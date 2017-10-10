@@ -147,6 +147,41 @@ class SearchResponderV2 extends ResponderV2 {
     }
 
     /**
+      * Creates a syntactically valid variable base name, based on the given entity.
+      *
+      * @param entity the entity to be used to create a base name for a variable.
+      * @return a base name for a variable.
+      */
+    private def escapeEntityForVariable(entity: Entity): String = {
+        val entityStr = entity match {
+            case QueryVariable(varName) => varName
+            case IriRef(iriLiteral, _) => iriLiteral
+            case XsdLiteral(stringLiteral, _) => stringLiteral
+            case _ => throw SparqlSearchException(s"A unique variable could not be made for $entity")
+        }
+
+        entityStr.replaceAll("[:/.#-]", "").replaceAll("\\s", "") // TODO: check if this is complete and if it could lea to collision of variable names
+    }
+
+    /**
+      * Creates a unique variable name from the given entity and the local part of a property IRI.
+      *
+      * @param base        the entity to use to create the variable base name.
+      * @param propertyIri the IRI of the property whose local part will be used to form the unique name.
+      * @return a unique variable.
+      */
+    private def createUniqueVariableNameFromEntityAndProperty(base: Entity, propertyIri: IRI): QueryVariable = {
+        val propertyHashIndex = propertyIri.lastIndexOf('#')
+
+        if (propertyHashIndex > 0) {
+            val propertyName = propertyIri.substring(propertyHashIndex + 1)
+            QueryVariable(escapeEntityForVariable(base) + "__" + escapeEntityForVariable(QueryVariable(propertyName)))
+        } else {
+            throw AssertionException(s"Invalid property IRI: $propertyIri")
+        }
+    }
+
+    /**
       * Represents the Iris of resources and value objects.
       *
       * @param resourceIris    resource Iris.
@@ -568,41 +603,6 @@ class SearchResponderV2 extends ResponderV2 {
                     case _ => None
                 }
 
-            }
-
-            /**
-              * Creates a syntactically valid variable base name, based on the given entity.
-              *
-              * @param entity the entity to be used to create a base name for a variable.
-              * @return a base name for a variable.
-              */
-            def escapeEntityForVariable(entity: Entity): String = {
-                val entityStr = entity match {
-                    case QueryVariable(varName) => varName
-                    case IriRef(iriLiteral, _) => iriLiteral
-                    case XsdLiteral(stringLiteral, _) => stringLiteral
-                    case _ => throw SparqlSearchException(s"A unique variable could not be made for $entity")
-                }
-
-                entityStr.replaceAll("[:/.#-]", "").replaceAll("\\s", "") // TODO: check if this is complete and if it could lea to collision of variable names
-            }
-
-            /**
-              * Creates a unique variable name from the given entity and the local part of a property IRI.
-              *
-              * @param base        the entity to use to create the variable base name.
-              * @param propertyIri the IRI of the property whose local part will be used to form the unique name.
-              * @return a unique variable.
-              */
-            def createUniqueVariableNameFromEntityAndProperty(base: Entity, propertyIri: IRI): QueryVariable = {
-                val propertyHashIndex = propertyIri.lastIndexOf('#')
-
-                if (propertyHashIndex > 0) {
-                    val propertyName = propertyIri.substring(propertyHashIndex + 1)
-                    QueryVariable(escapeEntityForVariable(base) + "__" + escapeEntityForVariable(QueryVariable(propertyName)))
-                } else {
-                    throw AssertionException(s"Invalid property IRI: $propertyIri")
-                }
             }
 
             /**
@@ -1488,14 +1488,15 @@ class SearchResponderV2 extends ResponderV2 {
 
         /**
           *
-          * Collects property type information for value or link properties requests present in the Construct clause for the given resource.
+          * Collects variables representing values that are present in the CONSTRUCT clause of the input query.
           *
-          * @param constructClause  the Construct clause to be looked at.
-          * @param resource the [[Entity]] representing the resource whose properties are to be collected
-          * @param typeInspection   results of type inspection.
+          * @param constructClause      the Construct clause to be looked at.
+          * @param resource             the [[Entity]] representing the resource whose properties are to be collected
+          * @param typeInspection       results of type inspection.
+          * @param variableConcatSuffix the suffix appended to variable names in prequery results.
           * @return a Set of [[PropertyTypeInfo]] representing the value and link value properties to be returned to the client.
           */
-        def collectValueVariablesForResource(constructClause: ConstructClause, resource: Entity, typeInspection: TypeInspectionResult): Set[Entity] = {
+        def collectValueVariablesForResource(constructClause: ConstructClause, resource: Entity, typeInspection: TypeInspectionResult, variableConcatSuffix: String): Set[QueryVariable] = {
 
             // make sure resource is a query variable or an Iri
             resource match {
@@ -1511,8 +1512,8 @@ class SearchResponderV2 extends ResponderV2 {
                     statementPattern.subj == resource
             }
 
-            statementsWithResourceAsSubject.foldLeft(Set.empty[Entity]) {
-                (acc: Set[Entity], statementPattern: StatementPattern) =>
+            statementsWithResourceAsSubject.foldLeft(Set.empty[QueryVariable]) {
+                (acc: Set[QueryVariable], statementPattern: StatementPattern) =>
 
                     // check if the predicate is a Knora value  or linking property
 
@@ -1543,11 +1544,40 @@ class SearchResponderV2 extends ResponderV2 {
 
                         }
 
-                        // TODO: check the objectTypeIri and if this is a linking prop statement.obj represents a resource -> recursively look for values of statement.obj using this method
+                        // convert the type information into an internal Knora Iri if possible
+                        val objectIri = if (InputValidation.isKnoraApiEntityIri(propTypeInfo.objectTypeIri)) {
+                            InputValidation.externalIriToInternalIri(propTypeInfo.objectTypeIri, () => throw BadRequestException(s"${propTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
+                        } else {
+                            propTypeInfo.objectTypeIri
+                        }
 
-                        acc + statementPattern.obj
+                        val valueObjectVariable: Set[QueryVariable] = objectIri match {
+
+                            // linking prop: get value object var and information which values are requested for dependent resource
+                            case OntologyConstants.KnoraBase.Resource =>
+
+                                // recursively get value objects requested for dependent resource: statement.obj represents a dependent resource (query variable or IRI)
+                                val valObjVarsForDependentRes: Set[QueryVariable] = collectValueVariablesForResource(constructClause, statementPattern.obj, typeInspection, variableConcatSuffix)
+
+                                // link value object variable
+                                val valObjVar = createUniqueVariableNameFromEntityAndProperty(statementPattern.obj, OntologyConstants.KnoraBase.LinkValue)
+
+                                // return link value object variable and value objects requested for the dependent resource
+                                valObjVarsForDependentRes + QueryVariable(valObjVar.variableName + variableConcatSuffix)
+
+                            case nonLinkingProp =>
+                                statementPattern.obj match {
+                                    case queryVar: QueryVariable => Set(QueryVariable(queryVar.variableName + variableConcatSuffix))
+
+                                    case other => throw SparqlSearchException(s"object of a statement involving a non linking property is expected to be a query variable, but $other given.")
+                                }
+
+                        }
+
+                        acc ++ valueObjectVariable
 
                     } else {
+                        // not a knora-api property
                         acc
                     }
             }
@@ -1751,7 +1781,6 @@ class SearchResponderV2 extends ResponderV2 {
 
                         val valueObjVarToIris: Map[QueryVariable, Set[IRI]] = valueObjectVariablesConcat.map {
                             (valueObjVarConcat: QueryVariable) =>
-                                // TODO: recreate the original variable name by removing nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableAppendix from its end
                                 valueObjVarConcat -> resultRow.rowMap(valueObjVarConcat.variableName).split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSet
                         }.toMap
 
@@ -1831,14 +1860,87 @@ class SearchResponderV2 extends ResponderV2 {
                             }
                     }
 
-                    // TODO: sort out those value objects that the user did not ask for in the input query's CONSTRUCT clause
-                    // valueObjectVarsForMainRes = collectValueVariablesForResource(preprocessedQuery.constructClause, mainResourceVar, typeInspectionResult)
+                    // sort out those value objects that the user did not ask for in the input query's CONSTRUCT clause
 
-                    // _ = println(valueObjectVarsForMainRes)
+                    // get all the requested value object vars (for main and dependent resources)
+                    valueObjectVariablesForAllResources: Set[QueryVariable] = collectValueVariablesForResource(preprocessedQuery.constructClause, mainResourceVar, typeInspectionResult, nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableAppendix)
+
+                    // collect requested valu object Iris for each resource
+                    requestedValObjIrisPerResource: Map[IRI, Set[IRI]] = queryResWithFullQueryPath.map {
+                        case (resIri: IRI, assertions: ConstructResponseUtilV2.ResourceWithValueRdfData) =>
+
+                            val valueObjIrisForRes: Map[QueryVariable, Set[IRI]] = valueObjectIrisPerMainResource(resIri)
+
+                            val valObjIrisRequestedForRes: Set[IRI] = valueObjectVariablesForAllResources.flatMap {
+                                (requestedQueryVar: QueryVariable) =>
+                                    valueObjIrisForRes.getOrElse(requestedQueryVar, throw AssertionException(s"key $requestedQueryVar is absent in prequery's value object Iris collection for resource $resIri"))
+                            }
+
+                            resIri -> valObjIrisRequestedForRes
+                    }
+
+                    queryResWithFullQueryPathOnlyRequestedValues: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = queryResWithFullQueryPath.map {
+                        case (resIri: IRI, assertions: ConstructResponseUtilV2.ResourceWithValueRdfData) =>
+
+                            val valueObjIrisRequestedForRes: Set[IRI] = requestedValObjIrisPerResource.getOrElse(resIri, throw AssertionException(s"key $resIri is absent in requested value object Iris collection for resource $resIri"))
+
+                            /**
+                              * Filter out those values that the user does not want to see.
+                              *
+                              * @param values the values to be filtered.
+                              * @return filtered values.
+                              */
+                            def traverseAndFilterValues(values: ConstructResponseUtilV2.ResourceWithValueRdfData): Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = {
+                                values.valuePropertyAssertions.foldLeft(Map.empty[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]]) {
+                                    case (acc, (propIri: IRI, values: Seq[ConstructResponseUtilV2.ValueRdfData])) =>
+
+                                        val valuesFiltered: Seq[ConstructResponseUtilV2.ValueRdfData] = values.filter {
+                                            (valueObj: ConstructResponseUtilV2.ValueRdfData) =>
+                                                // only return those value objects whose Iris are contained in valueObjIrisRequestedForRes
+                                                valueObjIrisRequestedForRes(valueObj.valueObjectIri)
+                                        }
+
+                                        val valuesFilteredRecursively: Seq[ConstructResponseUtilV2.ValueRdfData] = valuesFiltered.map {
+                                            (valObj: ConstructResponseUtilV2.ValueRdfData) =>
+                                                if (valObj.targetResource.nonEmpty) {
+
+                                                    val targetResourceAssertions: ConstructResponseUtilV2.ResourceWithValueRdfData = valObj.targetResource.get
+
+                                                    val targetResourceAssertionsFiltered: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = traverseAndFilterValues(targetResourceAssertions)
+
+                                                    valObj.copy(
+                                                        targetResource = Some(targetResourceAssertions.copy(
+                                                            valuePropertyAssertions = targetResourceAssertionsFiltered
+                                                        ))
+                                                    )
+                                                } else {
+                                                    valObj
+                                                }
+                                        }
+
+                                        // ignore properties if there are no value object to be displayed
+                                        if (valuesFilteredRecursively.nonEmpty) {
+
+                                            acc + (propIri -> valuesFilteredRecursively)
+                                        } else {
+                                            // ignore this property since there are no value objects
+                                            acc
+                                        }
 
 
+                                }
+                            }
 
-                } yield queryResWithFullQueryPath
+                            val requestedValuePropertyAssertions = traverseAndFilterValues(assertions)
+
+                            resIri -> assertions.copy(
+                                valuePropertyAssertions = requestedValuePropertyAssertions
+                            )
+
+                    }
+
+
+                } yield queryResWithFullQueryPathOnlyRequestedValues
 
             } else {
                 // the prequery returned no results, no further query is necessary

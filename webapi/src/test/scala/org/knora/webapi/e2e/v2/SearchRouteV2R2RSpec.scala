@@ -471,7 +471,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?book incunabula:title ?title .
                   |
-                  |        ?book incunabula:pubdate "JULIAN:1497-03-01" .
+                  |        ?book incunabula:pubdate ?pubdate .
                   |    } WHERE {
                   |
                   |        ?book a incunabula:book .
@@ -826,7 +826,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?thing a anything:Thing .
                   |
-                  |     ?thing anything:hasDecimal 2.1
+                  |     ?thing anything:hasDecimal ?decimal .
                   |} WHERE {
                   |
                   |     ?thing a anything:Thing .
@@ -864,7 +864,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?thing a anything:Thing .
                   |
-                  |     ?thing anything:hasDecimal 2.1
+                  |     ?thing anything:hasDecimal ?decimal .
                   |} WHERE {
                   |
                   |     ?thing a anything:Thing .
@@ -902,7 +902,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?thing a anything:Thing .
                   |
-                  |     ?thing anything:hasDecimal 2.1
+                  |     ?thing anything:hasDecimal ?decimal .
                   |} WHERE {
                   |
                   |     ?thing a anything:Thing .
@@ -975,7 +975,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?thing a anything:Thing .
                   |
-                  |     ?thing anything:hasBoolean true
+                  |     ?thing anything:hasBoolean ?boolean .
                   |} WHERE {
                   |
                   |     ?thing a anything:Thing .
