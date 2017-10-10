@@ -20,6 +20,9 @@ queryArr.push(`
         ?letter ?linkingProp1  <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> .
 
         ?letter ?linkingProp2  <http://rdfh.ch/beol/_yblAQMwT2un_xN7UaVWrg> .
+        
+        <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> beol:hasFamilyName ?name .
+        
 
     } WHERE {
         ?letter a knora-api:Resource .
@@ -34,8 +37,14 @@ queryArr.push(`
         ?letter ?linkingProp1  <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> .
         ?linkingProp1 knora-api:objectType knora-api:Resource .
         FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
-    
+        
         <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> a knora-api:Resource .
+
+        <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> beol:hasFamilyName ?name .
+        
+        beol:hasFamilyName knora-api:objectType xsd:string .
+        ?name a xsd:string .
+
 
         # Hermann, Jacob 1678-1733
         ?letter ?linkingProp2 <http://rdfh.ch/beol/_yblAQMwT2un_xN7UaVWrg> .
@@ -123,11 +132,13 @@ CONSTRUCT {
 
     ?letter a beol:letter .
 
+    ?letter beol:title ?title .
+
     ?letter knora-api:hasStandoffLinkTo ?anotherLetter .
 
     ?anotherLetter beol:hasAuthor ?author .
 
-    ?author beol:hasIAFIdentifier "120379260" .
+    ?author beol:hasIAFIdentifier ?gnd .
 } WHERE {
 
     ?letter a beol:letter .
@@ -214,17 +225,20 @@ queryArr.push(`
     CONSTRUCT {
         ?letter knora-api:isMainResource true .
         
+        #?letter beol:hasText ?text .
+        
     } WHERE {
         ?letter a knora-api:Resource .
         ?letter a beol:letter .
         
-        #?letter beol:hasText ?text .
+        ?letter beol:hasText ?text .
         
-        #beol:hasText knora-api:objectType xsd:string .
+        beol:hasText knora-api:objectType xsd:string .
 
-        #?text a xsd:string .
+        ?text a xsd:string .
         
-    }
+        
+    } OFFSET 0
 
 `);
 
@@ -286,7 +300,7 @@ function runQuery(queryStrArr, index) {
                 console.log(parsedData['schema:numberOfItems']);
                 console.log(rawData);
                 console.log(`Duration in millis: ${duration}`);
-                console.log("++++++++++")
+                console.log("++++++++++");
                 runQuery(queryStrArr, index+1);
             } catch (e) {
                 console.error(e.message);

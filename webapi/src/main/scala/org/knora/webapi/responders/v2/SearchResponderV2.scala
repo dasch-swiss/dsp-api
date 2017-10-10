@@ -1488,7 +1488,7 @@ class SearchResponderV2 extends ResponderV2 {
 
         /**
           *
-          * Collects variables representing values that are present in the CONSTRUCT clause of the input query.
+          * Recursively collects variables representing values that are present in the CONSTRUCT clause of the input query for the given [[Entity]] representing a resource.
           *
           * @param constructClause      the Construct clause to be looked at.
           * @param resource             the [[Entity]] representing the resource whose properties are to be collected
@@ -1505,6 +1505,8 @@ class SearchResponderV2 extends ResponderV2 {
                 case literal: XsdLiteral => throw SparqlSearchException(s"literal $literal cannot represent a resource")
                 case other => throw SparqlSearchException(s"$other cannot represent a resource")
             }
+
+            // TODO: check in type information that resource represents a resource
 
             // get statements with the main resource as a subject
             val statementsWithResourceAsSubject: Seq[StatementPattern] = constructClause.statements.filter {
@@ -1879,9 +1881,11 @@ class SearchResponderV2 extends ResponderV2 {
                             resIri -> valObjIrisRequestedForRes
                     }
 
+                    // filter out those value objects that the user does not want to be returned by the query
                     queryResWithFullQueryPathOnlyRequestedValues: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = queryResWithFullQueryPath.map {
                         case (resIri: IRI, assertions: ConstructResponseUtilV2.ResourceWithValueRdfData) =>
 
+                            // get the Iris of all the value objects requested for this resource
                             val valueObjIrisRequestedForRes: Set[IRI] = requestedValObjIrisPerResource.getOrElse(resIri, throw AssertionException(s"key $resIri is absent in requested value object Iris collection for resource $resIri"))
 
                             /**
@@ -1894,18 +1898,21 @@ class SearchResponderV2 extends ResponderV2 {
                                 values.valuePropertyAssertions.foldLeft(Map.empty[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]]) {
                                     case (acc, (propIri: IRI, values: Seq[ConstructResponseUtilV2.ValueRdfData])) =>
 
+                                        // filter values for the current resource
                                         val valuesFiltered: Seq[ConstructResponseUtilV2.ValueRdfData] = values.filter {
                                             (valueObj: ConstructResponseUtilV2.ValueRdfData) =>
                                                 // only return those value objects whose Iris are contained in valueObjIrisRequestedForRes
                                                 valueObjIrisRequestedForRes(valueObj.valueObjectIri)
                                         }
 
+                                        // if there are link values including a target resource, apply filter to their values too
                                         val valuesFilteredRecursively: Seq[ConstructResponseUtilV2.ValueRdfData] = valuesFiltered.map {
                                             (valObj: ConstructResponseUtilV2.ValueRdfData) =>
                                                 if (valObj.targetResource.nonEmpty) {
 
                                                     val targetResourceAssertions: ConstructResponseUtilV2.ResourceWithValueRdfData = valObj.targetResource.get
 
+                                                    // apply filter to the target resource's values
                                                     val targetResourceAssertionsFiltered: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = traverseAndFilterValues(targetResourceAssertions)
 
                                                     valObj.copy(
@@ -1920,7 +1927,6 @@ class SearchResponderV2 extends ResponderV2 {
 
                                         // ignore properties if there are no value object to be displayed
                                         if (valuesFilteredRecursively.nonEmpty) {
-
                                             acc + (propIri -> valuesFilteredRecursively)
                                         } else {
                                             // ignore this property since there are no value objects
