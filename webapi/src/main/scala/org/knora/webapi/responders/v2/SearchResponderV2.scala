@@ -241,55 +241,74 @@ class SearchResponderV2 extends ResponderV2 {
                 StatementPattern.makeExplicit(subj = resourceVar, pred = resourcePropVar, obj = resourceObjectVar)
             )
 
-            //  mark resources as a knora-base:Resource in CONSTRUCT clause and return direct assertions about resources
+            //  mark resources as the main resource and a knora-base:Resource in CONSTRUCT clause and return direct assertions about resources
             val constructPatternsForResources = Seq(
                 StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsMainResource), obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean)),
                 StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
                 StatementPattern(subj = resourceVar, pred = resourcePropVar, obj = resourceObjectVar)
             )
 
-            // TODO: check if value object Iris are given
+            if (valueObjectIris.nonEmpty) {
+                // value objects are to be queried
 
-            // WHERE patterns for statements about the resources' values
-            val wherePatternsForValueObjects = Seq(
-                ValuesPattern(resourceValueObject, valueObjectIris.map(iri => IriRef(iri))),
-                StatementPattern.makeInferred(subj = resourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = resourceValueObject),
-                StatementPattern.makeExplicit(subj = resourceVar, pred = resourceValueProp, obj = resourceValueObject),
-                StatementPattern.makeExplicit(subj = resourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                StatementPattern.makeExplicit(subj = resourceValueObject, pred = resourceValueObjectProp, obj = resourceValueObjectObj)
-            )
+                // WHERE patterns for statements about the resources' values
+                val wherePatternsForValueObjects = Seq(
+                    ValuesPattern(resourceValueObject, valueObjectIris.map(iri => IriRef(iri))),
+                    StatementPattern.makeInferred(subj = resourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = resourceValueObject),
+                    StatementPattern.makeExplicit(subj = resourceVar, pred = resourceValueProp, obj = resourceValueObject),
+                    StatementPattern.makeExplicit(subj = resourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                    StatementPattern.makeExplicit(subj = resourceValueObject, pred = resourceValueObjectProp, obj = resourceValueObjectObj)
+                )
 
-            // return assertions about value objects
-            val constructPatternsForValueObjects = Seq(
-                StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = resourceValueObject),
-                StatementPattern(subj = resourceVar, pred = resourceValueProp, obj = resourceValueObject),
-                StatementPattern(subj = resourceValueObject, pred = resourceValueObjectProp, obj = resourceValueObjectObj)
-            )
+                // return assertions about value objects
+                val constructPatternsForValueObjects = Seq(
+                    StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = resourceValueObject),
+                    StatementPattern(subj = resourceVar, pred = resourceValueProp, obj = resourceValueObject),
+                    StatementPattern(subj = resourceValueObject, pred = resourceValueObjectProp, obj = resourceValueObjectObj)
+                )
 
-            // get standoff for value objects (if any)
-            val wherePatternsForStandoff = Seq(
-                ValuesPattern(resourceValueObject, valueObjectIris.map(iri => IriRef(iri))),
-                StatementPattern.makeExplicit(subj = resourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff), obj = standoffNodeVar),
-                StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
-            )
+                // WHERE patterns for standoff belonging to value objects (if any)
+                val wherePatternsForStandoff = Seq(
+                    ValuesPattern(resourceValueObject, valueObjectIris.map(iri => IriRef(iri))),
+                    StatementPattern.makeExplicit(subj = resourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff), obj = standoffNodeVar),
+                    StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
+                )
 
-            val constructPatternsForStandoff = Seq(
-                StatementPattern(subj = resourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff), obj = standoffNodeVar),
-                StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
-            )
+                // return standoff
+                val constructPatternsForStandoff = Seq(
+                    StatementPattern(subj = resourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff), obj = standoffNodeVar),
+                    StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
+                )
 
-            ConstructQuery(
-                constructClause = ConstructClause(
-                    statements = constructPatternsForResources ++ constructPatternsForValueObjects ++ constructPatternsForStandoff
-                ),
-                whereClause = WhereClause(
-                    Seq(
-                        UnionPattern(
-                            Seq(wherePatternsForResources, wherePatternsForValueObjects, wherePatternsForStandoff)
+                ConstructQuery(
+                    constructClause = ConstructClause(
+                        statements = constructPatternsForResources ++ constructPatternsForValueObjects ++ constructPatternsForStandoff
+                    ),
+                    whereClause = WhereClause(
+                        Seq(
+                            UnionPattern(
+                                Seq(wherePatternsForResources, wherePatternsForValueObjects, wherePatternsForStandoff)
+                            )
                         )
                     )
                 )
-            )
+
+            } else {
+                // no value objects are to be queried
+
+                ConstructQuery(
+                    constructClause = ConstructClause(
+                        statements = constructPatternsForResources
+                    ),
+                    whereClause = WhereClause(
+                        Seq(
+                            UnionPattern(
+                                Seq(wherePatternsForResources)
+                            )
+                        )
+                    )
+                )
+            }
 
         }
 
@@ -419,7 +438,7 @@ class SearchResponderV2 extends ResponderV2 {
             // get the mappings
             mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullQueryPath, userProfile)
 
-            // _ = println(mappingsAsMap)
+        // _ = println(mappingsAsMap)
 
 
         } yield ReadResourcesSequenceV2(
@@ -1565,48 +1584,67 @@ class SearchResponderV2 extends ResponderV2 {
                 StatementPattern(subj = mainAndDependentResourceVar, pred = mainAndDependentResourcePropVar, obj = mainAndDependentResourceObjectVar)
             )
 
-            // WHERE patterns for statements about the main and dependent resources' values
-            val wherePatternsForMainAndDependentResourcesValues = Seq(
-                ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri))),
-                StatementPattern.makeInferred(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainAndDependentResourceValueObject),
-                StatementPattern.makeExplicit(subj = mainAndDependentResourceVar, pred = mainAndDependentResourceValueProp, obj = mainAndDependentResourceValueObject),
-                StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj)
-            )
+            if (valueObjectIris.nonEmpty) {
+                // value objects are to be queried
 
-            // return assertions about the main and dependent resources' values in CONSTRUCT clause
-            val constructPatternsForMainAndDependentResourcesValues = Seq(
-                StatementPattern(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainAndDependentResourceValueObject),
-                StatementPattern(subj = mainAndDependentResourceVar, pred = mainAndDependentResourceValueProp, obj = mainAndDependentResourceValueObject),
-                StatementPattern(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj)
-            )
+                // WHERE patterns for statements about the main and dependent resources' values
+                val wherePatternsForMainAndDependentResourcesValues = Seq(
+                    ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri))),
+                    StatementPattern.makeInferred(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainAndDependentResourceValueObject),
+                    StatementPattern.makeExplicit(subj = mainAndDependentResourceVar, pred = mainAndDependentResourceValueProp, obj = mainAndDependentResourceValueObject),
+                    StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                    StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj)
+                )
 
-            // get standoff for value objects (if any)
-            val wherePatternsForStandoff = Seq(
-                ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri))),
-                StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff), obj = standoffNodeVar),
-                StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
-            )
+                // return assertions about the main and dependent resources' values in CONSTRUCT clause
+                val constructPatternsForMainAndDependentResourcesValues = Seq(
+                    StatementPattern(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainAndDependentResourceValueObject),
+                    StatementPattern(subj = mainAndDependentResourceVar, pred = mainAndDependentResourceValueProp, obj = mainAndDependentResourceValueObject),
+                    StatementPattern(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj)
+                )
 
-            // return standoff assertions
-            val constructPatternsForStandoff = Seq(
-                StatementPattern(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff), obj = standoffNodeVar),
-                StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
-            )
+                // WHERE patterns for standoff belonging to value objects (if any)
+                val wherePatternsForStandoff = Seq(
+                    ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri))),
+                    StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff), obj = standoffNodeVar),
+                    StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
+                )
 
-            ConstructQuery(
-                constructClause = ConstructClause(
-                    statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues ++ constructPatternsForStandoff
-                ),
-                whereClause = WhereClause(
-                    Seq(
-                        UnionPattern(
-                            Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff)
+                // return standoff assertions
+                val constructPatternsForStandoff = Seq(
+                    StatementPattern(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff), obj = standoffNodeVar),
+                    StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
+                )
+
+                ConstructQuery(
+                    constructClause = ConstructClause(
+                        statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues ++ constructPatternsForStandoff
+                    ),
+                    whereClause = WhereClause(
+                        Seq(
+                            UnionPattern(
+                                Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff)
+                            )
                         )
                     )
                 )
-            )
 
+            } else {
+                // no value objects are to be queried
+
+                ConstructQuery(
+                    constructClause = ConstructClause(
+                        statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources
+                    ),
+                    whereClause = WhereClause(
+                        Seq(
+                            UnionPattern(
+                                Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources)
+                            )
+                        )
+                    )
+                )
+            }
         }
 
         for {
