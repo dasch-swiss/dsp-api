@@ -136,7 +136,7 @@
 :publicationIsEdited rdf:type owl:ObjectProperty ;
 
                     rdfs:label "ist editiert"@de ,
-                            "is edited "@en;
+                            "Edited "@en;
 
                     rdfs:comment """Represents the edition of the publication."""@en ;
 
@@ -280,7 +280,7 @@
 :publicationIsReprinted rdf:type owl:ObjectProperty ;
 
                     rdfs:label "wieder abgedruckt"@de ,
-                            "reprinted"@en,
+                            "Reprinted"@en,
                             "réimprimé"@fr ,
                             "ristampato"@it ;
 
@@ -304,11 +304,89 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
+###  http://www.knora.org/ontology/biblio#publicationIsReprintOf
+:publicationIsReprintOf rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "wieder abgedruckt von"@de ,
+                            "Reprint of"@en ;
+
+                    rdfs:comment """Represents original publication of a reprint."""@en ;
+
+                    knora-base:objectClassConstraint :Publication ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
+
+
+
+###  http://www.knora.org/ontology/biblio#publicationIsReprintOfValue
+
+:publicationIsReprintOfValue rdf:type owl:ObjectProperty ;
+
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
+
+
+###  http://www.knora.org/ontology/biblio#publicationIsReviewed
+:publicationIsReviewed rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Besprochen"@de ,
+                            "Reviewed"@en;
+
+                    rdfs:comment """Represents the reviewed publication."""@en ;
+
+                    knora-base:objectClassConstraint :Publication ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
+
+
+
+###  http://www.knora.org/ontology/biblio#publicationIsReviewedValue
+
+:publicationIsReviewedValue rdf:type owl:ObjectProperty ;
+
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
+
+
+###  http://www.knora.org/ontology/biblio#publicationIsReviewOf
+:publicationIsReviewOf rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Kritik von"@de ,
+                            "Review Of"@en;
+
+                    rdfs:comment """Represents the original publication of a review."""@en ;
+
+                    knora-base:objectClassConstraint :Publication ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
+
+
+
+###  http://www.knora.org/ontology/biblio#publicationIsReviewOfValue
+
+:publicationIsReviewOfValue rdf:type owl:ObjectProperty ;
+
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
+
+
 ###  http://www.knora.org/ontology/biblio#publicationIsTranslated
 :publicationIsTranslated rdf:type owl:ObjectProperty ;
 
                     rdfs:label "ist übersetzt "@de ,
-                            "is tranlated to"@en ;
+                            "Translated to"@en ;
 
                     rdfs:comment """Represents the translation of publication."""@en ;
 
@@ -1113,6 +1191,30 @@
                                     ],
                                     [ rdf:type owl:Restriction ;
                                        owl:onProperty :publicationIsReprintedValue ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :publicationIsReprintOf ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :publicationIsReprintOfValue ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :publicationIsReviewed ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :publicationIsReviewedValue ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :publicationIsReviewOf ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :publicationIsReviewOfValue ;
                                        owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
