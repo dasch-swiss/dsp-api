@@ -108,9 +108,9 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
     }
 
     /**
-      * Gets the group with the given group Iri and returns the information as a [[GroupInfoResponseV1]].
+      * Gets the group with the given group IRI and returns the information as a [[GroupInfoResponseV1]].
       *
-      * @param groupIRI    the Iri of the group requested.
+      * @param groupIRI    the IRI of the group requested.
       * @param userProfile the profile of user that is making the request.
       * @return information about the group as a [[GroupInfoResponseV1]].
       */
@@ -250,7 +250,7 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
 
             //_ = log.debug(s"group response: ${groupResponse.toString}")
 
-            // check group response and get group Iri
+            // check group response and get group IRI
             groupIri: IRI = if (groupResponse.results.bindings.nonEmpty) {
                 groupResponse.results.bindings.head.rowMap("s")
             } else {
@@ -288,7 +288,7 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
             groupMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
             //_ = log.debug(s"groupMembersByIRIGetRequestV1 - result: {}", MessageUtil.toSource(groupMembersResponse))
 
-            // get project member Iri from results rows
+            // get project member IRI from results rows
             groupMemberIris: Seq[IRI] = if (groupMembersResponse.results.bindings.nonEmpty) {
                 groupMembersResponse.results.bindings.map(_.rowMap("s"))
             } else {
@@ -318,7 +318,7 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
             //_ = log.debug(s"projectMembersByShortnameGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
 
 
-            // get project member Iri from results rows
+            // get project member IRI from results rows
             groupMemberIris: Seq[IRI] = if (groupMembersResponse.results.bindings.nonEmpty) {
                 groupMembersResponse.results.bindings.map(_.rowMap("s"))
             } else {
@@ -553,7 +553,7 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
       * Helper method that turns SPARQL result rows into a [[GroupInfoV1]].
       *
       * @param groupResponse results from the SPARQL query representing information about the group.
-      * @param groupIri      the Iri of the group the querid information belong to.
+      * @param groupIri      the IRI of the group the querid information belong to.
       * @param userProfile   the profile of the user that is making the request.
       * @return a [[GroupInfoV1]] representing information about the group.
       */

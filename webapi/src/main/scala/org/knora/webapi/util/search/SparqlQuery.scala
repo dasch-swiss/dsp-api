@@ -82,7 +82,7 @@ case class IriRef(iri: IRI, propertyPathOperator: Option[Char] = None) extends E
       */
     def toInternalEntityIri: IriRef = {
         if (isInternalEntityIri) {
-            IriRef(InputValidation.externalIriToInternalIri(iri, () => throw BadRequestException(s"$iri is not a valid external knora-api entity Iri")))
+            IriRef(InputValidation.externalToInternalEntityIri(iri, () => throw BadRequestException(s"$iri is not a valid external knora-api entity Iri")))
         } else {
             throw AssertionException("$iri is not a knora-api entity IRI")
         }

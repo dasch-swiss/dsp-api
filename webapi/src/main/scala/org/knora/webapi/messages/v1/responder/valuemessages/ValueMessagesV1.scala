@@ -114,7 +114,7 @@ case class CreateValueApiRequestV1(res_id: IRI,
   *
   * @param utf8str    a mere string in case of a text without any markup.
   * @param xml        xml in case of a text with markup.
-  * @param mapping_id Iri of the mapping used to transform XML to standoff.
+  * @param mapping_id IRI of the mapping used to transform XML to standoff.
   */
 case class CreateRichtextV1(utf8str: Option[String] = None,
                             xml: Option[String] = None,
@@ -624,7 +624,7 @@ object KnoraPrecisionV1 extends Enumeration {
   * Represents a [[StandoffTagV1]] for a standoff tag of a certain type (standoff tag class) that is about to be created in the triplestore.
   *
   * @param standoffNode           the standoff node to be created.
-  * @param standoffTagInstanceIri the standoff node's Iri.
+  * @param standoffTagInstanceIri the standoff node's IRI.
   * @param startParentIri         the IRI of the parent of the start tag.
   * @param endParentIri           the IRI of the parent of the end tag, if any.
   */
@@ -674,7 +674,7 @@ case class TextValueWithStandoffV1(utf8str: String,
       */
     def prepareForSparqlInsert(valueIri: IRI): Seq[CreateStandoffTagV1InTriplestore] = {
 
-        // create an Iri for each standoff tag
+        // create an IRI for each standoff tag
         // internal references to XML ids are not resolved yet
         val standoffTagsWithOriginalXMLIDs: Seq[CreateStandoffTagV1InTriplestore] = standoff.map {
             case (standoffNode: StandoffTagV1) =>
@@ -692,7 +692,7 @@ case class TextValueWithStandoffV1(utf8str: String,
                 standoffTag.standoffNode.originalXMLID.isDefined
         }.map {
             (standoffTagWithID: CreateStandoffTagV1InTriplestore) =>
-                // return the XML id as a key and the standoff Iri as the value
+                // return the XML id as a key and the standoff IRI as the value
                 standoffTagWithID.standoffNode.originalXMLID.get -> standoffTagWithID.standoffTagInstanceIri
         }.toMap
 
@@ -712,7 +712,7 @@ case class TextValueWithStandoffV1(utf8str: String,
                     (attributeWithOriginalXMLID: StandoffTagAttributeV1) =>
                         attributeWithOriginalXMLID match {
                             case refAttr: StandoffTagInternalReferenceAttributeV1 =>
-                                // resolve the XML id to the corresponding standoff node Iri
+                                // resolve the XML id to the corresponding standoff node IRI
                                 refAttr.copy(value = iDsToStandoffNodeIris(refAttr.value))
                             case attr => attr
                         }

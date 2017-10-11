@@ -60,7 +60,7 @@ Then go back to the webapi root directory and use SBT to start the API server:
 To shut down the Knora API server:
 
 ::
-  
+
   > re-stop
 
 
@@ -100,7 +100,7 @@ Then go back to the webapi root directory and use SBT to start the API server:
 To shut down the Knora API server:
 
 ::
-  
+
   > re-stop
 
 
@@ -143,7 +143,7 @@ Load Testing on Mac OS X
 To test the Knora API server with many concurrent connections on Mac OS X, you
 will need to adjust some kernel parameters to allow more open connections, to
 recycle ephemeral ports more quickly, and to use a wider range of ephemeral
-port numbers. The script ``webapi/scripts/os-x-kernel-test-config.sh`` will do
+port numbers. The script ``webapi/scripts/macOS-kernel-test-config.sh`` will do
 this.
 
 
@@ -160,7 +160,7 @@ looks like this:
 .. literalinclude:: ../../../../.travis.yml
     :language: yaml
     :linenos:
-    
+
 It basically means:
 
  - use the virtual machine based environment (line 1)
@@ -170,10 +170,10 @@ It basically means:
  - cache some directories between builds to make it faster (line 9-11)
  - start fuseki and afterwards start all tests (lines 12-14)
  - send notification to our slack channel (lines 15-17)
- 
+
 SBT Build Configuration
 -----------------------
- 
+
 .. literalinclude:: ../../../../webapi/WebapiBuild.sbt
 
 

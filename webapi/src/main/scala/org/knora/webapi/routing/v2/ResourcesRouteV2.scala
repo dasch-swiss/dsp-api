@@ -52,7 +52,7 @@ object ResourcesRouteV2 extends Authenticator {
 
                     val resourceIris: Seq[IRI] = resIris.map {
                         resIri: String =>
-                            InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource Iri: '$resIri'"))
+                            InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
                     }
 
                     val requestMessage = ResourcesGetRequestV2(resourceIris = resourceIris, userProfile = userProfile)
@@ -75,7 +75,7 @@ object ResourcesRouteV2 extends Authenticator {
 
                     val resourceIris: Seq[IRI] = resIris.map {
                             resIri: String =>
-                                InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource Iri: '$resIri'"))
+                                InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
                         }
 
                     val requestMessage = ResourcePreviewRequestV2(resourceIris = resourceIris, userProfile = userProfile)

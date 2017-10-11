@@ -141,14 +141,14 @@ object InputValidation {
     private val ExternalApiV2WithValueObjectOntologyRegex: Regex = (
         "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
             "(" + NCNamePattern + ")" +
-            OntologyConstants.KnoraApiV2WithValueObject.VersionSegment + "$"
+            OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "$"
         ).r
 
     // A regex for external knora-api v2 simple ontologies.
     private val ExternalApiV2SimpleOntologyRegex: Regex = (
         "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
             "(" + NCNamePattern + ")" +
-            OntologyConstants.KnoraApiV2Simplified.VersionSegment + "$"
+            OntologyConstants.KnoraApiV2Simple.VersionSegment + "$"
         ).r
 
     // A regex for entity IRIs in project-specific internal ontologies.
@@ -157,25 +157,39 @@ object InputValidation {
             "(" + NCNamePattern + ")#(" + NCNamePattern + ")$"
         ).r
 
-    // A regex for entity Iris in project-specific external ontologies (knora-api).
+    // A regex for entity IRIs in external ontologies (knora-api).
     // This works for both cases: with value object and simple.
     private val KnoraApiOntologyEntityRegex = (
         "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
-            "(" + NCNamePattern + ")" + "(" + OntologyConstants.KnoraApiV2WithValueObject.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simplified.VersionSegment + ")" +
+            "(" + NCNamePattern + ")" + "(" + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")" +
+            "#(" + NCNamePattern + ")$"
+        ).r
+
+    // A regex for entity IRIs in external ontologies using API v2 simplified schema.
+    private val KnoraApiV2SimpleOntologyEntityRegex = (
+        "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
+            "(" + NCNamePattern + ")" + "(" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")" +
+            "#(" + NCNamePattern + ")$"
+        ).r
+
+    // A regex for entity IRIs in external ontologies using API v2 schema with value objects.
+    private val KnoraApiV2WithValueObjectOntologyEntityRegex = (
+        "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
+            "(" + NCNamePattern + ")" + "(" + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + ")" +
             "#(" + NCNamePattern + ")$"
         ).r
 
     // A regex for external knora-api v2 with value object entity Iris.
     private val ExternalApiV2WithValueObjectOntologyEntityRegex: Regex = (
         "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
-            "(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2WithValueObject.VersionSegment +
+            "(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment +
             "#(" + NCNamePattern + ")$"
         ).r
 
     // A regex for external knora-api v2 simple entity Iris.
     private val ExternalApiV2SimpleOntologyEntityRegex: Regex = (
         "^" + OntologyConstants.KnoraApi.ApiOntologyStart +
-            "(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2Simplified.VersionSegment +
+            "(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2Simple.VersionSegment +
             "#(" + NCNamePattern + ")$"
         ).r
 
@@ -676,24 +690,24 @@ object InputValidation {
     }
 
     /**
-      * Converts an external ontology name to an internal ontology Iri.
+      * Converts an external ontology name to an internal ontology IRI.
       *
       * @param ontologyName the external ontology name to be converted.
-      * @return the internal ontology Iri.
+      * @return the internal ontology IRI.
       */
     private def externalOntologyNameToInternalOntologyIri(ontologyName: String): IRI = {
-        val internalOntologyName = if (ontologyName == "knora-api") "knora-base" else ontologyName
+        val internalOntologyName = if (ontologyName == OntologyConstants.KnoraApi.KnoraApiOntologyLabel) OntologyConstants.KnoraBase.KnoraBaseOntologyLabel else ontologyName
         OntologyConstants.KnoraInternal.InternalOntologyStart + internalOntologyName
     }
 
 
     /**
-      * Given the Iri of an external knora-api v2 with value object ontology, returns the internal ontology Iri.
+      * Given the IRI of an external knora-api v2 with value object ontology, returns the internal ontology IRI.
       *
-      * @param externalOntologyIri the external ontology Iri.
+      * @param externalOntologyIri the external ontology IRI.
       * @param errorFun            a function that throws an exception. It will be called if the form of the string is not
       *                            valid for an internal ontology IRI.
-      * @return the internal ontology Iri.
+      * @return the internal ontology IRI.
       */
     def externalOntologyIriApiV2WithValueObjectToInternalOntologyIri(externalOntologyIri: IRI, errorFun: () => Nothing): IRI = {
         externalOntologyIri match {
@@ -704,12 +718,12 @@ object InputValidation {
     }
 
     /**
-      * Given the Iri of an external knora-api v2 simple ontology, returns the internal ontology Iri.
+      * Given the IRI of an external knora-api v2 simple ontology, returns the internal ontology IRI.
       *
-      * @param externalOntologyIri the external ontology Iri.
+      * @param externalOntologyIri the external ontology IRI.
       * @param errorFun            a function that throws an exception. It will be called if the form of the string is not
       *                            valid for an internal ontology IRI.
-      * @return the internal ontology Iri.
+      * @return the internal ontology IRI.
       */
     def externalOntologyIriApiV2SimpleToInternalOntologyIri(externalOntologyIri: IRI, errorFun: () => Nothing): IRI = {
         externalOntologyIri match {
@@ -720,41 +734,58 @@ object InputValidation {
     }
 
     /**
-      * Given the Iri of an internal ontology, returns the knora-api with value object ontology Iri.
+      * Given the IRI of an internal ontology, returns the knora-api with value object ontology IRI.
       *
-      * @param internalOntologyIri the Iri of the internal ontology.
+      * @param internalOntologyIri the IRI of the internal ontology.
       * @param errorFun            a function that throws an exception. It will be called if the form of the string is not
       *                            valid for an internal ontology IRI.
-      * @return the external ontology Iri.
+      * @return the external ontology IRI.
       */
-    def internalOntologyIriToApiV2WithValueObjectOntologyIri(internalOntologyIri: IRI, errorFun: () => Nothing): IRI = {
+    def internalOntologyIriToApiV2SimpleOntologyIri(internalOntologyIri: IRI, errorFun: () => Nothing): IRI = {
         internalOntologyIri match {
             case ProjectSpecificInternalOntologyRegex(ontologyName) =>
-                val apiOntologyName = if (ontologyName == "knora-base") "knora-api" else ontologyName
-                OntologyConstants.KnoraApi.ApiOntologyStart + apiOntologyName + OntologyConstants.KnoraApiV2WithValueObject.VersionSegment
+                val apiOntologyName = if (ontologyName == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel) OntologyConstants.KnoraApi.KnoraApiOntologyLabel else ontologyName
+                OntologyConstants.KnoraApi.ApiOntologyStart + apiOntologyName + OntologyConstants.KnoraApiV2Simple.VersionSegment
             case _ => errorFun()
         }
     }
 
     /**
-      * Converts an external entity name to an internal entity Iri.
+      * Given the IRI of an internal ontology, returns the knora-api with value object ontology IRI.
+      *
+      * @param internalOntologyIri the IRI of the internal ontology.
+      * @param errorFun            a function that throws an exception. It will be called if the form of the string is not
+      *                            valid for an internal ontology IRI.
+      * @return the external ontology IRI.
+      */
+    def internalOntologyIriToApiV2WithValueObjectOntologyIri(internalOntologyIri: IRI, errorFun: () => Nothing): IRI = {
+        internalOntologyIri match {
+            case ProjectSpecificInternalOntologyRegex(ontologyName) =>
+                val apiOntologyName = if (ontologyName == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel) OntologyConstants.KnoraApi.KnoraApiOntologyLabel else ontologyName
+                OntologyConstants.KnoraApi.ApiOntologyStart + apiOntologyName + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment
+            case _ => errorFun()
+        }
+    }
+
+    /**
+      * Converts an external entity name to an internal entity IRI.
       *
       * @param ontology   the name of the ontology the entity belongs.
       * @param entityName the name of the entity.
-      * @return the internal entity Iri.
+      * @return the internal entity IRI.
       */
     private def externalEntityNameToInternalEntityIri(ontology: String, entityName: String) = {
-        val ontologyName = if (ontology == "knora-api") "knora-base" else ontology
+        val ontologyName = if (ontology == OntologyConstants.KnoraApi.KnoraApiOntologyLabel) OntologyConstants.KnoraBase.KnoraBaseOntologyLabel else ontology
         OntologyConstants.KnoraInternal.InternalOntologyStart + ontologyName + "#" + entityName
     }
 
     /**
-      * Given the Iri of an external knora-api v2 with value object entity, returns the internal entity Iri.
+      * Given the IRI of an external knora-api v2 with value object entity, returns the internal entity IRI.
       *
-      * @param externalEntityIri an external entity Iri.
+      * @param externalEntityIri an external entity IRI.
       * @param errorFun          a function that throws an exception. It will be called if the form of the string is not
       *                          valid for an internal ontology IRI.
-      * @return the internal entity Iri.
+      * @return the internal entity IRI.
       */
     def externalApiV2WithValueObjectEntityIriToInternalEntityIri(externalEntityIri: IRI, errorFun: () => Nothing): IRI = {
         externalEntityIri match {
@@ -765,12 +796,12 @@ object InputValidation {
     }
 
     /**
-      * Given the Iri of an external knora-api v2 simple entity, returns the internal entity Iri.
+      * Given the IRI of an external knora-api v2 simple entity, returns the internal entity IRI.
       *
-      * @param externalEntityIri an external entity Iri.
+      * @param externalEntityIri an external entity IRI.
       * @param errorFun          a function that throws an exception. It will be called if the form of the string is not
       *                          valid for an internal ontology IRI.
-      * @return the internal entity Iri.
+      * @return the internal entity IRI.
       */
     def externalApiV2SimpleEntityIriToInternalEntityIri(externalEntityIri: IRI, errorFun: () => Nothing): IRI = {
         externalEntityIri match {
@@ -781,36 +812,40 @@ object InputValidation {
     }
 
     /**
-      * Given the IRI of an internal ontology entity, returns the knora-api v2 with value object entity Iri.
+      * Given the IRI of an internal ontology entity, returns the knora-api v2 with value object entity IRI.
       *
-      * @param internalEntityIri the Iri of the internal ontology entity.
+      * @param internalEntityIri the IRI of the internal ontology entity.
       * @param errorFun          a function that throws an exception. It will be called if the form of the string is not
       *                          valid for an internal ontology entity IRI.
-      * @return the corresponding knora-api v2 with value object entity Iri.
+      * @return the corresponding knora-api v2 with value object entity IRI.
       */
     def internalEntityIriToApiV2WithValueObjectEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): IRI = {
         internalEntityIri match {
             case InternalOntologyEntityRegex(prefixLabel, entityName) =>
-                val apiPrefixLabel = if (prefixLabel == "knora-base") "knora-api" else prefixLabel
-                OntologyConstants.KnoraApi.ApiOntologyStart + apiPrefixLabel + OntologyConstants.KnoraApiV2WithValueObject.VersionSegment + "#" + entityName
+                val apiPrefixLabel = if (prefixLabel == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel) OntologyConstants.KnoraApi.KnoraApiOntologyLabel else prefixLabel
+                OntologyConstants.KnoraApi.ApiOntologyStart + apiPrefixLabel + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "#" + entityName
             case _ => errorFun()
         }
     }
 
     /**
-      * Given the IRI of an internal ontology entity, returns the simplified knora-api v2 entity Iri.
+      * Given the IRI of an internal ontology entity, returns the simplified knora-api v2 entity IRI.
       *
-      * @param internalEntityIri the Iri of the internal ontology entity.
+      * @param internalEntityIri the IRI of the internal ontology entity.
       * @param errorFun          a function that throws an exception. It will be called if the form of the string is not
       *                          valid for an internal ontology entity IRI.
       * @return the corresponding simplified knora-api v2.
       */
-    def internalEntityIriToSimpleApiV2EntityIri(internalEntityIri: IRI, errorFun: () => Nothing): IRI = {
-        internalEntityIri match {
-            case InternalOntologyEntityRegex(prefixLabel, entityName) =>
-                val apiPrefixLabel = if (prefixLabel == "knora-base") "knora-api" else prefixLabel
-                OntologyConstants.KnoraApi.ApiOntologyStart + apiPrefixLabel + OntologyConstants.KnoraApiV2Simplified.VersionSegment + "#" + entityName
-            case _ => errorFun()
+    def internalEntityIriToApiV2SimpleEntityIri(internalEntityIri: IRI, errorFun: () => Nothing): IRI = {
+        OntologyConstants.KnoraApiV2Simple.LiteralValueTypes.get(internalEntityIri) match {
+            case Some(xsdType) => xsdType
+            case None =>
+                internalEntityIri match {
+                    case InternalOntologyEntityRegex(prefixLabel, entityName) =>
+                        val apiPrefixLabel = if (prefixLabel == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel) OntologyConstants.KnoraApi.KnoraApiOntologyLabel else prefixLabel
+                        OntologyConstants.KnoraApi.ApiOntologyStart + apiPrefixLabel + OntologyConstants.KnoraApiV2Simple.VersionSegment + "#" + entityName
+                    case _ => errorFun()
+                }
         }
     }
 
@@ -843,7 +878,7 @@ object InputValidation {
     }
 
     /**
-      * Checks whether an IRI is the IRI of an external ontology entity (knora-api).
+      * Checks whether an IRI is the IRI of an external ontology entity.
       *
       * @param iri the IRI to be checked.
       * @return `true` if the IRI is the IRI of an external ontology entity.
@@ -856,14 +891,59 @@ object InputValidation {
     }
 
     /**
-      * Converts an external knora-api entity Iri (both with value object and simple) to an internal Iri.
+      * Checks whether an IRI is the IRI of a knora-api ontology entity (knora-api).
       *
-      * @param iri      the external Iri to be converted.
-      * @param errorFun a function that throws an exception. It will be called if the form of the string is not
-      *                 valid for an external ontology or entity IRI.
-      * @return an Iri which is not an external knora-api Iri.
+      * @param iri the IRI to be checked.
+      * @return `true` if the IRI is the IRI of a knora-api ontology entity.
       */
-    def externalIriToInternalIri(iri: IRI, errorFun: () => Nothing): IRI = {
+    def isBuiltInEntityIri(iri: IRI): Boolean = {
+        iri match {
+            case KnoraApiOntologyEntityRegex(ontology, _, _) if ontology == OntologyConstants.KnoraApi.KnoraApiOntologyLabel => true
+            case _ => false
+        }
+    }
+
+    /**
+      * Returns the API v2 schema used in an ontology entity IRI.
+      *
+      * @param entityIri the entity IRI.
+      * @param errorFun a function that throws an exception. It will be called if the form of the IRI is not valid
+      *                 for an external entity IRI.
+      * @return an [[ApiV2Schema]].
+      */
+    def getEntityApiSchema(entityIri: IRI, errorFun: () => Nothing): ApiV2Schema = {
+        entityIri match {
+            case ExternalApiV2SimpleOntologyEntityRegex(ontology, _) if ontology != OntologyConstants.KnoraBase.KnoraBaseOntologyLabel => ApiV2Simple
+            case ExternalApiV2WithValueObjectOntologyEntityRegex(ontology, _) if ontology != OntologyConstants.KnoraBase.KnoraBaseOntologyLabel => ApiV2WithValueObjects
+            case _ => errorFun()
+        }
+    }
+
+    /**
+      * Returns the API v2 schema used in an ontology IRI,.
+      *
+      * @param ontologyIri the ontology IRI.
+      * @param errorFun a function that throws an exception. It will be called if the form of the IRI is not valid
+      *                 for an external ontology IRI.
+      * @return an [[ApiV2Schema]].
+      */
+    def getOntologyApiSchema(ontologyIri: IRI, errorFun: () => Nothing): ApiV2Schema = {
+        ontologyIri match {
+            case ExternalApiV2SimpleOntologyRegex(_*) => ApiV2Simple
+            case ExternalApiV2WithValueObjectOntologyRegex(_*) => ApiV2WithValueObjects
+            case _ => errorFun()
+        }
+    }
+
+    /**
+      * Converts an external knora-api entity IRI (both with value object and simple) to an internal IRI.
+      *
+      * @param iri      the external IRI to be converted.
+      * @param errorFun a function that throws an exception. It will be called if the form of the string is not
+      *                 valid for an external entity IRI.
+      * @return an IRI which is not an external knora-api IRI.
+      */
+    def externalToInternalEntityIri(iri: IRI, errorFun: () => Nothing): IRI = {
 
         iri match {
 
@@ -872,6 +952,29 @@ object InputValidation {
 
             case ExternalApiV2WithValueObjectOntologyEntityRegex(ontology, entity) =>
                 externalEntityNameToInternalEntityIri(ontology, entity)
+
+            case _ => errorFun()
+        }
+    }
+
+
+    /**
+      * Converts an external knora-api ontology IRI (both with value object and simple) to an internal IRI.
+      *
+      * @param iri      the external IRI to be converted.
+      * @param errorFun a function that throws an exception. It will be called if the form of the string is not
+      *                 valid for an external ontology IRI.
+      * @return an internal ontology IRI.
+      */
+    def externalToInternalOntologyIri(iri: IRI, errorFun: () => Nothing): IRI = {
+
+        iri match {
+
+            case ExternalApiV2SimpleOntologyRegex(ontologyName) =>
+                externalOntologyNameToInternalOntologyIri(ontologyName)
+
+            case ExternalApiV2WithValueObjectOntologyRegex(ontologyName) =>
+                externalOntologyNameToInternalOntologyIri(ontologyName)
 
             case _ => errorFun()
         }
@@ -909,5 +1012,102 @@ object InputValidation {
         }
 
         mapPath
+    }
+
+    /**
+      * Converts an ontology entity IRI from one ontology schema to another. If the source schema is [[InternalSchema]]
+      * and the target schema extends [[ApiV2Schema]], the IRI is converted. If the source and target schemas
+      * are identical external and extend [[ApiV2Schema]], or if the source schema cannot be identified, the IRI is returned
+      * without conversion.
+      *
+      * @param entityIri    the entity IRI to be converted.
+      * @param targetSchema the target schema.
+      * @return the converted IRI.
+      */
+    def toExternalEntityIri(entityIri: IRI, targetSchema: ApiV2Schema): IRI = {
+        if (entityIri.startsWith(OntologyConstants.Xsd.XsdPrefixExpansion) || entityIri.startsWith(OntologyConstants.SchemaOrg.SchemaOrgPrefixExpansion)) {
+            // It's an XSD or schema.org entity, so leave it as is.
+            entityIri
+        } else {
+            entityIri match {
+                case InternalOntologyEntityRegex(_*) =>
+                    targetSchema match {
+                        case ApiV2Simple => internalEntityIriToApiV2SimpleEntityIri(entityIri, () => throw InconsistentTriplestoreDataException(s"Invalid internal ontology entity IRI: $entityIri"))
+                        case ApiV2WithValueObjects => internalEntityIriToApiV2WithValueObjectEntityIri(entityIri, () => throw InconsistentTriplestoreDataException(s"Invalid internal ontology entity IRI: $entityIri"))
+                    }
+
+                case KnoraApiV2SimpleOntologyEntityRegex(_*) =>
+                    targetSchema match {
+                        case ApiV2Simple => entityIri
+                        case other => throw BadRequestException(s"Can't convert entity IRI to ontology schema $other: $entityIri")
+                    }
+
+                case KnoraApiV2WithValueObjectOntologyEntityRegex(_*) =>
+                    targetSchema match {
+                        case ApiV2WithValueObjects => entityIri
+                        case other => throw BadRequestException(s"Can't convert entity IRI to ontology schema $other: $entityIri")
+                    }
+
+                case _ => entityIri
+            }
+        }
+    }
+
+    /**
+      * Converts an ontology IRI from one ontology schema to another. If the source schema is [[InternalSchema]]
+      * and the target schema extends [[ApiV2Schema]], the IRI is converted. If the ontology is a built-in API ontology
+      * matching the target schema, it is returned unconverted. Otherwise, an exception is thrown.
+      *
+      * @param ontologyIri  the ontology IRI to be converted.
+      * @param targetSchema the target schema.
+      * @return the converted IRI.
+      */
+    def toExternalOntologyIri(ontologyIri: IRI, targetSchema: ApiV2Schema): IRI = {
+        ontologyIri match {
+            case OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri if targetSchema == ApiV2Simple => ontologyIri
+            case OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri if targetSchema == ApiV2WithValueObjects => ontologyIri
+
+            case ProjectSpecificInternalOntologyRegex(_*) =>
+                targetSchema match {
+                    case ApiV2Simple => internalOntologyIriToApiV2SimpleOntologyIri(ontologyIri, () => throw InconsistentTriplestoreDataException(s"Invalid internal ontology IRI: $ontologyIri"))
+                    case ApiV2WithValueObjects => internalOntologyIriToApiV2WithValueObjectOntologyIri(ontologyIri, () => throw InconsistentTriplestoreDataException(s"Invalid internal ontology IRI: $ontologyIri"))
+                }
+
+            case _ => throw BadRequestException(s"Can't convert from $ontologyIri to $targetSchema")
+        }
+    }
+
+    /**
+      * Given an ontology IRI requested by the user, converts it to the IRI of an ontology that the ontology responder knows about.
+      *
+      * @param requestedOntology the IRI of the ontology that the user requested.
+      * @return the IRI of an ontology that the ontology responder can provide.
+      */
+    def requestedOntologyToOntologyForResponder(requestedOntology: IRI): IRI = {
+        if (requestedOntology == OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri || requestedOntology == OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri) {
+            // The client is asking about a built-in ontology, so don't translate its IRI.
+            requestedOntology
+        } else {
+            // The client is asking about a project-specific ontology. Translate its IRI to an internal ontology IRI.
+            val internalOntologyIri = externalToInternalOntologyIri(requestedOntology, () => throw BadRequestException(s"Invalid external ontology IRI: $requestedOntology"))
+            toIri(internalOntologyIri, () => throw BadRequestException(s"Invalid named graph IRI: $internalOntologyIri"))
+        }
+    }
+
+    /**
+      * Given an ontology entity IRI requested by the user, converts it to the IRI of an entity that the ontology responder knows about.
+      *
+      * @param requestedEntity the IRI of the entity that the user requested.
+      * @return the IRI of an entity that the ontology responder can provide.
+      */
+    def requestedEntityToEntityForResponder(requestedEntity: IRI): IRI = {
+        if (InputValidation.isBuiltInEntityIri(requestedEntity)) {
+            // The client is asking about a built-in class, so don't translate its IRI.
+            requestedEntity
+        } else {
+            // The client is asking about a project-specific class. Translate its IRI to an internal class IRI.
+            val internalEntityIri = externalToInternalEntityIri(requestedEntity, () => throw BadRequestException(s"invalid external entity IRI: $requestedEntity"))
+            toIri(internalEntityIri, () => throw BadRequestException(s"Invalid entity IRI: $internalEntityIri"))
+        }
     }
 }

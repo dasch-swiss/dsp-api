@@ -177,9 +177,9 @@ class ProjectsResponderV1 extends Responder {
     }
 
     /**
-      * Gets the project with the given project Iri and returns the information as a [[ProjectInfoResponseV1]].
+      * Gets the project with the given project IRI and returns the information as a [[ProjectInfoResponseV1]].
       *
-      * @param projectIri  the Iri of the project requested.
+      * @param projectIri  the IRI of the project requested.
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[ProjectInfoResponseV1]].
       */
@@ -199,9 +199,9 @@ class ProjectsResponderV1 extends Responder {
     }
 
     /**
-      * Gets the project with the given project Iri and returns the information as a [[ProjectInfoV1]].
+      * Gets the project with the given project IRI and returns the information as a [[ProjectInfoV1]].
       *
-      * @param projectIri  the Iri of the project requested.
+      * @param projectIri  the IRI of the project requested.
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[ProjectInfoV1]].
       */
@@ -249,7 +249,7 @@ class ProjectsResponderV1 extends Responder {
             //_ = log.debug(s"getProjectInfoByShortnameGetRequest - result: $projectResponse")
 
 
-            // get project Iri from results rows
+            // get project IRI from results rows
             projectIri: IRI = if (projectResponse.results.bindings.nonEmpty) {
                 projectResponse.results.bindings.head.rowMap("s")
             } else {
@@ -288,7 +288,7 @@ class ProjectsResponderV1 extends Responder {
             projectMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
             //_ = log.debug(s"projectMembersByIRIGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
 
-            // get project member Iri from results rows
+            // get project member IRI from results rows
             projectMemberIris: Seq[IRI] = if (projectMembersResponse.results.bindings.nonEmpty) {
                 projectMembersResponse.results.bindings.map(_.rowMap("s"))
             } else {
@@ -328,7 +328,7 @@ class ProjectsResponderV1 extends Responder {
             //_ = log.debug(s"projectMembersByShortnameGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
 
 
-            // get project member Iri from results rows
+            // get project member IRI from results rows
             projectMemberIris: Seq[IRI] = if (projectMembersResponse.results.bindings.nonEmpty) {
                 projectMembersResponse.results.bindings.map(_.rowMap("s"))
             } else {
@@ -366,7 +366,7 @@ class ProjectsResponderV1 extends Responder {
             projectMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
             //_ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
 
-            // get project member Iri from results rows
+            // get project member IRI from results rows
             projectMemberIris: Seq[IRI] = if (projectMembersResponse.results.bindings.nonEmpty) {
                 projectMembersResponse.results.bindings.map(_.rowMap("s"))
             } else {
@@ -406,7 +406,7 @@ class ProjectsResponderV1 extends Responder {
             //_ = log.debug(s"projectAdminMembersByShortnameGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
 
 
-            // get project member Iri from results rows
+            // get project member IRI from results rows
             projectMemberIris: Seq[IRI] = if (projectMembersResponse.results.bindings.nonEmpty) {
                 projectMembersResponse.results.bindings.map(_.rowMap("s"))
             } else {
@@ -679,7 +679,7 @@ class ProjectsResponderV1 extends Responder {
       * Helper method that turns SPARQL result rows into a [[ProjectInfoV1]].
       *
       * @param projectResponse results from the SPARQL query representing information about the project.
-      * @param projectIri      the Iri of the project the querid information belong to.
+      * @param projectIri      the IRI of the project the querid information belong to.
       * @param userProfile     the profile of user that is making the request.
       * @return a [[ProjectInfoV1]] representing information about project.
       */
@@ -712,8 +712,8 @@ class ProjectsResponderV1 extends Responder {
             )
 
         } else {
-            // no information was found for the given project Iri
-            throw NotFoundException(s"For the given project Iri $projectIri no information was found")
+            // no information was found for the given project IRI
+            throw NotFoundException(s"For the given project IRI $projectIri no information was found")
         }
 
     }

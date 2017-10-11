@@ -80,7 +80,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 10.seconds)
     }
 
-    "The Search Endpoint" should {
+    "The Search v2 Endpoint" should {
         "perform a fulltext search for 'Narr'" in {
 
             Get("/v2/search/Narr") ~> searchPath ~> check {

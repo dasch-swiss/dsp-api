@@ -103,7 +103,7 @@ object SearchRouteV2 extends Authenticator {
 
                 val externalResourceClassIri = InputValidation.toIri(resourceClassIriStr, () => throw BadRequestException(s"$resourceClassIriStr is not a valid Iri"))
 
-                Some(InputValidation.externalIriToInternalIri(externalResourceClassIri, () => throw BadRequestException(s"$externalResourceClassIri is not a valid knora-api resource class Iri")))
+                Some(InputValidation.externalToInternalEntityIri(externalResourceClassIri, () => throw BadRequestException(s"$externalResourceClassIri is not a valid knora-api resource class Iri")))
 
             case None => None
 
