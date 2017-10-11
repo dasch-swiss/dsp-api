@@ -601,8 +601,8 @@ class ValuesResponderV1 extends Responder {
         /**
           * Temporary structure to represent existing file values of a resource.
           *
-          * @param property       the property Iri (e.g., hasStillImageFileValueRepresentation)
-          * @param valueObjectIri the Iri of the value object.
+          * @param property       the property IRI (e.g., hasStillImageFileValueRepresentation)
+          * @param valueObjectIri the IRI of the value object.
           * @param quality        the quality of the file value
           */
         case class CurrentFileValue(property: IRI, valueObjectIri: IRI, quality: Option[Int])
@@ -736,7 +736,7 @@ class ValuesResponderV1 extends Responder {
         for {
 
         // Do the preparations of a file value change while already holding an update lock on the resource.
-        // This is necessary because in `makeTaskFuture` the current file value Iris for the given resource Iri have to been retrieved.
+        // This is necessary because in `makeTaskFuture` the current file value Iris for the given resource IRI have to been retrieved.
         // Using the lock, we make sure that these are still up to date when `changeValueV1` is being called.
         //
         // The method `changeValueV1` will be called using the same lock.

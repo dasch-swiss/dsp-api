@@ -110,7 +110,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
     }
 
-    "The Search Endpoint" should {
+    "The Search v2 Endpoint" should {
         "perform a fulltext search for 'Narr'" in {
 
             Get("/v2/search/Narr") ~> searchPath ~> check {

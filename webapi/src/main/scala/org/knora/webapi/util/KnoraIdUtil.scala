@@ -161,8 +161,8 @@ class KnoraIdUtil {
       */
     def makeProjectMappingIri(projectIri: IRI, mappingName: String): IRI = {
         val mappingIri = s"$projectIri/mappings/$mappingName"
-        // check that the mapping Iri is valid (mappingName is user input)
-        InputValidation.toIri(mappingIri, () => throw BadRequestException(s"the created mapping Iri $mappingIri is invalid"))
+        // check that the mapping IRI is valid (mappingName is user input)
+        InputValidation.toIri(mappingIri, () => throw BadRequestException(s"the created mapping IRI $mappingIri is invalid"))
     }
 
     /**
@@ -177,11 +177,11 @@ class KnoraIdUtil {
     }
 
     /**
-      * Creates an Iri used as a lock for the creation of mappings inside a given project.
-      * This method will always return the same Iri for the given project Iri.
+      * Creates an IRI used as a lock for the creation of mappings inside a given project.
+      * This method will always return the same IRI for the given project IRI.
       *
       * @param projectIri the IRI of the project the mapping will belong to.
-      * @return an Iri used as a lock for the creation of mappings inside a given project.
+      * @return an IRI used as a lock for the creation of mappings inside a given project.
       */
     def createMappingLockIriForProject(projectIri: IRI): IRI = {
         s"$projectIri/mappings"
