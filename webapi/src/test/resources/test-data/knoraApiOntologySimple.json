@@ -380,6 +380,8 @@
       "@id" : "knora-api:Region",
       "@type" : "owl:Class",
       "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
+      "rdfs:comment" : "Represents a geometric region of a resource. The geometry is represented currently as JSON string.",
+      "rdfs:label" : "Region",
       "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/simple/v2#Resource", {
         "@type" : "owl:Restriction",
         "owl:minCardinality" : 1,

@@ -107,6 +107,23 @@ object KnoraApiV2Simple {
     val Region: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.Region,
         subClassOf = Set(OntologyConstants.KnoraApiV2Simple.Resource),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "Region",
+                    LanguageCodes.EN -> "Region",
+                    LanguageCodes.FR -> "Région",
+                    LanguageCodes.IT -> "Regione"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents a geometric region of a resource. The geometry is represented currently as JSON string."
+                )
+            )
+        ),
         cardinalities = Map(
             OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2Simple.HasStandoffLinkTo -> Cardinality.MayHaveMany,
