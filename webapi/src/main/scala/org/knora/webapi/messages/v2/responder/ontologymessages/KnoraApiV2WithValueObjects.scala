@@ -28,6 +28,23 @@ import org.knora.webapi._
 object KnoraApiV2WithValueObjects {
     val Resource: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Resource,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "Ressource",
+                    LanguageCodes.EN -> "Resource",
+                    LanguageCodes.FR -> "Ressource",
+                    LanguageCodes.IT -> "Risorsa"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents a Knora resource."
+                )
+            )
+        ),
         cardinalities = Map(
             OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo -> Cardinality.MayHaveMany,
@@ -168,6 +185,23 @@ object KnoraApiV2WithValueObjects {
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Region,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         canBeInstantiated = true,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "Region",
+                    LanguageCodes.EN -> "Region",
+                    LanguageCodes.FR -> "Région",
+                    LanguageCodes.IT -> "Regione"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents a geometric region of a resource. The geometry is represented currently as JSON string."
+                )
+            )
+        ),
         cardinalities = Map(
             OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo -> Cardinality.MayHaveMany,
