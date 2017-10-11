@@ -21,30 +21,23 @@
 package org.knora.webapi.e2e.v2
 
 import java.net.URLEncoder
-import java.util
 
 import akka.actor.{ActorSystem, Props}
 import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
+import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.store._
-import akka.pattern._
-import org.scalatest.Assertion
-import spray.json._
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}
-import com.github.jsonldjava.core._
-import com.github.jsonldjava.utils._
-
-import scala.collection.JavaConverters._
-import scala.collection.mutable
 
 /**
   * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
@@ -82,32 +75,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
     )
 
-    private val numberOfItemsMember = "http://schema.org/numberOfItems"
-
-    private val itemListElementMember = "http://schema.org/itemListElement"
-
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
         Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 10.seconds)
-    }
-
-    /**
-      * Checks for the number of expected results to be returned.
-      *
-      * @param responseJson   the response send back by the search route.
-      * @param expectedNumber the expected number of results for the query.
-      * @return an assertion that the actual amount of results corresponds with the expected number of results.
-      */
-    def checkNumberOfItems(responseJson: String, expectedNumber: Int): Assertion = {
-
-        val res = JsonUtils.fromString(responseJson)
-
-        val compacted: Map[IRI, Any] = JsonLdProcessor.compact(res, new util.HashMap[String, String](), new JsonLdOptions()).asScala.toMap
-
-        val numberOfItems: Any = compacted.getOrElse(numberOfItemsMember, throw InvalidApiJsonException(s"member '$numberOfItemsMember' not given for search response."))
-
-        assert(numberOfItems.isInstanceOf[Int] && numberOfItems == expectedNumber)
-
     }
 
     "The Search Endpoint" should {

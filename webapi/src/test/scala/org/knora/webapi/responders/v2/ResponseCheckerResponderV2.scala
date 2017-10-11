@@ -23,7 +23,7 @@ package org.knora.webapi.responders.v2
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.v2.responder.{ReadResourceV2, ReadResourcesSequenceV2, ReadValueV2}
 
-object ResponseCheckerV2 {
+object ResponseCheckerResponderV2 {
 
     /**
       * Compares the response to a full resource request with the expected response.

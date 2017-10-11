@@ -1705,6 +1705,10 @@ class SearchResponderV2 extends ResponderV2 {
 
             nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificConstructToSelectTransformer = new NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult = typeInspectionResult)
 
+
+            // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
+            // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
+
             // Create a Select prequery
             nonTriplestoreSpecficPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
                 inputQuery = preprocessedQuery.copy(orderBy = inputQuery.orderBy, offset = inputQuery.offset), // TODO: This is a workaround to get Order By and OFFSET into the transformer since the preprocessor does not know about it
