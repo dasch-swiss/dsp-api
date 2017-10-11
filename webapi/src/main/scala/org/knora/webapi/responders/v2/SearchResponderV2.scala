@@ -95,6 +95,7 @@ class SearchResponderV2 extends ResponderV2 {
     val knoraIdUtil = new KnoraIdUtil
 
     def receive = {
+        case FullTextSearchCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, userProfile), log)
         case FulltextSearchGetRequestV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile), log)
         case ExtendedSearchGetRequestV2(query, userProfile) => future2Message(sender(), extendedSearchV2(inputQuery = query, userProfile = userProfile), log)
         case SearchResourceByLabelRequestV2(searchValue, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), searchResourcesByLabelV2(searchValue, limitToProject, limitToResourceClass, userProfile), log)
@@ -247,6 +248,49 @@ class SearchResponderV2 extends ResponderV2 {
     }
 
     /**
+      * Performs a fulltext search and returns the resources count (how man resources match the search criteria),
+      * without taking into consideration permission checking.
+      *
+      * This method does not return the resources themselves.
+      *
+      * @param searchValue          the values to search for.
+      * @param limitToProject       limit search to given project.
+      * @param limitToResourceClass limit search to given resource class.
+      * @param userProfile          the profile of the client making the request.
+      * @return a [[ReadResourcesSequenceV2]] representing the amount of resources that have been found.
+      */
+    private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+
+        for {
+            countSparql <- Future(queries.sparql.v2.txt.searchFulltext(
+                triplestore = settings.triplestoreType,
+                searchTerms = searchValue,
+                limitToProject = limitToProject,
+                limitToResourceClass = limitToResourceClass,
+                separator = None, // no separator needed for count query
+                limit = 1,
+                offset = 0,
+                countQuery = true // do  not get the resources themselves, but the sum of results
+            ).toString())
+
+            // _ = println(countSparql)
+
+            countResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResponse]
+
+            // query response should contain one result with one row with the name "count"
+            _ = if (countResponse.results.bindings.length != 1) {
+                throw SparqlSearchException(s"Fulltext count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given")
+            }
+
+            count = countResponse.results.bindings.head.rowMap("count")
+
+        } yield ReadResourcesSequenceV2(
+            numberOfResources = count.toInt,
+            resources = Seq.empty[ReadResourceV2] // no results for a count query
+        )
+    }
+
+    /**
       * Performs a fulltext search (simple search).
       *
       * @param searchValue          the values to search for.
@@ -356,9 +400,10 @@ class SearchResponderV2 extends ResponderV2 {
                 searchTerms = searchValue,
                 limitToProject = limitToProject,
                 limitToResourceClass = limitToResourceClass,
-                separator = groupConcatSeparator,
+                separator = Some(groupConcatSeparator),
                 limit = settings.v2ExtendedSearchResultsPerPage,
-                offset = offset * settings.v2ExtendedSearchResultsPerPage // determine the actual offset
+                offset = offset * settings.v2ExtendedSearchResultsPerPage, // determine the actual offset
+                countQuery = false
             ).toString())
 
             // _ = println(searchSparql)

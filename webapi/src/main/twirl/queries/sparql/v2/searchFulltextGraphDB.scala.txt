@@ -20,6 +20,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
+@import org.knora.webapi.SparqlSearchException
 
 @*
  * Performs a simple full-text search using GraphDB.
@@ -37,18 +38,25 @@
  * @param limitToResourceClass limit search to given resource class.
  * @param limit maximal amount of rows to be returned
  * @param offset offset for paging (starts with 0)
+ * @param countQuery indicates whether it is a count query or the actual resources should be returned.
  *@
 @(searchTerms: String,
   limitToProject: Option[IRI],
   limitToResourceClass: Option[IRI],
-  separator: Char,
+  separator: Option[Char],
   limit: Int,
-  offset: Int)
+  offset: Int,
+  countQuery: Boolean)
 
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-SELECT DISTINCT ?resource (GROUP_CONCAT(?valueObject; separator="@separator") AS ?valueObjectConcat) WHERE {
+@if(!countQuery) {
+SELECT DISTINCT ?resource (GROUP_CONCAT(?valueObject; separator="@separator.getOrElse(throw SparqlSearchException("Separator expected for non count query, but none given"))") AS ?valueObjectConcat)
+} else {
+    SELECT (count(distinct ?resource) as ?count)
+}
+WHERE {
 
     {
         SELECT DISTINCT ?matchingSubject WHERE {
@@ -94,7 +102,9 @@ SELECT DISTINCT ?resource (GROUP_CONCAT(?valueObject; separator="@separator") AS
     }
 
 }
+@if(!countQuery) {
 GROUP BY ?resource
 ORDER BY ?resource
 OFFSET @offset
+}
 LIMIT @limit

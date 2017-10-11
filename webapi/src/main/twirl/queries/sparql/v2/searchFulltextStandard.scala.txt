@@ -37,14 +37,16 @@
  * @param separator the separator to be used in aggregation functions.
  * @param limit maximal amount of rows to be returned
  * @param offset offset for paging (starts with 0)
+ * @param countQuery indicates whether it is a count query or the actual resources should be returned.
  *@
 @(triplestore: String,
   searchTerms: String,
   limitToProject: Option[IRI],
   limitToResourceClass: Option[IRI],
-  separator: Char,
+  separator: Option[Char],
   limit: Int,
-  offset: Int)
+  offset: Int,
+  countQuery: Boolean)
 
 @*
 

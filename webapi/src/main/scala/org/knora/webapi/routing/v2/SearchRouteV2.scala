@@ -24,7 +24,7 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.messages.v2.responder.searchmessages.{ExtendedSearchGetRequestV2, FulltextSearchGetRequestV2, SearchResourceByLabelRequestV2}
+import org.knora.webapi.messages.v2.responder.searchmessages.{ExtendedSearchGetRequestV2, FullTextSearchCountGetRequestV2, FulltextSearchGetRequestV2, SearchResourceByLabelRequestV2}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.util.search.v2.SearchParserV2
@@ -118,7 +118,31 @@ object SearchRouteV2 extends Authenticator {
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
-        path("v2" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+        path("v2" / "search" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+            get {
+                requestContext =>
+
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val searchString = InputValidation.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+
+                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+
+                    val limitToProject: Option[IRI] = getProjectFromParams(params)
+
+                    val limitToResourceClass: Option[IRI] = getResourceClassFromParams(params)
+
+                    val requestMessage = FullTextSearchCountGetRequestV2(searchValue = searchString, limitToProject = limitToProject, limitToResourceClass = limitToResourceClass, userProfile = userProfile)
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+        } ~ path("v2" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
