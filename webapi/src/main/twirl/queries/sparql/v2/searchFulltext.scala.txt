@@ -29,20 +29,37 @@
  *
  * @param triplestore the name of the triplestore being used.
  * @param searchTerms search terms.
+ * @param limitToProject limit search to the given project.
+ * @param limitToResourceClass limit search to given resource class.
  * @param separator the separator to be used in aggregation functions.
+ * @param limit maximal amount of rows to be returned
+ * @param offset offset for paging (starts with 0)
  *@
 @(triplestore: String,
   searchTerms: String,
-  separator: Char)
+  limitToProject: Option[IRI],
+  limitToResourceClass: Option[IRI],
+  separator: Char,
+  limit: Int,
+  offset: Int)
 
 @if(triplestore.startsWith("graphdb")) {
     @{
-        queries.sparql.v2.txt.searchFulltextGraphDB(searchTerms = searchTerms, separator = separator)
+        queries.sparql.v2.txt.searchFulltextGraphDB(searchTerms = searchTerms,
+                                                    limitToProject = limitToProject,
+                                                    limitToResourceClass = limitToResourceClass,
+                                                    separator = separator,
+                                                    limit = limit,
+                                                    offset = offset)
     }
 } else {
     @{
         queries.sparql.v2.txt.searchFulltextStandard(triplestore = triplestore,
                                                      searchTerms = searchTerms,
-                                                     separator = separator)
+                                                     limitToProject = limitToProject,
+                                                     limitToResourceClass = limitToResourceClass,
+                                                     separator = separator,
+                                                     limit = limit,
+                                                     offset = offset)
     }
 }

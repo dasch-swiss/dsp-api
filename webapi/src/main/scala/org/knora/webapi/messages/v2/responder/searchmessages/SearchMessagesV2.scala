@@ -37,9 +37,15 @@ sealed trait SearchResponderRequestV2 extends KnoraRequestV2 {
   * Requests a fulltext search. A successful response will be a [[ReadResourcesSequenceV2]].
   *
   * @param searchValue the values to search for.
+  * @param offset the offset to be used for paging.
+  * @param limitToProject limit search to given project.
+  * @param limitToResourceClass limit search to given resource class.
   * @param userProfile the profile of the user making the request.
   */
 case class FulltextSearchGetRequestV2(searchValue: String,
+                                      offset: Int,
+                                      limitToProject: Option[IRI],
+                                      limitToResourceClass: Option[IRI],
                                       userProfile: UserProfileV1) extends SearchResponderRequestV2
 
 /**

@@ -38,6 +38,79 @@ import scala.language.postfixOps
 object SearchRouteV2 extends Authenticator {
     val LIMIT_TO_PROJECT = "limitToProject"
     val LIMIT_TO_RESOURCE_CLASS = "limitToResourceClass"
+    val OFFSET = "offset"
+
+    /**
+      * Gets the requested offset. Returns zero if no offset is indicated.
+      *
+      * @param params the GET parameters.
+      * @return the offset to be used for paging.
+      */
+    private def getOffsetFromParams(params: Map[String, String]): Int = {
+        val offsetStr = params.get(OFFSET)
+
+        offsetStr match {
+            case Some(offset: String) =>
+
+                val offsetInt: Int = InputValidation.toInt(offset, () => throw BadRequestException(s"offset is expected to be an Integer, but $offset given"))
+
+                if (offsetInt < 0) throw BadRequestException(s"offset must be an Integer >= 0, but $offsetInt given.")
+
+                offsetInt
+
+
+            case None => 0
+        }
+    }
+
+    /**
+      * Gets the the project the search should be restricted to, if any.
+      *
+      * @param params the GET parameters.
+      * @return the project Iri, if any.
+      */
+    private def getProjectFromParams(params: Map[String, String]): Option[IRI] = {
+        val limitToProjectIriStr = params.get(LIMIT_TO_PROJECT)
+
+        val limitToProjectIri: Option[IRI] = limitToProjectIriStr match {
+
+            case Some(projectIriStr: String) =>
+                val projectIri = InputValidation.toIri(projectIriStr, () => throw BadRequestException(s"$projectIriStr is not a valid Iri"))
+
+                Some(projectIri)
+
+            case None => None
+
+        }
+
+        limitToProjectIri
+
+    }
+
+    /**
+      * Gets the resource class the search should be restricted to, if any.
+      *
+      * @param params the GET parameters.
+      * @return the internal resource class, if any.
+      */
+    private def getResourceClassFromParams(params: Map[String, String]): Option[IRI] = {
+
+        val limitToResourceClassIriStr = params.get(LIMIT_TO_RESOURCE_CLASS)
+
+        val limitToResourceClassIri: Option[IRI] = limitToResourceClassIriStr match {
+
+            case Some(resourceClassIriStr: String) =>
+
+                val externalResourceClassIri = InputValidation.toIri(resourceClassIriStr, () => throw BadRequestException(s"$resourceClassIriStr is not a valid Iri"))
+
+                Some(InputValidation.externalIriToInternalIri(externalResourceClassIri, () => throw BadRequestException(s"$externalResourceClassIri is not a valid knora-api resource class Iri")))
+
+            case None => None
+
+        }
+
+        limitToResourceClassIri
+    }
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system = _system
@@ -52,7 +125,15 @@ object SearchRouteV2 extends Authenticator {
 
                     val searchString = InputValidation.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
 
-                    val requestMessage = FulltextSearchGetRequestV2(searchValue = searchString, userProfile = userProfile)
+                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+
+                    val offset = getOffsetFromParams(params)
+
+                    val limitToProject: Option[IRI] = getProjectFromParams(params)
+
+                    val limitToResourceClass: Option[IRI] = getResourceClassFromParams(params)
+
+                    val requestMessage = FulltextSearchGetRequestV2(searchValue = searchString, offset = offset, limitToProject = limitToProject, limitToResourceClass = limitToResourceClass, userProfile = userProfile)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,
@@ -95,34 +176,11 @@ object SearchRouteV2 extends Authenticator {
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
 
-                    val limitToProjectIriStr = params.get(LIMIT_TO_PROJECT)
+                    val limitToProject: Option[IRI] = getProjectFromParams(params)
 
-                    val limitToProject: Option[IRI] = limitToProjectIriStr match {
+                    val limitToResourceClass: Option[IRI] = getResourceClassFromParams(params)
 
-                        case Some(projectIriStr: String) =>
-                            val projectIri = InputValidation.toIri(projectIriStr, () => throw BadRequestException(s"$projectIriStr is not a valid Iri"))
-
-                            Some(projectIri)
-
-                        case None => None
-
-                    }
-
-                    val limitToResourceClassIriStr = params.get(LIMIT_TO_RESOURCE_CLASS)
-
-                    val limitToResourceClass: Option[IRI] = limitToResourceClassIriStr match {
-
-                        case Some(resourceClassIriStr: String) =>
-
-                            val externalResourceClassIri = InputValidation.toIri(resourceClassIriStr, () => throw BadRequestException(s"$resourceClassIriStr is not a valid Iri"))
-
-                            Some(InputValidation.externalApiV2WithValueObjectEntityIriToInternalEntityIri(externalResourceClassIri, () => throw BadRequestException(s"$externalResourceClassIri is not a valid knora-api with value object resource class Iri")))
-
-                        case None => None
-
-                    }
-
-                    val requestMessage = SearchResourceByLabelRequestV2(searchValue = searchString, limitToProject = limitToProject, limitToResourceClass = limitToResourceClass,userProfile = userProfile)
+                    val requestMessage = SearchResourceByLabelRequestV2(searchValue = searchString, limitToProject = limitToProject, limitToResourceClass = limitToResourceClass, userProfile = userProfile)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,

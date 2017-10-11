@@ -95,7 +95,7 @@ class SearchResponderV2 extends ResponderV2 {
     val knoraIdUtil = new KnoraIdUtil
 
     def receive = {
-        case FulltextSearchGetRequestV2(searchValue, userProfile) => future2Message(sender(), fulltextSearchV2(searchValue, userProfile), log)
+        case FulltextSearchGetRequestV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile), log)
         case ExtendedSearchGetRequestV2(query, userProfile) => future2Message(sender(), extendedSearchV2(inputQuery = query, userProfile = userProfile), log)
         case SearchResourceByLabelRequestV2(searchValue, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), searchResourcesByLabelV2(searchValue, limitToProject, limitToResourceClass, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
@@ -249,11 +249,14 @@ class SearchResponderV2 extends ResponderV2 {
     /**
       * Performs a fulltext search (simple search).
       *
-      * @param searchValue the values to search for.
-      * @param userProfile the profile of the client making the request.
+      * @param searchValue          the values to search for.
+      * @param offset               the offset to be used for paging.
+      * @param limitToProject       limit search to given project.
+      * @param limitToResourceClass limit search to given resource class.
+      * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def fulltextSearchV2(searchValue: String, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         import SearchResponderV2Constants.FullTextSearchConstants._
 
@@ -351,7 +354,11 @@ class SearchResponderV2 extends ResponderV2 {
             searchSparql <- Future(queries.sparql.v2.txt.searchFulltext(
                 triplestore = settings.triplestoreType,
                 searchTerms = searchValue,
-                separator = groupConcatSeparator
+                limitToProject = limitToProject,
+                limitToResourceClass = limitToResourceClass,
+                separator = groupConcatSeparator,
+                limit = settings.v2ExtendedSearchResultsPerPage,
+                offset = offset * settings.v2ExtendedSearchResultsPerPage // determine the actual offset
             ).toString())
 
             // _ = println(searchSparql)
@@ -1442,22 +1449,15 @@ class SearchResponderV2 extends ResponderV2 {
               * Gets the OFFSET to be used in the prequery (needed for paging).
               *
               * @param inputQueryOffset the OFFSET provided in the input query.
-              * @param limit            the amount of result rows to be returned by the prequery
+              * @param limit            the maximum amount of result rows to be returned by the prequery.
               * @return the OFFSET.
               */
             def getOffset(inputQueryOffset: Long, limit: Int): Long = {
 
                 if (inputQueryOffset < 0) throw AssertionException("Negative OFFSET is illegal.")
 
-                if (inputQueryOffset == 0) {
-                    // first page, offset is zero
-                    0
-                } else {
-                    // subsequent page -> multiply offset with limit
-                    // for instance: the user requests offset 1, meaning that he wants to get the second page of results.
-                    // the OFFSET equals the amount of previous pages and has to be multiplied with the LIMIT used to get the number of rows.
-                    inputQueryOffset * limit
-                }
+                // determine offset for paging -> multiply given offset with limit (indicating the maximum amount of results per page).
+                inputQueryOffset * limit
 
             }
 

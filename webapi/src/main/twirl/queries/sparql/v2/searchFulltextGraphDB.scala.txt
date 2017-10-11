@@ -33,9 +33,17 @@
  *
  * @param searchTerms search terms.
  * @param separator the separator to be used in aggregation functions.
+ * @param limitToProject limit search to the given project.
+ * @param limitToResourceClass limit search to given resource class.
+ * @param limit maximal amount of rows to be returned
+ * @param offset offset for paging (starts with 0)
  *@
 @(searchTerms: String,
-  separator: Char)
+  limitToProject: Option[IRI],
+  limitToResourceClass: Option[IRI],
+  separator: Char,
+  limit: Int,
+  offset: Int)
 
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -77,8 +85,16 @@ SELECT DISTINCT ?resource (GROUP_CONCAT(?valueObject; separator="@separator") AS
     ?resource a knora-base:Resource ;
         knora-base:isDeleted false .
 
+    @if(limitToResourceClass.nonEmpty) {
+        ?resource a <@limitToResourceClass.get> .
+    }
+
+    @if(limitToProject.nonEmpty) {
+        ?resource knora-base:attachedToProject <@limitToProject.get>
+    }
+
 }
 GROUP BY ?resource
 ORDER BY ?resource
-OFFSET 0
-LIMIT 25
+OFFSET @offset
+LIMIT @limit

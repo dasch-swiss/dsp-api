@@ -30,6 +30,8 @@
  *
  * @param triplestore the name of the triplestore being used.
  * @param searchTerms search terms.
+ * @param limitToProject limit search to the given project.
+ * @param limitToResourceClass limit search to given resource class.
  *@
 @(triplestore: String,
   searchTerm: MatchStringWhileTyping,
