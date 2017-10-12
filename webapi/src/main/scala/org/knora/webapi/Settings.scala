@@ -41,6 +41,7 @@ class SettingsImpl(config: Config) extends Extension {
 
     val knoraApiHost: String = config.getString("app.http.knora-api.host")
     val knoraApiHttpPort: Int = config.getInt("app.http.knora-api.http-port")
+    val knoraApiHttpUrlStart: String = "http://" + knoraApiHost + (if (knoraApiHttpPort != 80) ":" + knoraApiHttpPort else "")
     val knoraApiHttpsPort: Int = config.getInt("app.http.knora-api.https-port")
     val knoraApiUseHttp: Boolean = config.getBoolean("app.http.knora-api.use-http")
     val knoraApiUseHttps: Boolean = config.getBoolean("app.http.knora-api.use-https")

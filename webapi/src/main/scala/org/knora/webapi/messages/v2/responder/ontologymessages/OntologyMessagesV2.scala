@@ -181,19 +181,21 @@ case class NamedGraphsGetRequestV2(userProfile: UserProfileV1) extends Ontologie
   * Requests entity definitions for the given named graphs.
   *
   * @param namedGraphIris the named graphs to query for.
+  * @param responseSchema    the API schema that will be used for the response.
   * @param allLanguages   true if information in all available languages should be returned.
   * @param userProfile    the profile of the user making the request.
   */
-case class NamedGraphEntitiesGetRequestV2(namedGraphIris: Set[IRI], allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class NamedGraphEntitiesGetRequestV2(namedGraphIris: Set[IRI], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
   * Requests the entity definitions for the given class IRIs. A successful response will be a [[ReadEntityDefinitionsV2]].
   *
   * @param resourceClassIris the IRIs of the classes to be queried.
+  * @param responseSchema    the API schema that will be used for the response.
   * @param allLanguages      true if information in all available languages should be returned.
   * @param userProfile       the profile of the user making the request.
   */
-case class ClassesGetRequestV2(resourceClassIris: Set[IRI], allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class ClassesGetRequestV2(resourceClassIris: Set[IRI], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
   * Requests the entity definitions for the given property Iris. A successful response will be a [[ReadEntityDefinitionsV2]].
@@ -261,7 +263,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
         val jsonOntologies: Map[IRI, JsonLDArray] = ontologies.map {
             case (namedGraphIri: IRI, classIris: Set[IRI]) =>
-                val classIrisInOntology = classIris.toSeq.map {
+                val classIrisInOntology = classIris.toArray.sorted.map {
                     classIri =>
                         JsonLDString(stringFormatter.toExternalEntityIri(
                             entityIri = classIri,
@@ -856,7 +858,7 @@ case class ClassEntityInfoV2(classIri: IRI,
         }
 
         // Convert OWL cardinalities to JSON-LD.
-        val owlCardinalities: Seq[JsonLDObject] = schemaSpecificCardinalities.map {
+        val owlCardinalities: Seq[JsonLDObject] = schemaSpecificCardinalities.toArray.sortBy(_._1).map {
             case (propertyIri: IRI, cardinality: Cardinality.Value) =>
 
                 val prop2card: (IRI, JsonLDInt) = cardinality match {
@@ -871,7 +873,7 @@ case class ClassEntityInfoV2(classIri: IRI,
                     OntologyConstants.Owl.OnProperty -> JsonLDString(propertyIri),
                     prop2card
                 ))
-        }.toSeq
+        }
 
         val convertedResourceClassIri = stringFormatter.toExternalEntityIri(
             entityIri = classIri,
@@ -908,7 +910,7 @@ case class ClassEntityInfoV2(classIri: IRI,
                     )))
         }
 
-        val jsonSubClassOf = subClassOf.toSeq.map {
+        val jsonSubClassOf = subClassOf.toArray.sorted.map {
             superClass =>
                 JsonLDString(
                     stringFormatter.toExternalEntityIri(

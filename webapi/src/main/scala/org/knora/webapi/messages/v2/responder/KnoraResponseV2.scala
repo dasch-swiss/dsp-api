@@ -703,7 +703,7 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
         val projectSpecificOntologyPrefixes: Map[IRI, JsonLDString] = internalProjectSpecificOntologiesUsed.map {
             internalOntologyIri =>
                 val prefix = stringFormatter.getOntologyPrefixLabelFromInternalOntologyIri(internalOntologyIri, () => throw InconsistentTriplestoreDataException(s"Invalid internal ontology IRI: $internalOntologyIri"))
-                val externalOntologyIri = stringFormatter.internalOntologyIriToApiV2WithValueObjectOntologyIri(internalOntologyIri, () => throw InconsistentTriplestoreDataException(s"Invalid internal ontology IRI: $internalOntologyIri"))
+                val externalOntologyIri = stringFormatter.internalOntologyIriToApiV2WithValueObjectsOntologyIri(internalOntologyIri, () => throw InconsistentTriplestoreDataException(s"Invalid internal ontology IRI: $internalOntologyIri"))
                 (prefix, JsonLDString(externalOntologyIri + "#"))
         }.toMap
 

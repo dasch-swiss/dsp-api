@@ -82,8 +82,8 @@ class OntologyResponderV2 extends Responder {
         case CheckSubClassRequestV2(subClassIri, superClassIri, userProfile) => future2Message(sender(), checkSubClassV2(subClassIri, superClassIri, userProfile), log)
         case SubClassesGetRequestV2(resourceClassIri, userProfile) => future2Message(sender(), getSubClassesV2(resourceClassIri, userProfile), log)
         case NamedGraphEntitiesRequestV2(namedGraphIri, userProfile) => future2Message(sender(), getNamedGraphEntityInfoV2ForNamedGraphV2(namedGraphIri, userProfile), log)
-        case NamedGraphEntitiesGetRequestV2(namedGraphIris, allLanguages, userProfile) => future2Message(sender(), getEntitiesForNamedGraphV2(namedGraphIris, allLanguages, userProfile), log)
-        case ClassesGetRequestV2(resourceClassIris, allLanguages, userProfile) => future2Message(sender(), getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris, allLanguages, userProfile), log)
+        case NamedGraphEntitiesGetRequestV2(namedGraphIris, responseSchema, allLanguages, userProfile) => future2Message(sender(), getEntitiesForNamedGraphV2(namedGraphIris, responseSchema, allLanguages, userProfile), log)
+        case ClassesGetRequestV2(resourceClassIris, responseSchema, allLanguages, userProfile) => future2Message(sender(), getClassDefinitionsWithCardinalitiesV2(resourceClassIris, responseSchema, allLanguages, userProfile), log)
         case PropertyEntitiesGetRequestV2(propertyIris, allLanguages, userProfile) => future2Message(sender(), getPropertyDefinitionsV2(propertyIris, allLanguages, userProfile), log)
         case NamedGraphsGetRequestV2(userProfile) => future2Message(sender(), getNamedGraphsV2(userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
@@ -851,7 +851,7 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile    the profile of the user making the request.
       * @return a [[ReadEntityDefinitionsV2]].
       */
-    private def getEntitiesForNamedGraphV2(namedGraphIris: Set[IRI], allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
+    private def getEntitiesForNamedGraphV2(namedGraphIris: Set[IRI], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
 
         for {
 
@@ -876,11 +876,17 @@ class OntologyResponderV2 extends Responder {
 
             entitiesForNamedGraphsMap: Map[IRI, NamedGraphEntityInfoV2] = entitiesForNamedGraphs.toMap
 
-            // collect all resource class Iris
-            resourceClassIris: Set[IRI] = entitiesForNamedGraphsMap.values.flatMap(_.classIris).toSet
+            // collect all class and property IRIs
+            classIris: Set[IRI] = entitiesForNamedGraphsMap.values.flatMap(_.classIris).toSet
             propertyIris: Set[IRI] = entitiesForNamedGraphsMap.values.flatMap(_.propertyIris).toSet
 
-            readEntityDefsForClasses: ReadEntityDefinitionsV2 <- getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris, allLanguages, userProfile = userProfile)
+            readEntityDefsForClasses: ReadEntityDefinitionsV2 <- getClassDefinitionsWithCardinalitiesV2(
+                classIris,
+                responseSchema,
+                allLanguages,
+                userProfile = userProfile
+            )
+
             readEntityDefsForProperties: ReadEntityDefinitionsV2 <- getPropertyDefinitionsV2(propertyIris, allLanguages, userProfile = userProfile)
 
             ontologiesWithClasses: Map[IRI, Set[IRI]] = entitiesForNamedGraphsMap.map {
@@ -901,11 +907,11 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile       the profile of the user making the request.
       * @return a [[ReadEntityDefinitionsV2]].
       */
-    private def getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris: Set[IRI], allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
+    private def getClassDefinitionsWithCardinalitiesV2(resourceClassIris: Set[IRI], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
         for {
 
         // request information about the given resource class Iris
-            resourceClassResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(classIris = resourceClassIris, userProfile = userProfile)
+            classInfoResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(classIris = resourceClassIris, userProfile = userProfile)
 
             // get the subclassOf relations of the given resource classes
             /*
@@ -916,11 +922,16 @@ class OntologyResponderV2 extends Responder {
             }.toMap
             */
 
+            knoraApiResourceClass = responseSchema match {
+                case ApiV2Simple => KnoraApiV2Simple.Resource
+                case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.Resource
+            }
+
             // get all property Iris from cardinalities
-            propertyIris: Set[IRI] = resourceClassResponse.classEntityInfoMap.values.foldLeft(Set.empty[IRI]) {
+            propertyIris: Set[IRI] = classInfoResponse.classEntityInfoMap.values.foldLeft(Set.empty[IRI]) {
                 case (acc: Set[IRI], resourceEntityInfo: ClassEntityInfoV2) =>
                     acc ++ resourceEntityInfo.cardinalities.keySet
-            }
+            } ++ knoraApiResourceClass.cardinalities.keySet
 
             // request information about the properties for which cardinalities are defined
             propertiesResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, userProfile = userProfile)
@@ -934,7 +945,7 @@ class OntologyResponderV2 extends Responder {
                 None
             }
 
-        } yield ReadEntityDefinitionsV2(classes = resourceClassResponse.classEntityInfoMap, properties = propertiesResponse.propertyEntityInfoMap, userLang = userLang)
+        } yield ReadEntityDefinitionsV2(classes = classInfoResponse.classEntityInfoMap, properties = propertiesResponse.propertyEntityInfoMap, userLang = userLang)
     }
 
     /**

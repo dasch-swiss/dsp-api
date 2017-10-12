@@ -94,7 +94,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "serve a project-specific ontology as JSON-LD via the namedgraphs route using the simple schema" in {
-            val ontologyIri = URLEncoder.encode("http://api.knora.org/ontology/incunabula/simple/v2", "UTF-8")
+            val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/simple/v2", "UTF-8")
 
             Get(s"/v2/ontologies/namedgraphs/$ontologyIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
@@ -110,7 +110,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "serve a project-specific ontology as JSON-LD via the namedgraphs route using the value object schema" in {
-            val ontologyIri = URLEncoder.encode("http://api.knora.org/ontology/incunabula/v2", "UTF-8")
+            val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/v2", "UTF-8")
 
             Get(s"/v2/ontologies/namedgraphs/$ontologyIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
@@ -162,7 +162,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "serve a project-specific property as JSON-LD using the simple schema" in {
-            val classIri = URLEncoder.encode("http://api.knora.org/ontology/incunabula/simple/v2#pubdate", "UTF-8")
+            val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/simple/v2#pubdate", "UTF-8")
 
             Get(s"/v2/ontologies/properties/$classIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
@@ -171,7 +171,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "serve a project-specific property as JSON-LD using the value object schema" in {
-            val classIri = URLEncoder.encode("http://api.knora.org/ontology/incunabula/v2#pubdate", "UTF-8")
+            val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/v2#pubdate", "UTF-8")
 
             Get(s"/v2/ontologies/properties/$classIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
