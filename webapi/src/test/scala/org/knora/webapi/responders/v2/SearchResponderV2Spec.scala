@@ -124,7 +124,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "perform a search by label for incunabula:book that contain 'Narrenschiff'" in {
 
-            actorUnderTest ! SearchResourceByLabelRequestV2(
+            actorUnderTest ! SearchResourceByLabelGetRequestV2(
                 searchValue = "Narrenschiff",
                 offset = 0,
                 limitToProject = None,

@@ -31,13 +31,15 @@
  * @param limitToResourceClass limit search to given resource class.
  * @param limit maximum amount of resources to be returned.
  * @param offset offset to be used for paging.
+ * @param countQuery indicates whether it is a count query or the actual resources should be returned.
  *@
 @(triplestore: String,
   searchTerm: MatchStringWhileTyping,
   limitToProject: Option[IRI],
   limitToResourceClass: Option[IRI],
   limit: Int,
-  offset: Int)
+  offset: Int,
+  countQuery: Boolean)
 
   @*
 

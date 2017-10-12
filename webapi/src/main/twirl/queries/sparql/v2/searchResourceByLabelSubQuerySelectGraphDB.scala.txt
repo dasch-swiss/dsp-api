@@ -23,48 +23,48 @@
 @import org.knora.webapi.util.search.ApacheLuceneSupport.MatchStringWhileTyping
 
 @*
- * Performs a search for resources by their label.
+ * Select subquery for a search for resources by their label.
  *
- * If the triplestore type is GraphDB, this template delegates to searchResourceByLabelGraphDB.sparql.txt, which is optimised
- * for GraphDB. Otherwise, it delegates to searchResourceByLabelStandard.sparql.txt.
- *
- * @param triplestore the name of the triplestore being used.
- * @param searchTerms search terms.
+ * @param searchTerm search terms.
  * @param limitToProject limit search to the given project.
  * @param limitToResourceClass limit search to given resource class.
  * @param limit maximum amount of resources to be returned.
  * @param offset offset to be used for paging.
  * @param countQuery indicates whether it is a count query or the actual resources should be returned.
  *@
-@(triplestore: String,
-  searchTerm: MatchStringWhileTyping,
-  limitToProject: Option[IRI],
-  limitToResourceClass: Option[IRI],
-  limit: Int,
-  offset: Int,
-  countQuery: Boolean)
 
-@if(triplestore.startsWith("graphdb")) {
-    @{
-        queries.sparql.v2.txt.searchResourceByLabelGraphDB(
-            searchTerm = searchTerm,
-            limitToProject = limitToProject,
-            limitToResourceClass = limitToResourceClass,
-            limit = limit,
-            offset = offset,
-            countQuery = countQuery
-        )
-    }
+ @(searchTerm: MatchStringWhileTyping,
+   limitToProject: Option[IRI],
+   limitToResourceClass: Option[IRI],
+   limit: Int,
+   offset: Int,
+   countQuery: Boolean)
+
+@if(!countQuery) {
+    SELECT DISTINCT ?resource ?label
 } else {
-    @{
-        queries.sparql.v2.txt.searchResourceByLabelStandard(
-            triplestore = triplestore,
-            searchTerm = searchTerm,
-            limitToProject = limitToProject,
-            limitToResourceClass = limitToResourceClass,
-            limit = limit,
-            offset = offset,
-            countQuery = countQuery
-        )
-    }
+    SELECT (count(distinct ?resource) as ?count)
 }
+WHERE {
+    ?resource a knora-base:Resource ;
+        knora-base:isDeleted false .
+
+    @if(limitToResourceClass.nonEmpty) {
+        ?resource a <@limitToResourceClass.get> .
+    }
+
+    @if(limitToProject.nonEmpty) {
+        ?resource knora-base:attachedToProject <@limitToProject.get>
+    }
+
+    GRAPH <http://www.ontotext.com/explicit> {
+            ?resource rdfs:label ?label .
+        }
+
+    ?label <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> @searchTerm.generateLiteralForLuceneIndexWithoutExactSequence .
+}
+@if(!countQuery) {
+ORDER BY ?resource @* Needed for paging: order needs to be deterministic *@
+}
+LIMIT @limit
+OFFSET @offset

@@ -98,7 +98,8 @@ class SearchResponderV2 extends ResponderV2 {
         case FullTextSearchCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, userProfile), log)
         case FulltextSearchGetRequestV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile), log)
         case ExtendedSearchGetRequestV2(query, userProfile) => future2Message(sender(), extendedSearchV2(inputQuery = query, userProfile = userProfile), log)
-        case SearchResourceByLabelRequestV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile), log)
+        case SearchResourceByLabelCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass, userProfile), log)
+        case SearchResourceByLabelGetRequestV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -2028,7 +2029,49 @@ class SearchResponderV2 extends ResponderV2 {
     }
 
     /**
-      * Performs a search for resources by their rdf:label.
+      * Performs a count query for a search for resources by their rdfs:label.
+      *
+      * @param searchValue          the values to search for.
+      * @param limitToProject       limit search to given project.
+      * @param limitToResourceClass limit search to given resource class.
+      * @param userProfile          the profile of the client making the request.
+      * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
+      */
+    private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[IRI], userProfile: UserProfileV1) = {
+
+        val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
+
+        for {
+            countSparql <- Future(queries.sparql.v2.txt.searchResourceByLabel(
+                triplestore = settings.triplestoreType,
+                searchTerm = searchPhrase,
+                limitToProject = limitToProject,
+                limitToResourceClass = limitToResourceClass,
+                limit = 1,
+                offset = 0,
+                countQuery = true
+            ).toString())
+
+            // _ = println(countSparql)
+
+            countResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResponse]
+
+            // query response should contain one result with one row with the name "count"
+            _ = if (countResponse.results.bindings.length != 1) {
+                throw SparqlSearchException(s"Fulltext count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given")
+            }
+
+            count = countResponse.results.bindings.head.rowMap("count")
+
+        } yield ReadResourcesSequenceV2(
+            numberOfResources = count.toInt,
+            resources = Seq.empty[ReadResourceV2] // no results for a count query
+        )
+
+    }
+
+    /**
+      * Performs a search for resources by their rdfs:label.
       *
       * @param searchValue          the values to search for.
       * @param offset the offset to be used for paging.
@@ -2048,21 +2091,54 @@ class SearchResponderV2 extends ResponderV2 {
                 limitToProject = limitToProject,
                 limitToResourceClass = limitToResourceClass,
                 limit = settings.v2ExtendedSearchResultsPerPage,
-                offset = offset * settings.v2ExtendedSearchResultsPerPage
+                offset = offset * settings.v2ExtendedSearchResultsPerPage,
+                countQuery = false
             ).toString())
 
             // _ = println(searchResourceByLabelSparql)
 
             searchResourceByLabelResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchResourceByLabelSparql)).mapTo[SparqlConstructResponse]
 
+            // collect the Iris of main resources returned
+            mainResourceIris: Set[IRI] = searchResourceByLabelResponse.statements.foldLeft(Set.empty[IRI]) {
+                case (acc: Set[IRI], (subjIri: IRI, assertions: Seq[(IRI, String)])) =>
+                    //statement.pred == OntologyConstants.KnoraBase.IsMainResource && statement.obj.toBoolean
+
+                    // check if the assertions represent a main resource and include its Iri if so
+                    val subjectIsMainResource: Boolean = assertions.contains((OntologyConstants.Rdf.Type, OntologyConstants.KnoraBase.Resource)) && assertions.exists {
+                        case (pred, obj) =>
+                            pred == OntologyConstants.KnoraBase.IsMainResource && obj.toBoolean
+                    }
+
+                    if (subjectIsMainResource) {
+                        acc + subjIri
+                    } else {
+                        acc
+                    }
+            }
+
+            // _ = println(mainResourceIris.size)
+
             // separate resources and value objects
             queryResultsSeparated = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResourceByLabelResponse, userProfile = userProfile)
+
+            // check if there are resources the user does not have sufficient permissions to see
+            forbiddenResourceOption: Option[ReadResourceV2] <- if (mainResourceIris.size > queryResultsSeparated.size) {
+                // some of the main resources have been suppressed, represent them using the forbidden resource
+                getForbiddenResource(userProfile)
+            } else {
+                // all resources visible, no need for the forbidden resource
+                Future(None)
+            }
 
         //_ = println(queryResultsSeparated)
 
         } yield ReadResourcesSequenceV2(
             numberOfResources = queryResultsSeparated.size,
-            resources = ConstructResponseUtilV2.createSearchResponse(searchResults = queryResultsSeparated, orderByResourceIri = queryResultsSeparated.keysIterator.toSeq, forbiddenResource = None)
+            resources = ConstructResponseUtilV2.createSearchResponse(
+                searchResults = queryResultsSeparated,
+                orderByResourceIri = mainResourceIris.toSeq.sorted,
+                forbiddenResource = forbiddenResourceOption)
         )
 
 
