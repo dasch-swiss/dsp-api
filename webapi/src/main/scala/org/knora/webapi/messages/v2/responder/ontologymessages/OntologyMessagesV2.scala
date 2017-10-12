@@ -25,7 +25,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.util.InputValidation
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.jsonld._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -218,6 +218,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                                    classes: Map[IRI, ClassEntityInfoV2] = Map.empty[IRI, ClassEntityInfoV2],
                                    properties: Map[IRI, PropertyEntityInfoV2] = Map.empty[IRI, PropertyEntityInfoV2], userLang: Option[String]) extends KnoraResponseV2 {
 
+    private val stringFormatter = StringFormatter.getInstance
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         // Make JSON-LD prefixes for the project-specific ontologies used in the response.
@@ -236,8 +237,8 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
         val projectSpecificOntologyPrefixes: Map[String, JsonLDString] = internalProjectSpecificOntologiesUsed.map {
             internalOntologyIri =>
-                val prefix = InputValidation.getOntologyPrefixLabelFromInternalOntologyIri(internalOntologyIri, () => throw InconsistentTriplestoreDataException(s"Can't parse $internalOntologyIri as an internal ontology IRI"))
-                val externalOntologyIri = InputValidation.toExternalOntologyIri(ontologyIri = internalOntologyIri, targetSchema = targetSchema)
+                val prefix = stringFormatter.getOntologyPrefixLabelFromInternalOntologyIri(internalOntologyIri, () => throw InconsistentTriplestoreDataException(s"Can't parse $internalOntologyIri as an internal ontology IRI"))
+                val externalOntologyIri = stringFormatter.toExternalOntologyIri(ontologyIri = internalOntologyIri, targetSchema = targetSchema)
                 prefix -> JsonLDString(externalOntologyIri + "#")
         }.toMap
 
@@ -262,13 +263,13 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
             case (namedGraphIri: IRI, classIris: Set[IRI]) =>
                 val classIrisInOntology = classIris.toSeq.map {
                     classIri =>
-                        JsonLDString(InputValidation.toExternalEntityIri(
+                        JsonLDString(stringFormatter.toExternalEntityIri(
                             entityIri = classIri,
                             targetSchema = targetSchema
                         ))
                 }
 
-                val convertedNamedGraphIri = InputValidation.toExternalOntologyIri(
+                val convertedNamedGraphIri = stringFormatter.toExternalOntologyIri(
                     ontologyIri = namedGraphIri,
                     targetSchema = targetSchema
                 )
@@ -281,7 +282,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
         val jsonClasses: Map[IRI, JsonLDObject] = classes.map {
             case (classIri: IRI, resourceEntity: ClassEntityInfoV2) =>
-                val externalClassIri = InputValidation.toExternalEntityIri(
+                val externalClassIri = stringFormatter.toExternalEntityIri(
                     entityIri = classIri,
                     targetSchema = targetSchema
                 )
@@ -307,7 +308,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
         val jsonProperties: Map[IRI, JsonLDObject] = filteredProperties.map {
             case (propertyIri, propertyInfo) =>
-                val externalPropertyIri = InputValidation.toExternalEntityIri(
+                val externalPropertyIri = stringFormatter.toExternalEntityIri(
                     entityIri = propertyIri,
                     targetSchema = targetSchema
                 )
@@ -353,6 +354,8 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
 case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
 
+    private val stringFormatter = StringFormatter.getInstance
+
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         val knoraApiOntologyPrefixExpansion = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
@@ -364,7 +367,7 @@ case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
         ))
 
         val namedGraphIris: Seq[JsonLDString] = namedGraphs.toSeq.map {
-            namedGraphIri => JsonLDString(InputValidation.toExternalOntologyIri(namedGraphIri, targetSchema))
+            namedGraphIri => JsonLDString(stringFormatter.toExternalOntologyIri(namedGraphIri, targetSchema))
         }
 
         val hasOntologiesProp = targetSchema match {
@@ -639,9 +642,11 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
                                 predicates: Map[IRI, PredicateInfoV2] = Map.empty[IRI, PredicateInfoV2],
                                 subPropertyOf: Set[IRI] = Set.empty[IRI],
                                 ontologySchema: OntologySchema) extends EntityInfoWithLabelAndCommentV2 {
+    private val stringFormatter = StringFormatter.getInstance
+
     def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
         // If this is an internal property IRI, convert it to an external one.
-        val convertedPropertyIri = InputValidation.toExternalEntityIri(
+        val convertedPropertyIri = stringFormatter.toExternalEntityIri(
             entityIri = propertyIri,
             targetSchema = targetSchema
         )
@@ -680,7 +685,7 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
                 // the specified type to an API type for the target schema.
                 maybeInternalSubjectClassConstraint match {
                     case Some(internalSubjectClassConstraint) =>
-                        Some(InputValidation.toExternalEntityIri(
+                        Some(stringFormatter.toExternalEntityIri(
                             entityIri = internalSubjectClassConstraint,
                             targetSchema = targetSchema
                         ))
@@ -700,7 +705,7 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
                 // the specified type to an API type for the target schema.
                 maybeInternalObjectClassConstraint match {
                     case Some(internalObjectClassConstraint) =>
-                        Some(InputValidation.toExternalEntityIri(
+                        Some(stringFormatter.toExternalEntityIri(
                             entityIri = internalObjectClassConstraint,
                             targetSchema = targetSchema
                         ))
@@ -756,7 +761,7 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
             case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.BelongsToOntology
         }
 
-        val convertedOntologyIri: IRI = InputValidation.toExternalOntologyIri(
+        val convertedOntologyIri: IRI = stringFormatter.toExternalOntologyIri(
             ontologyIri = ontologyIri,
             targetSchema = targetSchema
         )
@@ -764,7 +769,7 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
         val jsonSubPropertyOf: Seq[JsonLDString] = subPropertyOf.toSeq.map {
             superProperty =>
                 JsonLDString(
-                    InputValidation.toExternalEntityIri(
+                    stringFormatter.toExternalEntityIri(
                         entityIri = superProperty,
                         targetSchema = targetSchema
                     )
@@ -825,11 +830,13 @@ case class ClassEntityInfoV2(classIri: IRI,
                              subClassOf: Set[IRI] = Set.empty[IRI],
                              ontologySchema: OntologySchema) extends EntityInfoWithLabelAndCommentV2 {
 
+    private val stringFormatter = StringFormatter.getInstance
+
     def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
         // Convert the property IRIs in the cardinalities according to the target schema.
         val cardinalitiesWithTargetSchemaIris = cardinalities.map {
             case (propertyIri: IRI, cardinality: Cardinality.Value) =>
-                val schemaPropertyIri: IRI = InputValidation.toExternalEntityIri(
+                val schemaPropertyIri: IRI = stringFormatter.toExternalEntityIri(
                     entityIri = propertyIri,
                     targetSchema = targetSchema
                 )
@@ -866,7 +873,7 @@ case class ClassEntityInfoV2(classIri: IRI,
                 ))
         }.toSeq
 
-        val convertedResourceClassIri = InputValidation.toExternalEntityIri(
+        val convertedResourceClassIri = stringFormatter.toExternalEntityIri(
             entityIri = classIri,
             targetSchema = targetSchema
         )
@@ -876,7 +883,7 @@ case class ClassEntityInfoV2(classIri: IRI,
             case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.BelongsToOntology
         }
 
-        val convertedOntologyIri = InputValidation.toExternalOntologyIri(
+        val convertedOntologyIri = stringFormatter.toExternalOntologyIri(
             ontologyIri = ontologyIri,
             targetSchema = targetSchema
         )
@@ -904,7 +911,7 @@ case class ClassEntityInfoV2(classIri: IRI,
         val jsonSubClassOf = subClassOf.toSeq.map {
             superClass =>
                 JsonLDString(
-                    InputValidation.toExternalEntityIri(
+                    stringFormatter.toExternalEntityIri(
                         entityIri = superClass,
                         targetSchema = targetSchema
                     )

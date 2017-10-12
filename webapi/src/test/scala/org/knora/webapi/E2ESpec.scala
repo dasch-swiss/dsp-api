@@ -23,6 +23,7 @@ import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.util.StringFormatter
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 
 import scala.concurrent.duration._
@@ -39,6 +40,10 @@ object E2ESpec {
   */
 class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
 
+    /* needed by the core trait */
+    implicit lazy val settings: SettingsImpl = Settings(system)
+    StringFormatter.init(settings)
+
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESpec.defaultConfig)))
 
     def this(config: Config) = this(ActorSystem("E2ETest", config.withFallback(E2ESpec.defaultConfig)))
@@ -49,9 +54,6 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite wi
 
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system
-
-    /* needed by the core trait */
-    implicit lazy val settings: SettingsImpl = Settings(system)
 
     /* needed by the core trait */
     implicit lazy val log: LoggingAdapter = akka.event.Logging(system, "E2ESpec")

@@ -36,12 +36,14 @@ import spray.json.JsonParser
 
 import scala.util.matching.Regex
 
-
-/**
-  * Do save String to expected value type conversions (to be inserted in the SPARQL template).
-  * If the conversion fails, the callback function `errorFun` is called
-  */
-object InputValidation {
+object StringFormatter {
+    /**
+      * A container for an XML import namespace and its prefix label.
+      *
+      * @param namespace   the namespace.
+      * @param prefixLabel the prefix label.
+      */
+    case class XmlImportNamespaceInfoV1(namespace: IRI, prefixLabel: String)
 
     /**
       * Separates the calendar name from the rest of a Knora date.
@@ -78,6 +80,27 @@ object InputValidation {
       */
     val Era_CE: String = "CE"
 
+
+    var maybeInstance: Option[StringFormatter] = None
+
+    def getInstance: StringFormatter = {
+        maybeInstance match {
+            case Some(instance) => instance
+            case None => throw AssertionException("StringFormatter not yet initialised")
+        }
+    }
+
+    def init(settings: SettingsImpl): Unit = {
+        maybeInstance = Some(new StringFormatter(settings))
+    }
+}
+
+
+/**
+  * Handles string formatting and validation.
+  */
+class StringFormatter private(settings: SettingsImpl) {
+    import StringFormatter._
 
     // The expected format of a Knora date.
     // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
@@ -585,14 +608,6 @@ object InputValidation {
     }
 
     /**
-      * A container for an XML import namespace and its prefix label.
-      *
-      * @param namespace   the namespace.
-      * @param prefixLabel the prefix label.
-      */
-    case class XmlImportNamespaceInfoV1(namespace: IRI, prefixLabel: String)
-
-    /**
       * Converts the IRI of a project-specific internal ontology (used in the triplestore) to an XML prefix label and
       * namespace for use in data import.
       *
@@ -1008,7 +1023,7 @@ object InputValidation {
         val splitPath: Array[String] = mapPath.split('/')
 
         for (name <- splitPath) {
-            InputValidation.toNCName(name, () => errorFun())
+            toNCName(name, () => errorFun())
         }
 
         mapPath
@@ -1101,7 +1116,7 @@ object InputValidation {
       * @return the IRI of an entity that the ontology responder can provide.
       */
     def requestedEntityToEntityForResponder(requestedEntity: IRI): IRI = {
-        if (InputValidation.isBuiltInEntityIri(requestedEntity)) {
+        if (isBuiltInEntityIri(requestedEntity)) {
             // The client is asking about a built-in class, so don't translate its IRI.
             requestedEntity
         } else {

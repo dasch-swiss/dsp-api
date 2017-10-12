@@ -350,12 +350,12 @@ class ValuesResponderV1 extends Responder {
                 //
                 // Therefore, in the GenerateSparqlToCreateMultipleValuesRequestV1 we received, the standoff link targets
                 // that don't yet exist are represented as client resource IDs, while the targets that really exist are
-                // represented as ordinary IRIs. InputValidation.isStandoffLinkReferenceToClientIDForResource() can tell
+                // represented as ordinary IRIs. StringFormatter.isStandoffLinkReferenceToClientIDForResource() can tell
                 // us which are which.
                 //
                 // So now we can get the set of standoff link targets that are ordinary IRIs, and check that each of
                 // them exists in the triplestore and is a knora-base:Resource.
-                targetIrisThatAlreadyExist: Set[IRI] = targetIris.keySet.filterNot(iri => InputValidation.isStandoffLinkReferenceToClientIDForResource(iri))
+                targetIrisThatAlreadyExist: Set[IRI] = targetIris.keySet.filterNot(iri => stringFormatter.isStandoffLinkReferenceToClientIDForResource(iri))
                 targetIriCheckResult <- checkStandoffResourceReferenceTargets(targetIris = targetIrisThatAlreadyExist, userProfile = createMultipleValuesRequest.userProfile)
 
                 // For each target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property and one LinkValue,
@@ -363,7 +363,7 @@ class ValuesResponderV1 extends Responder {
                 standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = targetIris.toSeq.map {
                     case (targetIri, initialReferenceCount) =>
                         // If the target of a standoff link is a client ID for a resource, convert it to the corresponding real resource IRI.
-                        val realTargetIri = InputValidation.toRealStandoffLinkTargetResourceIri(iri = targetIri, clientResourceIDsToResourceIris = createMultipleValuesRequest.clientResourceIDsToResourceIris)
+                        val realTargetIri = stringFormatter.toRealStandoffLinkTargetResourceIri(iri = targetIri, clientResourceIDsToResourceIris = createMultipleValuesRequest.clientResourceIDsToResourceIris)
 
                         SparqlTemplateLinkUpdate(
                             linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
@@ -478,7 +478,7 @@ class ValuesResponderV1 extends Responder {
                                                             attributes = standoffTag.attributes.map {
                                                                 case iriAttribute: StandoffTagIriAttributeV1 =>
                                                                     iriAttribute.copy(
-                                                                        value = InputValidation.toRealStandoffLinkTargetResourceIri(
+                                                                        value = stringFormatter.toRealStandoffLinkTargetResourceIri(
                                                                             iri = iriAttribute.value,
                                                                             clientResourceIDsToResourceIris = createMultipleValuesRequest.clientResourceIDsToResourceIris
                                                                         )
@@ -725,7 +725,7 @@ class ValuesResponderV1 extends Responder {
                 case _ => changeFileValueRequest.file match {
                     case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
                         // a tmp file has been created by the resources route (non GUI-case), delete it
-                        InputValidation.deleteFileFromTmpLocation(conversionPathRequest.source, log)
+                        stringFormatter.deleteFileFromTmpLocation(conversionPathRequest.source, log)
                     case _ => ()
                 }
 
@@ -1192,7 +1192,7 @@ class ValuesResponderV1 extends Responder {
             sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = sparqlSelectResponse.results.bindings
 
-            _ = if (rows.isEmpty || !InputValidation.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
+            _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
                 throw UpdateNotPerformedException(s"The request to mark value ${deleteValueRequest.valueIri} (or a new version of that value) as deleted did not succeed. Please report this as a possible bug.")
             }
         } yield DeleteValueResponseV1(id = deletedValueIri)
@@ -1280,7 +1280,7 @@ class ValuesResponderV1 extends Responder {
                     val valuePermissions = rowMap("valuePermissions")
 
                     // Permission-checking on LinkValues is special, because they can be system-created rather than user-created.
-                    val valuePermissionCode = if (InputValidation.optionStringToBoolean(rowMap.get("isLinkValue"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${rowMap.get("isLinkValue")}"))) {
+                    val valuePermissionCode = if (stringFormatter.optionStringToBoolean(rowMap.get("isLinkValue"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${rowMap.get("isLinkValue")}"))) {
                         // It's a LinkValue.
                         PermissionUtilV1.getUserPermissionV1(
                             subjectIri = valueIri,
@@ -2522,7 +2522,7 @@ class ValuesResponderV1 extends Responder {
     @throws(classOf[BadRequestException])
     private def checkTextValueResourceRefs(textValue: TextValueWithStandoffV1): Unit = {
 
-        // please note that the function `InputValidation.getResourceIrisFromStandoffTags` is not used here
+        // please note that the function `StringFormatter.getResourceIrisFromStandoffTags` is not used here
         // because we want a double check (the function has already been called in the route or in standoff responder)
         val resourceRefsInStandoff: Set[IRI] = textValue.standoff.foldLeft(Set.empty[IRI]) {
             case (acc: Set[IRI], standoffNode: StandoffTagV1) =>

@@ -27,7 +27,7 @@ import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi.messages.v2.responder.ontologymessages.{ClassesGetRequestV2, NamedGraphEntitiesGetRequestV2, NamedGraphsGetRequestV2, PropertyEntitiesGetRequestV2}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
-import org.knora.webapi.util.InputValidation
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi._
 
 import scala.concurrent.ExecutionContextExecutor
@@ -44,6 +44,7 @@ object OntologiesRouteV2 extends Authenticator {
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
         implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
+        val stringFormatter = StringFormatter.getInstance
 
         path("ontology" / Segments) { (segments: List[String]) =>
             get {
@@ -60,13 +61,13 @@ object OntologiesRouteV2 extends Authenticator {
                     val userProfile = getUserProfileV1(requestContext)
 
                     val requestedOntology: IRI = OntologyConstants.KnoraApi.ApiOntologyHostname + requestContext.request.uri.path
-                    val responseSchema: ApiV2Schema = InputValidation.getOntologyApiSchema(requestedOntology, () => throw BadRequestException(s"Invalid external ontology IRI: $requestedOntology"))
-                    val ontologyForResponder = InputValidation.requestedOntologyToOntologyForResponder(requestedOntology)
+                    val responseSchema: ApiV2Schema = stringFormatter.getOntologyApiSchema(requestedOntology, () => throw BadRequestException(s"Invalid external ontology IRI: $requestedOntology"))
+                    val ontologyForResponder = stringFormatter.requestedOntologyToOntologyForResponder(requestedOntology)
                     val ontologiesForResponder: Set[IRI] = Set(ontologyForResponder)
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
-                    val allLanguages = InputValidation.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
+                    val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = NamedGraphEntitiesGetRequestV2(
                         namedGraphIris = ontologiesForResponder,
@@ -107,8 +108,8 @@ object OntologiesRouteV2 extends Authenticator {
 
                     val ontologiesAndSchemas: Set[(IRI, ApiV2Schema)] = externalOntologyIris.map {
                         (namedGraph: String) =>
-                            val schema = InputValidation.getOntologyApiSchema(namedGraph, () => throw BadRequestException(s"Invalid external ontology IRI: $namedGraph"))
-                            val ontologyForResponder = InputValidation.requestedOntologyToOntologyForResponder(namedGraph)
+                            val schema = stringFormatter.getOntologyApiSchema(namedGraph, () => throw BadRequestException(s"Invalid external ontology IRI: $namedGraph"))
+                            val ontologyForResponder = stringFormatter.requestedOntologyToOntologyForResponder(namedGraph)
                             (ontologyForResponder, schema)
                     }.toSet
 
@@ -124,7 +125,7 @@ object OntologiesRouteV2 extends Authenticator {
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
-                    val allLanguages = InputValidation.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
+                    val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = NamedGraphEntitiesGetRequestV2(
                         namedGraphIris = ontologiesForResponder,
@@ -150,8 +151,8 @@ object OntologiesRouteV2 extends Authenticator {
                     val classesAndSchemas: Set[(IRI, ApiV2Schema)] = externalResourceClassIris.map {
                         (classIri: String) =>
                             // Find out what schema the class IRI belongs to.
-                            val schema = InputValidation.getEntityApiSchema(classIri, () => throw BadRequestException(s"Invalid external class IRI: $classIri"))
-                            val classForResponder = InputValidation.requestedEntityToEntityForResponder(classIri)
+                            val schema = stringFormatter.getEntityApiSchema(classIri, () => throw BadRequestException(s"Invalid external class IRI: $classIri"))
+                            val classForResponder = stringFormatter.requestedEntityToEntityForResponder(classIri)
 
                             (classForResponder, schema)
                     }.toSet
@@ -168,7 +169,7 @@ object OntologiesRouteV2 extends Authenticator {
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
-                    val allLanguages = InputValidation.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
+                    val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = ClassesGetRequestV2(
                         resourceClassIris = classesForResponder,
@@ -194,8 +195,8 @@ object OntologiesRouteV2 extends Authenticator {
                     val propsAndSchemas: Set[(IRI, ApiV2Schema)] = externalPropertyIris.map {
                         (propIri: String) =>
                             // Find out what schema the property IRI belongs to.
-                            val schema = InputValidation.getEntityApiSchema(propIri, () => throw BadRequestException(s"Invalid external property IRI: $propIri"))
-                            val propForResponder = InputValidation.requestedEntityToEntityForResponder(propIri)
+                            val schema = stringFormatter.getEntityApiSchema(propIri, () => throw BadRequestException(s"Invalid external property IRI: $propIri"))
+                            val propForResponder = stringFormatter.requestedEntityToEntityForResponder(propIri)
                             (propForResponder, schema)
                     }.toSet
 
@@ -211,7 +212,7 @@ object OntologiesRouteV2 extends Authenticator {
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
-                    val allLanguages = InputValidation.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
+                    val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = PropertyEntitiesGetRequestV2(
                         propertyIris = propsForResponder,
