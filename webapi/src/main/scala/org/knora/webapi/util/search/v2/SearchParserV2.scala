@@ -144,7 +144,7 @@ object SearchParserV2 {
           * Returns the WHERE patterns found in the query.
           */
         private def getWherePatterns: Seq[QueryPattern] = {
-            wherePatterns.toVector
+            wherePatterns
         }
 
         private def unsupported(node: algebra.QueryModelNode) {

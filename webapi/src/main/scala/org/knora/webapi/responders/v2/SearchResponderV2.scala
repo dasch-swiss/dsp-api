@@ -178,8 +178,10 @@ class SearchResponderV2 extends ResponderV2 {
     abstract class AbstractExtendedSearchTransformer(typeInspectionResult: TypeInspectionResult) extends WhereTransformer {
 
         // Contains the variable representing the main resource: knora-base:isMainResource
-        // TODO: make this protected and write get method for access from the outside (var is mutable and mustn't be chanegd from the outside)
-        var mainResourceVariable: Option[QueryVariable] = None
+        protected var mainResourceVariable: Option[QueryVariable] = None
+
+        // get method for public access
+        def getMainResourceVariable: QueryVariable = mainResourceVariable.getOrElse(throw SparqlSearchException("Could not get main resource variable from transformer"))
 
         // a Set containing all `TypeableEntity` (keys of `typeInspectionResult`) that have already been processed
         // in order to prevent duplicates
@@ -192,15 +194,19 @@ class SearchResponderV2 extends ResponderV2 {
         val groupConcatSeparator: Char = FormatConstants.INFORMATION_SEPARATOR_ONE
 
         // contains variables representing group concatenated dependent resource Iris
-        // TODO: make this protected and write get method for access from the outside (var is mutable and mustn't be chanegd from the outside)
-        var dependentResourceVariablesGroupConcat = Set.empty[QueryVariable]
+        protected var dependentResourceVariablesGroupConcat = Set.empty[QueryVariable]
+
+        // get method for public access
+        def getDependentResourceVariablesGroupConcat: Set[QueryVariable] = dependentResourceVariablesGroupConcat
 
         // contains the variables of value objects (including those for link values)
         protected var valueObjectVariables = mutable.Set.empty[QueryVariable]
 
         // contains variables representing group concatenated value objects Iris
-        // TODO: make this protected and write get method for access from the outside (var is mutable and mustn't be chanegd from the outside)
-        var valueObjectVarsGroupConcat = Set.empty[QueryVariable]
+        protected var valueObjectVarsGroupConcat = Set.empty[QueryVariable]
+
+        // get method for public access
+        def getValueObjectVarsGroupConcat: Set[QueryVariable] = valueObjectVarsGroupConcat
 
         val groupConcatVariableAppendix = "Concat"
 
@@ -1928,11 +1934,11 @@ class SearchResponderV2 extends ResponderV2 {
             prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 
             // variable representing the main resources
-            mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.mainResourceVariable.getOrElse(throw SparqlSearchException("Could not get main resource variable from transformer"))
+            mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.getMainResourceVariable
 
             // a sequence of resource Iris that match the search criteria
             // attention: no permission checking has been done so far
-            mainResourceIris: Seq[String] = prequeryResponse.results.bindings.map {
+            mainResourceIris: Seq[IRI] = prequeryResponse.results.bindings.map {
                 case resultRow: VariableResultsRow =>
                     resultRow.rowMap(mainResourceVar.variableName)
             }
@@ -1941,7 +1947,7 @@ class SearchResponderV2 extends ResponderV2 {
                 // at least one resource matched the prequery
 
                 // variables representing dependent resources
-                val dependentResourceVariablesConcat: Set[QueryVariable] = nonTriplestoreSpecificConstructToSelectTransformer.dependentResourceVariablesGroupConcat
+                val dependentResourceVariablesConcat: Set[QueryVariable] = nonTriplestoreSpecificConstructToSelectTransformer.getDependentResourceVariablesGroupConcat
 
                 // get all the Iris for variables representing dependent resources per main resource
                 val dependentResourceIrisPerMainResource: Map[IRI, Set[IRI]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Set[IRI]]) {
@@ -1968,7 +1974,7 @@ class SearchResponderV2 extends ResponderV2 {
                 val allDependentResourceIris: Set[IRI] = dependentResourceIrisPerMainResource.values.flatten.toSet ++ dependentResourceIrisFromTypeInspection
 
                 // value objects variables present in the preequery's WHERE clause
-                val valueObjectVariablesConcat = nonTriplestoreSpecificConstructToSelectTransformer.valueObjectVarsGroupConcat
+                val valueObjectVariablesConcat = nonTriplestoreSpecificConstructToSelectTransformer.getValueObjectVarsGroupConcat
 
                 // for each main resource, create a Map of value object variables and their values
                 val valueObjectIrisPerMainResource: Map[IRI, Map[QueryVariable, Set[IRI]]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
