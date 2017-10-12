@@ -122,7 +122,7 @@ class SearchResponderV2 extends ResponderV2 {
           * @param filterExpression a filter expression.
           * @return the preprocessed expression.
           */
-        def preprocessFilterExpression(filterExpression: Expression): Expression = {
+        private def preprocessFilterExpression(filterExpression: Expression): Expression = {
             filterExpression match {
                 case entity: Entity => preprocessEntity(entity)
                 case compareExpr: CompareExpression => CompareExpression(leftArg = preprocessFilterExpression(compareExpr.leftArg), operator = compareExpr.operator, rightArg = preprocessFilterExpression(compareExpr.rightArg))
@@ -137,7 +137,7 @@ class SearchResponderV2 extends ResponderV2 {
           * @param entity an entity provided by [[SearchParserV2]].
           * @return the preprocessed entity.
           */
-        def preprocessEntity(entity: Entity): Entity = {
+        private def preprocessEntity(entity: Entity): Entity = {
             // convert external Iris to internal Iris if needed
 
             entity match {
@@ -158,7 +158,7 @@ class SearchResponderV2 extends ResponderV2 {
           * @param statementPattern a statement provided by SearchParserV2.
           * @return the preprocessed statement pattern.
           */
-        def preprocessStatementPattern(statementPattern: StatementPattern): StatementPattern = {
+        private def preprocessStatementPattern(statementPattern: StatementPattern): StatementPattern = {
 
             val subj = preprocessEntity(statementPattern.subj)
             val pred = preprocessEntity(statementPattern.pred)
@@ -208,8 +208,11 @@ class SearchResponderV2 extends ResponderV2 {
         // get method for public access
         def getValueObjectVarsGroupConcat: Set[QueryVariable] = valueObjectVarsGroupConcat
 
+        // suffix appended to variables that are returned by a SPARQL aggregation function.
         val groupConcatVariableAppendix = "Concat"
 
+        // variables that are created when processing filter statements
+        // they represent the value of a literal pointed to by a value object
         val valueVariablesCreatedInFilters = mutable.Map.empty[QueryVariable, QueryVariable]
 
         /**
@@ -219,7 +222,7 @@ class SearchResponderV2 extends ResponderV2 {
           * @param entity the entity to be converted to a [[TypeableEntity]].
           * @return an Option of a [[TypeableEntity]].
           */
-        def toTypeableEntityKey(entity: Entity): Option[TypeableEntity] = {
+        protected def toTypeableEntityKey(entity: Entity): Option[TypeableEntity] = {
 
             entity match {
                 case queryVar: QueryVariable => Some(TypeableVariable(queryVar.variableName))
@@ -247,7 +250,7 @@ class SearchResponderV2 extends ResponderV2 {
           * @param suffix        the suffix to be appended to the base name.
           * @return a unique variable.
           */
-        def createUniqueVariableFromStatement(baseStatement: StatementPattern, suffix: String): QueryVariable = {
+        protected def createUniqueVariableFromStatement(baseStatement: StatementPattern, suffix: String): QueryVariable = {
             QueryVariable(escapeEntityForVariable(baseStatement.subj) + "__" + escapeEntityForVariable(baseStatement.pred) + "__" + escapeEntityForVariable(baseStatement.obj) + "__" + suffix)
         }
 
@@ -257,7 +260,7 @@ class SearchResponderV2 extends ResponderV2 {
           * @param statementPattern the statement pattern to be checked.
           * @return query variable representing the main resource or None.
           */
-        def isMainResourceVariable(statementPattern: StatementPattern): Option[QueryVariable] = {
+        protected def isMainResourceVariable(statementPattern: StatementPattern): Option[QueryVariable] = {
             statementPattern.pred match {
                 case IriRef(OntologyConstants.KnoraBase.IsMainResource, _) =>
                     statementPattern.obj match {
@@ -281,7 +284,7 @@ class SearchResponderV2 extends ResponderV2 {
           * @param inputEntity         the [[Entity]] to make the statements about.
           * @return a sequence of [[QueryPattern]] representing the additional statements.
           */
-        def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, inputEntity: Entity): Seq[QueryPattern] = {
+        protected def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, inputEntity: Entity): Seq[QueryPattern] = {
 
             val typeIriInternal = if (InputValidation.isKnoraApiEntityIri(nonPropertyTypeInfo.typeIri)) {
                 InputValidation.externalToInternalEntityIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid external knora-api entity Iri"))
@@ -325,7 +328,7 @@ class SearchResponderV2 extends ResponderV2 {
             }
         }
 
-        def convertStatementForPropertyType(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern): Seq[QueryPattern] = {
+        protected def convertStatementForPropertyType(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern): Seq[QueryPattern] = {
 
             // convert the type information into an internal Knora Iri if possible
             val objectIri = if (InputValidation.isKnoraApiEntityIri(propertyTypeInfo.objectTypeIri)) {
@@ -432,7 +435,7 @@ class SearchResponderV2 extends ResponderV2 {
           * @param conversionFuncForNonPropertyType the function to use to create additional statements.
           * @return a sequence of [[QueryPattern]] representing the additional statements.
           */
-        def checkForNonPropertyTypeInfoForEntity(entity: Entity, typeInspection: TypeInspectionResult, processedTypeInfo: mutable.Set[TypeableEntity], conversionFuncForNonPropertyType: (NonPropertyTypeInfo, Entity) => Seq[QueryPattern]): Seq[QueryPattern] = {
+        protected def checkForNonPropertyTypeInfoForEntity(entity: Entity, typeInspection: TypeInspectionResult, processedTypeInfo: mutable.Set[TypeableEntity], conversionFuncForNonPropertyType: (NonPropertyTypeInfo, Entity) => Seq[QueryPattern]): Seq[QueryPattern] = {
 
             val typeInfoKey = toTypeableEntityKey(entity)
 
@@ -467,7 +470,7 @@ class SearchResponderV2 extends ResponderV2 {
           * @param conversionFuncForPropertyType the function to use for the conversion.
           * @return a sequence of [[QueryPattern]] representing the converted statement.
           */
-        def checkForPropertyTypeInfoForStatement(statementPattern: StatementPattern, typeInspection: TypeInspectionResult, conversionFuncForPropertyType: (PropertyTypeInfo, StatementPattern) => Seq[QueryPattern]): Seq[QueryPattern] = {
+        protected def checkForPropertyTypeInfoForStatement(statementPattern: StatementPattern, typeInspection: TypeInspectionResult, conversionFuncForPropertyType: (PropertyTypeInfo, StatementPattern) => Seq[QueryPattern]): Seq[QueryPattern] = {
             val predTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.pred)
 
             if (predTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains predTypeInfoKey.get)) {
@@ -492,7 +495,7 @@ class SearchResponderV2 extends ResponderV2 {
 
         // A Map of XSD types to the corresponding knora-base value predicates that point to literals.
         // This allows us to handle different types of values (value objects).
-        val literalTypesToValueTypeIris: Map[IRI, IRI] = Map(
+        protected val literalTypesToValueTypeIris: Map[IRI, IRI] = Map(
             OntologyConstants.Xsd.Integer -> OntologyConstants.KnoraBase.ValueHasInteger,
             OntologyConstants.Xsd.Decimal -> OntologyConstants.KnoraBase.ValueHasDecimal,
             OntologyConstants.Xsd.Boolean -> OntologyConstants.KnoraBase.ValueHasBoolean,
@@ -506,7 +509,7 @@ class SearchResponderV2 extends ResponderV2 {
           * @param linkingPropertyQueryVariable variable representing a linking property.
           * @return variable representing the corresponding link value property.
           */
-        def createlinkValuePropertyVariableFromLinkingPropertyVariable(linkingPropertyQueryVariable: QueryVariable): QueryVariable = {
+        protected def createlinkValuePropertyVariableFromLinkingPropertyVariable(linkingPropertyQueryVariable: QueryVariable): QueryVariable = {
             createUniqueVariableNameFromEntityAndProperty(linkingPropertyQueryVariable, OntologyConstants.KnoraBase.HasLinkToValue)
         }
 
@@ -516,7 +519,7 @@ class SearchResponderV2 extends ResponderV2 {
           * @param expression           the transformed Filter expression.
           * @param additionalStatements additionally created statement patterns.
           */
-        case class TransformedFilterExpression(expression: Expression, additionalStatements: Seq[StatementPattern] = Seq.empty[StatementPattern])
+        protected case class TransformedFilterExpression(expression: Expression, additionalStatements: Seq[StatementPattern] = Seq.empty[StatementPattern])
 
         /**
           * Transforms a Filter expression provided in the input query (knora-api simple) into a knora-base compliant Filter expression.
@@ -525,7 +528,7 @@ class SearchResponderV2 extends ResponderV2 {
           * @param typeInspection   the results of type inspection.
           * @return a [[TransformedFilterExpression]].
           */
-        def transformFilterExpression(filterExpression: Expression, typeInspection: TypeInspectionResult): TransformedFilterExpression = {
+        protected def transformFilterExpression(filterExpression: Expression, typeInspection: TypeInspectionResult): TransformedFilterExpression = {
 
             filterExpression match {
 
@@ -882,7 +885,7 @@ class SearchResponderV2 extends ResponderV2 {
         Seq(transformedPattern)
     }
 
-    class GraphDBSelectToSelectTransformer extends SelectToSelectTransformer {
+    private class GraphDBSelectToSelectTransformer extends SelectToSelectTransformer {
         def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
         def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
@@ -893,7 +896,7 @@ class SearchResponderV2 extends ResponderV2 {
 
     }
 
-    class NoInferenceSelectToSelectTransformer extends SelectToSelectTransformer {
+    private class NoInferenceSelectToSelectTransformer extends SelectToSelectTransformer {
         def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
         def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
@@ -908,7 +911,7 @@ class SearchResponderV2 extends ResponderV2 {
     /**
       * Transforms non-triplestore-specific query patterns to GraphDB-specific ones.
       */
-    class GraphDBConstructToConstructTransformer extends ConstructToConstructTransformer {
+    private class GraphDBConstructToConstructTransformer extends ConstructToConstructTransformer {
         def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
         def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
@@ -921,7 +924,7 @@ class SearchResponderV2 extends ResponderV2 {
     /**
       * Transforms non-triplestore-specific query patterns for a triplestore that does not have inference enabled.
       */
-    class NoInferenceConstructToConstructTransformer extends ConstructToConstructTransformer {
+    private class NoInferenceConstructToConstructTransformer extends ConstructToConstructTransformer {
         def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
         def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
@@ -973,15 +976,17 @@ class SearchResponderV2 extends ResponderV2 {
       * @param resourceIris    resource Iris.
       * @param valueObjectIris value object Iris.
       */
-    case class ResourceIrisAndValueObjectIris(resourceIris: Set[IRI], valueObjectIris: Set[IRI])
+    private case class ResourceIrisAndValueObjectIris(resourceIris: Set[IRI], valueObjectIris: Set[IRI])
 
     /**
-      * Traverses value property assertions and returns the Iris of the value objects and the dependent resources, recursively traversing their value properties as well .
+      * Traverses value property assertions and returns the Iris of the value objects and the dependent resources, recursively traversing their value properties as well.
+      * This is method is needed in order to determine if the full query path is still present in the results after permissions checking handled in [[ConstructResponseUtilV2.splitMainResourcesAndValueRdfData]].
+      * Due to insufficient permissions, some of the resources (both main and dependent resources) and/or values may have been filtered out.
       *
       * @param valuePropertyAssertions the assertions to be traversed.
       * @return a [[ResourceIrisAndValueObjectIris]] representing all resource and value object Iris that have been found in `valuePropertyAssertions`.
       */
-    def traverseValuePropertyAssertions(valuePropertyAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]]): ResourceIrisAndValueObjectIris = {
+    private def traverseValuePropertyAssertions(valuePropertyAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]]): ResourceIrisAndValueObjectIris = {
 
         // look at the value objects and ignore the property Iris (we are only interested in value instances)
         val resAndValObjIris: Seq[ResourceIrisAndValueObjectIris] = valuePropertyAssertions.values.flatten.foldLeft(Seq.empty[ResourceIrisAndValueObjectIris]) {
