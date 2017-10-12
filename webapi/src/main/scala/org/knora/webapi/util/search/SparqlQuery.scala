@@ -61,8 +61,32 @@ case class GroupConcat(inputVariable: QueryVariable, separator: Char, outputVari
     val outputVariable = QueryVariable(outputVariableName)
 
     def toSparql: String = {
-        s"(GROUP_CONCAT(${inputVariable.toSparql}; separator='${separator}') as ${outputVariable.toSparql})"
+        s"(GROUP_CONCAT(${inputVariable.toSparql}; SEPARATOR='${separator}') AS ${outputVariable.toSparql})"
     }
+}
+
+/**
+  * Represents a COUNT statement that counts how many instances/rows are returned for [[inputVariable]].
+  *
+  * @param inputVariable the variable to count.
+  * @param distinct indicates whether DISTINCT has to be used inside COUNT.
+  * @param outputVariableName the name of the variable representing the result.
+  */
+case class Count(inputVariable: QueryVariable, distinct: Boolean = true, outputVariableName: String) extends SelectQueryColumn {
+
+    val outputVariable = QueryVariable(outputVariableName)
+
+    val distinctAsStr: String = if (distinct) {
+        "DISTINCT"
+    } else {
+        ""
+    }
+
+    def toSparql: String = {
+
+        s"(COUNT($distinctAsStr ${inputVariable.toSparql}) AS ${outputVariable.toSparql})"
+    }
+
 }
 
 /**

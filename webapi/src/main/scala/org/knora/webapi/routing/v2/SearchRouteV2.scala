@@ -168,6 +168,25 @@ object SearchRouteV2 extends Authenticator {
                     )
                 }
             }
+        } ~ path("v2" / "searchextended" / "count" / Segment) { sparql => // Segment is a URL encoded string representing a Sparql query
+            get {
+
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val constructQuery = SearchParserV2.parseSearchQuery(sparql)
+
+                    val requestMessage = ExtendedSearchCountGetRequestV2(constructQuery = constructQuery, userProfile = userProfile)
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
+            }
         } ~ path("v2" / "searchextended" / Segment) { sparql => // Segment is a URL encoded string representing a Sparql query
             get {
 
@@ -190,7 +209,7 @@ object SearchRouteV2 extends Authenticator {
             }
 
 
-        } ~path("v2" / "searchbylabel" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+        } ~ path("v2" / "searchbylabel" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)

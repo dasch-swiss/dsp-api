@@ -61,6 +61,18 @@ case class FulltextSearchGetRequestV2(searchValue: String,
                                       limitToResourceClass: Option[IRI],
                                       userProfile: UserProfileV1) extends SearchResponderRequestV2
 
+
+/**
+  *
+  * Requests the amount of results (resources count) of a given extended search. A successful response will be a [[ReadResourcesSequenceV2]].
+  *
+  * @param constructQuery a Sparql construct query provided by the client.
+  * @param userProfile the profile of the user making the request.
+  */
+
+case class ExtendedSearchCountGetRequestV2(constructQuery: ConstructQuery,
+                                      userProfile: UserProfileV1) extends SearchResponderRequestV2
+
 /**
   *
   * Requests an extended search. A successful response will be a [[ReadResourcesSequenceV2]].
