@@ -26,12 +26,18 @@
  * Performs a search for resources by their label.
  *
  * @param triplestore the name of the triplestore being used.
- * @param searchTerms search terms.
+ * @param searchTerm search terms.
+ * @param limitToProject limit search to the given project.
+ * @param limitToResourceClass limit search to given resource class.
+ * @param limit maximum amount of resources to be returned.
+ * @param offset offset to be used for paging.
  *@
 @(triplestore: String,
   searchTerm: MatchStringWhileTyping,
   limitToProject: Option[IRI],
-  limitToResourceClass: Option[IRI])
+  limitToResourceClass: Option[IRI],
+  limit: Int,
+  offset: Int)
 
   @*
 

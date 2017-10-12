@@ -32,18 +32,24 @@
  * @param searchTerms search terms.
  * @param limitToProject limit search to the given project.
  * @param limitToResourceClass limit search to given resource class.
+ * @param limit maximum amount of resources to be returned.
+ * @param offset offset to be used for paging.
  *@
 @(triplestore: String,
   searchTerm: MatchStringWhileTyping,
   limitToProject: Option[IRI],
-  limitToResourceClass: Option[IRI])
+  limitToResourceClass: Option[IRI],
+  limit: Int,
+  offset: Int)
 
 @if(triplestore.startsWith("graphdb")) {
     @{
         queries.sparql.v2.txt.searchResourceByLabelGraphDB(
             searchTerm = searchTerm,
             limitToProject = limitToProject,
-            limitToResourceClass = limitToResourceClass
+            limitToResourceClass = limitToResourceClass,
+            limit = limit,
+            offset = offset
         )
     }
 } else {
@@ -52,7 +58,9 @@
             triplestore = triplestore,
             searchTerm = searchTerm,
             limitToProject = limitToProject,
-            limitToResourceClass = limitToResourceClass
+            limitToResourceClass = limitToResourceClass,
+            limit = limit,
+            offset = offset
         )
     }
 }

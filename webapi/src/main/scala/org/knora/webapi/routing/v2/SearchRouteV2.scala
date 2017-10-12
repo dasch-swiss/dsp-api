@@ -200,11 +200,19 @@ object SearchRouteV2 extends Authenticator {
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
 
+                    val offset = getOffsetFromParams(params)
+
                     val limitToProject: Option[IRI] = getProjectFromParams(params)
 
                     val limitToResourceClass: Option[IRI] = getResourceClassFromParams(params)
 
-                    val requestMessage = SearchResourceByLabelRequestV2(searchValue = searchString, limitToProject = limitToProject, limitToResourceClass = limitToResourceClass, userProfile = userProfile)
+                    val requestMessage = SearchResourceByLabelRequestV2(
+                        searchValue = searchString,
+                        offset = offset,
+                        limitToProject = limitToProject,
+                        limitToResourceClass = limitToResourceClass,
+                        userProfile = userProfile
+                    )
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,

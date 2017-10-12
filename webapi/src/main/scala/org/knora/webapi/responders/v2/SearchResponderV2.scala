@@ -98,7 +98,7 @@ class SearchResponderV2 extends ResponderV2 {
         case FullTextSearchCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, userProfile), log)
         case FulltextSearchGetRequestV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile), log)
         case ExtendedSearchGetRequestV2(query, userProfile) => future2Message(sender(), extendedSearchV2(inputQuery = query, userProfile = userProfile), log)
-        case SearchResourceByLabelRequestV2(searchValue, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), searchResourcesByLabelV2(searchValue, limitToProject, limitToResourceClass, userProfile), log)
+        case SearchResourceByLabelRequestV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -2031,12 +2031,13 @@ class SearchResponderV2 extends ResponderV2 {
       * Performs a search for resources by their rdf:label.
       *
       * @param searchValue          the values to search for.
+      * @param offset the offset to be used for paging.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
       * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def searchResourcesByLabelV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def searchResourcesByLabelV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
@@ -2045,7 +2046,9 @@ class SearchResponderV2 extends ResponderV2 {
                 triplestore = settings.triplestoreType,
                 searchTerm = searchPhrase,
                 limitToProject = limitToProject,
-                limitToResourceClass = limitToResourceClass
+                limitToResourceClass = limitToResourceClass,
+                limit = settings.v2ExtendedSearchResultsPerPage,
+                offset = offset * settings.v2ExtendedSearchResultsPerPage
             ).toString())
 
             // _ = println(searchResourceByLabelSparql)

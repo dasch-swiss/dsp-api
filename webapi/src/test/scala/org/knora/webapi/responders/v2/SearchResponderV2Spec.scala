@@ -126,6 +126,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! SearchResourceByLabelRequestV2(
                 searchValue = "Narrenschiff",
+                offset = 0,
                 limitToProject = None,
                 limitToResourceClass = Some("http://www.knora.org/ontology/incunabula#book"), // internal Iri!
                 userProfile = SharedAdminTestData.anonymousUser

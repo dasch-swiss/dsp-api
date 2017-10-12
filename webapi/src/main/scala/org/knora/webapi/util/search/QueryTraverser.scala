@@ -252,11 +252,6 @@ object QueryTraverser {
       */
     def transformConstructToConstruct(inputQuery: ConstructQuery, transformer: ConstructToConstructTransformer): ConstructQuery = {
 
-        // TODO: the current design would not be able to check permissions for properties and resources that are contained in the Where clause but not in the Construct clause
-        // TODO: This could lead to a situation in which the user looks for a resource relating to another resource or a property which he has no permissions to see, but still he would find that very resource relating to it.
-        // TODO: Should we enforce that statements in the Where clause have to be repeated in the Construct clause?
-        // TODO: Or should we include Where patterns in the Construct clause for permission checking and filter them out later?
-
         val transformedWherePatterns = transformWherePatterns(
             patterns = inputQuery.whereClause.patterns,
             whereTransformer = transformer

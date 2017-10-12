@@ -30,8 +30,6 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
 
-import scala.collection.immutable.ListMap
-
 
 object ConstructResponseUtilV2 {
 

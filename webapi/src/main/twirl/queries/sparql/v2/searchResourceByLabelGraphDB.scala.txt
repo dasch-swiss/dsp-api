@@ -25,11 +25,17 @@
 @*
  * Performs a search for resources by their label.
  *
- * @param searchTerms search terms to look for in the resources' label.
+ * @param searchTerm search terms.
+ * @param limitToProject limit search to the given project.
+ * @param limitToResourceClass limit search to given resource class.
+ * @param limit maximum amount of resources to be returned.
+ * @param offset offset to be used for paging.
  *@
 @(searchTerm: MatchStringWhileTyping,
   limitToProject: Option[IRI],
-  limitToResourceClass: Option[IRI])
+  limitToResourceClass: Option[IRI],
+  limit: Int,
+  offset: Int)
 
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -68,21 +74,22 @@ CONSTRUCT {
             ?label <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> @searchTerm.generateLiteralForLuceneIndexWithoutExactSequence .
 
         }
-        @* TODO: support paging (OFFSET) *@
-        ORDER BY ?resource
-        LIMIT 500
+        ORDER BY ?resource @* Needed for paging: order needs to be deterministic *@
+        LIMIT @limit
+        OFFSET @offset
     }
 
-    GRAPH <http://www.ontotext.com/explicit> {
-        ?resource a ?resourceType .
+    {
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?resource a ?resourceType .
+        }
+
+        ?resource knora-base:attachedToUser ?resourceCreator ;
+                knora-base:hasPermissions ?resourcePermissions ;
+                knora-base:attachedToProject ?referredResourceProject  .
     }
-
-    ?resource knora-base:attachedToUser ?resourceCreator ;
-            knora-base:hasPermissions ?resourcePermissions ;
-            knora-base:attachedToProject ?referredResourceProject  .
-
     # there might by resources that have neither values nor links
-    OPTIONAL {
+    UNION {
 
             ?resource knora-base:hasValue ?valueObject .
 
@@ -97,7 +104,4 @@ CONSTRUCT {
                         ?valueObjectProperty ?valueObjectValue .
                 }
     }
-
-
-
 }
