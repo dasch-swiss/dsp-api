@@ -216,7 +216,8 @@ class OntologyResponderV2 extends Responder {
             } + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri -> KnoraApiV2Simple.Classes.keySet) +
                 (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri -> KnoraApiV2WithValueObjects.Classes.keySet)
 
-            // Make a map of IRIs of named graphs to IRIs of properties defined in each one, knora-base:resourceProperty, which is never used directly.
+            // Make a map of IRIs of named graphs to IRIs of properties defined in each one, excluding knora-base:resourceProperty,
+            // which is never used directly.
             graphPropMap: Map[IRI, Set[IRI]] = propertyDefsRows.groupBy(_.rowMap("graph")).map {
                 case (graphIri, graphRows) =>
                     graphIri -> (graphRows.map(_.rowMap("prop")).toSet - OntologyConstants.KnoraBase.ResourceProperty)
@@ -390,7 +391,7 @@ class OntologyResponderV2 extends Responder {
                                         owlCardinalityValue = owlCardinality.cardinalityValue
                                     )
                                 )
-                        }.toMap - OntologyConstants.KnoraBase.HasStandoffLinkToValue, // Don't return a cardinality for hasStandoffLinkToValue, because there's nothing the client can do with it.
+                        }.toMap, // Don't return a cardinality for hasStandoffLinkToValue, because there's nothing the client can do with it.
                         linkProperties = linkProps,
                         linkValueProperties = linkValueProps,
                         fileValueProperties = fileValueProps,
@@ -707,8 +708,20 @@ class OntologyResponderV2 extends Responder {
         for {
             cacheData <- getCacheData
 
-            classDefsAvailable = cacheData.classDefs.filterKeys(classIris)
-            propertyDefsAvailable = cacheData.propertyDefs.filterKeys(propertyIris  - OntologyConstants.KnoraBase.HasStandoffLinkToValue) // Don't return hasStandoffLinkToValue, because there's nothing a client can do with it.
+            classDefsAvailable: Map[IRI, ClassEntityInfoV2] = cacheData.classDefs.filterKeys(classIris)
+            propertyDefsAvailable: Map[IRI, PropertyEntityInfoV2] = cacheData.propertyDefs.filterKeys(propertyIris)
+
+
+            missingClassDefs = classIris -- classDefsAvailable.keySet
+            missingPropertyDefs = propertyIris -- propertyDefsAvailable.keySet
+
+            _ = if (missingClassDefs.nonEmpty) {
+                throw NotFoundException(s"Some requested classes were not found: ${missingClassDefs.mkString(", ")}")
+            }
+
+            _ = if (missingPropertyDefs.nonEmpty) {
+                throw NotFoundException(s"Some requested properties were not found: ${missingPropertyDefs.mkString(", ")}")
+            }
 
             response = EntityInfoGetResponseV2(
                 classEntityInfoMap = new ErrorHandlingMap(classDefsAvailable, { key => s"Resource class $key not found" }),
@@ -933,8 +946,13 @@ class OntologyResponderV2 extends Responder {
                     acc ++ resourceEntityInfo.cardinalities.keySet
             } ++ knoraApiResourceClass.cardinalities.keySet
 
+            // Only try to get definitions for properties that we know about (built-in or project-specific Knora ontology properties).
+            propertyIrisFiltered: Set[IRI] = propertyIris.filter {
+                propertyIri => stringFormatter.isKnoraApiEntityIri(propertyIri)
+            }
+
             // request information about the properties for which cardinalities are defined
-            propertiesResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, userProfile = userProfile)
+            propertiesResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIrisFiltered, userProfile = userProfile)
 
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
