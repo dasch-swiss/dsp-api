@@ -31,13 +31,12 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2._
-import org.knora.webapi.e2e.v2.SearchRouteV2R2RV2SpecFullData._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.store._
-import org.knora.webapi.util.{FileUtil, MessageUtil}
+import org.knora.webapi.util.{FileUtil}
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}
@@ -98,6 +97,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
+        "perform a count query for a fulltext search for 'Narr'" in {
+
+            Get("/v2/search/count/Narr") ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkCountQuery(responseAs[String], 210)
+
+            }
+        }
+
 
         "perform a fulltext search for 'Dinge'" in {
             Get("/v2/search/Dinge") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
@@ -111,39 +121,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "perform an extended search for books that have the title 'Zeitglöcklein des Lebens'" ignore { // literals are not supported
-            val sparqlSimplified =
-                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
-                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-                  |
-                  |    CONSTRUCT {
-                  |        ?book knora-api:isMainResource true .
-                  |
-                  |        ?book incunabula:title "Zeitglöcklein des Lebens und Leidens Christi" .
-                  |
-                  |    } WHERE {
-                  |
-                  |        ?book a incunabula:book .
-                  |        ?book a knora-api:Resource .
-                  |
-                  |        ?book incunabula:title "Zeitglöcklein des Lebens und Leidens Christi" .
-                  |        incunabula:title knora-api:objectType xsd:string .
-                  |
-                  |    }
-                """.stripMargin
-
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+        "perform a count query for a fulltext search for 'Dinge'" in {
+            Get("/v2/search/count/Dinge") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfItems(responseAs[String], 2)
+                checkCountQuery(responseAs[String], 1)
 
             }
-
         }
 
-        "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' (2)" in {
+        "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer" in {
             val sparqlSimplified =
                 """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -173,7 +161,82 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfItems(responseAs[String], 2)
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform a count query for an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer" in {
+            val sparqlSimplified =
+                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/count/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkCountQuery(responseAs[String], 2)
+
+            }
+
+        }
+
+
+        "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer" in {
+            val sparqlSimplified =
+                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
 
@@ -209,18 +272,56 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                // 19 - 2 = 18 :-)
-                // there is a total of 19 incunabula books of which two have the title "Zeitglöcklein des Lebens und Leidens Christi" (see test above)
-                // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
-                // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/NotZeitgloeckleinExtendedSearch.jsonld"))
 
-                checkNumberOfItems(responseAs[String], 18)
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
 
         }
 
-        "perform an extended search for the page of a book whose seqnum equals 10" in {
+        "perform a count query for an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
+            val sparqlSimplified =
+                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        FILTER(?title != "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/count/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // 19 - 2 = 18 :-)
+                // there is a total of 19 incunabula books of which two have the title "Zeitglöcklein des Lebens und Leidens Christi" (see test above)
+                // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
+                // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
+
+                checkCountQuery(responseAs[String], 18)
+
+            }
+
+        }
+
+        "perform an extended search for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
 
             val sparqlSimplified =
                 """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
@@ -257,11 +358,103 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfItems(responseAs[String], 1)
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
 
             }
 
         }
+
+        "perform a count query for an extended search for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
+
+            val sparqlSimplified =
+                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?page knora-api:isMainResource true .
+                  |
+                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |    } WHERE {
+                  |
+                  |        ?page a incunabula:page .
+                  |        ?page a knora-api:Resource .
+                  |
+                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
+                  |
+                  |        <http://data.knora.org/b6b5ff1eb703> a knora-api:Resource .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |        incunabula:seqnum knora-api:objectType xsd:integer .
+                  |
+                  |        FILTER(?seqnum = 10)
+                  |
+                  |        ?seqnum a xsd:integer .
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkCountQuery(responseAs[String], 1)
+
+
+            }
+
+        }
+
+        "perform an extended search for the page of a book whose seqnum equals 10, returning only the seqnum" in {
+
+            val sparqlSimplified =
+                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?page knora-api:isMainResource true .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |    } WHERE {
+                  |
+                  |        ?page a incunabula:page .
+                  |        ?page a knora-api:Resource .
+                  |
+                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
+                  |
+                  |        <http://data.knora.org/b6b5ff1eb703> a knora-api:Resource .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |        incunabula:seqnum knora-api:objectType xsd:integer .
+                  |
+                  |        FILTER(?seqnum = 10)
+                  |
+                  |        ?seqnum a xsd:integer .
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/PageWithSeqnum10OnlySeqnuminAnswer.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+
+            }
+
+        }
+
 
         "perform an extended search for the pages of a book whose seqnum is lower than or equals 10" in {
 
@@ -300,7 +493,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfItems(responseAs[String], 10)
+                checkCountQuery(responseAs[String], 10)
 
             }
 
@@ -341,7 +534,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfItems(responseAs[String], 2)
+                checkCountQuery(responseAs[String], 2)
 
             }
 
@@ -385,7 +578,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfItems(responseAs[String], 2)
+                checkCountQuery(responseAs[String], 2)
 
             }
 
@@ -431,7 +624,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
-                checkNumberOfItems(responseAs[String], 17)
+                checkCountQuery(responseAs[String], 17)
 
             }
 
@@ -476,7 +669,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
-                checkNumberOfItems(responseAs[String], 17)
+                checkCountQuery(responseAs[String], 17)
 
             }
 
@@ -520,7 +713,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 4 (number of results from query below)
-                checkNumberOfItems(responseAs[String], 15)
+                checkCountQuery(responseAs[String], 15)
 
             }
 
@@ -564,7 +757,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 15 (number of results from query above)
-                checkNumberOfItems(responseAs[String], 4)
+                checkCountQuery(responseAs[String], 4)
 
             }
 
@@ -608,7 +801,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 18 (number of results from query above)
-                checkNumberOfItems(responseAs[String], 1)
+                checkCountQuery(responseAs[String], 1)
 
             }
 
@@ -652,7 +845,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 1 (number of results from query above)
-                checkNumberOfItems(responseAs[String], 18)
+                checkCountQuery(responseAs[String], 18)
 
             }
 
@@ -696,7 +889,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfItems(responseAs[String], 5)
+                checkCountQuery(responseAs[String], 5)
 
             }
 
@@ -752,7 +945,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfItems(responseAs[String], 2)
+                checkCountQuery(responseAs[String], 2)
 
             }
 
@@ -787,7 +980,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfItems(responseAs[String], 1)
+                checkCountQuery(responseAs[String], 1)
 
             }
 
@@ -825,7 +1018,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfItems(responseAs[String], 1)
+                checkCountQuery(responseAs[String], 1)
 
             }
 
@@ -863,7 +1056,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfItems(responseAs[String], 1)
+                checkCountQuery(responseAs[String], 1)
 
             }
 
@@ -901,7 +1094,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfItems(responseAs[String], 1)
+                checkCountQuery(responseAs[String], 1)
 
             }
 
@@ -936,7 +1129,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfItems(responseAs[String], 1)
+                checkCountQuery(responseAs[String], 1)
 
             }
 
@@ -975,7 +1168,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfItems(responseAs[String], 1)
+                checkCountQuery(responseAs[String], 1)
 
             }
 

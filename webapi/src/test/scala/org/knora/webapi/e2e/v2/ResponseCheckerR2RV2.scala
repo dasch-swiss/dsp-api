@@ -24,11 +24,10 @@ import java.util
 
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
-import org.knora.webapi.util.{JavaUtil, MessageUtil}
+import org.knora.webapi.util.JavaUtil
 import org.knora.webapi.{IRI, InvalidApiJsonException}
 
 import scala.collection.JavaConverters._
-import scala.collection.JavaConversions._
 
 object ResponseCheckerR2RV2 {
 
@@ -63,6 +62,26 @@ object ResponseCheckerR2RV2 {
         }
     }
 
+    /**
+      * Compare two value objects.
+      *
+      * @param expectedValue expected value.
+      * @param receivedValue received value.
+      */
+    private def compareValues(expectedValue: Map[IRI, Any], receivedValue: Map[IRI, Any]) = {
+
+        assert(expectedValue == receivedValue)
+
+        // TODO: recurse over target resource if it is a LinkValue
+
+    }
+
+    /**
+      * Compares the reveied resource to the expected.
+      *
+      * @param expectedResource the expected resource.
+      * @param receivedResource the received resource.
+      */
     private def compareResources(expectedResource: Map[IRI, Any], receivedResource: Map[IRI, Any]) = {
 
         assert(expectedResource(jsonldId) == receivedResource(jsonldId), s"Received resource Iri ${receivedResource(jsonldId)} does not match expected Iri ${expectedResource(jsonldId)}")
@@ -73,15 +92,37 @@ object ResponseCheckerR2RV2 {
 
         assert(expectedResource.keySet -- noPropertyKeys == receivedResource.keySet -- noPropertyKeys, s"property Iris are different for resource ${receivedResource(jsonldId)}")
 
-        // TODO: handle LinkValues (recursion)
         (expectedResource -- noPropertyKeys).foreach {
             case (propIri: IRI, expectedValuesForProp: Any) =>
 
                 // make sure that the property Iri exists in the received resource
                 assert(receivedResource.contains(propIri), s"Property $propIri not found in received resource ${receivedResource(jsonldId)}")
 
-                // compare the values of property
-                assert(expectedValuesForProp == receivedResource(propIri), s"values for property $propIri did not match for ${receivedResource(jsonldId)}")
+                // TODO: valueHasOrder is optional
+                // sort by value object Iri
+
+                val expectedValues: Seq[Map[IRI, Any]] = elementToList(expectedResource(propIri)).asInstanceOf[Seq[Map[IRI, Any]]].sortBy {
+                    case (valObj: Map[IRI, Any]) =>
+
+                        valObj(jsonldId) match {
+                            case valObjIri: IRI => valObjIri
+                        }
+                }
+
+                val receivedValues: Seq[Map[IRI, Any]] = elementToList(receivedResource(propIri)).asInstanceOf[Seq[Map[IRI, Any]]].sortBy {
+                    case (valObj: Map[IRI, Any]) =>
+
+                        valObj(jsonldId) match {
+                            case valObjIri: IRI => valObjIri
+                        }
+                }
+
+                expectedValues.zip(receivedValues).foreach {
+                    case (expectedVal, receivedVal) =>
+
+                        compareValues(expectedVal, receivedVal)
+                }
+
 
         }
 
@@ -117,30 +158,8 @@ object ResponseCheckerR2RV2 {
 
         // loop over all the given resources and compare them (order of resources is determined by request)
         expectedResourcesAsList.zip(receivedResourcesAsList).foreach {
-
-
             case (expectedResource: Map[IRI, Any], receivedResource: Map[IRI, Any]) =>
-
-                assert(expectedResource(jsonldId) == receivedResource(jsonldId), s"Received resource Iri ${receivedResource(jsonldId)} does not match expected Iri ${expectedResource(jsonldId)}")
-
-                assert(expectedResource(jsonldType) == receivedResource(jsonldType), s"Received resource type ${receivedResource(jsonldType)} does not match expected type ${expectedResource(jsonldType)}")
-
-                assert(expectedResource(name) == receivedResource(name), s"$name did not match for ${receivedResource(jsonldId)}")
-
-                assert(expectedResource.keySet -- noPropertyKeys == receivedResource.keySet -- noPropertyKeys, s"property Iris are different for resource ${receivedResource(jsonldId)}")
-
-                // TODO: handle LinkValues (recursion)
-                (expectedResource -- noPropertyKeys).foreach {
-                    case (propIri: IRI, expectedValuesForProp: Any) =>
-
-                        // make sure that the property Iri exists in the received resource
-                        assert(receivedResource.contains(propIri), s"Property $propIri not found in received resource ${receivedResource(jsonldId)}")
-
-                        // compare the values of property
-                        assert(expectedValuesForProp == receivedResource(propIri), s"values for property $propIri did not match for ${receivedResource(jsonldId)}")
-
-                }
-
+                compareResources(expectedResource, receivedResource)
         }
 
     }
@@ -148,19 +167,19 @@ object ResponseCheckerR2RV2 {
     /**
       * Checks for the number of expected results to be returned.
       *
-      * @param responseJson   the response send back by the search route.
+      * @param receivedJSONLD   the response send back by the search route.
       * @param expectedNumber the expected number of results for the query.
       * @return an assertion that the actual amount of results corresponds with the expected number of results.
       */
-    def checkNumberOfItems(responseJson: String, expectedNumber: Int): Unit = {
+    def checkCountQuery(receivedJSONLD: String, expectedNumber: Int): Unit = {
 
-        val res = JsonUtils.fromString(responseJson)
+        val receivedResponseCompactedAsJava = JsonLdProcessor.compact(JsonUtils.fromString(receivedJSONLD), new util.HashMap[String, String](), new JsonLdOptions())
 
-        val compacted: Map[IRI, Any] = JsonLdProcessor.compact(res, new util.HashMap[String, String](), new JsonLdOptions()).asScala.toMap
+        val receivedResponseAsScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(receivedResponseCompactedAsJava).asInstanceOf[Map[IRI, Any]]
 
-        val numberOfItems: Any = compacted.getOrElse(numberOfItemsMember, throw InvalidApiJsonException(s"member '$numberOfItemsMember' not given for search response."))
+        // make sure the indicated amount of results is correct
+        assert(receivedResponseAsScala(numberOfItemsMember).asInstanceOf[Int] == expectedNumber, s"$numberOfItemsMember is incorrect.")
 
-        assert(numberOfItems.isInstanceOf[Int] && numberOfItems == expectedNumber, s"expected $expectedNumber resources, but $numberOfItems given")
 
     }
 
