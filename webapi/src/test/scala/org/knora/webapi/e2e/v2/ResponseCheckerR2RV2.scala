@@ -129,20 +129,12 @@ object ResponseCheckerR2RV2 {
     }
 
     /**
-      * Compares the received JSON response to the expected JSON.
+      * Compares the reveived to the expected response.
       *
-      * @param expectedJSONLD expected answer from Knora API V2 as JSONLD.
-      * @param receivedJSONLD received answer from Knora Api V2 as JSONLD.
+      * @param expectedResponseAsScala expected response.
+      * @param receivedResponseAsScala received response.
       */
-    def compareJSONLD(expectedJSONLD: String, receivedJSONLD: String): Unit = {
-
-        val expectedResponseCompactedAsJava = JsonLdProcessor.compact(JsonUtils.fromString(expectedJSONLD), new util.HashMap[String, String](), new JsonLdOptions())
-
-        val expectedResponseAsScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(expectedResponseCompactedAsJava).asInstanceOf[Map[IRI, Any]]
-
-        val receivedResponseCompactedAsJava = JsonLdProcessor.compact(JsonUtils.fromString(receivedJSONLD), new util.HashMap[String, String](), new JsonLdOptions())
-
-        val receivedResponseAsScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(receivedResponseCompactedAsJava).asInstanceOf[Map[IRI, Any]]
+    def compareParsedJSONLD(expectedResponseAsScala: Map[IRI, Any], receivedResponseAsScala: Map[IRI, Any]): Unit = {
 
         // make sure the indicated amount of results is correct
         assert(expectedResponseAsScala(numberOfItemsMember).asInstanceOf[Int] == receivedResponseAsScala(numberOfItemsMember).asInstanceOf[Int], s"numberOfItems did not match: expected ${expectedResponseAsScala(numberOfItemsMember)}, but received ${receivedResponseAsScala(numberOfItemsMember)}")
@@ -161,6 +153,26 @@ object ResponseCheckerR2RV2 {
             case (expectedResource: Map[IRI, Any], receivedResource: Map[IRI, Any]) =>
                 compareResources(expectedResource, receivedResource)
         }
+
+    }
+
+    /**
+      * Compares the received JSON response to the expected JSON.
+      *
+      * @param expectedJSONLD expected answer from Knora API V2 as JSONLD.
+      * @param receivedJSONLD received answer from Knora Api V2 as JSONLD.
+      */
+    def compareJSONLD(expectedJSONLD: String, receivedJSONLD: String): Unit = {
+
+        val expectedResponseCompactedAsJava: util.Map[IRI, AnyRef] = JsonLdProcessor.compact(JsonUtils.fromString(expectedJSONLD), new util.HashMap[String, String](), new JsonLdOptions())
+
+        val expectedResponseAsScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(expectedResponseCompactedAsJava).asInstanceOf[Map[IRI, Any]]
+
+        val receivedResponseCompactedAsJava: util.Map[IRI, AnyRef] = JsonLdProcessor.compact(JsonUtils.fromString(receivedJSONLD), new util.HashMap[String, String](), new JsonLdOptions())
+
+        val receivedResponseAsScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(receivedResponseCompactedAsJava).asInstanceOf[Map[IRI, Any]]
+
+        compareParsedJSONLD(expectedResponseAsScala = expectedResponseAsScala, receivedResponseAsScala = receivedResponseAsScala)
 
     }
 
