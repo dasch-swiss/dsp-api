@@ -78,27 +78,28 @@ GraphDB installation, and restart GraphDB.
 Creating a Test Installation
 ----------------------------
 
+Run a supported triplestore
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+See the chapters on :ref:`starting-graphdb` and :ref:`starting-fuseki` on how to start a supported triplestore.
+
 Creating and running the WEBAPI Server distribution package
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Inside the ``knora/webapi`` folder run the following ``sbt`` commands:
+To create a deployment package for the WEBAPI Server, please run
+from inside the ``knora/webapi`` folder the following commands:
 
-```
-$ sbt packageBin
-```
+::
 
-This will create a ``zip`` file inside the ``knora/webapi/target/universal`` folder.
-To run the Knora API Server, unzip this package, and execute the ``webapi`` script
-inside the ``bin`` folder.
-
-Alternatively, the command ``sbt stage`` will create a folder with the same content as before,
-but will skip the zipping step.
+  $ sbt stage
+  $ cd target/universal/stage
+  $ ./bin/webapi
 
 Downloading and running SIPI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Download SIPI from SIPI_ and install from source by following the SIPI_Manual_. For running and setting up SIPI
-for Knora, please refer to SIPI_.
+for Knora, please refer to :ref:`SIPI`.
 
 Transforming Data When Ontologies Change
 ----------------------------------------
