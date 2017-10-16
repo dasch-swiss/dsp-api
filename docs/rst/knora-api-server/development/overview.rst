@@ -46,17 +46,17 @@ Triple Store
 -------------
 
 A number of triplestore implementations are available, including `free software`_ as
-well as proprietary options. The Knora API server is tested and configured to
-work out of the box with the following triplestores:
+well as proprietary options. The Knora API server is designed to work with any
+standards-compliant triplestore. It is primarily tested with `Ontotext GraphDB`_, a
+high-performance, proprietary triplestore. We recommend GraphDB Standard Edition,
+but GraphDB Free (which is proprietary but available free of charge) also works.
 
-* `Ontotext GraphDB`_, a high-performance, proprietary triplestore. The Knora
-  API server is tested with GraphDB Standard Edition and GraphDB Free (which
-  is proprietary but available free of charge).
+Knora includes support for `Apache Jena`_, which is `free software`_, but use of
+Jena is deprecated, and support for it will probably be removed in the future.
 
-* `Apache Jena`_, which is `free software`_. Knora comes bundled with Jena and with
-  its standalone SPARQL server, Fuseki.
+Built-in support and configuration for other triplestores is planned.
 
-See the chapters on :ref:`starting-fuseki` and :ref:`starting-graphdb-se` for more details.
+See the chapters on :ref:`starting-graphdb` and :ref:`starting-fuseki` for more details.
 
 .. _free software: http://www.gnu.org/philosophy/free-sw.en.html
 .. _Ontotext GraphDB: http://ontotext.com/products/graphdb/
@@ -71,7 +71,7 @@ Build SIPI Docker Image
 
 The Sipi docker image needs to be build by hand, as it requires the Kakadu distribution.
 
-To build the image, and push it to the docker hub, follow the following steps: 
+To build the image, and push it to the docker hub, follow the following steps:
 
 ::
 
@@ -94,7 +94,7 @@ To use the docker image stored locally or on the docker hub repository type:
 ::
 
   $ docker run --name sipi -d -p 1024:1024 dhlabbasel/sipi
-  
+
 This will create and start a docker container with the ``dhlabbasel/sipi`` image in the background. The default
 behaviour is to start Sipi by calling the following command:
 

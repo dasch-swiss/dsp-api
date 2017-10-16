@@ -20,27 +20,25 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.messages.v1.responder.valuemessages._
-@import org.knora.webapi.twirl.ResourceToCreate
+@import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 
 
 @**
- * Create new resources.
+ * Creates new resources.
  *
  * @param dataNamedGraph    the named graph in which the project stores its data.
  * @param triplestore       the name of the triplestore being used.
- * @param resourcesToCreate collection of resources to be created.
- * @param projectIri        Iri of the project.
- * @param creatorIri        Iri  of the craetor of resources.
- *
+ * @param resourcesToCreate a collection of resources to be created.
+ * @param projectIri        the IRI of the project in which the resources are to be created.
+ * @param creatorIri        the IRI of the creator of the resources.
+ * @param currentTime       an xsd:dateTimeStamp that will be attached to the resources.
  *@
-
-
 @(dataNamedGraph: IRI,
   triplestore: String,
-  resourcesToCreate: Seq[ResourceToCreate],
+  resourcesToCreate: Seq[SparqlTemplateResourceToCreate],
   projectIri: IRI,
-  creatorIri: IRI
-  )
+  creatorIri: IRI,
+  currentTime: String)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -48,36 +46,18 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-INSERT {
-    GRAPH ?dataNamedGraph {
+INSERT DATA {
+    GRAPH <@dataNamedGraph> {
         @for(res <- resourcesToCreate) {
-            ?resource@res.resourceIndex rdf:type ?resourceClass@res.resourceIndex ;
+            <@res.resourceIri> rdf:type <@res.resourceClassIri> ;
                 knora-base:isDeleted false ;
-                knora-base:attachedToUser ?creatorIri ;
-                knora-base:attachedToProject ?projectIri ;
-                rdfs:label ?label@res.resourceIndex ;
+                knora-base:attachedToUser <@creatorIri> ;
+                knora-base:attachedToProject <@projectIri> ;
+                rdfs:label """@res.resourceLabel""" ;
  				knora-base:hasPermissions "@res.permissions" ;
-                knora-base:creationDate ?currentTime .
+                knora-base:creationDate "@currentTime"^^xsd:dateTimeStamp .
 
             @res.generateSparqlForValuesResponse.insertSparql
         }
-    }
-}
-@* Ensure that inference is not used in the WHERE clause of this update. *@
-@if(triplestore.startsWith("graphdb")) {
-    USING <http://www.ontotext.com/explicit>
-}
-WHERE {
-    BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
-    BIND(IRI("@creatorIri") AS ?creatorIri)
-    BIND(IRI("@projectIri") AS ?projectIri)
-
-    BIND(NOW() AS ?currentTime)
-    @for(res <- resourcesToCreate) {
-        BIND(IRI("@res.resourceIri") AS ?resource@res.resourceIndex)
-        BIND(IRI("@res.resourceClassIri") AS ?resourceClass@res.resourceIndex)
-        BIND(str("@res.resourceLabel") AS ?label@res.resourceIndex)
-
-        @res.generateSparqlForValuesResponse.whereSparql
     }
 }

@@ -179,7 +179,7 @@ trait KnoraService {
         val ontologyCacheFuture = responderManager ? LoadOntologiesRequestV2(systemUser)
         Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[LoadOntologiesResponseV2]
 
-        if (StartupFlags.allowResetTriplestoreContentOperationOverHTTP.get) {
+        if (StartupFlags.allowReloadOverHTTP.get) {
             println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")
         }
 

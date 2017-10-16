@@ -63,7 +63,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
     private val authenticatePath = AuthenticationRouteV1.knoraApiPath(system, settings, log)
     private val usersPath = UsersRouteV1.knoraApiPath(system, settings, log)
 
-    private implicit val timeout: Timeout = 300.seconds
+    private implicit val timeout: Timeout = 600.seconds
 
     private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 

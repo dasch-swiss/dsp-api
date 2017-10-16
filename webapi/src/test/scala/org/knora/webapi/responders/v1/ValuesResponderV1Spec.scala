@@ -259,7 +259,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
         responderManager ! LoadOntologiesRequest(SharedAdminTestData.rootUser)
-        expectMsg(10.seconds, LoadOntologiesResponse())
+        expectMsg(30.seconds, LoadOntologiesResponse())
     }
 
     "The values responder" should {
@@ -1259,7 +1259,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             expectMsgPF(timeout) {
                 case msg: CreateValueResponseV1 =>
                     currentPubdateValueIri.set(msg.id)
-                    msg.value should ===(DateValueV1("2000", "2015-01-21", KnoraCalendarV1.GREGORIAN))
+                    msg.value should ===(DateValueV1("2000", "2015-01-21", "CE","CE", KnoraCalendarV1.GREGORIAN))
             }
         }
 
@@ -1281,7 +1281,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             expectMsgPF(timeout) {
                 case msg: ChangeValueResponseV1 =>
                     currentPubdateValueIri.set(msg.id)
-                    msg.value should ===(DateValueV1("1491-07-28", "1491-07-28", KnoraCalendarV1.JULIAN))
+                    msg.value should ===(DateValueV1("1491-07-28", "1491-07-28", "CE", "CE", KnoraCalendarV1.JULIAN))
             }
 
         }

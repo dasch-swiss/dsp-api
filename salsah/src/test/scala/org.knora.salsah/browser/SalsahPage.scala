@@ -601,6 +601,19 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
     }
 
     /**
+      * Get era selection.
+      *
+      * @param dateForm the [[WebElement]] representing the date form.
+      * @param index    1 indicates start date, 2 end date in case of a period.
+      * @return a [[Select]] representing the era.
+      */
+    def getEraSelection(dateForm: WebElement, index: Int): Select = {
+        eventually {
+            new Select(dateForm.findElement(By.xpath(s"//span[@class='propedit']/span[$index]/select[contains(@class,'erasel')]")))
+        }
+    }
+
+    /**
       * Get the days.
       *
       * @param dateForm dateForm the [[WebElement]] representing the date form.

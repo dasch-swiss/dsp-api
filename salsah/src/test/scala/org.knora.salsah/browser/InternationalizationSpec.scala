@@ -28,7 +28,7 @@ class InternationalizationSpec extends SalsahSpec {
             ]
         """
 
-    // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
+    // In order to run these tests, start `webapi` using the option `allowReloadOverHTTP`
 
     "The SALSAH home page" should {
         "load test data" in {

@@ -51,7 +51,7 @@ object PermissionsResponderV1Spec {
 class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.config) with ImplicitSender {
 
     private implicit val executionContext = system.dispatcher
-    private val timeout = 5.seconds
+    private val timeout = 30.seconds
 
     private val knoraIdUtil = new KnoraIdUtil
 
@@ -74,7 +74,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
         responderManager ! LoadOntologiesRequest(SharedAdminTestData.rootUser)
-        expectMsg(10.seconds, LoadOntologiesResponse())
+        expectMsg(20.seconds, LoadOntologiesResponse())
     }
 
 

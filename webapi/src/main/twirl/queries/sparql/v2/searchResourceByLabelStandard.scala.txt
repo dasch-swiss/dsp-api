@@ -28,7 +28,9 @@
  * @param searchTerms search terms.
  *@
 @(triplestore: String,
-  searchTerms: String)
+  searchTerms: String,
+  limitToProject: Option[IRI],
+  limitToResourceClass: Option[IRI])
 
   @*
 

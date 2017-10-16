@@ -49,7 +49,7 @@ Then go back to the webapi root directory and use SBT to start the API server:
     $ cd KNORA_PROJECT_DIRECTORY/webapi
     $ sbt
     > compile
-    > re-start allowResetTriplestoreContentOperationOverHTTP
+    > re-start allowReloadOverHTTP
 
 Then in another terminal, go to the SIPI project root directory and start the server:
 
@@ -82,7 +82,7 @@ In order to run the tests, the Selenium driver for Chrome has to be installed.
 
 It is architecture-dependant, please go to ``salsah/lib/chromedriver`` directory and unzip the distribution that matches your architecture, or download it from `here <https://sites.google.com/a/chromium.org/chromedriver/downloads>`_ and install it in this directory.
 
-Then, launch the services as described above; the triple store with the test data, the api server with the ``allowResetTriplestoreContentOperationOverHTTP`` option, sipi with the test configuration and salsah where you can run the tests in the same SBT session:
+Then, launch the services as described above; the triple store with the test data, the api server with the ``allowReloadOverHTTP`` option, sipi with the test configuration and salsah where you can run the tests in the same SBT session:
 
 ::
 

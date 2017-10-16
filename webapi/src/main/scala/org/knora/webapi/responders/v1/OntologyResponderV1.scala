@@ -93,7 +93,7 @@ class OntologyResponderV1 extends Responder {
     private def getEntityInfoResponseV1(resourceClassIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[EntityInfoGetResponseV1] = {
         for {
             response: EntityInfoGetResponseV2 <- (responderManager ? EntityInfoGetRequestV2(resourceClassIris, propertyIris, userProfile)).mapTo[EntityInfoGetResponseV2]
-        } yield EntityInfoGetResponseV1(resourceEntityInfoMap = response.resourceEntityInfoMap, propertyEntityInfoMap = response.propertyEntityInfoMap) // TODO: use V2 directly
+        } yield EntityInfoGetResponseV1(resourceEntityInfoMap = response.classEntityInfoMap, propertyEntityInfoMap = response.propertyEntityInfoMap) // TODO: use V2 directly
     }
 
 
@@ -148,7 +148,7 @@ class OntologyResponderV1 extends Responder {
         for {
         // Get all information about the resource type, including its property cardinalities.
             resourceClassInfoResponse: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(resourceClassIris = Set(resourceTypeIri), userProfile = userProfile)
-            resourceClassInfo: ResourceEntityInfoV1 = resourceClassInfoResponse.resourceEntityInfoMap.getOrElse(resourceTypeIri, throw NotFoundException(s"Resource class $resourceTypeIri not found"))
+            resourceClassInfo: ClassEntityInfoV2 = resourceClassInfoResponse.resourceEntityInfoMap.getOrElse(resourceTypeIri, throw NotFoundException(s"Resource class $resourceTypeIri not found"))
 
             // Get all information about those properties.
             propertyInfo: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = resourceClassInfo.cardinalities.keySet, userProfile = userProfile)
@@ -161,7 +161,7 @@ class OntologyResponderV1 extends Responder {
             }.map {
                 case (propertyIri: IRI, cardinality: Cardinality.Value) =>
                     propertyInfo.propertyEntityInfoMap.get(propertyIri) match {
-                        case Some(entityInfo: PropertyEntityInfoV1) =>
+                        case Some(entityInfo: PropertyEntityInfoV2) =>
 
                             if (entityInfo.isLinkProp) {
                                 // It is a linking prop: its valuetype_id is knora-base:LinkValue.
@@ -176,7 +176,7 @@ class OntologyResponderV1 extends Responder {
                                     vocabulary = entityInfo.ontologyIri,
                                     occurrence = cardinality.toString,
                                     valuetype_id = OntologyConstants.KnoraBase.LinkValue,
-                                    attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
+                                    attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
                                     gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri)),
                                     guiorder = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt)
                                 )
@@ -191,7 +191,7 @@ class OntologyResponderV1 extends Responder {
                                     vocabulary = entityInfo.ontologyIri,
                                     occurrence = cardinality.toString,
                                     valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
-                                    attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute)),
+                                    attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute)),
                                     gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri)),
                                     guiorder = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt)
                                 )
@@ -261,20 +261,20 @@ class OntologyResponderV1 extends Responder {
     /**
       * Gets the [[NamedGraphEntityInfoV1]] for a named graph
       *
-      * @param namedGraphIri the Iri of the named graph to query
+      * @param namedGraphIri the IRI of the named graph to query
       * @param userProfile   the profile of the user making the request.
       * @return a [[NamedGraphEntityInfoV1]].
       */
     def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV1] = {
         for {
             response: NamedGraphEntityInfoV2 <- (responderManager ? NamedGraphEntitiesRequestV2(namedGraphIri, userProfile)).mapTo[NamedGraphEntityInfoV2]
-        } yield NamedGraphEntityInfoV1(namedGraphIri = response.namedGraphIri, resourceClasses = response.resourceClasses, propertyIris = response.propertyIris) // TODO: use V2 directly
+        } yield NamedGraphEntityInfoV1(namedGraphIri = response.namedGraphIri, resourceClasses = response.classIris, propertyIris = response.propertyIris) // TODO: use V2 directly
     }
 
     /**
       * Gets all the resource classes and their properties for a named graph.
       *
-      * @param namedGraphIriOption the Iri of the named graph or None if all the named graphs should be queried.
+      * @param namedGraphIriOption the IRI of the named graph or None if all the named graphs should be queried.
       * @param userProfile         the profile of the user making the request.
       * @return [[ResourceTypesForNamedGraphResponseV1]].
       */
@@ -317,7 +317,7 @@ class OntologyResponderV1 extends Responder {
             } yield resourceTypes
         }
 
-        // get resource types for named graph depending on given Iri-Option
+        // get resource types for named graph depending on given IRI-Option
         namedGraphIriOption match {
             case Some(namedGraphIri) => // get the resource types for the given named graph
                 for {
@@ -337,7 +337,7 @@ class OntologyResponderV1 extends Responder {
     /**
       * Gets the property types defined in the given named graph. If there is no named graph defined, get property types for all existing named graphs.
       *
-      * @param namedGraphIriOption the Iri of the named graph or None if all the named graphs should be queried.
+      * @param namedGraphIriOption the IRI of the named graph or None if all the named graphs should be queried.
       * @param userProfile         the profile of the user making the request.
       * @return a [[PropertyTypesForNamedGraphResponseV1]].
       */
@@ -348,12 +348,12 @@ class OntologyResponderV1 extends Responder {
                 namedGraphEntityInfo <- getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
                 propertyIris: Set[IRI] = namedGraphEntityInfo.propertyIris
                 entities: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = propertyIris, userProfile = userProfile)
-                propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1] = entities.propertyEntityInfoMap.filterNot {
+                propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2] = entities.propertyEntityInfoMap.filterNot {
                     case (propertyIri, propertyEntityInfo) => propertyEntityInfo.isLinkValueProp
                 }
 
                 propertyDefinitions: Vector[PropertyDefinitionInNamedGraphV1] = propertyEntityInfoMap.map {
-                    case (propertyIri: IRI, entityInfo: PropertyEntityInfoV1) =>
+                    case (propertyIri: IRI, entityInfo: PropertyEntityInfoV2) =>
 
                         if (entityInfo.isLinkProp) {
                             // It is a linking prop: its valuetype_id is knora-base:LinkValue.
@@ -367,7 +367,7 @@ class OntologyResponderV1 extends Responder {
                                 description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
                                 vocabulary = entityInfo.ontologyIri,
                                 valuetype_id = OntologyConstants.KnoraBase.LinkValue,
-                                attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
+                                attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
                                 gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
                             )
 
@@ -379,7 +379,7 @@ class OntologyResponderV1 extends Responder {
                                 description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
                                 vocabulary = entityInfo.ontologyIri,
                                 valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
-                                attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjects(OntologyConstants.SalsahGui.GuiAttribute)),
+                                attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute)),
                                 gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
                             )
 
@@ -409,7 +409,7 @@ class OntologyResponderV1 extends Responder {
     /**
       * Gets the property types defined for the given resource class.
       *
-      * @param resourceClassIri the Iri of the resource class to query for.
+      * @param resourceClassIri the IRI of the resource class to query for.
       * @param userProfile      the profile of the user making the request.
       * @return a [[PropertyTypesForResourceTypeResponseV1]].
       */

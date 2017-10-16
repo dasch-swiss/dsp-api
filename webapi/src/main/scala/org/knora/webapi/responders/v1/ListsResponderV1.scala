@@ -60,7 +60,7 @@ class ListsResponderV1 extends Responder {
       * Due to compatibility with the old, crappy SALSAH-API, "hlists" and "selection" have to be differentiated in the response
       * [[ListsGetResponseV1]] is the abstract super class of [[HListGetResponseV1]] and [[SelectionGetResponseV1]]
       *
-      * @param rootNodeIri the Iri if the root node of the list to be queried.
+      * @param rootNodeIri the IRI if the root node of the list to be queried.
       * @return a [[ListsGetResponseV1]].
       */
     private def getListResponseV1(rootNodeIri: IRI, userProfile: UserProfileV1, pathType: PathType.Value): Future[ListsGetResponseV1] = {
