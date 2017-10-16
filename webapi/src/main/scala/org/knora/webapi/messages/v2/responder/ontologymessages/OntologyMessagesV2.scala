@@ -836,6 +836,7 @@ case class ClassEntityInfoV2(classIri: IRI,
 
     def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
         // Convert the property IRIs in the cardinalities according to the target schema.
+
         val cardinalitiesWithTargetSchemaIris = cardinalities.map {
             case (propertyIri: IRI, cardinality: Cardinality.Value) =>
                 val schemaPropertyIri: IRI = stringFormatter.toExternalEntityIri(
@@ -846,15 +847,31 @@ case class ClassEntityInfoV2(classIri: IRI,
                 (schemaPropertyIri, cardinality)
         }
 
-        // Add the standard cardinalities from knora-api:Resource for the target schema.
-        val schemaSpecificCardinalities: Map[IRI, Cardinality.Value] = targetSchema match {
-            case ApiV2Simple =>
-                // If we're using the simplified API, don't return link value properties.
-                cardinalitiesWithTargetSchemaIris.filterNot {
-                    case (propertyIri, _) => linkValueProperties.contains(propertyIri)
-                } ++ KnoraApiV2Simple.Resource.cardinalities
+        val linkValuePropertiesWithTargetSchemaIris = linkValueProperties.map {
+             propertyIri => stringFormatter.toExternalEntityIri(
+                 propertyIri,
+                 targetSchema = targetSchema
+             )
+        }
 
-            case ApiV2WithValueObjects => cardinalitiesWithTargetSchemaIris ++ KnoraApiV2WithValueObjects.Resource.cardinalities
+        // If we're using the simplified API, don't return link value properties.
+        val filteredCardinalities = targetSchema match {
+            case ApiV2Simple => cardinalitiesWithTargetSchemaIris.filterNot {
+                case (propertyIri, _) => linkValuePropertiesWithTargetSchemaIris.contains(propertyIri)
+            }
+
+            case ApiV2WithValueObjects => cardinalitiesWithTargetSchemaIris
+        }
+
+        // If this is a project-specific class, add the standard cardinalities from knora-api:Resource for the target
+        // schema.
+        val schemaSpecificCardinalities: Map[IRI, Cardinality.Value] = if (!stringFormatter.isBuiltInEntityIri(classIri)) {
+            targetSchema match {
+                case ApiV2Simple => filteredCardinalities ++ KnoraApiV2Simple.Resource.cardinalities
+                case ApiV2WithValueObjects => filteredCardinalities ++ KnoraApiV2WithValueObjects.Resource.cardinalities
+            }
+        } else {
+            filteredCardinalities
         }
 
         // Convert OWL cardinalities to JSON-LD.

@@ -916,15 +916,15 @@ class OntologyResponderV2 extends Responder {
     /**
       * Requests information about resource classes and their properties.
       *
-      * @param resourceClassIris the Iris of the resource classes to query for.
+      * @param classIris the Iris of the resource classes to query for.
       * @param userProfile       the profile of the user making the request.
       * @return a [[ReadEntityDefinitionsV2]].
       */
-    private def getClassDefinitionsWithCardinalitiesV2(resourceClassIris: Set[IRI], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
+    private def getClassDefinitionsWithCardinalitiesV2(classIris: Set[IRI], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
         for {
 
         // request information about the given resource class Iris
-            classInfoResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(classIris = resourceClassIris, userProfile = userProfile)
+            classInfoResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(classIris = classIris, userProfile = userProfile)
 
             // get the subclassOf relations of the given resource classes
             /*
@@ -935,16 +935,29 @@ class OntologyResponderV2 extends Responder {
             }.toMap
             */
 
-            knoraApiResourceClass = responseSchema match {
-                case ApiV2Simple => KnoraApiV2Simple.Resource
-                case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.Resource
+            // If a project-specific resource class was requested, include definitions of the built-in properties
+            // that knora-api:Resource has cardinalities for.
+
+            projectSpecificClassRequested = classIris.exists {
+                classIri => stringFormatter.isProjectSpecificEntityIri(classIri)
+            }
+
+            builtInPropertiesToAdd = if (projectSpecificClassRequested) {
+                val knoraApiResourceClass = responseSchema match {
+                    case ApiV2Simple => KnoraApiV2Simple.Resource
+                    case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.Resource
+                }
+
+                knoraApiResourceClass.cardinalities.keySet
+            } else {
+                Set.empty[IRI]
             }
 
             // get all property Iris from cardinalities
             propertyIris: Set[IRI] = classInfoResponse.classEntityInfoMap.values.foldLeft(Set.empty[IRI]) {
                 case (acc: Set[IRI], resourceEntityInfo: ClassEntityInfoV2) =>
                     acc ++ resourceEntityInfo.cardinalities.keySet
-            } ++ knoraApiResourceClass.cardinalities.keySet
+            } ++ builtInPropertiesToAdd
 
             // Only try to get definitions for properties that we know about (built-in or project-specific Knora ontology properties).
             propertyIrisFiltered: Set[IRI] = propertyIris.filter {

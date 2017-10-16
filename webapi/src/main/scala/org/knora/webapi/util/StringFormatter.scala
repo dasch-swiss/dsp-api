@@ -905,6 +905,19 @@ class StringFormatter private(settings: SettingsImpl) {
     }
 
     /**
+      * Checks whether an IRI is the IRI of a project-specific ontology entity (in an internal or external ontology).
+      *
+      * @param iri the IRI to be checked.
+      * @return `true` if the IRI is the IRI of a project-specific ontology entity.
+      */
+    def isProjectSpecificEntityIri(iri: IRI): Boolean = {
+        iri match {
+            case ProjectSpecificInternalOntologyEntityRegex(_*) | ProjectSpecificApiV2OntologyEntityRegex(_*) => true
+            case _ => false
+        }
+    }
+
+    /**
       * Checks whether an IRI is the IRI of an external ontology entity (in a built-in or project-specific ontology).
       *
       * @param iri the IRI to be checked.

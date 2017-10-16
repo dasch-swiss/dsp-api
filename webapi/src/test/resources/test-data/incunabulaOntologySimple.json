@@ -167,15 +167,7 @@
       }, {
         "@type" : "owl:Restriction",
         "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/simple/v2#hasLeftSidebandValue"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
         "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/simple/v2#hasRightSideband"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/simple/v2#hasRightSidebandValue"
       }, {
         "@type" : "owl:Restriction",
         "owl:cardinality" : 1,
@@ -192,10 +184,6 @@
         "@type" : "owl:Restriction",
         "owl:cardinality" : 1,
         "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/simple/v2#partOf"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:cardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/simple/v2#partOfValue"
       }, {
         "@type" : "owl:Restriction",
         "owl:maxCardinality" : 1,
