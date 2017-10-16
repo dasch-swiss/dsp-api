@@ -48,9 +48,9 @@ trait StandoffTagAttributeV1 {
 }
 
 /**
-  * Represents a standoff tag attribute of type Iri.
+  * Represents a standoff tag attribute of type IRI.
   *
-  * @param standoffPropertyIri the Iri of the standoff property
+  * @param standoffPropertyIri the IRI of the standoff property
   * @param value               the value of the standoff property.
   */
 case class StandoffTagIriAttributeV1(standoffPropertyIri: IRI, value: IRI) extends StandoffTagAttributeV1 {
@@ -64,7 +64,7 @@ case class StandoffTagIriAttributeV1(standoffPropertyIri: IRI, value: IRI) exten
 /**
   * Represents a standoff tag attribute that refers to another standoff node.
   *
-  * @param standoffPropertyIri the Iri of the standoff property
+  * @param standoffPropertyIri the IRI of the standoff property
   * @param value               the value of the standoff property.
   */
 case class StandoffTagInternalReferenceAttributeV1(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV1 {
@@ -78,7 +78,7 @@ case class StandoffTagInternalReferenceAttributeV1(standoffPropertyIri: IRI, val
 /**
   * Represents a standoff tag attribute of type string.
   *
-  * @param standoffPropertyIri the Iri of the standoff property
+  * @param standoffPropertyIri the IRI of the standoff property
   * @param value               the value of the standoff property.
   */
 case class StandoffTagStringAttributeV1(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV1 {
@@ -92,7 +92,7 @@ case class StandoffTagStringAttributeV1(standoffPropertyIri: IRI, value: String)
 /**
   * Represents a standoff tag attribute of type integer.
   *
-  * @param standoffPropertyIri the Iri of the standoff property
+  * @param standoffPropertyIri the IRI of the standoff property
   * @param value               the value of the standoff property.
   */
 case class StandoffTagIntegerAttributeV1(standoffPropertyIri: IRI, value: Int) extends StandoffTagAttributeV1 {
@@ -106,7 +106,7 @@ case class StandoffTagIntegerAttributeV1(standoffPropertyIri: IRI, value: Int) e
 /**
   * Represents a standoff tag attribute of type decimal.
   *
-  * @param standoffPropertyIri the Iri of the standoff property
+  * @param standoffPropertyIri the IRI of the standoff property
   * @param value               the value of the standoff property.
   */
 case class StandoffTagDecimalAttributeV1(standoffPropertyIri: IRI, value: BigDecimal) extends StandoffTagAttributeV1 {
@@ -120,7 +120,7 @@ case class StandoffTagDecimalAttributeV1(standoffPropertyIri: IRI, value: BigDec
 /**
   * Represents a standoff tag attribute of type boolean.
   *
-  * @param standoffPropertyIri the Iri of the standoff property
+  * @param standoffPropertyIri the IRI of the standoff property
   * @param value               the value of the standoff property.
   */
 case class StandoffTagBooleanAttributeV1(standoffPropertyIri: IRI, value: Boolean) extends StandoffTagAttributeV1 {

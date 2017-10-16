@@ -47,4 +47,3 @@ case class ResourcesGetRequestV2(resourceIris: Seq[IRI], userProfile: UserProfil
   * @param userProfile the profile of the user making the request.
   */
 case class ResourcePreviewRequestV2(resourceIris: Seq[IRI], userProfile: UserProfileV1) extends ResourcesResponderRequestV2
-

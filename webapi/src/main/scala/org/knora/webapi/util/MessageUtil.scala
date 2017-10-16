@@ -90,7 +90,7 @@ object MessageUtil {
       * to the expected format for the resources responder [[ResourceCreateValueResponseV1]], which describes a value
       * added to a new resource.
       *
-      * @param resourceIri   the Iri of the created resource.
+      * @param resourceIri   the IRI of the created resource.
       * @param creatorIri    the creator of the resource.
       * @param propertyIri   the property the valueResponse belongs to.
       * @param valueResponse the value that has been attached to the resource.
