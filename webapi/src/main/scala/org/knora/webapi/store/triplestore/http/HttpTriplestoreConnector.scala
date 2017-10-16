@@ -71,7 +71,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
     // The path for SPARQL queries.
     private val queryRequestPath = triplestoreType match {
-        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}"
+        case HTTP_GRAPH_DB_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}"
         case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/query"
         case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/query"
     }
@@ -85,7 +85,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
     // The path for SPARQL update operations.
     private val updateRequestPath = triplestoreType match {
-        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/statements"
+        case HTTP_GRAPH_DB_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/statements"
         case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/update"
         case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/update"
     }
@@ -319,7 +319,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
                 GraphProtocolAccessor.post(elem.name, elem.path)
 
-                if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE || triplestoreType == HTTP_GRAPH_DB_FREE_TS_TYPE) {
+                if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE) {
                     /* need to update the lucene index */
                     val indexUpdateSparqlString =
                         """
@@ -377,7 +377,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             // Send queries as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2,
             // "query via POST with URL-encoded parameters"), so we can include the "infer" parameter when using GraphDB.
 
-            val maybeInfer = if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE || triplestoreType == HTTP_GRAPH_DB_FREE_TS_TYPE) {
+            val maybeInfer = if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE) {
                 Some("infer" -> "true")
             } else {
                 None

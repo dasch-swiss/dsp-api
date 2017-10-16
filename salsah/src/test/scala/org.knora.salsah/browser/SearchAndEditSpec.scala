@@ -122,7 +122,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "do a simple search for 'Zeitglöcklein' and open a search result row representing a book" ignore { // can be enable when run locally
+        "do a simple search for 'Zeitglöcklein' and open a search result row representing a book (fixme #596)" ignore { // can be enable when run locally
 
             page.open()
 
@@ -633,7 +633,7 @@ class SearchAndEditSpec extends SalsahSpec {
             page.doLogout()
         }
 
-        "change the partof property of a page" ignore { // can be enable when run locally
+        "change the partof property of a page (fixme #596)" ignore { // can be enable when run locally
 
             page.open()
 

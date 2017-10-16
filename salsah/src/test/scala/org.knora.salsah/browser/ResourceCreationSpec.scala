@@ -89,7 +89,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
         }
 
-        "create a resource of type images:person" in {
+        "create a resource of type images:person (fixme #596)" ignore {
 
             page.open()
 
@@ -123,7 +123,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
         }
 
-        "create two resources of type anything:thing in two different projects as the multi-project user" in {
+        "create two resources of type anything:thing in two different projects as the multi-project user (fixme #596)" ignore {
 
             page.open()
 
