@@ -71,7 +71,7 @@ jobs:
         # start the sipi container (with production config)
         - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop
         # start the integration tests
-        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt fuseki-it:test
+        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt it:test
     - stage: test
       script:
         # prepare needed graphdb-se files
