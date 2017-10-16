@@ -244,7 +244,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             _ <- getTriplestoreHttpResponse(sparqlUpdate, isUpdate = true)
 
             // If we're using GraphDB, update the full-text search index.
-            _ = if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE) {
+            _ = if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE || triplestoreType == HTTP_GRAPH_DB_FREE_TS_TYPE) {
                 val indexUpdateSparqlString =
                     """
                         PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
