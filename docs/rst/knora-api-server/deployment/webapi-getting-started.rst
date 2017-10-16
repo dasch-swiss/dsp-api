@@ -78,11 +78,27 @@ GraphDB installation, and restart GraphDB.
 Creating a Test Installation
 ----------------------------
 
-TODO: write subsections like this:
+Creating and running the WEBAPI Server distribution package
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Download the Knora API Server and Sipi from GitHub
-* Configure
-* Run
+Inside the ``knora/webapi`` folder run the following ``sbt`` commands:
+
+```
+$ sbt packageBin
+```
+
+This will create a ``zip`` file inside the ``knora/webapi/target/universal`` folder.
+To run the Knora API Server, unzip this package, and execute the ``webapi`` script
+inside the ``bin`` folder.
+
+Alternatively, the command ``sbt stage`` will create a folder with the same content as before,
+but will skip the zipping step.
+
+Downloading and running SIPI
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Download SIPI from SIPI_ and install from source by following the SIPI_Manual_. For running and setting up SIPI
+for Knora, please refer to SIPI_.
 
 Transforming Data When Ontologies Change
 ----------------------------------------
@@ -158,3 +174,5 @@ be implemented as subclasses of ``org.eclipse.rdf4j.rio.RDFHandler``.
 .. _Apache Jena: https://jena.apache.org/
 .. _Turtle: https://www.w3.org/TR/turtle/
 .. _RDF4J: http://rdf4j.org/
+.. _SIPI: https://github.com/dhlab-basel/Sipi
+.. _SIPI_Manual: https://dhlab-basel.github.io/Sipi/documentation/index.html
