@@ -43,7 +43,7 @@ import org.knora.webapi.messages.v2.responder.persistentmapmessages.PersistentMa
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponderRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.responders.v1._
-import org.knora.webapi.responders.v2.{OntologyResponderV2, PersistentMapResponderV2, ResourcesResponderV2, SearchResponderV2}
+import org.knora.webapi.responders.v2._
 import org.knora.webapi.util.ActorUtil.handleUnexpectedMessage
 
 import scala.concurrent.ExecutionContextExecutor

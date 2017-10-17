@@ -27,7 +27,9 @@ import com.github.jsonldjava.utils.JsonUtils
 import org.knora.jsonld.{KnoraJsonLDFormat, KnoraJsonLDSupport, _}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
+import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2, ReadResourceUtil, ReadResourceV2}
+import org.knora.webapi.util.InputValidation
+import org.knora.webapi.util.jsonld._
 
 import scala.collection.JavaConverters._
 
@@ -94,6 +96,46 @@ case class ReadListsSequenceV2(items: Seq[ListNodeV2]) extends KnoraResponseV2 w
     def toXML: String = ???
 
     def toJsonLDWithValueObject(settings: SettingsImpl): String = ReadListsSequenceV2JsonLDFormat.write(this)
+
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+        // TODO: check targetSchema and return JSON-LD accordingly.
+
+        val context = JsonLDObject(Map(
+            "schema" -> JsonLDString("http://schema.org/"),
+            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion),
+            "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
+            "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#")
+        ))
+
+        val resourcesJsonObjects: Seq[JsonLDObject] = resources.map {
+            (resource: ReadResourceV2) => ReadResourceUtil.createJsonLDObjectFromReadResourceV2(
+                resource = resource,
+                targetSchema = targetSchema,
+                settings = settings
+            )
+        }
+
+
+        val listsJsonObjects: Seq[JsonLDObject] = items.map {
+            node: ListNodeV2 => node match {
+                case rootNode: ListRootNodeV2 => listRootNodeV2Writer(rootNode)
+                case childNode: ListChildNodeV2 => listChildNodeV2Writer(childNode)
+            }
+        }
+
+        val body = JsonLDObject(Map(
+            "@type" -> JsonLDString("http://schema.org/ItemList"),
+            "http://schema.org/numberOfItems" -> JsonLDInt(numberOfResources),
+            "http://schema.org/itemListElement" -> JsonLDArray(listsJsonObjects)
+        ))
+
+        JsonLDDocument(body = body, context = context)
+    }
+
+
+
+
+
 }
 
 

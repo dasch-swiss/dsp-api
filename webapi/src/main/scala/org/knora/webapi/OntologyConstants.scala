@@ -86,18 +86,14 @@ object OntologyConstants {
         val DateTimeStamp: IRI = XsdPrefixExpansion + "dateTimeStamp"
     }
 
-    object SchemaOrg {
-        val SchemaOrgPrefixExpansion: IRI = "http://schema.org/"
-
-        val Name: IRI = SchemaOrgPrefixExpansion + "name"
-    }
-
     /**
       * http://schema.org
       */
     object SchemaOrg {
-        val ItemList        = "http://schema.org/" + "ItemList"
-        val ItemListElement = "http://schema.org/" + "itemListElement"
+        val SchemaOrgPrefixExpansion: IRI = "http://schema.org/"
+        val Name: IRI = SchemaOrgPrefixExpansion + "name"
+        val ItemList: IRI = SchemaOrgPrefixExpansion + "ItemList"
+        val ItemListElement: IRI = SchemaOrgPrefixExpansion + "itemListElement"
     }
 
     object KnoraInternal {

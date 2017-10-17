@@ -131,6 +131,7 @@ lazy val webApiLibs = Seq(
     library.commonsValidator,
     library.diff,
     library.ehcache,
+    library.gwtServlet,
     library.jacksonScala,
     library.jsonldJava,
     library.jodd,
@@ -138,19 +139,19 @@ lazy val webApiLibs = Seq(
     library.jodaConvert,
     library.jenaLibs,
     library.jenaTest,
+    library.jwt,
     library.logbackClassic,
+    library.rdf4jRioTurtle,
+    library.rdf4jQueryParserSparql,
+    library.sayonHE,
+    library.scalaArm,
+    library.scalaJava8Compat,
     library.scalaLogging,
     library.scalaTest,
     library.scalaXml,
-    library.springSecurityCore,
-    library.xmlunitCore,
-    library.rdf4jRioTurtle,
-    library.rdf4jQueryParserSparql,
     library.scallop,
-    library.gwtServlet,
-    library.sayonHE,
-    library.scalaArm,
-    library.scalaJava8Compat
+    library.springSecurityCore,
+    library.xmlunitCore
 )
 
 lazy val library =
@@ -162,7 +163,6 @@ lazy val library =
             val aspectj = "1.8.7"
             val kamon = "0.5.2"
         }
-
 
         // akka
         val akkaActor              = "com.typesafe.akka"            %% "akka-actor"               % Version.akkaBase
@@ -177,7 +177,6 @@ lazy val library =
         val akkaHttpTestkit        = "com.typesafe.akka"            %% "akka-http-testkit"        % Version.akkaHttp    % "test, fuseki, graphdb, tdb, it, fuseki-it"
         val akkaStreamTestkit      = "com.typesafe.akka"            %% "akka-stream-testkit"      % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
         val scalaTest              = "org.scalatest"                %% "scalatest"                % "3.0.0"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
-
 
         //CORS support
         val akkaHttpCors           = "ch.megard"                    %% "akka-http-cors"           % "0.1.10"
@@ -196,6 +195,7 @@ lazy val library =
         // authentication
         val bcprov                 = "org.bouncycastle"              % "bcprov-jdk15on"           % "1.56"
         val springSecurityCore     = "org.springframework.security"  % "spring-security-core"     % "4.2.1.RELEASE"
+        val jwt                    = "io.igl"                       %% "jwt"                      % "1.2.2"
 
         // caching
         val ehcache                = "net.sf.ehcache"                % "ehcache"                  % "2.10.0"

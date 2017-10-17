@@ -42,7 +42,6 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.Success
 
-// needs Java 1.8 !!!
 import java.util.Base64
 
 /**
