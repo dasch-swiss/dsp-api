@@ -140,7 +140,7 @@
 
                     rdfs:comment """Represents the edition of the publication."""@en ;
 
-                    knora-base:objectClassConstraint :Edition ;
+                    knora-base:objectClassConstraint :Publication ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
@@ -160,7 +160,33 @@
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
+###  http://www.knora.org/ontology/biblio#publicationIsEditionOf
+:publicationIsEditionOf rdf:type owl:ObjectProperty ;
 
+                    rdfs:label "ist Edition von"@de ,
+                            "Edition Of "@en;
+
+                    rdfs:comment """Represents original publication of an edition."""@en ;
+
+                    knora-base:objectClassConstraint :Publication ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                    knora-base:subjectClassConstraint :Publication ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo.
+
+
+
+###  http://www.knora.org/ontology/biblio#publicationIsEditionOfValue
+
+:publicationIsEditionOfValue rdf:type owl:ObjectProperty ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    knora-base:subjectClassConstraint :Publication ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 ###  http://www.knora.org/ontology/biblio#publicationHasAuthor
 
@@ -406,15 +432,40 @@
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
+###  http://www.knora.org/ontology/biblio#publicationIsTranslationOf
+:publicationIsTranslationOf rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "ist Übersetztung von "@de ,
+                            "Translation of"@en ;
+
+                    rdfs:comment """Represents original publication of translation."""@en ;
+
+                    knora-base:objectClassConstraint :Publication ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
+
+
+
+###  http://www.knora.org/ontology/biblio#publicationIsTranslationOfValue
+
+:publicationIsTranslationOfValue rdf:type owl:ObjectProperty ;
+
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
+
 ###  http://www.knora.org/ontology/biblio#publicationIsTranslated
 :publicationIsTranslated rdf:type owl:ObjectProperty ;
 
-                    rdfs:label "ist übersetzt "@de ,
+                    rdfs:label "ist übersetztung"@de ,
                             "Translated to"@en ;
 
-                    rdfs:comment """Represents the translation of publication."""@en ;
+                    rdfs:comment """Represents translation of a publication."""@en ;
 
-                    knora-base:objectClassConstraint :Translation ;
+                    knora-base:objectClassConstraint :Publication ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
@@ -430,7 +481,6 @@
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
-
 
 ###  http://www.knora.org/ontology/biblio#publicationHasDOI
 
@@ -930,9 +980,9 @@
                     rdfs:subPropertyOf knora-base:hasValue, dcterms:title .
 
 
-###  http://www.knora.org/ontology/biblio#translationHasTranslator
+###  http://www.knora.org/ontology/biblio#publicationHasTranslator
 
-:translationHasTranslator rdf:type owl:ObjectProperty ;
+:publicationHasTranslator rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Übersetzer"@de ,
                             "Translator"@en ;
@@ -943,20 +993,20 @@
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
-                    knora-base:subjectClassConstraint :Translation ;
+                    knora-base:subjectClassConstraint :Publication ;
 
                     rdfs:subPropertyOf knora-base:hasLinkTo, bibo:translator .
 
 
 
 
-###  http://www.knora.org/ontology/biblio#translationHasTranslatorValue
+###  http://www.knora.org/ontology/biblio#publicationHasTranslatorValue
 
-:translationHasTranslatorValue rdf:type owl:ObjectProperty ;
+:publicationHasTranslatorValue rdf:type owl:ObjectProperty ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
-                    knora-base:subjectClassConstraint :Translation ;
+                    knora-base:subjectClassConstraint :Publication ;
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
@@ -1212,6 +1262,14 @@
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
+                                       owl:onProperty :publicationHasTranslator ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :publicationHasTranslatorValue ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
                                       owl:onProperty :publicationHasPublisher ;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
@@ -1225,6 +1283,14 @@
                                     ],
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :publicationIsEditedValue ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :publicationIsEditionOf ;
+                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :publicationIsEditionOfValue ;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
@@ -1282,6 +1348,14 @@
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :hasLinkValue ;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :publicationIsTranslationOf ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :publicationIsTranslationOfValue ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
                                        owl:onProperty :publicationIsTranslated ;
@@ -1494,14 +1568,7 @@
                                        owl:onProperty :translationHasLanguage ;
                                        owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
-                                    [ rdf:type owl:Restriction ;
-                                       owl:onProperty :translationHasTranslator ;
-                                       owl:minCardinality "1"^^xsd:nonNegativeInteger
-                                    ],
-                                    [ rdf:type owl:Restriction ;
-                                       owl:onProperty :translationHasTranslatorValue ;
-                                       owl:minCardinality "1"^^xsd:nonNegativeInteger
-                                    ],
+
                                     [ rdf:type owl:Restriction ;
                                        owl:onProperty :translationOf ;
                                        owl:minCardinality "1"^^xsd:nonNegativeInteger
