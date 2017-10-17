@@ -55,6 +55,29 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
+    val Result: PropertyEntityInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.Result,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "Ergebnis",
+                    LanguageCodes.EN -> "result",
+                    LanguageCodes.FR -> "résultat",
+                    LanguageCodes.IT -> "risultato"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Provides a message indicating that an operation was successful"
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.String)
+    )
+
     val IsEditable: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsEditable,
         propertyType = OntologyConstants.Owl.AnnotationProperty,
@@ -2209,6 +2232,7 @@ object KnoraApiV2WithValueObjects {
       * All the properties in the `knora-api` v2 ontology in the [[ApiV2WithValueObjects]] schema.
       */
     val Properties: Map[IRI, PropertyEntityInfoV2] = Set(
+        Result,
         IsEditable,
         CanBeInstantiated,
         HasPermissions,

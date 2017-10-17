@@ -630,6 +630,29 @@ trait KnoraResponseV2 {
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument
 }
 
+/**
+  * Provides a message indicating that the result of an operation was successful.
+  *
+  * @param message the message to be returned.
+  */
+case class SuccessResponseV2(message: String) extends KnoraResponseV2 {
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+        val (ontologyPrefixExpansion, resultProp) = targetSchema match {
+            case ApiV2Simple => (OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion, OntologyConstants.KnoraApiV2Simple.Result)
+            case ApiV2WithValueObjects => (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion, OntologyConstants.KnoraApiV2WithValueObjects.Result)
+        }
+
+        JsonLDDocument(
+            body = JsonLDObject(
+                Map(resultProp -> JsonLDString(message))
+            ),
+            context = JsonLDObject(
+                Map(OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(ontologyPrefixExpansion))
+            )
+        )
+    }
+}
+
 object ReadResourceUtil {
     /**
       * Creates a JSON-LD object from a [[ReadResourceV2]].

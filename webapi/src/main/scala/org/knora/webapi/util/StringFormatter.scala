@@ -931,6 +931,20 @@ class StringFormatter private(settings: SettingsImpl) {
     }
 
     /**
+      * Checks whether an IRI is the IRI of a project-specific API v2 with value objects ontology.
+      *
+      * @param iri the IRI to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the check fails.
+      * @return the same IRI.
+      */
+    def toProjectSpecificApiV2WithValueObjectsOntologyIri(iri: IRI, errorFun: () => Nothing): IRI = {
+        iri match {
+            case ProjectSpecificApiV2OntologyEntityRegex(_*) => iri
+            case _ => errorFun()
+        }
+    }
+
+    /**
       * Checks whether an IRI is the IRI of a built-in knora-api ontology entity.
       *
       * @param iri the IRI to be checked.

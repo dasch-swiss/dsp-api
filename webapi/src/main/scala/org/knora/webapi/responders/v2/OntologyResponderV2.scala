@@ -33,6 +33,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.{CacheUtil, ErrorHandlingMap, KnoraIdUtil}
 import org.knora.webapi._
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 
 import scala.concurrent.Future
 
@@ -86,6 +87,7 @@ class OntologyResponderV2 extends Responder {
         case ClassesGetRequestV2(resourceClassIris, responseSchema, allLanguages, userProfile) => future2Message(sender(), getClassDefinitionsWithCardinalitiesV2(resourceClassIris, responseSchema, allLanguages, userProfile), log)
         case PropertyEntitiesGetRequestV2(propertyIris, allLanguages, userProfile) => future2Message(sender(), getPropertyDefinitionsV2(propertyIris, allLanguages, userProfile), log)
         case NamedGraphsGetRequestV2(userProfile) => future2Message(sender(), getNamedGraphsV2(userProfile), log)
+        case createOntologyRequest: CreateOntologyRequestV2 => future2Message(sender(), createOntology(createOntologyRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -95,7 +97,7 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[LoadOntologiesResponse]].
       */
-    private def loadOntologies(userProfile: UserProfileV1): Future[LoadOntologiesResponseV2] = {
+    private def loadOntologies(userProfile: UserProfileV1): Future[SuccessResponseV2] = {
         // TODO: determine whether the user is authorised to reload the ontologies (depends on pull request #168).
 
         /**
@@ -679,7 +681,7 @@ class OntologyResponderV2 extends Responder {
 
             _ = CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = ontologyCacheData)
 
-        } yield LoadOntologiesResponseV2()
+        } yield SuccessResponseV2("Ontologies loaded.")
     }
 
     /**
@@ -1002,5 +1004,9 @@ class OntologyResponderV2 extends Responder {
             }
 
         } yield ReadEntityDefinitionsV2(properties = propertiesResponse.propertyEntityInfoMap, userLang = userLang)
+    }
+
+    private def createOntology(createOntologyRequest: CreateOntologyRequestV2): Future[SuccessResponseV2] = {
+
     }
 }

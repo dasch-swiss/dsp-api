@@ -48,7 +48,7 @@ object JavaUtil {
         import collection.JavaConverters._
         javaObj match {
             case x: java.util.HashMap[_, _] => x.asScala.toMap.mapValues(deepJavatoScala)
-            case x: java.util.ArrayList[_] => x.asScala.toVector.map(deepJavatoScala)
+            case x: java.util.ArrayList[_] => x.asScala.toList.map(deepJavatoScala)
             case _ => javaObj
         }
     }

@@ -36,8 +36,9 @@ import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
-import org.knora.webapi.messages.v2.responder.ontologymessages.{LoadOntologiesRequestV2, LoadOntologiesResponseV2}
-import org.knora.webapi.responders.{ResponderManager, _}
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
+import org.knora.webapi.responders._
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
 import org.knora.webapi.store._
@@ -180,7 +181,7 @@ trait KnoraService {
         // TODO: make a generic V2 ontology responder that handles this and is called by V1 ontology responder
         // TODO: forward LoadOntologies to V2 (V1 can still be called)
         val ontologyCacheFuture = responderManager ? LoadOntologiesRequestV2(systemUser)
-        Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[LoadOntologiesResponseV2]
+        Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[SuccessResponseV2]
 
         if (StartupFlags.allowReloadOverHTTP.get) {
             println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")

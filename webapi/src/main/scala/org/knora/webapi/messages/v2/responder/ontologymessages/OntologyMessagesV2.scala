@@ -41,25 +41,19 @@ sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 {
 
 /**
   * Requests that all ontologies in the repository are loaded. This message must be sent only once, when the application
-  * starts, before it accepts any API requests. A successful response will be a [[LoadOntologiesResponseV2]].
+  * starts, before it accepts any API requests. A successful response will be a [[SuccessResponseV2]].
   *
   * @param userProfile the profile of the user making the request.
   */
 case class LoadOntologiesRequestV2(userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
-  * Indicates that all ontologies were loaded.
+  * Requests the creation of an empty ontology. A successful response will be a [[SuccessResponseV2]].
+  *
+  * @param ontologyIri the IRI of the ontology to be created. This must be an API v2 with value objects schema IRI.
+  * @param userProfile the profile of the user making the request.
   */
-case class LoadOntologiesResponseV2() extends KnoraResponseV2 {
-    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl) = JsonLDDocument(
-        body = JsonLDObject(
-            Map("knora-api:result" -> JsonLDString("Ontologies loaded."))
-        ),
-        context = JsonLDObject(
-            Map(OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion))
-        )
-    )
-}
+case class CreateOntologyRequestV2(ontologyIri: IRI, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
   * Requests all available information about a list of ontology entities (classes and/or properties). A successful response will be an
