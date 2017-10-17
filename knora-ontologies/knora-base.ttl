@@ -365,6 +365,13 @@
 
                 rdfs:comment "Points to a LinkValue reification describing a link between two resources"@en ;
 
+                rdfs:label "hat Link zu"@de ,
+                           "has Link to"@en ,
+                           "a lien vers"@fr ,
+                           "ha Link verso"@it ;
+
+                rdfs:comment "Represents a direct connection between two resources"@en ;
+
                 :objectClassConstraint :LinkValue ;
 
                 :subjectClassConstraint :Resource ;
@@ -426,7 +433,8 @@
                               "a standoff lien vers"@fr ,
                               "ha standoff link verso"@it ;
 
-                   rdfs:comment "Represents a link in standoff markup from one resource to another."@en ;
+                   rdfs:comment "Repräsentiert einen Link im Standoff Markup von einer Ressource zu einer anderen"@de ,
+                                "Represents a link in standoff markup from one resource to another."@en ;
                    
                    :objectClassConstraint :Resource ;
 
@@ -439,6 +447,14 @@
 ###  http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue
 
 :hasStandoffLinkToValue rdf:type owl:ObjectProperty ;
+
+                        rdfs:label "hat Standoff Link zu"@de ,
+                                   "has Standoff Link to"@en ,
+                                   "a standoff lien vers"@fr ,
+                                   "ha standoff link verso"@it ;
+
+                        rdfs:comment "Repräsentiert einen Link im Standoff Markup von einer Ressource zu einer anderen"@de ,
+                                     "Represents a link in standoff markup from one resource to another."@en ;
 
                         :objectClassConstraint :LinkValue ;
 
@@ -639,9 +655,9 @@
             rdfs:comment "Region of interest within a digital object (e.g. an image)"@en ;
 
             rdfs:label "is Region von"@de ,
-                       "is Region of"@en ,
-                       "est Région de"@fr ,
-                       "e Region di"@it ;
+                       "is region of"@en ,
+                       "est région de"@fr ,
+                       "è regione di"@it ;
 
             :subjectClassConstraint :Region ;
 
@@ -654,6 +670,13 @@
 ###  http://www.knora.org/ontology/knora-base#isRegionOfValue
 
 :isRegionOfValue rdf:type owl:ObjectProperty ;
+
+                rdfs:comment "Region of interest within a digital object (e.g. an image)"@en ;
+
+                rdfs:label "is Region von"@de ,
+                           "is region of"@en ,
+                           "est région de"@fr ,
+                           "è regione di"@it ;
 
                  :objectClassConstraint :LinkValue ;
 

@@ -1,3 +1,23 @@
+/*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.knora.webapi.util
 
 import java.io.ByteArrayInputStream
@@ -23,6 +43,7 @@ object AkkaHttpUtils {
 
     /**
       * Given an [[HttpResponse]] containing json, return the said json.
+      *
       * @param response the [[HttpResponse]] containing json
       * @return an [[JsObject]]
       */
@@ -31,7 +52,7 @@ object AkkaHttpUtils {
         import DefaultJsonProtocol._
         import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 
-        implicit val materializer = ActorMaterializer()
+        implicit val materializer: ActorMaterializer = ActorMaterializer()
 
         val jsonFuture: Future[JsObject] = response match {
             case HttpResponse(StatusCodes.OK, _, entity, _) =>
@@ -52,7 +73,7 @@ object AkkaHttpUtils {
       */
     def httpResponseToJsonLDExpanded(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem, log: LoggingAdapter): Map[String, Any] = {
 
-        implicit val materializer = ActorMaterializer()
+        implicit val materializer: ActorMaterializer = ActorMaterializer()
 
         val jsonStringFuture: Future[String] = Unmarshal(response.entity).to[String]
 
@@ -69,33 +90,13 @@ object AkkaHttpUtils {
         val normalized: util.Map[String, Object] = JsonLdProcessor.compact(jsonObject, context, options)
 
 
-
         /*
         val opts: JsonLdOptions = new JsonLdOptions()
         val expanded = JsonLdProcessor.expand(httpResponseToJson(response), opts)
         println("expanded json-ld: " + expanded)
         */
 
-        convert(normalized).asInstanceOf[Map[String, Any]]
-    }
-
-    /**
-      * Deep conversion of a java collection into a scala collection.
-      *
-      * Usage: val y = convert(x).asInstanceOf[Map[String, Any]]
-      *
-      * @param x
-      * @return
-      */
-    private def convert(x:Any):Any =
-    {
-        import collection.JavaConverters._
-        x match
-        {
-            case x: java.util.HashMap[_,_] => x.asScala.toMap.mapValues(convert)
-            case x: java.util.ArrayList[_] => x.asScala.toList.map(convert)
-            case _ => x
-        }
+        JavaUtil.deepJavatoScala(normalized).asInstanceOf[Map[String, Any]]
     }
 
 }

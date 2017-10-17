@@ -16,17 +16,20 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-.. _starting-graphdb-se:
+.. _starting-graphdb:
 
-Starting GraphDB-SE
-=====================
+Starting GraphDB
+================
+
+GraphDB SE
+----------
 
 Inside the Knora API server git repository, there is a folder called ``/triplestores/graphdb-se`` containing the
 latest supported version of the GraphDB-SE distribution archive.
 
 
 Running Locally
----------------
+^^^^^^^^^^^^^^^
 
 Unzip ``graphdb-se-x.x.x-dist.zip`` to a place of your choosing and run the following:
 
@@ -37,10 +40,10 @@ Unzip ``graphdb-se-x.x.x-dist.zip`` to a place of your choosing and run the foll
 
 
 Running inside Docker
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 Important Steps
-^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~
 
 To be able to successfully run GraphDB inside docker two important steps need to be done beforhand:
 
@@ -49,7 +52,7 @@ To be able to successfully run GraphDB inside docker two important steps need to
      this folder into the docker container, so that the license can be used by GraphDB running inside the container.
 
 Usage
-^^^^^^
+~~~~~
 
 ::
 
@@ -68,16 +71,16 @@ at a later time, follow the following steps:
 ::
 
   $ docker run --name graphdb -d -t -v /path/to/license/folder:/external -p 7200:7200 dhlabbasel/graphdb
-  
+
   (to see the console output, attach to the container; to detach press Ctrl-c)
   $ docker attach graphdb
-    
+
   (to stop the container)
   $ docker stop graphdb
-  
+
   (to start the container again)
   $ docker start graphdb
-  
+
   (to remove the container; needs to be stopped)
   $ docker rm graphdb
 
@@ -85,3 +88,14 @@ at a later time, follow the following steps:
  - ``-d`` run container in background and print container ID
  - ``-t`` allocate a pseudo TTY, so you see the console output
  - ``-p`` forwards the exposed port to your host
+
+
+GraphDB Free
+------------
+
+You can run GraphDB Free locally as described for GraphDB SE above, or you can use Knora's pre-built
+GraphDB Free Docker image:
+
+::
+
+  $ docker run --rm -p 7200:7200 dhlabbasel/graphdb-free

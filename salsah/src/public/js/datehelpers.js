@@ -69,17 +69,22 @@
 
 
 	S.gregorian_to_jd = function(year, month, day) {
+        // console.log("gregorian_to_jd got year " + year + ", month " + month + ", day " + day);
+
 		year = parseInt(year);
 		month = parseInt(month);
 		day = parseInt(day);
-		if (year < 0) year++; // correction for PHP
-		return (GREGORIAN_EPOCH - 1) +
+		//if (year < 0) year++; // correction for PHP
+		var jd = (GREGORIAN_EPOCH - 1) +
 			(365 * (year - 1)) +
 			Math.floor((year - 1) / 4) +
 			(-Math.floor((year - 1) / 100)) +
 			Math.floor((year - 1) / 400) +
 			Math.floor((((367 * month) - 362) / 12) +
 			((month <= 2) ? 0 : (leap_gregorian(year) ? -1 : -2)) + day);
+
+		// console.log("gregorian_to_jd calculated JDN " + jd);
+		return jd;
 	};
 
 	//  JD_TO_GREGORIAN  --  Calculate Gregorian calendar date from Julian day
@@ -111,9 +116,12 @@
 	    yearday = wjd - S.gregorian_to_jd(year, 1, 1);
 	    leapadj = ((wjd < S.gregorian_to_jd(year, 3, 1)) ? 0 : (leap_gregorian(year) ? 1 : 2));
 	    var month = Math.floor((((yearday + leapadj) * 12) + 373) / 367);
+
+	    // console.log("jd_to_gregorian calculated month " + month);
+
 	    var day = (wjd - S.gregorian_to_jd(year, month, 1)) + 1;
 
-		if (year <= 0) year--; // correction for PHPvar JULIAN_EPOCH = 1721423.5;
+		// if (year <= 0) year--; // correction for PHPvar JULIAN_EPOCH = 1721423.5;
 
 	    return new Array(Math.round(year), Math.round(month), Math.round(day));
 	};

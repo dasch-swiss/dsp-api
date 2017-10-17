@@ -110,7 +110,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
     }
 
-    "The Search Endpoint" ignore {
+    "The Search v2 Endpoint" should {
         "perform a fulltext search for 'Narr'" in {
 
             Get("/v2/search/Narr") ~> searchPath ~> check {
@@ -133,6 +133,158 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
+        "perform an extended search for books that have the title 'Zeitglöcklein des Lebens'" ignore { // literals are not supported
+            val sparqlSimplified =
+                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book incunabula:title "Zeitglöcklein des Lebens und Leidens Christi" .
+                  |
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title "Zeitglöcklein des Lebens und Leidens Christi" .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfItems(responseAs[String], 2)
+
+            }
+
+        }
+
+        "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' (2)" in {
+            val sparqlSimplified =
+                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfItems(responseAs[String], 2)
+
+            }
+
+        }
+
+        "perform an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
+            val sparqlSimplified =
+                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        FILTER(?title != "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // 19 - 2 = 18 :-)
+                // there is a total of 19 incunabula books of which two have the title "Zeitglöcklein des Lebens und Leidens Christi" (see test above)
+                // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
+                // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
+
+                checkNumberOfItems(responseAs[String], 18)
+
+            }
+
+        }
+
+        "perform an extended search for the page of a book whose seqnum equals 10" in {
+
+            val sparqlSimplified =
+                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?page knora-api:isMainResource true .
+                  |
+                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |    } WHERE {
+                  |
+                  |        ?page a incunabula:page .
+                  |        ?page a knora-api:Resource .
+                  |
+                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
+                  |
+                  |        <http://data.knora.org/b6b5ff1eb703> a knora-api:Resource .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |        incunabula:seqnum knora-api:objectType xsd:integer .
+                  |
+                  |        FILTER(?seqnum = 10)
+                  |
+                  |        ?seqnum a xsd:integer .
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfItems(responseAs[String], 1)
+
+            }
+
+        }
+
         "perform an extended search for the pages of a book whose seqnum is lower than or equals 10" in {
 
             val sparqlSimplified =
@@ -142,9 +294,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page a incunabula:page .
-                  |
-                  |        ?page knora-api:partOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
@@ -179,7 +329,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
 
-        "perform an extended search for books that have been published on the first of March 1497 (Julian Calendar)" in {
+        "perform an extended search for books that have been published on the first of March 1497 (Julian Calendar)" ignore { // literals are not supported
             val sparqlSimplified =
                 """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -219,7 +369,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform an extended search for books that have not been published on the first of March 1497 (Julian Calendar)" in {
+        "perform an extended search for books that have been published on the first of March 1497 (Julian Calendar) (2)" in {
             val sparqlSimplified =
                 """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -231,7 +381,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?book incunabula:title ?title .
                   |
-                  |        ?book incunabula:pubdate "JULIAN:1497-03-01" .
+                  |        ?book incunabula:pubdate ?pubdate .
                   |    } WHERE {
                   |
                   |        ?book a incunabula:book .
@@ -247,7 +397,52 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?pubdate a knora-api:Date .
                   |
-                  |         FILTER(?pubdate != "JULIAN:1497-03-01")
+                  |        FILTER(?pubdate = "JULIAN:1497-03-01")
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfItems(responseAs[String], 2)
+
+            }
+
+        }
+
+
+        "perform an extended search for books that have not been published on the first of March 1497 (Julian Calendar)" in {
+            val sparqlSimplified =
+                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |        incunabula:pubdate knora-api:objectType knora-api:Date .
+                  |
+                  |        ?pubdate a knora-api:Date .
+                  |
+                  |        FILTER(?pubdate != "JULIAN:1497-03-01")
                   |
                   |    }
                 """.stripMargin
@@ -585,7 +780,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for an anything:Thing that has a decimal value of 2.1" in {
+        "search for an anything:Thing that has a decimal value of 2.1" ignore { // literals are not supported
             val sparqlSimplified =
                 """
                   |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
@@ -734,7 +929,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for an anything:Thing that has a Boolean value that is true" in {
+        "search for an anything:Thing that has a Boolean value that is true" ignore { // literals are not supported
             val sparqlSimplified =
                 """
                   |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>

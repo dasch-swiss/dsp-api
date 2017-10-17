@@ -205,9 +205,11 @@
 
              rdfs:subPropertyOf dc:description ;
 
-             rdfs:label "Beschreibung (Richtext)"@de ;
+             rdfs:label "Beschreibung (Richtext)"@de ,
+                        "Description"@en ;
 
-             rdfs:comment """Beschreibung"""@de ;
+             rdfs:comment """Beschreibung"""@de ,
+                          """Description"""@en ;
 
              knora-base:subjectClassConstraint knora-base:Resource ;
 
@@ -455,7 +457,8 @@
 
           rdfs:subPropertyOf knora-base:hasValue ;
 
-          rdfs:label "Ursprünglicher Dateiname"@de ,
+          rdfs:label "Original filename"@en ,
+                     "Ursprünglicher Dateiname"@de ,
                      "Nom de fichier original"@fr ;
 
           rdfs:comment """Der originale Dateiname"""@de ;

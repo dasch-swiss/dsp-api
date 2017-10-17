@@ -73,7 +73,7 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite wi
     override def beforeAll: Unit = {
         /* Set the startup flags and start the Knora Server */
         log.debug(s"Starting Knora Service")
-        StartupFlags.allowResetTriplestoreContentOperationOverHTTP send true
+        StartupFlags.allowReloadOverHTTP send true
         checkActorSystem()
         startService()
     }

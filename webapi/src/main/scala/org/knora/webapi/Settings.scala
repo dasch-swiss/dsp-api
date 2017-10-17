@@ -89,29 +89,31 @@ class SettingsImpl(config: Config) extends Extension {
     val triplestoreType: String = config.getString("app.triplestore.dbtype")
     val triplestoreHost: String = config.getString("app.triplestore.host")
 
+    val v2ExtendedSearchResultsPerPage: Int = config.getInt("app.v2.extended-search.results-per-page")
+
     val triplestorePort: Int = triplestoreType match {
-        case HTTP_SESAME_TS_TYPE => config.getInt("app.triplestore.sesame.port")
         case HTTP_GRAPH_DB_TS_TYPE => config.getInt("app.triplestore.graphdb.port")
-        case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getInt("app.triplestore.graphdb.port")
+        case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getInt("app.triplestore.graphdb-free.port")
         case HTTP_FUSEKI_TS_TYPE => config.getInt("app.triplestore.fuseki.port")
         case other => 9999
     }
 
     val triplestoreDatabaseName: String = triplestoreType match {
-        case HTTP_SESAME_TS_TYPE => config.getString("app.triplestore.sesame.repository-name")
         case HTTP_GRAPH_DB_TS_TYPE => config.getString("app.triplestore.graphdb.repository-name")
-        case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb.repository-name")
+        case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb-free.repository-name")
         case HTTP_FUSEKI_TS_TYPE => config.getString("app.triplestore.fuseki.repository-name")
         case other => ""
     }
 
     val triplestoreUsername: String = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => config.getString("app.triplestore.graphdb.username")
+        case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb-free.username")
         case other => ""
     }
 
     val triplestorePassword: String = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => config.getString("app.triplestore.graphdb.password")
+        case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb-free.password")
         case other => ""
     }
 
@@ -130,6 +132,9 @@ class SettingsImpl(config: Config) extends Extension {
     val fakeTriplestoreDataDir: File = new File(config.getString("app.triplestore.fake-triplestore-data-dir"))
 
     val skipAuthentication: Boolean = config.getBoolean("app.skip-authentication")
+
+    val jwtSecretKey: String = config.getString("app.jwt-secret-key")
+    val jwtLongevity: Long = config.getLong("app.jwt-longevity")
 
     val fallbackLanguage: String = config.getString("user.default-language")
 

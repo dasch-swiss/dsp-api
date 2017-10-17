@@ -44,7 +44,7 @@ class PermissionsV1E2ESpec extends E2ESpec(PermissionsV1E2ESpec.config) with Tri
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
         val request = Post(baseApiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 300.seconds)
+        singleAwaitingRequest(request, 600.seconds)
     }
 
     "The Permissions Route ('v1/permissions/projectIri/groupIri')" should {

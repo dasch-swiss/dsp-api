@@ -40,6 +40,7 @@ import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.FileIO
+import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
@@ -48,6 +49,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyEntityInfoV2
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.InputValidation.XmlImportNamespaceInfoV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagsV1
@@ -60,7 +62,7 @@ import spray.json._
 
 import scala.collection.immutable
 import scala.concurrent.duration._
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{ExecutionContextExecutor, Future, Promise}
 import scala.util.{Failure, Success, Try}
 import scala.xml._
 
@@ -75,9 +77,9 @@ object ResourcesRouteV1 extends Authenticator {
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
 
         implicit val system: ActorSystem = _system
-        implicit val materializer = ActorMaterializer()
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = settings.defaultTimeout
+        implicit val materializer: ActorMaterializer = ActorMaterializer()
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
         val log = Logger(LoggerFactory.getLogger(this.getClass))
@@ -308,6 +310,14 @@ object ResourcesRouteV1 extends Authenticator {
         }
 
         def makeMultiResourcesRequestMessage(resourceRequest: Seq[CreateResourceFromXmlImportRequestV1], projectId: IRI, apiRequestID: UUID, userProfile: UserProfileV1): Future[MultipleResourceCreateRequestV1] = {
+            // Make sure there are no duplicate client resource IDs.
+
+            val duplicateClientIDs: immutable.Iterable[String] = resourceRequest.map(_.client_id).groupBy(identity).collect { case (clientID, occurrences) if occurrences.size > 1 => clientID }
+
+            if (duplicateClientIDs.nonEmpty) {
+                throw BadRequestException(s"One or more client resource IDs were used for multiple resources: ${duplicateClientIDs.mkString(", ")}")
+            }
+
             val resourcesToCreate: Seq[Future[OneOfMultipleResourceCreateRequestV1]] =
                 resourceRequest.map(createResourceRequest => createOneResourceRequestFromXmlImport(createResourceRequest, userProfile))
 
@@ -328,7 +338,6 @@ object ResourcesRouteV1 extends Authenticator {
                 apiRequestID = UUID.randomUUID
             )
         }
-
 
         /**
           * Given the IRI the main internal ontology to be used in an XML import, recursively gets instances of
@@ -358,15 +367,34 @@ object ResourcesRouteV1 extends Authenticator {
                 assert(intermediateResults.contains(OntologyConstants.KnoraBase.KnoraBaseOntologyIri))
 
                 for {
-                // Get a NamedGraphEntityInfoV1 listing the IRIs of the properties defined in the initial ontology.
+                // Get a NamedGraphEntityInfoV1 listing the IRIs of the classes and properties defined in the initial ontology.
                     initialNamedGraphInfo: NamedGraphEntityInfoV1 <- (responderManager ? NamedGraphEntityInfoRequestV1(initialOntologyIri, userProfile)).mapTo[NamedGraphEntityInfoV1]
 
-                    // Get details about those properties.
-                    propertyInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(propertyIris = initialNamedGraphInfo.propertyIris, userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
+                    // Get details about those classes and properties.
+                    entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
+                        resourceClassIris = initialNamedGraphInfo.resourceClasses,
+                        propertyIris = initialNamedGraphInfo.propertyIris,
+                        userProfile = userProfile
+                    )).mapTo[EntityInfoGetResponseV1]
 
-                    // Look at the object class constraints of those properties. Make a set of the ontologies containing those classes,
+                    // Look at the properties that have cardinalities in the resource classes in the initial ontology.
+                    // Make a set of the ontologies containing the definitions of those properties, not including the initial ontology itself
+                    // or any other ontologies we've already looked at.
+                    ontologyIrisFromCardinalities: Set[IRI] = entityInfoResponse.resourceEntityInfoMap.foldLeft(Set.empty[IRI]) {
+                        case (acc, (resourceClassIri, resourceClassInfo)) =>
+                            val resourceCardinalityOntologies: Set[IRI] = resourceClassInfo.cardinalities.map {
+                                case (propertyIri, _) => InputValidation.getInternalOntologyIriFromInternalEntityIri(
+                                    internalEntityIri = propertyIri,
+                                    errorFun = () => throw InconsistentTriplestoreDataException(s"Class $resourceClassIri has a cardinality for an invalid property: $propertyIri")
+                                )
+                            }.toSet
+
+                            acc ++ resourceCardinalityOntologies
+                    } -- intermediateResults.keySet - initialOntologyIri
+
+                    // Look at the object class constraints of the properties in the initial ontology. Make a set of the ontologies containing those classes,
                     // not including the initial ontology itself or any other ontologies we've already looked at.
-                    ontologyIrisFromObjectClassConstraints: Set[IRI] = propertyInfoResponse.propertyEntityInfoMap.map {
+                    ontologyIrisFromObjectClassConstraints: Set[IRI] = entityInfoResponse.propertyEntityInfoMap.map {
                         case (propertyIri, propertyInfo) =>
                             val propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
                                 throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
@@ -378,8 +406,11 @@ object ResourcesRouteV1 extends Authenticator {
                             )
                     }.toSet -- intermediateResults.keySet - initialOntologyIri
 
+                    // Make a set of all the ontologies referenced by the initial ontology.
+                    referencedOntologies: Set[IRI] = ontologyIrisFromCardinalities ++ ontologyIrisFromObjectClassConstraints
+
                     // Recursively get NamedGraphEntityInfoV1 instances for each of those ontologies.
-                    futuresOfNamedGraphInfosFromObjectClassConstraints: Set[Future[Map[IRI, NamedGraphEntityInfoV1]]] = ontologyIrisFromObjectClassConstraints.map {
+                    futuresOfNamedGraphInfosForReferencedOntologies: Set[Future[Map[IRI, NamedGraphEntityInfoV1]]] = referencedOntologies.map {
                         ontologyIri =>
                             getNamedGraphInfosRec(
                                 initialOntologyIri = ontologyIri,
@@ -388,11 +419,11 @@ object ResourcesRouteV1 extends Authenticator {
                             )
                     }
 
-                    namedGraphInfosFromObjectClassConstraints: Set[Map[IRI, NamedGraphEntityInfoV1]] <- Future.sequence(futuresOfNamedGraphInfosFromObjectClassConstraints)
+                    namedGraphInfosFromReferencedOntologies: Set[Map[IRI, NamedGraphEntityInfoV1]] <- Future.sequence(futuresOfNamedGraphInfosForReferencedOntologies)
 
                 // Return the previous intermediate results, plus the information about the initial ontology
-                // and the ontologies containing classes used in object class constraints.
-                } yield namedGraphInfosFromObjectClassConstraints.flatten.toMap ++ intermediateResults + (initialOntologyIri -> initialNamedGraphInfo)
+                // and the other referenced ontologies.
+                } yield namedGraphInfosFromReferencedOntologies.flatten.toMap ++ intermediateResults + (initialOntologyIri -> initialNamedGraphInfo)
             }
 
             for {
@@ -480,7 +511,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                 // Collect all the property definitions in a single Map. Since any schema could use any property, we will
                 // pass this Map to the schema generation template for every schema.
-                propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV1] = entityInfoResponsesMap.values.flatMap(_.propertyEntityInfoMap).toMap
+                propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2] = entityInfoResponsesMap.values.flatMap(_.propertyEntityInfoMap).toMap
 
                 // Make a map of internal ontology IRIs to XmlImportNamespaceInfoV1 objects describing the XML namespace
                 // of each schema to be generated. Don't generate a schema for knora-base, because the built-in Knora
@@ -762,9 +793,15 @@ object ResourcesRouteV1 extends Authenticator {
                         maybeMappingID match {
                             case Some(mappingID) =>
                                 val mappingIri: Option[IRI] = Some(InputValidation.toIri(mappingID.toString, () => throw BadRequestException(s"Invalid mapping ID in element '${node.label}: '$mappingID")))
-                                val embeddedXmlRootNode = node.child.filterNot(_.label == "#PCDATA").head
-                                val embeddedXmlDoc = """<?xml version="1.0" encoding="UTF-8"?>""" + embeddedXmlRootNode.toString
-                                CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = None, xml = Some(embeddedXmlDoc), mapping_id = mappingIri)))
+                                val childElements = node.child.filterNot(_.label == "#PCDATA")
+
+                                if (childElements.nonEmpty) {
+                                    val embeddedXmlRootNode = childElements.head
+                                    val embeddedXmlDoc = """<?xml version="1.0" encoding="UTF-8"?>""" + embeddedXmlRootNode.toString
+                                    CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = None, xml = Some(embeddedXmlDoc), mapping_id = mappingIri)))
+                                } else {
+                                    throw BadRequestException(s"Element '${node.label}' provides a mapping_id, but its content is not XML")
+                                }
 
                             case None =>
                                 CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = Some(elementValue))))
@@ -1171,7 +1208,7 @@ object ResourcesRouteV1 extends Authenticator {
                             settings = settings,
                             responderManager = responderManager,
                             log = loggingAdapter
-                        )
+                        )(timeout = 1.hour, executionContext = executionContext)
                 }
 
             }

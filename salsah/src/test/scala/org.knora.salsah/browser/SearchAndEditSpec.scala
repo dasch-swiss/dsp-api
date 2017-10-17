@@ -58,7 +58,7 @@ class SearchAndEditSpec extends SalsahSpec {
     private val incunabulaUserFullName = "System Administrator"
     private val testPassword = "test"
 
-    // In order to run these tests, start `webapi` using the option `allowResetTriplestoreContentOperationOverHTTP`
+    // In order to run these tests, start `webapi` using the option `allowReloadOverHTTP`
 
 
     def doZeitgloeckleinSearch(): Unit = {

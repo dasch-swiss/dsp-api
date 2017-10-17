@@ -28,11 +28,11 @@
  * This template is used only by getResourcePropertiesAndValues.scala.txt.
  *
  * @param triplestore the name of the triplestore being used.
- * @param resourceIri the Iri of the requested resource.
+ * @param resourceIris the Iris of the requested resources.
  * @param preview indicates if the request should only return preview information.
  *@
 @(triplestore: String,
-  resourceIri: String,
+  resourceIris: Seq[IRI],
   preview: Boolean)
 
 

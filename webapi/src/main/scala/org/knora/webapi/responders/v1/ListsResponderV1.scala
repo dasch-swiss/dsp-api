@@ -45,9 +45,9 @@ class ListsResponderV1 extends Responder {
     }
 
     /**
-      * Retrieves a list from the triplestore and returns it as a [[org.knora.webapi.messages.v1.responder.listmessages.ListGetResponseV1]].
+      * Retrieves a list from the triplestore and returns it as a [[ListGetResponseV1]].
       * Due to compatibility with the old, crappy SALSAH-API, "hlists" and "selection" have to be differentiated in the response
-      * [[org.knora.webapi.messages.v1.responder.listmessages.ListGetResponseV1]] is the abstract super class of [[HListGetResponseV1]] and [[SelectionGetResponseV1]]
+      * [[ListGetResponseV1]] is the abstract super class of [[HListGetResponseV1]] and [[SelectionGetResponseV1]]
       *
       * @param rootNodeIri the Iri if the root node of the list to be queried.
       * @param userProfile the profile of the user making the request.

@@ -25,37 +25,53 @@ env:
     - WEBAPI_REPO=dhlabbasel/webapi
     - SALSAH_REPO=dhlabbasel/salsah
     - SIPI_REPO=dhlabbasel/sipi
-    - COMMIT=${TRAVIS_COMMIT::8}
-    - TAG=${TRAVIS_BRANCH//\//-}
     - DOCKERHOST=$(ip route get 8.8.8.8 | awk '{print $NF; exit}')
     - CHROME_BIN=google-chrome-stable
+    - GDB_HEAP_SIZE="4g"
 
 cache:
   directories:
     - $HOME/.ivy2
 
+
+before_install:
+  - openssl aes-256-cbc -K $encrypted_6254b38dc8d5_key -iv $encrypted_6254b38dc8d5_iv -in $TRAVIS_BUILD_DIR/private/graphdb.license.enc -out $TRAVIS_BUILD_DIR/private/graphdb.license -d
+
+stages:
+  - test
+  - name: publish # generally, only publish if we are on 'develop'
+    if: branch = develop
+
 jobs:
   include:
     - stage: test
       script:
-        # start fuseki
-        - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
+        # prepare needed graphdb-se files
+        - mkdir -p $TRAVIS_BUILD_DIR/data/conf
+        - cp $TRAVIS_BUILD_DIR/private/graphdb.license $TRAVIS_BUILD_DIR/data/conf/graphdb.license
+        - mkdir -p $TRAVIS_BUILD_DIR/graphdb
+        - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
+        # start and initialize graphdb-se
+        - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/data:/opt/graphdb/home -v $TRAVIS_BUILD_DIR/graphdb:/graphdb ontotext/graphdb:8.2.0-se
+        - sleep 15
+        - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
         # start the built-in webapi server tests
-        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt test
+        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt graphdb:test
     - stage: test
       script:
-        # start fuseki
-        - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
+        # prepare needed graphdb-se files
+        - mkdir -p $TRAVIS_BUILD_DIR/data/conf
+        - cp $TRAVIS_BUILD_DIR/private/graphdb.license $TRAVIS_BUILD_DIR/data/conf/graphdb.license
+        - mkdir -p $TRAVIS_BUILD_DIR/graphdb
+        - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
+        # start and initialize graphdb-se
+        - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/data:/opt/graphdb/home -v $TRAVIS_BUILD_DIR/graphdb:/graphdb ontotext/graphdb:8.2.0-se
+        - sleep 15
+        - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
         # start the sipi container (with production config)
         - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop
         # start the integration tests
-        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt fuseki-it:test
-    #- stage: webapi-graphdb
-    #  script:
-    #    # start graphdb
-    #    - cd $TRAVIS_BUILD_DIR/triplestores/fuseki/ && ./fuseki-server &
-    #    # start the built-in webapi server tests
-    #    - cd $TRAVIS_BUILD_DIR/webapi/ && sbt test
+        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt it:test
     #- stage: test
     #  script:
     #    #- "export DISPLAY=:99.0"
@@ -77,18 +93,18 @@ jobs:
     - stage: publish
       script:
         - docker login -u $DOCKER_USER -p $DOCKER_PASS
-        - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:$COMMIT
-        - docker tag $WEBAPI_REPO:$COMMIT $WEBAPI_REPO:$TAG
-        # only push to docker if it is not a pull request
-        - if [ "$TRAVIS_EVENT_TYPE" != "pull_request" ]; then docker push $WEBAPI_REPO ; fi
-        - docker build $TRAVIS_BUILD_DIR/salsah/ -t $SALSAH_REPO:$COMMIT
-        - docker tag $SALSAH_REPO:$COMMIT $SALSAH_REPO:$TAG
-        # only push to docker if it is not a pull request
-        - if [ "$TRAVIS_EVENT_TYPE" != "pull_request" ]; then docker push $SALSAH_REPO ; fi
-        # get the develop sipi and tag it as 'develop-knora' so we know that this version is tested (only on the develop branch)
+        # webapi
+        - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:develop
+        - docker tag $WEBAPI_REPO:develop $WEBAPI_REPO:latest
+        - docker push $WEBAPI_REPO
+        # salsah
+        - docker build $TRAVIS_BUILD_DIR/salsah/ -t $SALSAH_REPO:develop
+        - docker tag $SALSAH_REPO:develop $SALSAH_REPO:latest
+        - docker push $SALSAH_REPO
+        # sipi: get the develop sipi and tag it as 'develop-knora' so we know that this version is tested (only on the develop branch)
         - docker pull $SIPI_REPO:develop
-        - if [ "$TAG" == "develop" ]; then docker tag $SIPI_REPO:develop $SIPI_REPO:knora-develop ; fi
-        - if [ "$TRAVIS_EVENT_TYPE" != "pull_request" ]; then docker push $SIPI_REPO ; fi
+        - docker tag $SIPI_REPO:develop $SIPI_REPO:knora-develop
+        - docker push $SIPI_REPO
 
 notifications:
   slack:

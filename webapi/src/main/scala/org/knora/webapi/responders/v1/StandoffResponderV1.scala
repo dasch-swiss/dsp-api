@@ -38,6 +38,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
 import org.knora.webapi.util.ActorUtil._
@@ -209,7 +210,7 @@ class StandoffResponderV1 extends Responder {
                 defaultXSLTransformation: Option[IRI] <- mappingXML \ "defaultXSLTransformation" match {
                     case defaultTrans: NodeSeq if defaultTrans.length == 1 =>
 
-                        // check if the Iri is valid
+                        // check if the IRI is valid
                         val transIri = InputValidation.toIri(defaultTrans.headOption.getOrElse(throw BadRequestException("could not access <defaultXSLTransformation>")).text, () => throw BadRequestException(s"XSL transformation ${defaultTrans.head.text} is not a valid IRI"))
 
                         // try to obtain the XSL transformation to make sure that it really exists
@@ -241,7 +242,7 @@ class StandoffResponderV1 extends Responder {
 
                         val separatorRequired: Boolean = InputValidation.toBoolean(separatorBooleanAsString, () => throw BadRequestException(s"<separatesWords> could not be converted to Boolean: $separatorBooleanAsString"))
 
-                        // get the standoff class Iri
+                        // get the standoff class IRI
                         val standoffClassIri = (curMappingEle \ "standoffClass" \ "classIri").headOption.getOrElse(throw BadRequestException(s"no '<classIri>' given for node $curMappingEle")).text
 
                         // get a collection containing all the attributes
@@ -256,7 +257,7 @@ class StandoffResponderV1 extends Responder {
 
                                 val attributeNamespace = (curAttributeNode \ "namespace").headOption.getOrElse(throw BadRequestException(s"no '<namespace>' given for attribute $curAttributeNode")).text
 
-                                // get the standoff property Iri for the current attribute
+                                // get the standoff property IRI for the current attribute
                                 val propIri = (curAttributeNode \ "propertyIri").headOption.getOrElse(throw BadRequestException(s"no '<propertyIri>' given for attribute $curAttributeNode")).text
 
                                 MappingXMLAttribute(
@@ -312,7 +313,7 @@ class StandoffResponderV1 extends Responder {
                 // checks if the attributes defined for XML elements have cardinalities for the standoff properties defined on the standoff class
                 _ <- getStandoffEntitiesFromMappingV1(mappingXMLToStandoff, userProfile)
 
-                // check if the mapping Iri already exists
+                // check if the mapping IRI already exists
                 getExistingMappingSparql = queries.sparql.v1.txt.getMapping(
                     triplestore = settings.triplestoreType,
                     mappingIri = mappingIri
@@ -320,7 +321,7 @@ class StandoffResponderV1 extends Responder {
                 existingMappingResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(getExistingMappingSparql)).mapTo[SparqlConstructResponse]
 
                 _ = if (existingMappingResponse.statements.nonEmpty) {
-                    throw BadRequestException(s"mapping Iri $mappingIri already exists")
+                    throw BadRequestException(s"mapping IRI $mappingIri already exists")
                 }
 
                 createNewMappingSparql = queries.sparql.v1.txt.createNewMapping(
@@ -372,7 +373,7 @@ class StandoffResponderV1 extends Responder {
                 }
             }
 
-            // check if the given project Iri represents an actual project
+            // check if the given project IRI represents an actual project
             projectInfo: ProjectInfoResponseV1 <- (responderManager ? ProjectInfoByIRIGetRequestV1(
                 iri = projectIri,
                 Some(userProfile)
@@ -382,7 +383,7 @@ class StandoffResponderV1 extends Responder {
 
             // TODO: make sure that has sufficient permissions to create a mapping in the given project
 
-            // create the mapping Iri from the project Iri and the name provided by the user
+            // create the mapping IRI from the project IRI and the name provided by the user
             mappingIri = knoraIdUtil.makeProjectMappingIri(projectIri, mappingName)
 
             // put the mapping into the named graph of the project
@@ -390,7 +391,7 @@ class StandoffResponderV1 extends Responder {
 
             result: CreateMappingResponseV1 <- IriLocker.runWithIriLock(
                 apiRequestID,
-                knoraIdUtil.createMappingLockIriForProject(projectIri), // use a special project specific Iri to lock the creation of mappings for the given project
+                knoraIdUtil.createMappingLockIriForProject(projectIri), // use a special project specific IRI to lock the creation of mappings for the given project
                 () => createMappingAndCheck(
                     xml = xml,
                     label = label,
@@ -429,7 +430,7 @@ class StandoffResponderV1 extends Responder {
                 // get tags from this namespace if already existent, otherwise create an empty map
                 val namespaceMap: Map[String, Map[String, XMLTag]] = acc.namespace.getOrElse(namespace, Map.empty[String, Map[String, XMLTag]])
 
-                // get the standoff class Iri
+                // get the standoff class IRI
                 val standoffClassIri = curEle.standoffClass
 
                 // get a collection containing all the attributes
@@ -457,7 +458,7 @@ class StandoffResponderV1 extends Responder {
                                     throw BadRequestException("Duplicate attribute name in namespace")
                                 }
 
-                                // get the standoff property Iri for the current attribute
+                                // get the standoff property IRI for the current attribute
                                 val propIri = attrEle.standoffProperty
 
                                 // add the current attribute to the collection
@@ -528,7 +529,7 @@ class StandoffResponderV1 extends Responder {
     /**
       * Gets a mapping either from the cache or by making a request to the triplestore.
       *
-      * @param mappingIri  the Iri of the mapping to retrieve.
+      * @param mappingIri  the IRI of the mapping to retrieve.
       * @param userProfile the user making the request.
       * @return a [[MappingXMLtoStandoff]].
       */
@@ -571,7 +572,7 @@ class StandoffResponderV1 extends Responder {
       *
       * Gets a mapping from the triplestore.
       *
-      * @param mappingIri  the Iri of the mapping to retrieve.
+      * @param mappingIri  the IRI of the mapping to retrieve.
       * @param userProfile the user making the request.
       * @return a [[MappingXMLtoStandoff]].
       */

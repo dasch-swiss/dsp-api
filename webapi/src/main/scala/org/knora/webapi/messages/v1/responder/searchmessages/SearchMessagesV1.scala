@@ -131,7 +131,7 @@ case class SearchPreviewDimensionsV1(nx: Int, ny: Int)
 /**
   * Represents one row (resource) in [[SearchGetResponseV1]]
   *
-  * @param obj_id       Iri of the retrieved resource.
+  * @param obj_id       IRI of the retrieved resource.
   * @param preview_path path to a preview representation.
   * @param iconsrc      icon representing the resource type.
   * @param icontitle    description of the resource type.

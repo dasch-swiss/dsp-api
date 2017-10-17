@@ -27,7 +27,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.groupmessages.GroupV1JsonProtocol
 import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataV1, PermissionV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileType.UserProfileType
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
@@ -479,7 +479,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
     def ofType(userProfileType: UserProfileType): UserProfileV1 = {
 
         userProfileType match {
-            case UserProfileType.SHORT => {
+            case UserProfileTypeV1.SHORT => {
                 val oldUserData = userData
                 val newUserData = UserDataV1(
                     user_id = oldUserData.user_id,
@@ -500,7 +500,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     sessionId = None // removed sessionId
                 )
             }
-            case UserProfileType.RESTRICTED => {
+            case UserProfileTypeV1.RESTRICTED => {
                 val oldUserData = userData
                 val newUserData = UserDataV1(
                     lang = oldUserData.lang,
@@ -521,7 +521,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     sessionId = None // removed sessionId
                 )
             }
-            case UserProfileType.FULL => {
+            case UserProfileTypeV1.FULL => {
                 UserProfileV1(
                     userData = userData,
                     groups = groups,
@@ -607,7 +607,7 @@ case class UserDataV1(user_id: Option[IRI] = None,
   * sensitive information to the outside world. Since in API V1 [[UserDataV1]] is returned with some responses,
   * we use 'restricted' in those cases.
   */
-object UserProfileType extends Enumeration {
+object UserProfileTypeV1 extends Enumeration {
     /* TODO: Extend to incorporate user privacy wishes */
 
     type UserProfileType = Value

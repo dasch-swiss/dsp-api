@@ -26,8 +26,12 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
+import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
+import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
+import org.knora.webapi.util.JavaUtil
+import org.knora.webapi.util.jsonld.JsonLDDocument
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -39,11 +43,12 @@ object RouteUtilV2 {
     /**
       * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
       *
-      * @param requestMessage  a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
+      * @param requestMessage   a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
       * @param requestContext   the akka-http [[RequestContext]].
       * @param settings         the application's settings.
       * @param responderManager a reference to the responder manager.
       * @param log              a logging adapter.
+      * @param responseSchema   the API schema that should be used in the response.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
       * @return a [[Future]] containing a [[RouteResult]].
@@ -52,7 +57,8 @@ object RouteUtilV2 {
                      requestContext: RequestContext,
                      settings: SettingsImpl,
                      responderManager: ActorSelection,
-                     log: LoggingAdapter)
+                     log: LoggingAdapter,
+                     responseSchema: ApiV2Schema = ApiV2WithValueObjects)
                     (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         // Optionally log the request message. TODO: move this to the testing framework.
         if (settings.dumpMessages) {
@@ -60,7 +66,7 @@ object RouteUtilV2 {
         }
 
         val httpResponse: Future[HttpResponse] = for {
-            // Make sure the responder sent a reply of type KnoraResponseV2.
+        // Make sure the responder sent a reply of type KnoraResponseV2.
             knoraResponse <- (responderManager ? requestMessage).map {
                 case replyMessage: KnoraResponseV2 => replyMessage
 
@@ -78,13 +84,16 @@ object RouteUtilV2 {
             // TODO: check whether to send back JSON-LD or XML (content negotiation: HTTP accept header)
 
             // The request was successful
-            jsonResponseWithStatus = knoraResponse.toJsonLDWithValueObject(settings)
-
+            jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(responseSchema, settings)
+            contextAsJava = JavaUtil.deepScalaToJava(jsonLDDocument.context.toAny)
+            jsonAsJava = JavaUtil.deepScalaToJava(jsonLDDocument.body.toAny)
+            compacted = JsonLdProcessor.compact(jsonAsJava, contextAsJava, new JsonLdOptions())
+            jsonLDString = JsonUtils.toPrettyString(compacted)
         } yield HttpResponse(
             status = StatusCodes.OK,
             entity = HttpEntity(
                 ContentTypes.`application/json`,
-                jsonResponseWithStatus
+                jsonLDString
             )
         )
 

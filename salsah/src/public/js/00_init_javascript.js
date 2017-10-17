@@ -303,10 +303,10 @@ SALSAH.timecode2seconds = function(tc){
 var SALSAH_API_LEGACY = {
 	make_date_string: function(dateObj) {
 		// Knora expects a searchval string: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
-		var dateStr = dateObj.calendar + ":" + dateObj.dateval1;
+		var dateStr = dateObj.calendar + ":" + dateObj.dateval1 + ' ' + dateObj.era1;
 		if (dateObj.dateval2 !== undefined) {
 			// period
-			dateStr += ":" + dateObj.dateval2;
+			dateStr += ":" + dateObj.dateval2 + ' ' + dateObj.era2;
 		}
 		return dateStr;
 	}

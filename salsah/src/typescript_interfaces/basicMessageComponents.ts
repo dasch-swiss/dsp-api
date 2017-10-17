@@ -166,6 +166,16 @@ export module basicMessageComponents {
         dateval2:string;
 
         /**
+         * The era of dateval1, either "CE" or "BCE".
+         */
+        era1:string;
+
+        /**
+         * The era of dateval2, either "CE" or "BCE".
+         */
+        era2:string;
+
+        /**
          * Calendar used
          */
         calendar:string;
@@ -200,8 +210,8 @@ export module basicMessageComponents {
     export type KnoraIRI = string;
 
     /**
-     * String must have the following format: (GREGORIAN|JULIAN):YYYY[-MM[-DD]][:YYYY[-MM[-DD]]]
-     * E.g. an exact date like GREGORIAN:2015-12-03 or a period like GREGORIAN:2015-12-03:2015-12-04.
+     * String must have the following format: (GREGORIAN|JULIAN):YYYY[-MM[-DD]][ era][:YYYY[-MM[-DD]]][ era]
+     * E.g. an exact date like GREGORIAN:2015-12-03 CE or a period like GREGORIAN:2015-12-03 CE:2015-12-04 CE.
      * Dates may also have month or year precision, e.g. GREGORIAN:2015-12 (the whole month of december) or GREGORIAN:2015 (the whole year 2015).
      */
     type dateString = string;

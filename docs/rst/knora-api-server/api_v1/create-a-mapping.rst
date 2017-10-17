@@ -27,6 +27,10 @@ XML to Standoff Mapping
 The Knora Standard Mapping
 **************************
 
+-----------
+Description
+-----------
+
 A mapping allows for the conversion of XML to standoff representation in RDF and back. In order to create a TextValue with markup, the text has to be provided in XML format, along with the IRI of the mapping that will be used to convert the markup to standoff.
 However, a mapping is only needed if a TextValue with markup should be created. If a text has no markup, it is submitted as a mere sequence of characters.
 
@@ -45,10 +49,35 @@ Knora offers a standard mapping with the IRI ``http://data.knora.org/projects/st
  - ``<strike>`` -> ``standoff:StandoffStrikeTag``
  - ``<a href="URL">`` -> ``knora-base:StandoffUriTag``
  - ``<a class="salsah-link" href="Knora IRI">`` -> ``knora-base:StandoffLinkTag``
+ - ``<h1>`` to ``<h6>`` -> ``standoff:StandoffHeader1Tag`` to ``standoff:StandoffHeader6Tag``
+ - ``<ol>`` -> ``standoff:StandoffOrderedListTag``
+ - ``<ul>`` -> ``standoff:StandoffUnrderedListTag``
+ - ``<li>`` -> ``standoff:StandoffListElementTag``
+ - ``<tbody>`` -> ``standoff:StandoffTableBodyTag``
+ - ``<table>`` -> ``standoff:StandoffTableTag``
+ - ``<tr>`` -> ``standoff:StandoffTableRowTag``
+ - ``<td>`` -> ``standoff:StandoffTableCellTag``
  - ``<br>`` -> ``standoff:StandoffBrTag``
+ - ``<hr>`` -> ``standoff:StandoffLineTag``
+ - ``<pre>`` -> ``standoff:StandoffPreTag``
+ - ``<cite>`` -> ``standoff:StandoffCiteTag``
+ - ``<blockquote>`` -> ``standoff:StandoffBlockquoteTag``
+ - ``<code>`` -> ``standoff:StandoffCodeTag``
 
 The HTML produced by CKEditor is wrapped in an XML doctype and a pair of root tags ``<text>...</text>`` and then sent to Knora. The XML sent to the GUI by Knora is unwrapped accordingly (see ``jquery.htmleditor.js``).
 Although the GUI supports HTML5, it is treated as if it was XHTML in strict XML notation.
+
+-----------
+Maintenance
+-----------
+
+The standard mapping definition can be found at ``webapi/_test_data/test_route/texts/mappingForStandardHTML.xml``.  
+It was used to generate the default mapping, distributed 
+as ``knora-ontologies/standoff-data.ttl`` and that is loaded at a Knora installation.  
+It should be used to re-generate it, whenever we want to amend or extend it. 
+
+Note: once the mapping has been generated, one has to rework the resources' UUID in order to maintain backward compatibility. 
+
 
 *************************
 Creating a custom Mapping

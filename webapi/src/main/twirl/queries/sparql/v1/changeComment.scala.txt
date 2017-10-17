@@ -30,6 +30,7 @@
  * @param currentValueIri the IRI of the current version of the value.
  * @param newValueIri the IRI of the new version of the value.
  * @param maybeComment the new comment on the value.
+ * @param currentTime an xsd:dateTimeStamp that will be attached to the resources.
  *@
 @(dataNamedGraph: IRI,
   triplestore: String,
@@ -37,7 +38,8 @@
   propertyIri: IRI,
   currentValueIri: IRI,
   newValueIri: IRI,
-  maybeComment: Option[String])
+  maybeComment: Option[String],
+  currentTime: String)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -72,11 +74,11 @@ DELETE {
             }
 
             knora-base:isDeleted false ;
-            knora-base:valueCreationDate ?currentTime .
+            knora-base:valueCreationDate "@currentTime"^^xsd:dateTimeStamp .
         ?resource ?property ?newValue .
 
         @* Update the resource's last modification date. *@
-        ?resource knora-base:lastModificationDate ?currentTime .
+        ?resource knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
@@ -89,7 +91,6 @@ WHERE {
     BIND(IRI("@propertyIri") AS ?property)
     BIND(IRI("@currentValueIri") AS ?currentValue)
     BIND(IRI("@newValueIri") AS ?newValue)
-    BIND(NOW() AS ?currentTime)
 
     ?resource rdf:type ?resourceClass ;
         knora-base:isDeleted false .

@@ -14,7 +14,7 @@ lazy val webapi = (project in file(".")).
             FusekiIntegrationTest,
             GraphDBTest,
             GraphDBFreeTest,
-            SesameTest,
+            GraphDBFreeIntegrationTest,
             EmbeddedJenaTDBTest,
             IntegrationTest
         ).
@@ -47,10 +47,10 @@ lazy val webapi = (project in file(".")).
                 testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
-        settings(inConfig(SesameTest)(
+        settings(inConfig(GraphDBFreeIntegrationTest)(
             Defaults.testTasks ++ Seq(
                 fork := true,
-                javaOptions ++= javaSesameTestOptions,
+                javaOptions ++= javaGraphDBFreeIntegrationTestOptions,
                 testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
@@ -278,9 +278,9 @@ lazy val javaGraphDBFreeTestOptions = Seq(
     "-Dconfig.resource=graphdb-free.conf"
 ) ++ javaTestOptions
 
-lazy val SesameTest = config("sesame") extend(Test)
-lazy val javaSesameTestOptions = Seq(
-    "-Dconfig.resource=sesame.conf"
+lazy val GraphDBFreeIntegrationTest = config("graphdb-free-it") extend(IntegrationTest)
+lazy val javaGraphDBFreeIntegrationTestOptions = Seq(
+    "-Dconfig.resource=graphdb-free.conf"
 ) ++ javaTestOptions
 
 lazy val EmbeddedJenaTDBTest = config("tdb") extend(Test)

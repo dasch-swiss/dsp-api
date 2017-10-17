@@ -23,7 +23,7 @@ package org.knora.webapi.responders
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-import org.knora.webapi.util.JavaFunctionUtil
+import org.knora.webapi.util.JavaUtil
 import org.knora.webapi.{ApplicationLockException, IRI}
 
 import scala.annotation.tailrec
@@ -113,7 +113,7 @@ object IriLocker {
         val newLock = lockMap.merge(
             iri,
             IriLock(apiRequestID, 1),
-            JavaFunctionUtil.biFunction({ (currentLock, _) =>
+            JavaUtil.biFunction({ (currentLock, _) =>
                 // The lock is already in use. Who has it?
                 if (currentLock.apiRequestID == apiRequestID) {
                     // We already have it, so increment the entry count.
@@ -153,7 +153,7 @@ object IriLocker {
     private def decrementOrReleaseLock(iri: IRI, apiRequestID: UUID): Unit = {
         lockMap.compute(
             iri,
-            JavaFunctionUtil.biFunction({ (_, maybeCurrentLock) =>
+            JavaUtil.biFunction({ (_, maybeCurrentLock) =>
                 Option(maybeCurrentLock) match {
                     case Some(currentLock) =>
                         if (currentLock.apiRequestID == apiRequestID) {
