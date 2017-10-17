@@ -16,25 +16,17 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-.. _knora-api-server:
 
-####################
-The Knora API Server
-####################
+Introduction: Using API V2
+==========================
 
-The Knora API server implements Knora's HTTP-based API, and manages data
-stored in an RDF triplestore and in files. It is designed to work with any
-standards-compliant RDF triplestore, and is configured to work out of the box
-with `Ontotext GraphDB`_ and `Apache Jena`_.
+Version 2 of the Knora API aims to make both the response and request formats more generic and consistent.
+Version 1 was basically the result of the reimplementation of the existing API of the SALSAH prototype.
+Since the develeopment of this prototype has a long history and the specifiation of API V1 was an evolving process, V1 manifests several inconsistencies and patricularities.
+With V2, we would like to offer a format that is consistent and hence easier to use for a client.
 
-.. toctree::
-   :maxdepth: 2
+V2 Path Segment
+---------------
 
-   deployment/index
-   design-documentation/index
-   development/index
-   api_v1/index
-   api_v2/index
-
-.. _Ontotext GraphDB: http://ontotext.com/products/graphdb/
-.. _Apache Jena: https://jena.apache.org/
+Every request to API V1 includes ``v2`` as a path segment, e.g. ``http://host/v2/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a``.
+Accordingly, requests to another version of the API will require another path segment.

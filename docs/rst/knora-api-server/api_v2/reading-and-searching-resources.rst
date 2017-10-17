@@ -16,25 +16,20 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-.. _knora-api-server:
+.. _reading-and-searching-resources-2:
 
-####################
-The Knora API Server
-####################
+Reading and Searching Resources
+===============================
 
-The Knora API server implements Knora's HTTP-based API, and manages data
-stored in an RDF triplestore and in files. It is designed to work with any
-standards-compliant RDF triplestore, and is configured to work out of the box
-with `Ontotext GraphDB`_ and `Apache Jena`_.
+.. contents:: :local:
 
-.. toctree::
-   :maxdepth: 2
+In order to get an existing resource, the HTTP method ``GET`` has to be used.
+The request has to be sent to the Knora server using the ``resources`` path segment (depending on the type of request, this segment has to be exchanged, see below).
+Reading resources may require authentication since some resources may have restricted viewing permissions.
 
-   deployment/index
-   design-documentation/index
-   development/index
-   api_v1/index
-   api_v2/index
-
-.. _Ontotext GraphDB: http://ontotext.com/products/graphdb/
-.. _Apache Jena: https://jena.apache.org/
+***********************************************
+Get the Representation of a Resource by its IRI
+***********************************************
+----------------------------------------------------
+Simple Request of a Resource (full Resource Request)
+----------------------------------------------------
