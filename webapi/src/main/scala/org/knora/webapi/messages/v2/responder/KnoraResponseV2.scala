@@ -251,7 +251,7 @@ case class DecimalValueContentV2(valueHasString: String, valueHasDecimal: BigDec
 
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal -> JsonLDDecimal(valueHasDecimal)))
+        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal -> JsonLDString(valueHasDecimal.toString)))
     }
 
 }
@@ -309,8 +309,8 @@ case class IntervalValueContentV2(valueHasString: String, valueHasIntervalStart:
         // TODO: check targetSchema and return JSON-LD accordingly.
 
         JsonLDObject(Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart -> JsonLDDecimal(valueHasIntervalStart),
-            OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd -> JsonLDDecimal(valueHasIntervalEnd)
+            OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart -> JsonLDString(valueHasIntervalStart.toString),
+            OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd -> JsonLDString(valueHasIntervalEnd.toString)
         ))
     }
 
