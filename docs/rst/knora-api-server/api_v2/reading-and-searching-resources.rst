@@ -30,6 +30,59 @@ Reading resources may require authentication since some resources may have restr
 ***********************************************
 Get the Representation of a Resource by its IRI
 ***********************************************
-----------------------------------------------------
-Simple Request of a Resource (full Resource Request)
-----------------------------------------------------
+
+Get a Resource by its IRI
+-------------------------
+
+A resource can be obtained by making a GET request to the API providing its IRI. Because a Knora IRI has the format of a URL, its IRI has to be URL encoded.
+
+In order to get the resource with the IRI ``http://data.knora.org/c5058f3a`` (an incunabula book contained in the test data), make a HTTP GET request to the resources route
+(path segment ``resources`` in the API call) and append the URL encoded IRI:
+
+::
+
+    HTTP GET to http://host/v2/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a
+
+
+If necessary, several resources can be queried at the same time, their Iris separated by a forward slash. Please note that the amount of resources that can be queried in one requested is limited. See settings for ``app/v2`` in ``application.conf``.
+
+
+More formalized, the URL looks like this:
+
+::
+
+    HTTP GET to http://host/v2/resources/resourceIRI(/anotherResourceIri)*
+
+
+Get the preview of a resource by its IRI
+----------------------------------------
+
+I some cases, the client may only want to request the preview of a resource (this would be basically the resource without any properties: its ``rdfs:label`` and type).
+
+This works exactly like making a conventional resource request, using the path segment ``resourcespreview``:
+
+::
+
+    HTTP GET to http://host/v2/resourcespreview/resourceIRI(/anotherResourceIri)*
+
+
+********************
+Search for Resources
+********************
+
+Fulltext Search
+---------------
+
+Knora offers a fulltext search that searches through all textual representations of values and ``rdfs:label`` of resources. You can separate search terms by a white space character and they will be combined using the Boolean ``AND`` operator.
+Please note that the search terms have to be URL encoded.
+
+::
+
+   HTTP GET to http://host/v2/search/searchValue[limitToResourceClass=resourceClassIRI]
+   [limitToProject=projectIRI][offset=Integer]
+
+
+Please note that the first parameter has to be preceded by a question mark ``?``, any following parameter by an ampersand ``&``.
+
+The default value for the parameter ``offset`` is 0 which returns the first page of search results.
+Subsequent pages of results can be fetched by increasing ``offset`` by one. The amount of results per page is defined in ``app/v2`` in ``application.conf``.

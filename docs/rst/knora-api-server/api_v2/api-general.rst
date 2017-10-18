@@ -22,8 +22,22 @@ Introduction: Using API V2
 
 Version 2 of the Knora API aims to make both the response and request formats more generic and consistent.
 Version 1 was basically the result of the reimplementation of the existing API of the SALSAH prototype.
-Since the develeopment of this prototype has a long history and the specifiation of API V1 was an evolving process, V1 manifests several inconsistencies and patricularities.
+Since the development of this prototype has a long history and the specification of API V1 was an evolving process, V1 manifests several inconsistencies and peculiarities.
 With V2, we would like to offer a format that is consistent and hence easier to use for a client.
+
+Please note that V2 is still in development. We do not recommend yet to use it on productive systems.
+
+JSON-LD
+-------
+
+Our preferred format for data exchange is JSON-LD_. JSON-LD highly enhances the machine readability of responses received from the Knora API server, while applying the principle of resources with attached properties instead of sending
+directly the triples from the triplestore as a SPARQL endpoint would do (and vice versa when doing updates). The main advantage of using JSON-LD in V2 over our custom JSON format in V1 is that we can use Iris to identify members of the response.
+A machine can then obtain more information about these Iris, e.g., get their labels in different languages to display them to the user. Moreover, we can support entities defined in schema.org_ that are widely known and used.
+
+We designed the V2 routes in a way that would also allow for the usage of other formats such as XML. We plan to implement support for XML once the implementation of JSON-LD is completed.
+
+.. _JSON-LD: https://json-ld.org/spec/latest/json-ld/
+.. _schema.org: http://www.schema.org
 
 V2 Path Segment
 ---------------
