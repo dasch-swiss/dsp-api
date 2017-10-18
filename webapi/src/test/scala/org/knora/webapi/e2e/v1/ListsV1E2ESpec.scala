@@ -21,7 +21,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.v1.responder.authenticatemessages.Credentials
+import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.{E2ESpec, SharedAdminTestData}
@@ -51,13 +51,13 @@ class ListsV1E2ESpec extends E2ESpec(ListsV1E2ESpec.config) with SessionJsonProt
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
 
-    val rootCreds = Credentials(
+    val rootCreds = CredentialsV1(
         SharedAdminTestData.rootUser.userData.user_id.get,
         SharedAdminTestData.rootUser.userData.email.get,
         "test"
     )
 
-    val normalUserCreds = Credentials(
+    val normalUserCreds = CredentialsV1(
         SharedAdminTestData.normalUser.userData.user_id.get,
         SharedAdminTestData.normalUser.userData.email.get,
         "test"

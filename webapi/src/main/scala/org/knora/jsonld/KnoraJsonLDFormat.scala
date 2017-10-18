@@ -16,6 +16,8 @@
 
 package org.knora.jsonld
 
+import org.knora.webapi.util.jsonld.JsonLDDocument
+
 import scala.annotation.implicitNotFound
 
 /**
@@ -37,11 +39,11 @@ object KnoraJsonLDReader {
   */
 @implicitNotFound(msg = "Cannot find KnoraJsonLDWriter or KnoraJsonLDFormat type class for ${T}")
 trait KnoraJsonLDWriter[T] {
-    def write(obj: T): String
+    def write(obj: T): JsonLDDocument
 }
 
 object KnoraJsonLDWriter {
-    implicit def func2Writer[T](f: T => String): KnoraJsonLDWriter[T] = new KnoraJsonLDWriter[T] {
+    implicit def func2Writer[T](f: T => JsonLDDocument): KnoraJsonLDWriter[T] = new KnoraJsonLDWriter[T] {
         def write(obj: T) = f(obj)
     }
 }

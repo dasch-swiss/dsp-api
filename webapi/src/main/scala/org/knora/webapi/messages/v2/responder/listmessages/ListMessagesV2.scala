@@ -20,18 +20,13 @@
 
 package org.knora.webapi.messages.v2.responder.listmessages
 
-import java.{lang, util}
-
-import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
-import com.github.jsonldjava.utils.JsonUtils
 import org.knora.jsonld.{KnoraJsonLDFormat, KnoraJsonLDSupport, _}
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2, ReadResourceUtil, ReadResourceV2}
-import org.knora.webapi.util.InputValidation
+import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.util.jsonld._
 
-import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -95,47 +90,8 @@ case class ReadListsSequenceV2(items: Seq[ListNodeV2]) extends KnoraResponseV2 w
 
     def toXML: String = ???
 
-    def toJsonLDWithValueObject(settings: SettingsImpl): String = ReadListsSequenceV2JsonLDFormat.write(this)
-
-    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
-        // TODO: check targetSchema and return JSON-LD accordingly.
-
-        val context = JsonLDObject(Map(
-            "schema" -> JsonLDString("http://schema.org/"),
-            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion),
-            "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
-            "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#")
-        ))
-
-        val resourcesJsonObjects: Seq[JsonLDObject] = resources.map {
-            (resource: ReadResourceV2) => ReadResourceUtil.createJsonLDObjectFromReadResourceV2(
-                resource = resource,
-                targetSchema = targetSchema,
-                settings = settings
-            )
-        }
-
-
-        val listsJsonObjects: Seq[JsonLDObject] = items.map {
-            node: ListNodeV2 => node match {
-                case rootNode: ListRootNodeV2 => listRootNodeV2Writer(rootNode)
-                case childNode: ListChildNodeV2 => listChildNodeV2Writer(childNode)
-            }
-        }
-
-        val body = JsonLDObject(Map(
-            "@type" -> JsonLDString("http://schema.org/ItemList"),
-            "http://schema.org/numberOfItems" -> JsonLDInt(numberOfResources),
-            "http://schema.org/itemListElement" -> JsonLDArray(listsJsonObjects)
-        ))
-
-        JsonLDDocument(body = body, context = context)
-    }
-
-
-
-
-
+    // TODO: check targetSchema and return JSON-LD accordingly.
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = ReadListsSequenceV2JsonLDFormat.write(this)
 }
 
 
@@ -250,14 +206,14 @@ case class StringV2(value: String, language: Option[String] = None) {
       *
       * @return
       */
-    def toObject: Object = {
+    def toJsonLDValue: JsonLDValue = {
         if (language.nonEmpty) {
-            Map(
-                "@language" -> language.get,
-                "@value" -> value
-            ).asJava
+            JsonLDObject(Map(
+                "@language" -> JsonLDString(language.get),
+                "@value" -> JsonLDString(value)
+            ))
         } else {
-            value
+            JsonLDString(value)
         }
     }
 }
@@ -290,7 +246,7 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
           * @param seq a [[ReadListsSequenceV2]].
           * @return a [[String]].
           */
-        def write(seq: ReadListsSequenceV2): String = {
+        def write(seq: ReadListsSequenceV2): JsonLDDocument = {
             readListsSequenceV2Writer(seq.items)
         }
     }
@@ -412,140 +368,141 @@ trait ListV2JsonLDProtocol extends KnoraJsonLDSupport {
     /******************************************************************************************************************/
 
     /**
-      * Returns an JSON-LD string representing a sequence of list nodes.
+      * Returns an JSON-LD document representing a sequence of list nodes.
       *
       * @param items the sequence of [[ListNodeV2]].
       * @return a JSON-LD [[String]].
       */
-    private def readListsSequenceV2Writer(items: Seq[ListNodeV2]): String = {
+    private def readListsSequenceV2Writer(items: Seq[ListNodeV2]): JsonLDDocument = {
 
-        val context = new util.HashMap[String, String]()
-        context.put("@vocab", "http://schema.org/")
-        context.put("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
-        context.put("knora-base", "http://www.knora.org/ontology/knora-base#")
+        // TODO: check targetSchema and return JSON-LD accordingly.
 
-        val json: util.HashMap[String, Object] = new util.HashMap[String, Object]()
+        val context = JsonLDObject(Map(
+            "schema" -> JsonLDString("http://schema.org/"),
+            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion),
+            OntologyConstants.KnoraBase.KnoraBaseOntologyLabel -> JsonLDString(OntologyConstants.KnoraBase.KnoraBasePrefixExpansion),
+            "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
+            "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#")
+        ))
 
-        val listsSeq: util.List[Object] = items.map {
+        val listsJsonObjects: Seq[JsonLDObject] = items.map {
             node: ListNodeV2 => node match {
                 case rootNode: ListRootNodeV2 => listRootNodeV2Writer(rootNode)
                 case childNode: ListChildNodeV2 => listChildNodeV2Writer(childNode)
             }
-        }.asJava
+        }
 
-        json.put("@type", "ItemList")
+        val body = JsonLDObject(Map(
+            "@type" -> JsonLDString("http://schema.org/ItemList"),
+            "http://schema.org/numberOfItems" -> JsonLDInt(items.length),
+            "http://schema.org/itemListElement" -> JsonLDArray(listsJsonObjects)
+        ))
 
-        json.put("http://schema.org/numberOfItems", new lang.Integer(items.size))
-
-        json.put("http://schema.org/itemListElement", listsSeq)
-
-        val compacted: util.Map[IRI, AnyRef] = JsonLdProcessor.compact(json, context, new JsonLdOptions())
-
-        JsonUtils.toPrettyString(compacted)
+        JsonLDDocument(body = body, context = context)
     }
 
     /**
-      *  Returns an object which will be part of an JSON-LD string.
+      *  Returns an json-ld object which will be part of an JSON-LD document.
       *
       * @param node
       * @return
       */
-    private def listRootNodeV2Writer(node: ListRootNodeV2): Object = {
+    private def listRootNodeV2Writer(node: ListRootNodeV2): JsonLDObject = {
 
         // ListRootNodeV2(id: IRI, projectIri: Option[IRI], labels: Seq[StringWithOptionalLang], comments: Seq[StringWithOptionalLang], children: Seq[ListChildNodeV2]) extends ListNodeV2(id, labels, comments, children)
 
-        val result: util.HashMap[String, Object] = new util.HashMap[String, Object]()
+        val result: mutable.Map[IRI, JsonLDValue] = mutable.Map[IRI, JsonLDValue]()
 
-        result.put("@id", node.id)
+        result.put("@id", JsonLDString(node.id))
 
-        result.put("@type", OntologyConstants.KnoraBase.ListNode)
+        result.put("@type", JsonLDString(OntologyConstants.KnoraBase.ListNode))
 
-        result.put(OntologyConstants.KnoraBase.IsRootNode, new lang.Boolean(true))
+        result.put(OntologyConstants.KnoraBase.IsRootNode, JsonLDBoolean(true))
 
         if (node.projectIri.nonEmpty) {
-            result.put(OntologyConstants.KnoraBase.AttachedToProject, node.projectIri.get)
+            result.put(OntologyConstants.KnoraBase.AttachedToProject, JsonLDString(node.projectIri.get))
         }
 
         if (node.labels.nonEmpty) {
 
-            val labels: util.List[Object] = node.labels.map {
-                label: StringV2 => label.toObject
-            }.asJava
+            val labels: Seq[JsonLDValue] = node.labels.map {
+                label: StringV2 => label.toJsonLDValue
+            }
 
-            result.put(OntologyConstants.Rdfs.Label, labels)
+            result.put(OntologyConstants.Rdfs.Label, JsonLDArray(labels))
         }
 
         if (node.comments.nonEmpty) {
 
-            val comments: util.List[Object] = node.comments.map {
-                comment: StringV2 => comment.toObject
-            }.asJava
+            val comments: Seq[JsonLDValue] = node.comments.map {
+                comment: StringV2 => comment.toJsonLDValue
+            }
 
-            result.put(OntologyConstants.Rdfs.Comment, comments)
+            result.put(OntologyConstants.Rdfs.Comment, JsonLDArray(comments))
         }
 
         if (node.children.nonEmpty) {
 
-            val nodes: util.List[Object] = node.children.map {
+            val nodes: Seq[JsonLDObject] = node.children.map {
                 child: ListChildNodeV2 => listChildNodeV2Writer(child)
-            }.asJava
+            }
 
-            result.put(OntologyConstants.KnoraBase.HasSubListNode, nodes)
+            result.put(OntologyConstants.KnoraBase.HasSubListNode, JsonLDArray(nodes))
         }
 
-        result
+        JsonLDObject(result.toMap)
     }
 
     /**
-      * Returns an object which will be part of an JSON-LD string.
+      * Returns an JSON-LD object which will be part of an JSON-LD document.
       *
       * @param node
       * @return
       */
-    private def listChildNodeV2Writer(node: ListChildNodeV2): Object = {
+    private def listChildNodeV2Writer(node: ListChildNodeV2): JsonLDObject = {
 
         // ListChildNodeV2(id: IRI, hasRoot: IRI, name: Option[String], labels: Seq[StringWithOptionalLang], comments: Seq[StringWithOptionalLang], children: Seq[ListChildNodeV2], position: Option[Int]) extends ListNodeV2(id, labels, comments, children)
 
-        val result: util.HashMap[String, Object] = new util.HashMap[String, Object]()
+        val result: mutable.Map[IRI, JsonLDValue] = mutable.Map[IRI, JsonLDValue]()
 
-        result.put("@id", node.id)
+        result.put("@id", JsonLDString(node.id))
 
-        result.put("@type", OntologyConstants.KnoraBase.ListNode)
+        result.put("@type", JsonLDString(OntologyConstants.KnoraBase.ListNode))
 
         if (node.name.nonEmpty) {
-            result.put(OntologyConstants.KnoraBase.ListNodeName, node.name.get)
+            result.put(OntologyConstants.KnoraBase.ListNodeName, JsonLDString(node.name.get))
         }
 
         if (node.labels.nonEmpty) {
 
-            val labels: util.List[Object] = node.labels.map {
-                label: StringV2 => label.toObject
-            }.asJava
+            val labels: Seq[JsonLDValue] = node.labels.map {
+                label: StringV2 => label.toJsonLDValue
+            }
 
-            result.put(OntologyConstants.Rdfs.Label, labels)
+            result.put(OntologyConstants.Rdfs.Label, JsonLDArray(labels))
         }
 
         if (node.comments.nonEmpty) {
 
-            val comments: util.List[Object] = node.comments.map {
-                comment: StringV2 => comment.toObject
-            }.asJava
+            val comments: Seq[JsonLDValue] = node.comments.map {
+                comment: StringV2 => comment.toJsonLDValue
+            }
 
-            result.put(OntologyConstants.Rdfs.Comment, comments)
+            result.put(OntologyConstants.Rdfs.Comment, JsonLDArray(comments))
         }
 
         if (node.children.nonEmpty) {
-            val nodes: util.List[Object] = node.children.map {
+            val nodes: Seq[JsonLDObject] = node.children.map {
                 child: ListChildNodeV2 => listChildNodeV2Writer(child)
-            }.asJava
+            }
 
-            result.put(OntologyConstants.KnoraBase.HasSubListNode, nodes)
+            result.put(OntologyConstants.KnoraBase.HasSubListNode, JsonLDArray(nodes))
         }
 
         if (node.position.nonEmpty) {
-            result.put(OntologyConstants.KnoraBase.ListNodePosition, new lang.Integer(node.position.get))
+            result.put(OntologyConstants.KnoraBase.ListNodePosition, JsonLDInt(node.position.get))
         }
 
-        result
+        JsonLDObject(result.toMap)
     }
 }
