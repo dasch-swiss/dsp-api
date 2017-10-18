@@ -541,7 +541,7 @@ class SearchAndEditSpec extends SalsahSpec {
             page.doLogout()
 
         }
-/*
+
         "add a new creator to a book" in {
 
             page.open()
@@ -809,6 +809,6 @@ class SearchAndEditSpec extends SalsahSpec {
         "close the browser" in {
             page.quit()
         }
-*/
+
     }
 }
