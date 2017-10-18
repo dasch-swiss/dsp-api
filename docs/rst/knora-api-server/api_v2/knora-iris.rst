@@ -1,5 +1,5 @@
 .. Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
-   Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+    Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
 
    This file is part of Knora.
 
@@ -16,15 +16,9 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-************
-Using API V2
-************
+.. _knora-iris-v2:
 
-.. toctree::
-   :maxdepth: 2
+Knora Iris
+==========
 
-   api-general
-   knora-iris
-   reading-and-searching-resources
-   knarql-syntax
-   ontology-information
+.. contents:: :local:

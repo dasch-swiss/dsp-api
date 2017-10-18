@@ -51,6 +51,11 @@ This approach encapsulates the internals and adds a layer of abstraction to them
 The client will be able to use content negotiation to specify the preferred exchange format.
 For more information, see :ref:`querying-and-creating-ontologies-v2`.
 
+Knora IRIs
+----------
+
+Resources and entities are identified by IRIs. The systematics applied to build those IRIs are explained in :ref:`knora-iris-v2`.
+
 V2 Path Segment
 ---------------
 
