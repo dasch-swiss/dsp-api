@@ -102,7 +102,24 @@ A KnarQL query can be sent directly to the extended search route. Please note th
    HTTP GET to http://host/v2/searchextended/KnarQLQuery
 
 
-Both, sorting and offset (for paging) are handled in the KnarQL query itself.
+Both sorting and offset (for paging) are handled in the KnarQL query itself.
 Please see :ref:`knarql-syntax-v2` for detailed information about the query syntax and working examples.
+
+Count Queries
+-------------
+
+For both full fulltext and KnarQL count queries can be performed. The answer of a count query is the amount of resources (a number) that matched the indicated search criteria without taking into consideration permissions.
+This means that the client may not be able to access any of the resources matching the search criteria because of insufficient permissions.
+Insufficient permissions disallow someone from accessing a resource or any of its values or even knowing about its IRI, but it does not suppress information about the existence of such a resource.
+
+In order to perform a count query, just append the segment ``count``:
+
+::
+
+   HTTP GET to http://host/v2/search/count/searchValue[limitToResourceClass=resourceClassIRI]
+   [limitToProject=projectIRI][offset=Integer]
+
+   HTTP GET to http://host/v2/searchextended/count/KnarQLQuery
+
 
 .. [1] Phonetically, KnarQL is similar to the Swiss German word for a groundhog, a *Nargeli*.
