@@ -16,14 +16,12 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-************
-Using API V2
-************
+.. _querying-and-creating-ontologies-v2:
 
-.. toctree::
-   :maxdepth: 2
+Querying, creating, and updating Ontologies
+===========================================
 
-   api-general
-   reading-and-searching-resources
-   knarql-syntax
-   ontology-information
+.. contents:: :local:
+
+
+

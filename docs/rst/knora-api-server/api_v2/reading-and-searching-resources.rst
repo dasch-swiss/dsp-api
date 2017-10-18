@@ -16,7 +16,7 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-.. _reading-and-searching-resources-2:
+.. _reading-and-searching-resources-v2:
 
 Reading and Searching Resources
 ===============================
@@ -86,3 +86,23 @@ Please note that the first parameter has to be preceded by a question mark ``?``
 
 The default value for the parameter ``offset`` is 0 which returns the first page of search results.
 Subsequent pages of results can be fetched by increasing ``offset`` by one. The amount of results per page is defined in ``app/v2`` in ``application.conf``.
+
+Extended Search
+---------------
+
+For more complex queries than a fulltext search, Knora offers extended search possibilities. In order not to have to create a proprietary DLS, we decided that extended searches can be sent as SPARQL Construct queries to the Knora API server.
+The provided SPARQL will then be processed by the API and sent to the tripelstore. The answer will be in Knora API format (JSON-LD or any other supported format).
+
+We use term *Knora Query Language* (KnarQL) [1]_ to refer to the SPARQL Construct queries that can be sent to the extended search route. KnarQL is valid SPARQL but only supports a subset of SPARQL Construct query syntax.
+
+A KnarQL query can be sent directly to the extended search route. Please note that the query has to be URL encoded.
+
+::
+
+   HTTP GET to http://host/v2/searchextended/KnarQLQuery
+
+
+Both, sorting and offset (for paging) are handled in the KnarQL query itself.
+Please see :ref:`knarql-syntax-v2` for detailed information about the query syntax and working examples.
+
+.. [1] Phonetically, KnarQL is similar to the Swiss German word for a groundhog, a *Nargeli*.

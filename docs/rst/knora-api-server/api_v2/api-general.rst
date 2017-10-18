@@ -34,10 +34,22 @@ Our preferred format for data exchange is JSON-LD_. JSON-LD highly enhances the 
 directly the triples from the triplestore as a SPARQL endpoint would do (and vice versa when doing updates). The main advantage of using JSON-LD in V2 over our custom JSON format in V1 is that we can use Iris to identify members of the response.
 A machine can then obtain more information about these Iris, e.g., get their labels in different languages to display them to the user. Moreover, we can support entities defined in schema.org_ that are widely known and used.
 
-We designed the V2 routes in a way that would also allow for the usage of other formats such as XML. We plan to implement support for XML once the implementation of JSON-LD is completed.
+We designed the V2 routes in a way that would also allow for the usage of other formats such as XML.
+We plan to implement support for XML once the implementation of JSON-LD is completed.
+The client will be able to use content negotiation to specify the preferred exchange format.
 
 .. _JSON-LD: https://json-ld.org/spec/latest/json-ld/
 .. _schema.org: http://www.schema.org
+
+API Schema
+----------
+
+Knora API V2 offers the query and response format in a complex and a simplified schema.
+The main difference is that the complex schema exposes the complexity of value objects to the outside while the simplified version does not.
+In any of these cases, the client deals with the Knora-Api format, which is automatically converted from and to Knora-Base by the API.
+This approach encapsulates the internals and adds a layer of abstraction to them.
+The client will be able to use content negotiation to specify the preferred exchange format.
+For more information, see :ref:`querying-and-creating-ontologies-v2`.
 
 V2 Path Segment
 ---------------
