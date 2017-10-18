@@ -429,7 +429,7 @@ class SearchAndEditSpec extends SalsahSpec {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val pubdateField = editFields(10)
+            val pubdateField = editFields(7)
 
             page.clickEditButton(pubdateField)
 
@@ -492,13 +492,12 @@ class SearchAndEditSpec extends SalsahSpec {
 
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
-
             //
             // seqnum
             //
 
             // get the field representing the seqnum of the page
-            val seqnumField = editFields(10)
+            val seqnumField = editFields(2)
 
             page.clickEditButton(seqnumField)
 
@@ -519,7 +518,7 @@ class SearchAndEditSpec extends SalsahSpec {
             //
 
             // get the field representing the pagenum of the page
-            val pagenumField = editFields(2)
+            val pagenumField = editFields(3)
 
             page.clickEditButton(pagenumField)
 
@@ -542,7 +541,7 @@ class SearchAndEditSpec extends SalsahSpec {
             page.doLogout()
 
         }
-
+/*
         "add a new creator to a book" in {
 
             page.open()
@@ -810,6 +809,6 @@ class SearchAndEditSpec extends SalsahSpec {
         "close the browser" in {
             page.quit()
         }
-
+*/
     }
 }

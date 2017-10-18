@@ -27,6 +27,7 @@ import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringForResourceClassGetV1, DefaultObjectAccessPermissionsStringResponseV1, ResourceCreateOperation}
 import org.knora.webapi.messages.v1.responder.projectmessages._
@@ -34,14 +35,12 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.{MultipleResource
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, PredicateInfoV2, PropertyEntityInfoV2, ClassEntityInfoV2}
-import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, ClassEntityInfoV2, PredicateInfoV2, PropertyEntityInfoV2}
 import org.knora.webapi.responders.v1.GroupedProps._
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
-import spray.json._
 
 import scala.collection.immutable
 import scala.concurrent.Future
@@ -1122,7 +1121,7 @@ class ResourcesResponderV1 extends Responder {
                 restypeIriOption = resourceTypeIri,
                 numberOfProps = numberOfProps,
                 limitOfResults = limitOfResults,
-                separator = FormatConstants.INFORMATION_SEPARATOR_ONE
+                separator = StringFormatter.INFORMATION_SEPARATOR_ONE
             ).toString())
 
             // _ = println(searchResourcesSparql)
@@ -1142,7 +1141,7 @@ class ResourcesResponderV1 extends Responder {
                     if (numberOfProps > 1) {
                         // The client requested more than one property per resource that was found.
 
-                        val valueStrings = row.rowMap("values").split(FormatConstants.INFORMATION_SEPARATOR_ONE)
+                        val valueStrings = row.rowMap("values").split(StringFormatter.INFORMATION_SEPARATOR_ONE)
                         val guiOrders = row.rowMap("guiOrders").split(";")
                         val valueOrders = row.rowMap("valueOrders").split(";")
 

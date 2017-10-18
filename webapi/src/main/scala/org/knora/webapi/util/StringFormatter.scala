@@ -36,6 +36,9 @@ import spray.json.JsonParser
 
 import scala.util.matching.Regex
 
+/**
+  * Provides the singleton instance of [[StringFormatter]], as well as string formatting constants.
+  */
 object StringFormatter {
     /**
       * A container for an XML import namespace and its prefix label.
@@ -44,6 +47,28 @@ object StringFormatter {
       * @param prefixLabel the prefix label.
       */
     case class XmlImportNamespaceInfoV1(namespace: IRI, prefixLabel: String)
+
+    // A non-printing delimiter character, Unicode INFORMATION SEPARATOR ONE, that should never occur in data.
+    val INFORMATION_SEPARATOR_ONE = '\u001F'
+
+    // A non-printing delimiter character, Unicode INFORMATION SEPARATOR TWO, that should never occur in data.
+    val INFORMATION_SEPARATOR_TWO = '\u001E'
+
+    // A non-printing delimiter character, Unicode INFORMATION SEPARATOR TWO, that should never occur in data.
+    val INFORMATION_SEPARATOR_THREE = '\u001D'
+
+    // A non-printing delimiter character, Unicode INFORMATION SEPARATOR TWO, that should never occur in data.
+    val INFORMATION_SEPARATOR_FOUR = '\u001C'
+
+    // a separator to be inserted in the XML to separate nodes from one another
+    // this separator is only used temporarily while XML is being processed
+    val PARAGRAPH_SEPARATOR = '\u2029'
+
+    // Control sequences for changing text colour in terminals.
+    val ANSI_RED = "\u001B[31m"
+    val ANSI_GREEN = "\u001B[32m"
+    val ANSI_YELLOW = "\u001B[33m"
+    val ANSI_RESET = "\u001B[0m"
 
     /**
       * Separates the calendar name from the rest of a Knora date.
@@ -83,6 +108,9 @@ object StringFormatter {
 
     var maybeInstance: Option[StringFormatter] = None
 
+    /**
+      * Gets the singleton instance of [[StringFormatter]].
+      */
     def getInstance: StringFormatter = {
         maybeInstance match {
             case Some(instance) => instance
@@ -90,8 +118,18 @@ object StringFormatter {
         }
     }
 
+    /**
+      * Initialises the singleton instance of [[StringFormatter]].
+      *
+      * @param settings the application settings.
+      */
     def init(settings: SettingsImpl): Unit = {
-        maybeInstance = Some(new StringFormatter(settings))
+        this.synchronized {
+            maybeInstance match {
+                case Some(_) => ()
+                case None => maybeInstance = Some(new StringFormatter(settings))
+            }
+        }
     }
 }
 
@@ -900,6 +938,19 @@ class StringFormatter private(settings: SettingsImpl) {
     def isInternalEntityIri(iri: IRI): Boolean = {
         iri match {
             case KnoraBaseOntologyEntityRegex(_) | ProjectSpecificInternalOntologyEntityRegex(_*) => true
+            case _ => false
+        }
+    }
+
+    /**
+      * Checks whether an IRI is the IRI of a project-specific internal ontology.
+      *
+      * @param iri the IRI to be checked.
+      * @return `true` if the IRI is the IRI of a project-specific internal ontology.
+      */
+    def isProjectSpecificInternalOntologyIri(iri: IRI): Boolean = {
+        iri match {
+            case ProjectSpecificInternalOntologyRegex(ontologyName) if ontologyName != OntologyConstants.KnoraBase.KnoraBaseOntologyLabel => true
             case _ => false
         }
     }

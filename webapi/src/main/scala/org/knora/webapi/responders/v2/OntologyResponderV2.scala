@@ -20,13 +20,16 @@
 
 package org.knora.webapi.responders.v2
 
+import java.time.Instant
+
 import akka.pattern._
+import akka.http.scaladsl.util.FastFuture
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsNamedGraphGetV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.OwlCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
@@ -1006,7 +1009,27 @@ class OntologyResponderV2 extends Responder {
         } yield ReadEntityDefinitionsV2(properties = propertiesResponse.propertyEntityInfoMap, userLang = userLang)
     }
 
+    /**
+      * Creates a new, empty ontology.
+      *
+      * @param createOntologyRequest the request message.
+      * @return a [[SuccessResponseV2]].
+      */
     private def createOntology(createOntologyRequest: CreateOntologyRequestV2): Future[SuccessResponseV2] = {
+        for {
+            currentTime: String <- FastFuture.successful(Instant.now.toString)
 
+            createOntologySparql = queries.sparql.v2.txt.createOntology(
+                triplestore = settings.triplestoreType,
+                ontologyNamedGraphIri = createOntologyRequest.ontologyIri,
+                ontologyIri = createOntologyRequest.ontologyIri,
+                currentTime = currentTime
+            ).toString
+
+            createOntologyResponse <- (storeManager ? SparqlUpdateRequest(createOntologySparql)).mapTo[SparqlUpdateResponse]
+
+            // TODO: check whether the ontology was created by querying its lastModificationDate.
+
+        } yield SuccessResponseV2("Ontology created.")
     }
 }

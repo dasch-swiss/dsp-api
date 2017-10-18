@@ -50,10 +50,16 @@ case class LoadOntologiesRequestV2(userProfile: UserProfileV1) extends Ontologie
 /**
   * Requests the creation of an empty ontology. A successful response will be a [[SuccessResponseV2]].
   *
-  * @param ontologyIri the IRI of the ontology to be created. This must be an API v2 with value objects schema IRI.
+  * @param ontologyIri the IRI of the ontology to be created. This must be an internal ontology IRI.
   * @param userProfile the profile of the user making the request.
   */
-case class CreateOntologyRequestV2(ontologyIri: IRI, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class CreateOntologyRequestV2(ontologyIri: IRI, userProfile: UserProfileV1) extends OntologiesResponderRequestV2 {
+    private val stringFormatter = StringFormatter.getInstance
+
+    if (!stringFormatter.isProjectSpecificInternalOntologyIri(ontologyIri)) {
+        throw AssertionException(s"Expected internal project-specific ontology IRI: $ontologyIri")
+    }
+}
 
 /**
   * Requests all available information about a list of ontology entities (classes and/or properties). A successful response will be an

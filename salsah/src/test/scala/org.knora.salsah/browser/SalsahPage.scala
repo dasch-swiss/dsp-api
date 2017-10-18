@@ -681,7 +681,7 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
 
     def getFormFieldByName(name: String): WebElement = {
         eventually {
-            driver.findElement(By.xpath(s"//table[@class='propedit']//*[@name='$name']"))
+            driver.findElement(By.xpath(s"//table[@class='resadd']//*[@name='$name']"))
 
         }
 
@@ -690,7 +690,7 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
     def clickSaveButtonForResourceCreationForm(): Unit = {
 
         eventually {
-            driver.findElement(By.xpath("//form[@class='propedit']//input[@value='Save']")).click()
+            driver.findElement(By.xpath("//form[@class='resadd']//input[@value='Save']")).click()
         }
 
     }
