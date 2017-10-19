@@ -28,3 +28,4 @@ Using API V2
    reading-and-searching-resources
    knarql-syntax
    ontology-information
+   response-formats

@@ -100,7 +100,7 @@ If a property is represented by a query variable, it can be restricted to certai
 Values
 ******
 Values can only be represented by a query variable. Value literals are currently not supported.
-To restrict a value, a FILTER has to be used.
+To restrict a value, a FILTER has to be used. Without a FILTER, all the instances of a value are returned.
 
 Required Type Annotations
 *************************
@@ -221,7 +221,7 @@ The ``incunabula:book`` with the IRI ``http://data.knora.org/c5058f3a`` has 402 
 However, only the first page of results is returned with OFFSET set to 0. The same query can be sent again with OFFSET set to 1 to get the next page of results and so forth.
 Once a page does not contain the full possible amount of results (see settings in ``app/v2`` in ``application.conf``) or is empty, no more results are available.
 
-Let's assume the client is not interested in all of the book's pages, but just in first 10 of them. In that case, the sequence number can be restricted using a FILTER that is added to the query's WHERE clause:
+Let's assume the client is not interested in all of the book's pages, but just in first ten of them. In that case, the sequence number can be restricted using a FILTER that is added to the query's WHERE clause:
 
 ::
 

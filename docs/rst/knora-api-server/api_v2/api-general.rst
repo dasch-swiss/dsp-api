@@ -27,6 +27,15 @@ With V2, we would like to offer a format that is consistent and hence easier to 
 
 Please note that V2 is still in development. We do not recommend yet to use it on productive systems.
 
+Different API Operations
+------------------------
+
+In the following sections, the available V2 API operations are described:
+ - :ref:`knora-iris-v2`: Information about conventions applied to create Knora IRIs.
+ - :ref:`querying-and-creating-ontologies-v2`: Information about how to query, create or modify ontologies.
+ - :ref:`reading-and-searching-resources-v2`: Get a resource by its IRI or search for resources providing search criteria.
+ - :ref:`knarql-syntax-v2`: Information about the Knora Query Language KnarQL to perform an extended search.
+
 JSON-LD
 -------
 
