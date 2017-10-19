@@ -97,18 +97,19 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       * @param fullName user's full name
       */
     def doLogin(email: String, password: String, fullName: String): Unit = {
-        val loginButton = driver.findElement(By.id("dologin"))
-        loginButton.click()
 
-        val userInput = driver.findElement(By.id("user_id"))
-        val passwordInput = driver.findElement(By.id("password"))
-        val sendCredentials = driver.findElement(By.id("login_button"))
+            val loginButton = eventually(driver.findElement(By.id("dologin")))
+            loginButton.click()
 
-        userInput.sendKeys(email)
+            val userInput = driver.findElement(By.id("user_id"))
+            val passwordInput = driver.findElement(By.id("password"))
+            val sendCredentials = driver.findElement(By.id("login_button"))
 
-        passwordInput.sendKeys("test")
+            userInput.sendKeys(email)
 
-        sendCredentials.click()
+            passwordInput.sendKeys("test")
+
+            sendCredentials.click()
 
         eventually {
             driver.findElement(By.xpath("//*[@id=\"userctrl\"]")).getText.contains(fullName)
@@ -120,10 +121,10 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       * Logs the user out.
       */
     def doLogout(): Unit = {
-        val logoutButton = driver.findElement(By.id("dologout"))
-        logoutButton.click()
-
         eventually {
+            val logoutButton = driver.findElement(By.id("dologout"))
+            logoutButton.click()
+
             val logoutConfirmButton = driver.findElement(By.id("logout_button"))
             logoutConfirmButton.click()
         }
@@ -151,7 +152,9 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       * Returns the SALSAH simple search field.
       */
     def getSimpleSearchField: WebElement = {
-        driver.findElement(By.id("simplesearch"))
+        eventually {
+            driver.findElement(By.id("simplesearch"))
+        }
     }
 
     /**
