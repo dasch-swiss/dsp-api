@@ -422,6 +422,14 @@
       "rdfs:comment" : "Indicates when a resource was created",
       "rdfs:label" : "Creation date"
     },
+    "knora-api:error" : {
+      "@id" : "knora-api:error",
+      "@type" : "owl:DatatypeProperty",
+      "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
+      "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
+      "rdfs:comment" : "Provides a message indicating that an operation was unsuccessful",
+      "rdfs:label" : "error"
+    },
     "knora-api:hasAudioFile" : {
       "@id" : "knora-api:hasAudioFile",
       "@type" : "owl:DatatypeProperty",
@@ -551,6 +559,14 @@
       "knora-api:subjectType" : "http://www.w3.org/2002/07/owl#Class",
       "rdfs:comment" : "Specifies an icon to be used to represent instances of a resource class",
       "rdfs:label" : "Resource icon"
+    },
+    "knora-api:result" : {
+      "@id" : "knora-api:result",
+      "@type" : "owl:DatatypeProperty",
+      "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
+      "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
+      "rdfs:comment" : "Provides a message indicating that an operation was successful",
+      "rdfs:label" : "result"
     },
     "knora-api:subjectType" : {
       "@id" : "knora-api:subjectType",
