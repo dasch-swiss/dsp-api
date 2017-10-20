@@ -11,7 +11,7 @@ let queryArr = [];
 
 // search for all the letters exchanged between two persons
 queryArr.push(`
-    PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
+    PREFIX beol: <http://0.0.0.0:3333/ontology/beol/simple/v2#>
     PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
     
     CONSTRUCT {
@@ -58,7 +58,7 @@ queryArr.push(`
 
 // search for a letter that has the given title and mentions Isaac Newton
 queryArr.push(`
-      PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
+      PREFIX beol: <http://0.0.0.0:3333/ontology/beol/simple/v2#>
       PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
       
       CONSTRUCT {
@@ -90,7 +90,7 @@ queryArr.push(`
 
 // search for a letter that has the given title and mentions Isaac Newton using a var as a value prop pred
 queryArr.push(`
-      PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
+      PREFIX beol: <http://0.0.0.0:3333/ontology/beol/simple/v2#>
       PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
       
       CONSTRUCT {
@@ -124,7 +124,7 @@ queryArr.push(`
 
 // search for a letter with the given title that links to another letter via standoff that is authored by a person with IAF id "120379260" and has the title "1708-03-11_Scheuchzer_Johannes-Bernoulli_Johann_I"
 queryArr.push(`
-PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
+PREFIX beol: <http://0.0.0.0:3333/ontology/beol/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 
 CONSTRUCT {
@@ -173,7 +173,7 @@ CONSTRUCT {
 // Attention: link objects have several instances of knora-api:hasLinkTo
 queryArr.push(`
     PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+    PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
     
     CONSTRUCT {
         ?linkObj knora-api:isMainResource true .
@@ -205,7 +205,7 @@ queryArr.push(`
 // Attention: link objects have several instances of knora-api:hasLinkTo
 queryArr.push(`
     PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+    PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
     
     CONSTRUCT {
         ?linkObj knora-api:isMainResource true .
@@ -220,7 +220,7 @@ queryArr.push(`
 
 queryArr.push(`
     PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-    PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
+    PREFIX beol: <http://0.0.0.0:3333/ontology/beol/simple/v2#>
     
     CONSTRUCT {
         ?letter knora-api:isMainResource true .
