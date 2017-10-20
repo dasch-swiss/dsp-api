@@ -31,17 +31,17 @@ export module ResourcesResponse {
      */
     interface Resource {
         /**
-         * IRI of the resource.
+         * IRI of the resource instance.
          */
         "@id": Basic.KnoraInstanceIri;
 
         /**
-         * IRI of the class of this resource.
+         * IRI of the class of this resource instance.
          */
         "@type": Basic.KnoraEntityIri;
 
         /**
-         * http://schema.org/name of this resource (corresponds to rdfs:label).
+         * Short description of this resource (corresponds to rdfs:label).
          */
         "http://schema.org/name": string;
 
@@ -59,12 +59,12 @@ export module ResourcesResponse {
      */
     export interface ResourcesSequence {
         /**
-         * ResourcesSequence response format corresponds to schema.org/ItemList
+         * ResourcesSequence response format corresponds to http://schema.org/ItemList
          */
         "@type": "http://schema.org/ItemList";
 
         /**
-         * A sequence of resources.
+         * A resource or a sequence of resources (instances).
          */
         "http://schema.org/itemListElement": Resource | Array<Resource>;
 
