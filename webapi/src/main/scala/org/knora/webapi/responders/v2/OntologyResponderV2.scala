@@ -966,7 +966,7 @@ class OntologyResponderV2 extends Responder {
 
             // Only try to get definitions for properties that we know about (built-in or project-specific Knora ontology properties).
             propertyIrisFiltered: Set[IRI] = propertyIris.filter {
-                propertyIri => stringFormatter.isKnoraApiEntityIri(propertyIri)
+                propertyIri => stringFormatter.isKnoraEntityIri(propertyIri)
             }
 
             // request information about the properties for which cardinalities are defined

@@ -969,6 +969,16 @@ class StringFormatter private(settings: SettingsImpl) {
     }
 
     /**
+      * Checks whether an IRI is a Knora entity IRI (project-specific or built-in, internal or external).
+      *
+      * @param iri the IRI to be checked.
+      * @return `true` if the IRI is a Knora entity IRI.
+      */
+    def isKnoraEntityIri(iri: IRI): Boolean = {
+        isInternalEntityIri(iri) || isKnoraApiEntityIri(iri)
+    }
+
+    /**
       * Checks whether an IRI is the IRI of an external ontology entity (in a built-in or project-specific ontology).
       *
       * @param iri the IRI to be checked.
