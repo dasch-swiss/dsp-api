@@ -1,3 +1,6 @@
+/**
+ * This module contains basic definitions that can be reused in other modules.
+ */
 export module Basic {
 
     /**

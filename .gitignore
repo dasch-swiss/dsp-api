@@ -13,7 +13,7 @@ native
 docs/env
 docs/_build
 docs/_format_docu
-docs/_format_docu-v2
+docs/_format_docu_v2
 /project/
 */project/target/
 */project/project/
