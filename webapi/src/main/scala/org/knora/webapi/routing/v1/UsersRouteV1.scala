@@ -26,7 +26,7 @@ import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
-import org.knora.webapi.util.InputValidation
+import org.knora.webapi.util.StringFormatter
 
 /**
   * Provides a spray-routing function for API routes that deal with lists.
@@ -46,6 +46,7 @@ object UsersRouteV1 extends Authenticator {
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
+        val stringFormatter = StringFormatter.getInstance
 
         path("v1" / "users") {
             get {
@@ -94,7 +95,7 @@ object UsersRouteV1 extends Authenticator {
                         val requestMessage = if (identifier == "email") {
                             UserProfileByEmailGetRequestV1(value, UserProfileTypeV1.RESTRICTED, userProfile)
                         } else  {
-                            val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
+                            val userIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
                             UserProfileByIRIGetRequestV1(userIri, UserProfileTypeV1.RESTRICTED, userProfile)
                         }
                         RouteUtilV1.runJsonRoute(
@@ -110,7 +111,7 @@ object UsersRouteV1 extends Authenticator {
                 /* update a user identified by iri */
                 entity(as[ChangeUserApiRequestV1]) { apiRequest => requestContext =>
 
-                    val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
+                    val userIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
                     val userProfile = getUserProfileV1(requestContext)
 
                     /* the api request is already checked at time of creation. see case class. */
@@ -160,7 +161,7 @@ object UsersRouteV1 extends Authenticator {
             } ~ delete {
                 /* delete a user identified by iri */
                 requestContext => {
-                    val userIri = InputValidation.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
+                    val userIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
                     val userProfile = getUserProfileV1(requestContext)
 
                     /* update existing user's status to false */
@@ -187,7 +188,7 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
 
                     val requestMessage = UserProjectMembershipsGetRequestV1(
                         userIri = checkedUserIri,
@@ -210,8 +211,8 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
-                    val checkedProjectIri = InputValidation.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
+                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                    val checkedProjectIri = stringFormatter.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
 
                     val requestMessage = UserProjectMembershipAddRequestV1(
                         userIri = checkedUserIri,
@@ -233,8 +234,8 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
-                    val checkedProjectIri = InputValidation.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
+                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                    val checkedProjectIri = stringFormatter.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
 
                     val requestMessage = UserProjectMembershipRemoveRequestV1(
                         userIri = checkedUserIri,
@@ -258,7 +259,7 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
 
                     val requestMessage = UserProjectAdminMembershipsGetRequestV1(
                         userIri = checkedUserIri,
@@ -281,8 +282,8 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
-                    val checkedProjectIri = InputValidation.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
+                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                    val checkedProjectIri = stringFormatter.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
 
                     val requestMessage = UserProjectAdminMembershipAddRequestV1(
                         userIri = checkedUserIri,
@@ -304,8 +305,8 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
-                    val checkedProjectIri = InputValidation.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
+                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                    val checkedProjectIri = stringFormatter.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
 
                     val requestMessage = UserProjectAdminMembershipRemoveRequestV1(
                         userIri = checkedUserIri,
@@ -329,7 +330,7 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
 
                     val requestMessage = UserGroupMembershipsGetRequestV1(
                         userIri = checkedUserIri,
@@ -352,8 +353,8 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
-                    val checkedGroupIri = InputValidation.toIri(groupIri, () => throw BadRequestException(s"Invalid group IRI $groupIri"))
+                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                    val checkedGroupIri = stringFormatter.toIri(groupIri, () => throw BadRequestException(s"Invalid group IRI $groupIri"))
 
                     val requestMessage = UserGroupMembershipAddRequestV1(
                         userIri = checkedUserIri,
@@ -375,8 +376,8 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val checkedUserIri = InputValidation.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
-                    val checkedGroupIri = InputValidation.toIri(groupIri, () => throw BadRequestException(s"Invalid group IRI $groupIri"))
+                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                    val checkedGroupIri = stringFormatter.toIri(groupIri, () => throw BadRequestException(s"Invalid group IRI $groupIri"))
 
                     val requestMessage = UserGroupMembershipRemoveRequestV1(
                         userIri = checkedUserIri,

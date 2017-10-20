@@ -49,8 +49,8 @@ object DateUtilV1 {
     def dateValueV1ToJulianDayNumberValueV1(dateValueV1: DateValueV1): JulianDayNumberValueV1 = {
         // Get the start and end date ranges of the DateValueV1.
 
-        val dateRange1 = dateString2DateRange(dateValueV1.dateval1+ InputValidation.EraSeparator + dateValueV1.era1, dateValueV1.calendar)
-        val dateRange2 = dateString2DateRange(dateValueV1.dateval2+ InputValidation.EraSeparator + dateValueV1.era2, dateValueV1.calendar)
+        val dateRange1 = dateString2DateRange(dateValueV1.dateval1+ StringFormatter.EraSeparator + dateValueV1.era1, dateValueV1.calendar)
+        val dateRange2 = dateString2DateRange(dateValueV1.dateval2+ StringFormatter.EraSeparator + dateValueV1.era2, dateValueV1.calendar)
 
         JulianDayNumberValueV1(
             dateval1 = convertDateToJulianDayNumber(dateRange1.start),
@@ -70,8 +70,8 @@ object DateUtilV1 {
     def julianDayNumberValueV1ToDateValueV1(julianDayNumberValueV1: JulianDayNumberValueV1): DateValueV1 = {
         val dateval1 = julianDayNumber2DateString(julianDayNumberValueV1.dateval1, julianDayNumberValueV1.calendar, julianDayNumberValueV1.dateprecision1)
         val dateval2 = julianDayNumber2DateString(julianDayNumberValueV1.dateval2, julianDayNumberValueV1.calendar, julianDayNumberValueV1.dateprecision2)
-        val dateEra1 = dateval1.split(InputValidation.EraSeparator)
-        val dateEra2 = dateval2.split(InputValidation.EraSeparator)
+        val dateEra1 = dateval1.split(StringFormatter.EraSeparator)
+        val dateEra2 = dateval2.split(StringFormatter.EraSeparator)
 
         if (dateEra1.length < 2) throw AssertionException(s"$dateval1 does not have an era")
         if (dateEra2.length < 2) throw AssertionException(s"$dateval2 does not have an era")
@@ -106,7 +106,7 @@ object DateUtilV1 {
 
         val daysInMonth = Calendar.DAY_OF_MONTH // will be used to determine the number of days in the given month
         // val monthsInYear = Calendar.MONTH // will be used to determine the number of months in the given year (generic for other calendars)
-        val dateStringSplitByEra: Array[String] = dateString.split(InputValidation.EraSeparator)
+        val dateStringSplitByEra: Array[String] = dateString.split(StringFormatter.EraSeparator)
         val era: Int = dateStringSplitByEra.length match {
 
             case 1 =>
@@ -114,19 +114,19 @@ object DateUtilV1 {
                 GregorianCalendar.AD
             case 2 =>
                 dateStringSplitByEra(1) match {
-                    case InputValidation.Era_BC => GregorianCalendar.BC
-                    case InputValidation.Era_AD => GregorianCalendar.AD
+                    case StringFormatter.Era_BC => GregorianCalendar.BC
+                    case StringFormatter.Era_AD => GregorianCalendar.AD
 
                     // java Gregorian calendar has just BC and AD as public fields
-                    case InputValidation.Era_BCE => GregorianCalendar.BC  // BCE = BC
-                    case InputValidation.Era_CE =>  GregorianCalendar.AD  // CE = AD
+                    case StringFormatter.Era_BCE => GregorianCalendar.BC  // BCE = BC
+                    case StringFormatter.Era_CE =>  GregorianCalendar.AD  // CE = AD
 
                 }
             case _ => throw BadRequestException(s"Could not handle era in $dateString")
         }
 
 
-        val dateSegments = dateStringSplitByEra(0).split(InputValidation.PrecisionSeparator)
+        val dateSegments = dateStringSplitByEra(0).split(StringFormatter.PrecisionSeparator)
 
         // Determine and handle precision of the given date.
         // When setting the date, set time to noon (12) as JDC would contain a fraction otherwise:
@@ -229,8 +229,8 @@ object DateUtilV1 {
 
         val date_era:String = era match {
 
-            case 1 => InputValidation.Era_CE
-            case 0 => InputValidation.Era_BCE
+            case 1 => StringFormatter.Era_CE
+            case 0 => StringFormatter.Era_BCE
 
         }
         precision match {
@@ -296,10 +296,11 @@ object DateUtilV1 {
       * @return a [[JulianDayNumberValueV1]] representing the date.
       */
     def createJDNValueV1FromDateString(dateStr: String): JulianDayNumberValueV1 = {
-        val datestring = InputValidation.toDate(dateStr, () => throw BadRequestException(s"Invalid date format: $dateStr"))
+        val stringFormatter = StringFormatter.getInstance
+        val datestring = stringFormatter.toDate(dateStr, () => throw BadRequestException(s"Invalid date format: $dateStr"))
 
         // parse date: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
-        val parsedDate = datestring.split(InputValidation.CalendarSeparator)
+        val parsedDate = datestring.split(StringFormatter.CalendarSeparator)
         val calendar = KnoraCalendarV1.lookup(parsedDate(0))
 
         if (parsedDate.length > 2) {

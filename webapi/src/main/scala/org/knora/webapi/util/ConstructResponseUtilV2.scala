@@ -315,6 +315,7 @@ object ConstructResponseUtilV2 {
       * @return a [[ValueContentV2]] representing a value.
       */
     def createValueContentV2FromValueRdfData(valueObject: ValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation]): ValueContentV2 = {
+        val stringFormatter = StringFormatter.getInstance
 
         // every knora-base:Value (any of its subclasses) has a string representation
         val valueObjectValueHasString: String = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasString)
@@ -410,7 +411,7 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.StillImageFileValue =>
 
                 val isPreviewStr = valueObject.assertions.get(OntologyConstants.KnoraBase.IsPreview)
-                val isPreview = InputValidation.optionStringToBoolean(isPreviewStr, () => throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
+                val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, () => throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
 
                 StillImageFileValueContentV2(
                     internalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.InternalMimeType),

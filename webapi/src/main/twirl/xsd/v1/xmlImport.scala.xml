@@ -20,7 +20,7 @@
 
 @import org.knora.webapi._
 @import org.knora.webapi.messages.v2.responder.ontologymessages._
-@import org.knora.webapi.util.InputValidation.XmlImportNamespaceInfoV1
+@import org.knora.webapi.util.StringFormatter.XmlImportNamespaceInfoV1
 
 @**
  * Generates an XML schema based on ontology definitions.

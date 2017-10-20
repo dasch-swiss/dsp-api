@@ -46,7 +46,7 @@ import scala.concurrent.duration._
 class SalsahPage(pageUrl: String, headless: Boolean) {
 
     // How long to wait for results obtained using the 'eventually' function
-    implicit val patienceConfig = PatienceConfig(timeout = scaled(10.seconds), interval = scaled(20.millis))
+    implicit val patienceConfig = PatienceConfig(timeout = scaled(15.seconds), interval = scaled(20.millis))
 
     val chromeDriverPath = "lib/chromedriver/chromedriver"
 
@@ -493,7 +493,9 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       * @return the `iframe` representing CKEditor.
       */
     def findCkeditor(field: WebElement): WebElement = {
-        field.findElement(By.xpath("div//iframe"))
+        eventually {
+            field.findElement(By.xpath("div//iframe"))
+        }
     }
 
     /**
@@ -684,7 +686,7 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
 
     def getFormFieldByName(name: String): WebElement = {
         eventually {
-            driver.findElement(By.xpath(s"//table[@class='propedit']//*[@name='$name']"))
+            driver.findElement(By.xpath(s"//table[@class='resadd']//*[@name='$name']"))
 
         }
 
@@ -693,7 +695,7 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
     def clickSaveButtonForResourceCreationForm(): Unit = {
 
         eventually {
-            driver.findElement(By.xpath("//form[@class='propedit']//input[@value='Save']")).click()
+            driver.findElement(By.xpath("//form[@class='resadd']//input[@value='Save']")).click()
         }
 
     }

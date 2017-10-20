@@ -35,6 +35,7 @@ import org.knora.webapi.util._
 import org.knora.webapi.util.search.ApacheLuceneSupport.MatchStringWhileTyping
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.v2._
+import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, StringFormatter}
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -142,10 +143,10 @@ class SearchResponderV2 extends ResponderV2 {
 
             entity match {
                 case iriRef: IriRef => // if an Iri is an external knora-api entity (with value object or simple), convert it to an internal Iri
-                    if (InputValidation.isKnoraApiEntityIri(iriRef.iri)) {
-                        IriRef(InputValidation.externalToInternalEntityIri(iriRef.iri, () => throw BadRequestException(s"${iriRef.iri} is not a valid external knora-api entity Iri")))
+                    if (stringFormatter.isKnoraApiEntityIri(iriRef.iri)) {
+                        IriRef(stringFormatter.externalToInternalEntityIri(iriRef.iri, () => throw BadRequestException(s"${iriRef.iri} is not a valid external knora-api entity Iri")))
                     } else {
-                        IriRef(InputValidation.toIri(iriRef.iri, () => throw BadRequestException(s"$iriRef is not a valid IRI")))
+                        IriRef(stringFormatter.toIri(iriRef.iri, () => throw BadRequestException(s"$iriRef is not a valid IRI")))
                     }
 
                 case other => other
@@ -191,7 +192,7 @@ class SearchResponderV2 extends ResponderV2 {
         protected var dependentResourceVariables = mutable.Set.empty[QueryVariable]
 
         // separator used by GroupConcat
-        val groupConcatSeparator: Char = FormatConstants.INFORMATION_SEPARATOR_ONE
+        val groupConcatSeparator: Char = StringFormatter.INFORMATION_SEPARATOR_ONE
 
         // contains variables representing group concatenated dependent resource Iris
         protected var dependentResourceVariablesGroupConcat = Set.empty[QueryVariable]
@@ -230,8 +231,8 @@ class SearchResponderV2 extends ResponderV2 {
                 case iriRef: IriRef =>
                     // type info keys are external api v2 simple Iris,
                     // so convert this internal Iri to an external api v2 simple if possible
-                    val externalIri = if (InputValidation.isInternalEntityIri(iriRef.iri)) {
-                        InputValidation.internalEntityIriToApiV2SimpleEntityIri(iriRef.iri, () => throw BadRequestException(s"${iriRef.iri} is not a valid internal knora-api entity Iri"))
+                    val externalIri = if (stringFormatter.isInternalEntityIri(iriRef.iri)) {
+                        stringFormatter.internalEntityIriToApiV2SimpleEntityIri(iriRef.iri, () => throw BadRequestException(s"${iriRef.iri} is not a valid internal knora-api entity Iri"))
                     } else {
                         iriRef.iri
                     }
@@ -286,8 +287,8 @@ class SearchResponderV2 extends ResponderV2 {
           */
         protected def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, inputEntity: Entity): Seq[QueryPattern] = {
 
-            val typeIriInternal = if (InputValidation.isKnoraApiEntityIri(nonPropertyTypeInfo.typeIri)) {
-                InputValidation.externalToInternalEntityIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid external knora-api entity Iri"))
+            val typeIriInternal = if (stringFormatter.isKnoraApiEntityIri(nonPropertyTypeInfo.typeIri)) {
+                stringFormatter.externalToInternalEntityIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid external knora-api entity Iri"))
             } else {
                 nonPropertyTypeInfo.typeIri
             }
@@ -331,8 +332,8 @@ class SearchResponderV2 extends ResponderV2 {
         protected def convertStatementForPropertyType(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern): Seq[QueryPattern] = {
 
             // convert the type information into an internal Knora Iri if possible
-            val objectIri = if (InputValidation.isKnoraApiEntityIri(propertyTypeInfo.objectTypeIri)) {
-                InputValidation.externalToInternalEntityIri(propertyTypeInfo.objectTypeIri, () => throw BadRequestException(s"${propertyTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
+            val objectIri = if (stringFormatter.isKnoraApiEntityIri(propertyTypeInfo.objectTypeIri)) {
+                stringFormatter.externalToInternalEntityIri(propertyTypeInfo.objectTypeIri, () => throw BadRequestException(s"${propertyTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
             } else {
                 propertyTypeInfo.objectTypeIri
             }
@@ -564,8 +565,8 @@ class SearchResponderV2 extends ResponderV2 {
                                         // make sure that the comparison operator is a `CompareExpressionOperator.EQUALS`
                                         if (filterCompare.operator != CompareExpressionOperator.EQUALS) throw SparqlSearchException(s"Comparison operator in a CompareExpression for a property type is expected to be ${CompareExpressionOperator.EQUALS}, but ${filterCompare.operator} given. For negations use 'FILTER NOT EXISTS' ")
 
-                                        val objectTypeIriInternal = if (InputValidation.isKnoraApiEntityIri(propInfo.objectTypeIri)) {
-                                            InputValidation.externalToInternalEntityIri(propInfo.objectTypeIri, () => throw BadRequestException(s"${propInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
+                                        val objectTypeIriInternal = if (stringFormatter.isKnoraApiEntityIri(propInfo.objectTypeIri)) {
+                                            stringFormatter.externalToInternalEntityIri(propInfo.objectTypeIri, () => throw BadRequestException(s"${propInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
                                         } else {
                                             propInfo.objectTypeIri
                                         }
@@ -602,8 +603,8 @@ class SearchResponderV2 extends ResponderV2 {
 
                                 // the left arg queryVar is a variable representing a value
                                 // get the internal Iri of the value type, if possible (xsd types are not internal types).
-                                val typeIriInternal = if (InputValidation.isKnoraApiEntityIri(nonPropInfo.typeIri)) {
-                                    InputValidation.externalToInternalEntityIri(nonPropInfo.typeIri, () => throw BadRequestException(s"${nonPropInfo.typeIri} is not a valid external knora-api entity Iri"))
+                                val typeIriInternal = if (stringFormatter.isKnoraApiEntityIri(nonPropInfo.typeIri)) {
+                                    stringFormatter.externalToInternalEntityIri(nonPropInfo.typeIri, () => throw BadRequestException(s"${nonPropInfo.typeIri} is not a valid external knora-api entity Iri"))
                                 } else {
                                     nonPropInfo.typeIri
                                 }
@@ -725,7 +726,7 @@ class SearchResponderV2 extends ResponderV2 {
                                         }
 
                                         // validate Knora  date string
-                                        val dateStr: String = InputValidation.toDate(dateStringLiteral.value, () => throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"))
+                                        val dateStr: String = stringFormatter.toDate(dateStringLiteral.value, () => throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"))
 
                                         val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
 
@@ -1094,7 +1095,7 @@ class SearchResponderV2 extends ResponderV2 {
 
         import SearchResponderV2Constants.FullTextSearchConstants._
 
-        val groupConcatSeparator = FormatConstants.INFORMATION_SEPARATOR_ONE
+        val groupConcatSeparator = StringFormatter.INFORMATION_SEPARATOR_ONE
 
         /**
           * Creates a CONSTRUCT query for the given resource and value object Iris.
@@ -1603,10 +1604,10 @@ class SearchResponderV2 extends ResponderV2 {
                                 // Get the corresponding knora-base:valueHas* property so we can generate an appropriate variable name.
                                 val propertyIri: IRI = typeInfo match {
                                     case nonPropertyTypeInfo: NonPropertyTypeInfo =>
-                                        val internalTypeIri = if (InputValidation.isKnoraApiEntityIri(nonPropertyTypeInfo.typeIri)) {
-                                            IriRef(InputValidation.externalToInternalEntityIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid external knora-api entity Iri")))
+                                        val internalTypeIri = if (stringFormatter.isKnoraApiEntityIri(nonPropertyTypeInfo.typeIri)) {
+                                            IriRef(stringFormatter.externalToInternalEntityIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid external knora-api entity Iri")))
                                         } else {
-                                            IriRef(InputValidation.toIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid IRI")))
+                                            IriRef(stringFormatter.toIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid IRI")))
                                         }
                                         literalTypesToValueTypeIris.getOrElse(internalTypeIri.iri, throw SparqlSearchException(s"Type ${internalTypeIri.iri} is not supported in ORDER BY"))
 
@@ -1724,8 +1725,8 @@ class SearchResponderV2 extends ResponderV2 {
                     // create a key for the type annotations map
                     val typeableEntity: TypeableEntity = statementPattern.pred match {
                         case iri: IriRef =>
-                            val externalIri = if (InputValidation.isInternalEntityIri(iri.iri)) {
-                                InputValidation.internalEntityIriToApiV2SimpleEntityIri(iri.iri, () => throw BadRequestException(s"${iri.iri} is not a valid internal knora-api entity Iri"))
+                            val externalIri = if (stringFormatter.isInternalEntityIri(iri.iri)) {
+                                stringFormatter.internalEntityIriToApiV2SimpleEntityIri(iri.iri, () => throw BadRequestException(s"${iri.iri} is not a valid internal knora-api entity Iri"))
                             } else {
                                 iri.iri
                             }
@@ -1749,8 +1750,8 @@ class SearchResponderV2 extends ResponderV2 {
                         }
 
                         // convert the type information into an internal Knora Iri if possible
-                        val objectIri = if (InputValidation.isKnoraApiEntityIri(propTypeInfo.objectTypeIri)) {
-                            InputValidation.externalToInternalEntityIri(propTypeInfo.objectTypeIri, () => throw BadRequestException(s"${propTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
+                        val objectIri = if (stringFormatter.isKnoraApiEntityIri(propTypeInfo.objectTypeIri)) {
+                            stringFormatter.externalToInternalEntityIri(propTypeInfo.objectTypeIri, () => throw BadRequestException(s"${propTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
                         } else {
                             propTypeInfo.objectTypeIri
                         }

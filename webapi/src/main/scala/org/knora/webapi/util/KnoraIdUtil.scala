@@ -46,6 +46,7 @@ class KnoraIdUtil {
 
     private val base64Encoder = Base64.getUrlEncoder.withoutPadding
     private val base64Decoder = Base64.getUrlDecoder
+    private val stringFormatter = StringFormatter.getInstance
 
     /**
       * Generates a type 4 UUID using [[java.util.UUID]], and Base64-encodes it using a URL and filename safe
@@ -162,7 +163,7 @@ class KnoraIdUtil {
     def makeProjectMappingIri(projectIri: IRI, mappingName: String): IRI = {
         val mappingIri = s"$projectIri/mappings/$mappingName"
         // check that the mapping IRI is valid (mappingName is user input)
-        InputValidation.toIri(mappingIri, () => throw BadRequestException(s"the created mapping IRI $mappingIri is invalid"))
+        stringFormatter.toIri(mappingIri, () => throw BadRequestException(s"the created mapping IRI $mappingIri is invalid"))
     }
 
     /**

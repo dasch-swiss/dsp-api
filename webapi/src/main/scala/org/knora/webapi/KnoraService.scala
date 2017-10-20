@@ -31,20 +31,22 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.{ConnectionContext, Http}
 import akka.pattern._
 import akka.stream.ActorMaterializer
+import akka.util.Timeout
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
-import org.knora.webapi.messages.v2.responder.ontologymessages.{LoadOntologiesRequestV2, LoadOntologiesResponseV2}
-import org.knora.webapi.responders.{ResponderManager, _}
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
+import org.knora.webapi.responders._
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
 import org.knora.webapi.store._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
-import org.knora.webapi.util.CacheUtil
+import org.knora.webapi.util.{CacheUtil, StringFormatter}
 
 import scala.collection.JavaConverters._
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContextExecutor}
 import scala.concurrent.duration._
 
 /**
@@ -66,7 +68,7 @@ trait LiveCore extends Core {
     /**
       * The application's actor system.
       */
-    implicit lazy val system = ActorSystem("webapi")
+    implicit lazy val system: ActorSystem = ActorSystem("webapi")
 
     /**
       * The application's configuration.
@@ -86,6 +88,8 @@ trait LiveCore extends Core {
   */
 trait KnoraService {
     this: Core =>
+    // Initialise StringFormatter with the system settings. This must happen before any responders are constructed.
+    StringFormatter.init(settings)
 
     /**
       * The supervisor actor that forwards messages to responder actors to handle API requests.
@@ -100,7 +104,7 @@ trait KnoraService {
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
       */
-    implicit private val timeout = settings.defaultRestoreTimeout
+    implicit private val timeout: Timeout = settings.defaultRestoreTimeout
 
     /**
       * A user representing the Knora API server, used for initialisation on startup.
@@ -130,9 +134,9 @@ trait KnoraService {
             ProjectsRouteV1.knoraApiPath(system, settings, log) ~
             GroupsRouteV1.knoraApiPath(system, settings, log) ~
             PermissionsRouteV1.knoraApiPath(system, settings, log) ~
-            OntologiesRouteV2.knoraApiPath(system, settings, log) ~ // This is a V2 responder !
-            SearchRouteV2.knoraApiPath(system, settings, log) ~  // This is a V2 responder !
-            ResourcesRouteV2.knoraApiPath(system, settings, log) ~ // This is a V2 responder !
+            OntologiesRouteV2.knoraApiPath(system, settings, log) ~
+            SearchRouteV2.knoraApiPath(system, settings, log) ~
+            ResourcesRouteV2.knoraApiPath(system, settings, log) ~
             AuthenticationRouteV2.knoraApiPath(system, settings, log),
         settings,
         log
@@ -156,10 +160,10 @@ trait KnoraService {
       */
     def startService(): Unit = {
 
-        implicit val materializer = ActorMaterializer()
+        implicit val materializer: ActorMaterializer = ActorMaterializer()
 
         // needed for startup flags and the future map/flatmap in the end
-        implicit val executionContext = system.dispatcher
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
         CacheUtil.createCaches(settings.caches)
 
@@ -177,7 +181,7 @@ trait KnoraService {
         // TODO: make a generic V2 ontology responder that handles this and is called by V1 ontology responder
         // TODO: forward LoadOntologies to V2 (V1 can still be called)
         val ontologyCacheFuture = responderManager ? LoadOntologiesRequestV2(systemUser)
-        Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[LoadOntologiesResponseV2]
+        Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[SuccessResponseV2]
 
         if (StartupFlags.allowReloadOverHTTP.get) {
             println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")

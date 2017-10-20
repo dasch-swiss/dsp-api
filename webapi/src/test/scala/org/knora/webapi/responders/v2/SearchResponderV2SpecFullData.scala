@@ -1021,7 +1021,7 @@ object SearchResponderV2SpecFullData {
             StatementPattern(
                 namedGraph = None,
                 obj = IriRef(
-                    iri = "http://api.knora.org/ontology/incunabula/simple/v2#book"
+                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#book"
                 ),
                 pred = IriRef(
                     iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
@@ -1042,7 +1042,7 @@ object SearchResponderV2SpecFullData {
                 namedGraph = None,
                 obj = QueryVariable(variableName = "title"),
                 pred = IriRef(
-                    iri = "http://api.knora.org/ontology/incunabula/simple/v2#title"
+                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
                 ),
                 subj = QueryVariable(variableName = "book")
             ),
@@ -1055,7 +1055,7 @@ object SearchResponderV2SpecFullData {
                     iri = "http://api.knora.org/ontology/knora-api/simple/v2#objectType"
                 ),
                 subj = IriRef(
-                    iri = "http://api.knora.org/ontology/incunabula/simple/v2#title"
+                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
                 )
             ),
             StatementPattern(
@@ -1092,7 +1092,7 @@ object SearchResponderV2SpecFullData {
                 namedGraph = None,
                 obj = QueryVariable(variableName = "title"),
                 pred = IriRef(
-                    iri = "http://api.knora.org/ontology/incunabula/simple/v2#title"
+                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
                 ),
                 subj = QueryVariable(variableName = "book")
             )
@@ -1138,7 +1138,7 @@ object SearchResponderV2SpecFullData {
             StatementPattern(
                 namedGraph = None,
                 obj = IriRef(
-                    iri = "http://api.knora.org/ontology/incunabula/simple/v2#book"
+                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#book"
                 ),
                 pred = IriRef(
                     iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
@@ -1159,7 +1159,7 @@ object SearchResponderV2SpecFullData {
                 namedGraph = None,
                 obj = QueryVariable(variableName = "title"),
                 pred = IriRef(
-                    iri = "http://api.knora.org/ontology/incunabula/simple/v2#title"
+                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
                 ),
                 subj = QueryVariable(variableName = "book")
             ),
@@ -1172,7 +1172,7 @@ object SearchResponderV2SpecFullData {
                     iri = "http://api.knora.org/ontology/knora-api/simple/v2#objectType"
                 ),
                 subj = IriRef(
-                    iri = "http://api.knora.org/ontology/incunabula/simple/v2#title"
+                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
                 )
             ),
             StatementPattern(
@@ -1210,7 +1210,7 @@ object SearchResponderV2SpecFullData {
                 namedGraph = None,
                 obj = QueryVariable(variableName = "title"),
                 pred = IriRef(
-                    iri = "http://api.knora.org/ontology/incunabula/simple/v2#title"
+                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
                 ),
                 subj = QueryVariable(variableName = "book")
             )

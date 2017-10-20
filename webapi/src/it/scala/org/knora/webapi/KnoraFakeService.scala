@@ -20,6 +20,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
+import org.knora.webapi.util.StringFormatter
 
 /**
   * Created by subotic on 26.06.17.
@@ -27,6 +28,9 @@ import akka.stream.ActorMaterializer
 trait KnoraFakeService {
 
     this: Core =>
+
+    // Initialise StringFormatter with the system settings.
+    StringFormatter.init(settings)
 
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)

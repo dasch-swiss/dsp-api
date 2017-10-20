@@ -26,7 +26,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
-import org.knora.webapi.util.InputValidation
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.search.v2.SearchParserV2
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
@@ -39,6 +39,7 @@ object SearchRouteV2 extends Authenticator {
     val LIMIT_TO_PROJECT = "limitToProject"
     val LIMIT_TO_RESOURCE_CLASS = "limitToResourceClass"
     val OFFSET = "offset"
+    val stringFormatter = StringFormatter.getInstance
 
     /**
       * Gets the requested offset. Returns zero if no offset is indicated.
@@ -52,7 +53,7 @@ object SearchRouteV2 extends Authenticator {
         offsetStr match {
             case Some(offset: String) =>
 
-                val offsetInt: Int = InputValidation.toInt(offset, () => throw BadRequestException(s"offset is expected to be an Integer, but $offset given"))
+                val offsetInt: Int = stringFormatter.toInt(offset, () => throw BadRequestException(s"offset is expected to be an Integer, but $offset given"))
 
                 if (offsetInt < 0) throw BadRequestException(s"offset must be an Integer >= 0, but $offsetInt given.")
 
@@ -75,7 +76,7 @@ object SearchRouteV2 extends Authenticator {
         val limitToProjectIri: Option[IRI] = limitToProjectIriStr match {
 
             case Some(projectIriStr: String) =>
-                val projectIri = InputValidation.toIri(projectIriStr, () => throw BadRequestException(s"$projectIriStr is not a valid Iri"))
+                val projectIri = stringFormatter.toIri(projectIriStr, () => throw BadRequestException(s"$projectIriStr is not a valid Iri"))
 
                 Some(projectIri)
 
@@ -101,9 +102,9 @@ object SearchRouteV2 extends Authenticator {
 
             case Some(resourceClassIriStr: String) =>
 
-                val externalResourceClassIri = InputValidation.toIri(resourceClassIriStr, () => throw BadRequestException(s"$resourceClassIriStr is not a valid Iri"))
+                val externalResourceClassIri = stringFormatter.toIri(resourceClassIriStr, () => throw BadRequestException(s"$resourceClassIriStr is not a valid Iri"))
 
-                Some(InputValidation.externalToInternalEntityIri(externalResourceClassIri, () => throw BadRequestException(s"$externalResourceClassIri is not a valid knora-api resource class Iri")))
+                Some(stringFormatter.externalToInternalEntityIri(externalResourceClassIri, () => throw BadRequestException(s"$externalResourceClassIri is not a valid knora-api resource class Iri")))
 
             case None => None
 
@@ -124,7 +125,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val searchString = InputValidation.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+                    val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
 
@@ -147,7 +148,7 @@ object SearchRouteV2 extends Authenticator {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val searchString = InputValidation.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+                    val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
 
@@ -214,7 +215,7 @@ object SearchRouteV2 extends Authenticator {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val searchString = InputValidation.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+                    val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
 
@@ -244,7 +245,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val searchString = InputValidation.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+                    val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
 

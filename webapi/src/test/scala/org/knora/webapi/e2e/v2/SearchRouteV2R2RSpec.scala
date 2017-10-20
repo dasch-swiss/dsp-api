@@ -133,7 +133,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -171,7 +171,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform a count query for an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -208,7 +208,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -244,7 +244,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -282,7 +282,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform a count query for an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -324,7 +324,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "perform an extended search for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
 
             val sparqlSimplified =
-                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -370,7 +370,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "perform a count query for an extended search for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
 
             val sparqlSimplified =
-                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -414,7 +414,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "perform an extended search for the page of a book whose seqnum equals 10, returning only the seqnum" in {
 
             val sparqlSimplified =
-                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -459,7 +459,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "perform an extended search for the pages of a book whose seqnum is lower than or equals 10" in {
 
             val sparqlSimplified =
-                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -502,7 +502,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have been published on the first of March 1497 (Julian Calendar)" ignore { // literals are not supported
             val sparqlSimplified =
-                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -542,7 +542,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have been published on the first of March 1497 (Julian Calendar) (2)" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -587,7 +587,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have not been published on the first of March 1497 (Julian Calendar)" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -632,7 +632,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have not been published on the first of March 1497 (Julian Calendar) 2" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -677,7 +677,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have been published before 1497 (Julian Calendar)" in {
             val sparqlSimplified =
-                """    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -721,7 +721,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have been published 1497 or later (Julian Calendar)" in {
             val sparqlSimplified =
-                """    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -765,7 +765,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have been published after 1497 (Julian Calendar)" in {
             val sparqlSimplified =
-                """    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -809,7 +809,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have been published 1497 or before (Julian Calendar)" in {
             val sparqlSimplified =
-                """    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -853,7 +853,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have been published after 1486 and before 1491 (Julian Calendar)" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -897,7 +897,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "get the regions belonging to a page" in {
             val sparqlSimplified =
-                """    PREFIX incunabula: <http://api.knora.org/ontology/incunabula/simple/v2#>
+                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -954,7 +954,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "search for an anything:Thing that has a decimal value of 2.1" ignore { // literals are not supported
             val sparqlSimplified =
                 """
-                  |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |CONSTRUCT {
@@ -989,7 +989,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "search for an anything:Thing that has a decimal value of 2.1 2" in {
             val sparqlSimplified =
                 """
-                  |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |CONSTRUCT {
@@ -1027,7 +1027,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "search for an anything:Thing that has a decimal value bigger than 2.0" in {
             val sparqlSimplified =
                 """
-                  |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |CONSTRUCT {
@@ -1065,7 +1065,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "search for an anything:Thing that has a decimal value smaller than 3.0" in {
             val sparqlSimplified =
                 """
-                  |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |CONSTRUCT {
@@ -1103,7 +1103,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "search for an anything:Thing that has a Boolean value that is true" ignore { // literals are not supported
             val sparqlSimplified =
                 """
-                  |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |CONSTRUCT {
@@ -1138,7 +1138,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "search for an anything:Thing that has a Boolean value that is true 2" in {
             val sparqlSimplified =
                 """
-                  |PREFIX anything: <http://api.knora.org/ontology/anything/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |CONSTRUCT {

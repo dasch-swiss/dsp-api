@@ -74,28 +74,28 @@ jobs:
         - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop
         # start the integration tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt it:test
-    - stage: test
-      script:
-        # prepare needed graphdb-se files
-        - mkdir -p $TRAVIS_BUILD_DIR/data/conf
-        - cp $TRAVIS_BUILD_DIR/private/graphdb.license $TRAVIS_BUILD_DIR/data/conf/graphdb.license
-        - mkdir -p $TRAVIS_BUILD_DIR/graphdb
-        - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
-        # start and initialize graphdb-se
-        - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/data:/opt/graphdb/home -v $TRAVIS_BUILD_DIR/graphdb:/graphdb ontotext/graphdb:8.2.0-se
-        - sleep 15
-        - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test.sh
-        # start the sipi container (with test config)
-        - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop /sipi/local/bin/sipi --config=/sipi/config/sipi.knora-test-docker-config.lua
-        # start the webapi and salsah server
-        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt "run allowReloadOverHTTP" &
-        - cd $TRAVIS_BUILD_DIR/salsah/ && sbt run &
-        # wait for the webapi server to start before we proceed with running the salsah tests
-        - until netstat -an 2>/dev/null | grep '3333.*LISTEN'; do true; done
-        # unzip chromedriver
-        - cd $TRAVIS_BUILD_DIR/salsah/lib/chromedriver/ && unzip chromedriver_linux64.zip
-        # start built-in salsah browser tests
-        - cd $TRAVIS_BUILD_DIR/salsah/ && sbt headless:test
+    #- stage: test
+    #  script:
+    #    # prepare needed graphdb-se files
+    #    - mkdir -p $TRAVIS_BUILD_DIR/data/conf
+    #    - cp $TRAVIS_BUILD_DIR/private/graphdb.license $TRAVIS_BUILD_DIR/data/conf/graphdb.license
+    #    - mkdir -p $TRAVIS_BUILD_DIR/graphdb
+    #    - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
+    #    # start and initialize graphdb-se
+    #    - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/data:/opt/graphdb/home -v $TRAVIS_BUILD_DIR/graphdb:/graphdb ontotext/graphdb:8.2.0-se
+    #    - sleep 15
+    #    - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test.sh
+    #    # start the sipi container (with test config)
+    #    - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop /sipi/local/bin/sipi --config=/sipi/config/sipi.knora-test-docker-config.lua
+    #    # start the webapi and salsah server
+    #    - cd $TRAVIS_BUILD_DIR/webapi/ && sbt "run allowReloadOverHTTP" &
+    #    - cd $TRAVIS_BUILD_DIR/salsah/ && sbt run &
+    #    # wait for the webapi server to start before we proceed with running the salsah tests
+    #    - until netstat -an 2>/dev/null | grep '3333.*LISTEN'; do true; done
+    #    # unzip chromedriver
+    #    - cd $TRAVIS_BUILD_DIR/salsah/lib/chromedriver/ && unzip chromedriver_linux64.zip
+    #    # start built-in salsah browser tests
+    #    - cd $TRAVIS_BUILD_DIR/salsah/ && sbt headless:test
     - stage: publish
       script:
         - docker login -u $DOCKER_USER -p $DOCKER_PASS
