@@ -20,19 +20,23 @@
 
 package org.knora.webapi.responders.v2
 
+import java.time.Instant
+
 import akka.pattern._
+import akka.http.scaladsl.util.FastFuture
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsNamedGraphGetV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.OwlCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.{CacheUtil, ErrorHandlingMap, KnoraIdUtil}
 import org.knora.webapi._
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 
 import scala.concurrent.Future
 
@@ -82,10 +86,11 @@ class OntologyResponderV2 extends Responder {
         case CheckSubClassRequestV2(subClassIri, superClassIri, userProfile) => future2Message(sender(), checkSubClassV2(subClassIri, superClassIri, userProfile), log)
         case SubClassesGetRequestV2(resourceClassIri, userProfile) => future2Message(sender(), getSubClassesV2(resourceClassIri, userProfile), log)
         case NamedGraphEntitiesRequestV2(namedGraphIri, userProfile) => future2Message(sender(), getNamedGraphEntityInfoV2ForNamedGraphV2(namedGraphIri, userProfile), log)
-        case NamedGraphEntitiesGetRequestV2(namedGraphIris, allLanguages, userProfile) => future2Message(sender(), getEntitiesForNamedGraphV2(namedGraphIris, allLanguages, userProfile), log)
-        case ClassesGetRequestV2(resourceClassIris, allLanguages, userProfile) => future2Message(sender(), getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris, allLanguages, userProfile), log)
+        case NamedGraphEntitiesGetRequestV2(namedGraphIris, responseSchema, allLanguages, userProfile) => future2Message(sender(), getEntitiesForNamedGraphV2(namedGraphIris, responseSchema, allLanguages, userProfile), log)
+        case ClassesGetRequestV2(resourceClassIris, responseSchema, allLanguages, userProfile) => future2Message(sender(), getClassDefinitionsWithCardinalitiesV2(resourceClassIris, responseSchema, allLanguages, userProfile), log)
         case PropertyEntitiesGetRequestV2(propertyIris, allLanguages, userProfile) => future2Message(sender(), getPropertyDefinitionsV2(propertyIris, allLanguages, userProfile), log)
         case NamedGraphsGetRequestV2(userProfile) => future2Message(sender(), getNamedGraphsV2(userProfile), log)
+        case createOntologyRequest: CreateOntologyRequestV2 => future2Message(sender(), createOntology(createOntologyRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -95,7 +100,7 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[LoadOntologiesResponse]].
       */
-    private def loadOntologies(userProfile: UserProfileV1): Future[LoadOntologiesResponseV2] = {
+    private def loadOntologies(userProfile: UserProfileV1): Future[SuccessResponseV2] = {
         // TODO: determine whether the user is authorised to reload the ontologies (depends on pull request #168).
 
         /**
@@ -216,7 +221,8 @@ class OntologyResponderV2 extends Responder {
             } + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri -> KnoraApiV2Simple.Classes.keySet) +
                 (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri -> KnoraApiV2WithValueObjects.Classes.keySet)
 
-            // Make a map of IRIs of named graphs to IRIs of properties defined in each one, knora-base:resourceProperty, which is never used directly.
+            // Make a map of IRIs of named graphs to IRIs of properties defined in each one, excluding knora-base:resourceProperty,
+            // which is never used directly.
             graphPropMap: Map[IRI, Set[IRI]] = propertyDefsRows.groupBy(_.rowMap("graph")).map {
                 case (graphIri, graphRows) =>
                     graphIri -> (graphRows.map(_.rowMap("prop")).toSet - OntologyConstants.KnoraBase.ResourceProperty)
@@ -390,7 +396,7 @@ class OntologyResponderV2 extends Responder {
                                         owlCardinalityValue = owlCardinality.cardinalityValue
                                     )
                                 )
-                        }.toMap - OntologyConstants.KnoraBase.HasStandoffLinkToValue, // Don't return a cardinality for hasStandoffLinkToValue, because there's nothing the client can do with it.
+                        }.toMap, // Don't return a cardinality for hasStandoffLinkToValue, because there's nothing the client can do with it.
                         linkProperties = linkProps,
                         linkValueProperties = linkValueProps,
                         fileValueProperties = fileValueProps,
@@ -678,7 +684,7 @@ class OntologyResponderV2 extends Responder {
 
             _ = CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = ontologyCacheData)
 
-        } yield LoadOntologiesResponseV2()
+        } yield SuccessResponseV2("Ontologies loaded.")
     }
 
     /**
@@ -707,8 +713,20 @@ class OntologyResponderV2 extends Responder {
         for {
             cacheData <- getCacheData
 
-            classDefsAvailable = cacheData.classDefs.filterKeys(classIris)
-            propertyDefsAvailable = cacheData.propertyDefs.filterKeys(propertyIris  - OntologyConstants.KnoraBase.HasStandoffLinkToValue) // Don't return hasStandoffLinkToValue, because there's nothing a client can do with it.
+            classDefsAvailable: Map[IRI, ClassEntityInfoV2] = cacheData.classDefs.filterKeys(classIris)
+            propertyDefsAvailable: Map[IRI, PropertyEntityInfoV2] = cacheData.propertyDefs.filterKeys(propertyIris)
+
+
+            missingClassDefs = classIris -- classDefsAvailable.keySet
+            missingPropertyDefs = propertyIris -- propertyDefsAvailable.keySet
+
+            _ = if (missingClassDefs.nonEmpty) {
+                throw NotFoundException(s"Some requested classes were not found: ${missingClassDefs.mkString(", ")}")
+            }
+
+            _ = if (missingPropertyDefs.nonEmpty) {
+                throw NotFoundException(s"Some requested properties were not found: ${missingPropertyDefs.mkString(", ")}")
+            }
 
             response = EntityInfoGetResponseV2(
                 classEntityInfoMap = new ErrorHandlingMap(classDefsAvailable, { key => s"Resource class $key not found" }),
@@ -851,7 +869,7 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile    the profile of the user making the request.
       * @return a [[ReadEntityDefinitionsV2]].
       */
-    private def getEntitiesForNamedGraphV2(namedGraphIris: Set[IRI], allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
+    private def getEntitiesForNamedGraphV2(namedGraphIris: Set[IRI], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
 
         for {
 
@@ -876,11 +894,17 @@ class OntologyResponderV2 extends Responder {
 
             entitiesForNamedGraphsMap: Map[IRI, NamedGraphEntityInfoV2] = entitiesForNamedGraphs.toMap
 
-            // collect all resource class Iris
-            resourceClassIris: Set[IRI] = entitiesForNamedGraphsMap.values.flatMap(_.classIris).toSet
+            // collect all class and property IRIs
+            classIris: Set[IRI] = entitiesForNamedGraphsMap.values.flatMap(_.classIris).toSet
             propertyIris: Set[IRI] = entitiesForNamedGraphsMap.values.flatMap(_.propertyIris).toSet
 
-            readEntityDefsForClasses: ReadEntityDefinitionsV2 <- getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris, allLanguages, userProfile = userProfile)
+            readEntityDefsForClasses: ReadEntityDefinitionsV2 <- getClassDefinitionsWithCardinalitiesV2(
+                classIris,
+                responseSchema,
+                allLanguages,
+                userProfile = userProfile
+            )
+
             readEntityDefsForProperties: ReadEntityDefinitionsV2 <- getPropertyDefinitionsV2(propertyIris, allLanguages, userProfile = userProfile)
 
             ontologiesWithClasses: Map[IRI, Set[IRI]] = entitiesForNamedGraphsMap.map {
@@ -897,15 +921,15 @@ class OntologyResponderV2 extends Responder {
     /**
       * Requests information about resource classes and their properties.
       *
-      * @param resourceClassIris the Iris of the resource classes to query for.
+      * @param classIris the Iris of the resource classes to query for.
       * @param userProfile       the profile of the user making the request.
       * @return a [[ReadEntityDefinitionsV2]].
       */
-    private def getResourceClassDefinitionsWithCardinalitiesV2(resourceClassIris: Set[IRI], allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
+    private def getClassDefinitionsWithCardinalitiesV2(classIris: Set[IRI], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
         for {
 
         // request information about the given resource class Iris
-            resourceClassResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(classIris = resourceClassIris, userProfile = userProfile)
+            classInfoResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(classIris = classIris, userProfile = userProfile)
 
             // get the subclassOf relations of the given resource classes
             /*
@@ -916,14 +940,37 @@ class OntologyResponderV2 extends Responder {
             }.toMap
             */
 
+            // If a project-specific resource class was requested, include definitions of the built-in properties
+            // that knora-api:Resource has cardinalities for.
+
+            projectSpecificClassRequested = classIris.exists {
+                classIri => stringFormatter.isProjectSpecificEntityIri(classIri)
+            }
+
+            builtInPropertiesToAdd = if (projectSpecificClassRequested) {
+                val knoraApiResourceClass = responseSchema match {
+                    case ApiV2Simple => KnoraApiV2Simple.Resource
+                    case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.Resource
+                }
+
+                knoraApiResourceClass.cardinalities.keySet
+            } else {
+                Set.empty[IRI]
+            }
+
             // get all property Iris from cardinalities
-            propertyIris: Set[IRI] = resourceClassResponse.classEntityInfoMap.values.foldLeft(Set.empty[IRI]) {
+            propertyIris: Set[IRI] = classInfoResponse.classEntityInfoMap.values.foldLeft(Set.empty[IRI]) {
                 case (acc: Set[IRI], resourceEntityInfo: ClassEntityInfoV2) =>
                     acc ++ resourceEntityInfo.cardinalities.keySet
+            } ++ builtInPropertiesToAdd
+
+            // Only try to get definitions for properties that we know about (built-in or project-specific Knora ontology properties).
+            propertyIrisFiltered: Set[IRI] = propertyIris.filter {
+                propertyIri => stringFormatter.isKnoraEntityIri(propertyIri)
             }
 
             // request information about the properties for which cardinalities are defined
-            propertiesResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, userProfile = userProfile)
+            propertiesResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIrisFiltered, userProfile = userProfile)
 
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
@@ -934,7 +981,7 @@ class OntologyResponderV2 extends Responder {
                 None
             }
 
-        } yield ReadEntityDefinitionsV2(classes = resourceClassResponse.classEntityInfoMap, properties = propertiesResponse.propertyEntityInfoMap, userLang = userLang)
+        } yield ReadEntityDefinitionsV2(classes = classInfoResponse.classEntityInfoMap, properties = propertiesResponse.propertyEntityInfoMap, userLang = userLang)
     }
 
     /**
@@ -960,5 +1007,29 @@ class OntologyResponderV2 extends Responder {
             }
 
         } yield ReadEntityDefinitionsV2(properties = propertiesResponse.propertyEntityInfoMap, userLang = userLang)
+    }
+
+    /**
+      * Creates a new, empty ontology.
+      *
+      * @param createOntologyRequest the request message.
+      * @return a [[SuccessResponseV2]].
+      */
+    private def createOntology(createOntologyRequest: CreateOntologyRequestV2): Future[SuccessResponseV2] = {
+        for {
+            currentTime: String <- FastFuture.successful(Instant.now.toString)
+
+            createOntologySparql = queries.sparql.v2.txt.createOntology(
+                triplestore = settings.triplestoreType,
+                ontologyNamedGraphIri = createOntologyRequest.ontologyIri,
+                ontologyIri = createOntologyRequest.ontologyIri,
+                currentTime = currentTime
+            ).toString
+
+            createOntologyResponse <- (storeManager ? SparqlUpdateRequest(createOntologySparql)).mapTo[SparqlUpdateResponse]
+
+            // TODO: check whether the ontology was created by querying its lastModificationDate.
+
+        } yield SuccessResponseV2("Ontology created.")
     }
 }
