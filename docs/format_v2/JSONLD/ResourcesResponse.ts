@@ -26,9 +26,9 @@ export module ResourcesResponse {
             /**
              * Assertions about the value.
              *
-             * In case of a link value, this may again contain a resource as a nested structure.
+             * In case of a link value, this may again contain a `Resource` as a nested structure.
              */
-            [valueHasIri: string]: number | string | boolean | Resource;
+            [valueHasPropertyIri: string]: number | string | boolean | Resource;
 
         }
 
@@ -53,6 +53,11 @@ export module ResourcesResponse {
 
             /**
              * Properties of this resource.
+             *
+             * For a property, a `Value` or an Array of `Value` is given.
+             *
+             * Please note that the type `string` is not a valid value for a property.
+             * This is a mere requirement of Typescript to make the index signature return types consistent with other members of this interface.
              */
             [propertyIri: string]: Value | Array<Value> | string;
         }
@@ -77,7 +82,8 @@ export module ResourcesResponse {
             /**
              * Length of the sequence of resources.
              */
-            "http://schema.org/numberOfElements": number;
+            "http://schema.org/numberOfItems": number;
+
         }
     }
 

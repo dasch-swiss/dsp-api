@@ -66,11 +66,12 @@ html:
 
 jsonformat:
 	$(TYPEDOC) --out $(FORMATDOCDIR) --exclude **/sampleRequests/* --readme none --name "Knora API V1 Format Documentation" --module commonjs $(FORMATSRCDIR)
-	$(TYPEDOC) --out $(FORMATDOCDIRV2) --readme none --name "Knora API V2 JSON-LD Format Documentation" --module commonjs $(FORMATSRCDIRV2)
+	$(TYPEDOC) --out $(FORMATDOCDIRV2) --exclude **/$(FORMATSRCDIRV2)/samples/* --readme none --name "Knora API V2 JSON-LD Format Documentation" --module commonjs $(FORMATSRCDIRV2)
 	@echo "Format Docs Build finished. The index page for V1 is $(FORMATDOCDIR)/index.html, for V2 $(FORMATDOCDIRV2)/index.html"
 
 jsonformattest:
 	$(TYPEDOC) --out $(FORMATDOCDIR) --readme none --name "Knora API V1 Format Documentation" --module commonjs $(FORMATSRCDIR)
+	$(TYPEDOC) --out $(FORMATDOCDIRV2) --readme none --name "Knora API V2 JSON-LD Format Documentation" --module commonjs $(FORMATSRCDIRV2)
 	@echo "Sample requests test finished."
 
 dirhtml:
