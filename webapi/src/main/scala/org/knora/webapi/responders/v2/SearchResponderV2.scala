@@ -32,7 +32,7 @@ import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.ResponderV2
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
-import org.knora.webapi.util.search.ApacheLuceneSupport.MatchStringWhileTyping
+import org.knora.webapi.util.search.ApacheLuceneSupport.{CombineSearchTerms, MatchStringWhileTyping}
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.v2._
 import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, StringFormatter}
@@ -1052,10 +1052,12 @@ class SearchResponderV2 extends ResponderV2 {
       */
     private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
+        val searchTerms: CombineSearchTerms = CombineSearchTerms(searchValue)
+
         for {
             countSparql <- Future(queries.sparql.v2.txt.searchFulltext(
                 triplestore = settings.triplestoreType,
-                searchTerms = searchValue,
+                searchTerms = searchTerms,
                 limitToProject = limitToProject,
                 limitToResourceClass = limitToResourceClass,
                 separator = None, // no separator needed for count query
@@ -1185,10 +1187,12 @@ class SearchResponderV2 extends ResponderV2 {
 
         }
 
+        val searchTerms: CombineSearchTerms = CombineSearchTerms(searchValue)
+
         for {
             searchSparql <- Future(queries.sparql.v2.txt.searchFulltext(
                 triplestore = settings.triplestoreType,
-                searchTerms = searchValue,
+                searchTerms = searchTerms,
                 limitToProject = limitToProject,
                 limitToResourceClass = limitToResourceClass,
                 separator = Some(groupConcatSeparator),

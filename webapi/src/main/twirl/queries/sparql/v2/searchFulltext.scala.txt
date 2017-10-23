@@ -20,6 +20,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
+@import org.knora.webapi.util.search.ApacheLuceneSupport.CombineSearchTerms
 
 @*
  * Performs a simple full-text search.
@@ -37,7 +38,7 @@
  * @param countQuery indicates whether it is a count query or the actual resources should be returned.
  *@
 @(triplestore: String,
-  searchTerms: String,
+  searchTerms: CombineSearchTerms,
   limitToProject: Option[IRI],
   limitToResourceClass: Option[IRI],
   separator: Option[Char],

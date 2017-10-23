@@ -10,6 +10,15 @@ object ApacheLuceneSupport {
 
     private val logicalAnd = "AND"
 
+    // separates single terms
+    private val space = " "
+
+    /**
+      * Searches for a resource by its rdfs:label as the user is typing.
+      *
+      * @param terms the terms to search for.
+      * @param lastTerm the last term the user is entering at the moment.
+      */
     case class MatchStringWhileTyping(terms: Seq[String], lastTerm: String) {
 
         //
@@ -84,10 +93,10 @@ object ApacheLuceneSupport {
 
     }
 
+    /**
+      * Companion object providing constructor.
+      */
     object MatchStringWhileTyping {
-
-        // separates single terms
-        private val space = " "
 
         def apply(searchString: String) = {
 
@@ -104,6 +113,44 @@ object ApacheLuceneSupport {
 
 
         }
+
+    }
+
+    /**
+      * Handles Boolean logic for given search terms.
+      *
+      * @param terms given search terms.
+      */
+    case class CombineSearchTerms(terms: Seq[String]) {
+
+        /**
+          * Combines given search terms with a logical AND.
+          * Lucene's default behaviour is a logical OR.
+          *
+          * @return a string combining the given search terms with a logical AND.
+          */
+        def combineSearchTermsWithLogicalAnd: String = {
+
+            terms.mkString(s" $logicalAnd ")
+
+        }
+
+    }
+
+    /**
+      * Companion object providing constructor.
+      */
+    object CombineSearchTerms {
+
+        def apply(searchString: String): CombineSearchTerms = {
+
+            // split search string by a space
+            val searchTerms = searchString.split(space)
+
+            new CombineSearchTerms(terms = searchTerms.toSeq)
+
+        }
+
 
     }
 
