@@ -23,31 +23,29 @@ Reading and Searching Resources
 
 .. contents:: :local:
 
-In order to get an existing resource, the HTTP method ``GET`` has to be used.
-The request has to be sent to the Knora server using the ``resources`` path segment (depending on the type of request, this segment has to be exchanged, see below).
-Reading resources may require authentication since some resources may have restricted viewing permissions.
+To retrieve an existing resource, the HTTP method ``GET`` has to be used. Reading resources may require authentication, since some resources may have restricted viewing permissions.
 
 ***********************************************
 Get the Representation of a Resource by its IRI
 ***********************************************
 
-Get a Resource by its IRI
--------------------------
+Get a Full Representation of a Resource by its IRI
+--------------------------------------------------
 
-A resource can be obtained by making a GET request to the API providing its IRI. Because a Knora IRI has the format of a URL, its IRI has to be URL encoded.
+A full representation of resource can be obtained by making a GET request to the API providing its IRI. Because a Knora IRI has the format of a URL, its IRI has to be URL-encoded.
 
-In order to get the resource with the IRI ``http://data.knora.org/c5058f3a`` (an incunabula book contained in the test data), make a HTTP GET request to the resources route
-(path segment ``resources`` in the API call) and append the URL encoded IRI:
+To get the resource with the IRI ``http://data.knora.org/c5058f3a`` (a book from the sample Incunabula project, which is included in the Knora API server's test data), make a HTTP GET request to the ``resources`` route
+(path segment ``resources`` in the API call) and append the URL-encoded IRI:
 
 ::
 
     HTTP GET to http://host/v2/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a
 
 
-If necessary, several resources can be queried at the same time, their Iris separated by a forward slash. Please note that the amount of resources that can be queried in one requested is limited. See settings for ``app/v2`` in ``application.conf``.
+If necessary, several resources can be queried at the same time, their IRIs separated by slashes. Please note that the amount of resources that can be queried in one requested is limited. See the settings for ``app/v2`` in ``application.conf``.
 
 
-More formalized, the URL looks like this:
+More formally, the URL looks like this:
 
 ::
 
@@ -60,7 +58,7 @@ The response to a resource request is a ``ResourcesSequence`` (see :ref:`respons
 Get the preview of a resource by its IRI
 ----------------------------------------
 
-I some cases, the client may only want to request the preview of a resource (this would be basically the resource without any properties: its ``rdfs:label`` and type).
+In some cases, the client may only want to request the preview of a resource (this would be basically be the resource without any Knora properties: its ``rdfs:label`` and type).
 
 This works exactly like making a conventional resource request, using the path segment ``resourcespreview``:
 
