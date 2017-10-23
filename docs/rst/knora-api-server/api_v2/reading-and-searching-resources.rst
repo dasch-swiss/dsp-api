@@ -54,6 +54,9 @@ More formalized, the URL looks like this:
     HTTP GET to http://host/v2/resources/resourceIRI(/anotherResourceIri)*
 
 
+The response to a resource request is a ``ResourcesSequence`` (see :ref:`response-formats-v2`).
+
+
 Get the preview of a resource by its IRI
 ----------------------------------------
 
@@ -66,14 +69,48 @@ This works exactly like making a conventional resource request, using the path s
     HTTP GET to http://host/v2/resourcespreview/resourceIRI(/anotherResourceIri)*
 
 
+The response to a resource preview request is a ``ResourcesSequence`` (see :ref:`response-formats-v2`).
+
 ********************
 Search for Resources
 ********************
 
+Search for a Resource by its ``rdfs:label``
+-------------------------------------------
+
+Knora offers the possibility to search for resources by their ``rdfs:label``. The use case for this search is to find a specific resource as you type.
+E.g., the user wants to get a list of resources whose ``rdfs:label`` contain some search terms separated by a whitespace character:
+  - Zeit
+  - Zeitg
+  - ...
+  - Zeitglöcklein d
+  - ...
+  - Zeitglöcklein des Lebens
+
+With each character added to the last term, the selection gets more specific. The first term should at least contain four characters.
+To make this kind of "search as you type" possible, a wildcard character is automatically added to the last search term.
+
+::
+
+   HTTP GET to http://host/v2/searchbylabel/searchValue[limitToResourceClass=resourceClassIRI]
+   [limitToProject=projectIRI][offset=Integer]
+
+
+Please note that the first parameter has to be preceded by a question mark ``?``, any following parameter by an ampersand ``&``.
+
+The default value for the parameter ``offset`` is 0 which returns the first page of search results.
+Subsequent pages of results can be fetched by increasing ``offset`` by one. The amount of results per page is defined in ``app/v2`` in ``application.conf``.
+
+The response to a label search request is a ``ResourcesSequence`` (see :ref:`response-formats-v2`).
+
+For performance reasons, standoff markup is not queried for this route.
+
+
 Fulltext Search
 ---------------
 
-Knora offers a fulltext search that searches through all textual representations of values and ``rdfs:label`` of resources. You can separate search terms by a white space character and they will be combined using the Boolean ``AND`` operator.
+Knora offers a fulltext search that searches through all textual representations of values and ``rdfs:label`` of resources.
+You can separate search terms by a white space character and they will be combined using the Boolean ``AND`` operator.
 Please note that the search terms have to be URL encoded.
 
 ::
@@ -86,6 +123,8 @@ Please note that the first parameter has to be preceded by a question mark ``?``
 
 The default value for the parameter ``offset`` is 0 which returns the first page of search results.
 Subsequent pages of results can be fetched by increasing ``offset`` by one. The amount of results per page is defined in ``app/v2`` in ``application.conf``.
+
+The response to a fulltext search request is a ``ResourcesSequence`` (see :ref:`response-formats-v2`).
 
 Extended Search
 ---------------
@@ -105,6 +144,8 @@ A KnarQL query can be sent directly to the extended search route. Please note th
 Both sorting and offset (for paging) are handled in the KnarQL query itself.
 Please see :ref:`knarql-syntax-v2` for detailed information about the query syntax and working examples.
 
+The response to an extended search request is a ``ResourcesSequence`` (see :ref:`response-formats-v2`).
+
 Count Queries
 -------------
 
@@ -116,10 +157,18 @@ In order to perform a count query, just append the segment ``count``:
 
 ::
 
+   HTTP GET to http://host/v2/searchbylabel/count/searchValue[limitToResourceClass=resourceClassIRI]
+   [limitToProject=projectIRI][offset=Integer]
+
    HTTP GET to http://host/v2/search/count/searchValue[limitToResourceClass=resourceClassIRI]
    [limitToProject=projectIRI][offset=Integer]
 
    HTTP GET to http://host/v2/searchextended/count/KnarQLQuery
+
+
+Please note that the first parameter has to be preceded by a question mark ``?``, any following parameter by an ampersand ``&``.
+
+The response to a count query request is a ``ResourcesSequence`` (see :ref:`response-formats-v2`).
 
 
 .. [1] Phonetically, KnarQL is similar to the Swiss German word for a groundhog, a *Nargeli*.

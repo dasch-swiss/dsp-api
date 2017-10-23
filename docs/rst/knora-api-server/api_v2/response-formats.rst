@@ -23,15 +23,18 @@ V2 Response Formats
 
 .. contents:: :local:
 
--------------------------
-Resources Response Format
--------------------------
+------------------
+Resources Sequence
+------------------
 
-In order to make the API V2 more consistent, a generic response format is used wherever one or more instances of a resource are queried.
+In order to make the API V2 more consistent, a generic response format is used whenever one or more instances of a resource are queried: ``ResourcesSequence``.
 This means that different API operations return the answer in the same structure, still they represent different views on the data depending on which API route was used (context).
 For example, a resource request returns a resource and all its properties. In a fulltext search, the resource is returned with the properties that matched the search criteria.
+A response to an extended search may represent a whole query path, spanning different levels of relations between resources.
 
 Basically, resources are returned in form of an ordered sequence, including the information how many elements the list has.
 Dependent resources, i.e. resources that are referred to by other resources on the top level, are nested in link values.
+
+See interface ``ResourcesSequence`` in module ``ResourcesResponse`` (exists for both API schemas: ``ApiV2Simple`` and ``ApiV2WithValueObjects``).
 
 

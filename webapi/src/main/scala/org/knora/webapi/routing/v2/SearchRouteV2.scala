@@ -127,6 +127,10 @@ object SearchRouteV2 extends Authenticator {
 
                     val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
 
+                    if (searchString.length < settings.searchValueMinLength) {
+                        throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
+                    }
+
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
 
                     val limitToProject: Option[IRI] = getProjectFromParams(params)
@@ -149,6 +153,10 @@ object SearchRouteV2 extends Authenticator {
                     val userProfile = getUserProfileV1(requestContext)
 
                     val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+
+                    if (searchString.length < settings.searchValueMinLength) {
+                        throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
+                    }
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
 
@@ -217,6 +225,10 @@ object SearchRouteV2 extends Authenticator {
 
                     val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
 
+                    if (searchString.length < settings.searchValueMinLength) {
+                        throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
+                    }
+
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
 
                     val limitToProject: Option[IRI] = getProjectFromParams(params)
@@ -246,6 +258,10 @@ object SearchRouteV2 extends Authenticator {
                     val userProfile = getUserProfileV1(requestContext)
 
                     val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+
+                    if (searchString.length < settings.searchValueMinLength) {
+                        throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
+                    }
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
 

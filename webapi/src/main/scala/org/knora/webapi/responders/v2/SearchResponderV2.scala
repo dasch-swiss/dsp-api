@@ -1196,8 +1196,8 @@ class SearchResponderV2 extends ResponderV2 {
                 limitToProject = limitToProject,
                 limitToResourceClass = limitToResourceClass,
                 separator = Some(groupConcatSeparator),
-                limit = settings.v2ExtendedSearchResultsPerPage,
-                offset = offset * settings.v2ExtendedSearchResultsPerPage, // determine the actual offset
+                limit = settings.v2ResultsPerPage,
+                offset = offset * settings.v2ResultsPerPage, // determine the actual offset
                 countQuery = false
             ).toString())
 
@@ -1672,7 +1672,7 @@ class SearchResponderV2 extends ResponderV2 {
               */
             def getLimit: Int = {
                 // get LIMIT from settings
-                settings.v2ExtendedSearchResultsPerPage
+                settings.v2ResultsPerPage
             }
 
             /**
@@ -2251,8 +2251,8 @@ class SearchResponderV2 extends ResponderV2 {
                 searchTerm = searchPhrase,
                 limitToProject = limitToProject,
                 limitToResourceClass = limitToResourceClass,
-                limit = settings.v2ExtendedSearchResultsPerPage,
-                offset = offset * settings.v2ExtendedSearchResultsPerPage,
+                limit = settings.v2ResultsPerPage,
+                offset = offset * settings.v2ResultsPerPage,
                 countQuery = false
             ).toString())
 
