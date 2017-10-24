@@ -78,6 +78,7 @@ Search for a Resource by its ``rdfs:label``
 
 Knora offers the possibility to search for resources by their ``rdfs:label``. The use case for this search is to find a specific resource as you type.
 E.g., the user wants to get a list of resources whose ``rdfs:label`` contain some search terms separated by a whitespace character:
+
   - Zeit
   - Zeitg
   - ...
