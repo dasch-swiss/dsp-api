@@ -36,15 +36,30 @@ In the following sections, the available V2 API operations are described:
 JSON-LD
 -------
 
-Our preferred format for data exchange is JSON-LD_. JSON-LD allows the Knora API server to provide responses that are relatively easy for automated processes to interpret, since their structure and semantics is explicitly defined. For example, each project-specific Knora resource property is identified by an IRI, which can be dereferenced to get more information about it (e.g. its label in different languages). Moreover, each value has a type represented by an IRI. These are either standard RDF types (e.g. XSD datatypes) or more complex types whose IRIs can be dereferenced to get more information about their structure. Moreover, we can support entities defined in schema.org_ that are widely known and used.
+Our preferred format for data exchange is JSON-LD_. JSON-LD allows the Knora API server to provide responses that are relatively easy for automated processes to interpret, since their structure and semantics is explicitly defined. For example, each project-specific Knora resource property is identified by an IRI, which can be dereferenced to get more information about it (e.g. its label in different languages). Moreover, each value has a type represented by an IRI. These are either standard RDF types (e.g. XSD datatypes) or more complex types whose IRIs can be dereferenced to get more information about their structure.
 
 At the same time, JSON-LD responses are relatively easy for software developers to work with. Items in a response can have human-readable names, which can nevertheless be expanded to full IRIs. Also, while a format such as Turtle_ just provides a set of RDF triples, an equivalent JSON-LD response can explicitly provide data in a hierarchical structure, with objects nested inside other objects.
 
 We designed the V2 routes in a way that would also allow for the usage of other formats such as XML. We plan to implement support for XML once the implementation of JSON-LD is completed. The client will be able to use content negotiation to specify the preferred exchange format.
 
 .. _JSON-LD: https://json-ld.org/spec/latest/json-ld/
-.. _schema.org: http://www.schema.org
 .. _Turtle: https://www.w3.org/TR/turtle/
+
+Support of schema.org Entities
+------------------------------
+
+In our API responses (e.g., ``ResourcesSequence``, see :ref:`response-formats-v2`), we use entities defined in schema.org_.
+
+Our intent is that any client familiar with schema.org_ should be able to understand our response format.
+
+A resource's ``rdfs:label`` is represented as a ``http://schema.org/name`` altough they might not be equivalent in a strict sense (see label_name_).
+
+Likewise, we state an equivalency between a ``knora-api:Resource`` and a ``http://schema.org/Thing`` (see resource_thing_), so we can use a ``knora-api:Resource`` or any of its subclasses where ``http://schema.org`` requires a ``http://schema.org/Thing``.
+
+.. _schema.org: http://www.schema.org
+.. _label_name: https://github.com/schemaorg/schemaorg/issues/1762
+.. _resource_thing: https://lists.w3.org/Archives/Public/public-schemaorg/2017Mar/0087.html
+
 
 API Schema
 ----------

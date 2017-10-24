@@ -131,7 +131,7 @@ Extended Search
 For more complex queries than a fulltext search, Knora offers extended search possibilities. In order not to have to create a proprietary DLS, we decided that extended searches can be sent as SPARQL Construct queries to the Knora API server.
 The provided SPARQL will then be processed by the API and sent to the tripelstore. The answer will be in Knora API format (JSON-LD or any other supported format).
 
-We use term *Knora Query Language* (KnarQL) [1]_ to refer to the SPARQL Construct queries that can be sent to the extended search route. KnarQL is valid SPARQL but only supports a subset of SPARQL Construct query syntax.
+We use term *Knora Query Language* (KnarQL) to refer to the SPARQL Construct queries that can be sent to the extended search route. KnarQL is valid SPARQL but only supports a subset of SPARQL Construct query syntax.
 
 A KnarQL query can be sent directly to the extended search route. Please note that the query has to be URL encoded.
 
@@ -169,5 +169,3 @@ Please note that the first parameter has to be preceded by a question mark ``?``
 
 The response to a count query request is a ``ResourcesSequence`` (see :ref:`response-formats-v2`).
 
-
-.. [1] Phonetically, KnarQL is similar to the Swiss German word for a groundhog, a *Nargeli*.
