@@ -242,6 +242,9 @@ The following table indicates the possible combinations of value types and compa
 +------------------+-----------------------------------------------------+
 | List Value       | EQ, EXISTS                                          |
 +------------------+-----------------------------------------------------+
+| Boolean Value    | EQ, !EQ, EXISTS                                     |
++------------------+-----------------------------------------------------+
+
 
 Explanation of the comparison operators:
   - ``EQ``: checks if a resource's value *equals* the search value. In case of a text value type, it checks for identity of the strings compared.

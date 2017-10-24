@@ -93,6 +93,11 @@ class SearchResponderV1 extends Responder {
         OntologyConstants.KnoraBase.ListValue -> Set(
             SearchComparisonOperatorV1.EQ,
             SearchComparisonOperatorV1.EXISTS
+        ),
+        OntologyConstants.KnoraBase.BooleanValue -> Set(
+            SearchComparisonOperatorV1.EQ,
+            SearchComparisonOperatorV1.NOT_EQ,
+            SearchComparisonOperatorV1.EXISTS
         )
     )
 
@@ -441,6 +446,11 @@ class SearchResponderV1 extends Responder {
                             case OntologyConstants.KnoraBase.ListValue =>
                                 // check if string represents a node in a list
                                 val searchString = stringFormatter.toIri(searchval, () => throw BadRequestException(s"Given searchval is not a formally valid IRI $searchval"))
+                                searchParamWithoutValue.copy(searchValue = Some(searchString))
+
+                            case OntologyConstants.KnoraBase.BooleanValue =>
+                                // check if searchVal is a Boolan value
+                                val searchString = stringFormatter.toBoolean(searchval, () => throw BadRequestException(s"Given searchval is not a valid Boolean value: $searchval")).toString
                                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                             case other => throw BadRequestException(s"The value type for the given property $prop is unknown.")
