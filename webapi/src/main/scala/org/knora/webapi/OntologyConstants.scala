@@ -506,6 +506,8 @@ object OntologyConstants {
 
         val HasOntologies: IRI = KnoraApiV2PrefixExpansion + "hasOntologies"
 
+        val HasShortname: IRI = KnoraApiV2PrefixExpansion + "hasShortname"
+
         val HasOntologiesWithClasses: IRI = KnoraApiV2PrefixExpansion + "hasOntologiesWithClasses"
 
         val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
@@ -669,6 +671,8 @@ object OntologyConstants {
         val BelongsToOntology: IRI = KnoraApiV2PrefixExpansion + "belongsToOntology"
 
         val HasOntologies: IRI = KnoraApiV2PrefixExpansion + "hasOntologies"
+
+        val HasShortname: IRI = KnoraApiV2PrefixExpansion + "hasShortname"
 
         val HasOntologiesWithClasses: IRI = KnoraApiV2PrefixExpansion + "hasOntologiesWithClasses"
 

@@ -22,6 +22,7 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 
 
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
@@ -181,7 +182,7 @@ case class NamedGraphsGetRequestV2(userProfile: UserProfileV1) extends Ontologie
   * Requests entity definitions for the given named graphs.
   *
   * @param namedGraphIris the named graphs to query for.
-  * @param responseSchema    the API schema that will be used for the response.
+  * @param responseSchema the API schema that will be used for the response.
   * @param allLanguages   true if information in all available languages should be returned.
   * @param userProfile    the profile of the user making the request.
   */
@@ -354,7 +355,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
 }
 
-case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
+case class ReadNamedGraphsV2(namedGraphs: Set[NamedGraphV1]) extends KnoraResponseV2 {
 
     private val stringFormatter = StringFormatter.getInstance
 
@@ -368,8 +369,20 @@ case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
             OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(knoraApiOntologyPrefixExpansion)
         ))
 
-        val namedGraphIris: Seq[JsonLDString] = namedGraphs.toSeq.map {
-            namedGraphIri => JsonLDString(stringFormatter.toExternalOntologyIri(namedGraphIri, targetSchema))
+        val namedGraphIris: Seq[JsonLDObject] = namedGraphs.toSeq.map {
+            namedGraph =>
+                
+                val shortname = targetSchema match {
+                    case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasShortname
+                    case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasShortname
+                }
+
+                JsonLDObject(
+                    Map(
+                        "@id" -> JsonLDString(stringFormatter.toExternalOntologyIri(namedGraph.id, targetSchema)),
+                        shortname -> JsonLDString(namedGraph.shortname)
+                    )
+                )
         }
 
         val hasOntologiesProp = targetSchema match {
@@ -848,10 +861,11 @@ case class ClassEntityInfoV2(classIri: IRI,
         }
 
         val linkValuePropertiesWithTargetSchemaIris = linkValueProperties.map {
-             propertyIri => stringFormatter.toExternalEntityIri(
-                 propertyIri,
-                 targetSchema = targetSchema
-             )
+            propertyIri =>
+                stringFormatter.toExternalEntityIri(
+                    propertyIri,
+                    targetSchema = targetSchema
+                )
         }
 
         // If we're using the simplified API, don't return link value properties.
