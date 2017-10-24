@@ -23,7 +23,7 @@ package org.knora.webapi
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.util.CacheUtil
+import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 object CoreSpec {
@@ -51,6 +51,7 @@ object CoreSpec {
 abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with WordSpecLike with Matchers with BeforeAndAfterAll with ImplicitSender {
 
     val settings = Settings(_system)
+    StringFormatter.init(settings)
     val logger = akka.event.Logging(_system, this.getClass())
 
     final override def beforeAll() {

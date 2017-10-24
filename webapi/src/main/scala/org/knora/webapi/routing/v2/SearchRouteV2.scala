@@ -26,7 +26,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi.messages.v2.responder.searchmessages.{ExtendedSearchGetRequestV2, FulltextSearchGetRequestV2, SearchResourceByLabelRequestV2}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
-import org.knora.webapi.util.InputValidation
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.search.v2.SearchParserV2
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
@@ -44,13 +44,14 @@ object SearchRouteV2 extends Authenticator {
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
+        val stringFormatter = StringFormatter.getInstance
 
         path("v2" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val searchString = InputValidation.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+                    val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
 
                     val requestMessage = FulltextSearchGetRequestV2(searchValue = searchString, userProfile = userProfile)
 
@@ -91,7 +92,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val searchString = InputValidation.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+                    val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
 
@@ -100,7 +101,7 @@ object SearchRouteV2 extends Authenticator {
                     val limitToProject: Option[IRI] = limitToProjectIriStr match {
 
                         case Some(projectIriStr: String) =>
-                            val projectIri = InputValidation.toIri(projectIriStr, () => throw BadRequestException(s"$projectIriStr is not a valid Iri"))
+                            val projectIri = stringFormatter.toIri(projectIriStr, () => throw BadRequestException(s"$projectIriStr is not a valid Iri"))
 
                             Some(projectIri)
 
@@ -114,9 +115,9 @@ object SearchRouteV2 extends Authenticator {
 
                         case Some(resourceClassIriStr: String) =>
 
-                            val externalResourceClassIri = InputValidation.toIri(resourceClassIriStr, () => throw BadRequestException(s"$resourceClassIriStr is not a valid Iri"))
+                            val externalResourceClassIri = stringFormatter.toIri(resourceClassIriStr, () => throw BadRequestException(s"$resourceClassIriStr is not a valid Iri"))
 
-                            Some(InputValidation.externalApiV2WithValueObjectEntityIriToInternalEntityIri(externalResourceClassIri, () => throw BadRequestException(s"$externalResourceClassIri is not a valid knora-api with value object resource class Iri")))
+                            Some(stringFormatter.externalApiV2WithValueObjectEntityIriToInternalEntityIri(externalResourceClassIri, () => throw BadRequestException(s"$externalResourceClassIri is not a valid knora-api with value object resource class Iri")))
 
                         case None => None
 

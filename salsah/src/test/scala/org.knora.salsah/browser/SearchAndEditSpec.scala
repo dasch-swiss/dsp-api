@@ -21,6 +21,7 @@
 package org.knora.salsah.browser
 
 import org.openqa.selenium.{By, WebElement}
+import org.scalatest.concurrent.Eventually
 import org.scalatest.concurrent.Eventually._
 
 /**
@@ -42,7 +43,7 @@ class SearchAndEditSpec extends SalsahSpec {
     private val page = new SalsahPage(pageUrl, headless)
 
     // How long to wait for results obtained using the 'eventually' function
-    implicit private val patienceConfig = page.patienceConfig
+    implicit private val patienceConfig: Eventually.PatienceConfig = page.patienceConfig
 
     private val rdfDataObjectsJsonList: String =
         """
@@ -98,7 +99,6 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-
         "do a simple search for 'Zeitglöcklein' and open a search result row representing a page" in {
 
             page.open()
@@ -122,7 +122,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "do a simple search for 'Zeitglöcklein' and open a search result row representing a book (fixme #596)" ignore { // can be enable when run locally
+        "do a simple search for 'Zeitglöcklein' and open a search result row representing a book" in {
 
             page.open()
 
@@ -591,7 +591,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "edit the description of a page" ignore { // was realy ignored
+        "edit the description of a page" ignore { // FIXME: cannot send text to CkEditor.
 
             page.open()
 
@@ -606,20 +606,17 @@ class SearchAndEditSpec extends SalsahSpec {
 
             val window = page.getWindow(1)
 
-
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)
 
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val descriptionField = editFields(7)
+            val descriptionField = editFields(2)
 
             page.clickEditButton(descriptionField)
 
-            val ckeditor = eventually {
-                page.findCkeditor(descriptionField)
-            }
+            val ckeditor = page.findCkeditor(descriptionField)
 
             ckeditor.sendKeys("my text")
 
@@ -633,7 +630,7 @@ class SearchAndEditSpec extends SalsahSpec {
             page.doLogout()
         }
 
-        "change the partof property of a page (fixme #596)" ignore { // can be enable when run locally
+        "change the partof property of a page" in {
 
             page.open()
 
@@ -650,6 +647,8 @@ class SearchAndEditSpec extends SalsahSpec {
 
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)
+
+            Thread.sleep(500) // I don't know why, but sometimes the test fails without this.
 
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
@@ -695,7 +694,6 @@ class SearchAndEditSpec extends SalsahSpec {
             rows(4).click()
 
             val window = page.getWindow(1)
-
 
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)

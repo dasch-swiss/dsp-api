@@ -32,7 +32,7 @@ import akka.stream.ActorMaterializer
 import org.knora.webapi.messages.v1.responder.standoffmessages.RepresentationV1JsonProtocol.createMappingApiRequestV1Format
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
-import org.knora.webapi.util.InputValidation
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 import spray.json._
 
@@ -50,6 +50,7 @@ object StandoffRouteV1 extends Authenticator {
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
         implicit val materializer = ActorMaterializer()
+        val stringFormatter = StringFormatter.getInstance
 
         val responderManager = system.actorSelection("/user/responderManager")
 
@@ -108,11 +109,11 @@ object StandoffRouteV1 extends Authenticator {
                                 val xml: String = allParts.getOrElse(XML_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!")).toString
 
                                 CreateMappingRequestV1(
-                                    projectIri = InputValidation.toIri(standoffApiJSONRequest.project_id, () => throw BadRequestException("invalid project IRI")),
+                                    projectIri = stringFormatter.toIri(standoffApiJSONRequest.project_id, () => throw BadRequestException("invalid project IRI")),
                                     xml = xml,
                                     userProfile = userProfile,
-                                    label = InputValidation.toSparqlEncodedString(standoffApiJSONRequest.label, () => throw BadRequestException("'label' contains invalid characters")),
-                                    mappingName = InputValidation.toSparqlEncodedString(standoffApiJSONRequest.mappingName, () => throw BadRequestException("'mappingName' contains invalid characters")),
+                                    label = stringFormatter.toSparqlEncodedString(standoffApiJSONRequest.label, () => throw BadRequestException("'label' contains invalid characters")),
+                                    mappingName = stringFormatter.toSparqlEncodedString(standoffApiJSONRequest.mappingName, () => throw BadRequestException("'mappingName' contains invalid characters")),
                                     apiRequestID = UUID.randomUUID
                                 )
 

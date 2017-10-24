@@ -27,6 +27,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsNamedGraphGetV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversions
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
@@ -77,7 +78,7 @@ class OntologyResponderV1 extends Responder {
 
         for {
             // forward the request to the v2 ontologies responder
-            loadOntologiesResponse: LoadOntologiesResponseV2 <- (responderManager ? LoadOntologiesRequestV2(userProfile)).mapTo[LoadOntologiesResponseV2]
+            successResponse: SuccessResponseV2 <- (responderManager ? LoadOntologiesRequestV2(userProfile)).mapTo[SuccessResponseV2]
 
         } yield LoadOntologiesResponse()
     }

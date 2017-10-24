@@ -54,6 +54,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val knoraApiWithValueObjectsHasColor: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/knoraApiWithValueObjectsHasColor.json")))
     private val incunabulaSimplePubDate: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/incunabulaSimplePubDate.json")))
     private val incunabulaWithValueObjectsPubDate: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/incunabulaWithValueObjectsPubDate.json")))
+    private val incunabulaPageAndBookWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/incunabulaPageAndBookWithValueObjects.json")))
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
@@ -94,7 +95,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "serve a project-specific ontology as JSON-LD via the namedgraphs route using the simple schema" in {
-            val ontologyIri = URLEncoder.encode("http://api.knora.org/ontology/incunabula/simple/v2", "UTF-8")
+            val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/simple/v2", "UTF-8")
 
             Get(s"/v2/ontologies/namedgraphs/$ontologyIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
@@ -110,7 +111,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "serve a project-specific ontology as JSON-LD via the namedgraphs route using the value object schema" in {
-            val ontologyIri = URLEncoder.encode("http://api.knora.org/ontology/incunabula/v2", "UTF-8")
+            val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/v2", "UTF-8")
 
             Get(s"/v2/ontologies/namedgraphs/$ontologyIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
@@ -162,7 +163,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "serve a project-specific property as JSON-LD using the simple schema" in {
-            val classIri = URLEncoder.encode("http://api.knora.org/ontology/incunabula/simple/v2#pubdate", "UTF-8")
+            val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/simple/v2#pubdate", "UTF-8")
 
             Get(s"/v2/ontologies/properties/$classIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
@@ -171,7 +172,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "serve a project-specific property as JSON-LD using the value object schema" in {
-            val classIri = URLEncoder.encode("http://api.knora.org/ontology/incunabula/v2#pubdate", "UTF-8")
+            val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/v2#pubdate", "UTF-8")
 
             Get(s"/v2/ontologies/properties/$classIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
@@ -179,5 +180,14 @@ class OntologyV2R2RSpec extends R2RSpec {
             }
         }
 
+        "serve two project-specific classes and their properties as JSON-LD using the value object schema" in {
+            val pageIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/v2#page", "UTF-8")
+            val bookIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/v2#book", "UTF-8")
+
+            Get(s"/v2/ontologies/classes/$pageIri/$bookIri") ~> ontologiesPath ~> check {
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                assert(responseJson == incunabulaPageAndBookWithValueObjects)
+            }
+        }
     }
 }

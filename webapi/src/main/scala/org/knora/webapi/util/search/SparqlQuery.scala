@@ -21,7 +21,7 @@
 package org.knora.webapi.util.search
 
 import org.knora.webapi._
-import org.knora.webapi.util.InputValidation
+import org.knora.webapi.util.StringFormatter
 
 /**
   * Represents something that can generate SPARQL source code.
@@ -50,8 +50,10 @@ case class QueryVariable(variableName: String) extends Entity {
   * @param iri the IRI.
   */
 case class IriRef(iri: IRI) extends Entity {
-    val isInternalEntityIri: Boolean = InputValidation.isInternalEntityIri(iri)
-    val isApiEntityIri: Boolean = InputValidation.isKnoraApiEntityIri(iri)
+    private val stringFormatter = StringFormatter.getInstance
+
+    val isInternalEntityIri: Boolean = stringFormatter.isInternalEntityIri(iri)
+    val isApiEntityIri: Boolean = stringFormatter.isKnoraApiEntityIri(iri)
     val isEntityIri: Boolean = isApiEntityIri || isInternalEntityIri
 
     /**
@@ -61,7 +63,7 @@ case class IriRef(iri: IRI) extends Entity {
       */
     def toInternalEntityIri: IriRef = {
         if (isInternalEntityIri) {
-            IriRef(InputValidation.externalToInternalEntityIri(iri, () => throw BadRequestException(s"$iri is not a valid external knora-api entity Iri")))
+            IriRef(stringFormatter.externalToInternalEntityIri(iri, () => throw BadRequestException(s"$iri is not a valid external knora-api entity Iri")))
         } else {
             throw AssertionException("$iri is not a knora-api entity IRI")
         }
