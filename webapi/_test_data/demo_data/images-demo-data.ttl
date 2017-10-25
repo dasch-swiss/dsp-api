@@ -20,8 +20,8 @@
 	images:jahreszeit <http://data.knora.org/0cb8286054d5/values/f3311b70ec0f04> ;
 	images:jahrzehnt <http://data.knora.org/0cb8286054d5/values/852c0ec8ed0f04> ;
 	images:jahr_exakt <http://data.knora.org/0cb8286054d5/values/48566101ee0f04> ;
-	images:bildformat <http://data.knora.org/47b2992554d5> ;
-	images:bildformatValue <http://data.knora.org/0cb8286054d5/values/c3dcf335-51a3-4436-b107-a6ad2830d5bd> ;
+	images:hatBildformat <http://data.knora.org/47b2992554d5> ;
+	images:hatBildformatValue <http://data.knora.org/0cb8286054d5/values/c3dcf335-51a3-4436-b107-a6ad2830d5bd> ;
 	images:erfassungsdatum <http://data.knora.org/0cb8286054d5/values/3008c836ec0f04> ;
 	images:mutationsdatum <http://data.knora.org/0cb8286054d5/values/b65b6ea9ec0f04> ;
 	images:bearbeiter <http://data.knora.org/0cb8286054d5/values/0b80b43aee0f04> ;
@@ -155,7 +155,7 @@
 
 <http://data.knora.org/0cb8286054d5/values/c3dcf335-51a3-4436-b107-a6ad2830d5bd> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/0cb8286054d5> ;
-	rdf:predicate images:bildformat ;
+	rdf:predicate images:hatBildformat ;
 	rdf:object <http://data.knora.org/47b2992554d5> ;
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
@@ -256,8 +256,8 @@
 	images:jahreszeit <http://data.knora.org/20cf644a55d5/values/e56473f2f40f04> ;
 	images:jahrzehnt <http://data.knora.org/20cf644a55d5/values/775f664af60f04> ;
 	images:jahr_exakt <http://data.knora.org/20cf644a55d5/values/3a89b983f60f04> ;
-	images:bildformat <http://data.knora.org/5bc9d50f55d5> ;
-	images:bildformatValue <http://data.knora.org/20cf644a55d5/values/c003835c-e449-4fc4-96db-759a33c5cd47> ;
+	images:hatBildformat <http://data.knora.org/5bc9d50f55d5> ;
+	images:hatBildformatValue <http://data.knora.org/20cf644a55d5/values/c003835c-e449-4fc4-96db-759a33c5cd47> ;
 	images:erfassungsdatum <http://data.knora.org/20cf644a55d5/values/223b20b9f40f04> ;
 	images:mutationsdatum <http://data.knora.org/20cf644a55d5/values/a88ec62bf50f04> ;
 	images:bearbeiter <http://data.knora.org/20cf644a55d5/values/fdb20cbdf60f04> ;
@@ -383,7 +383,7 @@
 
 <http://data.knora.org/20cf644a55d5/values/c003835c-e449-4fc4-96db-759a33c5cd47> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/20cf644a55d5> ;
-	rdf:predicate images:bildformat ;
+	rdf:predicate images:hatBildformat ;
 	rdf:object <http://data.knora.org/5bc9d50f55d5> ;
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
@@ -440,8 +440,8 @@
 	images:jahreszeit <http://data.knora.org/34e6a03456d5/values/d797cb74fd0f04> ;
 	images:jahrzehnt <http://data.knora.org/34e6a03456d5/values/6992beccfe0f04> ;
 	images:jahr_exakt <http://data.knora.org/34e6a03456d5/values/2cbc1106ff0f04> ;
-	images:bildformat <http://data.knora.org/6fe011fa55d5> ;
-	images:bildformatValue <http://data.knora.org/34e6a03456d5/values/8e3829bd-e340-4e3e-a3cd-b2fc1b3f4453> ;
+	images:hatBildformat <http://data.knora.org/6fe011fa55d5> ;
+	images:hatBildformatValue <http://data.knora.org/34e6a03456d5/values/8e3829bd-e340-4e3e-a3cd-b2fc1b3f4453> ;
 	images:erfassungsdatum <http://data.knora.org/34e6a03456d5/values/146e783bfd0f04> ;
 	images:mutationsdatum <http://data.knora.org/34e6a03456d5/values/9ac11eaefd0f04> ;
 	images:bearbeiter <http://data.knora.org/34e6a03456d5/values/efe5643fff0f04> ;
@@ -554,7 +554,7 @@
 
 <http://data.knora.org/34e6a03456d5/values/8e3829bd-e340-4e3e-a3cd-b2fc1b3f4453> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/34e6a03456d5> ;
-	rdf:predicate images:bildformat ;
+	rdf:predicate images:hatBildformat ;
 	rdf:object <http://data.knora.org/6fe011fa55d5> ;
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
@@ -716,8 +716,8 @@
 	images:jahreszeit <http://data.knora.org/48fddc1e57d5/values/c9ca23f7051004> ;
 	images:jahrzehnt <http://data.knora.org/48fddc1e57d5/values/5bc5164f071004> ;
 	images:jahr_exakt <http://data.knora.org/48fddc1e57d5/values/1eef6988071004> ;
-	images:bildformat <http://data.knora.org/83f74de456d5> ;
-	images:bildformatValue <http://data.knora.org/48fddc1e57d5/values/da79da81-5566-48d4-a4a5-24e718e6c050> ;
+	images:hatBildformat <http://data.knora.org/83f74de456d5> ;
+	images:hatBildformatValue <http://data.knora.org/48fddc1e57d5/values/da79da81-5566-48d4-a4a5-24e718e6c050> ;
 	images:erfassungsdatum <http://data.knora.org/48fddc1e57d5/values/06a1d0bd051004> ;
 	images:mutationsdatum <http://data.knora.org/48fddc1e57d5/values/8cf47630061004> ;
 	images:bearbeiter <http://data.knora.org/48fddc1e57d5/values/e118bdc1071004> ;
@@ -872,7 +872,7 @@
 
 <http://data.knora.org/48fddc1e57d5/values/da79da81-5566-48d4-a4a5-24e718e6c050> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/48fddc1e57d5> ;
-	rdf:predicate images:bildformat ;
+	rdf:predicate images:hatBildformat ;
 	rdf:object <http://data.knora.org/83f74de456d5> ;
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
@@ -974,8 +974,8 @@
 	images:jahreszeit <http://data.knora.org/691e7e2244d5/values/5b7c99555b0f04> ;
 	images:jahrzehnt <http://data.knora.org/691e7e2244d5/values/ed768cad5c0f04> ;
 	images:jahr_exakt <http://data.knora.org/691e7e2244d5/values/b0a0dfe65c0f04> ;
-	images:bildformat <http://data.knora.org/a418efe743d5> ;
-	images:bildformatValue <http://data.knora.org/691e7e2244d5/values/d61d5ab2-5a81-44b2-b29a-7717b877f76c> ;
+	images:hatBildformat <http://data.knora.org/a418efe743d5> ;
+	images:hatBildformatValue <http://data.knora.org/691e7e2244d5/values/d61d5ab2-5a81-44b2-b29a-7717b877f76c> ;
 	images:erfassungsdatum <http://data.knora.org/691e7e2244d5/values/9852461c5b0f04> ;
 	images:mutationsdatum <http://data.knora.org/691e7e2244d5/values/1ea6ec8e5b0f04> ;
 	images:bearbeiter <http://data.knora.org/691e7e2244d5/values/73ca32205d0f04> ;
@@ -1114,7 +1114,7 @@
 
 <http://data.knora.org/691e7e2244d5/values/d61d5ab2-5a81-44b2-b29a-7717b877f76c> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/691e7e2244d5> ;
-	rdf:predicate images:bildformat ;
+	rdf:predicate images:hatBildformat ;
 	rdf:object <http://data.knora.org/a418efe743d5> ;
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
@@ -1232,8 +1232,8 @@
 	images:jahreszeit <http://data.knora.org/82ac0aeb53d5/values/f4c448bce70f04> ;
 	images:jahrzehnt <http://data.knora.org/82ac0aeb53d5/values/86bf3b14e90f04> ;
 	images:jahr_exakt <http://data.knora.org/82ac0aeb53d5/values/49e98e4de90f04> ;
-	images:bildformat <http://data.knora.org/bda67bb053d5> ;
-	images:bildformatValue <http://data.knora.org/82ac0aeb53d5/values/d56f956d-bdd4-43d6-93f8-44ce716ecf30> ;
+	images:hatBildformat <http://data.knora.org/bda67bb053d5> ;
+	images:hatBildformatValue <http://data.knora.org/82ac0aeb53d5/values/d56f956d-bdd4-43d6-93f8-44ce716ecf30> ;
 	images:erfassungsdatum <http://data.knora.org/82ac0aeb53d5/values/319bf582e70f04> ;
 	images:mutationsdatum <http://data.knora.org/82ac0aeb53d5/values/b7ee9bf5e70f04> ;
 	images:bearbeiter <http://data.knora.org/82ac0aeb53d5/values/0c13e286e90f04> ;
@@ -1387,7 +1387,7 @@
 
 <http://data.knora.org/82ac0aeb53d5/values/d56f956d-bdd4-43d6-93f8-44ce716ecf30> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/82ac0aeb53d5> ;
-	rdf:predicate images:bildformat ;
+	rdf:predicate images:hatBildformat ;
 	rdf:object <http://data.knora.org/bda67bb053d5> ;
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
@@ -1490,8 +1490,8 @@
 	images:jahreszeit <http://data.knora.org/96c346d554d5/values/6c4b47b1f00f04> ;
 	images:jahrzehnt <http://data.knora.org/96c346d554d5/values/fe453a09f20f04> ;
 	images:jahr_exakt <http://data.knora.org/96c346d554d5/values/c16f8d42f20f04> ;
-	images:bildformat <http://data.knora.org/d1bdb79a54d5> ;
-	images:bildformatValue <http://data.knora.org/96c346d554d5/values/2fae0256-9f92-4f08-bd21-a11743730237> ;
+	images:hatBildformat <http://data.knora.org/d1bdb79a54d5> ;
+	images:hatBildformatValue <http://data.knora.org/96c346d554d5/values/2fae0256-9f92-4f08-bd21-a11743730237> ;
 	images:erfassungsdatum <http://data.knora.org/96c346d554d5/values/a921f477f00f04> ;
 	images:mutationsdatum <http://data.knora.org/96c346d554d5/values/2f759aeaf00f04> ;
 	images:bearbeiter <http://data.knora.org/96c346d554d5/values/8499e07bf20f04> ;
@@ -1556,7 +1556,7 @@
 
 <http://data.knora.org/96c346d554d5/values/2fae0256-9f92-4f08-bd21-a11743730237> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/96c346d554d5> ;
-	rdf:predicate images:bildformat ;
+	rdf:predicate images:hatBildformat ;
 	rdf:object <http://data.knora.org/d1bdb79a54d5> ;
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
@@ -1748,8 +1748,8 @@
 	images:jahreszeit <http://data.knora.org/aada82bf55d5/values/5e7e9f33f90f04> ;
 	images:jahrzehnt <http://data.knora.org/aada82bf55d5/values/f078928bfa0f04> ;
 	images:jahr_exakt <http://data.knora.org/aada82bf55d5/values/b3a2e5c4fa0f04> ;
-	images:bildformat <http://data.knora.org/e5d4f38455d5> ;
-	images:bildformatValue <http://data.knora.org/aada82bf55d5/values/4ef3f3b4-cc44-4b7e-8071-c93cffd3ae60> ;
+	images:hatBildformat <http://data.knora.org/e5d4f38455d5> ;
+	images:hatBildformatValue <http://data.knora.org/aada82bf55d5/values/4ef3f3b4-cc44-4b7e-8071-c93cffd3ae60> ;
 	images:erfassungsdatum <http://data.knora.org/aada82bf55d5/values/9b544cfaf80f04> ;
 	images:mutationsdatum <http://data.knora.org/aada82bf55d5/values/21a8f26cf90f04> ;
 	images:bearbeiter <http://data.knora.org/aada82bf55d5/values/76cc38fefa0f04> ;
@@ -1823,7 +1823,7 @@
 
 <http://data.knora.org/aada82bf55d5/values/4ef3f3b4-cc44-4b7e-8071-c93cffd3ae60> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/aada82bf55d5> ;
-	rdf:predicate images:bildformat ;
+	rdf:predicate images:hatBildformat ;
 	rdf:object <http://data.knora.org/e5d4f38455d5> ;
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
@@ -1982,8 +1982,8 @@
 	images:jahreszeit <http://data.knora.org/bef1bea956d5/values/50b1f7b5011004> ;
 	images:jahrzehnt <http://data.knora.org/bef1bea956d5/values/e2abea0d031004> ;
 	images:jahr_exakt <http://data.knora.org/bef1bea956d5/values/a5d53d47031004> ;
-	images:bildformat <http://data.knora.org/f9eb2f6f56d5> ;
-	images:bildformatValue <http://data.knora.org/bef1bea956d5/values/88c1b82a-4a42-49b1-9588-f55ff3d8394a> ;
+	images:hatBildformat <http://data.knora.org/f9eb2f6f56d5> ;
+	images:hatBildformatValue <http://data.knora.org/bef1bea956d5/values/88c1b82a-4a42-49b1-9588-f55ff3d8394a> ;
 	images:erfassungsdatum <http://data.knora.org/bef1bea956d5/values/8d87a47c011004> ;
 	images:mutationsdatum <http://data.knora.org/bef1bea956d5/values/13db4aef011004> ;
 	images:bearbeiter <http://data.knora.org/bef1bea956d5/values/68ff9080031004> ;
@@ -2085,7 +2085,7 @@
 
 <http://data.knora.org/bef1bea956d5/values/88c1b82a-4a42-49b1-9588-f55ff3d8394a> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/bef1bea956d5> ;
-	rdf:predicate images:bildformat ;
+	rdf:predicate images:hatBildformat ;
 	rdf:object <http://data.knora.org/f9eb2f6f56d5> ;
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
@@ -2240,8 +2240,8 @@
 	images:jahreszeit <http://data.knora.org/d208fb9357d5/values/bc90a9c5091004> ;
 	images:jahrzehnt <http://data.knora.org/d208fb9357d5/values/4e8b9c1d0b1004> ;
 	images:jahr_exakt <http://data.knora.org/d208fb9357d5/values/11b5ef560b1004> ;
-	images:bildformat <http://data.knora.org/0d036c5957d5> ;
-	images:bildformatValue <http://data.knora.org/d208fb9357d5/values/4a0bbc36-9369-4a3e-a54e-4be9dbe2234f> ;
+	images:hatBildformat <http://data.knora.org/0d036c5957d5> ;
+	images:hatBildformatValue <http://data.knora.org/d208fb9357d5/values/4a0bbc36-9369-4a3e-a54e-4be9dbe2234f> ;
 	images:erfassungsdatum <http://data.knora.org/d208fb9357d5/values/f966568c091004> ;
 	images:mutationsdatum <http://data.knora.org/d208fb9357d5/values/7fbafcfe091004> ;
 	images:bearbeiter <http://data.knora.org/d208fb9357d5/values/d4de42900b1004> ;
@@ -2331,7 +2331,7 @@
 
 <http://data.knora.org/d208fb9357d5/values/4a0bbc36-9369-4a3e-a54e-4be9dbe2234f> a knora-base:LinkValue ;
 	rdf:subject <http://data.knora.org/d208fb9357d5> ;
-	rdf:predicate images:bildformat ;
+	rdf:predicate images:hatBildformat ;
 	rdf:object <http://data.knora.org/0d036c5957d5> ;
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;

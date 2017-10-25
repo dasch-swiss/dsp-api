@@ -53,7 +53,7 @@ case class IriRef(iri: IRI) extends Entity {
     private val stringFormatter = StringFormatter.getInstance
 
     val isInternalEntityIri: Boolean = stringFormatter.isInternalEntityIri(iri)
-    val isApiEntityIri: Boolean = stringFormatter.isKnoraApiEntityIri(iri)
+    val isApiEntityIri: Boolean = stringFormatter.isExternalEntityIri(iri)
     val isEntityIri: Boolean = isApiEntityIri || isInternalEntityIri
 
     /**

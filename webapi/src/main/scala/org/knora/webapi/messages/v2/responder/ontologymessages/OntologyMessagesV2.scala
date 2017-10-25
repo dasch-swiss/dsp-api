@@ -223,24 +223,54 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
     private val stringFormatter = StringFormatter.getInstance
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
-        // Make JSON-LD prefixes for the project-specific ontologies used in the response.
-        val ontologiesFromResourceClasses: Set[IRI] = classes.values.map {
-            resourceClass => resourceClass.ontologyIri
+        // Get the ontologies of all entities mentioned in class definitions.
+        val ontologiesFromClasses: Set[IRI] = classes.values.flatMap {
+            classInfo =>
+                val entityIris = classInfo.cardinalities.keySet ++ classInfo.subClassOf
+
+                entityIris.flatMap {
+                    entityIri =>
+                        if (stringFormatter.isKnoraEntityIri(entityIri)) {
+                            Set(stringFormatter.getOntologyIriFromEntityIri(entityIri, () => throw InconsistentTriplestoreDataException(s"Can't parse $entityIri as an entity IRI")))
+                        } else {
+                            Set.empty[IRI]
+                        }
+                } + classInfo.ontologyIri
         }.toSet
 
-        val ontologiesFromProperties: Set[IRI] = properties.values.map {
-            property => property.ontologyIri
+        // Get the ontologies of all entities mentioned in property definitions.
+        val ontologiesFromProperties: Set[IRI] = properties.values.flatMap {
+            property =>
+                val entityIris = property.subPropertyOf ++
+                    property.getPredicateObjectsWithoutLang(OntologyConstants.KnoraBase.SubjectClassConstraint) ++
+                    property.getPredicateObjectsWithoutLang(OntologyConstants.KnoraBase.ObjectClassConstraint) ++
+                    property.getPredicateObjectsWithoutLang(OntologyConstants.KnoraApiV2Simple.SubjectType) ++
+                    property.getPredicateObjectsWithoutLang(OntologyConstants.KnoraApiV2Simple.ObjectType) ++
+                    property.getPredicateObjectsWithoutLang(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType) ++
+                    property.getPredicateObjectsWithoutLang(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType)
+
+                entityIris.flatMap {
+                    entityIri =>
+                        if (stringFormatter.isKnoraEntityIri(entityIri)) {
+                            Set(stringFormatter.getOntologyIriFromEntityIri(entityIri, () => throw InconsistentTriplestoreDataException(s"Can't parse $entityIri as an entity IRI")))
+                        } else {
+                            Set.empty[IRI]
+                        }
+                } + property.ontologyIri
         }.toSet
 
-        val internalProjectSpecificOntologiesUsed: Set[IRI] = (ontologiesFromResourceClasses ++ ontologiesFromProperties) -
-            OntologyConstants.KnoraBase.KnoraBaseOntologyIri -
-            OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri -
-            OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri
+        val ontologiesUsed: Set[IRI] = ontologiesFromClasses ++ ontologiesFromProperties
 
-        val projectSpecificOntologyPrefixes: Map[String, JsonLDString] = internalProjectSpecificOntologiesUsed.map {
-            internalOntologyIri =>
-                val prefix = stringFormatter.getOntologyPrefixLabelFromInternalOntologyIri(internalOntologyIri, () => throw InconsistentTriplestoreDataException(s"Can't parse $internalOntologyIri as an internal ontology IRI"))
-                val externalOntologyIri = stringFormatter.toExternalOntologyIri(ontologyIri = internalOntologyIri, targetSchema = targetSchema)
+        // Make JSON-LD prefixes for the ontologies used in the response.
+        val ontologyPrefixes: Map[String, JsonLDString] = ontologiesUsed.map {
+            ontologyIri =>
+                val externalOntologyIri = if (stringFormatter.isExternalOntologyIri(ontologyIri)) {
+                    ontologyIri
+                } else {
+                    stringFormatter.toExternalOntologyIri(ontologyIri = ontologyIri, targetSchema = targetSchema)
+                }
+
+                val prefix = stringFormatter.getOntologyPrefixLabelFromExternalOntologyIri(externalOntologyIri, () => throw InconsistentTriplestoreDataException(s"Can't parse $externalOntologyIri as a Knora API v2 ontology IRI"))
                 prefix -> JsonLDString(externalOntologyIri + "#")
         }.toMap
 
@@ -257,7 +287,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
             "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
             "owl" -> JsonLDString("http://www.w3.org/2002/07/owl#"),
             "xsd" -> JsonLDString("http://www.w3.org/2001/XMLSchema#")
-        ) ++ projectSpecificOntologyPrefixes)
+        ) ++ ontologyPrefixes)
 
         // ontologies with their classes
 
@@ -755,7 +785,7 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
                         sourcePropertyType
                 }
 
-            case other => throw InconsistentTriplestoreDataException(s"Unsupported rdf:type for property: $other")
+            case other => throw InconsistentTriplestoreDataException(s"Unsupported rdf:type for property $propertyIri: $other")
         }
 
         val belongsToOntologyPred: IRI = targetSchema match {

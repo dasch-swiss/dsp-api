@@ -97,6 +97,25 @@ object OntologyConstants {
         val InternalOntologyStart = "http://www.knora.org/ontology/"
     }
 
+    /**
+      * Ontology labels that are reserved for built-in ontologies.
+      */
+    val BuiltInOntologyLabels = Set(
+        KnoraBase.KnoraBaseOntologyLabel,
+        KnoraApi.KnoraApiOntologyLabel,
+        SalsahGui.SalsahGuiOntologyLabel,
+        Standoff.StandoffOntologyLabel,
+        Dc.DcOntologyLabel
+    )
+
+    /**
+      * IRIs of ontologies that we serve from Scala constants, rather than from the triplestore.
+      */
+    val ConstantOntologies = Set(
+        KnoraApiV2Simple.KnoraApiOntologyIri,
+        KnoraApiV2WithValueObjects.KnoraApiOntologyIri
+    )
+
     object KnoraBase {
         val KnoraBaseOntologyLabel: String = "knora-base"
         val KnoraBaseOntologyIri: IRI = KnoraInternal.InternalOntologyStart + KnoraBaseOntologyLabel
@@ -130,7 +149,6 @@ object OntologyConstants {
         val mappingHasDefaultXSLTransformation: IRI = KnoraBasePrefixExpansion + "mappingHasDefaultXSLTransformation"
 
         val IsMainResource: IRI = KnoraBasePrefixExpansion + "isMainResource"
-
 
         val AbstractResourceClasses = Set(
             Resource,
@@ -412,7 +430,8 @@ object OntologyConstants {
     }
 
     object Standoff {
-        val StandoffPrefixExpansion: IRI = KnoraInternal.InternalOntologyStart + "standoff#"
+        val StandoffOntologyLabel: String = "standoff"
+        val StandoffPrefixExpansion: IRI = KnoraInternal.InternalOntologyStart + StandoffOntologyLabel + "#"
 
         val StandoffRootTag: IRI = StandoffPrefixExpansion + "StandoffRootTag"
         val StandoffParagraphTag: IRI = StandoffPrefixExpansion + "StandoffParagraphTag"
@@ -437,7 +456,9 @@ object OntologyConstants {
     }
 
     object SalsahGui {
-        val SalsahGuiPrefixExpansion: IRI = KnoraInternal.InternalOntologyStart + "salsah-gui#"
+        val SalsahGuiOntologyLabel: String = "salsah-gui"
+        val SalsahGuiOntologyIri: IRI = KnoraInternal.InternalOntologyStart + SalsahGuiOntologyLabel
+        val SalsahGuiPrefixExpansion: IRI = SalsahGuiOntologyIri + "#"
 
         val GuiAttribute: IRI = SalsahGuiPrefixExpansion + "guiAttribute"
         val GuiOrder: IRI = SalsahGuiPrefixExpansion + "guiOrder"
@@ -464,6 +485,10 @@ object OntologyConstants {
             val assignmentOperator: String = "="
         }
 
+    }
+
+    object Dc {
+        val DcOntologyLabel: String = "dc"
     }
 
     object KnoraXmlImportV1 {

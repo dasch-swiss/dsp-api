@@ -298,7 +298,7 @@
       "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
       "rdfs:comment" : "Description",
       "rdfs:label" : "Description",
-      "rdfs:subPropertyOf" : "http://0.0.0.0:3333/ontology/dc/v2#description"
+      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#description"
     },
     "incunabula:hasAuthor" : {
       "@id" : "incunabula:hasAuthor",
@@ -309,7 +309,7 @@
       "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
       "rdfs:comment" : "Erzeuger/Autor",
       "rdfs:label" : "Creator",
-      "rdfs:subPropertyOf" : "http://0.0.0.0:3333/ontology/dc/v2#creator"
+      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#creator"
     },
     "incunabula:hasLeftSideband" : {
       "@id" : "incunabula:hasLeftSideband",
@@ -482,7 +482,7 @@
       "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
       "rdfs:comment" : "Datum der Herausgabe",
       "rdfs:label" : "Datum der Herausgabe",
-      "rdfs:subPropertyOf" : "http://0.0.0.0:3333/ontology/dc/v2#date"
+      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#date"
     },
     "incunabula:publisher" : {
       "@id" : "incunabula:publisher",
@@ -493,7 +493,7 @@
       "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
       "rdfs:comment" : "Publishing is the process of production and dissemination of literature or information – the activity of making information available for public view. In some cases authors may be their own publishers, meaning: originators and developers of content also provide media to deliver and display the content. (Wikipedia http://en.wikipedia.org/wiki/Publisher)",
       "rdfs:label" : "Publisher",
-      "rdfs:subPropertyOf" : "http://0.0.0.0:3333/ontology/dc/v2#publisher"
+      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#publisher"
     },
     "incunabula:publoc" : {
       "@id" : "incunabula:publoc",
@@ -514,7 +514,7 @@
       "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
       "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#Sideband",
       "rdfs:label" : "Title",
-      "rdfs:subPropertyOf" : "http://0.0.0.0:3333/ontology/dc/v2#title"
+      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#title"
     },
     "incunabula:seqnum" : {
       "@id" : "incunabula:seqnum",
@@ -547,7 +547,7 @@
       "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
       "rdfs:comment" : "Titel",
       "rdfs:label" : "Title",
-      "rdfs:subPropertyOf" : "http://0.0.0.0:3333/ontology/dc/v2#title"
+      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#title"
     },
     "incunabula:transcription" : {
       "@id" : "incunabula:transcription",
@@ -574,6 +574,7 @@
   },
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "dc" : "http://api.knora.org/ontology/dc/v2#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
