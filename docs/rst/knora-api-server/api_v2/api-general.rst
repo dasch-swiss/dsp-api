@@ -54,7 +54,7 @@ Our intent is that any client familiar with schema.org_ should be able to unders
 
 A resource's ``rdfs:label`` is represented as a ``http://schema.org/name`` although they might not be equivalent in a strict sense (see label_name_).
 
-Likewise, we state an equivalency between a ``knora-api:Resource`` and a ``http://schema.org/Thing`` (see resource_thing_), so we can use a ``knora-api:Resource`` or any of its subclasses where ``http://schema.org`` requires a ``http://schema.org/Thing``.
+Likewise, ``knora-api:Resource`` is declared to be a subclass of ``http://schema.org/Thing`` (see resource_thing_), so we can use a ``knora-api:Resource`` or any of its subclasses where ``http://schema.org`` requires a ``http://schema.org/Thing``.
 
 .. _schema.org: http://www.schema.org
 .. _label_name: https://github.com/schemaorg/schemaorg/issues/1762
