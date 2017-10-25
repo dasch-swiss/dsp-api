@@ -27,14 +27,14 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcePreviewRequestV2, ResourcesGetRequestV2}
-import org.knora.webapi.responders.{Responder, ResponderV2}
+import org.knora.webapi.responders.{Responder, ResponderWithStandoffV2}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.ConstructResponseUtilV2
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 
 import scala.concurrent.Future
 
-class ResourcesResponderV2 extends ResponderV2 {
+class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
     def receive = {
         case ResourcesGetRequestV2(resIris, userProfile) => future2Message(sender(), getResources(resIris, userProfile), log)

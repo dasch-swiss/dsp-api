@@ -29,7 +29,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValue
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages._
-import org.knora.webapi.responders.ResponderV2
+import org.knora.webapi.responders.ResponderWithStandoffV2
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 import org.knora.webapi.util.search.ApacheLuceneSupport.{CombineSearchTerms, MatchStringWhileTyping}
@@ -91,7 +91,7 @@ object SearchResponderV2Constants {
 
 }
 
-class SearchResponderV2 extends ResponderV2 {
+class SearchResponderV2 extends ResponderWithStandoffV2 {
 
     val knoraIdUtil = new KnoraIdUtil
 
@@ -1939,7 +1939,7 @@ class SearchResponderV2 extends ResponderV2 {
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-            _ = println(triplestoreSpecificPrequery.toSparql)
+            // _ = println(triplestoreSpecificPrequery.toSparql)
 
             prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 

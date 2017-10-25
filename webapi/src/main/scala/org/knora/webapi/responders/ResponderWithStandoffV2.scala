@@ -30,9 +30,9 @@ import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformatio
 import scala.concurrent.Future
 
 /**
-  * An abstract class with utility methods for v2 responders.
+  * An abstract class with standoff utility methods for v2 responders.
   */
-abstract class ResponderV2 extends Responder {
+abstract class ResponderWithStandoffV2 extends Responder {
 
     /**
       * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].
