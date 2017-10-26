@@ -288,7 +288,9 @@
       "@id" : "knora-api:Resource",
       "@type" : "owl:Class",
       "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
-      "rdfs:subClassOf" : [ {
+      "rdfs:subClassOf" : [
+      "http://schema.org/Thing",
+      {
         "@type" : "owl:Restriction",
         "owl:cardinality" : 1,
         "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#creationDate"

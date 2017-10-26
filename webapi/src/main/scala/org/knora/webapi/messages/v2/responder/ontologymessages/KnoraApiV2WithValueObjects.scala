@@ -28,6 +28,7 @@ import org.knora.webapi._
 object KnoraApiV2WithValueObjects {
     val Resource: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Resource,
+        subClassOf = Set(OntologyConstants.SchemaOrg.Thing),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,

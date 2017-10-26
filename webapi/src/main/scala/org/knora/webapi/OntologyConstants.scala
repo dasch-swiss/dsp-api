@@ -90,6 +90,7 @@ object OntologyConstants {
         val SchemaOrgPrefixExpansion: IRI = "http://schema.org/"
 
         val Name: IRI = SchemaOrgPrefixExpansion + "name"
+        val Thing: IRI = SchemaOrgPrefixExpansion + "Thing"
     }
 
     object KnoraInternal {
