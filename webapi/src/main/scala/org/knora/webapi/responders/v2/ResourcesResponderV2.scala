@@ -99,7 +99,7 @@ class ResourcesResponderV2 extends Responder {
                 (mapping: GetMappingResponseV1) =>
 
                     for {
-                    // if given, get the default XSL transformation
+                        // if given, get the default XSL transformation
                         xsltOption: Option[String] <- if (mapping.mapping.defaultXSLTransformation.nonEmpty) {
                             for {
                                 xslTransformation: GetXSLTransformationResponseV1 <- (responderManager ? GetXSLTransformationRequestV1(mapping.mapping.defaultXSLTransformation.get, userProfile = userProfile)).mapTo[GetXSLTransformationResponseV1]

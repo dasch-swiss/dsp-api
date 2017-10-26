@@ -280,30 +280,30 @@ object OntologyConstants {
         val AttachedToProject: IRI = KnoraBasePrefixExpansion + "attachedToProject"
 
         /* User */
-        val User: IRI = KnoraBasePrefixExpansion                   + "User"
-        val Email: IRI = KnoraBasePrefixExpansion                  + "email"
-        val GivenName: IRI = KnoraBasePrefixExpansion              + "givenName"
-        val FamilyName: IRI = KnoraBasePrefixExpansion             + "familyName"
-        val Password: IRI = KnoraBasePrefixExpansion               + "password"
-        val UsersActiveProject: IRI = KnoraBasePrefixExpansion     + "currentproject"
-        val Status: IRI = KnoraBasePrefixExpansion                 + "status"
-        val PreferredLanguage: IRI = KnoraBasePrefixExpansion      + "preferredLanguage"
-        val IsInProject: IRI = KnoraBasePrefixExpansion            + "isInProject"
-        val IsInProjectAdminGroup: IRI = KnoraBasePrefixExpansion  + "isInProjectAdminGroup"
-        val IsInGroup: IRI = KnoraBasePrefixExpansion              + "isInGroup"
-        val IsInSystemAdminGroup: IRI = KnoraBasePrefixExpansion   + "isInSystemAdminGroup"
+        val User: IRI = KnoraBasePrefixExpansion + "User"
+        val Email: IRI = KnoraBasePrefixExpansion + "email"
+        val GivenName: IRI = KnoraBasePrefixExpansion + "givenName"
+        val FamilyName: IRI = KnoraBasePrefixExpansion + "familyName"
+        val Password: IRI = KnoraBasePrefixExpansion + "password"
+        val UsersActiveProject: IRI = KnoraBasePrefixExpansion + "currentproject"
+        val Status: IRI = KnoraBasePrefixExpansion + "status"
+        val PreferredLanguage: IRI = KnoraBasePrefixExpansion + "preferredLanguage"
+        val IsInProject: IRI = KnoraBasePrefixExpansion + "isInProject"
+        val IsInProjectAdminGroup: IRI = KnoraBasePrefixExpansion + "isInProjectAdminGroup"
+        val IsInGroup: IRI = KnoraBasePrefixExpansion + "isInGroup"
+        val IsInSystemAdminGroup: IRI = KnoraBasePrefixExpansion + "isInSystemAdminGroup"
 
         /* Project */
-        val KnoraProject: IRI = KnoraBasePrefixExpansion           + "knoraProject"
-        val ProjectShortname: IRI = KnoraBasePrefixExpansion       + "projectShortname"
-        val ProjectLongname: IRI = KnoraBasePrefixExpansion        + "projectLongname"
-        val ProjectDescription: IRI = KnoraBasePrefixExpansion     + "projectDescription"
-        val ProjectKeywords: IRI = KnoraBasePrefixExpansion        + "projectKeywords"
-        val ProjectLogo: IRI = KnoraBasePrefixExpansion            + "projectLogo"
-        val BelongsToInstitution: IRI = KnoraBasePrefixExpansion   + "belongsToInstitution"
-        val ProjectOntologyGraph: IRI = KnoraBasePrefixExpansion   + "projectOntologyGraph"
-        val ProjectDataGraph: IRI = KnoraBasePrefixExpansion       + "projectDataGraph"
-        val HasSelfJoinEnabled: IRI = KnoraBasePrefixExpansion     + "hasSelfJoinEnabled"
+        val KnoraProject: IRI = KnoraBasePrefixExpansion + "knoraProject"
+        val ProjectShortname: IRI = KnoraBasePrefixExpansion + "projectShortname"
+        val ProjectLongname: IRI = KnoraBasePrefixExpansion + "projectLongname"
+        val ProjectDescription: IRI = KnoraBasePrefixExpansion + "projectDescription"
+        val ProjectKeywords: IRI = KnoraBasePrefixExpansion + "projectKeywords"
+        val ProjectLogo: IRI = KnoraBasePrefixExpansion + "projectLogo"
+        val BelongsToInstitution: IRI = KnoraBasePrefixExpansion + "belongsToInstitution"
+        val ProjectOntologyGraph: IRI = KnoraBasePrefixExpansion + "projectOntologyGraph"
+        val ProjectDataGraph: IRI = KnoraBasePrefixExpansion + "projectDataGraph"
+        val HasSelfJoinEnabled: IRI = KnoraBasePrefixExpansion + "hasSelfJoinEnabled"
 
         /* Group */
         val UserGroup: IRI = KnoraBasePrefixExpansion + "UserGroup"
@@ -533,14 +533,15 @@ object OntologyConstants {
 
         val HasOntologiesWithClasses: IRI = KnoraApiV2PrefixExpansion + "hasOntologiesWithClasses"
 
-        val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
-
         val BelongsToOntology: IRI = KnoraApiV2PrefixExpansion + "belongsToOntology"
 
         val IsEditable: IRI = KnoraApiV2PrefixExpansion + "isEditable"
         val CanBeInstantiated: IRI = KnoraApiV2PrefixExpansion + "canBeInstantiated"
 
         val HasClasses: IRI = KnoraApiV2PrefixExpansion + "hasClasses"
+        val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
+        val HasStandoffClasses: IRI = KnoraApiV2PrefixExpansion + "hasStandoffClasses"
+        val HasStandoffProperties: IRI = KnoraApiV2PrefixExpansion + "hasStandoffProperties"
 
         val ValueAsString: IRI = KnoraApiV2PrefixExpansion + "valueAsString"
         val ValueCreationDate: IRI = KnoraApiV2PrefixExpansion + "valueCreationDate"
@@ -619,7 +620,7 @@ object OntologyConstants {
 
         val DecimalValueAsDecimal: IRI = KnoraApiV2PrefixExpansion + "decimalValueAsDecimal"
 
-        val GeometryValueAsGeometry: IRI = KnoraApiV2PrefixExpansion + "GeometryValueAsGeometry"
+        val GeometryValueAsGeometry: IRI = KnoraApiV2PrefixExpansion + "geometryValueAsGeometry"
 
         val LinkValueHasTarget: IRI = KnoraApiV2PrefixExpansion + "linkValueHasTarget"
         val LinkValueHasTargetIri: IRI = KnoraApiV2PrefixExpansion + "linkValueHasTargetIri"
@@ -697,9 +698,10 @@ object OntologyConstants {
 
         val HasOntologiesWithClasses: IRI = KnoraApiV2PrefixExpansion + "hasOntologiesWithClasses"
 
-        val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
-
         val HasClasses: IRI = KnoraApiV2PrefixExpansion + "hasClasses"
+        val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
+        val HasStandoffClasses: IRI = KnoraApiV2PrefixExpansion + "hasStandoffClasses"
+        val HasStandoffProperties: IRI = KnoraApiV2PrefixExpansion + "hasStandoffProperties"
 
         val HasValue: IRI = KnoraApiV2PrefixExpansion + "hasValue"
 
@@ -769,4 +771,5 @@ object OntologyConstants {
         val KnoraExplicitNamedGraph: IRI = "http://www.knora.org/explicit"
         val GraphDBExplicitNamedGraph: IRI = "http://www.ontotext.com/explicit"
     }
+
 }

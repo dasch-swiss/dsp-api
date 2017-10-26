@@ -576,6 +576,8 @@
       "rdfs:label" : "Subject type"
     }
   },
+  "knora-api:hasStandoffClasses" : { },
+  "knora-api:hasStandoffProperties" : { },
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",

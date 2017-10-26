@@ -508,7 +508,7 @@ object ConstructResponseUtilV2 {
     /**
       * Creates a response to a fulltext or extended search.
       *
-      * @param searchResults the results returned by the triplestore.
+      * @param searchResults      the results returned by the triplestore.
       * @param orderByResourceIri the order in which the resources should be returned.
       * @return a collection of [[ReadResourceV2]] representing the search results.
       */

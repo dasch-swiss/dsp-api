@@ -63,7 +63,7 @@ class OntologyResponderV1 extends Responder {
         case PropertyTypesForResourceTypeGetRequestV1(restypeId, userProfile) => future2Message(sender(), getPropertyTypesForResourceType(restypeId, userProfile), log)
         case StandoffEntityInfoGetRequestV1(standoffClassIris, standoffPropertyIris, userProfile) => future2Message(sender(), getStandoffEntityInfoResponseV1(standoffClassIris, standoffPropertyIris, userProfile), log)
         case StandoffClassesWithDataTypeGetRequestV1(userProfile) => future2Message(sender(), getStandoffStandoffClassesWithDataTypeV1(userProfile), log)
-        case StandoffAllPropertyEntitiesGetRequestV1(userProfile) => future2Message(sender(), getAllStandoffPropertyEntities(userProfile), log)
+        case StandoffAllPropertiesGetRequestV1(userProfile) => future2Message(sender(), getAllStandoffPropertyEntities(userProfile), log)
         case NamedGraphEntityInfoRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
@@ -87,14 +87,14 @@ class OntologyResponderV1 extends Responder {
       * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV1]] describing both resource and property entities.
       *
       * @param resourceClassIris the IRIs of the resource entities to be queried.
-      * @param propertyIris the IRIs of the property entities to be queried.
-      * @param userProfile  the profile of the user making the request.
+      * @param propertyIris      the IRIs of the property entities to be queried.
+      * @param userProfile       the profile of the user making the request.
       * @return an [[EntityInfoGetResponseV1]].
       */
     private def getEntityInfoResponseV1(resourceClassIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[EntityInfoGetResponseV1] = {
         for {
             response: EntityInfoGetResponseV2 <- (responderManager ? EntityInfoGetRequestV2(resourceClassIris, propertyIris, userProfile)).mapTo[EntityInfoGetResponseV2]
-        } yield EntityInfoGetResponseV1(resourceEntityInfoMap = response.classEntityInfoMap, propertyEntityInfoMap = response.propertyEntityInfoMap) // TODO: use V2 directly
+        } yield EntityInfoGetResponseV1(resourceClassInfoMap = response.classInfoMap, propertyInfoMap = response.propertyInfoMap) // TODO: use V2 directly
     }
 
 
@@ -109,7 +109,7 @@ class OntologyResponderV1 extends Responder {
     private def getStandoffEntityInfoResponseV1(standoffClassIris: Set[IRI] = Set.empty[IRI], standoffPropertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[StandoffEntityInfoGetResponseV1] = {
         for {
             response: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, userProfile)).mapTo[StandoffEntityInfoGetResponseV2]
-        } yield StandoffEntityInfoGetResponseV1(standoffClassEntityInfoMap = response.standoffClassEntityInfoMap, standoffPropertyEntityInfoMap = response.standoffPropertyEntityInfoMap) // TODO: use V2 directly
+        } yield StandoffEntityInfoGetResponseV1(standoffClassInfoMap = response.standoffClassInfoMap, standoffPropertyInfoMap = response.standoffPropertyInfoMap) // TODO: use V2 directly
     }
 
     /**
@@ -121,19 +121,19 @@ class OntologyResponderV1 extends Responder {
     private def getStandoffStandoffClassesWithDataTypeV1(userProfile: UserProfileV1): Future[StandoffClassesWithDataTypeGetResponseV1] = {
         for {
             response: StandoffClassesWithDataTypeGetResponseV2 <- (responderManager ? StandoffClassesWithDataTypeGetRequestV2(userProfile)).mapTo[StandoffClassesWithDataTypeGetResponseV2]
-        } yield StandoffClassesWithDataTypeGetResponseV1(standoffClassEntityInfoMap = response.standoffClassEntityInfoMap) // TODO: use V2 directly
+        } yield StandoffClassesWithDataTypeGetResponseV1(standoffClassInfoMap = response.standoffClassInfoMap) // TODO: use V2 directly
     }
 
     /**
       * Gets all standoff property entities.
       *
       * @param userProfile the profile of the user making the request.
-      * @return a [[StandoffAllPropertyEntitiesGetResponseV1]].
+      * @return a [[StandoffAllPropertiesGetResponseV1]].
       */
-    private def getAllStandoffPropertyEntities(userProfile: UserProfileV1): Future[StandoffAllPropertyEntitiesGetResponseV1] = {
+    private def getAllStandoffPropertyEntities(userProfile: UserProfileV1): Future[StandoffAllPropertiesGetResponseV1] = {
         for {
             response: StandoffAllPropertyEntitiesGetResponseV2 <- (responderManager ? StandoffAllPropertyEntitiesGetRequestV2(userProfile)).mapTo[StandoffAllPropertyEntitiesGetResponseV2]
-        } yield StandoffAllPropertyEntitiesGetResponseV1(standoffAllPropertiesEntityInfoMap = response.standoffAllPropertiesEntityInfoMap) // TODO: use V2 directly
+        } yield StandoffAllPropertiesGetResponseV1(standoffAllPropertiesInfoMap = response.standoffAllPropertiesEntityInfoMap) // TODO: use V2 directly
     }
 
     /**
@@ -147,9 +147,9 @@ class OntologyResponderV1 extends Responder {
     private def getResourceTypeResponseV1(resourceTypeIri: String, userProfile: UserProfileV1): Future[ResourceTypeResponseV1] = {
 
         for {
-        // Get all information about the resource type, including its property cardinalities.
+            // Get all information about the resource type, including its property cardinalities.
             resourceClassInfoResponse: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(resourceClassIris = Set(resourceTypeIri), userProfile = userProfile)
-            resourceClassInfo: ClassEntityInfoV2 = resourceClassInfoResponse.resourceEntityInfoMap.getOrElse(resourceTypeIri, throw NotFoundException(s"Resource class $resourceTypeIri not found"))
+            resourceClassInfo: ClassEntityInfoV2 = resourceClassInfoResponse.resourceClassInfoMap.getOrElse(resourceTypeIri, throw NotFoundException(s"Resource class $resourceTypeIri not found"))
 
             // Get all information about those properties.
             propertyInfo: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = resourceClassInfo.cardinalities.keySet, userProfile = userProfile)
@@ -161,7 +161,7 @@ class OntologyResponderV1 extends Responder {
                     resourceClassInfo.linkValueProperties(propertyIri) || propertyIri == OntologyConstants.KnoraBase.HasStandoffLinkTo
             }.map {
                 case (propertyIri: IRI, cardinality: Cardinality.Value) =>
-                    propertyInfo.propertyEntityInfoMap.get(propertyIri) match {
+                    propertyInfo.propertyInfoMap.get(propertyIri) match {
                         case Some(entityInfo: PropertyEntityInfoV2) =>
 
                             if (entityInfo.isLinkProp) {
@@ -285,7 +285,7 @@ class OntologyResponderV1 extends Responder {
         def getResourceTypes(namedGraphIri: IRI): Future[Seq[ResourceTypeV1]] = {
             for {
 
-            // get NamedGraphEntityInfoV1 for the given named graph
+                // get NamedGraphEntityInfoV1 for the given named graph
                 namedGraphEntityInfo: NamedGraphEntityInfoV1 <- getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
 
                 // get resinfo for each resource class in namedGraphEntityInfo
@@ -302,10 +302,11 @@ class OntologyResponderV1 extends Responder {
                     case (resClassIri, resInfo) =>
 
                         val properties = resInfo.restype_info.properties.map {
-                            (prop) => PropertyTypeV1(
-                                id = prop.id,
-                                label = prop.label.getOrElse(throw InconsistentTriplestoreDataException(s"No label given for ${prop.id}"))
-                            )
+                            (prop) =>
+                                PropertyTypeV1(
+                                    id = prop.id,
+                                    label = prop.label.getOrElse(throw InconsistentTriplestoreDataException(s"No label given for ${prop.id}"))
+                                )
                         }.toVector
 
                         ResourceTypeV1(
@@ -349,11 +350,11 @@ class OntologyResponderV1 extends Responder {
                 namedGraphEntityInfo <- getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
                 propertyIris: Set[IRI] = namedGraphEntityInfo.propertyIris
                 entities: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = propertyIris, userProfile = userProfile)
-                propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2] = entities.propertyEntityInfoMap.filterNot {
+                propertyInfoMap: Map[IRI, PropertyEntityInfoV2] = entities.propertyInfoMap.filterNot {
                     case (propertyIri, propertyEntityInfo) => propertyEntityInfo.isLinkValueProp
                 }
 
-                propertyDefinitions: Vector[PropertyDefinitionInNamedGraphV1] = propertyEntityInfoMap.map {
+                propertyDefinitions: Vector[PropertyDefinitionInNamedGraphV1] = propertyInfoMap.map {
                     case (propertyIri: IRI, entityInfo: PropertyEntityInfoV2) =>
 
                         if (entityInfo.isLinkProp) {

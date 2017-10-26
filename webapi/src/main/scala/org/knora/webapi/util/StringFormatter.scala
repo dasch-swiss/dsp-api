@@ -40,6 +40,7 @@ import scala.util.matching.Regex
   * Provides the singleton instance of [[StringFormatter]], as well as string formatting constants.
   */
 object StringFormatter {
+
     /**
       * A container for an XML import namespace and its prefix label.
       *
@@ -138,6 +139,7 @@ object StringFormatter {
   * Handles string formatting and validation.
   */
 class StringFormatter private(settings: SettingsImpl) {
+
     import StringFormatter._
 
     // The expected format of a Knora date.
@@ -245,7 +247,7 @@ class StringFormatter private(settings: SettingsImpl) {
     private val BuiltInApiV2SimpleOntologyEntityRegex = (
         "^" + OntologyConstants.KnoraApi.ApiOntologyHostname + "/ontology/(" +
             NCNamePattern + ")" + OntologyConstants.KnoraApiV2Simple.VersionSegment + "#(" + NCNamePattern + ")$"
-    ).r
+        ).r
 
     // A regex for the IRI of an entity in any built-in API v2 with value objects ontology (knora-api, salsah-gui, etc.).
     private val BuiltInApiV2WithValueObjectsOntologyEntityRegex = (
@@ -759,8 +761,8 @@ class StringFormatter private(settings: SettingsImpl) {
       * returns the ontology IRI.
       *
       * @param entityIri the ontology entity IRI.
-      * @param errorFun          a function that throws an exception. It will be called if the form of the string is not
-      *                          valid for an ontology entity IRI.
+      * @param errorFun  a function that throws an exception. It will be called if the form of the string is not
+      *                  valid for an ontology entity IRI.
       * @return the ontology prefix label specified in the entity IRI.
       */
     def getOntologyIriFromEntityIri(entityIri: IRI, errorFun: () => Nothing): String = {
@@ -812,9 +814,9 @@ class StringFormatter private(settings: SettingsImpl) {
       * Extracts the prefix label from the IRI of an ontology (internal or external, built-in or project-specific).
       *
       * @param ontologyIri the IRI of the ontology. Any trailing # character will be
-      *                            stripped before the conversion.
-      * @param errorFun            a function that throws an exception. It will be called if the form of the IRI is not
-      *                            valid for an ontology IRI.
+      *                    stripped before the conversion.
+      * @param errorFun    a function that throws an exception. It will be called if the form of the IRI is not
+      *                    valid for an ontology IRI.
       * @return the corresponding prefix label.
       */
     def getOntologyPrefixLabelFromOntologyIri(ontologyIri: IRI, errorFun: () => Nothing): String = {
@@ -896,8 +898,8 @@ class StringFormatter private(settings: SettingsImpl) {
     /**
       * Converts an external entity name to an internal entity IRI.
       *
-      * @param ontologyName   the name of the ontology the entity belongs.
-      * @param entityName the name of the entity.
+      * @param ontologyName the name of the ontology the entity belongs.
+      * @param entityName   the name of the entity.
       * @return the internal entity IRI.
       */
     private def externalEntityNameToInternalEntityIri(ontologyName: String, entityName: String) = {
@@ -1088,6 +1090,16 @@ class StringFormatter private(settings: SettingsImpl) {
     }
 
     /**
+      * Returns `true` if the specified IRI is the IRI of a `knora-api` ontology (simple or complex).
+      *
+      * @param ontologyIri the IRI to be checked.
+      * @return `true` if the specified IRI is the IRI of a `knora-api` ontology.
+      */
+    def isKnoraApiOntology(ontologyIri: IRI): Boolean = {
+        ontologyIri == OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri || ontologyIri == OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri
+    }
+
+    /**
       * Checks whether an IRI is a Knora entity IRI (project-specific or built-in, internal or external).
       *
       * @param iri the IRI to be checked.
@@ -1127,7 +1139,7 @@ class StringFormatter private(settings: SettingsImpl) {
     /**
       * Checks whether an IRI is the IRI of a project-specific API v2 with value objects ontology.
       *
-      * @param iri the IRI to be checked.
+      * @param iri      the IRI to be checked.
       * @param errorFun a function that throws an exception. It will be called if the check fails.
       * @return the same IRI.
       */
@@ -1146,7 +1158,7 @@ class StringFormatter private(settings: SettingsImpl) {
       */
     def isBuiltInEntityIri(iri: IRI): Boolean = {
         iri match {
-            case BuiltInApiV2OntologyEntityRegex(_*)  => true
+            case BuiltInApiV2OntologyEntityRegex(_*) => true
             case _ => false
         }
     }
@@ -1155,8 +1167,8 @@ class StringFormatter private(settings: SettingsImpl) {
       * Returns the API v2 schema used in an ontology entity IRI (from a built-in or project-specific ontology).
       *
       * @param entityIri the entity IRI.
-      * @param errorFun a function that throws an exception. It will be called if the form of the IRI is not valid
-      *                 for an external entity IRI.
+      * @param errorFun  a function that throws an exception. It will be called if the form of the IRI is not valid
+      *                  for an external entity IRI.
       * @return an [[ApiV2Schema]].
       */
     def getEntityApiSchema(entityIri: IRI, errorFun: () => Nothing): ApiV2Schema = {
@@ -1173,8 +1185,8 @@ class StringFormatter private(settings: SettingsImpl) {
       * Returns the API v2 schema used in an ontology IRI (from a built-in or project-specific ontology).
       *
       * @param ontologyIri the ontology IRI.
-      * @param errorFun a function that throws an exception. It will be called if the form of the IRI is not valid
-      *                 for an external ontology IRI.
+      * @param errorFun    a function that throws an exception. It will be called if the form of the IRI is not valid
+      *                    for an external ontology IRI.
       * @return an [[ApiV2Schema]].
       */
     def getOntologyApiSchema(ontologyIri: IRI, errorFun: () => Nothing): ApiV2Schema = {

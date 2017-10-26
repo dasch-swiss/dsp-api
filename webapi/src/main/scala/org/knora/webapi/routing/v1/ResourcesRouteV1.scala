@@ -255,7 +255,7 @@ object ResourcesRouteV1 extends Authenticator {
             if (multipartConversionRequest.nonEmpty && paramConversionRequest.nonEmpty) throw BadRequestException("Binaries sent and file params set to route. This is illegal.")
 
             for {
-            // make the whole Map a Future
+                // make the whole Map a Future
                 valuesToBeCreated: Iterable[(IRI, Seq[CreateValueV1WithComment])] <- Future.traverse(valuesToBeCreatedWithFuture) {
                     case (propIri: IRI, valuesFuture: Future[Seq[CreateValueV1WithComment]]) =>
                         for {
@@ -368,7 +368,7 @@ object ResourcesRouteV1 extends Authenticator {
                 assert(intermediateResults.contains(OntologyConstants.KnoraBase.KnoraBaseOntologyIri))
 
                 for {
-                // Get a NamedGraphEntityInfoV1 listing the IRIs of the classes and properties defined in the initial ontology.
+                    // Get a NamedGraphEntityInfoV1 listing the IRIs of the classes and properties defined in the initial ontology.
                     initialNamedGraphInfo: NamedGraphEntityInfoV1 <- (responderManager ? NamedGraphEntityInfoRequestV1(initialOntologyIri, userProfile)).mapTo[NamedGraphEntityInfoV1]
 
                     // Get details about those classes and properties.
@@ -381,7 +381,7 @@ object ResourcesRouteV1 extends Authenticator {
                     // Look at the properties that have cardinalities in the resource classes in the initial ontology.
                     // Make a set of the ontologies containing the definitions of those properties, not including the initial ontology itself
                     // or any other ontologies we've already looked at.
-                    ontologyIrisFromCardinalities: Set[IRI] = entityInfoResponse.resourceEntityInfoMap.foldLeft(Set.empty[IRI]) {
+                    ontologyIrisFromCardinalities: Set[IRI] = entityInfoResponse.resourceClassInfoMap.foldLeft(Set.empty[IRI]) {
                         case (acc, (resourceClassIri, resourceClassInfo)) =>
                             val resourceCardinalityOntologies: Set[IRI] = resourceClassInfo.cardinalities.map {
                                 case (propertyIri, _) => stringFormatter.getInternalOntologyIriFromInternalEntityIri(
@@ -395,7 +395,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                     // Look at the object class constraints of the properties in the initial ontology. Make a set of the ontologies containing those classes,
                     // not including the initial ontology itself or any other ontologies we've already looked at.
-                    ontologyIrisFromObjectClassConstraints: Set[IRI] = entityInfoResponse.propertyEntityInfoMap.map {
+                    ontologyIrisFromObjectClassConstraints: Set[IRI] = entityInfoResponse.propertyInfoMap.map {
                         case (propertyIri, propertyInfo) =>
                             val propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
                                 throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
@@ -422,13 +422,13 @@ object ResourcesRouteV1 extends Authenticator {
 
                     namedGraphInfosFromReferencedOntologies: Set[Map[IRI, NamedGraphEntityInfoV1]] <- Future.sequence(futuresOfNamedGraphInfosForReferencedOntologies)
 
-                // Return the previous intermediate results, plus the information about the initial ontology
-                // and the other referenced ontologies.
+                    // Return the previous intermediate results, plus the information about the initial ontology
+                    // and the other referenced ontologies.
                 } yield namedGraphInfosFromReferencedOntologies.flatten.toMap ++ intermediateResults + (initialOntologyIri -> initialNamedGraphInfo)
             }
 
             for {
-            // Get a NamedGraphEntityInfoV1 for the knora-base ontology.
+                // Get a NamedGraphEntityInfoV1 for the knora-base ontology.
                 knoraBaseGraphEntityInfo <- (responderManager ? NamedGraphEntityInfoRequestV1(OntologyConstants.KnoraBase.KnoraBaseOntologyIri, userProfile)).mapTo[NamedGraphEntityInfoV1]
 
                 // Recursively get NamedGraphEntityInfoV1 instances for the main ontology to be used in the XML import,
@@ -489,7 +489,7 @@ object ResourcesRouteV1 extends Authenticator {
             }
 
             for {
-            // Get a NamedGraphEntityInfoV1 for each ontology that we need to generate an XML schema for.
+                // Get a NamedGraphEntityInfoV1 for each ontology that we need to generate an XML schema for.
                 namedGraphInfos: Map[IRI, NamedGraphEntityInfoV1] <- getNamedGraphInfos(mainOntologyIri = internalOntologyIri, userProfile = userProfile)
 
                 // Get information about the resource classes and properties in each ontology.
@@ -512,7 +512,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                 // Collect all the property definitions in a single Map. Since any schema could use any property, we will
                 // pass this Map to the schema generation template for every schema.
-                propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2] = entityInfoResponsesMap.values.flatMap(_.propertyEntityInfoMap).toMap
+                propertyInfoMap: Map[IRI, PropertyEntityInfoV2] = entityInfoResponsesMap.values.flatMap(_.propertyInfoMap).toMap
 
                 // Make a map of internal ontology IRIs to XmlImportNamespaceInfoV1 objects describing the XML namespace
                 // of each schema to be generated. Don't generate a schema for knora-base, because the built-in Knora
@@ -556,12 +556,12 @@ object ResourcesRouteV1 extends Authenticator {
                             targetNamespaceInfo = namespaceInfo,
                             importedNamespaces = importedNamespaceInfos,
                             knoraXmlImportNamespacePrefixLabel = OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel,
-                            resourceEntityInfoMap = entityInfoResponsesMap(ontologyIri).resourceEntityInfoMap,
-                            propertyEntityInfoMap = propertyEntityInfoMap,
+                            resourceClassInfoMap = entityInfoResponsesMap(ontologyIri).resourceClassInfoMap,
+                            propertyInfoMap = propertyInfoMap,
                             getNamespacePrefixLabel = internalEntityIri => getNamespacePrefixLabel(internalEntityIri),
                             getEntityName = internalEntityIri => getEntityName(internalEntityIri)
                         ).toString().trim
-                        
+
                         // Parse the generated XML schema.
                         val parsedSchemaXml = try {
                             XML.loadString(unformattedSchemaXml)
@@ -598,7 +598,7 @@ object ResourcesRouteV1 extends Authenticator {
           */
         def generateSchemaZipFile(internalOntologyIri: IRI, userProfile: UserProfileV1): Future[Array[Byte]] = {
             for {
-            // Generate a bundle of XML schemas.
+                // Generate a bundle of XML schemas.
                 schemaBundle: XmlImportSchemaBundleV1 <- generateSchemasFromOntologies(
                     internalOntologyIri = internalOntologyIri,
                     userProfile = userProfile
@@ -631,7 +631,7 @@ object ResourcesRouteV1 extends Authenticator {
             )
 
             val validationFuture: Future[Unit] = for {
-            // Generate a bundle of XML schemas for validating the submitted XML.
+                // Generate a bundle of XML schemas for validating the submitted XML.
                 schemaBundle: XmlImportSchemaBundleV1 <- generateSchemasFromOntologies(mainOntologyIri, userProfile)
 
                 // Make a javax.xml.validation.SchemaFactory for instantiating XML schemas.
@@ -1188,7 +1188,7 @@ object ResourcesRouteV1 extends Authenticator {
                         val defaultNamespace = rootElement.getNamespace(null)
 
                         val multipleResourceCreateRequestFuture: Future[MultipleResourceCreateRequestV1] = for {
-                        // Validate the XML using XML schemas.
+                            // Validate the XML using XML schemas.
                             _ <- validateImportXml(
                                 xml = xml,
                                 defaultNamespace = defaultNamespace,

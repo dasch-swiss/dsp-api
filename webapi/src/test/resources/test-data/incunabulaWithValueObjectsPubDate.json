@@ -14,6 +14,8 @@
       "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#date"
     }
   },
+  "knora-api:hasStandoffClasses" : { },
+  "knora-api:hasStandoffProperties" : { },
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "dc" : "http://api.knora.org/ontology/dc/v2#",

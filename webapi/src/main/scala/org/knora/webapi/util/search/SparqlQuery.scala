@@ -234,7 +234,7 @@ case class FilterPattern(expression: Expression) extends QueryPattern {
   * Represents VALUES in a query.
   *
   * @param variable the variable that the values will be assigned to.
-  * @param values the IRIs that will be assigned to the variable.
+  * @param values   the IRIs that will be assigned to the variable.
   */
 case class ValuesPattern(variable: QueryVariable, values: Set[IriRef]) extends QueryPattern {
     def toSparql: String = s"VALUES ${variable.toSparql} { ${values.map(_.toSparql).mkString(" ")} }\n"

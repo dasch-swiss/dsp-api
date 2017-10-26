@@ -325,7 +325,7 @@
       "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
         "@type" : "owl:Restriction",
         "owl:cardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#GeometryValueAsGeometry"
+        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#geometryValueAsGeometry"
       }, {
         "@type" : "owl:Restriction",
         "owl:maxCardinality" : 1,
@@ -822,16 +822,6 @@
     "http://api.knora.org/ontology/knora-api/v2" : [ "http://api.knora.org/ontology/knora-api/v2#AudioFileValue", "http://api.knora.org/ontology/knora-api/v2#AudioRepresentation", "http://api.knora.org/ontology/knora-api/v2#BooleanValue", "http://api.knora.org/ontology/knora-api/v2#ColorValue", "http://api.knora.org/ontology/knora-api/v2#DDDFileValue", "http://api.knora.org/ontology/knora-api/v2#DDDRepresentation", "http://api.knora.org/ontology/knora-api/v2#DateValue", "http://api.knora.org/ontology/knora-api/v2#DecimalValue", "http://api.knora.org/ontology/knora-api/v2#DocumentFileValue", "http://api.knora.org/ontology/knora-api/v2#DocumentRepresentation", "http://api.knora.org/ontology/knora-api/v2#FileValue", "http://api.knora.org/ontology/knora-api/v2#GeomValue", "http://api.knora.org/ontology/knora-api/v2#GeonameValue", "http://api.knora.org/ontology/knora-api/v2#IntegerValue", "http://api.knora.org/ontology/knora-api/v2#IntervalValue", "http://api.knora.org/ontology/knora-api/v2#LinkValue", "http://api.knora.org/ontology/knora-api/v2#ListNode", "http://api.knora.org/ontology/knora-api/v2#ListValue", "http://api.knora.org/ontology/knora-api/v2#MovingImageFileValue", "http://api.knora.org/ontology/knora-api/v2#MovingImageRepresentation", "http://api.knora.org/ontology/knora-api/v2#Region", "http://api.knora.org/ontology/knora-api/v2#Representation", "http://api.knora.org/ontology/knora-api/v2#Resource", "http://api.knora.org/ontology/knora-api/v2#StillImageFileValue", "http://api.knora.org/ontology/knora-api/v2#StillImageRepresentation", "http://api.knora.org/ontology/knora-api/v2#TextFileValue", "http://api.knora.org/ontology/knora-api/v2#TextRepresentation", "http://api.knora.org/ontology/knora-api/v2#TextValue", "http://api.knora.org/ontology/knora-api/v2#UriValue", "http://api.knora.org/ontology/knora-api/v2#Value", "http://api.knora.org/ontology/knora-api/v2#XMLToStandoffMapping" ]
   },
   "knora-api:hasProperties" : {
-    "knora-api:GeometryValueAsGeometry" : {
-      "@id" : "knora-api:GeometryValueAsGeometry",
-      "@type" : "owl:DatatypeProperty",
-      "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/v2",
-      "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
-      "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#GeomValue",
-      "rdfs:comment" : "Represents a 2D geometry value as JSON.",
-      "rdfs:label" : "Geometry value as JSON",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#valueHas"
-    },
     "knora-api:audioFileValueHasDuration" : {
       "@id" : "knora-api:audioFileValueHasDuration",
       "@type" : "owl:DatatypeProperty",
@@ -987,6 +977,16 @@
       "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#FileValue",
       "rdfs:comment" : "Indicates whether this is file value is a preview.",
       "rdfs:label" : "File value is preview",
+      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#valueHas"
+    },
+    "knora-api:geometryValueAsGeometry" : {
+      "@id" : "knora-api:geometryValueAsGeometry",
+      "@type" : "owl:DatatypeProperty",
+      "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/v2",
+      "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
+      "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#GeomValue",
+      "rdfs:comment" : "Represents a 2D geometry value as JSON.",
+      "rdfs:label" : "Geometry value as JSON",
       "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#valueHas"
     },
     "knora-api:geonameValueAsGeonameCode" : {
@@ -1414,6 +1414,8 @@
       "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Value"
     }
   },
+  "knora-api:hasStandoffClasses" : { },
+  "knora-api:hasStandoffProperties" : { },
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",

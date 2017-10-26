@@ -123,7 +123,7 @@ object SearchRouteV2 extends Authenticator {
 
                     }
 
-                    val requestMessage = SearchResourceByLabelRequestV2(searchValue = searchString, limitToProject = limitToProject, limitToResourceClass = limitToResourceClass,userProfile = userProfile)
+                    val requestMessage = SearchResourceByLabelRequestV2(searchValue = searchString, limitToProject = limitToProject, limitToResourceClass = limitToResourceClass, userProfile = userProfile)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,

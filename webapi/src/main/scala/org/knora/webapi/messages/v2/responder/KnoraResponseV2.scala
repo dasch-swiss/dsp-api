@@ -86,7 +86,7 @@ sealed trait ValueContentV2 {
       * A representation of the `ValueContentV2` a [[JsonLDValue]].
       *
       * @param targetSchema the API schema to be used.
-      * @param settings the configuration options.
+      * @param settings     the configuration options.
       * @return a [[JsonLDValue]] that can be used to generate JSON-LD representing this value.
       */
     def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue
@@ -740,11 +740,12 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
         ) ++ projectSpecificOntologyPrefixes)
 
         val resourcesJsonObjects: Seq[JsonLDObject] = resources.map {
-            (resource: ReadResourceV2) => ReadResourceUtil.createJsonLDObjectFromReadResourceV2(
-                resource = resource,
-                targetSchema = targetSchema,
-                settings = settings
-            )
+            (resource: ReadResourceV2) =>
+                ReadResourceUtil.createJsonLDObjectFromReadResourceV2(
+                    resource = resource,
+                    targetSchema = targetSchema,
+                    settings = settings
+                )
         }
 
 

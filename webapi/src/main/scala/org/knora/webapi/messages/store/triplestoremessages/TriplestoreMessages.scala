@@ -43,7 +43,7 @@ case object CheckConnection extends TriplestoreRequest
 /**
   * Represents a SPARQL SELECT query to be sent to the triplestore. A successful response will be a [[SparqlSelectResponse]].
   *
-  * @param sparql       the SPARQL string.
+  * @param sparql the SPARQL string.
   */
 case class SparqlSelectRequest(sparql: String) extends TriplestoreRequest
 
@@ -105,7 +105,7 @@ case class VariableResultsRow(rowMap: ErrorHandlingMap[String, String]) {
   * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
   * [[SparqlConstructResponse]].
   *
-  * @param sparql       the SPARQL string.
+  * @param sparql the SPARQL string.
   */
 case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
 

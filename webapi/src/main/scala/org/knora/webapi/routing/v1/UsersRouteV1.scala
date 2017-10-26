@@ -34,6 +34,7 @@ import org.knora.webapi.util.StringFormatter
 object UsersRouteV1 extends Authenticator {
 
     /* bring json protocol into scope */
+
     import UserV1JsonProtocol._
 
     private val schemes = Array("http", "https")
@@ -63,41 +64,141 @@ object UsersRouteV1 extends Authenticator {
                         log
                     )
             } ~
-            post {
-                /* create a new user */
-                entity(as[CreateUserApiRequestV1]) { apiRequest => requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                post {
+                    /* create a new user */
+                    entity(as[CreateUserApiRequestV1]) { apiRequest =>
+                        requestContext =>
+                            val userProfile = getUserProfileV1(requestContext)
 
-                    val requestMessage = UserCreateRequestV1(
-                        createRequest = apiRequest,
-                        userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
+                            val requestMessage = UserCreateRequestV1(
+                                createRequest = apiRequest,
+                                userProfile,
+                                apiRequestID = UUID.randomUUID()
+                            )
 
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
+                            RouteUtilV1.runJsonRoute(
+                                requestMessage,
+                                requestContext,
+                                settings,
+                                responderManager,
+                                log
+                            )
+                    }
                 }
-            }
         } ~
-        path("v1" / "users" / Segment) { value =>
-            get {
-                /* return a single user identified by iri or email */
-                parameters("identifier" ? "iri") { (identifier: String) =>
+            path("v1" / "users" / Segment) { value =>
+                get {
+                    /* return a single user identified by iri or email */
+                    parameters("identifier" ? "iri") { (identifier: String) =>
+                        requestContext =>
+                            val userProfile = getUserProfileV1(requestContext)
+
+                            /* check if email or iri was supplied */
+                            val requestMessage = if (identifier == "email") {
+                                UserProfileByEmailGetRequestV1(value, UserProfileTypeV1.RESTRICTED, userProfile)
+                            } else {
+                                val userIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
+                                UserProfileByIRIGetRequestV1(userIri, UserProfileTypeV1.RESTRICTED, userProfile)
+                            }
+                            RouteUtilV1.runJsonRoute(
+                                requestMessage,
+                                requestContext,
+                                settings,
+                                responderManager,
+                                log
+                            )
+                    }
+                } ~
+                    put {
+                        /* update a user identified by iri */
+                        entity(as[ChangeUserApiRequestV1]) { apiRequest =>
+                            requestContext =>
+
+                                val userIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
+                                val userProfile = getUserProfileV1(requestContext)
+
+                                /* the api request is already checked at time of creation. see case class. */
+
+                                val requestMessage = if (apiRequest.oldPassword.isDefined && apiRequest.newPassword.isDefined) {
+                                    /* update existing user's password */
+                                    UserChangePasswordRequestV1(
+                                        userIri = userIri,
+                                        changeUserRequest = apiRequest,
+                                        userProfile,
+                                        apiRequestID = UUID.randomUUID()
+                                    )
+                                } else if (apiRequest.status.isDefined) {
+                                    /* update existing user's status */
+                                    UserChangeStatusRequestV1(
+                                        userIri,
+                                        changeUserRequest = apiRequest,
+                                        userProfile,
+                                        apiRequestID = UUID.randomUUID()
+                                    )
+                                } else if (apiRequest.systemAdmin.isDefined) {
+                                    /* update existing user's system admin membership status */
+                                    UserChangeSystemAdminMembershipStatusRequestV1(
+                                        userIri,
+                                        changeUserRequest = apiRequest,
+                                        userProfile,
+                                        apiRequestID = UUID.randomUUID()
+                                    )
+                                } else {
+                                    /* update existing user's basic information */
+                                    UserChangeBasicUserDataRequestV1(
+                                        userIri,
+                                        changeUserRequest = apiRequest,
+                                        userProfile,
+                                        apiRequestID = UUID.randomUUID()
+                                    )
+                                }
+
+                                RouteUtilV1.runJsonRoute(
+                                    requestMessage,
+                                    requestContext,
+                                    settings,
+                                    responderManager,
+                                    log
+                                )
+                        }
+                    } ~ delete {
+                    /* delete a user identified by iri */
+                    requestContext => {
+                        val userIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
+                        val userProfile = getUserProfileV1(requestContext)
+
+                        /* update existing user's status to false */
+                        val requestMessage = UserChangeStatusRequestV1(
+                            userIri,
+                            changeUserRequest = ChangeUserApiRequestV1(status = Some(false)),
+                            userProfile,
+                            apiRequestID = UUID.randomUUID()
+                        )
+
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                    }
+                }
+            } ~
+            path("v1" / "users" / "projects" / Segment) { userIri =>
+                get {
+                    /* get user's project memberships */
                     requestContext =>
                         val userProfile = getUserProfileV1(requestContext)
 
-                        /* check if email or iri was supplied */
-                        val requestMessage = if (identifier == "email") {
-                            UserProfileByEmailGetRequestV1(value, UserProfileTypeV1.RESTRICTED, userProfile)
-                        } else  {
-                            val userIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
-                            UserProfileByIRIGetRequestV1(userIri, UserProfileTypeV1.RESTRICTED, userProfile)
-                        }
+                        val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+
+                        val requestMessage = UserProjectMembershipsGetRequestV1(
+                            userIri = checkedUserIri,
+                            userProfileV1 = userProfile,
+                            apiRequestID = UUID.randomUUID()
+                        )
+
                         RouteUtilV1.runJsonRoute(
                             requestMessage,
                             requestContext,
@@ -107,293 +208,195 @@ object UsersRouteV1 extends Authenticator {
                         )
                 }
             } ~
-            put {
-                /* update a user identified by iri */
-                entity(as[ChangeUserApiRequestV1]) { apiRequest => requestContext =>
+            path("v1" / "users" / "projects" / Segment / Segment) { (userIri, projectIri) =>
+                post {
+                    /* add user to project */
+                    requestContext =>
+                        val userProfile = getUserProfileV1(requestContext)
 
-                    val userIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
-                    val userProfile = getUserProfileV1(requestContext)
+                        val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                        val checkedProjectIri = stringFormatter.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
 
-                    /* the api request is already checked at time of creation. see case class. */
+                        val requestMessage = UserProjectMembershipAddRequestV1(
+                            userIri = checkedUserIri,
+                            projectIri = checkedProjectIri,
+                            userProfileV1 = userProfile,
+                            apiRequestID = UUID.randomUUID()
+                        )
 
-                    val requestMessage = if (apiRequest.oldPassword.isDefined && apiRequest.newPassword.isDefined) {
-                        /* update existing user's password */
-                        UserChangePasswordRequestV1(
-                            userIri = userIri,
-                            changeUserRequest = apiRequest,
-                            userProfile,
-                            apiRequestID = UUID.randomUUID()
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
                         )
-                    } else if (apiRequest.status.isDefined) {
-                        /* update existing user's status */
-                        UserChangeStatusRequestV1(
-                            userIri,
-                            changeUserRequest = apiRequest,
-                            userProfile,
-                            apiRequestID = UUID.randomUUID()
-                        )
-                    } else if (apiRequest.systemAdmin.isDefined) {
-                        /* update existing user's system admin membership status */
-                        UserChangeSystemAdminMembershipStatusRequestV1(
-                            userIri,
-                            changeUserRequest = apiRequest,
-                            userProfile,
-                            apiRequestID = UUID.randomUUID()
-                        )
-                    } else {
-                        /* update existing user's basic information */
-                        UserChangeBasicUserDataRequestV1(
-                            userIri,
-                            changeUserRequest = apiRequest,
-                            userProfile,
-                            apiRequestID = UUID.randomUUID()
-                        )
+                } ~
+                    delete {
+                        /* remove user from project (and all groups belonging to this project) */
+                        requestContext =>
+                            val userProfile = getUserProfileV1(requestContext)
+
+                            val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                            val checkedProjectIri = stringFormatter.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
+
+                            val requestMessage = UserProjectMembershipRemoveRequestV1(
+                                userIri = checkedUserIri,
+                                projectIri = checkedProjectIri,
+                                userProfileV1 = userProfile,
+                                apiRequestID = UUID.randomUUID()
+                            )
+
+                            RouteUtilV1.runJsonRoute(
+                                requestMessage,
+                                requestContext,
+                                settings,
+                                responderManager,
+                                log
+                            )
                     }
+            } ~
+            path("v1" / "users" / "projects-admin" / Segment) { userIri =>
+                get {
+                    /* get user's project admin memberships */
+                    requestContext =>
+                        val userProfile = getUserProfileV1(requestContext)
 
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
+                        val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+
+                        val requestMessage = UserProjectAdminMembershipsGetRequestV1(
+                            userIri = checkedUserIri,
+                            userProfileV1 = userProfile,
+                            apiRequestID = UUID.randomUUID()
+                        )
+
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
                 }
-            } ~ delete {
-                /* delete a user identified by iri */
-                requestContext => {
-                    val userIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
-                    val userProfile = getUserProfileV1(requestContext)
+            } ~
+            path("v1" / "users" / "projects-admin" / Segment / Segment) { (userIri, projectIri) =>
+                post {
+                    /* add user to project admin */
+                    requestContext =>
+                        val userProfile = getUserProfileV1(requestContext)
 
-                    /* update existing user's status to false */
-                    val requestMessage = UserChangeStatusRequestV1(
-                        userIri,
-                        changeUserRequest = ChangeUserApiRequestV1(status = Some(false)),
-                        userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
+                        val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                        val checkedProjectIri = stringFormatter.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
 
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
+                        val requestMessage = UserProjectAdminMembershipAddRequestV1(
+                            userIri = checkedUserIri,
+                            projectIri = checkedProjectIri,
+                            userProfileV1 = userProfile,
+                            apiRequestID = UUID.randomUUID()
+                        )
+
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                } ~
+                    delete {
+                        /* remove user from project admin */
+                        requestContext =>
+                            val userProfile = getUserProfileV1(requestContext)
+
+                            val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                            val checkedProjectIri = stringFormatter.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
+
+                            val requestMessage = UserProjectAdminMembershipRemoveRequestV1(
+                                userIri = checkedUserIri,
+                                projectIri = checkedProjectIri,
+                                userProfileV1 = userProfile,
+                                apiRequestID = UUID.randomUUID()
+                            )
+
+                            RouteUtilV1.runJsonRoute(
+                                requestMessage,
+                                requestContext,
+                                settings,
+                                responderManager,
+                                log
+                            )
+                    }
+            } ~
+            path("v1" / "users" / "groups" / Segment) { userIri =>
+                get {
+                    /* get user's group memberships */
+                    requestContext =>
+                        val userProfile = getUserProfileV1(requestContext)
+
+                        val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+
+                        val requestMessage = UserGroupMembershipsGetRequestV1(
+                            userIri = checkedUserIri,
+                            userProfileV1 = userProfile,
+                            apiRequestID = UUID.randomUUID()
+                        )
+
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
                 }
-            }
-        } ~
-        path("v1" / "users" / "projects" / Segment) { userIri =>
-            get {
-                /* get user's project memberships */
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-
-                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
-
-                    val requestMessage = UserProjectMembershipsGetRequestV1(
-                        userIri = checkedUserIri,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
-        } ~
-        path("v1" / "users" / "projects" / Segment / Segment) { (userIri, projectIri) =>
-            post {
-                /* add user to project */
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-
-                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
-                    val checkedProjectIri = stringFormatter.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
-
-                    val requestMessage = UserProjectMembershipAddRequestV1(
-                        userIri = checkedUserIri,
-                        projectIri = checkedProjectIri,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
             } ~
-            delete {
-                /* remove user from project (and all groups belonging to this project) */
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+            path("v1" / "users" / "groups" / Segment / Segment) { (userIri, groupIri) =>
+                post {
+                    /* add user to group */
+                    requestContext =>
+                        val userProfile = getUserProfileV1(requestContext)
 
-                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
-                    val checkedProjectIri = stringFormatter.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
+                        val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                        val checkedGroupIri = stringFormatter.toIri(groupIri, () => throw BadRequestException(s"Invalid group IRI $groupIri"))
 
-                    val requestMessage = UserProjectMembershipRemoveRequestV1(
-                        userIri = checkedUserIri,
-                        projectIri = checkedProjectIri,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
+                        val requestMessage = UserGroupMembershipAddRequestV1(
+                            userIri = checkedUserIri,
+                            groupIri = checkedGroupIri,
+                            userProfileV1 = userProfile,
+                            apiRequestID = UUID.randomUUID()
+                        )
 
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                } ~
+                    delete {
+                        /* remove user from group */
+                        requestContext =>
+                            val userProfile = getUserProfileV1(requestContext)
+
+                            val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                            val checkedGroupIri = stringFormatter.toIri(groupIri, () => throw BadRequestException(s"Invalid group IRI $groupIri"))
+
+                            val requestMessage = UserGroupMembershipRemoveRequestV1(
+                                userIri = checkedUserIri,
+                                groupIri = checkedGroupIri,
+                                userProfileV1 = userProfile,
+                                apiRequestID = UUID.randomUUID()
+                            )
+
+                            RouteUtilV1.runJsonRoute(
+                                requestMessage,
+                                requestContext,
+                                settings,
+                                responderManager,
+                                log
+                            )
+                    }
             }
-        } ~
-        path("v1" / "users" / "projects-admin" / Segment) { userIri =>
-            get {
-                /* get user's project admin memberships */
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-
-                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
-
-                    val requestMessage = UserProjectAdminMembershipsGetRequestV1(
-                        userIri = checkedUserIri,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
-        } ~
-        path("v1" / "users" / "projects-admin" / Segment / Segment) { (userIri, projectIri) =>
-            post {
-                /* add user to project admin */
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-
-                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
-                    val checkedProjectIri = stringFormatter.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
-
-                    val requestMessage = UserProjectAdminMembershipAddRequestV1(
-                        userIri = checkedUserIri,
-                        projectIri = checkedProjectIri,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            } ~
-            delete {
-                /* remove user from project admin */
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-
-                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
-                    val checkedProjectIri = stringFormatter.toIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
-
-                    val requestMessage = UserProjectAdminMembershipRemoveRequestV1(
-                        userIri = checkedUserIri,
-                        projectIri = checkedProjectIri,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
-        } ~
-        path("v1" / "users" / "groups" / Segment) { userIri =>
-            get {
-                /* get user's group memberships */
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-
-                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
-
-                    val requestMessage = UserGroupMembershipsGetRequestV1(
-                        userIri = checkedUserIri,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
-        } ~
-        path ("v1" / "users" / "groups" / Segment / Segment) { (userIri, groupIri) =>
-            post {
-                /* add user to group */
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-
-                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
-                    val checkedGroupIri = stringFormatter.toIri(groupIri, () => throw BadRequestException(s"Invalid group IRI $groupIri"))
-
-                    val requestMessage = UserGroupMembershipAddRequestV1(
-                        userIri = checkedUserIri,
-                        groupIri = checkedGroupIri,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            } ~
-            delete {
-                /* remove user from group */
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-
-                    val checkedUserIri = stringFormatter.toIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
-                    val checkedGroupIri = stringFormatter.toIri(groupIri, () => throw BadRequestException(s"Invalid group IRI $groupIri"))
-
-                    val requestMessage = UserGroupMembershipRemoveRequestV1(
-                        userIri = checkedUserIri,
-                        groupIri = checkedGroupIri,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
-        }
     }
 }

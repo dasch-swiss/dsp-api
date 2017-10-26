@@ -904,7 +904,7 @@ object TransformData extends App {
                     val statementsWithoutCreatorOrPermissions = statements.filterNot {
                         (statement: Statement) =>
                             statement.getPredicate.stringValue == OntologyConstants.KnoraBase.AttachedToUser ||
-                            statement.getPredicate.stringValue == OntologyConstants.KnoraBase.HasPermissions
+                                statement.getPredicate.stringValue == OntologyConstants.KnoraBase.HasPermissions
                     }
 
                     val creatorStatement = valueFactory.createStatement(
@@ -1159,7 +1159,7 @@ object TransformData extends App {
                     }
 
                     statementsToWrite.foreach {
-                        statement =>  turtleWriter.handleStatement(statement)
+                        statement => turtleWriter.handleStatement(statement)
                     }
             }
 

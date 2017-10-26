@@ -92,11 +92,11 @@ case class PersistentMapGetRequestV2(mapPath: String) extends PersistentMapRespo
   * A request to set a value in a `knora-base:Map`. The map will be created if it does not exist. A successful response
   * will be a [[PersistentMapEntryPutResponseV2]].
   *
-  * @param mapPath     the map's path, which must be a sequence of names separated by slashes (`/`). Each name must
-  *                    be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
-  * @param mapEntryKey the map entry's key, which must be a valid XML
-  *                    [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
-  * @param apiRequestID  the ID of this API request.
+  * @param mapPath      the map's path, which must be a sequence of names separated by slashes (`/`). Each name must
+  *                     be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
+  * @param mapEntryKey  the map entry's key, which must be a valid XML
+  *                     [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
+  * @param apiRequestID the ID of this API request.
   */
 case class PersistentMapEntryPutRequestV2(mapPath: String, mapEntryKey: String, mapEntryValue: String, apiRequestID: UUID) extends PersistentMapResponderRequestV2 {
     private val stringFormatter = StringFormatter.getInstance
@@ -115,11 +115,11 @@ case class PersistentMapEntryPutResponseV2()
   * A request to delete a value from a `knora-base:Map`. If the map does not exist, a [[NotFoundException]] will be
   * returned. A successful response will be a [[PersistentMapEntryDeleteResponseV2]].
   *
-  * @param mapPath     the map's path, which must be a sequence of names separated by slashes (`/`). Each name must
-  *                    be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
-  * @param mapEntryKey the map entry's key, which must be a valid XML
-  *                    [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
-  * @param apiRequestID  the ID of this API request.
+  * @param mapPath      the map's path, which must be a sequence of names separated by slashes (`/`). Each name must
+  *                     be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
+  * @param mapEntryKey  the map entry's key, which must be a valid XML
+  *                     [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
+  * @param apiRequestID the ID of this API request.
   */
 case class PersistentMapEntryDeleteRequestV2(mapPath: String, mapEntryKey: String, apiRequestID: UUID) extends PersistentMapResponderRequestV2 {
     private val stringFormatter = StringFormatter.getInstance
@@ -137,9 +137,9 @@ case class PersistentMapEntryDeleteResponseV2()
   * A request to delete a `knora-base:Map` along with all its entries. If the map does not exist, a
   * [[NotFoundException]] will be returned. A successful response will be a [[PersistentMapDeleteResponseV2]].
   *
-  * @param mapPath the map's path, which must be a sequence of names separated by slashes (`/`). Each name must
-  *                be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
-  * @param apiRequestID  the ID of this API request.
+  * @param mapPath      the map's path, which must be a sequence of names separated by slashes (`/`). Each name must
+  *                     be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
+  * @param apiRequestID the ID of this API request.
   */
 case class PersistentMapDeleteRequestV2(mapPath: String, apiRequestID: UUID) extends PersistentMapResponderRequestV2 {
     private val stringFormatter = StringFormatter.getInstance

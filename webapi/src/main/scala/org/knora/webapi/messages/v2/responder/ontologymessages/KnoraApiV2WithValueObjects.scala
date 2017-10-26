@@ -2376,11 +2376,11 @@ object KnoraApiV2WithValueObjects {
     /**
       * Makes a [[ClassEntityInfoV2]].
       *
-      * @param classIri            the IRI of the class.
-      * @param subClassOf          the set of direct superclasses of this class.
-      * @param predicates          the predicates of the class.
-      * @param canBeInstantiated   true if this is a Knora resource class that can be instantiated via the Knora API.
-      * @param cardinalities       the cardinalities of the class.
+      * @param classIri          the IRI of the class.
+      * @param subClassOf        the set of direct superclasses of this class.
+      * @param predicates        the predicates of the class.
+      * @param canBeInstantiated true if this is a Knora resource class that can be instantiated via the Knora API.
+      * @param cardinalities     the cardinalities of the class.
       * @return a [[ClassEntityInfoV2]].
       */
     private def makeClass(classIri: IRI,

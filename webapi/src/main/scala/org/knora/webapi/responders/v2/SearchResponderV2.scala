@@ -1123,7 +1123,7 @@ class SearchResponderV2 extends Responder {
         }
 
         for {
-        // Do type inspection and remove type annotations from the WHERE clause.
+            // Do type inspection and remove type annotations from the WHERE clause.
 
             typeInspector <- FastFuture.successful(new ExplicitTypeInspectorV2(apiSchema))
             whereClauseWithoutAnnotations: WhereClause = typeInspector.removeTypeAnnotations(inputQuery.whereClause)
@@ -1251,10 +1251,10 @@ class SearchResponderV2 extends Responder {
     /**
       * Performs a search for resources by their rdf:label.
       *
-      * @param searchValue the values to search for.
-      * @param limitToProject limit search to given project.
+      * @param searchValue          the values to search for.
+      * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param userProfile the profile of the client making the request.
+      * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
     private def searchResourcesByLabelV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
@@ -1272,7 +1272,7 @@ class SearchResponderV2 extends Responder {
             // separate resources and value objects
             queryResultsSeparated = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResourceByLabelResponse, userProfile = userProfile)
 
-        //_ = println(queryResultsSeparated)
+            //_ = println(queryResultsSeparated)
 
         } yield ReadResourcesSequenceV2(numberOfResources = queryResultsSeparated.size, resources = ConstructResponseUtilV2.createSearchResponse(queryResultsSeparated))
 
