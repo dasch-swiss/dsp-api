@@ -59,6 +59,14 @@ jobs:
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt graphdb:test
     - stage: test
       script:
+        # start and initialize AllegroGraph
+        - docker run -d -p 10000-10035:10000-10035 --shm-size 1g --name agraph dhlabbasel/agraph
+        - sleep 15
+        - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./allegrograph-init-knora-test-unit.sh
+        # start the built-in webapi server tests
+        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt allegro:test
+    - stage: test
+      script:
         # prepare needed graphdb-se files
         - mkdir -p $TRAVIS_BUILD_DIR/data/conf
         - cp $TRAVIS_BUILD_DIR/private/graphdb.license $TRAVIS_BUILD_DIR/data/conf/graphdb.license
