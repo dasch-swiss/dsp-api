@@ -49,7 +49,7 @@ object ResourcesRouteV2 extends Authenticator {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    if (resIris.size > settings.v2ExtendedSearchResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ExtendedSearchResultsPerPage}")
+                    if (resIris.size > settings.v2ResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ResultsPerPage}")
 
                     val resourceIris: Seq[IRI] = resIris.map {
                         resIri: String =>
@@ -72,7 +72,7 @@ object ResourcesRouteV2 extends Authenticator {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    if (resIris.size > settings.v2ExtendedSearchResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ExtendedSearchResultsPerPage}")
+                    if (resIris.size > settings.v2ResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ResultsPerPage}")
 
                     val resourceIris: Seq[IRI] = resIris.map {
                             resIri: String =>
