@@ -1,0 +1,70 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+@import org.knora.webapi.SparqlGenerationException
+@import org.knora.webapi.util.search.ApacheLuceneSupport.MatchStringWhileTyping
+
+@*
+ * Select subquery for a search for resources by their label.
+ *
+ * @param searchTerm search terms.
+ * @param limitToProject limit search to the given project.
+ * @param limitToResourceClass limit search to given resource class.
+ * @param limit maximum amount of resources to be returned.
+ * @param offset offset to be used for paging.
+ * @param countQuery indicates whether it is a count query or the actual resources should be returned.
+ *@
+
+ @(searchTerm: MatchStringWhileTyping,
+   limitToProject: Option[IRI],
+   limitToResourceClass: Option[IRI],
+   limit: Int,
+   offset: Int,
+   countQuery: Boolean)
+
+@if(!countQuery) {
+    SELECT DISTINCT ?resource ?label
+} else {
+    SELECT (count(distinct ?resource) as ?count)
+}
+WHERE {
+    ?resource a knora-base:Resource ;
+        knora-base:isDeleted false .
+
+    @if(limitToResourceClass.nonEmpty) {
+        ?resource a <@limitToResourceClass.get> .
+    }
+
+    @if(limitToProject.nonEmpty) {
+        ?resource knora-base:attachedToProject <@limitToProject.get>
+    }
+
+    GRAPH <http://www.ontotext.com/explicit> {
+            ?resource rdfs:label ?label .
+        }
+
+    ?label <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> @searchTerm.generateLiteralForLuceneIndexWithoutExactSequence .
+}
+@if(!countQuery) {
+ORDER BY ?resource @* Needed for paging: order needs to be deterministic *@
+}
+LIMIT @limit
+OFFSET @offset

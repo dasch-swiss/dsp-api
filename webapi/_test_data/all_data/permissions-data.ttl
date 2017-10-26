@@ -314,3 +314,26 @@
                       knora-base:forGroup knora-base:ProjectMember ;
 
                       knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+
+##########################################################
+#
+# Sweet and tasty but forbidden resource
+#
+# but of the tree of the knowledge of good and evil, thou shalt not eat of it
+#
+##########################################################
+
+<http://data.knora.org/permissions/forbiddenResource> a knora-base:ForbiddenResource ;
+
+                      rdfs:label """This resource is a proxy for a resource you are not allowed to see (may depend on the context: query path)""" ;
+
+                      knora-base:isDeleted false ;
+
+                      knora-base:attachedToUser <http://data.knora.org/users/root> ;
+
+                      knora-base:attachedToProject knora-base:SystemProject ;
+
+                      knora-base:creationDate "2017-10-06T11:05:37Z"^^xsd:dateTimeStamp ;
+
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|V knora-base:UnknownUser" .

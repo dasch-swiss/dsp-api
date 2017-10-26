@@ -29,6 +29,7 @@ object KnoraApiV2Simple {
 
     val Resource: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.Resource,
+        subClassOf = Set(OntologyConstants.SchemaOrg.Thing),
         cardinalities = Map(
             OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2Simple.HasStandoffLinkTo -> Cardinality.MayHaveMany,

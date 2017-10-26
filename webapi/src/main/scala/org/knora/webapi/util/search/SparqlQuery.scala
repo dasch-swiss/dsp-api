@@ -36,12 +36,57 @@ sealed trait SparqlGenerator {
 sealed trait Entity extends Expression
 
 /**
+  * Represents something that can be returned by a SELECT query.
+  */
+trait SelectQueryColumn extends Entity
+
+/**
   * Represents a variable in a query.
   *
   * @param variableName the name of the variable.
   */
-case class QueryVariable(variableName: String) extends Entity {
+case class QueryVariable(variableName: String) extends SelectQueryColumn {
     def toSparql: String = s"?$variableName"
+}
+
+/**
+  * Represents a GROUP_CONCAT statement that combines several values into one, separated by a character.
+  *
+  * @param inputVariable      the variable to be concatenated.
+  * @param separator          the separator to be used when concatenating the single results.
+  * @param outputVariableName the name of the variable representing the concatenated result.
+  */
+case class GroupConcat(inputVariable: QueryVariable, separator: Char, outputVariableName: String) extends SelectQueryColumn {
+
+    val outputVariable = QueryVariable(outputVariableName)
+
+    def toSparql: String = {
+        s"(GROUP_CONCAT(${inputVariable.toSparql}; SEPARATOR='${separator}') AS ${outputVariable.toSparql})"
+    }
+}
+
+/**
+  * Represents a COUNT statement that counts how many instances/rows are returned for [[inputVariable]].
+  *
+  * @param inputVariable the variable to count.
+  * @param distinct indicates whether DISTINCT has to be used inside COUNT.
+  * @param outputVariableName the name of the variable representing the result.
+  */
+case class Count(inputVariable: QueryVariable, distinct: Boolean = true, outputVariableName: String) extends SelectQueryColumn {
+
+    val outputVariable = QueryVariable(outputVariableName)
+
+    val distinctAsStr: String = if (distinct) {
+        "DISTINCT"
+    } else {
+        ""
+    }
+
+    def toSparql: String = {
+
+        s"(COUNT($distinctAsStr ${inputVariable.toSparql}) AS ${outputVariable.toSparql})"
+    }
+
 }
 
 /**
@@ -49,7 +94,7 @@ case class QueryVariable(variableName: String) extends Entity {
   *
   * @param iri the IRI.
   */
-case class IriRef(iri: IRI) extends Entity {
+case class IriRef(iri: IRI, propertyPathOperator: Option[Char] = None) extends Entity {
     private val stringFormatter = StringFormatter.getInstance
 
     val isInternalEntityIri: Boolean = stringFormatter.isInternalEntityIri(iri)
@@ -69,7 +114,14 @@ case class IriRef(iri: IRI) extends Entity {
         }
     }
 
-    def toSparql: String = s"<$iri>"
+    def toSparql: String = {
+
+        if (propertyPathOperator.nonEmpty) {
+            s"<$iri>${propertyPathOperator.get}"
+        } else {
+            s"<$iri>"
+        }
+    }
 }
 
 /**
@@ -234,7 +286,7 @@ case class FilterPattern(expression: Expression) extends QueryPattern {
   * Represents VALUES in a query.
   *
   * @param variable the variable that the values will be assigned to.
-  * @param values the IRIs that will be assigned to the variable.
+  * @param values   the IRIs that will be assigned to the variable.
   */
 case class ValuesPattern(variable: QueryVariable, values: Set[IriRef]) extends QueryPattern {
     def toSparql: String = s"VALUES ${variable.toSparql} { ${values.map(_.toSparql).mkString(" ")} }\n"
@@ -347,7 +399,7 @@ case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereCl
   * @param limit       the maximum number of result rows to be returned.
   * @param offset      the offset to be used (limit of the previous query + 1 to do paging).
   */
-case class SelectQuery(variables: Seq[QueryVariable], useDistinct: Boolean = true, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], limit: Option[Int] = None, offset: Long = 0) extends SparqlGenerator {
+case class SelectQuery(variables: Seq[SelectQueryColumn], useDistinct: Boolean = true, whereClause: WhereClause, groupBy: Seq[QueryVariable] = Seq.empty[QueryVariable], orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], limit: Option[Int] = None, offset: Long = 0) extends SparqlGenerator {
     def toSparql: String = {
         val selectWhereSparql = "SELECT " + {
             if (useDistinct) {
@@ -356,6 +408,12 @@ case class SelectQuery(variables: Seq[QueryVariable], useDistinct: Boolean = tru
                 ""
             }
         } + variables.map(_.toSparql).mkString(" ") + "\n" + whereClause.toSparql + "\n"
+
+        val groupBySparql = if (groupBy.nonEmpty) {
+            "GROUP BY " + groupBy.map(_.toSparql).mkString(" ") + "\n"
+        } else {
+            ""
+        }
 
         val orderBySparql = if (orderBy.nonEmpty) {
             "ORDER BY " + orderBy.map(_.toSparql).mkString(" ")
@@ -371,7 +429,7 @@ case class SelectQuery(variables: Seq[QueryVariable], useDistinct: Boolean = tru
             ""
         }
 
-        selectWhereSparql + orderBySparql + offsetSparql + limitSparql
+        selectWhereSparql + groupBySparql + orderBySparql + offsetSparql + limitSparql
 
 
     }
