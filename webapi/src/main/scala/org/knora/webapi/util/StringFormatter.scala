@@ -686,7 +686,7 @@ class StringFormatter private(settings: SettingsImpl) {
       * @return `true` if the ontology name is reserved for a built-in ontology.
       */
     def isBuiltInOntologyName(ontologyName: String): Boolean = {
-        OntologyConstants.BuiltInOntologyLabels.contains(ontologyName)
+        OntologyConstants.BuiltInOntologyLabels.contains(ontologyName) || ontologyName.toLowerCase.startsWith("knora")
     }
 
     /**
