@@ -1,0 +1,15 @@
+FROM dhlabbasel/webapi-base:latest
+
+MAINTAINER Ivan Subotic "ivan.subotic@unibas.ch"
+
+# setup src folder
+RUN mkdir /src
+
+WORKDIR /src
+
+COPY . /src
+
+VOLUME ["/localdata"]
+
+# Expose the webapi default port
+EXPOSE 3333

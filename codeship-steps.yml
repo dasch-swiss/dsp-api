@@ -1,0 +1,7 @@
+- name: test
+  service: webapi
+  command: sbt test
+
+- name: it
+  service: webapi
+  command: sbt it:test

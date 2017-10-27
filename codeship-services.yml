@@ -1,0 +1,14 @@
+webapi:
+  build:
+    image: dhlabbasel/webapi
+    context: webapi
+    dockerfile: Dockerfile.testing
+  links:
+    - graphdb-free
+    - sipi
+
+graphdb-free:
+  image: dhlabbasel/graphdb-free
+
+sipi:
+   image: dhlabbasel/sipi
