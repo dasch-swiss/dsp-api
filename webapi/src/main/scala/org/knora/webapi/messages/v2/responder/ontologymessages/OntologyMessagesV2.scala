@@ -320,7 +320,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                     stringFormatter.toExternalOntologyIri(ontologyIri = ontologyIri, targetSchema = targetSchema)
                 }
 
-                val prefix = stringFormatter.getOntologyPrefixLabelFromExternalOntologyIri(externalOntologyIri, () => throw InconsistentTriplestoreDataException(s"Can't parse $externalOntologyIri as a Knora API v2 ontology IRI"))
+                val prefix = stringFormatter.getOntologyIDFromExternalOntologyIri(externalOntologyIri, () => throw InconsistentTriplestoreDataException(s"Can't parse $externalOntologyIri as a Knora API v2 ontology IRI")).getPrefixLabel
                 prefix -> JsonLDString(externalOntologyIri + "#")
         }.toMap
 
@@ -947,7 +947,7 @@ case class ClassEntityInfoV2(classIri: IRI,
 
         // If this is a project-specific class, add the standard cardinalities from knora-api:Resource for the target
         // schema.
-        val schemaSpecificCardinalities: Map[IRI, Cardinality.Value] = if (!stringFormatter.isBuiltInEntityIri(classIriWithTargetSchema)) {
+        val schemaSpecificCardinalities: Map[IRI, Cardinality.Value] = if (!stringFormatter.isBuiltInApiV2EntityIri(classIriWithTargetSchema)) {
             targetSchema match {
                 case ApiV2Simple => filteredCardinalities ++ KnoraApiV2Simple.Resource.cardinalities
                 case ApiV2WithValueObjects => filteredCardinalities ++ KnoraApiV2WithValueObjects.Resource.cardinalities

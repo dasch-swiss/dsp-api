@@ -459,10 +459,10 @@ object ResourcesRouteV1 extends Authenticator {
               * @return the prefix label that Knora uses to refer to the ontology.
               */
             def getNamespacePrefixLabel(internalEntityIri: IRI): String = {
-                val prefixLabel = stringFormatter.getOntologyPrefixLabelFromInternalEntityIri(
+                val prefixLabel = stringFormatter.getOntologyIDFromInternalEntityIri(
                     internalEntityIri = internalEntityIri,
                     errorFun = () => throw InconsistentTriplestoreDataException(s"Invalid entity IRI: $internalEntityIri")
-                )
+                ).getPrefixLabel
 
                 // If the schema generation template asks for the prefix label of something in knora-base, return
                 // the prefix label of the Knora XML import v1 namespace instead.
@@ -1216,9 +1216,9 @@ object ResourcesRouteV1 extends Authenticator {
         } ~ path("v1" / "resources" / "xmlimportschemas" / Segment) { internalOntologyIri =>
             get {
                 // Get the prefix label of the specified internal ontology.
-                val internalOntologyPrefixLabel: String = stringFormatter.getOntologyPrefixLabelFromInternalOntologyIri(
+                val internalOntologyPrefixLabel: String = stringFormatter.getOntologyIDFromInternalOntologyIri(
                     internalOntologyIri, () => throw BadRequestException(s"Invalid internal ontology IRI: $internalOntologyIri")
-                )
+                ).getPrefixLabel
 
                 // Respond with a Content-Disposition header specifying the filename of the generated Zip file.
                 respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> (internalOntologyPrefixLabel + "-xml-schemas.zip")))) {
