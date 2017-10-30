@@ -11,10 +11,7 @@ RUN \
   cd /src && \
   sbt stage && \
   mkdir /salsah && \
-  cp -r /src/target/universal/stage/* /salsah && \
-  rm -rf /src
+  cp -r /src/target/universal/stage/* /salsah
 
 # Expose the webapi default port
 EXPOSE 3335
-
-CMD ["/salsah/bin/salsah"]

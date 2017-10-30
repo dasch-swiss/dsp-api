@@ -2,13 +2,20 @@ webapi:
   build:
     image: dhlabbasel/webapi
     context: webapi
-    dockerfile: Dockerfile.testing
+    dockerfile: Dockerfile.ci
   links:
-    - graphdb-free
+    - graphdb
     - sipi
+    - salsah
 
-graphdb-free:
+graphdb:
   image: dhlabbasel/graphdb-free
 
 sipi:
-   image: dhlabbasel/sipi
+  image: dhlabbasel/sipi
+
+salsah:
+  build:
+    image: dhlabbasel/salsah
+    context: salsah
+    dockerfile: Dockerfile.ci

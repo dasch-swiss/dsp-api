@@ -1,7 +1,13 @@
-- name: test
+# Webapi standard tests. Needs only graphdb
+-
+name: test
   service: webapi
   command: sbt test
 
+# Webapi integration tests. Needs graphdb and sipi (with production config)
 - name: it
   service: webapi
   command: sbt it:test
+
+# Browser tests. Needs webapi (running), graphdb, sipi (with test config), and salsah (running)
+- name: browser

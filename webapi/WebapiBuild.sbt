@@ -1,6 +1,4 @@
 import sbt._
-import sbt.Keys._
-import spray.revolver.RevolverPlugin._
 import NativePackagerHelper._
 
 connectInput in run := true
@@ -64,25 +62,43 @@ lazy val webapi = (project in file(".")).
             fork in Test := true,
             javaOptions in Test ++= javaTestOptions,
             parallelExecution in Test := false,
-            // enable publishing the jar produced by `sbt it:package`
+            // enable publishing the jar produced by `sbt test:package` and `sbt it:package`
+            publishArtifact in (Test, packageBin) := true,
             publishArtifact in (IntegrationTest, packageBin) := true
         ).
-        settings( // enable deployment staging with `sbt stage`
-          mappings in Universal ++= {
-            // copy the scripts folder
-            directory("scripts") ++
-            // copy configuration files to config directory
-            contentOf("src/main/resources").toMap.mapValues("config/" + _)
-          },
-          // add 'config' directory first in the classpath of the start script,
-          scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
-          // add license
-          licenses := Seq(("GNU AGPL", url("https://www.gnu.org/licenses/agpl-3.0"))),
-          // need this here, but why?
-          mainClass in Compile := Some("org.knora.webapi.Main")
+        settings( // enable deployment staging with `sbt stage`. uses fat jar assembly.
+            // we specify the name for our fat jar
+            assemblyJarName in assembly := "assembly-webapi.jar",
+            // disable running of tests before fat jar assembly!
+            test in assembly := {},
+            mappings in Universal ++= {
+                // copy the scripts folder
+                directory("scripts") ++
+                // copy the configuration files to config directory
+                contentOf("configs").toMap.mapValues("config/" + _) ++
+                // copy configuration files to config directory
+                contentOf("src/main/resources").toMap.mapValues("config/" + _)
+            },
+            // removes all jar mappings in universal and appends the fat jar
+            mappings in Universal := {
+                // universalMappings: Seq[(File,String)]
+                val universalMappings = (mappings in Universal).value
+                val fatJar = (assembly in Compile).value
+                // removing means filtering
+                val filtered = universalMappings filter {
+                    case (file, name) =>  ! name.endsWith(".jar")
+                }
+                // add the fat jar
+                filtered :+ (fatJar -> ("lib/" + fatJar.getName))
+            },
+            // add 'config' directory first in the classpath of the start script,
+            scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
+            // add license
+            licenses := Seq(("GNU AGPL", url("https://www.gnu.org/licenses/agpl-3.0"))),
+            // need this here, but why?
+            mainClass in Compile := Some("org.knora.webapi.Main")
         ).
-        settings(Revolver.settings: _*).
-        enablePlugins(SbtTwirl). // Enable the SbtTwirl plugin
+        enablePlugins(SbtTwirl). // Enable the sbt-twirl plugin
         enablePlugins(JavaAppPackaging) // Enable the sbt-native-packager plugin
 
 lazy val webApiCommonSettings = Seq(
@@ -113,12 +129,12 @@ lazy val webApiLibs = Seq(
     //CORS support
     "ch.megard" %% "akka-http-cors" % "0.1.10",
     // jena
-    "org.apache.jena" % "apache-jena-libs" % "3.0.0" exclude("org.slf4j", "slf4j-log4j12"),
-    "org.apache.jena" % "jena-text" % "3.0.0" exclude("org.slf4j", "slf4j-log4j12"),
+    "org.apache.jena" % "apache-jena-libs" % "3.4.0" exclude("org.slf4j", "slf4j-log4j12"),
+    "org.apache.jena" % "jena-text" % "3.4.0" exclude("org.slf4j", "slf4j-log4j12"),
     // http client
     // "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
     // logging
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
     "ch.qos.logback" % "logback-classic" % "1.1.7",
     // input validation
     "commons-validator" % "commons-validator" % "1.6",

@@ -32,6 +32,8 @@ lazy val salsah = (project in file(".")).
             mappings in Universal ++= {
                 // copy the public folder
                 directory("src/public") ++
+                // copy the configuration files to config directory
+                contentOf("configs").toMap.mapValues("config/" + _) ++
                 // copy configuration files to config directory
                 contentOf("src/main/resources").toMap.mapValues("config/" + _)
             },
