@@ -29,12 +29,59 @@ object KnoraApiV2Simple {
 
     val Resource: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.Resource,
+        subClassOf = Set(OntologyConstants.SchemaOrg.Thing),
         cardinalities = Map(
             OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2Simple.HasStandoffLinkTo -> Cardinality.MayHaveMany,
             OntologyConstants.KnoraApiV2Simple.CreationDate -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2Simple.LastModificationDate -> Cardinality.MayHaveOne
         )
+    )
+
+    val Result: PropertyEntityInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Simple.Result,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "Ergebnis",
+                    LanguageCodes.EN -> "result",
+                    LanguageCodes.FR -> "résultat",
+                    LanguageCodes.IT -> "risultato"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Provides a message indicating that an operation was successful"
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.String)
+    )
+
+    val Error: PropertyEntityInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Simple.Error,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "Fehler",
+                    LanguageCodes.EN -> "error",
+                    LanguageCodes.FR -> "erreur",
+                    LanguageCodes.IT -> "errore"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Provides a message indicating that an operation was unsuccessful"
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.String)
     )
 
     val HasStandoffLinkTo: PropertyEntityInfoV2 = makeProperty(
@@ -967,6 +1014,8 @@ object KnoraApiV2Simple {
       * All the properties in the `knora-api` v2 ontology in the [[ApiV2Simple]] schema.
       */
     val Properties: Map[IRI, PropertyEntityInfoV2] = Set(
+        Result,
+        Error,
         CreationDate,
         LastModificationDate,
         HasValue,

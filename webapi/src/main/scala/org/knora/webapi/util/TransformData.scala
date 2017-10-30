@@ -828,7 +828,7 @@ object TransformData extends App {
                     statement.getPredicate.stringValue match {
                         case OntologyConstants.KnoraBase.ValueHasString =>
                             // Replace \r with INFORMATION SEPARATOR TWO.
-                            val objectWithSeparators = statement.getObject.stringValue.replace('\r', FormatConstants.INFORMATION_SEPARATOR_TWO)
+                            val objectWithSeparators = statement.getObject.stringValue.replace('\r', StringFormatter.INFORMATION_SEPARATOR_TWO)
 
                             // Insert linefeeds that were previously represented as "linebreak" standoff tags.
                             val objectWithLinefeeds: String = linefeedsToInsert.get(statement.getSubject.stringValue) match {

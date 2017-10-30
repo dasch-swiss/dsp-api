@@ -41,6 +41,7 @@ class SettingsImpl(config: Config) extends Extension {
 
     val knoraApiHost: String = config.getString("app.http.knora-api.host")
     val knoraApiHttpPort: Int = config.getInt("app.http.knora-api.http-port")
+    val knoraApiHttpUrlStart: String = "http://" + knoraApiHost + (if (knoraApiHttpPort != 80) ":" + knoraApiHttpPort else "")
     val knoraApiHttpsPort: Int = config.getInt("app.http.knora-api.https-port")
     val knoraApiUseHttp: Boolean = config.getBoolean("app.http.knora-api.use-http")
     val knoraApiUseHttps: Boolean = config.getBoolean("app.http.knora-api.use-https")
@@ -89,31 +90,28 @@ class SettingsImpl(config: Config) extends Extension {
     val triplestoreType: String = config.getString("app.triplestore.dbtype")
     val triplestoreHost: String = config.getString("app.triplestore.host")
 
-    val v2ExtendedSearchResultsPerPage: Int = config.getInt("app.v2.extended-search.results-per-page")
+    val v2ResultsPerPage: Int = config.getInt("app.v2.resources-sequence.results-per-page")
+    val searchValueMinLength: Int = config.getInt("app.v2.fulltext-search.search-value-min-length")
 
     val triplestorePort: Int = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => config.getInt("app.triplestore.graphdb.port")
-        case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getInt("app.triplestore.graphdb-free.port")
         case HTTP_FUSEKI_TS_TYPE => config.getInt("app.triplestore.fuseki.port")
         case other => 9999
     }
 
     val triplestoreDatabaseName: String = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => config.getString("app.triplestore.graphdb.repository-name")
-        case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb-free.repository-name")
         case HTTP_FUSEKI_TS_TYPE => config.getString("app.triplestore.fuseki.repository-name")
         case other => ""
     }
 
     val triplestoreUsername: String = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => config.getString("app.triplestore.graphdb.username")
-        case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb-free.username")
         case other => ""
     }
 
     val triplestorePassword: String = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => config.getString("app.triplestore.graphdb.password")
-        case HTTP_GRAPH_DB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb-free.password")
         case other => ""
     }
 

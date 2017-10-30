@@ -272,6 +272,14 @@ WHERE {
 
                     }
 
+                    case "http://www.knora.org/ontology/knora-base#BooleanValue" => {
+
+                        ?valueObject@index knora-base:valueHasBoolean @searchCriterion.searchValue .
+
+                        BIND('@searchCriterion.searchValue' AS ?literal@index)
+
+                    }
+
                     case other => {
                         @{throw SparqlGenerationException(s"Value type $other is not supported with comparison operator ${searchCriterion.comparisonOperator}"); ()}
                     }
@@ -314,6 +322,14 @@ WHERE {
 
                         FILTER (@searchCriterion.dateEnd < ?dateStart@index || @searchCriterion.dateStart > ?dateEnd@index )
                         BIND(?dateString@index as ?literal@index)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#BooleanValue" => {
+
+                        ?valueObject@index knora-base:valueHasBoolean ?literal@index .
+
+                        FILTER (?literal@index != @searchCriterion.searchValue)
 
                     }
 

@@ -18,7 +18,7 @@ package org.knora.webapi
 
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import org.knora.webapi.util.CacheUtil
+import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 
 
@@ -30,6 +30,8 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
     def actorRefFactory = system
 
     val settings = Settings(system)
+    StringFormatter.init(settings)
+
     val logger = akka.event.Logging(system, this.getClass())
     implicit val log = logger
 

@@ -31,7 +31,7 @@ import org.knora.salsah.SettingsImpl
 import org.scalatest._
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor}
+import scala.concurrent.{Await, ExecutionContextExecutor}
 
 /**
   * An abstract base class for Selenium tests of the SALSAH user interface.

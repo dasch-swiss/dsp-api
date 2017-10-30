@@ -329,7 +329,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
             "execute the search with the lucene index for 'knora-base:valueHasString' properties" in {
                 within(1000.millis) {
                     tsType match {
-                        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => storeManager ! SparqlSelectRequest(textSearchQueryGraphDBValueHasString)
+                        case HTTP_GRAPH_DB_TS_TYPE => storeManager ! SparqlSelectRequest(textSearchQueryGraphDBValueHasString)
                         case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
                     }
                     expectMsgPF(timeout) {
@@ -344,7 +344,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
             "execute the search with the lucene index for 'rdfs:label' properties" in {
                 within(1000.millis) {
                     tsType match {
-                        case HTTP_GRAPH_DB_TS_TYPE | HTTP_GRAPH_DB_FREE_TS_TYPE => storeManager ! SparqlSelectRequest(textSearchQueryGraphDBRDFLabel)
+                        case HTTP_GRAPH_DB_TS_TYPE => storeManager ! SparqlSelectRequest(textSearchQueryGraphDBRDFLabel)
                         case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
                     }
                     expectMsgPF(timeout) {

@@ -46,7 +46,7 @@ import scala.concurrent.duration._
 class SalsahPage(pageUrl: String, headless: Boolean) {
 
     // How long to wait for results obtained using the 'eventually' function
-    implicit val patienceConfig = PatienceConfig(timeout = scaled(10.seconds), interval = scaled(20.millis))
+    implicit val patienceConfig = PatienceConfig(timeout = scaled(15.seconds), interval = scaled(20.millis))
 
     val chromeDriverPath = "lib/chromedriver/chromedriver"
 
@@ -97,18 +97,19 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       * @param fullName user's full name
       */
     def doLogin(email: String, password: String, fullName: String): Unit = {
-        val loginButton = driver.findElement(By.id("dologin"))
-        loginButton.click()
 
-        val userInput = driver.findElement(By.id("user_id"))
-        val passwordInput = driver.findElement(By.id("password"))
-        val sendCredentials = driver.findElement(By.id("login_button"))
+            val loginButton = eventually(driver.findElement(By.id("dologin")))
+            loginButton.click()
 
-        userInput.sendKeys(email)
+            val userInput = driver.findElement(By.id("user_id"))
+            val passwordInput = driver.findElement(By.id("password"))
+            val sendCredentials = driver.findElement(By.id("login_button"))
 
-        passwordInput.sendKeys("test")
+            userInput.sendKeys(email)
 
-        sendCredentials.click()
+            passwordInput.sendKeys("test")
+
+            sendCredentials.click()
 
         eventually {
             driver.findElement(By.xpath("//*[@id=\"userctrl\"]")).getText.contains(fullName)
@@ -120,10 +121,10 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       * Logs the user out.
       */
     def doLogout(): Unit = {
-        val logoutButton = driver.findElement(By.id("dologout"))
-        logoutButton.click()
-
         eventually {
+            val logoutButton = driver.findElement(By.id("dologout"))
+            logoutButton.click()
+
             val logoutConfirmButton = driver.findElement(By.id("logout_button"))
             logoutConfirmButton.click()
         }
@@ -151,7 +152,9 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       * Returns the SALSAH simple search field.
       */
     def getSimpleSearchField: WebElement = {
-        driver.findElement(By.id("simplesearch"))
+        eventually {
+            driver.findElement(By.id("simplesearch"))
+        }
     }
 
     /**
@@ -490,7 +493,9 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       * @return the `iframe` representing CKEditor.
       */
     def findCkeditor(field: WebElement): WebElement = {
-        field.findElement(By.xpath("div//iframe"))
+        eventually {
+            field.findElement(By.xpath("div//iframe"))
+        }
     }
 
     /**
@@ -681,7 +686,7 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
 
     def getFormFieldByName(name: String): WebElement = {
         eventually {
-            driver.findElement(By.xpath(s"//table[@class='propedit']//*[@name='$name']"))
+            driver.findElement(By.xpath(s"//table[@class='resadd']//*[@name='$name']"))
 
         }
 
@@ -690,7 +695,7 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
     def clickSaveButtonForResourceCreationForm(): Unit = {
 
         eventually {
-            driver.findElement(By.xpath("//form[@class='propedit']//input[@value='Save']")).click()
+            driver.findElement(By.xpath("//form[@class='resadd']//input[@value='Save']")).click()
         }
 
     }

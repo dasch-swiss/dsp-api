@@ -90,6 +90,7 @@ object OntologyConstants {
         val SchemaOrgPrefixExpansion: IRI = "http://schema.org/"
 
         val Name: IRI = SchemaOrgPrefixExpansion + "name"
+        val Thing: IRI = SchemaOrgPrefixExpansion + "Thing"
     }
 
     object KnoraInternal {
@@ -499,8 +500,9 @@ object OntologyConstants {
 
         val KnoraApiV2PrefixExpansion: IRI = KnoraApiOntologyIri + "#"
 
-        val SubjectType: IRI = KnoraApiV2PrefixExpansion + "subjectType"
+        val Result: IRI = KnoraApiV2PrefixExpansion + "result"
 
+        val SubjectType: IRI = KnoraApiV2PrefixExpansion + "subjectType"
         val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
 
         val HasOntologies: IRI = KnoraApiV2PrefixExpansion + "hasOntologies"
@@ -522,6 +524,7 @@ object OntologyConstants {
         val AttachedToUser: IRI = KnoraApiV2PrefixExpansion + "attachedToUser"
         val AttachedToProject: IRI = KnoraApiV2PrefixExpansion + "attachedToProject"
         val HasStandoffLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasStandoffLinkTo"
+        val HasStandoffLinkToValue: IRI = KnoraApiV2PrefixExpansion + "hasStandoffLinkToValue"
         val HasPermissions: IRI = KnoraApiV2PrefixExpansion + "hasPermissions"
         val CreationDate: IRI = KnoraApiV2PrefixExpansion + "creationDate"
         val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
@@ -637,6 +640,9 @@ object OntologyConstants {
         val KnoraApiOntologyIri: IRI = KnoraApi.ApiOntologyStart + KnoraApi.KnoraApiOntologyLabel + VersionSegment
 
         val KnoraApiV2PrefixExpansion: IRI = KnoraApiOntologyIri + "#"
+
+        val Result: IRI = KnoraApiV2PrefixExpansion + "result"
+        val Error: IRI = KnoraApiV2PrefixExpansion + "error"
 
         val SubjectType: IRI = KnoraApiV2PrefixExpansion + "subjectType"
 
