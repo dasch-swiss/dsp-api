@@ -234,6 +234,29 @@ object KnoraApiV2Simple {
         )
     )
 
+    val LinkObject: ClassEntityInfoV2 = makeClass(
+        classIri = OntologyConstants.KnoraApiV2Simple.LinkObj,
+        subClassOf = Set(OntologyConstants.KnoraApiV2Simple.Resource),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Link Object"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents a generic link object."
+                )
+            )
+        ),
+        cardinalities = Map(
+            OntologyConstants.KnoraApiV2Simple.HasComment -> Cardinality.MayHaveMany,
+            OntologyConstants.KnoraApiV2Simple.HasLinkTo -> Cardinality.MustHaveOne
+        )
+    )
+
     val Representation: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.Representation,
         subClassOf = Set(OntologyConstants.KnoraApiV2Simple.Resource),
@@ -987,6 +1010,7 @@ object KnoraApiV2Simple {
     val Classes: Map[IRI, ClassEntityInfoV2] = Set(
         Resource,
         Region,
+        LinkObject,
         Representation,
         StillImageRepresentation,
         MovingImageRepresentation,

@@ -261,6 +261,7 @@ object KnoraApiV2WithValueObjects {
             OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate -> Cardinality.MayHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.HasColor -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.IsRegionOf -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.IsRegionOfValue -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.HasGeometry -> Cardinality.MustHaveSome,
             OntologyConstants.KnoraApiV2WithValueObjects.HasComment -> Cardinality.MustHaveSome
         )
@@ -289,6 +290,56 @@ object KnoraApiV2WithValueObjects {
                     LanguageCodes.EN -> "Indicates which representation a region refers to"
                 )
             )
+        )
+    )
+
+    val IsRegionOfValue: PropertyEntityInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsRegionOfValue,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Region),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue),
+        isEditable = true,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "ist Region von",
+                    LanguageCodes.EN -> "is region of",
+                    LanguageCodes.FR -> "est région de",
+                    LanguageCodes.IT -> "è regione di"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates which representation a region refers to"
+                )
+            )
+        )
+    )
+
+    val LinkObject: ClassEntityInfoV2 = makeClass(
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkObj,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Link Object"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents a generic link object."
+                )
+            )
+        ),
+        cardinalities = Map(
+            OntologyConstants.KnoraApiV2WithValueObjects.HasComment -> Cardinality.MayHaveMany,
+            OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue -> Cardinality.MustHaveOne
         )
     )
 
@@ -584,6 +635,31 @@ object KnoraApiV2WithValueObjects {
         ),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource)
+    )
+
+    val HasLinkToValue: PropertyEntityInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "hat Link zu",
+                    LanguageCodes.EN -> "has Link to",
+                    LanguageCodes.FR -> "a lien vers",
+                    LanguageCodes.IT -> "ha Link verso"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents a direct connection between two resources"
+                )
+            )
+        ),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue)
     )
 
     val SubjectType: PropertyEntityInfoV2 = makeProperty(
@@ -2196,6 +2272,7 @@ object KnoraApiV2WithValueObjects {
     val Classes: Map[IRI, ClassEntityInfoV2] = Set(
         Resource,
         Region,
+        LinkObject,
         Representation,
         StillImageRepresentation,
         MovingImageRepresentation,
@@ -2242,6 +2319,7 @@ object KnoraApiV2WithValueObjects {
         ValueCreationDate,
         HasValue,
         HasLinkTo,
+        HasLinkToValue,
         HasStandoffLinkTo,
         HasStandoffLinkToValue,
         CreationDate,
@@ -2250,6 +2328,7 @@ object KnoraApiV2WithValueObjects {
         ObjectType,
         ResourceIcon,
         IsRegionOf,
+        IsRegionOfValue,
         HasColor,
         HasGeometry,
         HasComment,

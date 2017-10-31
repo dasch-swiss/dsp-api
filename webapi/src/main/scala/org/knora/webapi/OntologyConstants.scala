@@ -542,6 +542,7 @@ object OntologyConstants {
         val DocumentRepresentation: IRI = KnoraApiV2PrefixExpansion + "DocumentRepresentation"
         val XMLToStandoffMapping: IRI = KnoraApiV2PrefixExpansion + "XMLToStandoffMapping"
         val ListNode: IRI = KnoraApiV2PrefixExpansion + "ListNode"
+        val LinkObj: IRI = KnoraApiV2PrefixExpansion + "LinkObj"
 
         val Value: IRI = KnoraApiV2PrefixExpansion + "Value"
         val TextValue: IRI = KnoraApiV2PrefixExpansion + "TextValue"
@@ -568,8 +569,10 @@ object OntologyConstants {
         val HasValue: IRI = KnoraApiV2PrefixExpansion + "hasValue"
         val ValueHas: IRI = KnoraApiV2PrefixExpansion + "valueHas"
         val HasLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasLinkTo"
+        val HasLinkToValue: IRI = KnoraApiV2PrefixExpansion + "hasLinkToValue"
 
         val IsRegionOf: IRI = KnoraApiV2PrefixExpansion + "isRegionOf"
+        val IsRegionOfValue: IRI = KnoraApiV2PrefixExpansion + "isRegionOfValue"
         val HasGeometry: IRI = KnoraApiV2PrefixExpansion + "hasGeometry"
         val HasColor: IRI = KnoraApiV2PrefixExpansion + "hasColor"
         val HasComment: IRI = KnoraApiV2PrefixExpansion + "hasComment"
@@ -658,6 +661,7 @@ object OntologyConstants {
         val DDDRepresentation: IRI = KnoraApiV2PrefixExpansion + "DDDRepresentation"
         val TextRepresentation: IRI = KnoraApiV2PrefixExpansion + "TextRepresentation"
         val DocumentRepresentation: IRI = KnoraApiV2PrefixExpansion + "DocumentRepresentation"
+        val LinkObj: IRI = KnoraApiV2PrefixExpansion + "LinkObj"
 
         val Date: IRI = KnoraApiV2PrefixExpansion + "Date"
         val Geom: IRI = KnoraApiV2PrefixExpansion + "Geom"

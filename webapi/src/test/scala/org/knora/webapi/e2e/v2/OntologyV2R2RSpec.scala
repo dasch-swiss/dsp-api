@@ -66,7 +66,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             val ontologyIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2", "UTF-8")
 
             Get(s"/v2/ontologies/namedgraphs/$ontologyIri") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
                 assert(responseJson == knoraApiOntologySimple)
             }
         }
