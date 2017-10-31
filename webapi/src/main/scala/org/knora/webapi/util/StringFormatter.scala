@@ -153,7 +153,19 @@ object StringFormatter {
         this.synchronized {
             maybeInstance match {
                 case Some(_) => ()
-                case None => maybeInstance = Some(new StringFormatter(settings))
+                case None => maybeInstance = Some(new StringFormatter(settings.knoraApiHttpBaseUrl))
+            }
+        }
+    }
+
+    /**
+      * Initialises the singleton instance of [[StringFormatter]] for a test.
+      */
+    def initForTest(): Unit = {
+        this.synchronized {
+            maybeInstance match {
+                case Some(_) => ()
+                case None => maybeInstance = Some(new StringFormatter("http://0.0.0.0:3333"))
             }
         }
     }
@@ -163,7 +175,7 @@ object StringFormatter {
 /**
   * Handles string formatting and validation.
   */
-class StringFormatter private(settings: SettingsImpl) {
+class StringFormatter private(knoraApiHttpBaseUrl: String) {
 
     import StringFormatter._
 
@@ -281,7 +293,7 @@ class StringFormatter private(settings: SettingsImpl) {
         ).r
 
     // The start of the IRI of a project-specific API v2 ontology that is served by this API server.
-    private val ProjectSpecificApiV2OntologyStart: String = settings.knoraApiHttpBaseUrl + "/ontology/"
+    private val ProjectSpecificApiV2OntologyStart: String = knoraApiHttpBaseUrl + "/ontology/"
 
     // A regex for the IRI of a project-specific API v2 ontology (simple or complex) that is served by this API server.
     private val ProjectSpecificApiV2OntologyRegex: Regex = (
@@ -343,6 +355,8 @@ class StringFormatter private(settings: SettingsImpl) {
     private val StandoffLinkReferenceToClientIDForResourceRegex: Regex = (
         "^ref:(" + NCNamePattern + ")$"
         ).r
+
+    private val ApiVersionNumberRegex: Regex = "^v[0-9]+.*$".r
 
     // Valid URL schemes.
     private val schemes = Array("http", "https")
@@ -707,7 +721,29 @@ class StringFormatter private(settings: SettingsImpl) {
       * @return `true` if the ontology name is reserved for a built-in ontology.
       */
     def isBuiltInOntologyName(ontologyName: String): Boolean = {
-        OntologyConstants.BuiltInOntologyLabels.contains(ontologyName) || ontologyName.toLowerCase.startsWith("knora")
+        OntologyConstants.BuiltInOntologyLabels.contains(ontologyName)
+    }
+
+    /**
+      * Checks that a name is valid as a project-specific ontology name.
+      *
+      * @param ontologyName the ontology name to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the name is invalid.
+      * @return the same ontology name.
+      */
+    def toProjectSpecificOntologyName(ontologyName: String, errorFun: () => Nothing): String = {
+        val lowerCaseOntologyName = ontologyName.toLowerCase
+
+        lowerCaseOntologyName match {
+            case ApiVersionNumberRegex(_*) => errorFun()
+            case _ => ()
+        }
+
+        if (isBuiltInOntologyName(ontologyName) || lowerCaseOntologyName.startsWith("knora")) {
+            errorFun()
+        } else {
+            ontologyName
+        }
     }
 
     /**
@@ -726,7 +762,7 @@ class StringFormatter private(settings: SettingsImpl) {
         val namespace = new StringBuilder(OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart)
 
         ontologyID.projectID match {
-            case Some(projectID) => namespace.append('/').append(projectID).append('/')
+            case Some(projectID) => namespace.append(projectID).append('/')
             case None => ()
         }
 
@@ -862,7 +898,7 @@ class StringFormatter private(settings: SettingsImpl) {
         val internalOntologyIri = new StringBuilder(OntologyConstants.KnoraInternal.InternalOntologyStart)
 
         ontologyID.projectID match {
-            case Some(projectID) => internalOntologyIri.append("/").append(projectID).append("/")
+            case Some(projectID) => internalOntologyIri.append(projectID).append('/')
             case None => ()
         }
 
@@ -893,7 +929,7 @@ class StringFormatter private(settings: SettingsImpl) {
             val externalOntologyIri = new StringBuilder(ProjectSpecificApiV2OntologyStart)
 
             ontologyID.projectID match {
-                case Some(projectID) => externalOntologyIri.append("/").append(projectID).append("/")
+                case Some(projectID) => externalOntologyIri.append(projectID).append('/')
                 case None => ()
             }
 
@@ -925,7 +961,7 @@ class StringFormatter private(settings: SettingsImpl) {
             val externalOntologyIri = new StringBuilder(ProjectSpecificApiV2OntologyStart)
 
             ontologyID.projectID match {
-                case Some(projectID) => externalOntologyIri.append("/").append(projectID).append("/")
+                case Some(projectID) => externalOntologyIri.append(projectID).append('/')
                 case None => ()
             }
 
@@ -944,7 +980,7 @@ class StringFormatter private(settings: SettingsImpl) {
         val internalOntologyIri = new StringBuilder(OntologyConstants.KnoraInternal.InternalOntologyStart)
 
         ontologyID.projectID match {
-            case Some(projectID) => internalOntologyIri.append("/").append(projectID).append("/")
+            case Some(projectID) => internalOntologyIri.append(projectID).append('/')
             case None => ()
         }
 
@@ -1218,7 +1254,8 @@ class StringFormatter private(settings: SettingsImpl) {
         iri match {
             case InternalOntologyRegex(_*) => iri
             case BuiltInApiV2OntologyRegex(ontologyName, _) => externalOntologyIDToInternalOntologyIri(OntologyID(ontologyName))
-            case ProjectSpecificApiV2OntologyRegex(_, Optional(projectID), ontologyName, _) => externalOntologyIDToInternalOntologyIri(OntologyID(ontologyName, projectID))
+            case ProjectSpecificApiV2OntologyRegex(_, Optional(projectID), ontologyName, _) =>
+                externalOntologyIDToInternalOntologyIri(OntologyID(ontologyName, projectID))
             case _ => errorFun()
         }
     }

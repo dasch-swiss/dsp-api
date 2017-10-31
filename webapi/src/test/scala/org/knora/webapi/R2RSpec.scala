@@ -30,9 +30,9 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
     def actorRefFactory = system
 
     val settings = Settings(system)
-    StringFormatter.init(settings)
+    val logger = akka.event.Logging(system, this.getClass)
+    StringFormatter.initForTest()
 
-    val logger = akka.event.Logging(system, this.getClass())
     implicit val log = logger
 
     implicit val knoraExceptionHandler = KnoraExceptionHandler(settings, log)
