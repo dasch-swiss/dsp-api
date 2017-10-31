@@ -739,7 +739,7 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
             case _ => ()
         }
 
-        if (isBuiltInOntologyName(ontologyName) || lowerCaseOntologyName.startsWith("knora")) {
+        if (isBuiltInOntologyName(ontologyName) || lowerCaseOntologyName.startsWith("knora") || lowerCaseOntologyName.startsWith("simple")) {
             errorFun()
         } else {
             ontologyName

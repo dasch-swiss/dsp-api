@@ -28,16 +28,18 @@ The IRIs used in Knora repositories and in the Knora API v2 follow certain conve
 IRIs for Ontologies and Ontology Entities
 -----------------------------------------
 
-Ontology IRIs
-^^^^^^^^^^^^^
+Internal Ontology IRIs
+^^^^^^^^^^^^^^^^^^^^^^
 
 Starting with the Knora API v2, Knora makes a distinction between 'internal' and 'external' ontologies. Internal ontologies are used in the triplestore, while external ontologies are used in the API. For each internal ontology, there is a corresponding external ontology. Some internal ontologies are built into Knora, while others are project-specific.
 
-Each internal ontology has an IRI, which is also the IRI of the named graph that contains the ontology in the triplestore. An internal ontology IRI has the form:
+Each internal ontology has an IRI, which is also the IRI of the named graph that contains the ontology in the triplestore. An internal project-specific ontology IRI has the form:
 
 ::
 
-   http://www.knora.org/ontology/ONTOLOGY_NAME
+   http://www.knora.org/ontology/[PROJECT_CODE/]ONTOLOGY_NAME
+
+A project code is a hexadecimal number of at least four digits, assigned by the DaSCH to uniquely identify a Knora project regardless of where it is hosted. It is recommended that new projects should request a project code and use it in their ontology IRIs, to avoid possible future naming conflicts.
 
 The name of the ontology must be a valid XML NCName_. The following names are reserved for built-in internal Knora ontologies:
 
@@ -46,7 +48,17 @@ The name of the ontology must be a valid XML NCName_. The following names are re
 - ``salsah-gui``
 - ``dc``
 
-Names starting with ``knora`` are reserved for future built-in Knora ontologies.
+Names starting with ``knora`` are reserved for future built-in Knora ontologies. An ontology name may not start with ``simple`` or with the letter `v` followed by one or more digits.
+
+For example, an ontology with project code 0001 and ontology name ``example`` could be:
+
+::
+
+   http://www.knora.org/ontology/0001/example
+
+
+External Ontology IRIs
+^^^^^^^^^^^^^^^^^^^^^^
 
 Unlike internal ontology IRIs, external ontology IRIs are meant to be dereferenced as URLs. When an ontology IRI is dereferenced, the ontology itself can be served either in a machine-readable format or as human-readable documentation.
 
@@ -54,7 +66,7 @@ The IRI of an external Knora ontology has the form:
 
 ::
 
-   http://HOST[:PORT]/ontology/ONTOLOGY_NAME/API_VERSION
+   http://HOST[:PORT]/ontology/[PROJECT_CODE/]ONTOLOGY_NAME/API_VERSION
 
 For built-in ontologies, the host is always ``api.knora.org``. Otherwise, the hostname and port configured in ``application.conf`` under ``app.http.knora-api.host`` and ``app.http.knora-api.http-port`` are used (the port is omitted if it is 80). This means that when a built-in external ontology IRI is dereferenced, the ontology can be served by a Knora API server running at ``api.knora.org``. When a project-specific external ontology IRI is dereferenced, the ontology can be served by the Knora API server that hosts the project. During development and testing, this could be ``localhost``.
 
@@ -69,12 +81,12 @@ Other schemas could be added in the future for more specific use cases.
 
 When requesting an ontology, the client requests a particular schema. (This will also be true of all Knora API v2 requests: the client will be able to specify which schema the response should be provided in.)
 
-For example, suppose a Knora API server is running at ``knora.example.org`` and hosts the ``incunabula`` ontology. That ontology can then be requested using either of these IRIs:
+For example, suppose a Knora API server is running at ``knora.example.org`` and hosts an ontology whose internal IRI is ``http://www.knora.org/ontology/0001/example``. That ontology can then be requested using either of these IRIs:
 
-- ``http://knora.example.org/ontology/incunabula/v2`` (for the default schema)
-- ``http://knora.example.org/ontology/incunabula/simple/v2`` (for the simple schema)
+- ``http://knora.example.org/ontology/0001/example/v2`` (for the default schema)
+- ``http://knora.example.org/ontology/0001/example/simple/v2`` (for the simple schema)
 
-While the internal ``incunabula`` ontology refers to definitions in ``knora-base``, the external ``incunabula`` ontology that is served by the API refers instead to a ``knora-api`` ontology, whose IRI depends on the schema being used:
+While the internal ``incunabula`` ontology refers to definitions in ``knora-base``, the external ``example`` ontology that is served by the API refers instead to a ``knora-api`` ontology, whose IRI depends on the schema being used:
 
 - ``http://api.knora.org/ontology/knora-api/v2`` (for the default schema)
 - ``http://api.knora.org/ontology/knora-api/simple/v2`` (for the simple schema)
