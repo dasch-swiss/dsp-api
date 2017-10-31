@@ -91,7 +91,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 actorUnderTest ! UsersGetRequestV1(rootUser)
                 val response = expectMsgType[UsersGetResponseV1](timeout)
                 response.users.nonEmpty should be (true)
-                response.users.size should be (16)
+                response.users.size should be (17)
             }
         }
 
