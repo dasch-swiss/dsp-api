@@ -218,6 +218,42 @@
                                 """Translation"""@en .
 
 ### ###########################################
+### beol:letterIsReplyTo
+
+:letterIsReplyTo rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+              rdfs:label "Antwort auf"@de ,
+                         "Reply to"@en ;
+
+              rdfs:comment """Der Brief ist eine Antwort auf einen Brief"""@de ,
+                           """Letter is reply to another letter"""@en ;
+
+              knora-base:subjectClassConstraint :letter ;
+
+              knora-base:objectClassConstraint :letter ;
+
+              salsah-gui:guiElement salsah-gui:Searchbox .
+
+### ###########################################
+### beol:letterIsReplyToValue
+
+:letterIsReplyToValue rdf:type owl:ObjectProperty ;
+
+                   knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                   knora-base:subjectClassConstraint :writtenSource ;
+
+                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                   rdfs:label "Antwort auf"@de ,
+                              "Reply to"@en ;
+
+                   rdfs:comment """Der Brief ist eine Antwort auf einen Brief"""@de ,
+                                """Letter is reply to another letter"""@en .
+
+### ###########################################
 ### beol:mentionsPerson
 
 :mentionsPerson rdf:type owl:ObjectProperty ;
@@ -897,12 +933,22 @@
                         ],
                         [
                             rdf:type owl:Restriction ;
+                            owl:onProperty :letterHasTranslation ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                            rdf:type owl:Restriction ;
                             owl:onProperty :letterHasTranslationValue ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ],
                         [
                             rdf:type owl:Restriction ;
-                            owl:onProperty :letterHasTranslation ;
+                            owl:onProperty :letterIsReplyTo ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :letterIsReplyToValue ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ],
                         [
