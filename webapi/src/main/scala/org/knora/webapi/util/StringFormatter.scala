@@ -731,7 +731,7 @@ class StringFormatter private(settings: SettingsImpl) {
         }
 
         namespace.append(ontologyID.ontologyName).append(OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd)
-        XmlImportNamespaceInfoV1(namespace = namespace.toString, prefixLabel = ontologyID.ontologyName)
+        XmlImportNamespaceInfoV1(namespace = namespace.toString, prefixLabel = ontologyID.getPrefixLabel)
     }
 
     /**
