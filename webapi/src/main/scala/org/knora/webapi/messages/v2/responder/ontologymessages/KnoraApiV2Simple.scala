@@ -252,6 +252,10 @@ object KnoraApiV2Simple {
             )
         ),
         cardinalities = Map(
+            OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2Simple.HasStandoffLinkTo -> Cardinality.MayHaveMany,
+            OntologyConstants.KnoraApiV2Simple.CreationDate -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2Simple.LastModificationDate -> Cardinality.MayHaveOne,
             OntologyConstants.KnoraApiV2Simple.HasComment -> Cardinality.MayHaveMany,
             OntologyConstants.KnoraApiV2Simple.HasLinkTo -> Cardinality.MustHaveOne
         )
