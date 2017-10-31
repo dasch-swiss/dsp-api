@@ -129,18 +129,18 @@ lazy val webApiLibs = Seq(
     //CORS support
     "ch.megard" %% "akka-http-cors" % "0.1.10",
     // jena
-    "org.apache.jena" % "apache-jena-libs" % "3.4.0" exclude("org.slf4j", "slf4j-log4j12"),
-    "org.apache.jena" % "jena-text" % "3.4.0" exclude("org.slf4j", "slf4j-log4j12"),
+    "org.apache.jena" % "apache-jena-libs" % "3.4.0" exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec"),
+    "org.apache.jena" % "jena-text" % "3.4.0" exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec"),
     // http client
     // "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
     // logging
     "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
     "ch.qos.logback" % "logback-classic" % "1.1.7",
     // input validation
-    "commons-validator" % "commons-validator" % "1.6",
+    "commons-validator" % "commons-validator" % "1.6" exclude("commons-logging", "commons-logging"),
     // authentication
-    "org.bouncycastle" % "bcprov-jdk15on" % "1.56",
-    "org.springframework.security" % "spring-security-core" % "4.2.1.RELEASE",
+    "org.bouncycastle" % "bcprov-jdk15on" % "1.58",
+    "org.springframework.security" % "spring-security-core" % "4.2.3.RELEASE" exclude("commons-logging", "commons-logging") exclude("org.springframework", "spring-aop"),
     // caching
     "net.sf.ehcache" % "ehcache" % "2.10.0",
     // monitoring - disabled for now
@@ -156,13 +156,13 @@ lazy val webApiLibs = Seq(
     //"javax.transaction" % "transaction-api" % "1.1-rev-1",
     "org.apache.commons" % "commons-lang3" % "3.4",
     "commons-io" % "commons-io" % "2.4",
-    "commons-beanutils" % "commons-beanutils" % "1.9.2", // not used by us, but need newest version to prevent this problem: http://stackoverflow.com/questions/14402745/duplicate-classes-in-commons-collections-and-commons-beanutils
+    "commons-beanutils" % "commons-beanutils" % "1.9.2" exclude("commons-logging", "commons-logging"), // not used by us, but need newest version to prevent this problem: http://stackoverflow.com/questions/14402745/duplicate-classes-in-commons-collections-and-commons-beanutils
     "org.jodd" % "jodd" % "3.2.6",
     "joda-time" % "joda-time" % "2.9.1",
     "org.joda" % "joda-convert" % "1.8",
     "com.sksamuel.diff" % "diff" % "1.1.11",
     "org.xmlunit" % "xmlunit-core" % "2.1.1",
-    "io.igl" %% "jwt" % "1.2.2",
+    "io.igl" %% "jwt" % "1.2.2" exclude("commons-codec", "commons-codec"),
     // testing
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test, fuseki, graphdb, tdb, it, fuseki-it",
     "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test, fuseki, graphdb, tdb, it, fuseki-it",
@@ -175,6 +175,11 @@ lazy val webApiLibs = Seq(
     "net.sf.saxon" % "Saxon-HE" % "9.7.0-14",
     "com.github.jsonld-java" % "jsonld-java" % "0.10.0",
     "com.jsuereth" % "scala-arm_2.12" % "2.0"
+)
+
+lazy val excludeDependencies = Seq(
+    // commons-logging is replaced by jcl-over-slf4j
+    ExclusionRule("commons-logging", "commons-logging")
 )
 
 lazy val javaRunOptions = Seq(
