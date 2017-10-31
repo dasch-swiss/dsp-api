@@ -1,3 +1,41 @@
+----------ChromeDriver v2.33 (2017-10-03)----------
+Supports Chrome v60-62
+Resolved issue 2032: ChromeDriver crashes while creating DNS resolver [['Pri-1']]
+Resolved issue 1918: Get/SetWindowSize & Get/SetWindowPosition commands are failing on Chromev62+ [['Pri-1']]
+Resolved issue 2013: Android 8.0.0 webviews not supported [['Pri-2']]
+Resolved issue 2017: In mobileEmulation "element is not clickable" if it is outside the visible area [['Pri-2']]
+Resolved issue 1981: chromedriver does not respect excludeSwitches flag [['Pri-2']]
+Partially Resolved issue 2002: Add Cookie is not spec compliant [[]]
+Resolved issue 1985: FindElement raises the wrong error [[]]
+
+----------ChromeDriver v2.32 (2017-08-30)----------
+Supports Chrome v59-61
+Resolved issue 1852: Error 'Element is not clickable at point' occurs on Chrome v61+ [['Pri-1']]
+Resolved issue 1950: DeleteCookie in Chrome v62 and Chromedriver v2.31 fails [['Pri-2']]
+Resolved issue 1942: ChromeDriver response in W3C mode is not standard compliant [['Pri-2']]
+Resolved issue 1910: Fails to retrieve default prompt text on Chrome v62+ [['Pri-2']]
+Resolved issue 1900: LaunchApp command throws UnknownError: cannot get automation extension on Mac and Windows Chrome v62+ [['Pri-2']]
+Resolved issue 1885: unknown error: Cannot use 'in' operator to search for 'String' in null [['Pri-2']]
+Resolved issue 1882: Chromedriver URI for Execute Async Script is not spec compliant [['Pri-3']]
+Resolved issue 1621: Implement session/<session id>/window/fullscreen command [['Pri-3']]
+Resolved issue 1896: Characters '3' and '#' are not being entered using SendKeys on Mac Chrome v62+ [[]]
+Resolved issue 1894: chromedriver 2.31 should be linked with glibc 2.17 [[]]
+Resolved issue 1740: ChromeDriver session handshake needs to be W3C compliant [[]]
+Resolved issue 1898: Wrong error is thrown while sending text to non prompt dialog. [[]]
+Resolved issue 1888: Chromedriver doesn't throw an exception when uploading an invalid file with selenium [[]]
+
+----------ChromeDriver v2.31 (2017-07-21)----------
+Supports Chrome v58-60
+Resolved issue 1804: Flakiness when retrieving cookies using GetCookies command on Windows [['Pri-1']]
+Resolved issue 1879: Implement /session/{session id}/cookie/{name} command [['Pri-2']]
+Resolved issue 1860: WebDriverException: Message: unknown error: bad inspector message:"" when attempting to get page_source [['Pri-2']]
+Resolved issue 1293: Timed out receiving message from renderer on window.location change [['Pri-2']]
+Resolved issue 1849: ChromeDriver 2.30 AddCookie command uses incorrect default path [['Pri-2']]
+Resolved issue 1256: switchToFrame should throw StaleElementReferenceException in case the element is stale [['Pri-2']]
+Resolved issue 1786: Feature request: change chromeOptions to goog:chromeOptions [['Pri-3']]
+Resolved issue 1772: Chromedriver running against canary chrome w/ headless flag requires XVFB for sendKey interactions [[]]
+Resolved issue 727979: Failed to set Chrome's command line file on device for long command line [['Pri-3']]
+
 ----------ChromeDriver v2.30 (2017-06-07)----------
 Supports Chrome v58-60
 Resolved issue 644: ChromeDriver does not delete the profile & scoped_dir* folders after test exits [['Pri-1']]

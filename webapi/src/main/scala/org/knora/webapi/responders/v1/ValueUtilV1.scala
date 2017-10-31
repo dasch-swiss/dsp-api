@@ -33,7 +33,7 @@ import org.knora.webapi.messages.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
-import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation}
+import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -42,6 +42,8 @@ import scala.concurrent.{ExecutionContext, Future}
   * Converts data from SPARQL query results into [[ApiValueV1]] objects.
   */
 class ValueUtilV1(private val settings: SettingsImpl) {
+
+    private val stringFormatter = StringFormatter.getInstance
 
     /**
       * Given a [[ValueProps]] containing details of a `knora-base:Value` object, creates a [[ApiValueV1]].
@@ -154,14 +156,14 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     /**
-      * Creates a URL pointing to the given resource class icon. From the resource class Iri it gets the ontology specific path, i.e. the ontology name.
-      * If the resource class Iri is "http://www.knora.org/ontology/knora-base#Region", the ontology name would be "knora-base".
+      * Creates a URL pointing to the given resource class icon. From the resource class IRI it gets the ontology specific path, i.e. the ontology name.
+      * If the resource class IRI is "http://www.knora.org/ontology/knora-base#Region", the ontology name would be "knora-base".
       * To the base path, the icon name is appended. In case of a region with the icon name "region.gif",
       * "http://salsahapp:port/project-icons-basepath/knora-base/region.gif" is returned.
       *
-      * This method requires the Iri segment before the last slash to be a unique identifier for all the ontologies used with Knora..
+      * This method requires the IRI segment before the last slash to be a unique identifier for all the ontologies used with Knora..
       *
-      * @param resourceClassIri the Iri of the resource class in question.
+      * @param resourceClassIri the IRI of the resource class in question.
       * @param iconsSrc         the name of the icon file.
       */
     def makeResourceClassIconURL(resourceClassIri: IRI, iconsSrc: String): IRI = {
@@ -271,7 +273,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     private def groupKnoraValueObjectPredicateRows(objRows: Seq[Map[String, String]]): GroupedValueObject = {
 
 
-        // get rid of the value object Iri `obj` and group by predicate Iri `objPred` (e.g. `valueHasString`)
+        // get rid of the value object IRI `obj` and group by predicate IRI `objPred` (e.g. `valueHasString`)
         val valuesGroupedByPredicate = objRows.map(_ - "obj").groupBy(_ ("objPred"))
 
         valuesGroupedByPredicate.foldLeft(GroupedValueObject(valuesLiterals = Map.empty[String, ValueLiterals], standoff = Map.empty[IRI, Map[IRI, String]])) {
@@ -324,7 +326,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       *
       * Given a list of result rows from the `get-resource-properties-and-values` SPARQL query, groups the rows first by property,
       * then by property object, and finally by property object predicate. In case the results contain standoff information, the standoff nodes are grouped
-      * according to their blank node Iri. If the first row of results has a `linkValue` column, this is taken to mean that the property
+      * according to their blank node IRI. If the first row of results has a `linkValue` column, this is taken to mean that the property
       * is a link property and that the value of `linkValue` is the IRI of the corresponding `knora-base:LinkValue`; that IRI is then
       * added to the literals in the results, with the key [[OntologyConstants.KnoraBase.LinkValue]].
       *
@@ -462,8 +464,8 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       */
     private def makeTextValueWithStandoff(utf8str: String, valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserProfileV1)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueWithStandoffV1] = {
 
-        // get the Iri of the mapping
-        val mappingIri = valueProps.literalData.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping Iri associated with standoff belonging to textValue ${valueProps.valueIri}")).literals.head
+        // get the IRI of the mapping
+        val mappingIri = valueProps.literalData.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping IRI associated with standoff belonging to textValue ${valueProps.valueIri}")).literals.head
 
         for {
 
@@ -477,7 +479,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             standoff = standoffTags,
             mappingIri = mappingIri,
             mapping = mappingResponse.mapping,
-            resource_reference = InputValidation.getResourceIrisFromStandoffTags(standoffTags)
+            resource_reference = stringFormatter.getResourceIrisFromStandoffTags(standoffTags)
         )
 
     }
@@ -562,7 +564,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         val predicates = valueProps.literalData
 
         val isPreviewStr = predicates.get(OntologyConstants.KnoraBase.IsPreview).flatMap(_.literals.headOption)
-        val isPreview = InputValidation.optionStringToBoolean(isPreviewStr, () => throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
+        val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, () => throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
 
         Future(StillImageFileValueV1(
             internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,

@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.twirl.{StandoffTagAttributeV1, StandoffTagInternalReferenceAttributeV1, StandoffTagV1}
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
-import org.knora.webapi.util.{DateUtilV1, InputValidation, KnoraIdUtil}
+import org.knora.webapi.util.{DateUtilV1, StringFormatter, KnoraIdUtil}
 import org.knora.webapi.{BadRequestException, _}
 import spray.json._
 
@@ -114,7 +114,7 @@ case class CreateValueApiRequestV1(res_id: IRI,
   *
   * @param utf8str    a mere string in case of a text without any markup.
   * @param xml        xml in case of a text with markup.
-  * @param mapping_id Iri of the mapping used to transform XML to standoff.
+  * @param mapping_id IRI of the mapping used to transform XML to standoff.
   */
 case class CreateRichtextV1(utf8str: Option[String] = None,
                             xml: Option[String] = None,
@@ -624,7 +624,7 @@ object KnoraPrecisionV1 extends Enumeration {
   * Represents a [[StandoffTagV1]] for a standoff tag of a certain type (standoff tag class) that is about to be created in the triplestore.
   *
   * @param standoffNode           the standoff node to be created.
-  * @param standoffTagInstanceIri the standoff node's Iri.
+  * @param standoffTagInstanceIri the standoff node's IRI.
   * @param startParentIri         the IRI of the parent of the start tag.
   * @param endParentIri           the IRI of the parent of the end tag, if any.
   */
@@ -650,7 +650,8 @@ case class TextValueWithStandoffV1(utf8str: String,
                                    mappingIri: IRI,
                                    mapping: MappingXMLtoStandoff) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
 
-    val knoraIdUtil = new KnoraIdUtil
+    private val knoraIdUtil = new KnoraIdUtil
+    private val stringFormatter = StringFormatter.getInstance
 
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
 
@@ -674,7 +675,7 @@ case class TextValueWithStandoffV1(utf8str: String,
       */
     def prepareForSparqlInsert(valueIri: IRI): Seq[CreateStandoffTagV1InTriplestore] = {
 
-        // create an Iri for each standoff tag
+        // create an IRI for each standoff tag
         // internal references to XML ids are not resolved yet
         val standoffTagsWithOriginalXMLIDs: Seq[CreateStandoffTagV1InTriplestore] = standoff.map {
             case (standoffNode: StandoffTagV1) =>
@@ -692,7 +693,7 @@ case class TextValueWithStandoffV1(utf8str: String,
                 standoffTag.standoffNode.originalXMLID.isDefined
         }.map {
             (standoffTagWithID: CreateStandoffTagV1InTriplestore) =>
-                // return the XML id as a key and the standoff Iri as the value
+                // return the XML id as a key and the standoff IRI as the value
                 standoffTagWithID.standoffNode.originalXMLID.get -> standoffTagWithID.standoffTagInstanceIri
         }.toMap
 
@@ -712,7 +713,7 @@ case class TextValueWithStandoffV1(utf8str: String,
                     (attributeWithOriginalXMLID: StandoffTagAttributeV1) =>
                         attributeWithOriginalXMLID match {
                             case refAttr: StandoffTagInternalReferenceAttributeV1 =>
-                                // resolve the XML id to the corresponding standoff node Iri
+                                // resolve the XML id to the corresponding standoff node IRI
                                 refAttr.copy(value = iDsToStandoffNodeIris(refAttr.value))
                             case attr => attr
                         }
@@ -746,7 +747,7 @@ case class TextValueWithStandoffV1(utf8str: String,
             case otherText: TextValueV1 =>
 
                 // unescape utf8str since it contains escaped sequences while the string returned by the triplestore does not
-                otherText.utf8str == InputValidation.toSparqlEncodedString(utf8str, () => throw InvalidStandoffException(s"Could not unescape utf8str $utf8str"), true)
+                otherText.utf8str == stringFormatter.toSparqlEncodedString(utf8str, () => throw InvalidStandoffException(s"Could not unescape utf8str $utf8str"), true)
             case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
@@ -766,7 +767,7 @@ case class TextValueWithStandoffV1(utf8str: String,
             case textValueWithStandoffV1: TextValueWithStandoffV1 =>
 
                 // compare utf8str (unescape utf8str since it contains escaped sequences while the string returned by the triplestore does not)
-                val utf8strIdentical: Boolean = textValueWithStandoffV1.utf8str == InputValidation.toSparqlEncodedString(utf8str, () => throw InvalidStandoffException(s"Could not unescape utf8str $utf8str"), true)
+                val utf8strIdentical: Boolean = textValueWithStandoffV1.utf8str == stringFormatter.toSparqlEncodedString(utf8str, () => throw InvalidStandoffException(s"Could not unescape utf8str $utf8str"), true)
 
                 // compare standoff nodes (sort them first, since the order does not make any difference )
                 val standoffIdentical: Boolean = textValueWithStandoffV1.standoff.sortBy(standoffNode => (standoffNode.standoffTagClassIri, standoffNode.startPosition)) == this.standoff.sortBy(standoffNode => (standoffNode.standoffTagClassIri, standoffNode.startPosition))

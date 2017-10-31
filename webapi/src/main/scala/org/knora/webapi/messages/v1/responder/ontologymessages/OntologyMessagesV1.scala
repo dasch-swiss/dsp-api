@@ -64,10 +64,10 @@ case class EntityInfoGetRequestV1(resourceClassIris: Set[IRI] = Set.empty[IRI], 
 /**
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
   *
-  * @param resourceEntityInfoMap a [[Map]] of resource entity IRIs to [[ResourceEntityInfoV2]] objects.
+  * @param resourceEntityInfoMap a [[Map]] of resource entity IRIs to [[ClassEntityInfoV2]] objects.
   * @param propertyEntityInfoMap a [[Map]] of property entity IRIs to [[PropertyEntityInfoV2]] objects.
   */
-case class EntityInfoGetResponseV1(resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV2],
+case class EntityInfoGetResponseV1(resourceEntityInfoMap: Map[IRI, ClassEntityInfoV2],
                                    propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2])
 
 
@@ -217,7 +217,7 @@ case class PropertyTypesForNamedGraphResponseV1(properties: Seq[PropertyDefiniti
 /**
   * Gets all property types that are defined for the given resource class.
   *
-  * @param resourceClassIri the Iri of the resource class to query for.
+  * @param resourceClassIri the IRI of the resource class to query for.
   * @param userProfile      the profile of the user making the request.
   */
 case class PropertyTypesForResourceTypeGetRequestV1(resourceClassIri: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
@@ -268,7 +268,7 @@ case class NamedGraphEntityInfoRequestV1(namedGraphIri: IRI, userProfile: UserPr
 /**
   * Represents the assertions about a given named graph entity.
   *
-  * @param namedGraphIri   the Iri of the named graph.
+  * @param namedGraphIri   the IRI of the named graph.
   * @param resourceClasses the resource classes defined in the named graph.
   * @param propertyIris    the properties defined in the named graph.
   */
@@ -362,7 +362,7 @@ case class PropertyDefinitionInNamedGraphV1(id: IRI,
   * @param longname    the full name of the named graph.
   * @param description a description of the named graph.
   * @param project_id  the project belonging to the named graph.
-  * @param uri         the Iri of the named graph.
+  * @param uri         the IRI of the named graph.
   * @param active      indicates if this is named graph the user's project belongs to.
   */
 case class NamedGraphV1(id: IRI,

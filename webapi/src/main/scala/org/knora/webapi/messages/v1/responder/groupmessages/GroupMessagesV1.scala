@@ -92,7 +92,7 @@ case class GroupsGetRequestV1(userProfile: Option[UserProfileV1]) extends Groups
 /**
   * Get everything about a single group identified through it's IRI.
   *
-  * @param groupIri      Iri of the group.
+  * @param groupIri      IRI of the group.
   * @param userProfileV1 the profile of the user making the request.
   */
 case class GroupInfoByIRIGetRequest(groupIri: IRI, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1

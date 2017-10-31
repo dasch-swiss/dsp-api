@@ -27,6 +27,7 @@ import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringForResourceClassGetV1, DefaultObjectAccessPermissionsStringResponseV1, ResourceCreateOperation}
 import org.knora.webapi.messages.v1.responder.projectmessages._
@@ -34,14 +35,12 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.{MultipleResource
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, PredicateInfoV2, PropertyEntityInfoV2, ResourceEntityInfoV2}
-import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, ClassEntityInfoV2, PredicateInfoV2, PropertyEntityInfoV2}
 import org.knora.webapi.responders.v1.GroupedProps._
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
-import spray.json._
 
 import scala.collection.immutable
 import scala.concurrent.Future
@@ -495,7 +494,7 @@ class ResourcesResponderV1 extends Responder {
                         case (incomingIri: IRI, rows: Seq[VariableResultsRow]) =>
                             // Make a resource info for each referring resource, and check the permissions on the referring resource.
 
-                            val rowsForResInfo = rows.filterNot(row => InputValidation.optionStringToBoolean(row.rowMap.get("isLinkValue"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${row.rowMap.get("isLinkValue")}")))
+                            val rowsForResInfo = rows.filterNot(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isLinkValue"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${row.rowMap.get("isLinkValue")}")))
 
                             for {
                                 (incomingResPermission, incomingResInfo) <- makeResourceInfoV1(incomingIri, rowsForResInfo, userProfile, queryOntology = false)
@@ -506,7 +505,7 @@ class ResourcesResponderV1 extends Responder {
                                         // Yes. For each link from the referring resource, check whether the user has permission to see the link. If so, make an IncomingV1 for the link.
 
                                         // Filter to get only the rows representing LinkValues.
-                                        val rowsWithLinkValues = rows.filter(row => InputValidation.optionStringToBoolean(row.rowMap.get("isLinkValue"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${row.rowMap.get("isLinkValue")}")))
+                                        val rowsWithLinkValues = rows.filter(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isLinkValue"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${row.rowMap.get("isLinkValue")}")))
 
                                         // Group them by LinkValue IRI.
                                         val groupedByLinkValue: Map[String, Seq[VariableResultsRow]] = rowsWithLinkValues.groupBy(_.rowMap("obj"))
@@ -795,7 +794,7 @@ class ResourcesResponderV1 extends Responder {
                             dimX = row.rowMap("dimX").toInt,
                             dimY = row.rowMap("dimY").toInt,
                             qualityLevel = row.rowMap("qualityLevel").toInt,
-                            isPreview = InputValidation.optionStringToBoolean(row.rowMap.get("isPreview"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isPreview: ${row.rowMap.get("isPreview")}"))
+                            isPreview = stringFormatter.optionStringToBoolean(row.rowMap.get("isPreview"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isPreview: ${row.rowMap.get("isPreview")}"))
                         ))
                     )
 
@@ -996,7 +995,7 @@ class ResourcesResponderV1 extends Responder {
                                     userProfile = userProfile
                                 )).mapTo[EntityInfoGetResponseV1]
 
-                                regionInfo: ResourceEntityInfoV2 = entityInfoResponse.resourceEntityInfoMap(resClass)
+                                regionInfo: ClassEntityInfoV2 = entityInfoResponse.resourceEntityInfoMap(resClass)
 
                                 resClassIcon: Option[String] = regionInfo.predicates.get(OntologyConstants.KnoraBase.ResourceIcon) match {
                                     case Some(predicateInfo: PredicateInfoV2) =>
@@ -1122,7 +1121,7 @@ class ResourcesResponderV1 extends Responder {
                 restypeIriOption = resourceTypeIri,
                 numberOfProps = numberOfProps,
                 limitOfResults = limitOfResults,
-                separator = FormatConstants.INFORMATION_SEPARATOR_ONE
+                separator = StringFormatter.INFORMATION_SEPARATOR_ONE
             ).toString())
 
             // _ = println(searchResourcesSparql)
@@ -1142,7 +1141,7 @@ class ResourcesResponderV1 extends Responder {
                     if (numberOfProps > 1) {
                         // The client requested more than one property per resource that was found.
 
-                        val valueStrings = row.rowMap("values").split(FormatConstants.INFORMATION_SEPARATOR_ONE)
+                        val valueStrings = row.rowMap("values").split(StringFormatter.INFORMATION_SEPARATOR_ONE)
                         val guiOrders = row.rowMap("guiOrders").split(";")
                         val valueOrders = row.rowMap("valueOrders").split(";")
 
@@ -1419,7 +1418,7 @@ class ResourcesResponderV1 extends Responder {
       * @return a tuple (IRI, Vector[CreateValueV1WithComment]) containing the IRI of the resource and a collection of holders of [[UpdateValueV1]] and comment.
       */
     private def checkResource(resourceClassIri: IRI,
-                              resourceClassInfo: ResourceEntityInfoV2,
+                              resourceClassInfo: ClassEntityInfoV2,
                               propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2],
                               values: Map[IRI, Seq[CreateValueV1WithComment]],
                               sipiConversionRequest: Option[SipiResponderConversionRequestV1],
@@ -1600,7 +1599,7 @@ class ResourcesResponderV1 extends Responder {
       * Generates SPARQL to create multiple resources in a single update operation.
       *
       * @param resourcesToCreate Collection of the resources to be created .
-      * @param projectIri        Iri of the project .
+      * @param projectIri        IRI of the project .
       * @param creatorIri        the creator of the resources to be created.
       * @param namedGraph        the named graph the resources belongs to.
       * @return a [String] returns a Sparql query for creating the resources and their values .
@@ -1620,7 +1619,7 @@ class ResourcesResponderV1 extends Responder {
     /**
       * Verifies the created resource and its values.
       *
-      * @param resourceIri                     Iri of the created resource .
+      * @param resourceIri                     IRI of the created resource .
       * @param creatorIri                      the creator of the resources to be created.
       * @param createNewResourceSparql         Sparql query to create the resource .
       * @param generateSparqlForValuesResponse Sparql statement for creation of values of resource.
@@ -1859,7 +1858,7 @@ class ResourcesResponderV1 extends Responder {
                         conversionRequest match {
                             case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
                                 // a tmp file has been created by the resources route (non GUI-case), delete it
-                                InputValidation.deleteFileFromTmpLocation(conversionPathRequest.source, log)
+                                stringFormatter.deleteFileFromTmpLocation(conversionPathRequest.source, log)
                             case _ => ()
                         }
                     case None => ()
@@ -1919,7 +1918,7 @@ class ResourcesResponderV1 extends Responder {
                 sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
                 rows = sparqlSelectResponse.results.bindings
 
-                _ = if (rows.isEmpty || !InputValidation.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
+                _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
                     throw UpdateNotPerformedException(s"Resource ${resourceDeleteRequest.resourceIri} was not marked as deleted. Please report this as a possible bug.")
                 }
             } yield ResourceDeleteResponseV1(id = resourceDeleteRequest.resourceIri)
@@ -2089,7 +2088,7 @@ class ResourcesResponderV1 extends Responder {
       *
       * Queries the properties for the given resource.
       *
-      * @param resourceIri the Iri of the given resource.
+      * @param resourceIri the IRI of the given resource.
       * @param userProfile the profile of the user making the request.
       * @return a [[PropertiesGetResponseV1]] representing the properties of the given resource.
       */
@@ -2135,14 +2134,14 @@ class ResourcesResponderV1 extends Responder {
             groupedPropsByType: GroupedPropertiesByType <- getGroupedProperties(resourceIri)
 
             // TODO: Should we get rid of the tuple and replace it by a case class?
-            (propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2], resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV2], propsAndCardinalities: Map[IRI, Cardinality.Value]) <- maybeResourceTypeIri match {
+            (propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2], resourceEntityInfoMap: Map[IRI, ClassEntityInfoV2], propsAndCardinalities: Map[IRI, Cardinality.Value]) <- maybeResourceTypeIri match {
                 case Some(resourceTypeIri) =>
                     val propertyEntityIris: Set[IRI] = groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++ groupedPropsByType.groupedLinkProperties.groupedProperties.keySet
                     val resourceEntityIris: Set[IRI] = Set(resourceTypeIri)
 
                     for {
                         entityInfoResponse <- (responderManager ? EntityInfoGetRequestV1(resourceClassIris = resourceEntityIris, propertyIris = propertyEntityIris, userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
-                        resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV2] = entityInfoResponse.resourceEntityInfoMap
+                        resourceEntityInfoMap: Map[IRI, ClassEntityInfoV2] = entityInfoResponse.resourceEntityInfoMap
                         propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2] = entityInfoResponse.propertyEntityInfoMap
 
                         resourceTypeEntityInfo = resourceEntityInfoMap(resourceTypeIri)
@@ -2155,7 +2154,7 @@ class ResourcesResponderV1 extends Responder {
                     } yield (propertyEntityInfoMap, resourceEntityInfoMap, propsAndCardinalities)
 
                 case None =>
-                    Future((Map.empty[IRI, PropertyEntityInfoV2], Map.empty[IRI, ResourceEntityInfoV2], Map.empty[IRI, Cardinality.Value]))
+                    Future((Map.empty[IRI, PropertyEntityInfoV2], Map.empty[IRI, ClassEntityInfoV2], Map.empty[IRI, Cardinality.Value]))
             }
 
             queryResult <- queryResults2PropertyV1s(
@@ -2197,7 +2196,7 @@ class ResourcesResponderV1 extends Responder {
                 resourceProject = maybeResourceProjectStatement.getOrElse(throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no knora-base:attachedToProject"))._2
 
                 // Get the rows describing file values from the query results, grouped by file value IRI.
-                fileValueGroupedRows: Seq[(IRI, Seq[VariableResultsRow])] = resInfoResponseRows.filter(row => InputValidation.optionStringToBoolean(row.rowMap.get("isFileValue"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isFileValue: ${row.rowMap.get("isFileValue")}"))).groupBy(row => row.rowMap("obj")).toVector
+                fileValueGroupedRows: Seq[(IRI, Seq[VariableResultsRow])] = resInfoResponseRows.filter(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isFileValue"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isFileValue: ${row.rowMap.get("isFileValue")}"))).groupBy(row => row.rowMap("obj")).toVector
 
                 // Convert the file value rows to ValueProps objects, and filter out the ones that the user doesn't have permission to see.
                 valuePropsForFileValues: Seq[(IRI, ValueProps)] = fileValueGroupedRows.map {
@@ -2325,7 +2324,7 @@ class ResourcesResponderV1 extends Responder {
       * @param groupedPropertiesByType The [[GroupedPropertiesByType]] returned by `getGroupedProperties` containing the resuls of the SPARQL query.
       * @param propertyEntityInfoMap   a [[Map]] of entity IRIs to [[PropertyEntityInfoV2]] objects. If this [[Map]] is not empty, it will be used to include
       *                                ontology-based information in the returned [[PropertyV1]] objects.
-      * @param resourceEntityInfoMap   a [[Map]] of entity IRIs to [[ResourceEntityInfoV2]] objects. If this [[Map]] is not empty, it will be used to include
+      * @param resourceEntityInfoMap   a [[Map]] of entity IRIs to [[ClassEntityInfoV2]] objects. If this [[Map]] is not empty, it will be used to include
       *                                ontology-based information for linking properties in the returned [[PropertyV1]] objects.
       * @param propsAndCardinalities   a [[Map]] of property IRIs to their cardinalities in the class of the queried resource. If this [[Map]] is not
       *                                empty, it will be used to include cardinalities in the returned [[PropertyV1]] objects.
@@ -2335,7 +2334,7 @@ class ResourcesResponderV1 extends Responder {
     private def queryResults2PropertyV1s(containingResourceIri: IRI,
                                          groupedPropertiesByType: GroupedPropertiesByType,
                                          propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2],
-                                         resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV2],
+                                         resourceEntityInfoMap: Map[IRI, ClassEntityInfoV2],
                                          propsAndCardinalities: Map[IRI, Cardinality.Value],
                                          userProfile: UserProfileV1): Future[Seq[PropertyV1]] = {
         /**

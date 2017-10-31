@@ -8,6 +8,8 @@ PAPER         =
 BUILDDIR      = _build
 FORMATDOCDIR  = _format_docu
 FORMATSRCDIR  = ../salsah/src/typescript_interfaces
+FORMATDOCDIRV2  = _format_docu_v2
+FORMATSRCDIRV2  = format_v2/JSONLD
 TYPEDOC       = typedoc
 
 # User-friendly check for sphinx-build
@@ -64,10 +66,12 @@ html:
 
 jsonformat:
 	$(TYPEDOC) --out $(FORMATDOCDIR) --exclude **/sampleRequests/* --readme none --name "Knora API V1 Format Documentation" --module commonjs $(FORMATSRCDIR)
-	@echo "Format Docs Build finished. The index page is $(FORMATDOCDIR)/index.html."
+	$(TYPEDOC) --out $(FORMATDOCDIRV2) --exclude **/$(FORMATSRCDIRV2)/samples/* --readme none --name "Knora API V2 JSON-LD Format Documentation" --module commonjs $(FORMATSRCDIRV2)
+	@echo "Format Docs Build finished. The index page for V1 is $(FORMATDOCDIR)/index.html, for V2 $(FORMATDOCDIRV2)/index.html"
 
 jsonformattest:
 	$(TYPEDOC) --out $(FORMATDOCDIR) --readme none --name "Knora API V1 Format Documentation" --module commonjs $(FORMATSRCDIR)
+	$(TYPEDOC) --out $(FORMATDOCDIRV2) --readme none --name "Knora API V2 JSON-LD Format Documentation" --module commonjs $(FORMATSRCDIRV2)
 	@echo "Sample requests test finished."
 
 dirhtml:

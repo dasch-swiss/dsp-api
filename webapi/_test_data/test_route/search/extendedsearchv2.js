@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * To be run with nodejs.
  */
@@ -10,7 +11,7 @@ let queryArr = [];
 
 // search for all the letters exchanged between two persons
 queryArr.push(`
-    PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
+    PREFIX beol: <http://0.0.0.0:3333/ontology/beol/simple/v2#>
     PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
     
     CONSTRUCT {
@@ -19,6 +20,9 @@ queryArr.push(`
         ?letter ?linkingProp1  <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> .
 
         ?letter ?linkingProp2  <http://rdfh.ch/beol/_yblAQMwT2un_xN7UaVWrg> .
+        
+        <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> beol:hasFamilyName ?name .
+        
 
     } WHERE {
         ?letter a knora-api:Resource .
@@ -33,8 +37,14 @@ queryArr.push(`
         ?letter ?linkingProp1  <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> .
         ?linkingProp1 knora-api:objectType knora-api:Resource .
         FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
-    
+        
         <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> a knora-api:Resource .
+
+        <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> beol:hasFamilyName ?name .
+        
+        beol:hasFamilyName knora-api:objectType xsd:string .
+        ?name a xsd:string .
+
 
         # Hermann, Jacob 1678-1733
         ?letter ?linkingProp2 <http://rdfh.ch/beol/_yblAQMwT2un_xN7UaVWrg> .
@@ -48,7 +58,7 @@ queryArr.push(`
 
 // search for a letter that has the given title and mentions Isaac Newton
 queryArr.push(`
-      PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
+      PREFIX beol: <http://0.0.0.0:3333/ontology/beol/simple/v2#>
       PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
       
       CONSTRUCT {
@@ -80,7 +90,7 @@ queryArr.push(`
 
 // search for a letter that has the given title and mentions Isaac Newton using a var as a value prop pred
 queryArr.push(`
-      PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
+      PREFIX beol: <http://0.0.0.0:3333/ontology/beol/simple/v2#>
       PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
       
       CONSTRUCT {
@@ -114,7 +124,7 @@ queryArr.push(`
 
 // search for a letter with the given title that links to another letter via standoff that is authored by a person with IAF id "120379260" and has the title "1708-03-11_Scheuchzer_Johannes-Bernoulli_Johann_I"
 queryArr.push(`
-PREFIX beol: <http://api.knora.org/ontology/beol/simple/v2#>
+PREFIX beol: <http://0.0.0.0:3333/ontology/beol/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 
 CONSTRUCT {
@@ -122,11 +132,13 @@ CONSTRUCT {
 
     ?letter a beol:letter .
 
+    ?letter beol:title ?title .
+
     ?letter knora-api:hasStandoffLinkTo ?anotherLetter .
 
     ?anotherLetter beol:hasAuthor ?author .
 
-    ?author beol:hasIAFIdentifier "120379260" .
+    ?author beol:hasIAFIdentifier ?gnd .
 } WHERE {
 
     ?letter a beol:letter .
@@ -157,7 +169,78 @@ CONSTRUCT {
 }
 `);
 
+// query all link objects that refer to an incunabula:book
+// Attention: link objects have several instances of knora-api:hasLinkTo
+queryArr.push(`
+    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+    PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+    
+    CONSTRUCT {
+        ?linkObj knora-api:isMainResource true .
+        
+        ?linkObj knora-api:hasLinkTo ?book .
+        
+    } WHERE {
+        ?linkObj a knora-api:Resource .
+        ?linkObj a knora-api:LinkObj .
+        
+        ?linkObj knora-api:hasLinkTo ?book .
+        knora-api:hasLinkTo knora-api:objectType knora-api:Resource .
+        
+        ?book a knora-api:Resource .
+        ?book a incunabula:book . 
+     
+        ?book incunabula:title ?title .
+        
+        incunabula:title knora-api:objectType xsd:string .
 
+        ?title a xsd:string .
+        
+    }
+
+`);
+
+
+// query all link objects that refer to an incunabula:book
+// Attention: link objects have several instances of knora-api:hasLinkTo
+queryArr.push(`
+    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+    PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+    
+    CONSTRUCT {
+        ?linkObj knora-api:isMainResource true .
+        
+    } WHERE {
+        ?linkObj a knora-api:Resource .
+        ?linkObj a incunabula:book .
+        
+    }
+
+`);
+
+queryArr.push(`
+    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+    PREFIX beol: <http://0.0.0.0:3333/ontology/beol/simple/v2#>
+    
+    CONSTRUCT {
+        ?letter knora-api:isMainResource true .
+        
+        #?letter beol:hasText ?text .
+        
+    } WHERE {
+        ?letter a knora-api:Resource .
+        ?letter a beol:letter .
+        
+        ?letter beol:hasText ?text .
+        
+        beol:hasText knora-api:objectType xsd:string .
+
+        ?text a xsd:string .
+        
+        
+    } OFFSET 0
+
+`);
 
 
 
@@ -217,7 +300,7 @@ function runQuery(queryStrArr, index) {
                 console.log(parsedData['schema:numberOfItems']);
                 console.log(rawData);
                 console.log(`Duration in millis: ${duration}`);
-                console.log("++++++++++")
+                console.log("++++++++++");
                 runQuery(queryStrArr, index+1);
             } catch (e) {
                 console.error(e.message);

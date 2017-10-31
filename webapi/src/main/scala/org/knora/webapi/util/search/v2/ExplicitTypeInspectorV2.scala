@@ -44,7 +44,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
         import Ordering.Tuple2 // scala compiler issue: https://issues.scala-lang.org/browse/SI-8541
 
         val RDF_TYPE: Value = Value(0, OntologyConstants.Rdf.Type)
-        val OBJECT_TYPE: Value = Value(1, OntologyConstants.KnoraApiV2Simplified.ObjectType)
+        val OBJECT_TYPE: Value = Value(1, OntologyConstants.KnoraApiV2Simple.ObjectType)
 
         val valueMap: Map[IRI, Value] = values.map(v => (v.toString, v)).toMap
     }
@@ -61,11 +61,19 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
             OntologyConstants.Xsd.String,
             OntologyConstants.Xsd.Integer,
             OntologyConstants.Xsd.Decimal,
-            OntologyConstants.KnoraApiV2Simplified.Date,
-            OntologyConstants.KnoraApiV2Simplified.Resource,
-            OntologyConstants.KnoraApiV2Simplified.StillImageFile,
-            OntologyConstants.KnoraApiV2Simplified.Geom,
-            OntologyConstants.KnoraApiV2Simplified.Color
+            OntologyConstants.KnoraApiV2Simple.Resource,
+            OntologyConstants.KnoraApiV2Simple.Date,
+            OntologyConstants.KnoraApiV2Simple.Geom,
+            OntologyConstants.KnoraApiV2Simple.Geoname,
+            OntologyConstants.KnoraApiV2Simple.Interval,
+            OntologyConstants.KnoraApiV2Simple.Color,
+            OntologyConstants.KnoraApiV2Simple.File,
+            OntologyConstants.KnoraApiV2Simple.StillImageFile,
+            OntologyConstants.KnoraApiV2Simple.TextFile,
+            OntologyConstants.KnoraApiV2Simple.MovingImageFile,
+            OntologyConstants.KnoraApiV2Simple.AudioFile,
+            OntologyConstants.KnoraApiV2Simple.DDDFile,
+            OntologyConstants.KnoraApiV2Simple.DocumentFile
         )
 
         /**
@@ -207,14 +215,14 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
         val typeableEntity = toTypeableEntity(statementPattern.subj)
 
         val annotationPropIri = statementPattern.pred match {
-            case IriRef(iri) => iri
+            case IriRef(iri, _) => iri
             case other => throw AssertionException(s"Not a type annotation predicate: $other")
         }
 
         val annotationProp = TypeAnnotationPropertiesV2.valueMap.getOrElse(annotationPropIri, throw AssertionException(s"Not a type annotation predicate: $annotationPropIri"))
 
         val typeIri = statementPattern.obj match {
-            case IriRef(iri) => iri
+            case IriRef(iri, _) => iri
             case other => throw AssertionException(s"Not a valid type in a type annotation: $other")
         }
 
@@ -233,7 +241,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
       */
     private def isAnnotationStatement(statementPattern: StatementPattern): Boolean = {
         statementPattern.pred match {
-            case IriRef(predIri) =>
+            case IriRef(predIri, _) =>
                 TypeAnnotationPropertiesV2.valueMap.get(predIri) match {
                     case Some(TypeAnnotationPropertiesV2.RDF_TYPE) =>
                         isValidTypeInAnnotation(statementPattern.obj)
@@ -260,7 +268,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
       */
     def isValidTypeInAnnotation(entity: Entity): Boolean = {
         entity match {
-            case IriRef(objIri) if TypeInspectionConstantsV2.ApiV2SimpleTypeIris(objIri) => true
+            case IriRef(objIri, _) if TypeInspectionConstantsV2.ApiV2SimpleTypeIris(objIri) => true
             case _ => false
         }
     }
@@ -276,7 +284,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
             case statementPattern: StatementPattern =>
                 // Don't look for a type annotation of an IRI that's the object of rdf:type.
                 statementPattern.pred match {
-                    case IriRef(OntologyConstants.Rdf.Type) => toTypeableEntities(Seq(statementPattern.subj, statementPattern.pred))
+                    case IriRef(OntologyConstants.Rdf.Type, _) => toTypeableEntities(Seq(statementPattern.subj, statementPattern.pred))
                     case _ => toTypeableEntities(Seq(statementPattern.subj, statementPattern.pred, statementPattern.obj))
                 }
 
@@ -302,7 +310,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
     private def toTypeableEntity(entity: Entity): TypeableEntity = {
         entity match {
             case QueryVariable(variableName) => TypeableVariable(variableName)
-            case IriRef(iri) => TypeableIri(iri)
+            case IriRef(iri, _) => TypeableIri(iri)
             case _ => throw AssertionException(s"Entity cannot be typed: $entity")
         }
     }
@@ -317,7 +325,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
     private def toTypeableEntities(entities: Seq[Entity]): Set[TypeableEntity] = {
         entities.collect {
             case QueryVariable(variableName) => TypeableVariable(variableName)
-            case IriRef(iri) if !TypeInspectionConstantsV2.ApiV2SimpleNonTypeableIris(iri) => TypeableIri(iri)
+            case IriRef(iri, _) if !TypeInspectionConstantsV2.ApiV2SimpleNonTypeableIris(iri) => TypeableIri(iri)
         }.toSet
     }
 }

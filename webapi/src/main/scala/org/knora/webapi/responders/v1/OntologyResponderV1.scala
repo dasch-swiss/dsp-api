@@ -27,6 +27,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsNamedGraphGetV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversions
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
@@ -77,7 +78,7 @@ class OntologyResponderV1 extends Responder {
 
         for {
             // forward the request to the v2 ontologies responder
-            loadOntologiesResponse: LoadOntologiesResponseV2 <- (responderManager ? LoadOntologiesRequestV2(userProfile)).mapTo[LoadOntologiesResponseV2]
+            successResponse: SuccessResponseV2 <- (responderManager ? LoadOntologiesRequestV2(userProfile)).mapTo[SuccessResponseV2]
 
         } yield LoadOntologiesResponse()
     }
@@ -93,7 +94,7 @@ class OntologyResponderV1 extends Responder {
     private def getEntityInfoResponseV1(resourceClassIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[EntityInfoGetResponseV1] = {
         for {
             response: EntityInfoGetResponseV2 <- (responderManager ? EntityInfoGetRequestV2(resourceClassIris, propertyIris, userProfile)).mapTo[EntityInfoGetResponseV2]
-        } yield EntityInfoGetResponseV1(resourceEntityInfoMap = response.resourceEntityInfoMap, propertyEntityInfoMap = response.propertyEntityInfoMap) // TODO: use V2 directly
+        } yield EntityInfoGetResponseV1(resourceEntityInfoMap = response.classEntityInfoMap, propertyEntityInfoMap = response.propertyEntityInfoMap) // TODO: use V2 directly
     }
 
 
@@ -148,7 +149,7 @@ class OntologyResponderV1 extends Responder {
         for {
         // Get all information about the resource type, including its property cardinalities.
             resourceClassInfoResponse: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(resourceClassIris = Set(resourceTypeIri), userProfile = userProfile)
-            resourceClassInfo: ResourceEntityInfoV2 = resourceClassInfoResponse.resourceEntityInfoMap.getOrElse(resourceTypeIri, throw NotFoundException(s"Resource class $resourceTypeIri not found"))
+            resourceClassInfo: ClassEntityInfoV2 = resourceClassInfoResponse.resourceEntityInfoMap.getOrElse(resourceTypeIri, throw NotFoundException(s"Resource class $resourceTypeIri not found"))
 
             // Get all information about those properties.
             propertyInfo: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = resourceClassInfo.cardinalities.keySet, userProfile = userProfile)
@@ -261,20 +262,20 @@ class OntologyResponderV1 extends Responder {
     /**
       * Gets the [[NamedGraphEntityInfoV1]] for a named graph
       *
-      * @param namedGraphIri the Iri of the named graph to query
+      * @param namedGraphIri the IRI of the named graph to query
       * @param userProfile   the profile of the user making the request.
       * @return a [[NamedGraphEntityInfoV1]].
       */
     def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV1] = {
         for {
             response: NamedGraphEntityInfoV2 <- (responderManager ? NamedGraphEntitiesRequestV2(namedGraphIri, userProfile)).mapTo[NamedGraphEntityInfoV2]
-        } yield NamedGraphEntityInfoV1(namedGraphIri = response.namedGraphIri, resourceClasses = response.resourceClasses, propertyIris = response.propertyIris) // TODO: use V2 directly
+        } yield NamedGraphEntityInfoV1(namedGraphIri = response.namedGraphIri, resourceClasses = response.classIris, propertyIris = response.propertyIris) // TODO: use V2 directly
     }
 
     /**
       * Gets all the resource classes and their properties for a named graph.
       *
-      * @param namedGraphIriOption the Iri of the named graph or None if all the named graphs should be queried.
+      * @param namedGraphIriOption the IRI of the named graph or None if all the named graphs should be queried.
       * @param userProfile         the profile of the user making the request.
       * @return [[ResourceTypesForNamedGraphResponseV1]].
       */
@@ -317,7 +318,7 @@ class OntologyResponderV1 extends Responder {
             } yield resourceTypes
         }
 
-        // get resource types for named graph depending on given Iri-Option
+        // get resource types for named graph depending on given IRI-Option
         namedGraphIriOption match {
             case Some(namedGraphIri) => // get the resource types for the given named graph
                 for {
@@ -337,7 +338,7 @@ class OntologyResponderV1 extends Responder {
     /**
       * Gets the property types defined in the given named graph. If there is no named graph defined, get property types for all existing named graphs.
       *
-      * @param namedGraphIriOption the Iri of the named graph or None if all the named graphs should be queried.
+      * @param namedGraphIriOption the IRI of the named graph or None if all the named graphs should be queried.
       * @param userProfile         the profile of the user making the request.
       * @return a [[PropertyTypesForNamedGraphResponseV1]].
       */
@@ -409,7 +410,7 @@ class OntologyResponderV1 extends Responder {
     /**
       * Gets the property types defined for the given resource class.
       *
-      * @param resourceClassIri the Iri of the resource class to query for.
+      * @param resourceClassIri the IRI of the resource class to query for.
       * @param userProfile      the profile of the user making the request.
       * @return a [[PropertyTypesForResourceTypeResponseV1]].
       */
