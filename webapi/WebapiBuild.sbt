@@ -15,6 +15,9 @@ lazy val webapi = (project in file(".")).
             IntegrationTest
         ).
         settings(webApiCommonSettings:  _*).
+        settings(inConfig(Test)(
+            Defaults.testTasks ++ baseAssemblySettings
+        ): _*).
         settings(inConfig(FusekiTest)(
             Defaults.testTasks ++ Seq(
                 fork := true,
@@ -48,7 +51,7 @@ lazy val webapi = (project in file(".")).
                 fork := true,
                 javaOptions ++= javaIntegrationTestOptions,
                 testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
-            )
+            ) ++ baseAssemblySettings
         ): _*).
         settings(
             libraryDependencies ++= webApiLibs,
@@ -67,20 +70,18 @@ lazy val webapi = (project in file(".")).
             publishArtifact in (IntegrationTest, packageBin) := true
         ).
         settings( // enable deployment staging with `sbt stage`. uses fat jar assembly.
-            // we specify the name for our fat jar
+            // we specify the name for our fat jars (main, test, it)
             assemblyJarName in assembly := "assembly-webapi.jar",
+            assemblyJarName in (Test, assembly) := s"${name.value}-test-${version.value}.jar",
+            assemblyJarName in (IntegrationTest, assembly) := s"${name.value}-it-${version.value}.jar",
             // disable running of tests before fat jar assembly!
             test in assembly := {},
-            mappings in Universal ++= {
-                // copy the scripts folder
-                directory("scripts") ++
-                // copy the configuration files to config directory
-                contentOf("configs").toMap.mapValues("config/" + _) ++
-                // copy configuration files to config directory
-                contentOf("src/main/resources").toMap.mapValues("config/" + _)
-            },
-            // removes all jar mappings in universal and appends the fat jar
+            test in (Test, assembly) := {},
+            test in (IntegrationTest, assembly) := {},
+            // Skip packageDoc task on stage
+            mappings in (Compile, packageDoc) := Seq(),
             mappings in Universal := {
+                // removes all jar mappings in universal and appends the fat jar
                 // universalMappings: Seq[(File,String)]
                 val universalMappings = (mappings in Universal).value
                 val fatJar = (assembly in Compile).value
@@ -91,6 +92,16 @@ lazy val webapi = (project in file(".")).
                 // add the fat jar
                 filtered :+ (fatJar -> ("lib/" + fatJar.getName))
             },
+            mappings in Universal ++= {
+                // copy the scripts folder
+                directory("scripts") ++
+                // copy the configuration files to config directory
+                contentOf("configs").toMap.mapValues("config/" + _) ++
+                // copy configuration files to config directory
+                contentOf("src/main/resources").toMap.mapValues("config/" + _)
+            },
+            // the bash scripts classpath only needs the fat jar
+            scriptClasspath := Seq( (assemblyJarName in assembly).value ),
             // add 'config' directory first in the classpath of the start script,
             scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
             // add license
