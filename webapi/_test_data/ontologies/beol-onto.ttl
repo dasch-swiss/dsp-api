@@ -207,7 +207,7 @@
 
                    knora-base:objectClassConstraint knora-base:LinkValue ;
 
-                   knora-base:subjectClassConstraint :writtenSource ;
+                   knora-base:subjectClassConstraint :letter ;
 
                    rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
