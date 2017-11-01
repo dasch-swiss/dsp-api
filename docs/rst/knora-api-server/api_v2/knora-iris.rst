@@ -38,7 +38,7 @@ IRIs for Ontologies and Ontology Entities
 Internal Ontology IRIs
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Starting with the Knora API v2, Knora makes a distinction between internal and external ontologies. Internal ontologies are used in the triplestore, while external ontologies are used in the API. For each internal ontology, there is a corresponding external ontology. Some internal ontologies are built into Knora, while others are project-specific. The Knora API server automatically generates external ontologies based on project-specific internal ontologies.
+Starting with Knora API v2, Knora makes a distinction between internal and external ontologies. Internal ontologies are used in the triplestore, while external ontologies are used in the API. For each internal ontology, there is a corresponding external ontology. Some internal ontologies are built into Knora, while others are project-specific. The Knora API server automatically generates external ontologies based on project-specific internal ontologies.
 
 Each internal ontology has an IRI, which is also the IRI of the named graph that contains the ontology in the triplestore. An internal project-specific ontology IRI has the form:
 
@@ -89,7 +89,7 @@ The API version identifier indicates not only the version of the API, but also a
 
 Other schemas could be added in the future for more specific use cases.
 
-When requesting an ontology, the client requests a particular schema. (This will also be true of all Knora API v2 requests: the client will be able to specify which schema the response should be provided in.)
+When requesting an ontology, the client requests a particular schema. (This will also be true of most Knora API v2 requests: the client will be able to specify which schema the response should be provided in.)
 
 For example, suppose a Knora API server is running at ``knora.example.org`` and hosts an ontology whose internal IRI is ``http://www.knora.org/ontology/0001/example``. That ontology can then be requested using either of these IRIs:
 
@@ -115,7 +115,7 @@ IRIs for Data
 
 Knora generates IRIs for data that it creates in the triplestore. Each generated data IRI contains one or more UUID_ identifiers to make it unique. To keep data IRIs relatively short, each UUID is Base64_ encoded, using the 'URL and Filename safe Base64 Alphabet' specified in Table 2 of RFC 4648, without padding; thus each UUID is a 22-character string.
 
-Data IRIs are not currently intended to be dereferenced as URLs. Instead, each Knora resource will have a corresponding ARK_ URL, which will be handled by a server that redirects requests to the relevant Knora API server (see :ref:`permalinks`). However, every generated data IRI begins with ``http://rdfh.ch``. This domain is not curently used, but it is owned by the DaSCH_, so it would be possible to make data IRIs directly dereferenceable in the future.
+Data IRIs are not currently intended to be dereferenced as URLs. Instead, each Knora resource will have a corresponding ARK_ URL, which will be handled by a server that redirects requests to the relevant Knora API server (see :ref:`permalinks`). However, every generated data IRI begins with ``http://rdfh.ch``. This domain is not curently used, but it is owned by the DaSCH_, so it would be possible to make resource IRIs directly dereferenceable in the future.
 
 The formats of generated data IRIs for different types of objects are as follows:
 
