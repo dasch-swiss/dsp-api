@@ -1,4 +1,5 @@
-FROM dhlabbasel/webapi-base:latest
+# first stage does the building
+FROM dhlabbasel/webapi-base:latest as build-stage
 
 MAINTAINER Ivan Subotic "ivan.subotic@unibas.ch"
 
@@ -6,15 +7,19 @@ MAINTAINER Ivan Subotic "ivan.subotic@unibas.ch"
 RUN mkdir /src
 COPY . /src
 
-# generate deployment jars and clean up
+# generate deployment packaging
 RUN \
   cd /src && \
   sbt stage && \
   mkdir /salsah && \
-  cp -r /src/target/universal/stage/* /salsah && \
-  rm -rf /src
+  cp -r /src/target/universal/stage/* /salsah
 
-# Expose the webapi default port
+# starting second stage
+FROM openjdk:8-jre-alpine
+
+COPY --from=build-stage /salsah /salsah
+
+# Expose the salsah default port
 EXPOSE 3335
 
 CMD ["/salsah/bin/salsah"]

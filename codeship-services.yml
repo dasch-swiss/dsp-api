@@ -1,7 +1,6 @@
 webapi:
   build:
     image: dhlabbasel/webapi
-    context: webapi
     dockerfile: Dockerfile.ci
   links:
     - graphdb

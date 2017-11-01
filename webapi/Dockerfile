@@ -1,4 +1,5 @@
-FROM dhlabbasel/webapi-base:latest
+# first stage does the building
+FROM dhlabbasel/webapi-base:latest as build-stage
 
 MAINTAINER Ivan Subotic "ivan.subotic@unibas.ch"
 
@@ -6,13 +7,17 @@ MAINTAINER Ivan Subotic "ivan.subotic@unibas.ch"
 RUN mkdir /src
 COPY . /src
 
-# generate deployment jars and clean up.
+# generate deployment packaging
 RUN \
   cd /src && \
   sbt stage && \
   mkdir /webapi && \
-  cp -r /src/target/universal/stage/* /webapi && \
-  rm -rf /src
+  cp -r /src/target/universal/stage/* /webapi
+
+# starting second stage
+FROM openjdk:8-jre-alpine
+
+COPY --from=build-stage /webapi /webapi
 
 # Expose the webapi default port
 EXPOSE 3333
