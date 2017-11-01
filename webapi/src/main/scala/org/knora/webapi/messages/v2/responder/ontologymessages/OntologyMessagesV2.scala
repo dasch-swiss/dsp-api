@@ -64,6 +64,18 @@ case class CreateOntologyRequestV2(ontologyName: String,
 }
 
 /**
+  * Requests the addition of a property to an ontology. A successful response will be a [[ReadEntityDefinitionsV2]].
+  *
+  * @param propertyIri the IRI of the new property (in the API v2 complex schema).
+  * @param apiRequestID the ID of the API request.
+  * @param userProfile  the profile of the user making the request.
+  */
+case class CreatePropertyRequestV2(propertyIri: IRI,
+                                   apiRequestID: UUID,
+                                   userProfile: UserProfileV1) extends OntologiesResponderRequestV2 {
+}
+
+/**
   * Requests all available information about a list of ontology entities (classes and/or properties). A successful response will be an
   * [[EntityInfoGetResponseV2]].
   *
