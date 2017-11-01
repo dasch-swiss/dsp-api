@@ -32,11 +32,12 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.OwlCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.{CacheUtil, ErrorHandlingMap, KnoraIdUtil}
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.util.StringFormatter.OntologyID
 
 import scala.concurrent.Future
 
@@ -1006,21 +1007,89 @@ class OntologyResponderV2 extends Responder {
       * @param createOntologyRequest the request message.
       * @return a [[SuccessResponseV2]].
       */
-    private def createOntology(createOntologyRequest: CreateOntologyRequestV2): Future[SuccessResponseV2] = {
+    private def createOntology(createOntologyRequest: CreateOntologyRequestV2): Future[ReadEntityDefinitionsV2] = {
+        def makeTaskFuture(internalOntologyIri: IRI): Future[ReadEntityDefinitionsV2] = {
+            for {
+                currentTime: String <- FastFuture.successful(Instant.now.toString)
+
+                // Make sure the ontology doesn't already exist.
+
+                checkOntologySparql = queries.sparql.v2.txt.getOntologyInfo(
+                    triplestore = settings.triplestoreType,
+                    ontologyIri = internalOntologyIri
+                ).toString
+
+                preUpdateCheckResponse <- (storeManager ? SparqlSelectRequest(checkOntologySparql)).mapTo[SparqlSelectResponse]
+
+                _ = if (preUpdateCheckResponse.results.bindings.nonEmpty) {
+                    throw BadRequestException(s"Ontology $internalOntologyIri cannot be created, because it already exists")
+                }
+
+                // Create the ontology.
+
+                createOntologySparql = queries.sparql.v2.txt.createOntology(
+                    triplestore = settings.triplestoreType,
+                    ontologyNamedGraphIri = internalOntologyIri,
+                    ontologyIri = internalOntologyIri,
+                    currentTime = currentTime
+                ).toString
+
+                createOntologyResponse <- (storeManager ? SparqlUpdateRequest(createOntologySparql)).mapTo[SparqlUpdateResponse]
+
+                // Check that the update was successful.
+
+                postUpdateCheckResponse <- (storeManager ? SparqlSelectRequest(checkOntologySparql)).mapTo[SparqlSelectResponse]
+
+                lastModDate: Set[String] = postUpdateCheckResponse.results.bindings.map {
+                    row => row.rowMap.get("ontologyPred") match {
+                        case Some(OntologyConstants.KnoraBase.LastModificationDate) => row.rowMap.get("ontologyObj")
+                        case _ => None
+                    }
+                }.toSet.flatten
+
+                _ = if (lastModDate.size > 1) {
+                    throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has more than one knora-base:lastModificationDate")
+                }
+
+                _ = if (lastModDate.head != currentTime) {
+                    throw UpdateNotPerformedException()
+                }
+
+                // TODO: tell the projects responder that the ontology was created, so it can add it to the project's admin data.
+
+                externalOntologyIri = stringFormatter.internalOntologyIriToApiV2WithValueObjectsOntologyIri(internalOntologyIri, () => throw AssertionException(s"Invalid internal ontology IRI: $internalOntologyIri"))
+
+            } yield ReadEntityDefinitionsV2(
+                ontologies = Map(externalOntologyIri -> Set.empty[IRI])
+            )
+        }
+
         for {
-            currentTime: String <- FastFuture.successful(Instant.now.toString)
+            userProfile <- FastFuture.successful(createOntologyRequest.userProfile)
 
-            createOntologySparql = queries.sparql.v2.txt.createOntology(
-                triplestore = settings.triplestoreType,
-                ontologyNamedGraphIri = createOntologyRequest.ontologyIri,
-                ontologyIri = createOntologyRequest.ontologyIri,
-                currentTime = currentTime
-            ).toString
+            // TODO: check whether the user is a project or system admin.
 
-            createOntologyResponse <- (storeManager ? SparqlUpdateRequest(createOntologySparql)).mapTo[SparqlUpdateResponse]
+            // TODO: get a real project code from the projects responder.
 
-            // TODO: check whether the ontology was created by querying its lastModificationDate.
+            projectCode: Option[String] = if (createOntologyRequest.ontologyName == "example") {
+                Some("0000")
+            } else {
+                None
+            }
 
-        } yield SuccessResponseV2("Ontology created.")
+            // Check that the ontology name is valid.
+            validOntologyName = stringFormatter.toProjectSpecificOntologyName(createOntologyRequest.ontologyName, () => throw BadRequestException(s"Invalid project-specific ontology name: ${createOntologyRequest.ontologyName}"))
+
+            // Make the internal ontology IRI.
+            externalOntologyID = OntologyID(validOntologyName, projectCode)
+            internalOntologyIri = stringFormatter.externalOntologyIDToInternalOntologyIri(externalOntologyID)
+
+            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            taskResult <- IriLocker.runWithIriLock(
+                createOntologyRequest.apiRequestID,
+                createOntologyRequest.ontologyName,
+                () => makeTaskFuture(internalOntologyIri)
+            )
+        } yield taskResult
     }
 }

@@ -21,6 +21,8 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
 
+import java.util.UUID
+
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
@@ -48,17 +50,17 @@ sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 {
 case class LoadOntologiesRequestV2(userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
-  * Requests the creation of an empty ontology. A successful response will be a [[SuccessResponseV2]].
+  * Requests the creation of an empty ontology. A successful response will be a [[ReadEntityDefinitionsV2]].
   *
-  * @param ontologyIri the IRI of the ontology to be created. This must be an internal ontology IRI.
-  * @param userProfile the profile of the user making the request.
+  * @param ontologyName  the name of the ontology to be created.
+  * @param projectIri   the IRI of the project that the ontology will belong to.
+  * @param apiRequestID the ID of the API request.
+  * @param userProfile  the profile of the user making the request.
   */
-case class CreateOntologyRequestV2(ontologyIri: IRI, userProfile: UserProfileV1) extends OntologiesResponderRequestV2 {
-    private val stringFormatter = StringFormatter.getInstance
-
-    if (!stringFormatter.isProjectSpecificInternalOntologyIri(ontologyIri)) {
-        throw AssertionException(s"Expected internal project-specific ontology IRI: $ontologyIri")
-    }
+case class CreateOntologyRequestV2(ontologyName: String,
+                                   projectIri: IRI,
+                                   apiRequestID: UUID,
+                                   userProfile: UserProfileV1) extends OntologiesResponderRequestV2 {
 }
 
 /**
@@ -223,7 +225,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                                    properties: Map[IRI, PropertyEntityInfoV2] = Map.empty[IRI, PropertyEntityInfoV2],
                                    standoffClasses: Map[IRI, ClassEntityInfoV2] = Map.empty[IRI, ClassEntityInfoV2],
                                    standoffProperties: Map[IRI, PropertyEntityInfoV2] = Map.empty[IRI, PropertyEntityInfoV2],
-                                   userLang: Option[String]) extends KnoraResponseV2 {
+                                   userLang: Option[String] = None) extends KnoraResponseV2 {
 
     private val stringFormatter = StringFormatter.getInstance
 

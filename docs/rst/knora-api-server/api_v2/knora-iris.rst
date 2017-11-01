@@ -41,21 +41,20 @@ Each internal ontology has an IRI, which is also the IRI of the named graph that
 
 A project code is a hexadecimal number of at least four digits, assigned by the DaSCH to uniquely identify a Knora project regardless of where it is hosted. It is recommended that new projects should request a project code and use it in their ontology IRIs, to avoid possible future naming conflicts.
 
-The name of the ontology must be a valid XML NCName_. The following names are reserved for built-in internal Knora ontologies:
+For example, the ontology IRI based on project code 0001 and ontology name ``example`` would be:
+
+::
+
+   http://www.knora.org/ontology/0001/example
+
+An ontology name must be a valid XML NCName_. The following names are reserved for built-in internal Knora ontologies:
 
 - ``knora-base``
 - ``standoff``
 - ``salsah-gui``
 - ``dc``
 
-Names starting with ``knora`` are reserved for future built-in Knora ontologies. An ontology name may not start with ``simple`` or with the letter `v` followed by one or more digits.
-
-For example, an ontology with project code 0001 and ontology name ``example`` could be:
-
-::
-
-   http://www.knora.org/ontology/0001/example
-
+Names starting with ``knora`` are reserved for future built-in Knora ontologies. A project-specific ontology name may not start with the letter `v` followed by one or more digits, and may not contain the reserved words ``knora``, ``ontology``, or ``simple``.
 
 External Ontology IRIs
 ^^^^^^^^^^^^^^^^^^^^^^
