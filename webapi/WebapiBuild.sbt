@@ -71,9 +71,9 @@ lazy val webapi = (project in file(".")).
         ).
         settings( // enable deployment staging with `sbt stage`. uses fat jar assembly.
             // we specify the name for our fat jars (main, test, it)
-            assemblyJarName in assembly := "assembly-webapi.jar",
-            assemblyJarName in (Test, assembly) := s"${name.value}-test-${version.value}.jar",
-            assemblyJarName in (IntegrationTest, assembly) := s"${name.value}-it-${version.value}.jar",
+            assemblyJarName in assembly := s"assembly-${name.value}-main-${version.value}.jar",
+            assemblyJarName in (Test, assembly) := s"assembly-${name.value}-test-${version.value}.jar",
+            assemblyJarName in (IntegrationTest, assembly) := s"assembly-${name.value}-it-${version.value}.jar",
             // disable running of tests before fat jar assembly!
             test in assembly := {},
             test in (Test, assembly) := {},
@@ -106,8 +106,10 @@ lazy val webapi = (project in file(".")).
             scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
             // add license
             licenses := Seq(("GNU AGPL", url("https://www.gnu.org/licenses/agpl-3.0"))),
-            // need this here, but why?
-            mainClass in Compile := Some("org.knora.webapi.Main")
+            // need this here, so that the Manifest inside the jars has the correct main class set.
+            mainClass in Compile := Some("org.knora.webapi.Main"),
+            mainClass in Test := Some("org.scalatest.tools.Runner"),
+            mainClass in IntegrationTest := Some("org.scalatest.tools.Runner")
         ).
         enablePlugins(SbtTwirl). // Enable the sbt-twirl plugin
         enablePlugins(JavaAppPackaging) // Enable the sbt-native-packager plugin
@@ -202,7 +204,7 @@ lazy val javaRunOptions = Seq(
     //"-XX:MaxGCPauseMillis=500"
 )
 
-lazy val javaTestOptions = Seq(
+lazy val javaBaseTestOptions = Seq(
     // "-showversion",
     "-Xms2G",
     "-Xmx4G"
@@ -212,29 +214,33 @@ lazy val javaTestOptions = Seq(
     //"-XX:MaxMetaspaceSize=4096m"
 )
 
+lazy val javaTestOptions = Seq(
+    "-Dconfig.resource=graphdb.conf"
+) ++ javaBaseTestOptions
+
 lazy val FusekiTest = config("fuseki") extend(Test)
 lazy val javaFusekiTestOptions = Seq(
     "-Dconfig.resource=fuseki.conf"
-) ++ javaTestOptions
+) ++ javaBaseTestOptions
 
 lazy val FusekiIntegrationTest = config("fuseki-it") extend(IntegrationTest)
 lazy val javaFusekiIntegrationTestOptions = Seq(
     "-Dconfig.resource=fuseki.conf"
-) ++ javaTestOptions
+) ++ javaBaseTestOptions
 
 lazy val GraphDBTest = config("graphdb") extend(Test)
 lazy val javaGraphDBTestOptions = Seq(
     "-Dconfig.resource=graphdb.conf"
-) ++ javaTestOptions
+) ++ javaBaseTestOptions
 
 lazy val EmbeddedJenaTDBTest = config("tdb") extend(Test)
 lazy val javaEmbeddedJenaTDBTestOptions = Seq(
     "-Dconfig.resource=jenatdb.conf"
-) ++ javaTestOptions
+) ++ javaBaseTestOptions
 
 // The 'IntegrationTest' config does not need to be created here, as it is a built-in config!
 // The standard testing tasks are available, but must be prefixed with 'it:', e.g., 'it:test'
 // The test need to be stored in the 'it' (and not 'test') folder. The standard source hierarchy is used, e.g., 'src/it/scala'
 lazy val javaIntegrationTestOptions = Seq(
     "-Dconfig.resource=graphdb.conf"
-) ++ javaTestOptions
+) ++ javaBaseTestOptions
