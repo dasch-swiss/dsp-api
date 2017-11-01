@@ -71,6 +71,31 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "not create 'foo' again" in {
+            actorUnderTest ! CreateOntologyRequestV2(
+                ontologyName = "foo",
+                projectIri = projectWithoutProjectID,
+                apiRequestID = UUID.randomUUID,
+                userProfile = userProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create 'example' again" in {
+            actorUnderTest ! CreateOntologyRequestV2(
+                ontologyName = "example",
+                projectIri = projectWithProjectID,
+                apiRequestID = UUID.randomUUID,
+                userProfile = userProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
         "not create an ontology called '0000'" in {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "0000",
