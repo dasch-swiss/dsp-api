@@ -163,6 +163,7 @@ object KnoraApiV2WithValueObjects {
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo),
+        isLinkProp = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -2444,6 +2445,7 @@ object KnoraApiV2WithValueObjects {
                              propertyType: IRI,
                              subPropertyOf: Set[IRI] = Set.empty[IRI],
                              isEditable: Boolean = false,
+                             isLinkProp: Boolean = false,
                              isLinkValueProp: Boolean = false,
                              predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
                              subjectType: Option[IRI] = None,
@@ -2475,6 +2477,7 @@ object KnoraApiV2WithValueObjects {
             propertyIri = propertyIri,
             ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri,
             isEditable = isEditable,
+            isLinkProp = isLinkProp,
             isLinkValueProp = isLinkValueProp,
             ontologySchema = ApiV2WithValueObjects,
             predicates = predsWithTypes.map {
