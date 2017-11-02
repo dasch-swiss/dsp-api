@@ -279,13 +279,13 @@ object OntologyConstants {
         /* Project */
         val KnoraProject: IRI = KnoraBasePrefixExpansion           + "knoraProject"
         val ProjectShortname: IRI = KnoraBasePrefixExpansion       + "projectShortname"
+        val ProjectShortcode: IRI = KnoraBasePrefixExpansion       + "projectShortcode"
         val ProjectLongname: IRI = KnoraBasePrefixExpansion        + "projectLongname"
         val ProjectDescription: IRI = KnoraBasePrefixExpansion     + "projectDescription"
         val ProjectKeywords: IRI = KnoraBasePrefixExpansion        + "projectKeywords"
         val ProjectLogo: IRI = KnoraBasePrefixExpansion            + "projectLogo"
         val BelongsToInstitution: IRI = KnoraBasePrefixExpansion   + "belongsToInstitution"
-        val ProjectOntologyGraph: IRI = KnoraBasePrefixExpansion   + "projectOntologyGraph"
-        val ProjectDataGraph: IRI = KnoraBasePrefixExpansion       + "projectDataGraph"
+        val ProjectOntology: IRI = KnoraBasePrefixExpansion        + "projectOntology"
         val HasSelfJoinEnabled: IRI = KnoraBasePrefixExpansion     + "hasSelfJoinEnabled"
 
         /* Group */
