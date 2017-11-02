@@ -803,11 +803,17 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
             None
         }
 
+        val isLinkValuePropertyStatement: Option[(IRI, JsonLDBoolean)] = if (isLinkValueProp && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkValueProperty -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
         Map(
             "@id" -> JsonLDString(convertedPropertyIri),
             "@type" -> JsonLDString(convertedPropertyType),
             belongsToOntologyPred -> JsonLDString(convertedOntologyIri)
-        ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++ isEditableStatement
+        ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++ isEditableStatement ++ isLinkValuePropertyStatement
     }
 }
 

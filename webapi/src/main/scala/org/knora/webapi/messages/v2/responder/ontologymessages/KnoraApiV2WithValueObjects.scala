@@ -99,6 +99,26 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.Boolean)
     )
 
+    val IsLinkValueProperty: PropertyEntityInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsLinkValueProperty,
+        propertyType = OntologyConstants.Owl.AnnotationProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "is link value property"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates whether a property points to a link value (reification)"
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.Boolean)
+    )
+
     val CanBeInstantiated: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.CanBeInstantiated,
         propertyType = OntologyConstants.Owl.AnnotationProperty,
@@ -169,6 +189,7 @@ object KnoraApiV2WithValueObjects {
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue),
+        isLinkValueProp = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -2318,6 +2339,7 @@ object KnoraApiV2WithValueObjects {
     val Properties: Map[IRI, PropertyEntityInfoV2] = Set(
         Result,
         IsEditable,
+        IsLinkValueProperty,
         CanBeInstantiated,
         HasPermissions,
         ValueAsString,
@@ -2412,6 +2434,7 @@ object KnoraApiV2WithValueObjects {
       * @param propertyType  the type of the property (owl:ObjectProperty, owl:DatatypeProperty, or rdf:Property).
       * @param subPropertyOf the set of direct superproperties of this property.
       * @param isEditable    true if this is a Knora resource property that can be edited via the Knora API.
+      * @param isLinkValueProp true if the property points to a link value (reification).
       * @param predicates    the property's predicates.
       * @param subjectType   the required type of the property's subject.
       * @param objectType    the required type of the property's object.
@@ -2421,6 +2444,7 @@ object KnoraApiV2WithValueObjects {
                              propertyType: IRI,
                              subPropertyOf: Set[IRI] = Set.empty[IRI],
                              isEditable: Boolean = false,
+                             isLinkValueProp: Boolean = false,
                              predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
                              subjectType: Option[IRI] = None,
                              objectType: Option[IRI] = None): PropertyEntityInfoV2 = {
@@ -2451,6 +2475,7 @@ object KnoraApiV2WithValueObjects {
             propertyIri = propertyIri,
             ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri,
             isEditable = isEditable,
+            isLinkValueProp = isLinkValueProp,
             ontologySchema = ApiV2WithValueObjects,
             predicates = predsWithTypes.map {
                 pred => pred.predicateIri -> pred

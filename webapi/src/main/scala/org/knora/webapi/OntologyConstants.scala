@@ -517,6 +517,7 @@ object OntologyConstants {
         val BelongsToOntology: IRI = KnoraApiV2PrefixExpansion + "belongsToOntology"
 
         val IsEditable: IRI = KnoraApiV2PrefixExpansion + "isEditable"
+        val IsLinkValueProperty: IRI = KnoraApiV2PrefixExpansion + "isLinkValueProperty"
         val CanBeInstantiated: IRI = KnoraApiV2PrefixExpansion + "canBeInstantiated"
 
         val HasClasses: IRI = KnoraApiV2PrefixExpansion + "hasClasses"
