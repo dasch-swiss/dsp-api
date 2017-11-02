@@ -244,7 +244,7 @@ object ConstructResponseUtilV2 {
         def nestResources(resourceIri: IRI, alreadyTraversed: Set[IRI] = Set.empty[IRI]): ResourceWithValueRdfData = {
             val resource = flatResourcesWithValues(resourceIri)
 
-            val transformedValuePropertyAssertions = resource.valuePropertyAssertions.map {
+            val transformedValuePropertyAssertions: Map[IRI, Seq[ValueRdfData]] = resource.valuePropertyAssertions.map {
                 case (propIri, values) =>
                     val transformedValues = values.map {
                         value =>
@@ -268,9 +268,66 @@ object ConstructResponseUtilV2 {
                     propIri -> transformedValues
             }
 
-            resource.copy(
-                valuePropertyAssertions = transformedValuePropertyAssertions
-            )
+            // TODO: check if there is an incoming link from a resource that has not been processed yet
+
+            val incomingResourcesWithLinkValueProps: Map[IRI, ResourceWithValueRdfData] = flatResourcesWithValues.foldLeft(Map.empty[IRI, ResourceWithValueRdfData]) {
+                case (acc: Map[IRI, ResourceWithValueRdfData], (incomingResIri: IRI, values: ResourceWithValueRdfData)) =>
+
+                    val incomingLinkPropertyAssertions: Map[IRI, Seq[ValueRdfData]] = if (!alreadyTraversed(incomingResIri)) {
+
+                        values.valuePropertyAssertions.foldLeft(Map.empty[IRI, Seq[ValueRdfData]]) {
+                            case (acc: Map[IRI, Seq[ValueRdfData]], (valObjIri: IRI, values: Seq[ValueRdfData])) =>
+
+                                val incomingLinkValues: Seq[ValueRdfData] = values.foldLeft(Seq.empty[ValueRdfData]) {
+                                    (acc, value: ValueRdfData) =>
+
+                                        // check if it is a link value and points to this resource
+                                        if (value.valueObjectClass == OntologyConstants.KnoraBase.LinkValue && value.assertions(OntologyConstants.Rdf.Object) == resourceIri) {
+                                            // add incoming link value
+                                            acc :+ value
+                                        } else {
+                                            acc
+                                        }
+
+                                }
+
+                                if (incomingLinkValues.nonEmpty) {
+                                    acc + (valObjIri -> incomingLinkValues)
+                                } else {
+                                    acc
+                                }
+                        }
+
+                    } else {
+                        Map.empty[IRI, Seq[ValueRdfData]]
+                    }
+
+
+                    if (incomingLinkPropertyAssertions.nonEmpty) {
+                        acc + (incomingResIri -> values.copy(
+                            valuePropertyAssertions = incomingLinkPropertyAssertions
+                        ))
+                    } else {
+                        acc
+                    }
+            }
+
+
+            if (incomingResourcesWithLinkValueProps.nonEmpty) {
+
+                // TODO: create a virtual property for the incoming link and given link values and add it
+                // incomingResourcesWithLinkValueProps contains resources that have incoming link values
+                // flatResourcesWithValues contains the complete information
+
+                resource.copy(
+                    valuePropertyAssertions = transformedValuePropertyAssertions
+                )
+            } else {
+                resource.copy(
+                    valuePropertyAssertions = transformedValuePropertyAssertions
+                )
+            }
+
         }
 
         val mainResourceIris: Set[IRI] = flatResourcesWithValues.filter {
