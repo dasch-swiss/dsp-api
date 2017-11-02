@@ -1,4 +1,4 @@
-FROM dhlabbasel/webapi-base:latest
+FROM dhlabbasel/sbt-ivy2-cache
 
 MAINTAINER Ivan Subotic "ivan.subotic@unibas.ch"
 

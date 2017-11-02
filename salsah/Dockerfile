@@ -1,5 +1,5 @@
 # first stage does the building
-FROM dhlabbasel/webapi-base:latest as build-stage
+FROM dhlabbasel/sbt-ivy2-cache as build-stage
 
 MAINTAINER Ivan Subotic "ivan.subotic@unibas.ch"
 
