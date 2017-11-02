@@ -383,7 +383,7 @@ object ResourcesRouteV1 extends Authenticator {
                     // or any other ontologies we've already looked at.
                     ontologyIrisFromCardinalities: Set[IRI] = entityInfoResponse.resourceClassInfoMap.foldLeft(Set.empty[IRI]) {
                         case (acc, (resourceClassIri, resourceClassInfo)) =>
-                            val resourceCardinalityOntologies: Set[IRI] = resourceClassInfo.cardinalities.map {
+                            val resourceCardinalityOntologies: Set[IRI] = resourceClassInfo.allCardinalities.map {
                                 case (propertyIri, _) => stringFormatter.getInternalOntologyIriFromInternalEntityIri(
                                     internalEntityIri = propertyIri,
                                     errorFun = () => throw InconsistentTriplestoreDataException(s"Class $resourceClassIri has a cardinality for an invalid property: $propertyIri")

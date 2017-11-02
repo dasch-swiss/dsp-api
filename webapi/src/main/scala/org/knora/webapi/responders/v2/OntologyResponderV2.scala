@@ -75,15 +75,15 @@ class OntologyResponderV2 extends Responder {
     case class OntologyCacheData(namedGraphs: Set[IRI],
                                  namedGraphClasses: Map[IRI, Set[IRI]],
                                  namedGraphProperties: Map[IRI, Set[IRI]],
-                                 classDefs: Map[IRI, ClassEntityInfoV2],
+                                 classDefs: Map[IRI, ReadClassInfoV2],
                                  resourceAndValueSubClassOfRelations: Map[IRI, Set[IRI]],
                                  resourceSuperClassOfRelations: Map[IRI, Set[IRI]],
                                  propertyDefs: Map[IRI, PropertyEntityInfoV2],
                                  namedGraphStandoffClasses: Map[IRI, Set[IRI]],
                                  namedGraphStandoffProperties: Map[IRI, Set[IRI]],
-                                 standoffClassDefs: Map[IRI, ClassEntityInfoV2],
+                                 standoffClassDefs: Map[IRI, ReadClassInfoV2],
                                  standoffPropertyDefs: Map[IRI, PropertyEntityInfoV2],
-                                 standoffClassDefsWithDataType: Map[IRI, ClassEntityInfoV2])
+                                 standoffClassDefsWithDataType: Map[IRI, ReadClassInfoV2])
 
     def receive = {
         case LoadOntologiesRequestV2(userProfile) => future2Message(sender(), loadOntologies(userProfile), log)
@@ -345,8 +345,10 @@ class OntologyResponderV2 extends Responder {
             // instantiated directly.
             concreteResourceDefsGrouped = resourceDefsGrouped -- OntologyConstants.KnoraBase.AbstractResourceClasses
 
-            // Construct a ClassEntityInfoV2 for each resource class.
-            resourceEntityInfos: Map[IRI, ClassEntityInfoV2] = concreteResourceDefsGrouped.map {
+            // TODO: distinguish between inherited and non-inherited cardinalities.
+
+            // Construct a ReadClassInfoV2 for each resource class.
+            resourceEntityInfos: Map[IRI, ReadClassInfoV2] = concreteResourceDefsGrouped.map {
                 case (resourceClassIri, resourceClassRows) =>
                     val ontologyIri = getOntologyIri(resourceClassIri)
 
@@ -389,27 +391,29 @@ class OntologyResponderV2 extends Responder {
                         throw InconsistentTriplestoreDataException(s"Resource class $resourceClassIri has cardinalities for one or more link value properties without corresponding link properties. The missing link property or properties: ${missingLinkProps.mkString(", ")}")
                     }
 
-                    val resourceEntityInfo = ClassEntityInfoV2(
-                        classIri = resourceClassIri,
-                        ontologyIri = getOntologyIri(resourceClassIri),
-                        canBeInstantiated = ontologyIri != OntologyConstants.KnoraBase.KnoraBaseOntologyIri, // Any resource class defined in a project-specific ontology can be instantiated.
-                        predicates = new ErrorHandlingMap(predicates, { key: IRI => s"Predicate $key not found for resource class $resourceClassIri" }),
-                        cardinalities = owlCardinalities.map {
-                            owlCardinality =>
-                                // Convert the OWL cardinality to a Knora Cardinality enum value.
-                                owlCardinality.propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
-                                    propertyIri = owlCardinality.propertyIri,
-                                    OwlCardinalityInfo(
-                                        owlCardinalityIri = owlCardinality.cardinalityIri,
-                                        owlCardinalityValue = owlCardinality.cardinalityValue
+                    val resourceEntityInfo = ReadClassInfoV2(
+                        classInfoContent = ClassInfoContentV2(
+                            classIri = resourceClassIri,
+                            ontologyIri = getOntologyIri(resourceClassIri),
+                            predicates = new ErrorHandlingMap(predicates, { key: IRI => s"Predicate $key not found for resource class $resourceClassIri" }),
+                            cardinalities = owlCardinalities.map {
+                                owlCardinality =>
+                                    // Convert the OWL cardinality to a Knora Cardinality enum value.
+                                    owlCardinality.propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
+                                        propertyIri = owlCardinality.propertyIri,
+                                        OwlCardinalityInfo(
+                                            owlCardinalityIri = owlCardinality.cardinalityIri,
+                                            owlCardinalityValue = owlCardinality.cardinalityValue
+                                        )
                                     )
-                                )
-                        }.toMap, // Don't return a cardinality for hasStandoffLinkToValue, because there's nothing the client can do with it.
+                            }.toMap,
+                            subClassOf = directResourceSubClassOfRelations.getOrElse(resourceClassIri, Set.empty[IRI]),
+                            ontologySchema = InternalSchema
+                        ),
+                        canBeInstantiated = ontologyIri != OntologyConstants.KnoraBase.KnoraBaseOntologyIri, // Any resource class defined in a project-specific ontology can be instantiated.
                         linkProperties = linkProps,
                         linkValueProperties = linkValueProps,
-                        fileValueProperties = fileValueProps,
-                        subClassOf = directResourceSubClassOfRelations.getOrElse(resourceClassIri, Set.empty[IRI]),
-                        ontologySchema = InternalSchema
+                        fileValueProperties = fileValueProps
                     )
 
                     resourceClassIri -> resourceEntityInfo
@@ -596,7 +600,9 @@ class OntologyResponderV2 extends Responder {
                     standoffClassIri -> prop2Card
             }.toMap
 
-            standoffClassEntityInfos: Map[IRI, ClassEntityInfoV2] = standoffClassesGrouped.map {
+            // TODO: distinguish between inherited and non-inherited cardinalities.
+
+            standoffClassEntityInfos: Map[IRI, ReadClassInfoV2] = standoffClassesGrouped.map {
                 case (standoffClassIri, standoffClassRows) =>
 
                     val standoffGroupedByPredicate: Map[IRI, Seq[VariableResultsRow]] = standoffClassRows.filter(_.rowMap.contains("standoffClassPred")).groupBy(_.rowMap("standoffClassPred")) - OntologyConstants.Rdfs.SubClassOf
@@ -624,17 +630,19 @@ class OntologyResponderV2 extends Responder {
                         throw InconsistentTriplestoreDataException(s"standoff class $standoffClassIri is a subclass of more than one standoff data type class: ${standoffDataType.mkString(", ")}")
                     }
 
-                    val standoffInfo = ClassEntityInfoV2(
-                        classIri = standoffClassIri,
-                        ontologyIri = getOntologyIri(standoffClassIri),
-                        predicates = predicates,
-                        cardinalities = standoffCardinalitiesWithInheritance(standoffClassIri),
-                        standoffDataType = standoffDataType.headOption match {
-                            case Some(dataType: IRI) => Some(StandoffDataTypeClasses.lookup(dataType, () => throw InconsistentTriplestoreDataException(s"$dataType is not a valid standoff data type")))
-                            case None => None
-                        },
-                        subClassOf = directStandoffSubClassOfRelations.getOrElse(standoffClassIri, Set.empty[IRI]),
-                        ontologySchema = InternalSchema
+                    val standoffInfo = ReadClassInfoV2(
+                        classInfoContent = ClassInfoContentV2(
+                            classIri = standoffClassIri,
+                            ontologyIri = getOntologyIri(standoffClassIri),
+                            predicates = predicates,
+                            cardinalities = standoffCardinalitiesWithInheritance(standoffClassIri),
+                            standoffDataType = standoffDataType.headOption match {
+                                case Some(dataType: IRI) => Some(StandoffDataTypeClasses.lookup(dataType, () => throw InconsistentTriplestoreDataException(s"$dataType is not a valid standoff data type")))
+                                case None => None
+                            },
+                            subClassOf = directStandoffSubClassOfRelations.getOrElse(standoffClassIri, Set.empty[IRI]),
+                            ontologySchema = InternalSchema
+                        )
                     )
 
                     standoffClassIri -> standoffInfo
@@ -684,9 +692,9 @@ class OntologyResponderV2 extends Responder {
             }
 
             // collect all the standoff classes that have a data type (i.e. are subclasses of a data type standoff class)
-            standoffClassEntityInfosWithDataType: Map[IRI, ClassEntityInfoV2] = standoffClassEntityInfos.filter {
-                case (standoffClassIri: IRI, entityInfo: ClassEntityInfoV2) =>
-                    entityInfo.standoffDataType.isDefined
+            standoffClassEntityInfosWithDataType: Map[IRI, ReadClassInfoV2] = standoffClassEntityInfos.filter {
+                case (standoffClassIri: IRI, entityInfo: ReadClassInfoV2) =>
+                    entityInfo.classInfoContent.standoffDataType.isDefined
             }
 
             allClassDefs = resourceEntityInfos ++ KnoraApiV2Simple.Classes ++ KnoraApiV2WithValueObjects.Classes
@@ -698,15 +706,15 @@ class OntologyResponderV2 extends Responder {
                 namedGraphs = graphClassMap.keySet ++ graphPropMap.keySet ++ standoffGraphClassMap.keySet ++ standoffGraphPropMap.keySet,
                 namedGraphClasses = new ErrorHandlingMap[IRI, Set[IRI]](graphClassMap, { key => s"Named graph not found: $key" }),
                 namedGraphProperties = new ErrorHandlingMap[IRI, Set[IRI]](graphPropMap, { key => s"Named graph not found: $key" }),
-                classDefs = new ErrorHandlingMap[IRI, ClassEntityInfoV2](allClassDefs, { key => s"Class not found: $key" }),
+                classDefs = new ErrorHandlingMap[IRI, ReadClassInfoV2](allClassDefs, { key => s"Class not found: $key" }),
                 resourceAndValueSubClassOfRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSubClassOfRelations ++ allValueSubClassOfRelations, { key => s"Class not found: $key" }),
                 resourceSuperClassOfRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSuperClassOfRelations, { key => s"Class not found: $key" }),
                 propertyDefs = new ErrorHandlingMap[IRI, PropertyEntityInfoV2](allPropertyDefs, { key => s"Property not found: $key" }),
                 namedGraphStandoffClasses = new ErrorHandlingMap[IRI, Set[IRI]](standoffGraphClassMap, { key => s"Named graph not found: $key" }),
                 namedGraphStandoffProperties = new ErrorHandlingMap[IRI, Set[IRI]](standoffGraphPropMap, { key => s"Named graph not found: $key" }),
-                standoffClassDefs = new ErrorHandlingMap[IRI, ClassEntityInfoV2](standoffClassEntityInfos, { key => s"Standoff class def not found $key" }),
+                standoffClassDefs = new ErrorHandlingMap[IRI, ReadClassInfoV2](standoffClassEntityInfos, { key => s"Standoff class def not found $key" }),
                 standoffPropertyDefs = new ErrorHandlingMap[IRI, PropertyEntityInfoV2](standoffPropertyEntityInfos, { key => s"Standoff property def not found $key" }),
-                standoffClassDefsWithDataType = new ErrorHandlingMap[IRI, ClassEntityInfoV2](standoffClassEntityInfosWithDataType, { key => s"Standoff class def with datatype not found $key" }))
+                standoffClassDefsWithDataType = new ErrorHandlingMap[IRI, ReadClassInfoV2](standoffClassEntityInfosWithDataType, { key => s"Standoff class def with datatype not found $key" }))
 
             _ = CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = ontologyCacheData)
 
@@ -739,7 +747,7 @@ class OntologyResponderV2 extends Responder {
         for {
             cacheData <- getCacheData
 
-            classDefsAvailable: Map[IRI, ClassEntityInfoV2] = cacheData.classDefs.filterKeys(classIris)
+            classDefsAvailable: Map[IRI, ReadClassInfoV2] = cacheData.classDefs.filterKeys(classIris)
             propertyDefsAvailable: Map[IRI, PropertyEntityInfoV2] = cacheData.propertyDefs.filterKeys(propertyIris)
 
             missingClassDefs = classIris -- classDefsAvailable.keySet
@@ -838,7 +846,7 @@ class OntologyResponderV2 extends Responder {
 
             subClasses = subClassIris.map {
                 subClassIri =>
-                    val resourceClassInfo: ClassEntityInfoV2 = cacheData.classDefs(subClassIri)
+                    val resourceClassInfo: ReadClassInfoV2 = cacheData.classDefs(subClassIri)
 
                     SubClassInfoV2(
                         id = subClassIri,

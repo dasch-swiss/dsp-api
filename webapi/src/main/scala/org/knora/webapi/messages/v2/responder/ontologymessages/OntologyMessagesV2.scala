@@ -88,10 +88,10 @@ case class EntityInfoGetRequestV2(classIris: Set[IRI] = Set.empty[IRI], property
 /**
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
   *
-  * @param classInfoMap    a [[Map]] of class entity IRIs to [[ClassEntityInfoV2]] objects.
+  * @param classInfoMap    a [[Map]] of class entity IRIs to [[ReadClassInfoV2]] objects.
   * @param propertyInfoMap a [[Map]] of property entity IRIs to [[PropertyEntityInfoV2]] objects.
   */
-case class EntityInfoGetResponseV2(classInfoMap: Map[IRI, ClassEntityInfoV2],
+case class EntityInfoGetResponseV2(classInfoMap: Map[IRI, ReadClassInfoV2],
                                    propertyInfoMap: Map[IRI, PropertyEntityInfoV2])
 
 /**
@@ -107,10 +107,10 @@ case class StandoffEntityInfoGetRequestV2(standoffClassIris: Set[IRI] = Set.empt
 /**
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
   *
-  * @param standoffClassInfoMap    a [[Map]] of standoff class IRIs to [[ClassEntityInfoV2]] objects.
+  * @param standoffClassInfoMap    a [[Map]] of standoff class IRIs to [[ReadClassInfoV2]] objects.
   * @param standoffPropertyInfoMap a [[Map]] of standoff property IRIs to [[PropertyEntityInfoV2]] objects.
   */
-case class StandoffEntityInfoGetResponseV2(standoffClassInfoMap: Map[IRI, ClassEntityInfoV2],
+case class StandoffEntityInfoGetResponseV2(standoffClassInfoMap: Map[IRI, ReadClassInfoV2],
                                            standoffPropertyInfoMap: Map[IRI, PropertyEntityInfoV2])
 
 /**
@@ -124,9 +124,9 @@ case class StandoffClassesWithDataTypeGetRequestV2(userProfile: UserProfileV1) e
 /**
   * Represents assertions about all standoff classes that are a subclass of a data type standoff class.
   *
-  * @param standoffClassInfoMap a [[Map]] of standoff class entity IRIs to [[ClassEntityInfoV2]] objects.
+  * @param standoffClassInfoMap a [[Map]] of standoff class entity IRIs to [[ReadClassInfoV2]] objects.
   */
-case class StandoffClassesWithDataTypeGetResponseV2(standoffClassInfoMap: Map[IRI, ClassEntityInfoV2])
+case class StandoffClassesWithDataTypeGetResponseV2(standoffClassInfoMap: Map[IRI, ReadClassInfoV2])
 
 /**
   * Requests information about all standoff property entities. A successful response will be an
@@ -233,18 +233,18 @@ case class PropertyEntitiesGetRequestV2(propertyIris: Set[IRI], allLanguages: Bo
   *                           should be returned in all available languages.
   */
 case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]],
-                                   classes: Map[IRI, ClassEntityInfoV2] = Map.empty[IRI, ClassEntityInfoV2],
+                                   classes: Map[IRI, ReadClassInfoV2] = Map.empty[IRI, ReadClassInfoV2],
                                    properties: Map[IRI, PropertyEntityInfoV2] = Map.empty[IRI, PropertyEntityInfoV2],
-                                   standoffClasses: Map[IRI, ClassEntityInfoV2] = Map.empty[IRI, ClassEntityInfoV2],
+                                   standoffClasses: Map[IRI, ReadClassInfoV2] = Map.empty[IRI, ReadClassInfoV2],
                                    standoffProperties: Map[IRI, PropertyEntityInfoV2] = Map.empty[IRI, PropertyEntityInfoV2],
                                    userLang: Option[String] = None) extends KnoraResponseV2 {
 
     private val stringFormatter = StringFormatter.getInstance
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
-        def classesToJsonLD(classDefs: Map[IRI, ClassEntityInfoV2]): Map[IRI, JsonLDObject] = {
+        def classesToJsonLD(classDefs: Map[IRI, ReadClassInfoV2]): Map[IRI, JsonLDObject] = {
             classDefs.map {
-                case (classIri: IRI, resourceEntity: ClassEntityInfoV2) =>
+                case (classIri: IRI, resourceEntity: ReadClassInfoV2) =>
                     val externalClassIri = stringFormatter.toExternalEntityIri(
                         entityIri = classIri,
                         targetSchema = targetSchema
@@ -287,7 +287,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
         val ontologiesFromClasses: Set[IRI] = allClasses.values.flatMap {
             classInfo =>
-                val entityIris = classInfo.cardinalities.keySet ++ classInfo.subClassOf
+                val entityIris = classInfo.allCardinalities.keySet ++ classInfo.classInfoContent.subClassOf
 
                 entityIris.flatMap {
                     entityIri =>
@@ -296,7 +296,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                         } else {
                             Set.empty[IRI]
                         }
-                } + classInfo.ontologyIri
+                } + classInfo.classInfoContent.ontologyIri
         }.toSet
 
         // Get the ontologies of all entities mentioned in property definitions.
@@ -667,7 +667,7 @@ sealed trait EntityInfoV2 {
   * Represents information about an ontology entity that has mostly non-language-specific predicates, plus
   * language specific `rdfs:label` and `rdfs:comment` predicates.
   *
-  * It is extended by [[ClassEntityInfoV2]] and [[PropertyEntityInfoV2]].
+  * It is extended by [[ReadClassInfoV2]] and [[PropertyEntityInfoV2]].
   */
 sealed trait EntityInfoWithLabelAndCommentV2 extends EntityInfoV2 {
 
@@ -886,53 +886,40 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
 }
 
 /**
-  * Represents the assertions about a given OWL class.
+  * Represents an OWL class definition as returned in an API response.
   *
-  * @param classIri                    the IRI of the class.
-  * @param ontologyIri                 the IRI of the ontology in which the class is defined.
-  * @param rdfType                     the rdf:type of the class (defaults to owl:Class).
-  * @param predicates                  a [[Map]] of predicate IRIs to [[PredicateInfoV2]] objects.
-  * @param cardinalities               a [[Map]] of properties to [[Cardinality.Value]] objects representing the class's
-  *                                    cardinalities on those properties.
-  * @param xsdStringRestrictionPattern if the class's rdf:type is rdfs:Datatype, an optional xsd:pattern specifying
-  *                                    the regular expression that restricts its values. This has the effect of making the
-  *                                    class a subclass of a blank node with owl:onDatatype xsd:string.
-  * @param standoffDataType            if this is a standoff tag class, the standoff datatype tag class (if any) that it
-  *                                    is a subclass of.
+  * @param classInfoContent a [[ReadClassInfoV2]] providing information about the class.
+  * @param canBeInstantiated `true` if the class can be instantiated via the API.
+  * @param inheritedCardinalities a [[Map]] of properties to [[Cardinality.Value]] objects representing the class's
+  *                                    inherited cardinalities on those properties.
   * @param linkProperties              a [[Set]] of IRIs of properties of the class that point to resources.
   * @param linkValueProperties         a [[Set]] of IRIs of properties of the class
   *                                    that point to `LinkValue` objects.
   * @param fileValueProperties         a [[Set]] of IRIs of properties of the class
   *                                    that point to `FileValue` objects.
-  * @param subClassOf                  the classes that this class is a subclass of.
-  * @param ontologySchema              indicates whether this ontology entity belongs to an internal ontology (for use in the
-  *                                    triplestore) or an external one (for use in the Knora API).
   */
-case class ClassEntityInfoV2(classIri: IRI,
-                             ontologyIri: IRI,
-                             rdfType: IRI = OntologyConstants.Owl.Class,
-                             canBeInstantiated: Boolean = false,
-                             predicates: Map[IRI, PredicateInfoV2] = Map.empty[IRI, PredicateInfoV2],
-                             cardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
-                             xsdStringRestrictionPattern: Option[String] = None,
-                             standoffDataType: Option[StandoffDataTypeClasses.Value] = None,
-                             linkProperties: Set[IRI] = Set.empty[IRI],
-                             linkValueProperties: Set[IRI] = Set.empty[IRI],
-                             fileValueProperties: Set[IRI] = Set.empty[IRI],
-                             subClassOf: Set[IRI] = Set.empty[IRI],
-                             ontologySchema: OntologySchema) extends EntityInfoWithLabelAndCommentV2 {
+case class ReadClassInfoV2(classInfoContent: ClassInfoContentV2,
+                           canBeInstantiated: Boolean = false,
+                           inheritedCardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
+                           linkProperties: Set[IRI] = Set.empty[IRI],
+                           linkValueProperties: Set[IRI] = Set.empty[IRI],
+                           fileValueProperties: Set[IRI] = Set.empty[IRI]) extends EntityInfoWithLabelAndCommentV2 {
 
     private val stringFormatter = StringFormatter.getInstance
+
+    lazy val allCardinalities: Map[IRI, Cardinality.Value] = inheritedCardinalities ++ classInfoContent.cardinalities
 
     def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
         // Convert the IRIs in the class definition according to the target schema.
 
         val classIriWithTargetSchema = stringFormatter.toExternalEntityIri(
-            entityIri = classIri,
+            entityIri = classInfoContent.classIri,
             targetSchema = targetSchema
         )
 
-        val cardinalitiesWithTargetSchemaIris = cardinalities.map {
+        // TODO: mark inherited cardinalities.
+
+        val cardinalitiesWithTargetSchemaIris = allCardinalities.map {
             case (propertyIri: IRI, cardinality: Cardinality.Value) =>
                 val schemaPropertyIri: IRI = stringFormatter.toExternalEntityIri(
                     entityIri = propertyIri,
@@ -963,8 +950,8 @@ case class ClassEntityInfoV2(classIri: IRI,
         // schema.
         val schemaSpecificCardinalities: Map[IRI, Cardinality.Value] = if (!stringFormatter.isBuiltInApiV2EntityIri(classIriWithTargetSchema)) {
             targetSchema match {
-                case ApiV2Simple => filteredCardinalities ++ KnoraApiV2Simple.Resource.cardinalities
-                case ApiV2WithValueObjects => filteredCardinalities ++ KnoraApiV2WithValueObjects.Resource.cardinalities
+                case ApiV2Simple => filteredCardinalities ++ KnoraApiV2Simple.Resource.allCardinalities
+                case ApiV2WithValueObjects => filteredCardinalities ++ KnoraApiV2WithValueObjects.Resource.allCardinalities
             }
         } else {
             filteredCardinalities
@@ -994,7 +981,7 @@ case class ClassEntityInfoV2(classIri: IRI,
         }
 
         val convertedOntologyIri = stringFormatter.toExternalOntologyIri(
-            ontologyIri = ontologyIri,
+            ontologyIri = classInfoContent.ontologyIri,
             targetSchema = targetSchema
         )
 
@@ -1007,7 +994,7 @@ case class ClassEntityInfoV2(classIri: IRI,
             resIcon => resourceIconPred -> JsonLDString(resIcon)
         }
 
-        val jsonRestriction: Option[JsonLDObject] = xsdStringRestrictionPattern.map {
+        val jsonRestriction: Option[JsonLDObject] = classInfoContent.xsdStringRestrictionPattern.map {
             (pattern: String) =>
                 JsonLDObject(Map(
                     "@type" -> JsonLDString(OntologyConstants.Rdfs.Datatype),
@@ -1018,7 +1005,7 @@ case class ClassEntityInfoV2(classIri: IRI,
                     )))
         }
 
-        val jsonSubClassOf = subClassOf.toArray.sorted.map {
+        val jsonSubClassOf = classInfoContent.subClassOf.toArray.sorted.map {
             superClass =>
                 JsonLDString(
                     stringFormatter.toExternalEntityIri(
@@ -1043,10 +1030,40 @@ case class ClassEntityInfoV2(classIri: IRI,
         Map(
             "@id" -> JsonLDString(classIriWithTargetSchema),
             belongsToOntologyPred -> JsonLDString(convertedOntologyIri),
-            "@type" -> JsonLDString(rdfType)
+            "@type" -> JsonLDString(classInfoContent.rdfType)
         ) ++ jsonSubClassOfStatement ++ resourceIconStatement ++ canBeInstantiatedStatement
     }
+
+    override val predicates: Map[IRI, PredicateInfoV2] = classInfoContent.predicates
 }
+
+/**
+  * Represents the assertions about a given OWL class.
+  *
+  * @param classIri                    the IRI of the class.
+  * @param ontologyIri                 the IRI of the ontology in which the class is defined.
+  * @param rdfType                     the rdf:type of the class (defaults to owl:Class).
+  * @param predicates                  a [[Map]] of predicate IRIs to [[PredicateInfoV2]] objects.
+  * @param cardinalities               a [[Map]] of properties to [[Cardinality.Value]] objects representing the cardinalities
+  *                                    that are directly defined on the class (as opposed to inherited) on those properties.
+  * @param xsdStringRestrictionPattern if the class's rdf:type is rdfs:Datatype, an optional xsd:pattern specifying
+  *                                    the regular expression that restricts its values. This has the effect of making the
+  *                                    class a subclass of a blank node with owl:onDatatype xsd:string.
+  * @param standoffDataType            if this is a standoff tag class, the standoff datatype tag class (if any) that it
+  *                                    is a subclass of.
+  * @param subClassOf                  the classes that this class is a subclass of.
+  * @param ontologySchema              indicates whether this ontology entity belongs to an internal ontology (for use in the
+  *                                    triplestore) or an external one (for use in the Knora API).
+  */
+case class ClassInfoContentV2(classIri: IRI,
+                              ontologyIri: IRI,
+                              rdfType: IRI = OntologyConstants.Owl.Class,
+                              predicates: Map[IRI, PredicateInfoV2] = Map.empty[IRI, PredicateInfoV2],
+                              cardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
+                              xsdStringRestrictionPattern: Option[String] = None,
+                              standoffDataType: Option[StandoffDataTypeClasses.Value] = None,
+                              subClassOf: Set[IRI] = Set.empty[IRI],
+                              ontologySchema: OntologySchema)
 
 /**
   * Represents the assertions about a given named graph entity.

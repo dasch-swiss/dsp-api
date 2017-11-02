@@ -35,7 +35,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.{MultipleResource
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, ClassEntityInfoV2, PredicateInfoV2, PropertyEntityInfoV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, ReadClassInfoV2, PredicateInfoV2, PropertyEntityInfoV2}
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
@@ -637,7 +637,7 @@ class ResourcesResponderV1 extends Responder {
 
             // Collect all property IRIs and their cardinalities for the queried resource's type, except the ones that point to LinkValue objects or FileValue objects,
             // which are not relevant in this API operation.
-            propsAndCardinalities: Map[IRI, Cardinality.Value] = resourceTypeEntityInfo.cardinalities.filterNot {
+            propsAndCardinalities: Map[IRI, Cardinality.Value] = resourceTypeEntityInfo.allCardinalities.filterNot {
                 case (propertyIri, cardinality) =>
                     resourceTypeEntityInfo.linkValueProperties(propertyIri) || resourceTypeEntityInfo.fileValueProperties(propertyIri)
             }
@@ -995,7 +995,7 @@ class ResourcesResponderV1 extends Responder {
                                     userProfile = userProfile
                                 )).mapTo[EntityInfoGetResponseV1]
 
-                                regionInfo: ClassEntityInfoV2 = entityInfoResponse.resourceClassInfoMap(resClass)
+                                regionInfo: ReadClassInfoV2 = entityInfoResponse.resourceClassInfoMap(resClass)
 
                                 resClassIcon: Option[String] = regionInfo.predicates.get(OntologyConstants.KnoraBase.ResourceIcon) match {
                                     case Some(predicateInfo: PredicateInfoV2) =>
@@ -1239,7 +1239,7 @@ class ResourcesResponderV1 extends Responder {
 
             allPropertyIris: Set[IRI] = resourceClassesEntityInfoResponse.resourceClassInfoMap.flatMap {
                 case (_, resourceEntityInfo) =>
-                    resourceEntityInfo.cardinalities.keySet
+                    resourceEntityInfo.allCardinalities.keySet
             }.toSet
 
             propertyEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
@@ -1250,7 +1250,7 @@ class ResourcesResponderV1 extends Responder {
 
             propertyEntityInfoMapsPerResource: Map[IRI, Map[IRI, PropertyEntityInfoV2]] = resourceClassesEntityInfoResponse.resourceClassInfoMap.map {
                 case (resourceClassIri, resourceEntityInfo) =>
-                    val propertyEntityInfoMapForResource: Map[IRI, PropertyEntityInfoV2] = resourceEntityInfo.cardinalities.keySet.map {
+                    val propertyEntityInfoMapForResource: Map[IRI, PropertyEntityInfoV2] = resourceEntityInfo.allCardinalities.keySet.map {
                         propertyIri =>
                             (propertyIri, propertyEntityInfoResponse.propertyInfoMap(propertyIri))
                     }.toMap
@@ -1418,7 +1418,7 @@ class ResourcesResponderV1 extends Responder {
       * @return a tuple (IRI, Vector[CreateValueV1WithComment]) containing the IRI of the resource and a collection of holders of [[UpdateValueV1]] and comment.
       */
     private def checkResource(resourceClassIri: IRI,
-                              resourceClassInfo: ClassEntityInfoV2,
+                              resourceClassInfo: ReadClassInfoV2,
                               propertyInfoMap: Map[IRI, PropertyEntityInfoV2],
                               values: Map[IRI, Seq[CreateValueV1WithComment]],
                               sipiConversionRequest: Option[SipiResponderConversionRequestV1],
@@ -1497,7 +1497,7 @@ class ResourcesResponderV1 extends Responder {
 
             _ = values.foreach {
                 case (propertyIri, valuesForProperty) =>
-                    val cardinality = resourceClassInfo.cardinalities.getOrElse(propertyIri, throw OntologyConstraintException(s"Resource class $resourceClassIri has no cardinality for property $propertyIri"))
+                    val cardinality = resourceClassInfo.allCardinalities.getOrElse(propertyIri, throw OntologyConstraintException(s"Resource class $resourceClassIri has no cardinality for property $propertyIri"))
 
                     if ((cardinality == Cardinality.MayHaveOne || cardinality == Cardinality.MustHaveOne) && valuesForProperty.size > 1) {
                         throw OntologyConstraintException(s"Resource class $resourceClassIri does not allow more than one value for property $propertyIri")
@@ -1508,7 +1508,7 @@ class ResourcesResponderV1 extends Responder {
             _ = if (resourceClassInfo.fileValueProperties.size > 1) throw BadRequestException(s"The given resource type $resourceClassIri requires more than on file value. This is not supported for API V1")
 
             // Check that no required values are missing.
-            requiredProps: Set[IRI] = resourceClassInfo.cardinalities.filter {
+            requiredProps: Set[IRI] = resourceClassInfo.allCardinalities.filter {
                 case (propIri, cardinality) => cardinality == Cardinality.MustHaveOne || cardinality == Cardinality.MustHaveSome
             }.keySet -- resourceClassInfo.linkValueProperties -- resourceClassInfo.fileValueProperties // exclude link value and file value properties from checking
 
@@ -1704,7 +1704,7 @@ class ResourcesResponderV1 extends Responder {
 
             propertyEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
                 resourceClassIris = Set.empty[IRI],
-                propertyIris = resourceClassInfo.cardinalities.keySet,
+                propertyIris = resourceClassInfo.allCardinalities.keySet,
                 userProfile = userProfile
             )).mapTo[EntityInfoGetResponseV1]
 
@@ -2134,27 +2134,27 @@ class ResourcesResponderV1 extends Responder {
             groupedPropsByType: GroupedPropertiesByType <- getGroupedProperties(resourceIri)
 
             // TODO: Should we get rid of the tuple and replace it by a case class?
-            (propertyInfoMap: Map[IRI, PropertyEntityInfoV2], resourceEntityInfoMap: Map[IRI, ClassEntityInfoV2], propsAndCardinalities: Map[IRI, Cardinality.Value]) <- maybeResourceTypeIri match {
+            (propertyInfoMap: Map[IRI, PropertyEntityInfoV2], resourceEntityInfoMap: Map[IRI, ReadClassInfoV2], propsAndCardinalities: Map[IRI, Cardinality.Value]) <- maybeResourceTypeIri match {
                 case Some(resourceTypeIri) =>
                     val propertyEntityIris: Set[IRI] = groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++ groupedPropsByType.groupedLinkProperties.groupedProperties.keySet
                     val resourceEntityIris: Set[IRI] = Set(resourceTypeIri)
 
                     for {
                         entityInfoResponse <- (responderManager ? EntityInfoGetRequestV1(resourceClassIris = resourceEntityIris, propertyIris = propertyEntityIris, userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
-                        resourceEntityInfoMap: Map[IRI, ClassEntityInfoV2] = entityInfoResponse.resourceClassInfoMap
+                        resourceEntityInfoMap: Map[IRI, ReadClassInfoV2] = entityInfoResponse.resourceClassInfoMap
                         propertyInfoMap: Map[IRI, PropertyEntityInfoV2] = entityInfoResponse.propertyInfoMap
 
                         resourceTypeEntityInfo = resourceEntityInfoMap(resourceTypeIri)
 
                         // all properties and their cardinalities for the queried resource's type, except the ones that point to LinkValue objects
-                        propsAndCardinalities: Map[IRI, Cardinality.Value] = resourceTypeEntityInfo.cardinalities.filterNot {
+                        propsAndCardinalities: Map[IRI, Cardinality.Value] = resourceTypeEntityInfo.allCardinalities.filterNot {
                             case (propertyIri, cardinality) =>
                                 resourceTypeEntityInfo.linkValueProperties(propertyIri)
                         }
                     } yield (propertyInfoMap, resourceEntityInfoMap, propsAndCardinalities)
 
                 case None =>
-                    Future((Map.empty[IRI, PropertyEntityInfoV2], Map.empty[IRI, ClassEntityInfoV2], Map.empty[IRI, Cardinality.Value]))
+                    Future((Map.empty[IRI, PropertyEntityInfoV2], Map.empty[IRI, ReadClassInfoV2], Map.empty[IRI, Cardinality.Value]))
             }
 
             queryResult <- queryResults2PropertyV1s(
@@ -2324,7 +2324,7 @@ class ResourcesResponderV1 extends Responder {
       * @param groupedPropertiesByType The [[GroupedPropertiesByType]] returned by `getGroupedProperties` containing the resuls of the SPARQL query.
       * @param propertyInfoMap         a [[Map]] of entity IRIs to [[PropertyEntityInfoV2]] objects. If this [[Map]] is not empty, it will be used to include
       *                                ontology-based information in the returned [[PropertyV1]] objects.
-      * @param resourceEntityInfoMap   a [[Map]] of entity IRIs to [[ClassEntityInfoV2]] objects. If this [[Map]] is not empty, it will be used to include
+      * @param resourceEntityInfoMap   a [[Map]] of entity IRIs to [[ReadClassInfoV2]] objects. If this [[Map]] is not empty, it will be used to include
       *                                ontology-based information for linking properties in the returned [[PropertyV1]] objects.
       * @param propsAndCardinalities   a [[Map]] of property IRIs to their cardinalities in the class of the queried resource. If this [[Map]] is not
       *                                empty, it will be used to include cardinalities in the returned [[PropertyV1]] objects.
@@ -2334,7 +2334,7 @@ class ResourcesResponderV1 extends Responder {
     private def queryResults2PropertyV1s(containingResourceIri: IRI,
                                          groupedPropertiesByType: GroupedPropertiesByType,
                                          propertyInfoMap: Map[IRI, PropertyEntityInfoV2],
-                                         resourceEntityInfoMap: Map[IRI, ClassEntityInfoV2],
+                                         resourceEntityInfoMap: Map[IRI, ReadClassInfoV2],
                                          propsAndCardinalities: Map[IRI, Cardinality.Value],
                                          userProfile: UserProfileV1): Future[Seq[PropertyV1]] = {
         /**

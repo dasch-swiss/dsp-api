@@ -64,10 +64,10 @@ case class EntityInfoGetRequestV1(resourceClassIris: Set[IRI] = Set.empty[IRI], 
 /**
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
   *
-  * @param resourceClassInfoMap a [[Map]] of resource class IRIs to [[ClassEntityInfoV2]] objects.
+  * @param resourceClassInfoMap a [[Map]] of resource class IRIs to [[ReadClassInfoV2]] objects.
   * @param propertyInfoMap      a [[Map]] of property IRIs to [[PropertyEntityInfoV2]] objects.
   */
-case class EntityInfoGetResponseV1(resourceClassInfoMap: Map[IRI, ClassEntityInfoV2],
+case class EntityInfoGetResponseV1(resourceClassInfoMap: Map[IRI, ReadClassInfoV2],
                                    propertyInfoMap: Map[IRI, PropertyEntityInfoV2])
 
 
@@ -85,10 +85,10 @@ case class StandoffEntityInfoGetRequestV1(standoffClassIris: Set[IRI] = Set.empt
 /**
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
   *
-  * @param standoffClassInfoMap    a [[Map]] of resource class IRIs to [[ClassEntityInfoV2]] objects.
+  * @param standoffClassInfoMap    a [[Map]] of resource class IRIs to [[ReadClassInfoV2]] objects.
   * @param standoffPropertyInfoMap a [[Map]] of property IRIs to [[PropertyEntityInfoV2]] objects.
   */
-case class StandoffEntityInfoGetResponseV1(standoffClassInfoMap: Map[IRI, ClassEntityInfoV2],
+case class StandoffEntityInfoGetResponseV1(standoffClassInfoMap: Map[IRI, ReadClassInfoV2],
                                            standoffPropertyInfoMap: Map[IRI, PropertyEntityInfoV2])
 
 /**
@@ -103,9 +103,9 @@ case class StandoffClassesWithDataTypeGetRequestV1(userProfile: UserProfileV1) e
 /**
   * Represents assertions about all standoff classes that are a subclass of a data type standoff class.
   *
-  * @param standoffClassInfoMap a [[Map]] of resource class IRIs to [[ClassEntityInfoV2]] objects.
+  * @param standoffClassInfoMap a [[Map]] of resource class IRIs to [[ReadClassInfoV2]] objects.
   */
-case class StandoffClassesWithDataTypeGetResponseV1(standoffClassInfoMap: Map[IRI, ClassEntityInfoV2])
+case class StandoffClassesWithDataTypeGetResponseV1(standoffClassInfoMap: Map[IRI, ReadClassInfoV2])
 
 /**
   * Requests information about all standoff properties. A successful response will be an

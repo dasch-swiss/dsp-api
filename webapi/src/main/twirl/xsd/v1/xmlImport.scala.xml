@@ -36,7 +36,7 @@
 @(targetNamespaceInfo: XmlImportNamespaceInfoV1,
   importedNamespaces: Seq[XmlImportNamespaceInfoV1],
   knoraXmlImportNamespacePrefixLabel: String,
-  resourceClassInfoMap: Map[IRI, ClassEntityInfoV2],
+  resourceClassInfoMap: Map[IRI, ReadClassInfoV2],
   propertyInfoMap: Map[IRI, PropertyEntityInfoV2],
   getNamespacePrefixLabel: IRI => String,
   getEntityName: IRI => String)
@@ -86,7 +86,7 @@
                                     <xs:element ref="@{knoraXmlImportNamespacePrefixLabel}:file" minOccurs="1" maxOccurs="1"/>
                                 }
 
-                                @for((propertyIri, cardinality) <- resourceClassInfo.cardinalities.toVector.sortBy(_._1)) {
+                                @for((propertyIri, cardinality) <- resourceClassInfo.allCardinalities.toVector.sortBy(_._1)) {
 
                                     @defining(propertyInfoMap.getOrElse(propertyIri, throw AssertionException(s"The definition of the property $propertyIri is needed but was not read"))) { propertyInfo =>
 

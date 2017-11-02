@@ -26,7 +26,7 @@ import org.knora.webapi._
   * Represents the `knora-api` ontology, version 2, in the [[ApiV2WithValueObjects]] schema.
   */
 object KnoraApiV2WithValueObjects {
-    val Resource: ClassEntityInfoV2 = makeClass(
+    val Resource: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Resource,
         subClassOf = Set(OntologyConstants.SchemaOrg.Thing),
         predicates = Seq(
@@ -232,7 +232,7 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.DateTimeStamp)
     )
 
-    val Region: ClassEntityInfoV2 = makeClass(
+    val Region: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Region,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         canBeInstantiated = true,
@@ -292,7 +292,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val Representation: ClassEntityInfoV2 = makeClass(
+    val Representation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Representation,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         predicates = Seq(
@@ -322,7 +322,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val StillImageRepresentation: ClassEntityInfoV2 = makeClass(
+    val StillImageRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.StillImageRepresentation,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
@@ -352,7 +352,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val MovingImageRepresentation: ClassEntityInfoV2 = makeClass(
+    val MovingImageRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageRepresentation,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
@@ -382,7 +382,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val AudioRepresentation: ClassEntityInfoV2 = makeClass(
+    val AudioRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.AudioRepresentation,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
@@ -412,7 +412,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val DDDRepresentation: ClassEntityInfoV2 = makeClass(
+    val DDDRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.DDDRepresentation,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
@@ -442,7 +442,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val TextRepresentation: ClassEntityInfoV2 = makeClass(
+    val TextRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.TextRepresentation,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
@@ -467,7 +467,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val DocumentRepresentation: ClassEntityInfoV2 = makeClass(
+    val DocumentRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.DocumentRepresentation,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
@@ -498,12 +498,12 @@ object KnoraApiV2WithValueObjects {
     )
 
     // TODO: what should go here?
-    val XMLToStandoffMapping: ClassEntityInfoV2 = makeClass(
+    val XMLToStandoffMapping: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.XMLToStandoffMapping
     )
 
     // TODO: what should go here?
-    val ListNode: ClassEntityInfoV2 = makeClass(
+    val ListNode: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.ListNode
     )
 
@@ -526,7 +526,7 @@ object KnoraApiV2WithValueObjects {
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Value)
     )
 
-    val Value: ClassEntityInfoV2 = makeClass(
+    val Value: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Value,
         cardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
@@ -952,7 +952,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val TextValue: ClassEntityInfoV2 = makeClass(
+    val TextValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
@@ -1044,7 +1044,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val DateValue: ClassEntityInfoV2 = makeClass(
+    val DateValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
@@ -1228,7 +1228,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val LinkValue: ClassEntityInfoV2 = makeClass(
+    val LinkValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
@@ -1297,7 +1297,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val IntegerValue: ClassEntityInfoV2 = makeClass(
+    val IntegerValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.IntegerValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
@@ -1343,7 +1343,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val DecimalValue: ClassEntityInfoV2 = makeClass(
+    val DecimalValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.DecimalValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
@@ -1389,7 +1389,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val BooleanValue: ClassEntityInfoV2 = makeClass(
+    val BooleanValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
@@ -1435,7 +1435,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val GeomValue: ClassEntityInfoV2 = makeClass(
+    val GeomValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.GeomValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
@@ -1481,7 +1481,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val IntervalValue: ClassEntityInfoV2 = makeClass(
+    val IntervalValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.IntervalValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
@@ -1550,7 +1550,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val ListValue: ClassEntityInfoV2 = makeClass(
+    val ListValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.ListValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
@@ -1596,7 +1596,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val ColorValue: ClassEntityInfoV2 = makeClass(
+    val ColorValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.ColorValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
@@ -1642,7 +1642,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val UriValue: ClassEntityInfoV2 = makeClass(
+    val UriValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.UriValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
@@ -1688,7 +1688,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val GeonameValue: ClassEntityInfoV2 = makeClass(
+    val GeonameValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
@@ -1734,7 +1734,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val FileValue: ClassEntityInfoV2 = makeClass(
+    val FileValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.FileValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
@@ -1826,7 +1826,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val TextFileValue: ClassEntityInfoV2 = makeClass(
+    val TextFileValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.TextFileValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         predicates = Seq(
@@ -1852,7 +1852,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val StillImageFileValue: ClassEntityInfoV2 = makeClass(
+    val StillImageFileValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         predicates = Seq(
@@ -1948,7 +1948,7 @@ object KnoraApiV2WithValueObjects {
     )
 
 
-    val MovingImageFileValue: ClassEntityInfoV2 = makeClass(
+    val MovingImageFileValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         predicates = Seq(
@@ -2089,7 +2089,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val AudioFileValue: ClassEntityInfoV2 = makeClass(
+    val AudioFileValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         predicates = Seq(
@@ -2138,7 +2138,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val DDDFileValue: ClassEntityInfoV2 = makeClass(
+    val DDDFileValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.DDDFileValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         predicates = Seq(
@@ -2164,7 +2164,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val DocumentFileValue: ClassEntityInfoV2 = makeClass(
+    val DocumentFileValue: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.DocumentFileValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
         predicates = Seq(
@@ -2193,7 +2193,7 @@ object KnoraApiV2WithValueObjects {
     /**
       * All the classes in the `knora-api` v2 ontology in the [[ApiV2WithValueObjects]] schema.
       */
-    val Classes: Map[IRI, ClassEntityInfoV2] = Set(
+    val Classes: Map[IRI, ReadClassInfoV2] = Set(
         Resource,
         Region,
         Representation,
@@ -2226,7 +2226,7 @@ object KnoraApiV2WithValueObjects {
         DDDFileValue,
         DocumentFileValue
     ).map {
-        classInfo => classInfo.classIri -> classInfo
+        classInfo => classInfo.classInfoContent.classIri -> classInfo
     }.toMap
 
     /**
@@ -2375,35 +2375,39 @@ object KnoraApiV2WithValueObjects {
     }
 
     /**
-      * Makes a [[ClassEntityInfoV2]].
+      * Makes a [[ReadClassInfoV2]].
       *
       * @param classIri          the IRI of the class.
       * @param subClassOf        the set of direct superclasses of this class.
       * @param predicates        the predicates of the class.
       * @param canBeInstantiated true if this is a Knora resource class that can be instantiated via the Knora API.
       * @param cardinalities     the cardinalities of the class.
-      * @return a [[ClassEntityInfoV2]].
+      * @return a [[ReadClassInfoV2]].
       */
     private def makeClass(classIri: IRI,
                           subClassOf: Set[IRI] = Set.empty[IRI],
                           predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
                           canBeInstantiated: Boolean = false,
-                          cardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value]): ClassEntityInfoV2 = {
+                          cardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value]): ReadClassInfoV2 = {
         val predicatesWithType = predicates :+ makePredicate(
             predicateIri = OntologyConstants.Rdf.Type,
             objects = Set(OntologyConstants.Owl.Class)
         )
 
-        ClassEntityInfoV2(
-            classIri = classIri,
-            predicates = predicatesWithType.map {
-                pred => pred.predicateIri -> pred
-            }.toMap,
-            canBeInstantiated = canBeInstantiated,
-            cardinalities = cardinalities,
-            subClassOf = subClassOf,
-            ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri,
-            ontologySchema = ApiV2WithValueObjects
+        // TODO: distinguish between inherited cardinalities and others.
+
+        ReadClassInfoV2(
+            classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = predicatesWithType.map {
+                    pred => pred.predicateIri -> pred
+                }.toMap,
+                cardinalities = cardinalities,
+                subClassOf = subClassOf,
+                ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri,
+                ontologySchema = ApiV2WithValueObjects
+            ),
+            canBeInstantiated = canBeInstantiated
         )
     }
 

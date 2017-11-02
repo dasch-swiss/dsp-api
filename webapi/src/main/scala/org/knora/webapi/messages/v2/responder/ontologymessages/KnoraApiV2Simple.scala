@@ -27,7 +27,7 @@ import org.knora.webapi._
   */
 object KnoraApiV2Simple {
 
-    val Resource: ClassEntityInfoV2 = makeClass(
+    val Resource: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.Resource,
         subClassOf = Set(OntologyConstants.SchemaOrg.Thing),
         cardinalities = Map(
@@ -151,7 +151,7 @@ object KnoraApiV2Simple {
         objectType = Some(OntologyConstants.Xsd.DateTimeStamp)
     )
 
-    val Region: ClassEntityInfoV2 = makeClass(
+    val Region: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.Region,
         subClassOf = Set(OntologyConstants.KnoraApiV2Simple.Resource),
         predicates = Seq(
@@ -234,7 +234,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val Representation: ClassEntityInfoV2 = makeClass(
+    val Representation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.Representation,
         subClassOf = Set(OntologyConstants.KnoraApiV2Simple.Resource),
         predicates = Seq(
@@ -263,7 +263,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val StillImageRepresentation: ClassEntityInfoV2 = makeClass(
+    val StillImageRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.StillImageRepresentation,
         subClassOf = Set(OntologyConstants.KnoraApiV2Simple.Representation),
         predicates = Seq(
@@ -292,7 +292,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val MovingImageRepresentation: ClassEntityInfoV2 = makeClass(
+    val MovingImageRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.MovingImageRepresentation,
         subClassOf = Set(OntologyConstants.KnoraApiV2Simple.Representation),
         predicates = Seq(
@@ -321,7 +321,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val AudioRepresentation: ClassEntityInfoV2 = makeClass(
+    val AudioRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.AudioRepresentation,
         subClassOf = Set(OntologyConstants.KnoraApiV2Simple.Representation),
         predicates = Seq(
@@ -350,7 +350,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val DDDRepresentation: ClassEntityInfoV2 = makeClass(
+    val DDDRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.DDDRepresentation,
         subClassOf = Set(OntologyConstants.KnoraApiV2Simple.Representation),
         predicates = Seq(
@@ -379,7 +379,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val TextRepresentation: ClassEntityInfoV2 = makeClass(
+    val TextRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.TextRepresentation,
         subClassOf = Set(OntologyConstants.KnoraApiV2Simple.Representation),
         predicates = Seq(
@@ -408,7 +408,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val DocumentRepresentation: ClassEntityInfoV2 = makeClass(
+    val DocumentRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.DocumentRepresentation,
         subClassOf = Set(OntologyConstants.KnoraApiV2Simple.Representation),
         predicates = Seq(
@@ -752,7 +752,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val Date: ClassEntityInfoV2 = makeDatatype(
+    val Date: ReadClassInfoV2 = makeDatatype(
         datatypeIri = OntologyConstants.KnoraApiV2Simple.Date,
         xsdStringRestrictionPattern = Some("(GREGORIAN|JULIAN):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?"),
         predicates = Seq(
@@ -771,7 +771,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val Color: ClassEntityInfoV2 = makeDatatype(
+    val Color: ReadClassInfoV2 = makeDatatype(
         datatypeIri = OntologyConstants.KnoraApiV2Simple.Color,
         xsdStringRestrictionPattern = Some("#([0-9a-fA-F]{3}){1,2}"),
         predicates = Seq(
@@ -790,7 +790,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val Interval: ClassEntityInfoV2 = makeDatatype(
+    val Interval: ReadClassInfoV2 = makeDatatype(
         datatypeIri = OntologyConstants.KnoraApiV2Simple.Interval,
         xsdStringRestrictionPattern = Some("\\d+(\\.\\d+)?,\\d+(\\.\\d+)?"),
         predicates = Seq(
@@ -809,7 +809,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val Geoname: ClassEntityInfoV2 = makeDatatype(
+    val Geoname: ReadClassInfoV2 = makeDatatype(
         datatypeIri = OntologyConstants.KnoraApiV2Simple.Geoname,
         xsdStringRestrictionPattern = Some("\\d{1,8}"),
         predicates = Seq(
@@ -828,7 +828,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val Geom: ClassEntityInfoV2 = makeDatatype(
+    val Geom: ReadClassInfoV2 = makeDatatype(
         datatypeIri = OntologyConstants.KnoraApiV2Simple.Geom,
         subClassOf = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
@@ -847,7 +847,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val File: ClassEntityInfoV2 = makeDatatype(
+    val File: ReadClassInfoV2 = makeDatatype(
         datatypeIri = OntologyConstants.KnoraApiV2Simple.File,
         subClassOf = Some(OntologyConstants.Xsd.Uri),
         predicates = Seq(
@@ -867,7 +867,7 @@ object KnoraApiV2Simple {
     )
 
 
-    val TextFile: ClassEntityInfoV2 = makeDatatype(
+    val TextFile: ReadClassInfoV2 = makeDatatype(
         datatypeIri = OntologyConstants.KnoraApiV2Simple.TextFile,
         subClassOf = Some(OntologyConstants.KnoraApiV2Simple.File),
         predicates = Seq(
@@ -886,7 +886,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val StillImageFile: ClassEntityInfoV2 = makeDatatype(
+    val StillImageFile: ReadClassInfoV2 = makeDatatype(
         datatypeIri = OntologyConstants.KnoraApiV2Simple.StillImageFile,
         subClassOf = Some(OntologyConstants.KnoraApiV2Simple.File),
         predicates = Seq(
@@ -905,7 +905,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val MovingImageFile: ClassEntityInfoV2 = makeDatatype(
+    val MovingImageFile: ReadClassInfoV2 = makeDatatype(
         datatypeIri = OntologyConstants.KnoraApiV2Simple.MovingImageFile,
         subClassOf = Some(OntologyConstants.KnoraApiV2Simple.File),
         predicates = Seq(
@@ -924,7 +924,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val AudioFile: ClassEntityInfoV2 = makeClass(
+    val AudioFile: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.AudioFile,
         subClassOf = Set(OntologyConstants.KnoraApiV2Simple.File),
         predicates = Seq(
@@ -943,7 +943,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val DDDFile: ClassEntityInfoV2 = makeClass(
+    val DDDFile: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.DDDFile,
         subClassOf = Set(OntologyConstants.KnoraApiV2Simple.File),
         predicates = Seq(
@@ -962,7 +962,7 @@ object KnoraApiV2Simple {
         )
     )
 
-    val DocumentFile: ClassEntityInfoV2 = makeClass(
+    val DocumentFile: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.DocumentFile,
         subClassOf = Set(OntologyConstants.KnoraApiV2Simple.File),
         predicates = Seq(
@@ -984,7 +984,7 @@ object KnoraApiV2Simple {
     /**
       * All the classes in the `knora-api` v2 ontology in the [[ApiV2Simple]] schema.
       */
-    val Classes: Map[IRI, ClassEntityInfoV2] = Set(
+    val Classes: Map[IRI, ReadClassInfoV2] = Set(
         Resource,
         Region,
         Representation,
@@ -1007,7 +1007,7 @@ object KnoraApiV2Simple {
         Geoname,
         Geom
     ).map {
-        classInfo => classInfo.classIri -> classInfo
+        classInfo => classInfo.classInfoContent.classIri -> classInfo
     }.toMap
 
     /**
@@ -1113,40 +1113,44 @@ object KnoraApiV2Simple {
     }
 
     /**
-      * Makes a [[ClassEntityInfoV2]] representing an owl:Class.
+      * Makes a [[ReadClassInfoV2]] representing an owl:Class.
       *
       * @param classIri       the IRI of the class.
       * @param subClassOf     the set of direct superclasses of this class.
       * @param predicates     the predicates of the class.
       * @param cardinalities  the cardinalities of the class.
       * @param linkProperties the set of the class's link properties.
-      * @return a [[ClassEntityInfoV2]].
+      * @return a [[ReadClassInfoV2]].
       */
     private def makeClass(classIri: IRI,
                           subClassOf: Set[IRI] = Set.empty[IRI],
                           predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
                           cardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
-                          linkProperties: Set[IRI] = Set.empty[IRI]): ClassEntityInfoV2 = {
+                          linkProperties: Set[IRI] = Set.empty[IRI]): ReadClassInfoV2 = {
         val predicatesWithType = predicates :+ makePredicate(
             predicateIri = OntologyConstants.Rdf.Type,
             objects = Set(OntologyConstants.Owl.Class)
         )
 
-        ClassEntityInfoV2(
-            classIri = classIri,
-            predicates = predicatesWithType.map {
-                pred => pred.predicateIri -> pred
-            }.toMap,
-            cardinalities = cardinalities,
-            linkProperties = linkProperties,
-            subClassOf = subClassOf,
-            ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri,
-            ontologySchema = ApiV2Simple
+        // TODO: distinguish between inherited cardinalities and others.
+
+        ReadClassInfoV2(
+            classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = predicatesWithType.map {
+                    pred => pred.predicateIri -> pred
+                }.toMap,
+                cardinalities = cardinalities,
+                subClassOf = subClassOf,
+                ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri,
+                ontologySchema = ApiV2Simple
+            ),
+            linkProperties = linkProperties
         )
     }
 
     /**
-      * Makes a [[ClassEntityInfoV2]] representing an rdfs:Datatype.
+      * Makes a [[ReadClassInfoV2]] representing an rdfs:Datatype.
       *
       * @param datatypeIri                 the IRI of the datatype.
       * @param subClassOf                  the superclass of the datatype.
@@ -1154,27 +1158,29 @@ object KnoraApiV2Simple {
       *                                    the regular expression that restricts its values. This has the effect of making the
       *                                    class a subclass of a blank node with owl:onDatatype xsd:string.
       * @param predicates                  the predicates of the datatype.
-      * @return a [[ClassEntityInfoV2]].
+      * @return a [[ReadClassInfoV2]].
       */
     private def makeDatatype(datatypeIri: IRI,
                              subClassOf: Option[IRI] = None,
                              xsdStringRestrictionPattern: Option[String] = None,
-                             predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2]): ClassEntityInfoV2 = {
+                             predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2]): ReadClassInfoV2 = {
         val predicatesWithType = predicates :+ makePredicate(
             predicateIri = OntologyConstants.Rdf.Type,
             objects = Set(OntologyConstants.Rdfs.Datatype)
         )
 
-        ClassEntityInfoV2(
-            classIri = datatypeIri,
-            ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri,
-            rdfType = OntologyConstants.Rdfs.Datatype,
-            xsdStringRestrictionPattern = xsdStringRestrictionPattern,
-            predicates = predicatesWithType.map {
-                pred => pred.predicateIri -> pred
-            }.toMap,
-            subClassOf = subClassOf.toSet,
-            ontologySchema = ApiV2Simple
+        ReadClassInfoV2(
+            classInfoContent = ClassInfoContentV2(
+                classIri = datatypeIri,
+                ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri,
+                rdfType = OntologyConstants.Rdfs.Datatype,
+                xsdStringRestrictionPattern = xsdStringRestrictionPattern,
+                predicates = predicatesWithType.map {
+                    pred => pred.predicateIri -> pred
+                }.toMap,
+                subClassOf = subClassOf.toSet,
+                ontologySchema = ApiV2Simple
+            )
         )
     }
 }

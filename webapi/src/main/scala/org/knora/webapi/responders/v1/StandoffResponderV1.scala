@@ -707,7 +707,7 @@ class StandoffResponderV1 extends Responder {
             // get the property Iris that are defined on the standoff classes returned by the ontology responder
             standoffPropertyIrisFromOntologyResponder = standoffClassEntities.standoffClassInfoMap.foldLeft(Set.empty[IRI]) {
                 case (acc, (standoffClassIri, standoffClassEntity)) =>
-                    val props = standoffClassEntity.cardinalities.keySet
+                    val props = standoffClassEntity.allCardinalities.keySet
                     acc ++ props
             }
 
@@ -730,14 +730,14 @@ class StandoffResponderV1 extends Responder {
                     val standoffPropertiesForStandoffClass: Set[IRI] = xmlTag.attributes.keySet
 
                     // check that the current standoff class has cardinalities for all the properties defined
-                    val cardinalitiesFound = standoffClassEntities.standoffClassInfoMap(standoffClass).cardinalities.keySet.intersect(standoffPropertiesForStandoffClass)
+                    val cardinalitiesFound = standoffClassEntities.standoffClassInfoMap(standoffClass).allCardinalities.keySet.intersect(standoffPropertiesForStandoffClass)
 
                     if (standoffPropertiesForStandoffClass != cardinalitiesFound) {
                         throw NotFoundException(s"the following standoff properties have no cardinality for $standoffClass: ${(standoffPropertiesForStandoffClass -- cardinalitiesFound).mkString(", ")}")
                     }
 
                     // collect the required standoff properties for the standoff class
-                    val requiredPropsForClass = standoffClassEntities.standoffClassInfoMap(standoffClass).cardinalities.filter {
+                    val requiredPropsForClass = standoffClassEntities.standoffClassInfoMap(standoffClass).allCardinalities.filter {
                         case (property: IRI, card: Cardinality.Value) =>
                             card == Cardinality.MustHaveOne || card == Cardinality.MustHaveSome
                     }.keySet -- StandoffProperties.systemProperties -- StandoffProperties.dataTypeProperties
@@ -748,7 +748,7 @@ class StandoffResponderV1 extends Responder {
                     }
 
                     // check if the standoff class's data type is correct in the mapping
-                    standoffClassEntities.standoffClassInfoMap(standoffClass).standoffDataType match {
+                    standoffClassEntities.standoffClassInfoMap(standoffClass).classInfoContent.standoffDataType match {
                         case Some(dataType: StandoffDataTypeClasses.Value) =>
                             // check if this corresponds to the datatype in the mapping
                             val dataTypeFromMapping: XMLStandoffDataTypeClass = xmlTag.tagItem.mapping.dataType.getOrElse(throw InvalidStandoffException(s"no data type provided for $standoffClass, but $dataType required"))
