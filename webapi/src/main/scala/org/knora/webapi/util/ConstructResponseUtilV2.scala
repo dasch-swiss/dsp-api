@@ -319,8 +319,16 @@ object ConstructResponseUtilV2 {
                 // incomingResourcesWithLinkValueProps contains resources that have incoming link values
                 // flatResourcesWithValues contains the complete information
 
+                val incomingValueProps: Map[IRI, Seq[ValueRdfData]] = incomingResourcesWithLinkValueProps.flatMap {
+                    case (incomingResIri: IRI, values: ResourceWithValueRdfData) =>
+
+                        values.valuePropertyAssertions
+                }
+
+                val incomingProps: (IRI, Seq[ValueRdfData]) = OntologyConstants.KnoraBase.HasIncomingLinks -> incomingValueProps.values.toSeq.flatten
+
                 resource.copy(
-                    valuePropertyAssertions = transformedValuePropertyAssertions
+                    valuePropertyAssertions = transformedValuePropertyAssertions + incomingProps
                 )
             } else {
                 resource.copy(
