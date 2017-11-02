@@ -101,15 +101,15 @@
 
                                         knora-base:projectShortname "images"^^xsd:string ;
 
+                                        knora-base:projectShortcode "0101"^^xsd:string ;
+
                                         knora-base:projectLongname "Image Collection Demo"^^xsd:string ;
 
                                         knora-base:projectDescription "A demo project of a collection of images"^^xsd:string ;
 
                                         knora-base:projectKeywords "images, collection"^^xsd:string ;
 
-                                        knora-base:projectOntologyGraph "http://www.knora.org/ontology/images"^^xsd:string ;
-
-                                        knora-base:projectDataGraph "http://www.knora.org/data/images"^^xsd:string ;
+                                        knora-base:projectOntology <http://www.knora.org/ontology/images> ;
 
                                         knora-base:status "true"^^xsd:boolean ;
 
@@ -247,9 +247,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                           knora-base:projectKeywords """Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images"""^^xsd:string ;
 
-                                          knora-base:projectOntologyGraph "http://www.knora.org/ontology/incunabula"^^xsd:string ;
-
-                                          knora-base:projectDataGraph "http://www.knora.org/data/incunabula"^^xsd:string ;
+                                          knora-base:projectOntology <http://www.knora.org/ontology/incunabula> ;
 
                                           knora-base:projectLogo "incunabula_logo.png"^^xsd:string ;
 
@@ -371,8 +369,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:projectShortname "anything"^^xsd:string ;
   knora-base:projectLongname "Anything Project"^^xsd:string ;
   knora-base:projectDescription "Anything Project"^^xsd:string ;
-  knora-base:projectOntologyGraph "http://www.knora.org/ontology/anything"^^xsd:string ;
-  knora-base:projectDataGraph "http://www.knora.org/data/anything"^^xsd:string ;
+  knora-base:projectOntology <http://www.knora.org/ontology/anything> ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -407,8 +404,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:projectShortname "dokubib"^^xsd:string ;
   knora-base:projectLongname "Dokubib"^^xsd:string ;
   knora-base:projectDescription "Dokubib"^^xsd:string ;
-  knora-base:projectOntologyGraph "http://www.knora.org/ontology/dokubib"^^xsd:string ;
-  knora-base:projectDataGraph "http://www.knora.org/data/dokubib"^^xsd:string ;
+  knora-base:projectOntology <http://www.knora.org/ontology/dokubib> ;
   knora-base:status "false"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -421,8 +417,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:projectShortname "beol"^^xsd:string ;
   knora-base:projectLongname "Bernoulli-Euler Online"^^xsd:string ;
   knora-base:projectDescription "Bernoulli-Euler Online"^^xsd:string ;
-  knora-base:projectOntologyGraph "http://www.knora.org/ontology/beol"^^xsd:string ;
-  knora-base:projectDataGraph "http://www.knora.org/data/beol"^^xsd:string ;
+  knora-base:projectOntology <http://www.knora.org/ontology/beol> ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -459,8 +454,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:projectShortname "biblio"^^xsd:string ;
   knora-base:projectLongname "Bibliography"^^xsd:string ;
   knora-base:projectDescription "Bibliography"^^xsd:string ;
-  knora-base:projectOntologyGraph "http://www.knora.org/ontology/biblio"^^xsd:string ;
-  knora-base:projectDataGraph "http://www.knora.org/data/biblio"^^xsd:string ;
+  knora-base:projectOntologyGraph <http://www.knora.org/ontology/biblio> ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
