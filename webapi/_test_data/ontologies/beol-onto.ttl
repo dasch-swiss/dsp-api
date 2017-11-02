@@ -1380,3 +1380,10 @@
              rdfs:subClassOf knora-base:StandoffLinkTag ;
 
              rdfs:comment "represents an entity (<entity>) tag in text"@en .
+
+
+:StandoffFigureTag  rdf:type owl:Class ;
+
+             rdfs:subClassOf knora-base:StandoffUriTag ;
+
+             rdfs:comment "represents a figure in text"@en .
