@@ -20,7 +20,7 @@ RUN \
     rm -rf /knora/webapi/project
 
 # starting second stage
-FROM openjdk:8-jdk-alpine
+FROM openjdk:8-jre-alpine
 
 RUN \
     mkdir -p /knora/webapi && \
