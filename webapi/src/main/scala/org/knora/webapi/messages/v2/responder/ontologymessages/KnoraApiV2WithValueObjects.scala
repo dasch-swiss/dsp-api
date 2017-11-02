@@ -295,6 +295,7 @@ object KnoraApiV2WithValueObjects {
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Region),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo),
+        isLinkProp = true,
         isEditable = true,
         predicates = Seq(
             makePredicate(
@@ -322,6 +323,7 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue),
         isEditable = true,
+        isLinkValueProp = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -644,6 +646,7 @@ object KnoraApiV2WithValueObjects {
     val HasLinkTo: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo,
         propertyType = OntologyConstants.Owl.ObjectProperty,
+        isLinkProp = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -669,6 +672,7 @@ object KnoraApiV2WithValueObjects {
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue),
+        isLinkValueProp = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
