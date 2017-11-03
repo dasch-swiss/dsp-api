@@ -1250,7 +1250,7 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
       */
     def externalToInternalEntityIri(iri: IRI, errorFun: () => Nothing): IRI = {
         iri match {
-            case BuiltInApiV2OntologyEntityRegex(ontologyName, _, entityName) => externalEntityNameToInternalEntityIri(OntologyID(ontologyName), entityName)
+            case BuiltInApiV2OntologyEntityRegex(ontologyName, _, entityName) if isBuiltInOntologyName(ontologyName) => externalEntityNameToInternalEntityIri(OntologyID(ontologyName), entityName)
             case ProjectSpecificApiV2OntologyEntityRegex(_, Optional(projectCode), ontologyName, _, entityName) => externalEntityNameToInternalEntityIri(OntologyID(ontologyName, projectCode), entityName)
             case _ => errorFun()
         }
@@ -1269,7 +1269,7 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
     def toInternalOntologyIri(iri: IRI, errorFun: () => Nothing): IRI = {
         iri match {
             case InternalOntologyRegex(_*) => iri
-            case BuiltInApiV2OntologyRegex(ontologyName, _) => externalOntologyIDToInternalOntologyIri(OntologyID(ontologyName))
+            case BuiltInApiV2OntologyRegex(ontologyName, _) if isBuiltInOntologyName(ontologyName) => externalOntologyIDToInternalOntologyIri(OntologyID(ontologyName))
             case ProjectSpecificApiV2OntologyRegex(_, Optional(projectCode), ontologyName, _) =>
                 externalOntologyIDToInternalOntologyIri(OntologyID(ontologyName, projectCode))
             case _ => errorFun()

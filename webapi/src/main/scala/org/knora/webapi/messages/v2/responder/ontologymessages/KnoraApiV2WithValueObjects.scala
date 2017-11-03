@@ -99,6 +99,27 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.Boolean)
     )
 
+    val IsInherited: PropertyEntityInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsInherited,
+        propertyType = OntologyConstants.Owl.AnnotationProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "is inherited"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates whether a cardinality has been inherited from a base class"
+                )
+            )
+        ),
+        subjectType = Some(OntologyConstants.Owl.Restriction),
+        objectType = Some(OntologyConstants.Xsd.Boolean)
+    )
+
     val CanBeInstantiated: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.CanBeInstantiated,
         propertyType = OntologyConstants.Owl.AnnotationProperty,
@@ -2165,6 +2186,7 @@ object KnoraApiV2WithValueObjects {
     val Properties: Map[IRI, PropertyEntityInfoV2] = Set(
         Result,
         IsEditable,
+        IsInherited,
         CanBeInstantiated,
         HasPermissions,
         ValueAsString,

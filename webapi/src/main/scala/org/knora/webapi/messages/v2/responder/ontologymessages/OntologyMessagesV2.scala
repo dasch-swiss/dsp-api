@@ -917,9 +917,7 @@ case class ReadClassInfoV2(classInfoContent: ClassInfoContentV2,
             targetSchema = targetSchema
         )
 
-        // TODO: mark inherited cardinalities.
-
-        val cardinalitiesWithTargetSchemaIris = allCardinalities.map {
+        val directCardinalitiesWithTargetSchemaIris: Map[IRI, Cardinality.Value] = classInfoContent.directCardinalities.map {
             case (propertyIri: IRI, cardinality: Cardinality.Value) =>
                 val schemaPropertyIri: IRI = stringFormatter.toExternalEntityIri(
                     entityIri = propertyIri,
@@ -928,6 +926,18 @@ case class ReadClassInfoV2(classInfoContent: ClassInfoContentV2,
 
                 (schemaPropertyIri, cardinality)
         }
+
+        val inheritedCardinalitiesWithTargetSchemaIris: Map[IRI, Cardinality.Value] = allCardinalities.map {
+            case (propertyIri: IRI, cardinality: Cardinality.Value) =>
+                val schemaPropertyIri: IRI = stringFormatter.toExternalEntityIri(
+                    entityIri = propertyIri,
+                    targetSchema = targetSchema
+                )
+
+                (schemaPropertyIri, cardinality)
+        }
+
+        val allCardinalitiesWithTargetSchemaIris: Map[IRI, Cardinality.Value] = directCardinalitiesWithTargetSchemaIris ++ inheritedCardinalitiesWithTargetSchemaIris
 
         val linkValuePropertiesWithTargetSchemaIris = linkValueProperties.map {
             propertyIri =>
@@ -939,11 +949,11 @@ case class ReadClassInfoV2(classInfoContent: ClassInfoContentV2,
 
         // If we're using the simplified API, don't return link value properties.
         val filteredCardinalities = targetSchema match {
-            case ApiV2Simple => cardinalitiesWithTargetSchemaIris.filterNot {
+            case ApiV2Simple => allCardinalitiesWithTargetSchemaIris.filterNot {
                 case (propertyIri, _) => linkValuePropertiesWithTargetSchemaIris.contains(propertyIri)
             }
 
-            case ApiV2WithValueObjects => cardinalitiesWithTargetSchemaIris
+            case ApiV2WithValueObjects => allCardinalitiesWithTargetSchemaIris
         }
 
         // If this is a project-specific class, add the standard cardinalities from knora-api:Resource for the target
@@ -968,11 +978,18 @@ case class ReadClassInfoV2(classInfoContent: ClassInfoContentV2,
                     case Cardinality.MustHaveSome => OntologyConstants.Owl.MinCardinality -> JsonLDInt(1)
                 }
 
+                // If we're using the complex schema and the cardinality is inherited, add an annotation to say so.
+                val isInherited = if (targetSchema == ApiV2WithValueObjects && !directCardinalitiesWithTargetSchemaIris.contains(propertyIri)) {
+                    Some(OntologyConstants.KnoraApiV2WithValueObjects.IsInherited -> JsonLDBoolean(true))
+                } else {
+                    None
+                }
+
                 JsonLDObject(Map(
                     "@type" -> JsonLDString(OntologyConstants.Owl.Restriction),
                     OntologyConstants.Owl.OnProperty -> JsonLDString(propertyIri),
                     prop2card
-                ))
+                ) ++ isInherited)
         }
 
         val belongsToOntologyPred = targetSchema match {
