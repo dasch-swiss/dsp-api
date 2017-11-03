@@ -33,8 +33,7 @@
  * @param maybeKeywords      the new optional value for keywords.
  * @param maybeLogo          the new optional value for logo.
  * @param maybeInstitution   the new optional value for institution.
- * @param maybeOntologyGraph the new optional value for ontology graph.
- * @param maybeDataGraph     the new optional value for data graph.
+ * @param maybeOntologies    the new optional value for ontologies.
  * @param maybeStatus        the new optional value for status.
  * @param maybeSelfjoin      the new optional value for selfjoin.
  *@
@@ -47,8 +46,7 @@
   maybeKeywords: Option[String],
   maybeLogo: Option[String],
   maybeInstitution: Option[IRI],
-  maybeOntologyGraph: Option[String],
-  maybeDataGraph: Option[String],
+  maybeOntologies: Option[Seq[IRI]],
   maybeStatus: Option[Boolean],
   maybeSelfjoin: Option[Boolean])
 
@@ -86,12 +84,8 @@ DELETE {
         ?project knora-base:belongsToInstitution ?currentInstitution .
     }
 
-    @if(maybeOntologyGraph.nonEmpty) {
-        project knora-base:projectOntologyGraph ?currentOntologyGraph .
-    }
-
-    @if(maybeDataGraph.nonEmpty) {
-        ?project knora-base:projectDataGraph ?currentDataGraph .
+    @if(maybeOntologies.nonEmpty) {
+        project knora-base:projectOntology ?currentOntologies .
     }
 
     @if(maybeStatus.nonEmpty) {
@@ -132,12 +126,10 @@ DELETE {
         ?project knora-base:belongsToInstitution <@maybeInstitution.get> .
     }
 
-    @if(maybeOntologyGraph.nonEmpty) {
-        ?project knora-base:projectOntologyGraph "@maybeOntologyGraph.get"^^xsd:string .
-    }
-
-    @if(maybeDataGraph.nonEmpty) {
-        ?project knora-base:projectDataGraph "@maybeDataGraph.get"^^xsd:string .
+    @if(maybeOntologies.nonEmpty) {
+        @for(ontology <- maybeOntologies.get) {
+          ?user knora-base:projectOntology <@ontology> .
+        }
     }
 
     @if(maybeStatus.nonEmpty) {
@@ -182,9 +174,7 @@ WHERE {
 
     optional {?project knora-base:belongsToInstitution ?currentInstitution .}
 
-    ?project knora-base:projectOntologyGraph ?currentOntologyGraph .
-
-    ?project knora-base:projectDataGraph ?currentDataGraph .
+    optional {?project knora-base:projectOntology ?currentOntologies .}
 
     ?project knora-base:status ?currentStatus .
 

@@ -214,9 +214,14 @@ class KnoraIdUtil {
       *
       * @return a new project IRI.
       */
-    def makeRandomProjectIri: IRI = {
-        val knoraProjectID = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/projects/$knoraProjectID"
+    def makeRandomProjectIri(maybeShortcode: Option[String]): IRI = {
+
+        if (maybeShortcode.isDefined) {
+            s"http://$IriDomain/projects/${maybeShortcode.get}"
+        } else {
+            val knoraProjectID = makeRandomBase64EncodedUuid
+            s"http://$IriDomain/projects/$knoraProjectID"
+        }
     }
 
     /**

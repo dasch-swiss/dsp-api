@@ -30,6 +30,7 @@ import org.apache.commons.validator.routines.UrlValidator
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.twirl.StandoffTagV1
 import spray.json.JsonParser
@@ -519,6 +520,7 @@ class StringFormatter private(settings: SettingsImpl) {
     }
 
     // TODO: Move to test case if needed
+    // TODO: There should be unit tests for everything!
     /*
     def main(args: Array[String]): Unit = {
         val delimiter = StringUtils.repeat('=', 80)
@@ -1259,5 +1261,24 @@ class StringFormatter private(settings: SettingsImpl) {
             case ProjectSpecificApiV2OntologyUrlPathRegex(_*) => true
             case _ => false
         }
+    }
+
+    /**
+      * Given the projectInfo calculates the project's data named graph.
+      *
+      * @param projectInfo the project's [[ProjectInfoV1]].
+      * @return the IRI of the project's data named graph.
+      */
+    def projectDataNamedGraph(projectInfo: ProjectInfoV1): IRI = {
+        if (projectInfo.shortcode.isDefined) {
+            OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortcode.get + "/" + projectInfo.shortname
+        } else {
+            OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortname
+        }
+    }
+
+    def isValidShortcode(shortcode: String): Boolean = {
+        // ToDo: do some checking
+        true
     }
 }

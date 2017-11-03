@@ -743,8 +743,7 @@
             :projectShortname "SystemProject" ;
             :projectLongname "Knora System Project" ;
             :projectDescription "Knora System Project" ;
-            :projectOntologyGraph "http://www.knora.org/ontology/knora-base" ;
-            :projectDataGraph "-" ;
+            :projectOntology <http://www.knora.org/ontology/knora-base> ;
             :status "true"^^xsd:boolean ;
             :hasSelfJoinEnabled "false"^^xsd:boolean .
 

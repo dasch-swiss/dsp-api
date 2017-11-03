@@ -387,7 +387,7 @@ class StandoffResponderV1 extends Responder {
             mappingIri = knoraIdUtil.makeProjectMappingIri(projectIri, mappingName)
 
             // put the mapping into the named graph of the project
-            namedGraph = projectInfo.project_info.dataNamedGraph
+            namedGraph = StringFormatter.getInstance.projectDataNamedGraph(projectInfo.project_info)
 
             result: CreateMappingResponseV1 <- IriLocker.runWithIriLock(
                 apiRequestID,

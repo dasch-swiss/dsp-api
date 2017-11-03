@@ -23,6 +23,7 @@ package org.knora.webapi.responders.v1
 import java.util.UUID
 
 import akka.actor.Status
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
@@ -31,7 +32,7 @@ import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.KnoraIdUtil
+import org.knora.webapi.util.{KnoraIdUtil, StringFormatter}
 
 import scala.concurrent.Future
 
@@ -129,7 +130,7 @@ class ProjectsResponderV1 extends Responder {
                         keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords).map(_.head),
                         logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head),
                         institution = propsMap.get(OntologyConstants.KnoraBase.BelongsToProject).map(_.head),
-                        ontologies = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no 'projectOntology' defined.")),
+                        ontologies = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, Seq.empty[IRI]),
                         status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.toBoolean,
                         selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).head.toBoolean
                     )
@@ -145,8 +146,6 @@ class ProjectsResponderV1 extends Responder {
       * @return a sequence of [[NamedGraphV1]]
       */
     private def projectsNamedGraphGetV1(userProfile: UserProfileV1): Future[Seq[NamedGraphV1]] = {
-
-
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjects(
@@ -448,22 +447,28 @@ class ProjectsResponderV1 extends Responder {
                 throw ForbiddenException("A new project can only be created by a system admin.")
             }
 
-            // check if the supplied 'shortname' for the new project is unique, i.e. not already registered
-            sparqlQueryString = queries.sparql.v1.txt.getProjectByShortname(
-                triplestore = settings.triplestoreType,
-                shortname = createRequest.shortname
-            ).toString()
-            //_ = log.debug(s"createNewProjectV1 - check duplicate shortname query: $sparqlQueryString")
-
-            projectInfoQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            projectResponse = projectInfoQueryResponse.results.bindings
-            //_ = log.debug(s"createNewProjectV1 - check duplicate shortname response: $projectInfoQueryResponse")
-
-            _ = if (projectResponse.nonEmpty) {
+            // check if the supplied shortname is unique
+            shortnameExists <- projectByShortnameExists(createRequest.shortname)
+            _ = if (shortnameExists) {
                 throw DuplicateValueException(s"Project with the shortname: '${createRequest.shortname}' already exists")
             }
 
-            newProjectIRI = knoraIdUtil.makeRandomProjectIri
+            // check if the optionally supplied shortcode is valid and unique
+            shortcodeExists <- if (createRequest.shortcode.isDefined) {
+                val shortcode = createRequest.shortcode.get
+                if (StringFormatter.getInstance.isValidShortcode(shortcode)) {
+                    projectByShortcodeExists(shortcode)
+                } else {
+                    throw BadRequestException(s"The supplied short code: '$shortcode' is not valid.")
+                }
+            } else {
+                FastFuture.successful(false)
+            }
+            _ = if (shortcodeExists) {
+                throw DuplicateValueException(s"Project with the shortcode: '${createRequest.shortcode.get}' already exists")
+            }
+
+            newProjectIRI = knoraIdUtil.makeRandomProjectIri(createRequest.shortcode)
             projectOntologyGraphString = "http://www.knora.org/ontology/" + createRequest.shortname
             projectDataGraphString = "http://www.knora.org/data/" + createRequest.shortname
 
@@ -474,14 +479,13 @@ class ProjectsResponderV1 extends Responder {
                 projectIri = newProjectIRI,
                 projectClassIri = OntologyConstants.KnoraBase.KnoraProject,
                 shortname = createRequest.shortname,
+                maybeShortcode = createRequest.shortcode,
                 maybeLongname = createRequest.longname,
                 maybeDescription = createRequest.description,
                 maybeKeywords = createRequest.keywords,
                 maybeLogo = createRequest.logo,
                 status = createRequest.status,
-                hasSelfJoinEnabled = createRequest.selfjoin,
-                projectOntologyGraph = projectOntologyGraphString,
-                projectDataGraph = projectDataGraphString
+                hasSelfJoinEnabled = createRequest.selfjoin
             ).toString
             //_ = log.debug("createNewProjectV1 - update query: {}", createNewProjectSparqlString)
 
@@ -593,8 +597,7 @@ class ProjectsResponderV1 extends Responder {
             projectUpdatePayload.keywords,
             projectUpdatePayload.logo,
             projectUpdatePayload.institution,
-            projectUpdatePayload.ontologyNamedGraph,
-            projectUpdatePayload.dataNamedGraph,
+            projectUpdatePayload.ontologies,
             projectUpdatePayload.status,
             projectUpdatePayload.selfjoin).flatten.size
 
@@ -616,8 +619,7 @@ class ProjectsResponderV1 extends Responder {
                 maybeKeywords = projectUpdatePayload.keywords,
                 maybeLogo = projectUpdatePayload.logo,
                 maybeInstitution = projectUpdatePayload.institution,
-                maybeOntologyGraph = projectUpdatePayload.ontologyNamedGraph,
-                maybeDataGraph = projectUpdatePayload.ontologyNamedGraph,
+                maybeOntologies = projectUpdatePayload.ontologies,
                 maybeStatus = projectUpdatePayload.status,
                 maybeSelfjoin = projectUpdatePayload.selfjoin
             ).toString)
@@ -655,12 +657,8 @@ class ProjectsResponderV1 extends Responder {
                 if (updatedProject.institution != projectUpdatePayload.institution) throw UpdateNotPerformedException("Project's 'institution' was not updated. Please report this as a possible bug.")
             }
 
-            _ = if (projectUpdatePayload.ontologyNamedGraph.isDefined) {
-                if (updatedProject.ontologyNamedGraph != projectUpdatePayload.ontologyNamedGraph.get) throw UpdateNotPerformedException("Project's 'ontologyGraph' was not updated. Please report this as a possible bug.")
-            }
-
-            _ = if (projectUpdatePayload.dataNamedGraph.isDefined) {
-                if (updatedProject.dataNamedGraph != projectUpdatePayload.dataNamedGraph.get) throw UpdateNotPerformedException("Project's 'dataGraph' was not updated. Please report this as a possible bug.")
+            _ = if (projectUpdatePayload.ontologies.isDefined) {
+                if (updatedProject.ontologies != projectUpdatePayload.ontologies.get) throw UpdateNotPerformedException("Project's 'ontologies' where not updated. Please report this as a possible bug.")
             }
 
             _ = if (projectUpdatePayload.status.isDefined) {
@@ -696,26 +694,25 @@ class ProjectsResponderV1 extends Responder {
 
         if (projectResponse.nonEmpty) {
 
-            val projectProperties = projectResponse.foldLeft(Map.empty[IRI, Seq[String]]) {
-                case (acc, rows: Seq[VariableResultsRow]) =>
-                    acc + (rows.rowMap("p") -> rows.map(_.rowMap("o")))
+            val projectProperties: Map[String, Seq[String]] = projectResponse.groupBy(_.rowMap("p")).map {
+                case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
             }
 
-            // log.debug(s"createProjectInfoV1 - projectProperties: $projectProperties")
+            log.debug(s"createProjectInfoV1 - projectProperties: $projectProperties")
 
             /* create and return the project info */
             ProjectInfoV1(
                 id = projectIri,
-                shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")),
-                longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname),
-                description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription),
-                keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeywords),
-                logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo),
-                institution = projectProperties.get(OntologyConstants.KnoraBase.BelongsToInstitution),
-                ontologyNamedGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectOntologyGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntologyGraph defined.")),
-                dataNamedGraph = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectDataGraph, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectDataGraph defined.")),
-                status = projectProperties.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).toBoolean,
-                selfjoin = projectProperties.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).toBoolean
+                shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head,
+                shortcode = projectProperties.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head),
+                longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head),
+                description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head),
+                keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeywords).map(_.head),
+                logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head),
+                institution = projectProperties.get(OntologyConstants.KnoraBase.BelongsToInstitution).map(_.head),
+                ontologies = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, Seq.empty[IRI]),
+                status = projectProperties.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.toBoolean,
+                selfjoin = projectProperties.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).head.toBoolean
             )
 
         } else {
@@ -814,6 +811,23 @@ class ProjectsResponderV1 extends Responder {
     def projectByShortnameExists(shortname: String): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.v1.txt.checkProjectExistsByShortname(shortname = shortname).toString)
+            //_ = log.debug("projectExists - query: {}", askString)
+
+            checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            result = checkUserExistsResponse.result
+
+        } yield result
+    }
+
+    /**
+      * Helper method for checking if a project identified by shortcode exists.
+      *
+      * @param shortcode the shortcode of the project.
+      * @return a [[Boolean]].
+      */
+    def projectByShortcodeExists(shortcode: String): Future[Boolean] = {
+        for {
+            askString <- Future(queries.sparql.v1.txt.checkProjectExistsByShortcode(shortcode = shortcode).toString)
             //_ = log.debug("projectExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]

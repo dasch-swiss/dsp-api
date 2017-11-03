@@ -300,7 +300,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 assert(response.status === StatusCodes.OK)
 
                 val projects: Seq[IRI] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[IRI]]
-                projects should contain allElementsOf Seq("http://data.knora.org/projects/images", "http://data.knora.org/projects/77275339", "http://data.knora.org/projects/anything")
+                projects should contain allElementsOf Seq(SharedAdminTestData.IMAGES_PROJECT_IRI, SharedAdminTestData.INCUNABULA_PROJECT_IRI, SharedAdminTestData.ANYTHING_PROJECT_IRI)
 
                 // testing getUserProjectMemberships method, which should return the same result
                 projects should contain allElementsOf getUserProjectMemberships(multiUserIri, rootCreds)
@@ -320,13 +320,13 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 assert(response.status === StatusCodes.OK)
 
                 val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
-                membershipsAfterUpdate should equal(Seq("http://data.knora.org/projects/images"))
+                membershipsAfterUpdate should equal(Seq(SharedAdminTestData.IMAGES_PROJECT_IRI))
             }
 
             "remove user from project" in {
 
                 val membershipsBeforeUpdate = getUserProjectMemberships(normalUserCreds.userIri, rootCreds)
-                membershipsBeforeUpdate should equal(Seq("http://data.knora.org/projects/images"))
+                membershipsBeforeUpdate should equal(Seq(SharedAdminTestData.IMAGES_PROJECT_IRI))
 
                 val request = Delete(baseApiUrl + "/v1/users/projects/" + normalUserCreds.urlEncodedIri + "/" + imagesProjectIriEnc) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
@@ -347,7 +347,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 assert(response.status === StatusCodes.OK)
 
                 val projects: Seq[IRI] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[IRI]]
-                projects should contain allElementsOf Seq("http://data.knora.org/projects/images", "http://data.knora.org/projects/77275339", "http://data.knora.org/projects/anything")
+                projects should contain allElementsOf Seq(SharedAdminTestData.IMAGES_PROJECT_IRI, SharedAdminTestData.INCUNABULA_PROJECT_IRI, SharedAdminTestData.ANYTHING_PROJECT_IRI)
 
                 // explicitly testing 'getUserProjectsAdminMemberships' method, which should return the same result
                 projects should contain allElementsOf getUserProjectAdminMemberships(multiUserIri, rootCreds)
@@ -369,14 +369,14 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
                 val membershipsAfterUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
                 //log.debug(s"membershipsAfterUpdate: $membershipsAfterUpdate")
-                membershipsAfterUpdate should equal(Seq("http://data.knora.org/projects/images"))
+                membershipsAfterUpdate should equal(Seq(SharedAdminTestData.IMAGES_PROJECT_IRI))
             }
 
             "remove user from project admin group" in {
 
                 val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
                 log.debug(s"membershipsBeforeUpdate: $membershipsBeforeUpdate")
-                membershipsBeforeUpdate should equal(Seq("http://data.knora.org/projects/images"))
+                membershipsBeforeUpdate should equal(Seq(SharedAdminTestData.IMAGES_PROJECT_IRI))
 
                 val request = Delete(baseApiUrl + "/v1/users/projects-admin/" + normalUserCreds.urlEncodedIri + "/" + imagesProjectIriEnc) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)

@@ -1623,7 +1623,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             actorUnderTest ! CreateValueRequestV1(
                 value = HierarchicalListValueV1(summer),
                 userProfile = imagesUser,
-                propertyIri = "http://www.knora.org/ontology/images#jahreszeit",
+                propertyIri = "http://www.knora.org/ontology/0101/images#jahreszeit",
                 resourceIri = "http://data.knora.org/691e7e2244d5",
                 apiRequestID = UUID.randomUUID
             )

@@ -7,12 +7,12 @@
 @prefix dc: <http://www.knora.org/ontology/dc#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
-@prefix images: <http://www.knora.org/ontology/images#> .
+@prefix images: <http://www.knora.org/ontology/0101/images#> .
 
 <http://data.knora.org/0cb8286054d5> a images:bild ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:titel <http://data.knora.org/0cb8286054d5/values/cea90774ee0f04> ;
 	images:signatur <http://data.knora.org/0cb8286054d5/values/aab421c4eb0f04> ;
 	images:bildnr <http://data.knora.org/0cb8286054d5/values/6dde74fdeb0f04> ;
@@ -196,7 +196,7 @@
 <http://data.knora.org/0d036c5957d5> a images:bildformat ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:bildart <http://data.knora.org/0d036c5957d5/values/2a96b66d081004> ;
 	images:erwerbsdatum <http://data.knora.org/0d036c5957d5/values/b0e95ce0081004> ;
 	images:stueckzahl <http://data.knora.org/0d036c5957d5/values/676c6334081004> ;
@@ -248,7 +248,7 @@
 <http://data.knora.org/20cf644a55d5> a images:bild ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:titel <http://data.knora.org/20cf644a55d5/values/c0dc5ff6f60f04> ;
 	images:signatur <http://data.knora.org/20cf644a55d5/values/9ce77946f40f04> ;
 	images:bildnr <http://data.knora.org/20cf644a55d5/values/5f11cd7ff40f04> ;
@@ -432,7 +432,7 @@
 <http://data.knora.org/34e6a03456d5> a images:bild ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:titel <http://data.knora.org/34e6a03456d5/values/b20fb878ff0f04> ;
 	images:signatur <http://data.knora.org/34e6a03456d5/values/8e1ad2c8fc0f04> ;
 	images:bildnr <http://data.knora.org/34e6a03456d5/values/51442502fd0f04> ;
@@ -616,7 +616,7 @@
 <http://data.knora.org/47b2992554d5> a images:bildformat ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:bildart <http://data.knora.org/47b2992554d5/values/5590db32ea0f04> ;
 	images:erwerbsdatum <http://data.knora.org/47b2992554d5/values/24617b51eb0f04> ;
 	images:format <http://data.knora.org/47b2992554d5/values/9e0dd5deea0f04> ;
@@ -708,7 +708,7 @@
 <http://data.knora.org/48fddc1e57d5> a images:bild ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:titel <http://data.knora.org/48fddc1e57d5/values/a44210fb071004> ;
 	images:signatur <http://data.knora.org/48fddc1e57d5/values/804d2a4b051004> ;
 	images:bildnr <http://data.knora.org/48fddc1e57d5/values/43777d84051004> ;
@@ -892,7 +892,7 @@
 <http://data.knora.org/5bc9d50f55d5> a images:bildformat ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:bildart <http://data.knora.org/5bc9d50f55d5/values/cd16da27f30f04> ;
 	images:erwerbsdatum <http://data.knora.org/5bc9d50f55d5/values/d9bd260df40f04> ;
 	images:format <http://data.knora.org/5bc9d50f55d5/values/1694d3d3f30f04> ;
@@ -966,7 +966,7 @@
 <http://data.knora.org/691e7e2244d5> a images:bild ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:titel <http://data.knora.org/691e7e2244d5/values/36f485595d0f04> ;
 	images:signatur <http://data.knora.org/691e7e2244d5/values/12ff9fa95a0f04> ;
 	images:bildnr <http://data.knora.org/691e7e2244d5/values/d528f3e25a0f04> ;
@@ -1150,7 +1150,7 @@
 <http://data.knora.org/6fe011fa55d5> a images:bildformat ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:bildart <http://data.knora.org/6fe011fa55d5/values/bf4932aafb0f04> ;
 	images:erwerbsdatum <http://data.knora.org/6fe011fa55d5/values/cbf07e8ffc0f04> ;
 	images:format <http://data.knora.org/6fe011fa55d5/values/08c72b56fc0f04> ;
@@ -1224,7 +1224,7 @@
 <http://data.knora.org/82ac0aeb53d5> a images:bild ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:titel <http://data.knora.org/82ac0aeb53d5/values/cf3c35c0e90f04> ;
 	images:signatur <http://data.knora.org/82ac0aeb53d5/values/ab474f10e70f04> ;
 	images:bildnr <http://data.knora.org/82ac0aeb53d5/values/6e71a249e70f04> ;
@@ -1408,7 +1408,7 @@
 <http://data.knora.org/83f74de456d5> a images:bildformat ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:bildart <http://data.knora.org/83f74de456d5/values/b17c8a2c041004> ;
 	images:erwerbsdatum <http://data.knora.org/83f74de456d5/values/faf983d8041004> ;
 	images:lieferant <http://data.knora.org/df1260ad43d5> ;
@@ -1482,7 +1482,7 @@
 <http://data.knora.org/96c346d554d5> a images:bild ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:titel <http://data.knora.org/96c346d554d5/values/47c333b5f20f04> ;
 	images:signatur <http://data.knora.org/96c346d554d5/values/23ce4d05f00f04> ;
 	images:bildnr <http://data.knora.org/96c346d554d5/values/e6f7a03ef00f04> ;
@@ -1666,7 +1666,7 @@
 <http://data.knora.org/a418efe743d5> a images:bildformat ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:bildart <http://data.knora.org/a418efe743d5/values/432e008b590f04> ;
 	images:erwerbsdatum <http://data.knora.org/a418efe743d5/values/4fd54c705a0f04> ;
 	images:format <http://data.knora.org/a418efe743d5/values/8cabf9365a0f04> ;
@@ -1740,7 +1740,7 @@
 <http://data.knora.org/aada82bf55d5> a images:bild ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:titel <http://data.knora.org/aada82bf55d5/values/39f68b37fb0f04> ;
 	images:signatur <http://data.knora.org/aada82bf55d5/values/1501a687f80f04> ;
 	images:bildnr <http://data.knora.org/aada82bf55d5/values/d82af9c0f80f04> ;
@@ -1924,7 +1924,7 @@
 <http://data.knora.org/bda67bb053d5> a images:bildformat ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:format <http://data.knora.org/bda67bb053d5/values/e81dfcd6e60f04> ;
 	images:lieferant <http://data.knora.org/df1260ad43d5> ;
 	images:lieferantValue <http://data.knora.org/bda67bb053d5/values/9764be5b-8219-4b19-95fa-52fbb15786ff> ;
@@ -1974,7 +1974,7 @@
 <http://data.knora.org/bef1bea956d5> a images:bild ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:titel <http://data.knora.org/bef1bea956d5/values/2b29e4b9031004> ;
 	images:signatur <http://data.knora.org/bef1bea956d5/values/0734fe09011004> ;
 	images:bildnr <http://data.knora.org/bef1bea956d5/values/ca5d5143011004> ;
@@ -2158,7 +2158,7 @@
 <http://data.knora.org/d1bdb79a54d5> a images:bildformat ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:bildart <http://data.knora.org/d1bdb79a54d5/values/54fdade6ee0f04> ;
 	images:erwerbsdatum <http://data.knora.org/d1bdb79a54d5/values/9d7aa792ef0f04> ;
 	images:lieferant <http://data.knora.org/df1260ad43d5> ;
@@ -2232,7 +2232,7 @@
 <http://data.knora.org/d208fb9357d5> a images:bild ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:titel <http://data.knora.org/d208fb9357d5/values/970896c90b1004> ;
 	images:signatur <http://data.knora.org/d208fb9357d5/values/7313b019091004> ;
 	images:bildnr <http://data.knora.org/d208fb9357d5/values/363d0353091004> ;
@@ -2416,7 +2416,7 @@
 <http://data.knora.org/df1260ad43d5> a images:person ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:lastname <http://data.knora.org/df1260ad43d5/values/745d606c580f04> ;
 	images:firstname <http://data.knora.org/df1260ad43d5/values/3787b3a5580f04> ;
 	images:address <http://data.knora.org/df1260ad43d5/values/fab006df580f04> ;
@@ -2460,7 +2460,7 @@
 <http://data.knora.org/e5d4f38455d5> a images:bildformat ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:bildart <http://data.knora.org/e5d4f38455d5/values/46300669f70f04> ;
 	images:erwerbsdatum <http://data.knora.org/e5d4f38455d5/values/52d7524ef80f04> ;
 	images:format <http://data.knora.org/e5d4f38455d5/values/8fadff14f80f04> ;
@@ -2534,7 +2534,7 @@
 <http://data.knora.org/f9eb2f6f56d5> a images:bildformat ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://data.knora.org/users/c266a56709> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://data.knora.org/projects/0101> ;
 	images:bildart <http://data.knora.org/f9eb2f6f56d5/values/38635eebff0f04> ;
 	images:erwerbsdatum <http://data.knora.org/f9eb2f6f56d5/values/81e05797001004> ;
 	images:lieferant <http://data.knora.org/df1260ad43d5> ;

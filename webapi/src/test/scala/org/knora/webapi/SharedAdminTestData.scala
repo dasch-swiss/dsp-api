@@ -24,6 +24,7 @@ import org.knora.webapi.messages.v1.responder.groupmessages.GroupInfoV1
 import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataV1, PermissionV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.SharedOntologyTestData._
 
 /**
   * This object holds the same user which are loaded with '_test_data/all_data/admin-data.ttl'. Using this object
@@ -172,13 +173,13 @@ object SharedAdminTestData {
     def systemProjectInfo = ProjectInfoV1(
         id = SYSTEM_PROJECT_IRI,
         shortname = "SystemProject",
+        shortcode = None,
         longname = Some("Knora System Project"),
         description = Some("Knora System Project"),
         keywords = None,
         logo = None,
         institution = None,
-        ontologyNamedGraph = "http://www.knora.org/ontology/knora-base",
-        dataNamedGraph = "-",
+        ontologies = Seq("http://www.knora.org/ontology/knora-base"),
         status = true,
         selfjoin = false
     )
@@ -188,7 +189,7 @@ object SharedAdminTestData {
     /** Images Demo Project Admin Data  **/
     /*************************************/
 
-    val IMAGES_PROJECT_IRI = "http://data.knora.org/projects/images"
+    val IMAGES_PROJECT_IRI = "http://data.knora.org/projects/0101"
 
     /* represents 'user01' as found in admin-data.ttl  */
     def imagesUser01 = UserProfileV1(
@@ -210,7 +211,7 @@ object SharedAdminTestData {
                 IMAGES_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
             ),
             administrativePermissionsPerProject = Map(
-                "http://data.knora.org/projects/images" -> Set(
+                IMAGES_PROJECT_IRI -> Set(
                     PermissionV1.ProjectAdminAllPermission,
                     PermissionV1.ProjectResourceCreateAllPermission
                 )
@@ -236,10 +237,10 @@ object SharedAdminTestData {
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                "http://data.knora.org/projects/images" -> List(OntologyConstants.KnoraBase.ProjectMember)
+                IMAGES_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember)
             ),
             administrativePermissionsPerProject = Map(
-                "http://data.knora.org/projects/images" -> Set(
+                IMAGES_PROJECT_IRI -> Set(
                     PermissionV1.ProjectResourceCreateAllPermission
                 )
             ),
@@ -264,12 +265,12 @@ object SharedAdminTestData {
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                "http://data.knora.org/projects/images" -> List("http://data.knora.org/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}")
+                IMAGES_PROJECT_IRI -> List("http://data.knora.org/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}")
             ),
             administrativePermissionsPerProject = Map(
-                "http://data.knora.org/projects/images" -> Set(
-                    PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/images#bild"),
-                    PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/images#bildformat")
+                IMAGES_PROJECT_IRI -> Set(
+                    PermissionV1.projectResourceCreateRestrictedPermission(s"$IMAGES_ONTOLOGY_IRI#bild"),
+                    PermissionV1.projectResourceCreateRestrictedPermission(s"$IMAGES_ONTOLOGY_IRI#bildformat")
                 )
             ),
             anonymousUser = false
@@ -278,15 +279,15 @@ object SharedAdminTestData {
 
     /* represents the full project info of the images project */
     def imagesProjectInfo = ProjectInfoV1(
-        id = "http://data.knora.org/projects/images",
+        id = IMAGES_PROJECT_IRI,
         shortname = "images",
+        shortcode = Some("0101"),
         longname = Some("Image Collection Demo"),
         description = Some("A demo project of a collection of images"),
         keywords = Some("images, collection"),
         logo = None,
         institution = None,
-        ontologyNamedGraph = "http://www.knora.org/ontology/images",
-        dataNamedGraph = "http://www.knora.org/data/images",
+        ontologies = Seq(IMAGES_ONTOLOGY_IRI),
         status = true,
         selfjoin = false
     )
@@ -296,7 +297,7 @@ object SharedAdminTestData {
         id = "-",
         name = "ProjectAdmin",
         description = Some("Default Project Admin Group"),
-        project = "http://data.knora.org/projects/images",
+        project = IMAGES_PROJECT_IRI,
         status = true,
         selfjoin = false
     )
@@ -306,7 +307,7 @@ object SharedAdminTestData {
         id = "-",
         name = "ProjectMember",
         description = Some("Default Project Member Group"),
-        project = "http://data.knora.org/projects/images",
+        project = IMAGES_PROJECT_IRI,
         status = true,
         selfjoin = false
     )
@@ -316,7 +317,7 @@ object SharedAdminTestData {
         id = "http://data.knora.org/groups/images-reviewer",
         name = "Image reviewer",
         description = Some("A group for image reviewers."),
-        project = "http://data.knora.org/projects/images",
+        project = IMAGES_PROJECT_IRI,
         status = true,
         selfjoin = false
     )
@@ -327,8 +328,6 @@ object SharedAdminTestData {
     /*************************************/
 
     val INCUNABULA_PROJECT_IRI = "http://data.knora.org/projects/77275339"
-    val INCUNABULA_BOOK_RESOURCE_CLASS = "http://www.knora.org/ontology/incunabula#book"
-    val INCUNABULA_PAGE_RESOURCE_CLASS = "http://www.knora.org/ontology/incunabula#page"
 
     /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
     def incunabulaProjectAdminUser = UserProfileV1(
@@ -419,13 +418,13 @@ object SharedAdminTestData {
     def incunabulaProjectInfo = ProjectInfoV1(
         id = INCUNABULA_PROJECT_IRI,
         shortname = "incunabula",
+        shortcode = None,
         longname = Some("Bilderfolgen Basler Frühdrucke"),
         description = Some("<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>"),
         keywords = Some("Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images"),
         logo = Some("incunabula_logo.png"),
         institution = None,
-        ontologyNamedGraph = "http://www.knora.org/ontology/incunabula",
-        dataNamedGraph = "http://www.knora.org/data/incunabula",
+        ontologies = Seq("http://www.knora.org/ontology/incunabula"),
         status = true,
         selfjoin = false
     )
@@ -494,13 +493,13 @@ object SharedAdminTestData {
     def anythingProjectInfo = ProjectInfoV1(
         id = ANYTHING_PROJECT_IRI,
         shortname = "anything",
+        shortcode = None,
         longname = Some("Anything Project"),
         description = Some("Anything Project"),
         keywords = None,
         logo = None,
         institution = None,
-        ontologyNamedGraph = "http://www.knora.org/ontology/anything",
-        dataNamedGraph = "http://www.knora.org/data/anything",
+        ontologies = Seq("http://www.knora.org/ontology/anything"),
         status = true,
         selfjoin = false
     )
@@ -515,13 +514,13 @@ object SharedAdminTestData {
     def beolProjectInfo = ProjectInfoV1(
         id = BEOL_PROJECT_IRI,
         shortname = "beol",
+        shortcode = None,
         longname = Some("Bernoulli-Euler Online"),
         description = Some("Bernoulli-Euler Online"),
         keywords = None,
         logo = None,
         institution = None,
-        ontologyNamedGraph = "http://www.knora.org/ontology/beol",
-        dataNamedGraph = "http://www.knora.org/data/beol",
+        ontologies = Seq("http://www.knora.org/ontology/beol"),
         status = true,
         selfjoin = false
     )
@@ -536,13 +535,13 @@ object SharedAdminTestData {
     def biblioProjectInfo = ProjectInfoV1(
         id = BIBLIO_PROJECT_IRI,
         shortname = "biblio",
+        shortcode = None,
         longname = Some("Bibliography"),
         description = Some("Bibliography"),
         keywords = None,
         logo = None,
         institution = None,
-        ontologyNamedGraph = "http://www.knora.org/ontology/biblio",
-        dataNamedGraph = "http://www.knora.org/data/biblio",
+        ontologies = Seq("http://www.knora.org/ontology/biblio"),
         status = true,
         selfjoin = false
     )
@@ -574,13 +573,13 @@ object SharedAdminTestData {
     def dokubibProjectInfo = ProjectInfoV1(
         id = DOKUBIB_PROJECT_IRI,
         shortname = "dokubib",
+        shortcode = None,
         longname = Some("Dokubib"),
         description = Some("Dokubib"),
         keywords = None,
         logo = None,
         institution = None,
-        ontologyNamedGraph = "http://www.knora.org/ontology/dokubib",
-        dataNamedGraph = "http://www.knora.org/data/dokubib",
+        ontologies = Seq("http://www.knora.org/ontology/dokubib"),
         status = false,
         selfjoin = false
     )

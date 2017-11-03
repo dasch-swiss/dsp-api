@@ -26,6 +26,7 @@ import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
+import org.knora.webapi.SharedOntologyTestData._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{ObjectAccessPermissionV1, ObjectAccessPermissionsForResourceGetV1, PermissionV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
@@ -1182,7 +1183,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
 
             actorUnderTest ! ResourceCreateRequestV1(
-                resourceTypeIri = SharedAdminTestData.INCUNABULA_BOOK_RESOURCE_CLASS,
+                resourceTypeIri = INCUNABULA_BOOK_RESOURCE_CLASS,
                 label = "Test-Book",
                 projectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
                 values = valuesToBeCreated,
@@ -1260,7 +1261,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             )
 
             actorUnderTest ! ResourceCreateRequestV1(
-                resourceTypeIri = SharedAdminTestData.INCUNABULA_PAGE_RESOURCE_CLASS,
+                resourceTypeIri = INCUNABULA_PAGE_RESOURCE_CLASS,
                 label = "Test-Page",
                 projectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
                 values = valuesToBeCreated,

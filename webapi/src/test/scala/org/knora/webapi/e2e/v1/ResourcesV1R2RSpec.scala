@@ -31,6 +31,8 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
+import org.knora.webapi.SharedOntologyTestData._
+import org.knora.webapi.SharedAdminTestData._
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
@@ -302,14 +304,14 @@ class ResourcesV1R2RSpec extends R2RSpec {
         "create a resource of type 'images:person' in 'images' project" in {
 
             val params =
-                """
+                s"""
                   |{
-                  |    "restype_id": "http://www.knora.org/ontology/images#person",
+                  |    "restype_id": "$IMAGES_ONTOLOGY_IRI#person",
                   |    "label": "Testperson",
-                  |    "project_id": "http://data.knora.org/projects/images",
+                  |    "project_id": "$IMAGES_PROJECT_IRI",
                   |    "properties": {
-                  |        "http://www.knora.org/ontology/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
-                  |        "http://www.knora.org/ontology/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
+                  |        "$IMAGES_ONTOLOGY_IRI#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
+                  |        "$IMAGES_ONTOLOGY_IRI#firstname": [{"richtext_value":{"utf8str":"Name"}}]
                   |    }
                   |}
                 """.stripMargin

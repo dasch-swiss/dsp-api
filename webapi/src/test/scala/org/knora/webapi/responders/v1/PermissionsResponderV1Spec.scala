@@ -22,6 +22,7 @@ import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.SharedAdminTestData._
 import org.knora.webapi.SharedPermissionsTestData._
+import org.knora.webapi.SharedOntologyTestData._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringForResourceClassGetV1, _}
@@ -96,7 +97,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 actorUnderTest ! PermissionDataGetV1(
                     projectIris = SharedAdminTestData.multiuserUser.projects_info.keys.toSeq,
                     groupIris = SharedAdminTestData.multiuserUser.groups,
-                    isInProjectAdminGroups = Seq("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images"),
+                    isInProjectAdminGroups = Seq(INCUNABULA_PROJECT_IRI, IMAGES_PROJECT_IRI),
                     isInSystemAdminGroup = false
                 )
                 expectMsg(SharedAdminTestData.multiuserUser.permissionData)
@@ -106,7 +107,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 actorUnderTest ! PermissionDataGetV1(
                     projectIris = SharedAdminTestData.incunabulaProjectAdminUser.projects_info.keys.toSeq,
                     groupIris = SharedAdminTestData.incunabulaProjectAdminUser.groups,
-                    isInProjectAdminGroups = Seq("http://data.knora.org/projects/77275339"),
+                    isInProjectAdminGroups = Seq(INCUNABULA_PROJECT_IRI),
                     isInSystemAdminGroup = false
                 )
                 expectMsg(SharedAdminTestData.incunabulaProjectAdminUser.permissionData)
@@ -136,7 +137,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 actorUnderTest ! PermissionDataGetV1(
                     projectIris = SharedAdminTestData.imagesUser01.projects_info.keys.toSeq,
                     groupIris = SharedAdminTestData.imagesUser01.groups,
-                    isInProjectAdminGroups = Seq("http://data.knora.org/projects/images"),
+                    isInProjectAdminGroups = Seq(IMAGES_PROJECT_IRI),
                     isInSystemAdminGroup = false
                 )
                 expectMsg(SharedAdminTestData.imagesUser01.permissionData)

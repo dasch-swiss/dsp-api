@@ -20,7 +20,7 @@
 
 package org.knora.webapi.util
 
-import org.knora.webapi.{BadRequestException, CoreSpec}
+import org.knora.webapi.{BadRequestException, CoreSpec, SharedAdminTestData}
 
 /**
   * Tests [[StringFormatter]].
@@ -144,6 +144,18 @@ class StringFormatterSpec extends CoreSpec() {
             val validIri = stringFormatter.toIri(testUrl, () => throw BadRequestException(s"Invalid IRI $testUrl"))
 
             validIri should be(testUrl)
+        }
+
+        "return the data named graph of a project without short code" in {
+            val expected = "http://www.knora.org/data/incunabula"
+            val result = stringFormatter.projectDataNamedGraph(SharedAdminTestData.incunabulaProjectInfo)
+            result should be(expected)
+        }
+
+        "return the data named graph of a project with short code" in {
+            val expected = "http://www.knora.org/data/0101/images"
+            val result = stringFormatter.projectDataNamedGraph(SharedAdminTestData.imagesProjectInfo)
+            result should be(expected)
         }
 
     }
