@@ -535,6 +535,7 @@ object OntologyConstants {
         val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
 
         val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
+        val ForbiddenResource: IRI = KnoraApiV2PrefixExpansion + "ForbiddenResource"
         val Region: IRI = KnoraApiV2PrefixExpansion + "Region"
         val Representation: IRI = KnoraApiV2PrefixExpansion + "Representation"
         val StillImageRepresentation: IRI = KnoraApiV2PrefixExpansion + "StillImageRepresentation"
@@ -675,6 +676,7 @@ object OntologyConstants {
         val Geoname: IRI = KnoraApiV2PrefixExpansion + "Geoname"
 
         val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
+        val ForbiddenResource: IRI = KnoraApiV2PrefixExpansion + "ForbiddenResource"
 
         val ResourceIcon: IRI = KnoraApiV2PrefixExpansion + "resourceIcon"
 

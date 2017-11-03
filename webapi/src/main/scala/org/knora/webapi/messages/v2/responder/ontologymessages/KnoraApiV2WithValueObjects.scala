@@ -308,6 +308,35 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
+    val ForbiddenResource: ClassEntityInfoV2 = makeClass(
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.ForbiddenResource,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        canBeInstantiated = true,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."
+                )
+            )
+        ),
+        cardinalities = Map(
+            OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo -> Cardinality.MayHaveMany,
+            OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue -> Cardinality.MayHaveMany,
+            OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.CreationDate -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.HasComment -> Cardinality.MustHaveSome
+        )
+    )
+
     val Region: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Region,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
@@ -332,6 +361,7 @@ object KnoraApiV2WithValueObjects {
         cardinalities = Map(
             OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo -> Cardinality.MayHaveMany,
+            OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue -> Cardinality.MayHaveMany,
             OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.CreationDate -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate -> Cardinality.MayHaveOne,
@@ -2357,6 +2387,7 @@ object KnoraApiV2WithValueObjects {
       */
     val Classes: Map[IRI, ClassEntityInfoV2] = Set(
         Resource,
+        ForbiddenResource,
         Region,
         LinkObject,
         Representation,

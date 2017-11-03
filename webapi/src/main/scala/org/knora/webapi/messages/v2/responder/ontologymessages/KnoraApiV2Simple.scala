@@ -38,6 +38,32 @@ object KnoraApiV2Simple {
         )
     )
 
+    val ForbiddenResource: ClassEntityInfoV2 = makeClass(
+        classIri = OntologyConstants.KnoraApiV2Simple.ForbiddenResource,
+        subClassOf = Set(OntologyConstants.KnoraApiV2Simple.Resource),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."
+                )
+            )
+        ),
+        cardinalities = Map(
+            OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2Simple.HasStandoffLinkTo -> Cardinality.MayHaveMany,
+            OntologyConstants.KnoraApiV2Simple.CreationDate -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2Simple.LastModificationDate -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2Simple.HasComment -> Cardinality.MustHaveSome
+        )
+    )
+
     val Result: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2Simple.Result,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1037,6 +1063,7 @@ object KnoraApiV2Simple {
       */
     val Classes: Map[IRI, ClassEntityInfoV2] = Set(
         Resource,
+        ForbiddenResource,
         Region,
         LinkObject,
         Representation,

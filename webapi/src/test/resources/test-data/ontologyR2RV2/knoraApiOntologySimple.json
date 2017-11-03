@@ -340,6 +340,34 @@
         "owl:onProperty" : "http://schema.org/name"
       } ]
     },
+    "knora-api:ForbiddenResource" : {
+      "@id" : "knora-api:ForbiddenResource",
+      "@type" : "owl:Class",
+      "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
+      "rdfs:comment" : "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.",
+      "rdfs:label" : "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.",
+      "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/simple/v2#Resource", {
+        "@type" : "owl:Restriction",
+        "owl:cardinality" : 1,
+        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#creationDate"
+      }, {
+        "@type" : "owl:Restriction",
+        "owl:minCardinality" : 1,
+        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasComment"
+      }, {
+        "@type" : "owl:Restriction",
+        "owl:minCardinality" : 0,
+        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"
+      }, {
+        "@type" : "owl:Restriction",
+        "owl:maxCardinality" : 1,
+        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#lastModificationDate"
+      }, {
+        "@type" : "owl:Restriction",
+        "owl:cardinality" : 1,
+        "owl:onProperty" : "http://schema.org/name"
+      } ]
+    },
     "knora-api:StillImageFile" : {
       "@id" : "knora-api:StillImageFile",
       "@type" : "rdfs:Datatype",
@@ -414,7 +442,7 @@
     }
   },
   "knora-api:hasOntologiesWithClasses" : {
-    "http://api.knora.org/ontology/knora-api/simple/v2" : [ "http://api.knora.org/ontology/knora-api/simple/v2#AudioFile", "http://api.knora.org/ontology/knora-api/simple/v2#AudioRepresentation", "http://api.knora.org/ontology/knora-api/simple/v2#Color", "http://api.knora.org/ontology/knora-api/simple/v2#DDDFile", "http://api.knora.org/ontology/knora-api/simple/v2#DDDRepresentation", "http://api.knora.org/ontology/knora-api/simple/v2#Date", "http://api.knora.org/ontology/knora-api/simple/v2#DocumentFile", "http://api.knora.org/ontology/knora-api/simple/v2#DocumentRepresentation", "http://api.knora.org/ontology/knora-api/simple/v2#File", "http://api.knora.org/ontology/knora-api/simple/v2#Geom", "http://api.knora.org/ontology/knora-api/simple/v2#Geoname", "http://api.knora.org/ontology/knora-api/simple/v2#Interval", "http://api.knora.org/ontology/knora-api/simple/v2#LinkObj", "http://api.knora.org/ontology/knora-api/simple/v2#MovingImageFile", "http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation", "http://api.knora.org/ontology/knora-api/simple/v2#Region", "http://api.knora.org/ontology/knora-api/simple/v2#Representation", "http://api.knora.org/ontology/knora-api/simple/v2#Resource", "http://api.knora.org/ontology/knora-api/simple/v2#StillImageFile", "http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation", "http://api.knora.org/ontology/knora-api/simple/v2#TextFile", "http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation" ]
+    "http://api.knora.org/ontology/knora-api/simple/v2" : [ "http://api.knora.org/ontology/knora-api/simple/v2#AudioFile", "http://api.knora.org/ontology/knora-api/simple/v2#AudioRepresentation", "http://api.knora.org/ontology/knora-api/simple/v2#Color", "http://api.knora.org/ontology/knora-api/simple/v2#DDDFile", "http://api.knora.org/ontology/knora-api/simple/v2#DDDRepresentation", "http://api.knora.org/ontology/knora-api/simple/v2#Date", "http://api.knora.org/ontology/knora-api/simple/v2#DocumentFile", "http://api.knora.org/ontology/knora-api/simple/v2#DocumentRepresentation", "http://api.knora.org/ontology/knora-api/simple/v2#File", "http://api.knora.org/ontology/knora-api/simple/v2#ForbiddenResource", "http://api.knora.org/ontology/knora-api/simple/v2#Geom", "http://api.knora.org/ontology/knora-api/simple/v2#Geoname", "http://api.knora.org/ontology/knora-api/simple/v2#Interval", "http://api.knora.org/ontology/knora-api/simple/v2#LinkObj", "http://api.knora.org/ontology/knora-api/simple/v2#MovingImageFile", "http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation", "http://api.knora.org/ontology/knora-api/simple/v2#Region", "http://api.knora.org/ontology/knora-api/simple/v2#Representation", "http://api.knora.org/ontology/knora-api/simple/v2#Resource", "http://api.knora.org/ontology/knora-api/simple/v2#StillImageFile", "http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation", "http://api.knora.org/ontology/knora-api/simple/v2#TextFile", "http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation" ]
   },
   "knora-api:hasProperties" : {
     "knora-api:HasFile" : {
