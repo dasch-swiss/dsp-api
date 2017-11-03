@@ -60,7 +60,33 @@ case class LoadOntologiesRequestV2(userProfile: UserProfileV1) extends Ontologie
 case class CreateOntologyRequestV2(ontologyName: String,
                                    projectIri: IRI,
                                    apiRequestID: UUID,
-                                   userProfile: UserProfileV1) extends OntologiesResponderRequestV2 {
+                                   userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+
+/**
+  * Constructs instances of [[CreateOntologyRequestV2]] based on JSON-LD requests.
+  */
+object CreateOntologyRequestV2 {
+    def fromJsonLD(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, userProfile: UserProfileV1): CreateOntologyRequestV2 = {
+        val stringFormatter = StringFormatter.getInstance
+        val docObjMap = jsonLDDocument.body.value
+
+        val ontologyName: String = docObjMap.getOrElse(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName, throw BadRequestException("No knora-api:ontologyName provided")) match {
+            case JsonLDString(value) => stringFormatter.toProjectSpecificOntologyName(value, () => throw BadRequestException(s"Invalid knora-api:ontologyName: $value"))
+            case other => throw BadRequestException(s"Invalid knora-api:ontologyName: $other")
+        }
+
+        val projectIri: IRI = docObjMap.getOrElse(OntologyConstants.KnoraApiV2WithValueObjects.ProjectIri, throw BadRequestException("No knora-api:projectIri provided")) match {
+            case JsonLDString(value) => stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid knora-api:projectIri: $value"))
+            case other => throw BadRequestException(s"Invalid knora-api:projectIri: $other")
+        }
+
+        CreateOntologyRequestV2(
+            ontologyName = ontologyName,
+            projectIri = projectIri,
+            apiRequestID = apiRequestID,
+            userProfile = userProfile
+        )
+    }
 }
 
 /**

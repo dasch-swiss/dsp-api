@@ -1462,6 +1462,22 @@
       "rdfs:comment" : "Specifies the required type of the objects of a property",
       "rdfs:label" : "Object type"
     },
+    "knora-api:ontologyName" : {
+      "@id" : "knora-api:ontologyName",
+      "@type" : "owl:DatatypeProperty",
+      "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/v2",
+      "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
+      "rdfs:comment" : "Represents the short name of an ontology",
+      "rdfs:label" : "ontology name"
+    },
+    "knora-api:projectIri" : {
+      "@id" : "knora-api:projectIri",
+      "@type" : "owl:DatatypeProperty",
+      "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/v2",
+      "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#anyURI",
+      "rdfs:comment" : "Represents the IRI of a Knora project",
+      "rdfs:label" : "project IRI"
+    },
     "knora-api:resourceIcon" : {
       "@id" : "knora-api:resourceIcon",
       "@type" : "owl:DatatypeProperty",
