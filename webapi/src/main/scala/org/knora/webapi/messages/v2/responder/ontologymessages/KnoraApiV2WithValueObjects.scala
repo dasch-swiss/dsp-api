@@ -46,7 +46,7 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
+        directCardinalities = Map(
             OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo -> Cardinality.MayHaveMany,
             OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue -> Cardinality.MayHaveMany,
@@ -253,17 +253,13 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo -> Cardinality.MayHaveMany,
-            OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.CreationDate -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate -> Cardinality.MayHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.HasColor -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.IsRegionOf -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.HasGeometry -> Cardinality.MustHaveSome,
             OntologyConstants.KnoraApiV2WithValueObjects.HasComment -> Cardinality.MustHaveSome
-        )
+        ),
+        inheritedCardinalities = Resource.allCardinalities
     )
 
     val IsRegionOf: PropertyEntityInfoV2 = makeProperty(
@@ -312,14 +308,10 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo -> Cardinality.MayHaveMany,
-            OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.CreationDate -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate -> Cardinality.MayHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue -> Cardinality.MustHaveSome
-        )
+        ),
+        inheritedCardinalities = Resource.allCardinalities
     )
 
     val StillImageRepresentation: ReadClassInfoV2 = makeClass(
@@ -342,14 +334,10 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo -> Cardinality.MayHaveMany,
-            OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.CreationDate -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate -> Cardinality.MayHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue -> Cardinality.MustHaveSome
-        )
+        ),
+        inheritedCardinalities = Resource.allCardinalities
     )
 
     val MovingImageRepresentation: ReadClassInfoV2 = makeClass(
@@ -372,14 +360,10 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo -> Cardinality.MayHaveMany,
-            OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.CreationDate -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate -> Cardinality.MayHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.HasMovingImageFileValue -> Cardinality.MustHaveSome
-        )
+        ),
+        inheritedCardinalities = Resource.allCardinalities
     )
 
     val AudioRepresentation: ReadClassInfoV2 = makeClass(
@@ -402,14 +386,10 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo -> Cardinality.MayHaveMany,
-            OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.CreationDate -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate -> Cardinality.MayHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.HasAudioFileValue -> Cardinality.MustHaveSome
-        )
+        ),
+        inheritedCardinalities = Resource.allCardinalities
     )
 
     val DDDRepresentation: ReadClassInfoV2 = makeClass(
@@ -432,14 +412,10 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo -> Cardinality.MayHaveMany,
-            OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.CreationDate -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate -> Cardinality.MayHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.HasDDDFileValue -> Cardinality.MustHaveSome
-        )
+        ),
+        inheritedCardinalities = Resource.allCardinalities
     )
 
     val TextRepresentation: ReadClassInfoV2 = makeClass(
@@ -462,9 +438,10 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.HasTextFileValue -> Cardinality.MustHaveSome
-        )
+        ),
+        inheritedCardinalities = Resource.allCardinalities
     )
 
     val DocumentRepresentation: ReadClassInfoV2 = makeClass(
@@ -487,14 +464,10 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo -> Cardinality.MayHaveMany,
-            OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.CreationDate -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate -> Cardinality.MayHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.HasDocumentFileValue -> Cardinality.MustHaveSome
-        )
+        ),
+        inheritedCardinalities = Resource.allCardinalities
     )
 
     // TODO: what should go here?
@@ -528,7 +501,7 @@ object KnoraApiV2WithValueObjects {
 
     val Value: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Value,
-        cardinalities = Map(
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne
         )
@@ -969,13 +942,12 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping -> Cardinality.MayHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml -> Cardinality.MayHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml -> Cardinality.MayHaveOne
-        )
+        ),
+        inheritedCardinalities = Value.allCardinalities
     )
 
     val TextValueAsXml: PropertyEntityInfoV2 = makeProperty(
@@ -1061,9 +1033,7 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth -> Cardinality.MayHaveOne,
@@ -1071,7 +1041,8 @@ object KnoraApiV2WithValueObjects {
             OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay -> Cardinality.MayHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay -> Cardinality.MayHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar -> Cardinality.MayHaveOne
-        )
+        ),
+        inheritedCardinalities = Value.allCardinalities
     )
 
     val DateValueHasStartYear: PropertyEntityInfoV2 = makeProperty(
@@ -1245,12 +1216,11 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTarget -> Cardinality.MayHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri -> Cardinality.MayHaveOne
-        )
+        ),
+        inheritedCardinalities = Value.allCardinalities
     )
 
     val LinkValueHasTarget: PropertyEntityInfoV2 = makeProperty(
@@ -1314,11 +1284,10 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.IntegerValueAsInteger -> Cardinality.MustHaveOne
-        )
+        ),
+        inheritedCardinalities = Value.allCardinalities
     )
 
     val IntegerValueAsInteger: PropertyEntityInfoV2 = makeProperty(
@@ -1360,11 +1329,10 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal -> Cardinality.MustHaveOne
-        )
+        ),
+        inheritedCardinalities = Value.allCardinalities
     )
 
     val DecimalValueAsDecimal: PropertyEntityInfoV2 = makeProperty(
@@ -1406,11 +1374,10 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.BooleanValueAsBoolean -> Cardinality.MustHaveOne
-        )
+        ),
+        inheritedCardinalities = Value.allCardinalities
     )
 
     val BooleanValueAsBoolean: PropertyEntityInfoV2 = makeProperty(
@@ -1452,11 +1419,10 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry -> Cardinality.MustHaveOne
-        )
+        ),
+        inheritedCardinalities = Value.allCardinalities
     )
 
     val GeometryValueAsGeometry: PropertyEntityInfoV2 = makeProperty(
@@ -1498,12 +1464,11 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd -> Cardinality.MustHaveOne
-        )
+        ),
+        inheritedCardinalities = Value.allCardinalities
     )
 
     val IntervalValueHasStart: PropertyEntityInfoV2 = makeProperty(
@@ -1567,11 +1532,10 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNode -> Cardinality.MustHaveOne
-        )
+        ),
+        inheritedCardinalities = Value.allCardinalities
     )
 
     val HierarchicalListValueAsListNode: PropertyEntityInfoV2 = makeProperty(
@@ -1613,11 +1577,10 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.BooleanValueAsBoolean -> Cardinality.MustHaveOne
-        )
+        ),
+        inheritedCardinalities = Value.allCardinalities
     )
 
     val ColorValueAsColor: PropertyEntityInfoV2 = makeProperty(
@@ -1659,11 +1622,10 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.UriValueAsUri -> Cardinality.MustHaveOne
-        )
+        ),
+        inheritedCardinalities = Value.allCardinalities
     )
 
     val UriValueAsUri: PropertyEntityInfoV2 = makeProperty(
@@ -1705,11 +1667,10 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode -> Cardinality.MustHaveOne
-        )
+        ),
+        inheritedCardinalities = Value.allCardinalities
     )
 
     val GeonameValueAsGeonameCode: PropertyEntityInfoV2 = makeProperty(
@@ -1751,13 +1712,12 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> Cardinality.MustHaveOne
-        )
+        ),
+        inheritedCardinalities = Value.allCardinalities
     )
 
     val FileValueIsPreview: PropertyEntityInfoV2 = makeProperty(
@@ -1843,13 +1803,7 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> Cardinality.MustHaveOne
-        )
+        inheritedCardinalities = FileValue.allCardinalities
     )
 
     val StillImageFileValue: ReadClassInfoV2 = makeClass(
@@ -1869,16 +1823,12 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> Cardinality.MustHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimX -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimY -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl -> Cardinality.MustHaveOne
-        )
+        ),
+        inheritedCardinalities = FileValue.allCardinalities
     )
 
     val StillImageFileValueHasDimX: PropertyEntityInfoV2 = makeProperty(
@@ -1965,18 +1915,14 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> Cardinality.MustHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasDimX -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasDimY -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasFps -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasQualityLevel -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasDuration -> Cardinality.MustHaveOne
-        )
+        ),
+        inheritedCardinalities = FileValue.allCardinalities
     )
 
     val MovingImageFileValueHasDimX: PropertyEntityInfoV2 = makeProperty(
@@ -2106,14 +2052,10 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> Cardinality.MustHaveOne,
+        directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValueHasDuration -> Cardinality.MustHaveOne
-        )
+        ),
+        inheritedCardinalities = FileValue.allCardinalities
     )
 
     val AudioFileValueHasDuration: PropertyEntityInfoV2 = makeProperty(
@@ -2155,13 +2097,7 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> Cardinality.MustHaveOne
-        )
+        inheritedCardinalities = FileValue.allCardinalities
     )
 
     val DocumentFileValue: ReadClassInfoV2 = makeClass(
@@ -2181,13 +2117,7 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         ),
-        cardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> Cardinality.MustHaveOne
-        )
+        inheritedCardinalities = FileValue.allCardinalities
     )
 
     /**
@@ -2381,14 +2311,16 @@ object KnoraApiV2WithValueObjects {
       * @param subClassOf        the set of direct superclasses of this class.
       * @param predicates        the predicates of the class.
       * @param canBeInstantiated true if this is a Knora resource class that can be instantiated via the Knora API.
-      * @param cardinalities     the cardinalities of the class.
+      * @param directCardinalities  the direct cardinalities of the class.
+      * @param inheritedCardinalities  the inherited cardinalities of the class.
       * @return a [[ReadClassInfoV2]].
       */
     private def makeClass(classIri: IRI,
                           subClassOf: Set[IRI] = Set.empty[IRI],
                           predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
                           canBeInstantiated: Boolean = false,
-                          cardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value]): ReadClassInfoV2 = {
+                          directCardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
+                          inheritedCardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value]): ReadClassInfoV2 = {
         val predicatesWithType = predicates :+ makePredicate(
             predicateIri = OntologyConstants.Rdf.Type,
             objects = Set(OntologyConstants.Owl.Class)
@@ -2402,11 +2334,12 @@ object KnoraApiV2WithValueObjects {
                 predicates = predicatesWithType.map {
                     pred => pred.predicateIri -> pred
                 }.toMap,
-                directCardinalities = cardinalities,
+                directCardinalities = directCardinalities,
                 subClassOf = subClassOf,
                 ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri,
                 ontologySchema = ApiV2WithValueObjects
             ),
+            inheritedCardinalities = inheritedCardinalities,
             canBeInstantiated = canBeInstantiated
         )
     }
