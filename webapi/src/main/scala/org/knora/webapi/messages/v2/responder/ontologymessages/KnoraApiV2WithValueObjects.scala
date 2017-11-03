@@ -2402,7 +2402,7 @@ object KnoraApiV2WithValueObjects {
                 predicates = predicatesWithType.map {
                     pred => pred.predicateIri -> pred
                 }.toMap,
-                cardinalities = cardinalities,
+                directCardinalities = cardinalities,
                 subClassOf = subClassOf,
                 ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri,
                 ontologySchema = ApiV2WithValueObjects

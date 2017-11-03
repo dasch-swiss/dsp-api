@@ -52,7 +52,7 @@ case class LoadOntologiesRequestV2(userProfile: UserProfileV1) extends Ontologie
 /**
   * Requests the creation of an empty ontology. A successful response will be a [[ReadEntityDefinitionsV2]].
   *
-  * @param ontologyName  the name of the ontology to be created.
+  * @param ontologyName the name of the ontology to be created.
   * @param projectIri   the IRI of the project that the ontology will belong to.
   * @param apiRequestID the ID of the API request.
   * @param userProfile  the profile of the user making the request.
@@ -66,7 +66,7 @@ case class CreateOntologyRequestV2(ontologyName: String,
 /**
   * Requests the addition of a property to an ontology. A successful response will be a [[ReadEntityDefinitionsV2]].
   *
-  * @param propertyIri the IRI of the new property (in the API v2 complex schema).
+  * @param propertyIri  the IRI of the new property (in the API v2 complex schema).
   * @param apiRequestID the ID of the API request.
   * @param userProfile  the profile of the user making the request.
   */
@@ -495,11 +495,11 @@ object Cardinality extends Enumeration {
       */
     case class OwlCardinalityInfo(owlCardinalityIri: IRI, owlCardinalityValue: Int) {
         if (!OntologyConstants.Owl.cardinalityOWLRestrictions.contains(owlCardinalityIri)) {
-            throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality property $owlCardinalityIri")
+            throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality property: $owlCardinalityIri")
         }
 
         if (!(owlCardinalityValue == 0 || owlCardinalityValue == 1)) {
-            throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality value $owlCardinalityValue")
+            throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality value: $owlCardinalityValue")
         }
 
         override def toString: String = s"<$owlCardinalityIri> $owlCardinalityValue"
@@ -888,15 +888,15 @@ case class PropertyEntityInfoV2(propertyIri: IRI,
 /**
   * Represents an OWL class definition as returned in an API response.
   *
-  * @param classInfoContent a [[ReadClassInfoV2]] providing information about the class.
-  * @param canBeInstantiated `true` if the class can be instantiated via the API.
+  * @param classInfoContent       a [[ReadClassInfoV2]] providing information about the class.
+  * @param canBeInstantiated      `true` if the class can be instantiated via the API.
   * @param inheritedCardinalities a [[Map]] of properties to [[Cardinality.Value]] objects representing the class's
-  *                                    inherited cardinalities on those properties.
-  * @param linkProperties              a [[Set]] of IRIs of properties of the class that point to resources.
-  * @param linkValueProperties         a [[Set]] of IRIs of properties of the class
-  *                                    that point to `LinkValue` objects.
-  * @param fileValueProperties         a [[Set]] of IRIs of properties of the class
-  *                                    that point to `FileValue` objects.
+  *                               inherited cardinalities on those properties.
+  * @param linkProperties         a [[Set]] of IRIs of properties of the class that point to resources.
+  * @param linkValueProperties    a [[Set]] of IRIs of properties of the class
+  *                               that point to `LinkValue` objects.
+  * @param fileValueProperties    a [[Set]] of IRIs of properties of the class
+  *                               that point to `FileValue` objects.
   */
 case class ReadClassInfoV2(classInfoContent: ClassInfoContentV2,
                            canBeInstantiated: Boolean = false,
@@ -907,7 +907,7 @@ case class ReadClassInfoV2(classInfoContent: ClassInfoContentV2,
 
     private val stringFormatter = StringFormatter.getInstance
 
-    lazy val allCardinalities: Map[IRI, Cardinality.Value] = inheritedCardinalities ++ classInfoContent.cardinalities
+    lazy val allCardinalities: Map[IRI, Cardinality.Value] = inheritedCardinalities ++ classInfoContent.directCardinalities
 
     def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
         // Convert the IRIs in the class definition according to the target schema.
@@ -1044,7 +1044,7 @@ case class ReadClassInfoV2(classInfoContent: ClassInfoContentV2,
   * @param ontologyIri                 the IRI of the ontology in which the class is defined.
   * @param rdfType                     the rdf:type of the class (defaults to owl:Class).
   * @param predicates                  a [[Map]] of predicate IRIs to [[PredicateInfoV2]] objects.
-  * @param cardinalities               a [[Map]] of properties to [[Cardinality.Value]] objects representing the cardinalities
+  * @param directCardinalities         a [[Map]] of properties to [[Cardinality.Value]] objects representing the cardinalities
   *                                    that are directly defined on the class (as opposed to inherited) on those properties.
   * @param xsdStringRestrictionPattern if the class's rdf:type is rdfs:Datatype, an optional xsd:pattern specifying
   *                                    the regular expression that restricts its values. This has the effect of making the
@@ -1059,7 +1059,7 @@ case class ClassInfoContentV2(classIri: IRI,
                               ontologyIri: IRI,
                               rdfType: IRI = OntologyConstants.Owl.Class,
                               predicates: Map[IRI, PredicateInfoV2] = Map.empty[IRI, PredicateInfoV2],
-                              cardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
+                              directCardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
                               xsdStringRestrictionPattern: Option[String] = None,
                               standoffDataType: Option[StandoffDataTypeClasses.Value] = None,
                               subClassOf: Set[IRI] = Set.empty[IRI],

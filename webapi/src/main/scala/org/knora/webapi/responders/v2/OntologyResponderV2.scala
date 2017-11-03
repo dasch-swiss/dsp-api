@@ -22,22 +22,22 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 
-import akka.pattern._
 import akka.http.scaladsl.util.FastFuture
+import akka.pattern._
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory
+import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsNamedGraphGetV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.OwlCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, _}
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
-import org.knora.webapi.util.{CacheUtil, ErrorHandlingMap, KnoraIdUtil}
-import org.knora.webapi._
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.util.StringFormatter.OntologyID
+import org.knora.webapi.util.{CacheUtil, ErrorHandlingMap, KnoraIdUtil}
 
 import scala.concurrent.Future
 
@@ -126,7 +126,29 @@ class OntologyResponderV2 extends Responder {
                                             cardinalityValue: Int,
                                             isLinkProp: Boolean = false,
                                             isLinkValueProp: Boolean = false,
-                                            isFileValueProp: Boolean = false)
+                                            isFileValueProp: Boolean = false) {
+            if (!OntologyConstants.Owl.cardinalityOWLRestrictions.contains(cardinalityIri)) {
+                throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality property: $cardinalityIri")
+            }
+
+            if (!(cardinalityValue == 0 || cardinalityValue == 1)) {
+                throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality value: $cardinalityValue")
+            }
+
+            /**
+              * Converts this [[OwlCardinalityOnProperty]] to a tuple containing the property IRI and
+              * a [[Cardinality.Value]].
+              */
+            def toClassDefCardinality: (IRI, Cardinality.Value) = {
+                propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
+                    propertyIri = propertyIri,
+                    OwlCardinalityInfo(
+                        owlCardinalityIri = cardinalityIri,
+                        owlCardinalityValue = cardinalityValue
+                    )
+                )
+            }
+        }
 
         /**
           * Gets the IRI of the ontology that an entity belongs to. This is assumed to be the namespace
@@ -305,7 +327,7 @@ class OntologyResponderV2 extends Responder {
             fileValueProps: Set[IRI] = propertyIris.filter(prop => allSubPropertyOfRelations(prop).contains(OntologyConstants.KnoraBase.HasFileValue))
 
             // Make a map of the cardinalities defined directly on each resource class. Each resource class IRI points to a map of
-            // property IRIs to OwlCardinality objects.
+            // property IRIs to OwlCardinalityOnProperty objects.
             directResourceClassCardinalities: Map[IRI, Map[IRI, OwlCardinalityOnProperty]] = resourceDefsGrouped.map {
                 case (resourceClassIri, rows) =>
                     val resourceClassCardinalities: Map[IRI, OwlCardinalityOnProperty] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
@@ -345,8 +367,6 @@ class OntologyResponderV2 extends Responder {
             // instantiated directly.
             concreteResourceDefsGrouped = resourceDefsGrouped -- OntologyConstants.KnoraBase.AbstractResourceClasses
 
-            // TODO: distinguish between inherited and non-inherited cardinalities.
-
             // Construct a ReadClassInfoV2 for each resource class.
             resourceEntityInfos: Map[IRI, ReadClassInfoV2] = concreteResourceDefsGrouped.map {
                 case (resourceClassIri, resourceClassRows) =>
@@ -372,12 +392,12 @@ class OntologyResponderV2 extends Responder {
                     }
 
                     // Get the OWL cardinalities for the class.
-                    val owlCardinalities = resourceCardinalitiesWithInheritance(resourceClassIri)
+                    val allOwlCardinalitiesForClass: Set[OwlCardinalityOnProperty] = resourceCardinalitiesWithInheritance(resourceClassIri)
 
                     // Identify the link properties, like value properties, and file value properties in the cardinalities.
-                    val linkProps = owlCardinalities.filter(_.isLinkProp).map(_.propertyIri)
-                    val linkValueProps = owlCardinalities.filter(_.isLinkValueProp).map(_.propertyIri)
-                    val fileValueProps = owlCardinalities.filter(_.isFileValueProp).map(_.propertyIri)
+                    val linkProps = allOwlCardinalitiesForClass.filter(_.isLinkProp).map(_.propertyIri)
+                    val linkValueProps = allOwlCardinalitiesForClass.filter(_.isLinkValueProp).map(_.propertyIri)
+                    val fileValueProps = allOwlCardinalitiesForClass.filter(_.isFileValueProp).map(_.propertyIri)
 
                     // Make sure there is a link value property for each link property.
                     val missingLinkValueProps = linkProps.map(linkProp => knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(linkProp)) -- linkValueProps
@@ -391,26 +411,29 @@ class OntologyResponderV2 extends Responder {
                         throw InconsistentTriplestoreDataException(s"Resource class $resourceClassIri has cardinalities for one or more link value properties without corresponding link properties. The missing link property or properties: ${missingLinkProps.mkString(", ")}")
                     }
 
+                    // Make maps of the class's direct and inherited cardinalities.
+
+                    val directCardinalities: Map[IRI, Cardinality.Value] = directResourceClassCardinalities(resourceClassIri).values.map {
+                        cardinalityOnProperty: OwlCardinalityOnProperty => cardinalityOnProperty.toClassDefCardinality
+                    }.toMap
+
+                    val inheritedCardinalities: Map[IRI, Cardinality.Value] = allOwlCardinalitiesForClass.filterNot {
+                        cardinalityOnProperty: OwlCardinalityOnProperty => directCardinalities.contains(cardinalityOnProperty.propertyIri)
+                    }.map {
+                        cardinalityOnProperty: OwlCardinalityOnProperty => cardinalityOnProperty.toClassDefCardinality
+                    }.toMap
+
                     val resourceEntityInfo = ReadClassInfoV2(
                         classInfoContent = ClassInfoContentV2(
                             classIri = resourceClassIri,
                             ontologyIri = getOntologyIri(resourceClassIri),
                             predicates = new ErrorHandlingMap(predicates, { key: IRI => s"Predicate $key not found for resource class $resourceClassIri" }),
-                            cardinalities = owlCardinalities.map {
-                                owlCardinality =>
-                                    // Convert the OWL cardinality to a Knora Cardinality enum value.
-                                    owlCardinality.propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
-                                        propertyIri = owlCardinality.propertyIri,
-                                        OwlCardinalityInfo(
-                                            owlCardinalityIri = owlCardinality.cardinalityIri,
-                                            owlCardinalityValue = owlCardinality.cardinalityValue
-                                        )
-                                    )
-                            }.toMap,
+                            directCardinalities = directCardinalities,
                             subClassOf = directResourceSubClassOfRelations.getOrElse(resourceClassIri, Set.empty[IRI]),
                             ontologySchema = InternalSchema
                         ),
                         canBeInstantiated = ontologyIri != OntologyConstants.KnoraBase.KnoraBaseOntologyIri, // Any resource class defined in a project-specific ontology can be instantiated.
+                        inheritedCardinalities = inheritedCardinalities,
                         linkProperties = linkProps,
                         linkValueProperties = linkValueProps,
                         fileValueProperties = fileValueProps
@@ -577,7 +600,7 @@ class OntologyResponderV2 extends Responder {
             }
 
             // Allow each standoff class to inherit cardinalities from its base classes.
-            standoffCardinalitiesWithInheritance = standoffClassIris.map {
+            standoffCardinalitiesWithInheritance: Map[IRI, Set[OwlCardinalityOnProperty]] = standoffClassIris.map {
                 standoffClassIri =>
                     val standoffClassCardinalities: Set[OwlCardinalityOnProperty] = inheritCardinalities(
                         resourceClassIri = standoffClassIri,
@@ -586,21 +609,8 @@ class OntologyResponderV2 extends Responder {
                         directResourceClassCardinalities = directStandoffClassCardinalities ++ valueBaseClassCardinalities
                     ).values.toSet
 
-                    val prop2Card: Map[IRI, Cardinality.Value] = standoffClassCardinalities.map {
-                        (card: OwlCardinalityOnProperty) =>
-                            card.propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
-                                propertyIri = card.propertyIri,
-                                OwlCardinalityInfo(
-                                    owlCardinalityIri = card.cardinalityIri,
-                                    owlCardinalityValue = card.cardinalityValue
-                                )
-                            )
-                    }.toMap
-
-                    standoffClassIri -> prop2Card
+                    standoffClassIri -> standoffClassCardinalities
             }.toMap
-
-            // TODO: distinguish between inherited and non-inherited cardinalities.
 
             standoffClassEntityInfos: Map[IRI, ReadClassInfoV2] = standoffClassesGrouped.map {
                 case (standoffClassIri, standoffClassRows) =>
@@ -623,6 +633,20 @@ class OntologyResponderV2 extends Responder {
                             )
                     }
 
+                    val allOwlCardinalitiesForClass: Set[OwlCardinalityOnProperty] = standoffCardinalitiesWithInheritance(standoffClassIri)
+
+                    // Make maps of the class's direct and inherited cardinalities.
+
+                    val directCardinalities: Map[IRI, Cardinality.Value] = directStandoffClassCardinalities(standoffClassIri).values.map {
+                        cardinalityOnProperty: OwlCardinalityOnProperty => cardinalityOnProperty.toClassDefCardinality
+                    }.toMap
+
+                    val inheritedCardinalities: Map[IRI, Cardinality.Value] = allOwlCardinalitiesForClass.filterNot {
+                        cardinalityOnProperty: OwlCardinalityOnProperty => directCardinalities.contains(cardinalityOnProperty.propertyIri)
+                    }.map {
+                        cardinalityOnProperty: OwlCardinalityOnProperty => cardinalityOnProperty.toClassDefCardinality
+                    }.toMap
+
                     // determine the data type of the given standoff class IRI
                     // if the resulting set is empty, it is not a typed standoff class
                     val standoffDataType: Set[IRI] = allStandoffSubClassOfRelations(standoffClassIri).intersect(StandoffDataTypeClasses.getStandoffClassIris)
@@ -635,14 +659,15 @@ class OntologyResponderV2 extends Responder {
                             classIri = standoffClassIri,
                             ontologyIri = getOntologyIri(standoffClassIri),
                             predicates = predicates,
-                            cardinalities = standoffCardinalitiesWithInheritance(standoffClassIri),
+                            directCardinalities = directCardinalities,
                             standoffDataType = standoffDataType.headOption match {
                                 case Some(dataType: IRI) => Some(StandoffDataTypeClasses.lookup(dataType, () => throw InconsistentTriplestoreDataException(s"$dataType is not a valid standoff data type")))
                                 case None => None
                             },
                             subClassOf = directStandoffSubClassOfRelations.getOrElse(standoffClassIri, Set.empty[IRI]),
                             ontologySchema = InternalSchema
-                        )
+                        ),
+                        inheritedCardinalities = inheritedCardinalities
                     )
 
                     standoffClassIri -> standoffInfo
