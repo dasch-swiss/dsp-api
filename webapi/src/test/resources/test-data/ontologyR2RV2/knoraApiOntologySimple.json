@@ -559,6 +559,16 @@
       "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
       "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Resource"
     },
+    "knora-api:isPartOf" : {
+      "@id" : "knora-api:isPartOf",
+      "@type" : "owl:ObjectProperty",
+      "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
+      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Resource",
+      "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Resource",
+      "rdfs:comment" : "Indicates that this resource is part of another resource",
+      "rdfs:label" : "is part of",
+      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo"
+    },
     "knora-api:isRegionOf" : {
       "@id" : "knora-api:isRegionOf",
       "@type" : "owl:ObjectProperty",

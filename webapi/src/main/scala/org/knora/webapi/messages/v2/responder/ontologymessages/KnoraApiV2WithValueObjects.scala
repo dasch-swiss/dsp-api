@@ -254,6 +254,60 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.DateTimeStamp)
     )
 
+    val IsPartOf: PropertyEntityInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsPartOf,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo),
+        isLinkProp = true,
+        isEditable = true,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "ist Teil von",
+                    LanguageCodes.EN -> "is part of",
+                    LanguageCodes.FR -> "fait partie de",
+                    LanguageCodes.IT -> "fa parte di"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates that this resource is part of another resource"
+                )
+            )
+        )
+    )
+
+    val IsPartOfValue: PropertyEntityInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsPartOfValue,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue),
+        isEditable = true,
+        isLinkValueProp = true,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "ist Teil von",
+                    LanguageCodes.EN -> "is part of",
+                    LanguageCodes.FR -> "fait partie de",
+                    LanguageCodes.IT -> "fa parte di"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates that this resource is part of another resource"
+                )
+            )
+        )
+    )
+
     val Region: ClassEntityInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Region,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
@@ -2360,6 +2414,8 @@ object KnoraApiV2WithValueObjects {
         SubjectType,
         ObjectType,
         ResourceIcon,
+        IsPartOf,
+        IsPartOfValue,
         IsRegionOf,
         IsRegionOfValue,
         HasColor,

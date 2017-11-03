@@ -183,6 +183,30 @@ object KnoraApiV2Simple {
         )
     )
 
+    val IsPartOf: PropertyEntityInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Simple.IsPartOf,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),
+        objectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.HasLinkTo),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "ist Teil von",
+                    LanguageCodes.EN -> "is part of",
+                    LanguageCodes.FR -> "fait partie de",
+                    LanguageCodes.IT -> "fa parte di"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates that this resource is part of another resource"
+                )
+            )
+        )
+    )
 
     val IsRegionOf: PropertyEntityInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2Simple.IsRegionOf,
@@ -1052,6 +1076,7 @@ object KnoraApiV2Simple {
         SubjectType,
         ObjectType,
         ResourceIcon,
+        IsPartOf,
         IsRegionOf,
         HasGeometry,
         HasColor,
