@@ -41,11 +41,14 @@ object ConstructResponseUtilV2 {
     /**
       * Represents the RDF data about a value, possibly including standoff.
       *
-      * @param valueObjectIri the value object's IRI.
-      * @param assertions     the value objects assertions.
-      * @param standoff       standoff assertions, if any.
+      * @param valueObjectIri   the value object's IRI.
+      * @param valueObjectClass the type (class) of the value object.
+      * @param targetResource   the referred resource in case of a link value.
+      * @param incomingLink     indicates if it is an incoming link in case of a link value.
+      * @param assertions       the value objects assertions.
+      * @param standoff         standoff assertions, if any.
       */
-    case class ValueRdfData(valueObjectIri: IRI, valueObjectClass: IRI, targetResource: Option[ResourceWithValueRdfData] = None, assertions: Map[IRI, String], standoff: Map[IRI, Map[IRI, String]])
+    case class ValueRdfData(valueObjectIri: IRI, valueObjectClass: IRI, targetResource: Option[ResourceWithValueRdfData] = None, incomingLink: Boolean = false, assertions: Map[IRI, String], standoff: Map[IRI, Map[IRI, String]])
 
     /**
       * Represents a resource and its values.
@@ -268,8 +271,7 @@ object ConstructResponseUtilV2 {
                     propIri -> transformedValues
             }
 
-            // TODO: check if there is an incoming link from a resource that has not been processed yet
-
+            // check if there is an incoming link from a resource that has not been processed yet
             val incomingResourcesWithLinkValueProps: Map[IRI, ResourceWithValueRdfData] = flatResourcesWithValues.foldLeft(Map.empty[IRI, ResourceWithValueRdfData]) {
                 case (acc: Map[IRI, ResourceWithValueRdfData], (incomingResIri: IRI, values: ResourceWithValueRdfData)) =>
 
@@ -288,7 +290,6 @@ object ConstructResponseUtilV2 {
                                         } else {
                                             acc
                                         }
-
                                 }
 
                                 if (incomingLinkValues.nonEmpty) {
@@ -302,7 +303,6 @@ object ConstructResponseUtilV2 {
                         Map.empty[IRI, Seq[ValueRdfData]]
                     }
 
-
                     if (incomingLinkPropertyAssertions.nonEmpty) {
                         acc + (incomingResIri -> values.copy(
                             valuePropertyAssertions = incomingLinkPropertyAssertions
@@ -314,18 +314,25 @@ object ConstructResponseUtilV2 {
 
 
             if (incomingResourcesWithLinkValueProps.nonEmpty) {
-
-                // TODO: create a virtual property for the incoming link and given link values and add it
                 // incomingResourcesWithLinkValueProps contains resources that have incoming link values
                 // flatResourcesWithValues contains the complete information
-
                 val incomingValueProps: Map[IRI, Seq[ValueRdfData]] = incomingResourcesWithLinkValueProps.flatMap {
-                    case (incomingResIri: IRI, values: ResourceWithValueRdfData) =>
-
-                        values.valuePropertyAssertions
+                    case (incomingResIri: IRI, assertions: ResourceWithValueRdfData) =>
+                        assertions.valuePropertyAssertions
                 }
 
-                val incomingProps: (IRI, Seq[ValueRdfData]) = OntologyConstants.KnoraBase.HasIncomingLinks -> incomingValueProps.values.toSeq.flatten
+                // create a virtual property representing an incoming link
+                val incomingProps: (IRI, Seq[ValueRdfData]) = OntologyConstants.KnoraBase.HasIncomingLinks -> incomingValueProps.values.toSeq.flatten.map {
+                    (linkValue: ValueRdfData) =>
+
+                        // get the source of the link value (it points to the resource that is currently processed)
+                        val source = Some(nestResources(linkValue.assertions(OntologyConstants.Rdf.Subject), alreadyTraversed + resourceIri))
+
+                        linkValue.copy(
+                            targetResource = source,
+                            incomingLink = true
+                        )
+                }
 
                 resource.copy(
                     valuePropertyAssertions = transformedValuePropertyAssertions + incomingProps
@@ -448,7 +455,11 @@ object ConstructResponseUtilV2 {
                 IntervalValueContentV2(valueHasString = valueObjectValueHasString, valueHasIntervalStart = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalStart)), valueHasIntervalEnd = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalEnd)), comment = valueCommentOption)
 
             case OntologyConstants.KnoraBase.LinkValue =>
-                val referredResourceIri = valueObject.assertions(OntologyConstants.Rdf.Object)
+                val referredResourceIri = if (!valueObject.incomingLink) {
+                    valueObject.assertions(OntologyConstants.Rdf.Object)
+                } else {
+                    valueObject.assertions(OntologyConstants.Rdf.Subject)
+                }
 
                 val linkValue = LinkValueContentV2(
                     valueHasString = valueObjectValueHasString,
@@ -456,6 +467,7 @@ object ConstructResponseUtilV2 {
                     predicate = valueObject.assertions(OntologyConstants.Rdf.Predicate),
                     referredResourceIri = referredResourceIri,
                     comment = valueCommentOption,
+                    incomingLink = valueObject.incomingLink,
                     referredResource = None
                 )
 

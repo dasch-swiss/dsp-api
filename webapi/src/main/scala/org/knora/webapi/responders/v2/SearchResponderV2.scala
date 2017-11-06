@@ -1001,9 +1001,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     // recursively traverse the link value's nested resource and its assertions
                     val resAndValObjIrisForDependentRes: ResourceIrisAndValueObjectIris = traverseValuePropertyAssertions(dependentRes.valuePropertyAssertions)
-                    // get the dependent resource's Iri from the current link value's rdf:object
-                    val dependentResIri: IRI = assertion.assertions.getOrElse(OntologyConstants.Rdf.Object, throw InconsistentTriplestoreDataException(s"expected ${OntologyConstants.Rdf.Object} for link value ${assertion.valueObjectIri}"))
-
+                    // get the dependent resource's Iri from the current link value's rdf:object or rdf:subject in case of an incoming link
+                    val dependentResIri: IRI = if (!assertion.incomingLink) {
+                        assertion.assertions.getOrElse(OntologyConstants.Rdf.Object, throw InconsistentTriplestoreDataException(s"expected ${OntologyConstants.Rdf.Object} for link value ${assertion.valueObjectIri}"))
+                    } else {
+                        assertion.assertions.getOrElse(OntologyConstants.Rdf.Subject, throw InconsistentTriplestoreDataException(s"expected ${OntologyConstants.Rdf.Subject} for link value ${assertion.valueObjectIri}"))
+                    }
                     // append results from recursion and current value object
                     ResourceIrisAndValueObjectIris(resourceIris = resAndValObjIrisForDependentRes.resourceIris + dependentResIri, valueObjectIris = resAndValObjIrisForDependentRes.valueObjectIris + assertion.valueObjectIri) +: acc
                 } else {
@@ -1695,7 +1698,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
         /**
           *
-          * Recursively collects variables representing values that are present in the CONSTRUCT clause of the input query for the given [[Entity]] representing a resource.
+          * Collects variables representing values that are present in the CONSTRUCT clause of the input query for the given [[Entity]] representing a resource.
           *
           * @param constructClause      the Construct clause to be looked at.
           * @param resource             the [[Entity]] representing the resource whose properties are to be collected
@@ -1765,14 +1768,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             // linking prop: get value object var and information which values are requested for dependent resource
                             case OntologyConstants.KnoraBase.Resource =>
 
-                                // recursively get value objects requested for dependent resource: statement.obj represents a dependent resource (query variable or IRI)
-                                val valObjVarsForDependentRes: Set[QueryVariable] = collectValueVariablesForResource(constructClause, statementPattern.obj, typeInspection, variableConcatSuffix)
-
                                 // link value object variable
                                 val valObjVar = createUniqueVariableNameFromEntityAndProperty(statementPattern.obj, OntologyConstants.KnoraBase.LinkValue)
 
                                 // return link value object variable and value objects requested for the dependent resource
-                                valObjVarsForDependentRes + QueryVariable(valObjVar.variableName + variableConcatSuffix)
+                                Set(QueryVariable(valObjVar.variableName + variableConcatSuffix))
 
                             case nonLinkingProp =>
                                 statementPattern.obj match {
@@ -1975,6 +1975,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         acc + (mainResIri -> dependentResIris)
                 }
 
+                // collect all variables representing resources
+                val allResourceVariablesFromTypeInspection: Set[QueryVariable] = typeInspectionResult.typedEntities.collect {
+                    case (queryVar: TypeableVariable, nonPropTypeInfo: NonPropertyTypeInfo) if stringFormatter.isKnoraApiEntityIri(nonPropTypeInfo.typeIri) &&
+                        stringFormatter.externalToInternalEntityIri(nonPropTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropTypeInfo.typeIri} is not a valid external knora-api entity Iri")) == OntologyConstants.KnoraBase.Resource => QueryVariable(queryVar.variableName)
+                }.toSet
+
                 // the user may have defined Iris of dependent resources in the input query (type annotations)
                 val dependentResourceIrisFromTypeInspection: Set[IRI] = typeInspectionResult.typedEntities.collect {
                     case (iri: TypeableIri, nonPropTypeInfo: NonPropertyTypeInfo) => iri.iri
@@ -2074,17 +2080,25 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     }
 
                     // sort out those value objects that the user did not ask for in the input query's CONSTRUCT clause
+                    valueObjectVariablesForAllResVars: Set[QueryVariable] = allResourceVariablesFromTypeInspection.flatMap {
+                        depResVar =>
+                            collectValueVariablesForResource(preprocessedQuery.constructClause, depResVar, typeInspectionResult, nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableAppendix)
+                    }
 
-                    // get all the requested value object vars (for main and dependent resources)
-                    valueObjectVariablesForAllResources: Set[QueryVariable] = collectValueVariablesForResource(preprocessedQuery.constructClause, mainResourceVar, typeInspectionResult, nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableAppendix)
+                    valueObjectVariablesForDependentResIris: Set[QueryVariable] = dependentResourceIrisFromTypeInspection.flatMap {
+                        depResIri =>
+                            collectValueVariablesForResource(preprocessedQuery.constructClause, IriRef(iri = depResIri), typeInspectionResult, nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableAppendix)
+                    }
 
-                    // collect requested valu object Iris for each resource
+                    allValueObjectVariables: Set[QueryVariable] = valueObjectVariablesForAllResVars ++ valueObjectVariablesForDependentResIris
+
+                    // collect requested value object Iris for each resource
                     requestedValObjIrisPerResource: Map[IRI, Set[IRI]] = queryResWithFullQueryPath.map {
                         case (resIri: IRI, assertions: ConstructResponseUtilV2.ResourceWithValueRdfData) =>
 
                             val valueObjIrisForRes: Map[QueryVariable, Set[IRI]] = valueObjectIrisPerMainResource(resIri)
 
-                            val valObjIrisRequestedForRes: Set[IRI] = valueObjectVariablesForAllResources.flatMap {
+                            val valObjIrisRequestedForRes: Set[IRI] = allValueObjectVariables.flatMap {
                                 (requestedQueryVar: QueryVariable) =>
                                     valueObjIrisForRes.getOrElse(requestedQueryVar, throw AssertionException(s"key $requestedQueryVar is absent in prequery's value object Iris collection for resource $resIri"))
                             }

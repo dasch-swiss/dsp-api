@@ -610,6 +610,8 @@ object OntologyConstants {
 
         val LinkValueHasTarget: IRI = KnoraApiV2PrefixExpansion + "linkValueHasTarget"
         val LinkValueHasTargetIri: IRI = KnoraApiV2PrefixExpansion + "linkValueHasTargetIri"
+        val LinkValueHasSource: IRI = KnoraApiV2PrefixExpansion + "linkValueHasSource"
+        val LinkValueHasSourceIri: IRI = KnoraApiV2PrefixExpansion + "linkValueHasSourceIri"
 
         val FileValueAsUrl: IRI = KnoraApiV2PrefixExpansion + "fileValueAsUrl"
         val FileValueIsPreview: IRI = KnoraApiV2PrefixExpansion + "fileValueIsPreview"
