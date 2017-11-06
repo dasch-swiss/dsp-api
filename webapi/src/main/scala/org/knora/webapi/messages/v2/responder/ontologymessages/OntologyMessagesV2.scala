@@ -92,11 +92,11 @@ object CreateOntologyRequestV2 {
 /**
   * Requests the addition of a property to an ontology. A successful response will be a [[ReadEntityDefinitionsV2]].
   *
-  * @param propertyIri  the IRI of the new property (in the API v2 complex schema).
-  * @param apiRequestID the ID of the API request.
-  * @param userProfile  the profile of the user making the request.
+  * @param propertyInfoContent information about the property to be created.
+  * @param apiRequestID        the ID of the API request.
+  * @param userProfile         the profile of the user making the request.
   */
-case class CreatePropertyRequestV2(propertyIri: IRI,
+case class CreatePropertyRequestV2(propertyInfoContent: PropertyInfoContentV2,
                                    apiRequestID: UUID,
                                    userProfile: UserProfileV1) extends OntologiesResponderRequestV2 {
 }
@@ -507,7 +507,49 @@ case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
 case class PredicateInfoV2(predicateIri: IRI,
                            ontologyIri: IRI,
                            objects: Set[String] = Set.empty[String],
-                           objectsWithLang: Map[String, String] = Map.empty[String, String])
+                           objectsWithLang: Map[String, String] = Map.empty[String, String]) {
+    private val stringFormatter: StringFormatter = StringFormatter.getInstance
+
+    /**
+      * Converts this [[PredicateInfoV2]], including its objects (which must all be IRIs), from one ontology schema to another. May be used only if the predicate
+      * is known to have IRIs as objects.
+      *
+      * @param sourceSchema the source schema.
+      * @param targetSchema the target schema.
+      * @param errorFun a function that throws an exception. It will be called if the conversion is not supported
+      *                 or the predicate has objects that are not IRIs.
+      * @return the converted [[PredicateInfoV2]].
+      */
+    def convertObjectsToOntologySchema(sourceSchema: OntologySchema, targetSchema: OntologySchema, errorFun: () => Nothing): PredicateInfoV2 = {
+        if (objectsWithLang.nonEmpty) {
+            errorFun()
+        }
+
+        PredicateInfoV2(
+            predicateIri = stringFormatter.convertEntityIri(
+                entityIri = predicateIri,
+                sourceSchema = sourceSchema,
+                targetSchema = targetSchema,
+                errorFun = errorFun
+            ),
+            ontologyIri = stringFormatter.convertOntologyIri(
+                ontologyIri = ontologyIri,
+                sourceSchema = sourceSchema,
+                targetSchema = targetSchema,
+                errorFun = errorFun
+            ),
+            objects = objects.map {
+                objIri =>
+                    stringFormatter.convertEntityIri(
+                        entityIri = objIri,
+                        sourceSchema = sourceSchema,
+                        targetSchema = targetSchema,
+                        errorFun = errorFun
+                    )
+            }
+        )
+    }
+}
 
 /**
   * Represents the OWL cardinalities that Knora supports.
@@ -595,7 +637,53 @@ object Cardinality extends Enumeration {
   * Represents information about an ontology entity (a class or property definition).
   */
 sealed trait EntityInfoContentV2 {
+    /**
+      * The predicates of the entity, and their objects.
+      */
     val predicates: Map[IRI, PredicateInfoV2]
+
+    protected val stringFormatter: StringFormatter = StringFormatter.getInstance
+
+    /**
+      * Converts this entity's predicates from one ontology schema to another. Each predicate's IRI is converted,
+      * and its objects are also optionally converted.
+      *
+      * @param predsWithSchemaSpecificObjs a set of the predicates whose objects need to be converted.
+      * @param sourceSchema the source schema.
+      * @param targetSchema the target schema.
+      * @param errorFun a function that throws an exception. It will be called if the conversion cannot be performed.
+      * @return a map of converted predicate IRIs to converted [[PredicateInfoV2]] objects.
+      */
+    protected def convertPredicates(predsWithSchemaSpecificObjs: Set[IRI],
+                                    sourceSchema: OntologySchema,
+                                    targetSchema: OntologySchema,
+                                    errorFun: () => Nothing): Map[IRI, PredicateInfoV2] = {
+        // TODO: check that this handles non-Knora predicates.
+
+        predicates.map {
+            case (predicateIri, predicateInfo) =>
+                val convertedPredicateIri = stringFormatter.convertEntityIri(
+                    entityIri = predicateIri,
+                    sourceSchema = sourceSchema,
+                    targetSchema = targetSchema,
+                    errorFun = throw AssertionException(s"Can't convert predicate IRI $predicateIri from schema $sourceSchema to schema $targetSchema")
+                )
+
+                val convertedPredicateInfo = if (predsWithSchemaSpecificObjs.contains(predicateIri)) {
+                    predicateInfo.convertObjectsToOntologySchema(
+                        sourceSchema = sourceSchema,
+                        targetSchema = targetSchema,
+                        errorFun = errorFun
+                    )
+                } else {
+                    predicateInfo.copy(
+                        predicateIri = convertedPredicateIri
+                    )
+                }
+
+                convertedPredicateIri -> convertedPredicateInfo
+        }
+    }
 
     /**
       * Gets a predicate and its object from an entity in a specific language.
@@ -707,7 +795,7 @@ sealed trait ReadEntityInfoV2 {
       */
     val entityInfoContent: EntityInfoContentV2
 
-    protected val stringFormatter = StringFormatter.getInstance
+    protected val stringFormatter: StringFormatter = StringFormatter.getInstance
 
     /**
       * Returns the contents of a JSON-LD object containing non-language-specific information about the entity.
@@ -778,7 +866,63 @@ case class PropertyInfoContentV2(propertyIri: IRI,
                                  ontologyIri: IRI,
                                  predicates: Map[IRI, PredicateInfoV2] = Map.empty[IRI, PredicateInfoV2],
                                  subPropertyOf: Set[IRI] = Set.empty[IRI],
-                                 ontologySchema: OntologySchema) extends EntityInfoContentV2
+                                 ontologySchema: OntologySchema) extends EntityInfoContentV2 {
+
+    import PropertyInfoContentV2._
+
+    def toOntologySchema(targetSchema: OntologySchema, errorFun: () => Nothing): PropertyInfoContentV2 = {
+        // TODO: check that this works with non-Knora IRIs.
+
+        val convertedPropertyIri = stringFormatter.convertEntityIri(
+            entityIri = propertyIri,
+            sourceSchema = ontologySchema,
+            targetSchema = targetSchema,
+            errorFun = errorFun
+        )
+
+        val convertedOntologyIri = stringFormatter.convertOntologyIri(
+            ontologyIri = ontologyIri,
+            sourceSchema = ontologySchema,
+            targetSchema = targetSchema,
+            errorFun = errorFun
+        )
+
+        val convertedPredicates = convertPredicates(
+            predsWithSchemaSpecificObjs = PredicatesWithSchemaDependentObjects,
+            sourceSchema = ontologySchema,
+            targetSchema = targetSchema,
+            errorFun = errorFun
+        )
+
+        val convertedSubPropertyOf = subPropertyOf.map {
+            baseProp => stringFormatter.convertEntityIri(
+                entityIri = baseProp,
+                sourceSchema = ontologySchema,
+                targetSchema = targetSchema,
+                errorFun = errorFun
+            )
+        }
+
+        PropertyInfoContentV2(
+            propertyIri = convertedPropertyIri,
+            ontologyIri = convertedOntologyIri,
+            predicates = convertedPredicates,
+            subPropertyOf = convertedSubPropertyOf,
+            ontologySchema = targetSchema
+        )
+    }
+}
+
+object PropertyInfoContentV2 {
+    private val PredicatesWithSchemaDependentObjects = Set(
+        OntologyConstants.KnoraApiV2Simple.SubjectType,
+        OntologyConstants.KnoraApiV2Simple.ObjectType,
+        OntologyConstants.KnoraApiV2WithValueObjects.SubjectType,
+        OntologyConstants.KnoraApiV2WithValueObjects.ObjectType,
+        OntologyConstants.KnoraBase.SubjectClassConstraint,
+        OntologyConstants.KnoraBase.ObjectClassConstraint
+    )
+}
 
 /**
   * Represents an RDF property definition as returned in an API response.
@@ -798,6 +942,8 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
                               isFileValueProp: Boolean = false,
                               isStandoffInternalReferenceProperty: Boolean = false) extends ReadEntityInfoV2 {
     def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
+        // TODO: have the PropertyInfoContentV2 do its own IRI conversions.
+
         // If this is an internal property IRI, convert it to an external one.
         val convertedPropertyIri = stringFormatter.toExternalEntityIri(
             entityIri = entityInfoContent.propertyIri,
@@ -974,6 +1120,8 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
     lazy val allCardinalities: Map[IRI, Cardinality.Value] = inheritedCardinalities ++ entityInfoContent.directCardinalities
 
     def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
+        // TODO: have the ClassInfoContentV2 do its own IRI conversions.
+
         // Convert the IRIs in the class definition according to the target schema.
 
         val classIriWithTargetSchema = stringFormatter.toExternalEntityIri(
@@ -1142,7 +1290,9 @@ case class ClassInfoContentV2(classIri: IRI,
                               xsdStringRestrictionPattern: Option[String] = None,
                               standoffDataType: Option[StandoffDataTypeClasses.Value] = None,
                               subClassOf: Set[IRI] = Set.empty[IRI],
-                              ontologySchema: OntologySchema) extends EntityInfoContentV2
+                              ontologySchema: OntologySchema) extends EntityInfoContentV2 {
+    // TODO: add a toOntologySchema method as in PropertyInfoContentV2.
+}
 
 /**
   * Represents the assertions about a given named graph entity.

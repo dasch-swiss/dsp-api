@@ -104,7 +104,7 @@ object StringFormatter {
       * Represents the name and optional project ID of an ontology (internal or external, built-in or project-specific).
       *
       * @param ontologyName the name of the ontology (an XML NCName).
-      * @param projectCode the ontology's optional project ID (at least 4 hexadecimal digits).
+      * @param projectCode  the ontology's optional project ID (at least 4 hexadecimal digits).
       */
     case class OntologyID(ontologyName: String, projectCode: Option[String] = None) {
         /**
@@ -731,7 +731,7 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
       * Checks that a name is valid as a project-specific ontology name.
       *
       * @param ontologyName the ontology name to be checked.
-      * @param errorFun a function that throws an exception. It will be called if the name is invalid.
+      * @param errorFun     a function that throws an exception. It will be called if the name is invalid.
       * @return the same ontology name.
       */
     def toProjectSpecificOntologyName(ontologyName: String, errorFun: () => Nothing): String = {
@@ -1019,6 +1019,62 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
     }
 
     /**
+      * Converts an ontology entity IRI from one ontology schema to another.
+      *
+      * @param entityIri    the entity IRI to be converted.
+      * @param sourceSchema the source schema.
+      * @param targetSchema the target schema.
+      * @param errorFun     a function that throws an exception. It will be called if the IRI is invalid or the conversion
+      *                     is unsupported.
+      * @return the converted entity IRI.
+      */
+    def convertEntityIri(entityIri: IRI, sourceSchema: OntologySchema, targetSchema: OntologySchema, errorFun: () => Nothing): IRI = {
+        if (sourceSchema == targetSchema) {
+            entityIri
+        } else {
+            if (sourceSchema == InternalSchema) {
+                targetSchema match {
+                    case ApiV2Simple => internalEntityIriToApiV2SimpleEntityIri(entityIri, errorFun)
+                    case ApiV2WithValueObjects => internalEntityIriToApiV2WithValueObjectEntityIri(entityIri, errorFun)
+                    case _ => errorFun()
+                }
+            } else if (targetSchema == InternalSchema) {
+                externalToInternalEntityIri(entityIri, errorFun)
+            } else {
+                errorFun()
+            }
+        }
+    }
+
+    /**
+      * Converts an ontology IRI from one ontology schema to another.
+      *
+      * @param ontologyIri  the ontology IRI to be converted.
+      * @param sourceSchema the source schema.
+      * @param targetSchema the target schema.
+      * @param errorFun     a function that throws an exception. It will be called if the IRI is invalid or the conversion
+      *                     is unsupported.
+      * @return the converted ontology IRI.
+      */
+    def convertOntologyIri(ontologyIri: IRI, sourceSchema: OntologySchema, targetSchema: OntologySchema, errorFun: () => Nothing): IRI = {
+        if (sourceSchema == targetSchema) {
+            ontologyIri
+        } else {
+            if (sourceSchema == InternalSchema) {
+                targetSchema match {
+                    case ApiV2Simple => internalOntologyIriToApiV2SimpleOntologyIri(ontologyIri, errorFun)
+                    case ApiV2WithValueObjects => internalOntologyIriToApiV2WithValueObjectsOntologyIri(ontologyIri, errorFun)
+                    case _ => errorFun()
+                }
+            } else if (targetSchema == InternalSchema) {
+                toInternalOntologyIri(ontologyIri, errorFun)
+            } else {
+                errorFun()
+            }
+        }
+    }
+
+    /**
       * Given the IRI of an internal ontology entity (in any ontology, even a non-Knora ontology), returns the
       * simplified knora-api v2 entity IRI.
       *
@@ -1150,9 +1206,9 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
     /**
       * Checks whether an IRI is the IRI of a project-specific internal ontology.
       *
-      * @param iri the IRI to be checked.
-      * @param errorFun          a function that throws an exception. It will be called if the form of the string is not
-      *                          valid for a project-specific internal ontology.
+      * @param iri      the IRI to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the form of the string is not
+      *                 valid for a project-specific internal ontology.
       * @return the same IRI.
       */
     def toProjectSpecificInternalOntologyIri(iri: IRI, errorFun: () => Nothing): IRI = {
