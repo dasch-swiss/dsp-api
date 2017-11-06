@@ -37,7 +37,7 @@
   importedNamespaces: Seq[XmlImportNamespaceInfoV1],
   knoraXmlImportNamespacePrefixLabel: String,
   resourceClassInfoMap: Map[IRI, ReadClassInfoV2],
-  propertyInfoMap: Map[IRI, PropertyEntityInfoV2],
+  propertyInfoMap: Map[IRI, ReadPropertyInfoV2],
   getNamespacePrefixLabel: IRI => String,
   getEntityName: IRI => String)
 

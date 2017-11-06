@@ -509,6 +509,9 @@ case class PredicateInfoV2(predicateIri: IRI,
                            objects: Set[String] = Set.empty[String],
                            objectsWithLang: Map[String, String] = Map.empty[String, String])
 
+/**
+  * Represents the OWL cardinalities that Knora supports.
+  */
 object Cardinality extends Enumeration {
 
     /**
@@ -590,9 +593,9 @@ object Cardinality extends Enumeration {
 
 
 /**
-  * Represents information about either a resource or a property entity.
+  * Represents information about either a resource or a property entity, as returned in an API response.
   */
-sealed trait EntityInfoV2 {
+sealed trait ReadEntityInfoV2 {
     val predicates: Map[IRI, PredicateInfoV2]
 
     /**
@@ -681,24 +684,34 @@ sealed trait EntityInfoV2 {
         }
     }
 
-    def getPredicateObjectsWithLangs(predicateIri: IRI): Map[String, String] = {
+    /**
+      * Returns all the objects specified for a given predicate, along with the language tag of each object.
+      *
+      * @param predicateIri the IRI of the predicate.
+      * @return a map of language tags to objects, or an empty map if this entity doesn't have the specified predicate.
+      */
+    private def getPredicateObjectsWithLangs(predicateIri: IRI): Map[String, String] = {
         predicates.get(predicateIri) match {
             case Some(predicateInfo) => predicateInfo.objectsWithLang
             case None => Map.empty[String, String]
         }
     }
-}
 
-/**
-  * Represents information about an ontology entity that has mostly non-language-specific predicates, plus
-  * language specific `rdfs:label` and `rdfs:comment` predicates.
-  *
-  * It is extended by [[ReadClassInfoV2]] and [[ReadPropertyInfoV2]].
-  */
-sealed trait EntityInfoWithLabelAndCommentV2 extends EntityInfoV2 {
-
+    /**
+      * Returns the contents of a JSON-LD object containing non-language-specific information about the entity.
+      *
+      * @param targetSchema the API v2 schema in which the response will be returned.
+      */
     protected def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue]
 
+    /**
+      * Returns a JSON-LD object representing the entity, with language-specific information provided in a single language.
+      *
+      * @param targetSchema the API v2 schema in which the response will be returned.
+      * @param userLang the user's preferred language.
+      * @param settings the application settings.
+      * @return a JSON-LD object representing the entity.
+      */
     def toJsonLDWithSingleLanguage(targetSchema: ApiV2Schema, userLang: String, settings: SettingsImpl): JsonLDObject = {
         val label: Option[(IRI, JsonLDString)] = getPredicateAndObjectWithLang(OntologyConstants.Rdfs.Label, settings, userLang).map {
             case (k, v: String) => (k, JsonLDString(v))
@@ -711,6 +724,13 @@ sealed trait EntityInfoWithLabelAndCommentV2 extends EntityInfoV2 {
         JsonLDObject(getNonLanguageSpecific(targetSchema) ++ label ++ comment)
     }
 
+    /**
+      * Returns a JSON-LD object representing the entity, with language-specific information provided in all
+      * available languages.
+      *
+      * @param targetSchema the API v2 schema in which the response will be returned.
+      * @return a JSON-LD object representing the entity.
+      */
     def toJsonLDWithAllLanguages(targetSchema: ApiV2Schema): JsonLDObject = {
         val labelObjs: Map[String, String] = getPredicateObjectsWithLangs(OntologyConstants.Rdfs.Label)
 
@@ -764,7 +784,7 @@ case class ReadPropertyInfoV2(propertyInfoContent: PropertyInfoContentV2,
                               isLinkProp: Boolean = false,
                               isLinkValueProp: Boolean = false,
                               isFileValueProp: Boolean = false,
-                              isStandoffInternalReferenceProperty: Boolean = false) extends EntityInfoWithLabelAndCommentV2 {
+                              isStandoffInternalReferenceProperty: Boolean = false) extends ReadEntityInfoV2 {
     private val stringFormatter = StringFormatter.getInstance
 
     def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
@@ -939,7 +959,7 @@ case class ReadClassInfoV2(classInfoContent: ClassInfoContentV2,
                            inheritedCardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
                            linkProperties: Set[IRI] = Set.empty[IRI],
                            linkValueProperties: Set[IRI] = Set.empty[IRI],
-                           fileValueProperties: Set[IRI] = Set.empty[IRI]) extends EntityInfoWithLabelAndCommentV2 {
+                           fileValueProperties: Set[IRI] = Set.empty[IRI]) extends ReadEntityInfoV2 {
 
     private val stringFormatter = StringFormatter.getInstance
 
