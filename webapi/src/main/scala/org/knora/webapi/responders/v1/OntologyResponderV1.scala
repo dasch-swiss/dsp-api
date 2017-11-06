@@ -150,6 +150,7 @@ class OntologyResponderV1 extends Responder {
             // Get all information about the resource type, including its property cardinalities.
             resourceClassInfoResponse: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(resourceClassIris = Set(resourceTypeIri), userProfile = userProfile)
             resourceClassInfo: ReadClassInfoV2 = resourceClassInfoResponse.resourceClassInfoMap.getOrElse(resourceTypeIri, throw NotFoundException(s"Resource class $resourceTypeIri not found"))
+            resourceClassInfoContent = resourceClassInfo.entityInfoContent
 
             // Get all information about those properties.
             propertyInfo: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = resourceClassInfo.allCardinalities.keySet, userProfile = userProfile)
@@ -164,6 +165,8 @@ class OntologyResponderV1 extends Responder {
                     propertyInfo.propertyInfoMap.get(propertyIri) match {
                         case Some(entityInfo: ReadPropertyInfoV2) =>
 
+                            val entityInfoContent = entityInfo.entityInfoContent
+
                             if (entityInfo.isLinkProp) {
                                 // It is a linking prop: its valuetype_id is knora-base:LinkValue.
                                 // It is restricted to the resource class that is given for knora-base:objectClassConstraint
@@ -172,14 +175,14 @@ class OntologyResponderV1 extends Responder {
                                 PropertyDefinitionV1(
                                     id = propertyIri,
                                     name = propertyIri,
-                                    label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                    description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                    vocabulary = entityInfo.propertyInfoContent.ontologyIri,
+                                    label = entityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                    description = entityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                    vocabulary = entityInfo.entityInfoContent.ontologyIri,
                                     occurrence = cardinality.toString,
                                     valuetype_id = OntologyConstants.KnoraBase.LinkValue,
-                                    attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
-                                    gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri)),
-                                    guiorder = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt)
+                                    attributes = valueUtilV1.makeAttributeString(entityInfoContent.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
+                                    gui_name = entityInfoContent.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri)),
+                                    guiorder = entityInfoContent.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt)
                                 )
 
                             } else {
@@ -187,14 +190,14 @@ class OntologyResponderV1 extends Responder {
                                 PropertyDefinitionV1(
                                     id = propertyIri,
                                     name = propertyIri,
-                                    label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                    description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                    vocabulary = entityInfo.propertyInfoContent.ontologyIri,
+                                    label = entityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                    description = entityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                    vocabulary = entityInfo.entityInfoContent.ontologyIri,
                                     occurrence = cardinality.toString,
-                                    valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
-                                    attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute)),
-                                    gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri)),
-                                    guiorder = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt)
+                                    valuetype_id = entityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
+                                    attributes = valueUtilV1.makeAttributeString(entityInfoContent.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute)),
+                                    gui_name = entityInfoContent.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri)),
+                                    guiorder = entityInfoContent.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt)
                                 )
                             }
                         case None =>
@@ -206,9 +209,9 @@ class OntologyResponderV1 extends Responder {
             resourceTypeResponse = ResourceTypeResponseV1(
                 restype_info = ResTypeInfoV1(
                     name = resourceTypeIri,
-                    label = resourceClassInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                    description = resourceClassInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                    iconsrc = resourceClassInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon),
+                    label = resourceClassInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                    description = resourceClassInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                    iconsrc = resourceClassInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon),
                     properties = propertyDefinitions
                 )
             )
@@ -357,6 +360,8 @@ class OntologyResponderV1 extends Responder {
                 propertyDefinitions: Vector[PropertyDefinitionInNamedGraphV1] = propertyInfoMap.map {
                     case (propertyIri: IRI, entityInfo: ReadPropertyInfoV2) =>
 
+                        val entityInfoContent = entityInfo.entityInfoContent
+
                         if (entityInfo.isLinkProp) {
                             // It is a linking prop: its valuetype_id is knora-base:LinkValue.
                             // It is restricted to the resource class that is given for knora-base:objectClassConstraint
@@ -365,24 +370,24 @@ class OntologyResponderV1 extends Responder {
                             PropertyDefinitionInNamedGraphV1(
                                 id = propertyIri,
                                 name = propertyIri,
-                                label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                vocabulary = entityInfo.propertyInfoContent.ontologyIri,
+                                label = entityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                description = entityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                vocabulary = entityInfoContent.ontologyIri,
                                 valuetype_id = OntologyConstants.KnoraBase.LinkValue,
-                                attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
-                                gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+                                attributes = valueUtilV1.makeAttributeString(entityInfo.entityInfoContent.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
+                                gui_name = entityInfoContent.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
                             )
 
                         } else {
                             PropertyDefinitionInNamedGraphV1(
                                 id = propertyIri,
                                 name = propertyIri,
-                                label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                vocabulary = entityInfo.propertyInfoContent.ontologyIri,
-                                valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
-                                attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute)),
-                                gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+                                label = entityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                description = entityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                vocabulary = entityInfoContent.ontologyIri,
+                                valuetype_id = entityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
+                                attributes = valueUtilV1.makeAttributeString(entityInfo.entityInfoContent.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute)),
+                                gui_name = entityInfoContent.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
                             )
 
                         }

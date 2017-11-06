@@ -134,7 +134,7 @@ class ValuesResponderV1 extends Responder {
             )).mapTo[EntityInfoGetResponseV1]
 
             propertyInfo = entityInfoResponse.propertyInfoMap(createValueRequest.propertyIri)
-            propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
+            propertyObjectClassConstraint = propertyInfo.entityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
                 throw InconsistentTriplestoreDataException(s"Property ${createValueRequest.propertyIri} has no knora-base:objectClassConstraint")
             }
 
@@ -812,7 +812,7 @@ class ValuesResponderV1 extends Responder {
                 )).mapTo[EntityInfoGetResponseV1]
 
                 propertyInfo = entityInfoResponse.propertyInfoMap(propertyIri)
-                propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
+                propertyObjectClassConstraint = propertyInfo.entityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
                     throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
                 }
 

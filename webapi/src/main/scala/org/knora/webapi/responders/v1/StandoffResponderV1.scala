@@ -748,7 +748,7 @@ class StandoffResponderV1 extends Responder {
                     }
 
                     // check if the standoff class's data type is correct in the mapping
-                    standoffClassEntities.standoffClassInfoMap(standoffClass).classInfoContent.standoffDataType match {
+                    standoffClassEntities.standoffClassInfoMap(standoffClass).entityInfoContent.standoffDataType match {
                         case Some(dataType: StandoffDataTypeClasses.Value) =>
                             // check if this corresponds to the datatype in the mapping
                             val dataTypeFromMapping: XMLStandoffDataTypeClass = xmlTag.tagItem.mapping.dataType.getOrElse(throw InvalidStandoffException(s"no data type provided for $standoffClass, but $dataType required"))

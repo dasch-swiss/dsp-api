@@ -97,16 +97,17 @@ object StandoffTagUtilV1 {
                     }
 
                     val standoffTagPropIri = xmlToStandoffMapping.attributesToProps.getOrElse(xmlNamespace, throw BadRequestException(s"namespace $xmlNamespace unknown for attribute ${attr.key} in mapping")).getOrElse(attr.key, throw BadRequestException(s"mapping for attr '${attr.key}' not provided"))
+                    val propPredicates = standoffPropertyEntities(standoffTagPropIri).entityInfoContent.predicates
 
                     // check if a cardinality exists for the current attribute
                     if (classSpecificProps.get(standoffTagPropIri).isEmpty) {
                         throw BadRequestException(s"no cardinality defined for attr '${attr.key}'")
                     }
 
-                    if (standoffPropertyEntities(standoffTagPropIri).predicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint).isDefined) {
+                    if (propPredicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint).isDefined) {
                         // property is a data type property
 
-                        val propDatatypeConstraint = standoffPropertyEntities(standoffTagPropIri).predicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint)
+                        val propDatatypeConstraint = propPredicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint)
 
                         propDatatypeConstraint.objects.headOption match {
                             case Some(OntologyConstants.Xsd.String) =>
@@ -363,7 +364,7 @@ object StandoffTagUtilV1 {
                 }
 
                 // check the data type of the given standoff class
-                standoffEntities.standoffClassInfoMap(standoffClassIri).classInfoContent.standoffDataType match {
+                standoffEntities.standoffClassInfoMap(standoffClassIri).entityInfoContent.standoffDataType match {
 
                     case Some(StandoffDataTypeClasses.StandoffLinkTag) =>
 
@@ -706,8 +707,10 @@ object StandoffTagUtilV1 {
                 val attributes: Seq[StandoffTagAttributeV1] = (standoffNodes -- StandoffProperties.systemProperties - OntologyConstants.Rdf.Type).map {
                     case (propIri, value) =>
 
+                        val propPredicates = standoffEntities.standoffPropertyInfoMap(propIri).entityInfoContent.predicates
+
                         // check if the given property has an object type constraint (linking property) or an object data type constraint
-                        if (standoffEntities.standoffPropertyInfoMap(propIri).predicates.get(OntologyConstants.KnoraBase.ObjectClassConstraint).isDefined) {
+                        if (propPredicates.get(OntologyConstants.KnoraBase.ObjectClassConstraint).isDefined) {
 
                             // it is a linking property
                             // check if it refers to a resource or a standoff node
@@ -725,10 +728,10 @@ object StandoffTagUtilV1 {
                                 // it refers to a knora resource
                                 StandoffTagIriAttributeV1(standoffPropertyIri = propIri, value = value)
                             }
-                        } else if (standoffEntities.standoffPropertyInfoMap(propIri).predicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint).isDefined) {
+                        } else if (propPredicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint).isDefined) {
 
                             // it is a data type property (literal)
-                            val propDataType = standoffEntities.standoffPropertyInfoMap(propIri).predicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint)
+                            val propDataType = propPredicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint)
 
                             propDataType.objects.headOption match {
                                 case Some(OntologyConstants.Xsd.String) =>
@@ -760,7 +763,7 @@ object StandoffTagUtilV1 {
                     standoffTagClassIri = standoffNodes(OntologyConstants.Rdf.Type),
                     startPosition = standoffNodes(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
                     endPosition = standoffNodes(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
-                    dataType = standoffEntities.standoffClassInfoMap(standoffNodes(OntologyConstants.Rdf.Type)).classInfoContent.standoffDataType,
+                    dataType = standoffEntities.standoffClassInfoMap(standoffNodes(OntologyConstants.Rdf.Type)).entityInfoContent.standoffDataType,
                     startIndex = standoffNodes(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt,
                     endIndex = standoffNodes.get(OntologyConstants.KnoraBase.StandoffTagHasEndIndex) match {
                         case Some(endIndex: String) => Some(endIndex.toInt)

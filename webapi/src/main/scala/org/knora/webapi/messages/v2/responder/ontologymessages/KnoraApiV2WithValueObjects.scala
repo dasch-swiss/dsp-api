@@ -2217,7 +2217,7 @@ object KnoraApiV2WithValueObjects {
         DDDFileValue,
         DocumentFileValue
     ).map {
-        classInfo => classInfo.classInfoContent.classIri -> classInfo
+        classInfo => classInfo.entityInfoContent.classIri -> classInfo
     }.toMap
 
     /**
@@ -2289,7 +2289,7 @@ object KnoraApiV2WithValueObjects {
         MovingImageFileValueHasDuration,
         AudioFileValueHasDuration
     ).map {
-        propertyInfo => propertyInfo.propertyInfoContent.propertyIri -> propertyInfo
+        propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
     }.toMap
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2357,7 +2357,7 @@ object KnoraApiV2WithValueObjects {
         val predsWithTypes = predicates ++ maybeSubjectTypePred ++ maybeObjectTypePred :+ propTypePred
 
         ReadPropertyInfoV2(
-            propertyInfoContent = PropertyInfoContentV2(
+            entityInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
                 ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri,
                 ontologySchema = ApiV2WithValueObjects,
@@ -2395,7 +2395,7 @@ object KnoraApiV2WithValueObjects {
         // TODO: distinguish between inherited cardinalities and others.
 
         ReadClassInfoV2(
-            classInfoContent = ClassInfoContentV2(
+            entityInfoContent = ClassInfoContentV2(
                 classIri = classIri,
                 predicates = predicatesWithType.map {
                     pred => pred.predicateIri -> pred

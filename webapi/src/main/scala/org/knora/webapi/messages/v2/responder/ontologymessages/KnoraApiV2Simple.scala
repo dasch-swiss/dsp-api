@@ -983,7 +983,7 @@ object KnoraApiV2Simple {
         Geoname,
         Geom
     ).map {
-        classInfo => classInfo.classInfoContent.classIri -> classInfo
+        classInfo => classInfo.entityInfoContent.classIri -> classInfo
     }.toMap
 
     /**
@@ -1012,7 +1012,7 @@ object KnoraApiV2Simple {
         HasTextFile,
         HasDocumentFile
     ).map {
-        propertyInfo => propertyInfo.propertyInfoContent.propertyIri -> propertyInfo
+        propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
     }.toMap
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1078,7 +1078,7 @@ object KnoraApiV2Simple {
         val predsWithTypes = predicates ++ maybeSubjectTypePred ++ maybeObjectTypePred :+ propTypePred
 
         ReadPropertyInfoV2(
-            propertyInfoContent = PropertyInfoContentV2(
+            entityInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
                 ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri,
                 ontologySchema = ApiV2Simple,
@@ -1115,7 +1115,7 @@ object KnoraApiV2Simple {
         // TODO: distinguish between inherited cardinalities and others.
 
         ReadClassInfoV2(
-            classInfoContent = ClassInfoContentV2(
+            entityInfoContent = ClassInfoContentV2(
                 classIri = classIri,
                 predicates = predicatesWithType.map {
                     pred => pred.predicateIri -> pred
@@ -1151,7 +1151,7 @@ object KnoraApiV2Simple {
         )
 
         ReadClassInfoV2(
-            classInfoContent = ClassInfoContentV2(
+            entityInfoContent = ClassInfoContentV2(
                 classIri = datatypeIri,
                 ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri,
                 rdfType = OntologyConstants.Rdfs.Datatype,

@@ -26,6 +26,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetReq
 import org.knora.webapi.messages.v1.responder.searchmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadEntityInfoV2
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.twirl.SearchCriterion
 import org.knora.webapi.util.ActorUtil._
@@ -190,9 +191,10 @@ class SearchResponderV1 extends Responder {
                         // Yes. Get more information about the resource.
 
                         val resourceClassIri = firstRowMap("resourceClass")
-                        val resourceEntityInfoMap = entityInfoResponse.resourceClassInfoMap(resourceClassIri)
-                        val resourceClassLabel = resourceEntityInfoMap.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage))
-                        val resourceClassIcon = resourceEntityInfoMap.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
+                        val resourceEntityInfo: ReadEntityInfoV2 = entityInfoResponse.resourceClassInfoMap(resourceClassIri)
+                        val resourceEntityInfoContent = resourceEntityInfo.entityInfoContent
+                        val resourceClassLabel = resourceEntityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage))
+                        val resourceClassIcon = resourceEntityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
                         val resourceLabel = firstRowMap.getOrElse("resourceLabel", throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no rdfs:label"))
 
                         // Collect the matching values in the resource.
@@ -213,7 +215,7 @@ class SearchResponderV1 extends Responder {
                                 val value: Option[(IRI, MatchingValue)] = valuePermissionCode.map {
                                     permissionCode =>
                                         val propertyIri = row.rowMap("resourceProperty")
-                                        val propertyLabel = entityInfoResponse.propertyInfoMap(propertyIri).getPredicateObject(OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage)) match {
+                                        val propertyLabel = entityInfoResponse.propertyInfoMap(propertyIri).entityInfoContent.getPredicateObject(OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage)) match {
                                             case Some(label) => label
                                             case None => throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:label")
                                         }
@@ -323,7 +325,7 @@ class SearchResponderV1 extends Responder {
                     val propertyObjectClassConstraint: IRI = if (propertyEntityInfo.isLinkProp) {
                         OntologyConstants.KnoraBase.Resource
                     } else {
-                        propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $prop has no knora-base:objectClassConstraint"))
+                        propertyEntityInfo.entityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $prop has no knora-base:objectClassConstraint"))
                     }
 
                     // Ensure that the property's objectClassConstraint is valid, and that the specified operator can be
@@ -507,9 +509,10 @@ class SearchResponderV1 extends Responder {
                         // Yes. Get more information about the resource.
 
                         val resourceClassIri = firstRowMap("resourceClass")
-                        val resourceEntityInfoMap = entityInfoResponse.resourceClassInfoMap(resourceClassIri)
-                        val resourceClassLabel = resourceEntityInfoMap.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage))
-                        val resourceClassIcon = resourceEntityInfoMap.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
+                        val resourceEntityInfo = entityInfoResponse.resourceClassInfoMap(resourceClassIri)
+                        val resourceEntityInfoContent = resourceEntityInfo.entityInfoContent
+                        val resourceClassLabel = resourceEntityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage))
+                        val resourceClassIcon = resourceEntityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
                         val resourceLabel = firstRowMap.getOrElse("resourceLabel", throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no rdfs:label"))
 
                         // If there were search criteria referring to values, collect the matching values in the resource.
@@ -558,7 +561,7 @@ class SearchResponderV1 extends Responder {
                                             }
 
                                             val propertyIri = searchCriterion.propertyIri
-                                            val propertyLabel = propertyInfo.propertyInfoMap(propertyIri).getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage)) match {
+                                            val propertyLabel = propertyInfo.propertyInfoMap(propertyIri).entityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage)) match {
                                                 case Some(label) => label
                                                 case None => throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:label")
                                             }

@@ -397,7 +397,7 @@ object ResourcesRouteV1 extends Authenticator {
                     // not including the initial ontology itself or any other ontologies we've already looked at.
                     ontologyIrisFromObjectClassConstraints: Set[IRI] = entityInfoResponse.propertyInfoMap.map {
                         case (propertyIri, propertyInfo) =>
-                            val propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
+                            val propertyObjectClassConstraint = propertyInfo.entityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
                                 throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
                             }
 

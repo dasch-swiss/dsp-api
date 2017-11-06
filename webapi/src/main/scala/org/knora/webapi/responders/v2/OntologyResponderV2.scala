@@ -424,7 +424,7 @@ class OntologyResponderV2 extends Responder {
                     }.toMap
 
                     val resourceEntityInfo = ReadClassInfoV2(
-                        classInfoContent = ClassInfoContentV2(
+                        entityInfoContent = ClassInfoContentV2(
                             classIri = resourceClassIri,
                             ontologyIri = getOntologyIri(resourceClassIri),
                             predicates = new ErrorHandlingMap(predicates, { key: IRI => s"Predicate $key not found for resource class $resourceClassIri" }),
@@ -467,7 +467,7 @@ class OntologyResponderV2 extends Responder {
                     }
 
                     val propertyEntityInfo = ReadPropertyInfoV2(
-                        propertyInfoContent = PropertyInfoContentV2(
+                        entityInfoContent = PropertyInfoContentV2(
                             propertyIri = propertyIri,
                             ontologyIri = ontologyIri,
                             predicates = predicates,
@@ -657,7 +657,7 @@ class OntologyResponderV2 extends Responder {
                     }
 
                     val standoffInfo = ReadClassInfoV2(
-                        classInfoContent = ClassInfoContentV2(
+                        entityInfoContent = ClassInfoContentV2(
                             classIri = standoffClassIri,
                             ontologyIri = getOntologyIri(standoffClassIri),
                             predicates = predicates,
@@ -707,7 +707,7 @@ class OntologyResponderV2 extends Responder {
                     }
 
                     val standoffPropertyEntityInfo = ReadPropertyInfoV2(
-                        propertyInfoContent = PropertyInfoContentV2(
+                        entityInfoContent = PropertyInfoContentV2(
                             propertyIri = standoffPropertyIri,
                             ontologyIri = ontologyIri,
                             predicates = predicates,
@@ -723,7 +723,7 @@ class OntologyResponderV2 extends Responder {
             // collect all the standoff classes that have a data type (i.e. are subclasses of a data type standoff class)
             standoffClassEntityInfosWithDataType: Map[IRI, ReadClassInfoV2] = standoffClassEntityInfos.filter {
                 case (standoffClassIri: IRI, entityInfo: ReadClassInfoV2) =>
-                    entityInfo.classInfoContent.standoffDataType.isDefined
+                    entityInfo.entityInfoContent.standoffDataType.isDefined
             }
 
             allClassDefs = resourceEntityInfos ++ KnoraApiV2Simple.Classes ++ KnoraApiV2WithValueObjects.Classes
@@ -879,7 +879,7 @@ class OntologyResponderV2 extends Responder {
 
                     SubClassInfoV2(
                         id = subClassIri,
-                        label = resourceClassInfo.getPredicateObject(
+                        label = resourceClassInfo.entityInfoContent.getPredicateObject(
                             predicateIri = OntologyConstants.Rdfs.Label,
                             preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)
                         ).getOrElse(throw InconsistentTriplestoreDataException(s"Resource class $subClassIri has no rdfs:label"))
