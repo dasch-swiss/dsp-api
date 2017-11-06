@@ -78,11 +78,11 @@ class OntologyResponderV2 extends Responder {
                                  classDefs: Map[IRI, ReadClassInfoV2],
                                  resourceAndValueSubClassOfRelations: Map[IRI, Set[IRI]],
                                  resourceSuperClassOfRelations: Map[IRI, Set[IRI]],
-                                 propertyDefs: Map[IRI, PropertyEntityInfoV2],
+                                 propertyDefs: Map[IRI, ReadPropertyInfoV2],
                                  namedGraphStandoffClasses: Map[IRI, Set[IRI]],
                                  namedGraphStandoffProperties: Map[IRI, Set[IRI]],
                                  standoffClassDefs: Map[IRI, ReadClassInfoV2],
-                                 standoffPropertyDefs: Map[IRI, PropertyEntityInfoV2],
+                                 standoffPropertyDefs: Map[IRI, ReadPropertyInfoV2],
                                  standoffClassDefsWithDataType: Map[IRI, ReadClassInfoV2])
 
     def receive = {
@@ -443,7 +443,7 @@ class OntologyResponderV2 extends Responder {
             }
 
             // Construct a PropertyEntityInfoV2 for each property definition, not taking inheritance into account.
-            propertyEntityInfos: Map[IRI, PropertyEntityInfoV2] = propertyDefsGrouped.map {
+            propertyEntityInfos: Map[IRI, ReadPropertyInfoV2] = propertyDefsGrouped.map {
                 case (propertyIri, propertyRows) =>
                     val ontologyIri = getOntologyIri(propertyIri)
 
@@ -466,16 +466,18 @@ class OntologyResponderV2 extends Responder {
                             )
                     }
 
-                    val propertyEntityInfo = PropertyEntityInfoV2(
-                        propertyIri = propertyIri,
-                        ontologyIri = ontologyIri,
+                    val propertyEntityInfo = ReadPropertyInfoV2(
+                        propertyInfoContent = PropertyInfoContentV2(
+                            propertyIri = propertyIri,
+                            ontologyIri = ontologyIri,
+                            predicates = predicates,
+                            subPropertyOf = directSubPropertyOfRelations.getOrElse(propertyIri, Set.empty[IRI]),
+                            ontologySchema = InternalSchema
+                        ),
                         isEditable = ontologyIri != OntologyConstants.KnoraBase.KnoraBaseOntologyIri, // Any property defined in a project-specific ontology is editable.
                         isLinkProp = linkProps.contains(propertyIri),
                         isLinkValueProp = linkValueProps.contains(propertyIri),
-                        isFileValueProp = fileValueProps.contains(propertyIri),
-                        predicates = predicates,
-                        subPropertyOf = directSubPropertyOfRelations.getOrElse(propertyIri, Set.empty[IRI]),
-                        ontologySchema = InternalSchema
+                        isFileValueProp = fileValueProps.contains(propertyIri)
                     )
 
                     propertyIri -> propertyEntityInfo
@@ -681,7 +683,7 @@ class OntologyResponderV2 extends Responder {
 
 
             // Construct a PropertyEntityInfoV2 for each property definition, not taking inheritance into account.
-            standoffPropertyEntityInfos: Map[IRI, PropertyEntityInfoV2] = standoffPropertyDefsGrouped.map {
+            standoffPropertyEntityInfos: Map[IRI, ReadPropertyInfoV2] = standoffPropertyDefsGrouped.map {
                 case (standoffPropertyIri, propertyRows) =>
                     val ontologyIri = getOntologyIri(standoffPropertyIri)
 
@@ -704,13 +706,15 @@ class OntologyResponderV2 extends Responder {
                             )
                     }
 
-                    val standoffPropertyEntityInfo = PropertyEntityInfoV2(
-                        propertyIri = standoffPropertyIri,
-                        ontologyIri = ontologyIri,
-                        predicates = predicates,
-                        subPropertyOf = directStandoffSubPropertyOfRelations.getOrElse(standoffPropertyIri, Set.empty[IRI]),
-                        isStandoffInternalReferenceProperty = allStandoffSubPropertyOfRelations(standoffPropertyIri).contains(OntologyConstants.KnoraBase.StandoffTagHasInternalReference),
-                        ontologySchema = InternalSchema
+                    val standoffPropertyEntityInfo = ReadPropertyInfoV2(
+                        propertyInfoContent = PropertyInfoContentV2(
+                            propertyIri = standoffPropertyIri,
+                            ontologyIri = ontologyIri,
+                            predicates = predicates,
+                            subPropertyOf = directStandoffSubPropertyOfRelations.getOrElse(standoffPropertyIri, Set.empty[IRI]),
+                            ontologySchema = InternalSchema
+                        ),
+                        isStandoffInternalReferenceProperty = allStandoffSubPropertyOfRelations(standoffPropertyIri).contains(OntologyConstants.KnoraBase.StandoffTagHasInternalReference)
                     )
 
                     standoffPropertyIri -> standoffPropertyEntityInfo
@@ -734,11 +738,11 @@ class OntologyResponderV2 extends Responder {
                 classDefs = new ErrorHandlingMap[IRI, ReadClassInfoV2](allClassDefs, { key => s"Class not found: $key" }),
                 resourceAndValueSubClassOfRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSubClassOfRelations ++ allValueSubClassOfRelations, { key => s"Class not found: $key" }),
                 resourceSuperClassOfRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSuperClassOfRelations, { key => s"Class not found: $key" }),
-                propertyDefs = new ErrorHandlingMap[IRI, PropertyEntityInfoV2](allPropertyDefs, { key => s"Property not found: $key" }),
+                propertyDefs = new ErrorHandlingMap[IRI, ReadPropertyInfoV2](allPropertyDefs, { key => s"Property not found: $key" }),
                 namedGraphStandoffClasses = new ErrorHandlingMap[IRI, Set[IRI]](standoffGraphClassMap, { key => s"Named graph not found: $key" }),
                 namedGraphStandoffProperties = new ErrorHandlingMap[IRI, Set[IRI]](standoffGraphPropMap, { key => s"Named graph not found: $key" }),
                 standoffClassDefs = new ErrorHandlingMap[IRI, ReadClassInfoV2](standoffClassEntityInfos, { key => s"Standoff class def not found $key" }),
-                standoffPropertyDefs = new ErrorHandlingMap[IRI, PropertyEntityInfoV2](standoffPropertyEntityInfos, { key => s"Standoff property def not found $key" }),
+                standoffPropertyDefs = new ErrorHandlingMap[IRI, ReadPropertyInfoV2](standoffPropertyEntityInfos, { key => s"Standoff property def not found $key" }),
                 standoffClassDefsWithDataType = new ErrorHandlingMap[IRI, ReadClassInfoV2](standoffClassEntityInfosWithDataType, { key => s"Standoff class def with datatype not found $key" }))
 
             _ = CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = ontologyCacheData)
@@ -773,7 +777,7 @@ class OntologyResponderV2 extends Responder {
             cacheData <- getCacheData
 
             classDefsAvailable: Map[IRI, ReadClassInfoV2] = cacheData.classDefs.filterKeys(classIris)
-            propertyDefsAvailable: Map[IRI, PropertyEntityInfoV2] = cacheData.propertyDefs.filterKeys(propertyIris)
+            propertyDefsAvailable: Map[IRI, ReadPropertyInfoV2] = cacheData.propertyDefs.filterKeys(propertyIris)
 
             missingClassDefs = classIris -- classDefsAvailable.keySet
             missingPropertyDefs = propertyIris -- propertyDefsAvailable.keySet

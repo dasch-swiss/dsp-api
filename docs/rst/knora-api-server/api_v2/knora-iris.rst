@@ -30,7 +30,7 @@ Project Codes
 
 A project code is a hexadecimal number of at least four digits, assigned by the DaSCH_ to uniquely identify a Knora project regardless of where it is hosted. Project codes are currently optional. It is recommended that new projects request a project code and use it in their ontology IRIs, to avoid possible future naming conflicts.
 
-TODO: Is there a range of project codes reserved for local testing?
+The range of project IDs from ``0000`` to ``00FF`` inclusive is reserved for local testing. Thus, the first useful project will be ``0100``.
 
 IRIs for Ontologies and Ontology Entities
 -----------------------------------------

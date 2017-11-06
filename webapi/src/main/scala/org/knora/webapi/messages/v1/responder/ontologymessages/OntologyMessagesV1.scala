@@ -65,10 +65,10 @@ case class EntityInfoGetRequestV1(resourceClassIris: Set[IRI] = Set.empty[IRI], 
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
   *
   * @param resourceClassInfoMap a [[Map]] of resource class IRIs to [[ReadClassInfoV2]] objects.
-  * @param propertyInfoMap      a [[Map]] of property IRIs to [[PropertyEntityInfoV2]] objects.
+  * @param propertyInfoMap      a [[Map]] of property IRIs to [[ReadPropertyInfoV2]] objects.
   */
 case class EntityInfoGetResponseV1(resourceClassInfoMap: Map[IRI, ReadClassInfoV2],
-                                   propertyInfoMap: Map[IRI, PropertyEntityInfoV2])
+                                   propertyInfoMap: Map[IRI, ReadPropertyInfoV2])
 
 
 /**
@@ -86,10 +86,10 @@ case class StandoffEntityInfoGetRequestV1(standoffClassIris: Set[IRI] = Set.empt
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
   *
   * @param standoffClassInfoMap    a [[Map]] of resource class IRIs to [[ReadClassInfoV2]] objects.
-  * @param standoffPropertyInfoMap a [[Map]] of property IRIs to [[PropertyEntityInfoV2]] objects.
+  * @param standoffPropertyInfoMap a [[Map]] of property IRIs to [[ReadPropertyInfoV2]] objects.
   */
 case class StandoffEntityInfoGetResponseV1(standoffClassInfoMap: Map[IRI, ReadClassInfoV2],
-                                           standoffPropertyInfoMap: Map[IRI, PropertyEntityInfoV2])
+                                           standoffPropertyInfoMap: Map[IRI, ReadPropertyInfoV2])
 
 /**
   * Requests information about all standoff classes that are a subclass of a data type standoff class. A successful response will be an
@@ -119,9 +119,9 @@ case class StandoffAllPropertiesGetRequestV1(userProfile: UserProfileV1) extends
 /**
   * Represents assertions about all standoff all standoff property entities.
   *
-  * @param standoffAllPropertiesInfoMap a [[Map]] of resource entity IRIs to [[PropertyEntityInfoV2]] objects.
+  * @param standoffAllPropertiesInfoMap a [[Map]] of resource entity IRIs to [[ReadPropertyInfoV2]] objects.
   */
-case class StandoffAllPropertiesGetResponseV1(standoffAllPropertiesInfoMap: Map[IRI, PropertyEntityInfoV2])
+case class StandoffAllPropertiesGetResponseV1(standoffAllPropertiesInfoMap: Map[IRI, ReadPropertyInfoV2])
 
 
 /**
