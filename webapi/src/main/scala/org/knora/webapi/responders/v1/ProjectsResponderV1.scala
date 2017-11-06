@@ -714,7 +714,7 @@ class ProjectsResponderV1 extends Responder {
       */
     private def updateProjectV1(projectIri: IRI, projectUpdatePayload: ProjectUpdatePayloadV1): Future[ProjectOperationResponseV1] = {
 
-        // log.debug("updateProjectV1 - projectUpdatePayload: {}", projectUpdatePayload)
+        log.debug("updateProjectV1 - projectIri: {}, projectUpdatePayload: {}", projectIri, projectUpdatePayload)
 
         val parametersCount = List(
             projectUpdatePayload.shortname,

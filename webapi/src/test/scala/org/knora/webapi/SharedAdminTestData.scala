@@ -189,7 +189,7 @@ object SharedAdminTestData {
     /** Images Demo Project Admin Data  **/
     /*************************************/
 
-    val IMAGES_PROJECT_IRI = "http://data.knora.org/projects/0101"
+    val IMAGES_PROJECT_IRI = "http://data.knora.org/projects/00FF"
 
     /* represents 'user01' as found in admin-data.ttl  */
     def imagesUser01 = UserProfileV1(
@@ -281,7 +281,7 @@ object SharedAdminTestData {
     def imagesProjectInfo = ProjectInfoV1(
         id = IMAGES_PROJECT_IRI,
         shortname = "images",
-        shortcode = Some("0101"),
+        shortcode = Some("00FF"),
         longname = Some("Image Collection Demo"),
         description = Some("A demo project of a collection of images"),
         keywords = Some("images, collection"),

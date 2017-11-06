@@ -1215,7 +1215,7 @@ class ResourcesResponderV1 extends Responder {
 
             // Create random IRIs for resources, collect in Map[clientResourceID, IRI]
             clientResourceIDsToResourceIris: Map[String, IRI] = new ErrorHandlingMap(
-                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info.shortname)).toMap,
+                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info)).toMap,
                 errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
                 errorFun = { errorMsg => throw BadRequestException(errorMsg) }
             )
@@ -1825,7 +1825,7 @@ class ResourcesResponderV1 extends Responder {
             }.mapTo[ProjectInfoResponseV1]
 
             namedGraph = StringFormatter.getInstance.projectDataNamedGraph(projectInfoResponse.project_info)
-            resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info.shortname)
+            resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info)
 
             // Check user's PermissionProfile (part of UserProfileV1) to see if the user has the permission to
             // create a new resource in the given project.

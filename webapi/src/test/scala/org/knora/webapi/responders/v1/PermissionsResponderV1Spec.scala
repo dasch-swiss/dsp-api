@@ -386,8 +386,8 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             "return the default object access permissions 'string' for the 'images:jahreszeit' property" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
                     projectIri = IMAGES_PROJECT_IRI,
-                    resourceClassIri = "http://www.knora.org/ontology/images#bild",
-                    propertyIri = "http://www.knora.org/ontology/images#jahreszeit",
+                    resourceClassIri = s"$IMAGES_ONTOLOGY_IRI#bild",
+                    propertyIri = s"$IMAGES_ONTOLOGY_IRI#jahreszeit",
                     imagesUser01.permissionData
                 )
                 expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"))
@@ -425,7 +425,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             "return the default object access permissions 'string' for the 'images:Bild' class and 'anything:hasText' property" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
                     projectIri = ANYTHING_PROJECT_IRI,
-                    resourceClassIri = "http://www.knora.org/ontology/images#bild",
+                    resourceClassIri = s"$IMAGES_ONTOLOGY_IRI#bild",
                     propertyIri = "http://www.knora.org/ontology/anything#hasText",
                     anythingUser1.permissionData
                 )

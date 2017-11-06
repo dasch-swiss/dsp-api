@@ -45,14 +45,14 @@ class StoreRouteV1E2ESpec extends E2ESpec(StoreRouteV1E2ESpec.config) with Tripl
       *
       *  [
       *     {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/incunabula"},
-      *     {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/images"}
+      *     {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/00FF/images"}
       *  ]
       *
       * and could have been supplied to the post request instead of the scala object.
       */
     private val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
 
     "The ResetTriplestoreContent Route ('v1/store/ResetTriplestoreContent')" should {

@@ -166,13 +166,13 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
         }
 
         "return parsed permissions string as 'Set[PermissionV1]' (administrative permissions)" in {
-            val hasPermissionsString = "ProjectResourceCreateAllPermission|ProjectAdminAllPermission|ProjectResourceCreateRestrictedPermission <http://www.knora.org/ontology/images#bild>,<http://www.knora.org/ontology/images#bildformat>"
+            val hasPermissionsString = "ProjectResourceCreateAllPermission|ProjectAdminAllPermission|ProjectResourceCreateRestrictedPermission <http://www.knora.org/ontology/00FF/images#bild>,<http://www.knora.org/ontology/00FF/images#bildformat>"
 
             val permissionsSet = Set(
                 PermissionV1.ProjectResourceCreateAllPermission,
                 PermissionV1.ProjectAdminAllPermission,
-                PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/images#bild"),
-                PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/images#bildformat")
+                PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/00FF/images#bild"),
+                PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/00FF/images#bildformat")
             )
 
             PermissionUtilV1.parsePermissionsWithType(Some(hasPermissionsString), PermissionType.AP) should contain allElementsOf permissionsSet

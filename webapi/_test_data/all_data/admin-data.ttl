@@ -97,11 +97,11 @@
 ##########################################################
 
 
-<http://data.knora.org/projects/0101> rdf:type knora-base:knoraProject ;
+<http://data.knora.org/projects/00FF> rdf:type knora-base:knoraProject ;
 
                                              knora-base:projectShortname "images"^^xsd:string ;
 
-                                             knora-base:projectShortcode "0101"^^xsd:string ;
+                                             knora-base:projectShortcode "00FF"^^xsd:string ;
 
                                              knora-base:projectLongname "Image Collection Demo"^^xsd:string ;
 
@@ -109,7 +109,7 @@
 
                                              knora-base:projectKeywords "images, collection"^^xsd:string ;
 
-                                             knora-base:projectOntology <http://www.knora.org/ontology/0101/images> ;
+                                             knora-base:projectOntology <http://www.knora.org/ontology/00FF/images> ;
 
                                              knora-base:status "true"^^xsd:boolean ;
 
@@ -131,11 +131,11 @@
 
                                          knora-base:status "true"^^xsd:boolean ;
 
-                                         knora-base:isInProject <http://data.knora.org/projects/0101> ;
+                                         knora-base:isInProject <http://data.knora.org/projects/00FF> ;
 
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
 
-                                         knora-base:isInProjectAdminGroup <http://data.knora.org/projects/0101> .
+                                         knora-base:isInProjectAdminGroup <http://data.knora.org/projects/00FF> .
 
 
 ## Project Member
@@ -153,7 +153,7 @@
 
                                          knora-base:status "true"^^xsd:boolean ;
 
-                                         knora-base:isInProject <http://data.knora.org/projects/0101> ;
+                                         knora-base:isInProject <http://data.knora.org/projects/00FF> ;
 
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -173,7 +173,7 @@
 
                                          knora-base:status "true"^^xsd:boolean ;
 
-                                         knora-base:isInProject <http://data.knora.org/projects/0101> ;
+                                         knora-base:isInProject <http://data.knora.org/projects/00FF> ;
 
                                          knora-base:isInGroup <http://data.knora.org/groups/images-reviewer> ;
 
@@ -195,7 +195,7 @@
 
                                          knora-base:status "true"^^xsd:boolean ;
 
-                                         knora-base:isInProject <http://data.knora.org/projects/0101> ;
+                                         knora-base:isInProject <http://data.knora.org/projects/00FF> ;
 
                                          knora-base:isInGroup <http://data.knora.org/groups/images-reviewer> ;
 
@@ -209,7 +209,7 @@
 
                                                knora-base:groupDescription "A group for image reviewers."^^xsd:string ;
 
-                                               knora-base:belongsToProject <http://data.knora.org/projects/0101> ;
+                                               knora-base:belongsToProject <http://data.knora.org/projects/00FF> ;
 
                                                knora-base:status "true"^^xsd:boolean ;
 
@@ -347,13 +347,13 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                         knora-base:status "true"^^xsd:boolean ;
 
                                         knora-base:isInProject <http://data.knora.org/projects/77275339> ,
-                                                               <http://data.knora.org/projects/0101> ,
+                                                               <http://data.knora.org/projects/00FF> ,
                                                                <http://data.knora.org/projects/anything> ;
 
                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
 
                                         knora-base:isInProjectAdminGroup <http://data.knora.org/projects/77275339> ,
-                                                                         <http://data.knora.org/projects/0101> ,
+                                                                         <http://data.knora.org/projects/00FF> ,
                                                                          <http://data.knora.org/projects/anything> ;
 
                                         knora-base:isInGroup <http://data.knora.org/groups/images-reviewer> .

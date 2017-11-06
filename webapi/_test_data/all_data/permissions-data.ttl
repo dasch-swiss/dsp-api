@@ -64,7 +64,7 @@
 
                       rdf:type knora-base:AdministrativePermission ;
 
-                      knora-base:forProject <http://data.knora.org/projects/0101> ;
+                      knora-base:forProject <http://data.knora.org/projects/00FF> ;
 
                       knora-base:forGroup knora-base:ProjectMember ;
 
@@ -76,7 +76,7 @@
 
                       rdf:type knora-base:AdministrativePermission ;
 
-                      knora-base:forProject <http://data.knora.org/projects/0101> ;
+                      knora-base:forProject <http://data.knora.org/projects/00FF> ;
 
                       knora-base:forGroup knora-base:ProjectAdmin ;
 
@@ -88,11 +88,11 @@
 
                       rdf:type knora-base:AdministrativePermission ;
 
-                      knora-base:forProject <http://data.knora.org/projects/0101> ;
+                      knora-base:forProject <http://data.knora.org/projects/00FF> ;
 
                       knora-base:forGroup <http://data.knora.org/groups/images-reviewer> ;
 
-                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/0101/images#bild,http://www.knora.org/ontology/0101/images#bildformat"^^xsd:string .
+                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/00FF/images#bild,http://www.knora.org/ontology/00FF/images#bildformat"^^xsd:string .
 
 
 ### Default Object Access Permissions on ProjectMember Group
@@ -100,7 +100,7 @@
 
                       rdf:type knora-base:DefaultObjectAccessPermission ;
 
-                      knora-base:forProject <http://data.knora.org/projects/0101> ;
+                      knora-base:forProject <http://data.knora.org/projects/00FF> ;
 
                       knora-base:forGroup knora-base:ProjectMember ;
 
@@ -112,7 +112,7 @@
 
                       rdf:type knora-base:DefaultObjectAccessPermission ;
 
-                      knora-base:forProject <http://data.knora.org/projects/0101> ;
+                      knora-base:forProject <http://data.knora.org/projects/00FF> ;
 
                       knora-base:forGroup knora-base:KnownUser ;
 

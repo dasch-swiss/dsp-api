@@ -328,7 +328,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             "return all named graphs after adding a new ontology" in {
                 actorUnderTest ! ProjectOntologyAddV1(
                     projectIri = IMAGES_PROJECT_IRI,
-                    ontologyIri = "http://data.knora.org/ontology/blabla1",
+                    ontologyIri = "http://data.knora.org/ontology/00FF/blabla1",
                     apiRequestID = UUID.randomUUID()
                 )
                 val received01: ProjectInfoV1 = expectMsgType[ProjectInfoV1](timeout)

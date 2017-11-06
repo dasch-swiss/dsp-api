@@ -25,6 +25,8 @@ import java.util.UUID
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi.SharedOntologyTestData._
+import org.knora.webapi.SharedAdminTestData._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
@@ -50,8 +52,8 @@ object ValuesResponderV1Spec {
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 
-    private val incunabulaProjectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI
-    private val anythingProjectIri = SharedAdminTestData.ANYTHING_PROJECT_IRI
+    private val incunabulaProjectIri = INCUNABULA_PROJECT_IRI
+    private val anythingProjectIri = ANYTHING_PROJECT_IRI
 
     private val zeitglöckleinIri = "http://data.knora.org/c5058f3a"
     private val miscResourceIri = "http://data.knora.org/miscResource"
@@ -90,7 +92,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
     val rdfDataObjects = Vector(
         RdfDataObject(path = "_test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
     private val actorUnderTest = TestActorRef[ValuesResponderV1]
@@ -1623,7 +1625,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             actorUnderTest ! CreateValueRequestV1(
                 value = HierarchicalListValueV1(summer),
                 userProfile = imagesUser,
-                propertyIri = "http://www.knora.org/ontology/0101/images#jahreszeit",
+                propertyIri = s"$IMAGES_ONTOLOGY_IRI#jahreszeit",
                 resourceIri = "http://data.knora.org/691e7e2244d5",
                 apiRequestID = UUID.randomUUID
             )

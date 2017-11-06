@@ -22,7 +22,7 @@ package org.knora.webapi
 
 object SharedOntologyTestData {
 
-    val IMAGES_ONTOLOGY_IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "0101/images"
+    val IMAGES_ONTOLOGY_IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "00FF/images"
     val IMAGES_TITEL_PROPERTY = IMAGES_ONTOLOGY_IRI + "#" + "titel"
     val IMAGES_BILD_RESOURCE_CLASS = IMAGES_ONTOLOGY_IRI + "#" + "bild"
 

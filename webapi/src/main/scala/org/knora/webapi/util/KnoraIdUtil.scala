@@ -24,6 +24,7 @@ import java.nio.ByteBuffer
 import java.util.{Base64, UUID}
 
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 
 object KnoraIdUtil {
     private val CanonicalUuidLength = 36
@@ -135,12 +136,16 @@ class KnoraIdUtil {
     /**
       * Creates a new resource IRI based on a UUID.
       *
-      * @param projectShortname the project's unique, short identifier.
+      * @param projectInfo the project's info.
       * @return a new resource IRI.
       */
-    def makeRandomResourceIri(projectShortname: String): IRI = {
+    def makeRandomResourceIri(projectInfo: ProjectInfoV1): IRI = {
         val knoraResourceID = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/$projectShortname/$knoraResourceID"
+        if (projectInfo.shortcode.isDefined) {
+            s"http://$IriDomain/${projectInfo.shortcode.get}/${projectInfo.shortname}/$knoraResourceID"
+        } else {
+            s"http://$IriDomain/${projectInfo.shortname}/$knoraResourceID"
+        }
     }
 
     /**
@@ -210,7 +215,7 @@ class KnoraIdUtil {
     }
 
     /**
-      * Creates a new project IRI based on a UUID.
+      * Creates a new project IRI based on a UUID or the project's shortcode.
       *
       * @return a new project IRI.
       */
