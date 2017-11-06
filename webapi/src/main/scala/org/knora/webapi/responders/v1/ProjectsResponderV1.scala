@@ -65,6 +65,8 @@ class ProjectsResponderV1 extends Responder {
         case ProjectAdminMembersByShortnameGetRequestV1(shortname, userProfileV1) => future2Message(sender(), projectAdminMembersByShortnameGetRequestV1(shortname, userProfileV1), log)
         case ProjectCreateRequestV1(createRequest, userProfileV1, apiRequestID) => future2Message(sender(), projectCreateRequestV1(createRequest, userProfileV1, apiRequestID), log)
         case ProjectChangeRequestV1(projectIri, changeProjectRequest, userProfileV1, apiRequestID) => future2Message(sender(), changeBasicInformationRequestV1(projectIri, changeProjectRequest, userProfileV1, apiRequestID), log)
+        case ProjectOntologyAddV1(projectIri, ontologyIri, apiRequestID) => future2Message(sender(), projectOntologyAddV1(projectIri, ontologyIri, apiRequestID), log)
+        case ProjectOntologyRemoveV1(projectIri, ontologyIri, apiRequestID) => future2Message(sender(), projectOntologyRemoveV1(projectIri, ontologyIri, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -73,6 +75,7 @@ class ProjectsResponderV1 extends Responder {
       *
       * @param userProfile the profile of the user that is making the request.
       * @return all the projects as a [[ProjectsResponseV1]].
+      * @throws NotFoundException if no projects are found.
       */
     private def projectsGetRequestV1(userProfile: Option[UserProfileV1]): Future[ProjectsResponseV1] = {
 
@@ -144,6 +147,7 @@ class ProjectsResponderV1 extends Responder {
       *
       * @param userProfile
       * @return a sequence of [[NamedGraphV1]]
+      * @throws InconsistentTriplestoreDataException whenever a expected/required peace of data is not found.
       */
     private def projectsNamedGraphGetV1(userProfile: UserProfileV1): Future[Seq[NamedGraphV1]] = {
 
@@ -165,20 +169,27 @@ class ProjectsResponderV1 extends Responder {
             }
             //_ = log.debug(s"getProjectsResponseV1 - projectsWithProperties: $projectsWithProperties")
 
-            namedGraphs: Seq[NamedGraphV1] = projectsWithProperties.map {
+            namedGraphs: Seq[NamedGraphV1] = projectsWithProperties.flatMap {
                 case (projectIri: String, propsMap: Map[String, Seq[String]]) =>
 
-                    // FixMe: Every project can now have a number of ontologies and thus a number of named graphs. The named graphs correspond to the ontology IRIs.
-                    NamedGraphV1(
-                        id = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntology defined.")).head,
-                        shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")).head,
-                        longname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectLongname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no longname defined.")).head,
-                        description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")).head,
-                        project_id = projectIri,
-                        uri = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no projectOntology defined.")).head,
-                        active = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.toBoolean
-                    )
+                    val maybeOntologies = propsMap.get(OntologyConstants.KnoraBase.ProjectOntology)
+                    maybeOntologies match {
+                        case Some(ontologies) => ontologies.map( ontologyIri =>
+                            NamedGraphV1(
+                                id = ontologyIri,
+                                shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")).head,
+                                longname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectLongname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no longname defined.")).head,
+                                description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")).head,
+                                project_id = projectIri,
+                                uri = ontologyIri,
+                                active = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.toBoolean
+                            )
+                        )
+                        case None => Seq.empty[NamedGraphV1]
+                    }
             }.toSeq
+
+            // _ = log.debug("projectsNamedGraphGetV1 - namedGraphs: {}", namedGraphs)
         } yield namedGraphs
     }
 
@@ -188,6 +199,7 @@ class ProjectsResponderV1 extends Responder {
       * @param projectIri  the IRI of the project requested.
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[ProjectInfoResponseV1]].
+      * @throws NotFoundException when no project for the given IRI can be found
       */
     private def projectInfoByIRIGetRequestV1(projectIri: IRI, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
 
@@ -239,6 +251,7 @@ class ProjectsResponderV1 extends Responder {
       * @param shortName   the shortname of the project requested.
       * @param userProfile the profile of user that is making the request.
       * @return information about the project as a [[ProjectInfoResponseV1]].
+      * @throws NotFoundException in the case that no project for the given shortname can be found.
       */
     private def projectInfoByShortnameGetRequestV1(shortName: String, userProfile: Option[UserProfileV1]): Future[ProjectInfoResponseV1] = {
 
@@ -275,6 +288,7 @@ class ProjectsResponderV1 extends Responder {
       * @param projectIri    the IRI of the project.
       * @param userProfileV1 the profile of the user that is making the request.
       * @return the members of a project as a [[ProjectMembersGetResponseV1]]
+      * @throws NotFoundException in the case that the project's IRI is not found.
       */
     private def projectMembersByIRIGetRequestV1(projectIri: IRI, userProfileV1: UserProfileV1): Future[ProjectMembersGetResponseV1] = {
 
@@ -283,7 +297,9 @@ class ProjectsResponderV1 extends Responder {
         for {
             projectExists: Boolean <- projectByIriExists(projectIri)
 
-            _ = if (!projectExists) throw NotFoundException(s"Project '$projectIri' not found.")
+            _ = if (!projectExists) {
+                throw NotFoundException(s"Project '$projectIri' not found.")
+            }
 
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectMembersByIri(
                 triplestore = settings.triplestoreType,
@@ -314,6 +330,7 @@ class ProjectsResponderV1 extends Responder {
       * @param shortname     the IRI of the project.
       * @param userProfileV1 the profile of the user that is making the request.
       * @return the members of a project as a [[ProjectMembersGetResponseV1]]
+      * @throws NotFoundException in the case that the project with the given shortname can not be found.
       */
     private def projectMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserProfileV1): Future[ProjectMembersGetResponseV1] = {
 
@@ -322,7 +339,9 @@ class ProjectsResponderV1 extends Responder {
         for {
             projectExists: Boolean <- projectByShortnameExists(shortname)
 
-            _ = if (!projectExists) throw NotFoundException(s"Project '$shortname' not found.")
+            _ = if (!projectExists) {
+                throw NotFoundException(s"Project '$shortname' not found.")
+            }
 
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectMembersByShortname(
                 triplestore = settings.triplestoreType,
@@ -353,6 +372,7 @@ class ProjectsResponderV1 extends Responder {
       * @param projectIri    the IRI of the project.
       * @param userProfileV1 the profile of the user that is making the request.
       * @return the members of a project as a [[ProjectMembersGetResponseV1]]
+      * @throws NotFoundException in the case that the project's IRI is not found.
       */
     private def projectAdminMembersByIRIGetRequestV1(projectIri: IRI, userProfileV1: UserProfileV1): Future[ProjectAdminMembersGetResponseV1] = {
 
@@ -361,7 +381,9 @@ class ProjectsResponderV1 extends Responder {
         for {
             projectExists: Boolean <- projectByIriExists(projectIri)
 
-            _ = if (!projectExists) throw NotFoundException(s"Project '$projectIri' not found.")
+            _ = if (!projectExists) {
+                throw NotFoundException(s"Project '$projectIri' not found.")
+            }
 
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectAdminMembersByIri(
                 triplestore = settings.triplestoreType,
@@ -392,6 +414,7 @@ class ProjectsResponderV1 extends Responder {
       * @param shortname     the IRI of the project.
       * @param userProfileV1 the profile of the user that is making the request.
       * @return the members of a project as a [[ProjectMembersGetResponseV1]]
+      * @throws NotFoundException in the case that the project with the given shortname can not be found.
       */
     private def projectAdminMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserProfileV1): Future[ProjectAdminMembersGetResponseV1] = {
 
@@ -400,7 +423,9 @@ class ProjectsResponderV1 extends Responder {
         for {
             projectExists: Boolean <- projectByShortnameExists(shortname)
 
-            _ = if (!projectExists) throw NotFoundException(s"Project '$shortname' not found.")
+            _ = if (!projectExists) {
+                throw NotFoundException(s"Project '$shortname' not found.")
+            }
 
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectAdminMembersByShortname(
                 triplestore = settings.triplestoreType,
@@ -428,10 +453,13 @@ class ProjectsResponderV1 extends Responder {
     /**
       * Creates a project.
       *
-      * @param createRequest
-      * @param userProfile
-      * @param apiRequestID
-      * @return
+      * @param createRequest the new project's information.
+      * @param userProfile the profile of the user that is making the request.
+      * @param apiRequestID the unique api request ID.
+      * @return a [[ProjectOperationResponseV1]].
+      * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
+      * @throws DuplicateValueException in the case when either the shortname or shortcode are not unique.
+      * @throws BadRequestException in the case when the shortcode is invalid.
       */
     private def projectCreateRequestV1(createRequest: CreateProjectApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
 
@@ -526,11 +554,12 @@ class ProjectsResponderV1 extends Responder {
     /**
       * Changes project's basic information.
       *
-      * @param projectIri
-      * @param changeProjectRequest
-      * @param userProfileV1
-      * @param apiRequestID
-      * @return
+      * @param projectIri the IRI of the project.
+      * @param changeProjectRequest the change payload.
+      * @param userProfileV1 the profile of the user making the request.
+      * @param apiRequestID the unique api request ID.
+      * @return a [[ProjectOperationResponseV1]].
+      * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
       */
     private def changeBasicInformationRequestV1(projectIri: IRI, changeProjectRequest: ChangeProjectApiRequestV1, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
 
@@ -563,7 +592,7 @@ class ProjectsResponderV1 extends Responder {
                 selfjoin = changeProjectRequest.selfjoin
             )
 
-            result <- updateProjectV1(projectIri, projectUpdatePayload, userProfileV1)
+            result <- updateProjectV1(projectIri, projectUpdatePayload)
 
         } yield result
 
@@ -579,14 +608,111 @@ class ProjectsResponderV1 extends Responder {
     }
 
     /**
+      * Add a ontology to the project.
+      *
+      * @param projectIri the IRI of the project.
+      * @param ontologyIri the IRI of the ontology that is added to the project.
+      * @param apiRequestID the unique api request ID.
+      * @return a [[ProjectInfoV1]]
+      * @throws NotFoundException in the case that the project's IRI is not found.
+      */
+    private def projectOntologyAddV1(projectIri: IRI, ontologyIri: IRI, apiRequestID: UUID): Future[ProjectInfoV1] = {
+
+        // log.debug("projectOntologyAddV1 - projectIri: {}, ontologyIri: {}", projectIri, ontologyIri)
+
+        /**
+          * The actual ontology add task run with an IRI lock.
+          */
+        def ontologyAddTask(projectIri: IRI, ontologyIri: IRI): Future[ProjectInfoV1] = for {
+
+            _ <- Future(
+                // check if necessary information is present
+                if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
+            )
+
+            maybeProjectInfo <- projectInfoByIRIGetV1(projectIri, None)
+
+            // _ = log.debug("projectOntologyAddV1 - ontologyAddTask - maybeProjectInfo: {}", maybeProjectInfo)
+
+            ontologies: Seq[IRI] = maybeProjectInfo match {
+                case Some(pi) => pi.ontologies :+ ontologyIri
+                case None => throw NotFoundException(s"Project '$projectIri' not found. Aborting update request.")
+            }
+
+            projectUpdatePayload = ProjectUpdatePayloadV1(ontologies = Some(ontologies))
+
+            result <- updateProjectV1(projectIri, projectUpdatePayload)
+        } yield result.project_info
+
+        for {
+            // run the change status task with an IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                projectIri,
+                () => ontologyAddTask(projectIri, ontologyIri)
+            )
+        } yield taskResult
+    }
+
+    /**
+      * Remove a ontology from the project.
+      *
+      * @param projectIri the IRI of the project.
+      * @param ontologyIri the IRI of the ontology that is added to the project.
+      * @param apiRequestID the unique api request ID.
+      * @return a [[ProjectInfoV1]]
+      * @throws NotFoundException in the case that the project's IRI is not found.
+      */
+    private def projectOntologyRemoveV1(projectIri: IRI, ontologyIri: IRI, apiRequestID: UUID): Future[ProjectInfoV1] = {
+
+        // log.debug("projectOntologyRemoveV1 - projectIri: {}, ontologyIri: {}", projectIri, ontologyIri)
+
+        /**
+          * The actual ontology remove task run with an IRI lock.
+          */
+        def ontologyRemoveTask(projectIri: IRI, ontologyIri: IRI): Future[ProjectInfoV1] = for {
+
+            _ <- Future(
+                // check if necessary information is present
+                if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
+            )
+
+            maybeProjectInfo <- projectInfoByIRIGetV1(projectIri, None)
+
+            // _ = log.debug("projectOntologyRemoveV1 - ontologyRemoveTask - maybeProjectInfo: {}", maybeProjectInfo)
+
+            ontologies: Seq[IRI] = maybeProjectInfo match {
+                case Some(pi) => pi.ontologies.filterNot(_.equals(ontologyIri))
+                case None => throw NotFoundException(s"Project '$projectIri' not found. Aborting update request.")
+            }
+
+            projectUpdatePayload = ProjectUpdatePayloadV1(ontologies = Some(ontologies))
+
+            result <- updateProjectV1(projectIri, projectUpdatePayload)
+        } yield result.project_info
+
+        for {
+            // run the change status task with an IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                projectIri,
+                () => ontologyRemoveTask(projectIri, ontologyIri)
+            )
+        } yield taskResult
+
+    }
+
+    /**
       * Main project update method.
       *
-      * @param projectIri
-      * @param projectUpdatePayload
-      * @param userProfile
-      * @return
+      * @param projectIri the IRI of the project.
+      * @param projectUpdatePayload the data to be updated. Update means exchanging what is in the triplestore with
+      *                             this data. If only some parts of the data need to be changed, then this needs to
+      *                             be prepared in the step before this one.
+      * @return a [[ProjectOperationResponseV1]].
+      * @throws NotFoundException in the case that the project's IRI is not found.
       */
-    private def updateProjectV1(projectIri: IRI, projectUpdatePayload: ProjectUpdatePayloadV1, userProfile: UserProfileV1): Future[ProjectOperationResponseV1] = {
+    private def updateProjectV1(projectIri: IRI, projectUpdatePayload: ProjectUpdatePayloadV1): Future[ProjectOperationResponseV1] = {
 
         // log.debug("updateProjectV1 - projectUpdatePayload: {}", projectUpdatePayload)
 
@@ -604,9 +730,11 @@ class ProjectsResponderV1 extends Responder {
         if (parametersCount == 0) throw BadRequestException("No data would be changed. Aborting update request.")
 
         for {
-        /* Verify that the project exists. */
-            maybeProjectInfo <- projectInfoByIRIGetV1(projectIri, Some(userProfile))
-            projectInfo: ProjectInfoV1 = maybeProjectInfo.getOrElse(throw NotFoundException(s"Project '$projectIri' not found. Aborting update request."))
+            /* Verify that the project exists. */
+            projectExists <- projectByIriExists(projectIri)
+            _ = if (!projectExists) {
+                throw NotFoundException(s"Project '$projectIri' not found. Aborting update request.")
+            }
 
             /* Update project */
             updateProjectSparqlString <- Future(queries.sparql.v1.txt.updateProject(
@@ -623,12 +751,12 @@ class ProjectsResponderV1 extends Responder {
                 maybeStatus = projectUpdatePayload.status,
                 maybeSelfjoin = projectUpdatePayload.selfjoin
             ).toString)
-            //_ = log.debug(s"updateProjectV1 - query: {}",updateProjectSparqlString)
+            // _ = log.debug(s"updateProjectV1 - query: {}",updateProjectSparqlString)
 
             updateProjectResponse <- (storeManager ? SparqlUpdateRequest(updateProjectSparqlString)).mapTo[SparqlUpdateResponse]
 
             /* Verify that the project was updated. */
-            maybeUpdatedProject <- projectInfoByIRIGetV1(projectIri, Some(userProfile))
+            maybeUpdatedProject <- projectInfoByIRIGetV1(projectIri, None)
             updatedProject: ProjectInfoV1 = maybeUpdatedProject.getOrElse(throw UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
 
             //_ = log.debug("updateProjectV1 - projectUpdatePayload: {} /  updatedProject: {}", projectUpdatePayload, updatedProject)
@@ -698,7 +826,7 @@ class ProjectsResponderV1 extends Responder {
                 case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
             }
 
-            log.debug(s"createProjectInfoV1 - projectProperties: $projectProperties")
+            // log.debug(s"createProjectInfoV1 - projectProperties: $projectProperties")
 
             /* create and return the project info */
             ProjectInfoV1(
@@ -796,8 +924,8 @@ class ProjectsResponderV1 extends Responder {
             askString <- Future(queries.sparql.v1.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
             //_ = log.debug("projectExists - query: {}", askString)
 
-            checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-            result = checkUserExistsResponse.result
+            checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            result = checkProjectExistsResponse.result
 
         } yield result
     }
@@ -813,8 +941,8 @@ class ProjectsResponderV1 extends Responder {
             askString <- Future(queries.sparql.v1.txt.checkProjectExistsByShortname(shortname = shortname).toString)
             //_ = log.debug("projectExists - query: {}", askString)
 
-            checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-            result = checkUserExistsResponse.result
+            checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            result = checkProjectExistsResponse.result
 
         } yield result
     }
@@ -830,8 +958,8 @@ class ProjectsResponderV1 extends Responder {
             askString <- Future(queries.sparql.v1.txt.checkProjectExistsByShortcode(shortcode = shortcode).toString)
             //_ = log.debug("projectExists - query: {}", askString)
 
-            checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-            result = checkUserExistsResponse.result
+            checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            result = checkProjectExistsResponse.result
 
         } yield result
     }

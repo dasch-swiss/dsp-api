@@ -26,9 +26,10 @@ import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.SharedAdminTestData._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse, NamedGraphV1}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
@@ -204,7 +205,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 expectMsg(Failure(DuplicateValueException(s"Project with the shortname: 'newproject' already exists")))
             }
 
-            "return a 'DuplicateValueException' during creation if the supplied project shortname is unique but the short code is not" in {
+            "return a 'DuplicateValueException' during creation if the supplied project shortname is unique but the shortcode is not" in {
                 actorUnderTest ! ProjectCreateRequestV1(
                     CreateProjectApiRequestV1(
                         shortname = "newproject3",
@@ -268,6 +269,28 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 received.project_info.selfjoin should be (true)
             }
 
+            "ADD an ontology to the project" in {
+                actorUnderTest ! ProjectOntologyAddV1(
+                    projectIri = newProjectIri.get,
+                    ontologyIri = "http://data.knora.org/ontology/blabla1",
+                    apiRequestID = UUID.randomUUID()
+                )
+
+                val received: ProjectInfoV1 = expectMsgType[ProjectInfoV1](timeout)
+                received.ontologies should be (Seq("http://data.knora.org/ontology/blabla1"))
+            }
+
+            "REMOVE an ontology from the project" in {
+                actorUnderTest ! ProjectOntologyRemoveV1(
+                    projectIri = newProjectIri.get,
+                    ontologyIri = "http://data.knora.org/ontology/blabla1",
+                    apiRequestID = UUID.randomUUID()
+                )
+
+                val received: ProjectInfoV1 = expectMsgType[ProjectInfoV1](timeout)
+                received.ontologies.isEmpty should be (true)
+            }
+
             "return 'NotFound' if a not existing project IRI is submitted during update" in {
                 actorUnderTest ! ProjectChangeRequestV1(
                     projectIri = "http://data.knora.org/projects/notexisting",
@@ -291,6 +314,30 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 )
                 expectMsg(Failure(BadRequestException("No data would be changed. Aborting update request.")))
                 */
+            }
+        }
+
+        "used to query named graphs" should {
+            "return all named graphs" in {
+                actorUnderTest ! ProjectsNamedGraphGetV1(SharedAdminTestData.rootUser)
+
+                val received: Seq[NamedGraphV1] = expectMsgType[Seq[NamedGraphV1]]
+                received.size should be (7)
+            }
+
+            "return all named graphs after adding a new ontology" in {
+                actorUnderTest ! ProjectOntologyAddV1(
+                    projectIri = IMAGES_PROJECT_IRI,
+                    ontologyIri = "http://data.knora.org/ontology/blabla1",
+                    apiRequestID = UUID.randomUUID()
+                )
+                val received01: ProjectInfoV1 = expectMsgType[ProjectInfoV1](timeout)
+                received01.ontologies.size should be (2)
+
+                actorUnderTest ! ProjectsNamedGraphGetV1(SharedAdminTestData.rootUser)
+
+                val received02: Seq[NamedGraphV1] = expectMsgType[Seq[NamedGraphV1]]
+                received02.size should be (8)
             }
         }
 

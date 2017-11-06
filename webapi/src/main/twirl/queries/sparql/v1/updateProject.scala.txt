@@ -85,7 +85,7 @@ DELETE {
     }
 
     @if(maybeOntologies.nonEmpty) {
-        project knora-base:projectOntology ?currentOntologies .
+        ?project knora-base:projectOntology ?currentOntologies .
     }
 
     @if(maybeStatus.nonEmpty) {
@@ -128,7 +128,7 @@ DELETE {
 
     @if(maybeOntologies.nonEmpty) {
         @for(ontology <- maybeOntologies.get) {
-          ?user knora-base:projectOntology <@ontology> .
+          ?project knora-base:projectOntology <@ontology> .
         }
     }
 

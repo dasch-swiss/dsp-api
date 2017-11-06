@@ -208,6 +208,33 @@ case class ProjectChangeRequestV1(projectIri: IRI,
                                   userProfileV1: UserProfileV1,
                                   apiRequestID: UUID) extends ProjectsResponderRequestV1
 
+/**
+  * Requests adding an ontology to the project. This is an internal message, which should
+  * only be sent by the ontology responder who is responsible for actually creating the
+  * ontology.
+  *
+  * @param projectIri the IRI of the project to be updated.
+  * @param ontologyIri the IRI of the ontology to be added.
+  * @param apiRequestID the ID of the API request.
+  */
+case class ProjectOntologyAddV1(projectIri: IRI,
+                                ontologyIri: IRI,
+                                apiRequestID: UUID) extends ProjectsResponderRequestV1
+
+
+/**
+  * Requests removing an ontology from the project. This is an internal message, which should
+  * only be sent by the ontology responder who is responsible for actually removing the
+  * ontology.
+  *
+  * @param projectIri the IRI of the project to be updated.
+  * @param ontologyIri the IRI of the ontology to be removed.
+  * @param apiRequestID the ID of the API request.
+  */
+case class ProjectOntologyRemoveV1(projectIri: IRI,
+                                   ontologyIri: IRI,
+                                   apiRequestID: UUID) extends ProjectsResponderRequestV1
+
 // Responses
 /**
   * Represents the Knora API v1 JSON response to a request for information about all projects.
