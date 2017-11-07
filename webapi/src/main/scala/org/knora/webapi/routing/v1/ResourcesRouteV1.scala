@@ -966,7 +966,7 @@ object ResourcesRouteV1 extends Authenticator {
                             case b: BodyPart if b.name == FILE_PART => {
                                 log.debug(s"inside allPartsFuture - processing $FILE_PART")
                                 val filename = b.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
-                                val tmpFile = stringFormatter.createTempFile(settings)
+                                val tmpFile = FileUtil.createTempFile(settings)
                                 val written = b.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
                                 written.map { written =>
                                     //println(s"written result: ${written.wasSuccessful}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")

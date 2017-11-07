@@ -40,7 +40,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtoc
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagsV1
-import org.knora.webapi.util.{DateUtilV1, StringFormatter}
+import org.knora.webapi.util.{DateUtilV1, FileUtil, StringFormatter}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.{Future, Promise}
@@ -506,7 +506,7 @@ object ValuesRouteV1 extends Authenticator {
                                 if (b.name == FILE_PART) {
                                     loggingAdapter.debug(s"inside allPartsFuture - processing $FILE_PART")
                                     val filename = b.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
-                                    val tmpFile = stringFormatter.createTempFile(settings)
+                                    val tmpFile = FileUtil.createTempFile(settings)
                                     val written = b.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
                                     written.map { written =>
                                         loggingAdapter.debug(s"written result: ${written.wasSuccessful}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")

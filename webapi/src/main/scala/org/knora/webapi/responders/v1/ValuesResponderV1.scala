@@ -725,7 +725,7 @@ class ValuesResponderV1 extends Responder {
                 case _ => changeFileValueRequest.file match {
                     case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
                         // a tmp file has been created by the resources route (non GUI-case), delete it
-                        stringFormatter.deleteFileFromTmpLocation(conversionPathRequest.source, log)
+                        FileUtil.deleteFileFromTmpLocation(conversionPathRequest.source, log)
                     case _ => ()
                 }
 
