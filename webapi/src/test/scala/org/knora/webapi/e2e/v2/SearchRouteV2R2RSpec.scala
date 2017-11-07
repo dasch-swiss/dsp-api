@@ -951,7 +951,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "get a book a page points to and include the page in the results" in {
+        "get a book a page points to and include the page in the results (all properties present in WHERE clause)" in {
             val sparqlSimplified =
             """
             PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1002,7 +1002,62 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/bookWithIncomingPages.jsonld"))
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/bookWithIncomingPagesWithAllRequestedProps.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "get a book a page points to and only include the page's partof link in the results (none of the other properties)" in {
+            val sparqlSimplified =
+                """
+            PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+
+            CONSTRUCT {
+
+                ?book knora-api:isMainResource true .
+
+                ?book incunabula:title ?title .
+
+                <http://data.knora.org/50e7460a7203> knora-api:isPartOf ?book .
+
+            } WHERE {
+
+                ?book a knora-api:Resource .
+
+                ?book incunabula:title ?title .
+
+                incunabula:title knora-api:objectType xsd:string .
+
+                ?title a xsd:string .
+
+                <http://data.knora.org/50e7460a7203> knora-api:isPartOf ?book .
+                knora-api:isPartOf knora-api:objectType knora-api:Resource .
+
+                <http://data.knora.org/50e7460a7203> a knora-api:Resource .
+
+                <http://data.knora.org/50e7460a7203> knora-api:seqnum ?seqnum .
+                knora-api:seqnum knora-api:objectType xsd:integer .
+
+                ?seqnum a xsd:integer .
+
+                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFileValue ?file .
+                knora-api:hasStillImageFileValue knora-api:objectType knora-api:StillImageFile .
+
+                ?file a knora-api:StillImageFile .
+
+            } OFFSET 0
+            """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/bookWithIncomingPagesOnlyLink.jsonld"))
 
                 compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
