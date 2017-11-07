@@ -33,7 +33,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 
-SELECT ?prop ?propPred ?propObj ?propObjLang
+SELECT ?graph ?prop ?propPred ?propObj ?propObjLang
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
@@ -42,9 +42,11 @@ WHERE {
     @for((propIri, index) <- propertyIris.zipWithIndex) {
 		@if(index > 0) {UNION}
     	{
-    		BIND(IRI("@propIri") as ?prop)
-    		?prop ?propPred ?propObj .
-            BIND(lang(?propObj) as ?propObjLang)
+            GRAPH ?graph {
+                BIND(IRI("@propIri") as ?prop)
+                ?prop ?propPred ?propObj .
+                BIND(lang(?propObj) as ?propObjLang)
+            }
     	}
     }
 }

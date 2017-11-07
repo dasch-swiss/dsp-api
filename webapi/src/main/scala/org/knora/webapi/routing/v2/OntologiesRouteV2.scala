@@ -20,18 +20,20 @@
 
 package org.knora.webapi.routing.v2
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import org.knora.webapi.messages.v2.responder.ontologymessages.{ClassesGetRequestV2, NamedGraphEntitiesGetRequestV2, NamedGraphsGetRequestV2, PropertyEntitiesGetRequestV2}
+import org.knora.webapi._
+import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi._
+import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 
 import scala.concurrent.ExecutionContextExecutor
-import scala.language.postfixOps
 
 /**
   * Provides a spray-routing function for API routes that deal with search.
@@ -236,6 +238,30 @@ object OntologiesRouteV2 extends Authenticator {
                         log,
                         responseSchema = responseSchema
                     )
+                }
+            }
+        } ~ path("v2" / "ontologies") {
+            post {
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessage: CreateOntologyRequestV2 = CreateOntologyRequestV2.fromJsonLD(
+                            jsonLDDocument = requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            userProfile = userProfile
+                        )
+
+                        RouteUtilV2.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            responseSchema = ApiV2WithValueObjects
+                        )
+                    }
                 }
             }
         }

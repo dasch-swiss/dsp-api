@@ -469,7 +469,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
         for {
 
-        // get the mapping and the related standoff entities
+            // get the mapping and the related standoff entities
             mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV1]
 
             standoffTags: Seq[StandoffTagV1] = StandoffTagUtilV1.createStandoffTagsV1FromSparqlResults(mappingResponse.standoffEntities, valueProps.standoff)

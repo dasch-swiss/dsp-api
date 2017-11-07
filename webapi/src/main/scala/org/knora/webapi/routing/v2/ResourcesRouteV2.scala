@@ -67,7 +67,7 @@ object ResourcesRouteV2 extends Authenticator {
                     )
                 }
             }
-        } ~ path("v2" / "resourcespreview" / Segments ) { (resIris: Seq[String]) =>
+        } ~ path("v2" / "resourcespreview" / Segments) { (resIris: Seq[String]) =>
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
@@ -75,9 +75,9 @@ object ResourcesRouteV2 extends Authenticator {
                     if (resIris.size > settings.v2ResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ResultsPerPage}")
 
                     val resourceIris: Seq[IRI] = resIris.map {
-                            resIri: String =>
-                                stringFormatter.toIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
-                        }
+                        resIri: String =>
+                            stringFormatter.toIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
+                    }
 
                     val requestMessage = ResourcePreviewRequestV2(resourceIris = resourceIris, userProfile = userProfile)
 

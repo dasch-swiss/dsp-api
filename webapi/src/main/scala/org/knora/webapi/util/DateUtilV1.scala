@@ -49,8 +49,8 @@ object DateUtilV1 {
     def dateValueV1ToJulianDayNumberValueV1(dateValueV1: DateValueV1): JulianDayNumberValueV1 = {
         // Get the start and end date ranges of the DateValueV1.
 
-        val dateRange1 = dateString2DateRange(dateValueV1.dateval1+ StringFormatter.EraSeparator + dateValueV1.era1, dateValueV1.calendar)
-        val dateRange2 = dateString2DateRange(dateValueV1.dateval2+ StringFormatter.EraSeparator + dateValueV1.era2, dateValueV1.calendar)
+        val dateRange1 = dateString2DateRange(dateValueV1.dateval1 + StringFormatter.EraSeparator + dateValueV1.era1, dateValueV1.calendar)
+        val dateRange2 = dateString2DateRange(dateValueV1.dateval2 + StringFormatter.EraSeparator + dateValueV1.era2, dateValueV1.calendar)
 
         JulianDayNumberValueV1(
             dateval1 = convertDateToJulianDayNumber(dateRange1.start),
@@ -118,8 +118,8 @@ object DateUtilV1 {
                     case StringFormatter.Era_AD => GregorianCalendar.AD
 
                     // java Gregorian calendar has just BC and AD as public fields
-                    case StringFormatter.Era_BCE => GregorianCalendar.BC  // BCE = BC
-                    case StringFormatter.Era_CE =>  GregorianCalendar.AD  // CE = AD
+                    case StringFormatter.Era_BCE => GregorianCalendar.BC // BCE = BC
+                    case StringFormatter.Era_CE => GregorianCalendar.AD // CE = AD
 
                 }
             case _ => throw BadRequestException(s"Could not handle era in $dateString")
@@ -227,7 +227,7 @@ object DateUtilV1 {
         val day = gregorianCalendar.get(Calendar.DAY_OF_MONTH)
         val era = gregorianCalendar.get(Calendar.ERA)
 
-        val date_era:String = era match {
+        val date_era: String = era match {
 
             case 1 => StringFormatter.Era_CE
             case 0 => StringFormatter.Era_BCE

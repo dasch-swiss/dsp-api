@@ -4,6 +4,8 @@ import java.io.File
 import java.net.URLEncoder
 
 import akka.actor.{ActorSystem, Props}
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
@@ -13,17 +15,27 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesReq
 import org.knora.webapi.responders._
 import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.store._
+import org.knora.webapi.util.jsonld.{JsonLDArray, JsonLDObject, JsonLDValue}
 import org.knora.webapi.util.{AkkaHttpUtils, FileUtil}
 import spray.json._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
+object OntologyV2R2RSpec {
+    private val userProfile = SharedAdminTestData.anythingUser1
+    private val username = userProfile.userData.email.get
+    private val password = "test"
+    private val projectWithoutProjectID = SharedAdminTestData.ANYTHING_PROJECT_IRI
+    private val projectWithProjectID = SharedAdminTestData.ANYTHING_PROJECT_IRI // TODO: use a project that has a project ID, when one exists.
+}
+
 /**
   * End-to-end test specification for API v2 ontology routes.
   */
 class OntologyV2R2RSpec extends R2RSpec {
 
+    import OntologyV2R2RSpec._
 
     override def testConfigSource: String =
         """
@@ -55,6 +67,10 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val incunabulaSimplePubDate: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/incunabulaSimplePubDate.json")))
     private val incunabulaWithValueObjectsPubDate: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/incunabulaWithValueObjectsPubDate.json")))
     private val incunabulaPageAndBookWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/incunabulaPageAndBookWithValueObjects.json")))
+    private val exampleOntologySimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/p0001-example-simple.json")))
+    private val exampleOntologyWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/p0001-example-withValueObjects.json")))
+    private val exampleThingSimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/p0001-example-ExampleThingSimple.json")))
+    private val exampleThingWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/p0001-example-ExampleThingWithValueObjects.json")))
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
@@ -187,6 +203,62 @@ class OntologyV2R2RSpec extends R2RSpec {
             Get(s"/v2/ontologies/classes/$pageIri/$bookIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
                 assert(responseJson == incunabulaPageAndBookWithValueObjects)
+            }
+        }
+
+        "serve a project-specific ontology whose IRI contains a project ID, as JSON-LD, using the simple schema" in {
+            Get("/ontology/0001/example/simple/v2") ~> ontologiesPath ~> check {
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                assert(responseJson == exampleOntologySimple)
+            }
+        }
+
+        "serve a project-specific ontology whose IRI contains a project ID, as JSON-LD, using the value object schema" in {
+            Get("/ontology/0001/example/v2") ~> ontologiesPath ~> check {
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                assert(responseJson == exampleOntologyWithValueObjects)
+            }
+        }
+
+        "serve a class from project-specific ontology whose IRI contains a project ID, as JSON-LD, using the simple schema" in {
+            val exampleThingIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/example/simple/v2#ExampleThing", "UTF-8")
+
+            Get(s"/v2/ontologies/classes/$exampleThingIri") ~> ontologiesPath ~> check {
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                assert(responseJson == exampleThingSimple)
+            }
+        }
+
+        "serve a class from project-specific ontology whose IRI contains a project ID, as JSON-LD, using the value object schema" in {
+            val exampleThingIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/example/v2#ExampleThing", "UTF-8")
+
+            Get(s"/v2/ontologies/classes/$exampleThingIri") ~> ontologiesPath ~> check {
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                assert(responseJson == exampleThingWithValueObjects)
+            }
+        }
+
+        "create an empty ontology called 'example' with a project code" in {
+            val params =
+                s"""
+                   |{
+                   |    "knora-api:ontologyName": "example",
+                   |    "knora-api:projectIri": "$projectWithProjectID",
+                   |    "@context": {
+                   |        "knora-api": "${OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion}"
+                   |    }
+                   |}
+                """.stripMargin
+
+            Post("/v2/ontologies", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(username, password)) ~> ontologiesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJsonDoc = responseToJsonLDDocument(response)
+
+                responseJsonDoc.body.value(OntologyConstants.KnoraApiV2WithValueObjects.HasOntologiesWithClasses) match {
+                    case ontologies: JsonLDObject =>
+                        assert(ontologies.value("http://0.0.0.0:3333/ontology/0000/example/v2") == JsonLDArray(Seq.empty[JsonLDValue]))
+                    case _ => throw AssertionException(s"Unexpected response: $responseJsonDoc")
+                }
             }
         }
     }

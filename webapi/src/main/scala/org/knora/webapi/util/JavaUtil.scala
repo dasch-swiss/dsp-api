@@ -72,4 +72,12 @@ object JavaUtil {
             case _ => scalaCollection
         }
     }
+
+    /**
+      * Helps turn matches for optional regular expression groups, which can be null, into Scala Option objects. See
+      * [[https://stackoverflow.com/a/18794646]].
+      */
+    object Optional {
+        def unapply[T](a: T) = if (null == a) Some(None) else Some(Some(a))
+    }
 }

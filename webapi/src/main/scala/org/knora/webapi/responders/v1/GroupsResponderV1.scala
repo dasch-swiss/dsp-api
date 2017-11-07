@@ -294,7 +294,7 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
             } else {
                 Seq.empty[IRI]
             }
-        //_ = log.debug(s"groupMembersByIRIGetRequestV1 - groupMemberIris: $groupMemberIris")
+            //_ = log.debug(s"groupMembersByIRIGetRequestV1 - groupMemberIris: $groupMemberIris")
 
         } yield GroupMembersResponseV1(members = groupMemberIris)
     }
@@ -324,7 +324,7 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
             } else {
                 Seq.empty[IRI]
             }
-        //_ = log.debug(s"groupMembersByNameRequestV1 - groupMemberIris: $groupMemberIris")
+            //_ = log.debug(s"groupMembersByNameRequestV1 - groupMemberIris: $groupMemberIris")
 
         } yield GroupMembersResponseV1(members = groupMemberIris)
     }
@@ -401,7 +401,7 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
         } yield groupOperationResponseV1
 
         for {
-        // run user creation with an global IRI lock
+            // run user creation with an global IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 GROUPS_GLOBAL_LOCK_IRI,
@@ -455,7 +455,7 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
         } yield result
 
         for {
-        // run the change status task with an IRI lock
+            // run the change status task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 groupIri,
