@@ -384,10 +384,7 @@ object ResourcesRouteV1 extends Authenticator {
                     ontologyIrisFromCardinalities: Set[IRI] = entityInfoResponse.resourceClassInfoMap.foldLeft(Set.empty[IRI]) {
                         case (acc, (resourceClassIri, resourceClassInfo)) =>
                             val resourceCardinalityOntologies: Set[IRI] = resourceClassInfo.allCardinalities.map {
-                                case (propertyIri, _) => stringFormatter.getInternalOntologyIriFromInternalEntityIri(
-                                    internalEntityIri = propertyIri,
-                                    errorFun = () => throw InconsistentTriplestoreDataException(s"Class $resourceClassIri has a cardinality for an invalid property: $propertyIri")
-                                )
+                                case (propertyIri, _) => stringFormatter.toSmartIri(propertyIri).getOntology.toString
                             }.toSet
 
                             acc ++ resourceCardinalityOntologies
@@ -397,14 +394,11 @@ object ResourcesRouteV1 extends Authenticator {
                     // not including the initial ontology itself or any other ontologies we've already looked at.
                     ontologyIrisFromObjectClassConstraints: Set[IRI] = entityInfoResponse.propertyInfoMap.map {
                         case (propertyIri, propertyInfo) =>
-                            val propertyObjectClassConstraint = propertyInfo.entityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
+                            val propertyObjectClassConstraint = propertyInfo.entityInfoContent.getPredicateObject(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint)).getOrElse {
                                 throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
                             }
 
-                            stringFormatter.getInternalOntologyIriFromInternalEntityIri(
-                                internalEntityIri = propertyObjectClassConstraint,
-                                errorFun = () => throw InconsistentTriplestoreDataException(s"Property $propertyIri has an invalid knora-base:objectClassConstraint: $propertyObjectClassConstraint")
-                            )
+                            stringFormatter.toSmartIri(propertyObjectClassConstraint).getOntology.toString
                     }.toSet -- intermediateResults.keySet - initialOntologyIri
 
                     // Make a set of all the ontologies referenced by the initial ontology.
@@ -459,10 +453,7 @@ object ResourcesRouteV1 extends Authenticator {
               * @return the prefix label that Knora uses to refer to the ontology.
               */
             def getNamespacePrefixLabel(internalEntityIri: IRI): String = {
-                val prefixLabel = stringFormatter.getOntologyIDFromInternalEntityIri(
-                    internalEntityIri = internalEntityIri,
-                    errorFun = () => throw InconsistentTriplestoreDataException(s"Invalid entity IRI: $internalEntityIri")
-                ).getPrefixLabel
+                val prefixLabel = stringFormatter.toSmartIri(internalEntityIri).getPrefixLabel
 
                 // If the schema generation template asks for the prefix label of something in knora-base, return
                 // the prefix label of the Knora XML import v1 namespace instead.
@@ -481,12 +472,7 @@ object ResourcesRouteV1 extends Authenticator {
               * @param internalEntityIri an internal ontology entity IRI.
               * @return the local name of the entity.
               */
-            def getEntityName(internalEntityIri: IRI): String = {
-                stringFormatter.getEntityNameFromInternalEntityIri(
-                    internalEntityIri = internalEntityIri,
-                    errorFun = () => throw InconsistentTriplestoreDataException(s"Invalid entity IRI: $internalEntityIri")
-                )
-            }
+            def getEntityName(internalEntityIri: IRI): String = stringFormatter.toSmartIri(internalEntityIri).getEntityName
 
             for {
                 // Get a NamedGraphEntityInfoV1 for each ontology that we need to generate an XML schema for.
@@ -519,10 +505,8 @@ object ResourcesRouteV1 extends Authenticator {
                 // types are specified in the handwritten standard Knora XML import v1 schema.
                 schemasToGenerate: Map[IRI, XmlImportNamespaceInfoV1] = (namedGraphInfos.keySet - OntologyConstants.KnoraBase.KnoraBaseOntologyIri).map {
                     ontologyIri =>
-                        ontologyIri -> stringFormatter.internalOntologyIriToXmlNamespaceInfoV1(
-                            internalOntologyIri = ontologyIri,
-                            errorFun = () => throw BadRequestException(s"Invalid ontology IRI: $internalOntologyIri")
-                        )
+                        val ontologySmartIri = stringFormatter.toSmartIri(ontologyIri)
+                        ontologyIri -> stringFormatter.internalOntologyIriToXmlNamespaceInfoV1(ontologySmartIri)
                 }.toMap
 
                 // Make an XmlImportNamespaceInfoV1 for the standard Knora XML import v1 schema's namespace.
@@ -626,9 +610,9 @@ object ResourcesRouteV1 extends Authenticator {
         def validateImportXml(xml: String, defaultNamespace: IRI, userProfile: UserProfileV1): Future[Unit] = {
             // Convert the default namespace of the submitted XML to an internal ontology IRI. This should be the
             // IRI of the main ontology used in the import.
-            val mainOntologyIri = stringFormatter.xmlImportNamespaceToInternalOntologyIriV1(
+            val mainOntologyIri: IRI = stringFormatter.xmlImportNamespaceToInternalOntologyIriV1(
                 defaultNamespace, () => throw BadRequestException(s"Invalid XML import namespace: $defaultNamespace")
-            )
+            ).toString
 
             val validationFuture: Future[Unit] = for {
                 // Generate a bundle of XML schemas for validating the submitted XML.
@@ -1216,8 +1200,9 @@ object ResourcesRouteV1 extends Authenticator {
         } ~ path("v1" / "resources" / "xmlimportschemas" / Segment) { internalOntologyIri =>
             get {
                 // Get the prefix label of the specified internal ontology.
-                val internalOntologyPrefixLabel: String = stringFormatter.getOntologyIDFromInternalOntologyIri(
-                    internalOntologyIri, () => throw BadRequestException(s"Invalid internal ontology IRI: $internalOntologyIri")
+                val internalOntologyPrefixLabel: String = stringFormatter.toSmartIriWithErr(
+                    iri = internalOntologyIri,
+                    () => throw BadRequestException(s"Invalid internal ontology IRI: $internalOntologyIri")
                 ).getPrefixLabel
 
                 // Respond with a Content-Disposition header specifying the filename of the generated Zip file.

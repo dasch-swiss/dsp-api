@@ -177,6 +177,15 @@ object InternalServerException {
 case class AuthenticationException(message: String = "Error during authentication. Please report this as a possible bug.") extends InternalServerException(message)
 
 /**
+  * Indicates that data could not be converted from one format to another. This exception should not be thrown when
+  * validating user input, but rather when processing input that has already been validated, or data that has been
+  * loaded from the triplestore.
+  *
+  * @param message a description of the error.
+  */
+case class DataConversionException(message: String) extends InternalServerException(message)
+
+/**
   * An exception indicating that during file upload there was an error.
   *
   * @param message a description of the error.

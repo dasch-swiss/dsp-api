@@ -27,7 +27,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 import org.knora.webapi.util.jsonld._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +58,7 @@ case class LoadOntologiesRequestV2(userProfile: UserProfileV1) extends Ontologie
   * @param userProfile  the profile of the user making the request.
   */
 case class CreateOntologyRequestV2(ontologyName: String,
-                                   projectIri: IRI,
+                                   projectIri: SmartIri,
                                    apiRequestID: UUID,
                                    userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
@@ -75,8 +75,8 @@ object CreateOntologyRequestV2 {
             case other => throw BadRequestException(s"Invalid knora-api:ontologyName: $other")
         }
 
-        val projectIri: IRI = docObjMap.getOrElse(OntologyConstants.KnoraApiV2WithValueObjects.ProjectIri, throw BadRequestException("No knora-api:projectIri provided")) match {
-            case JsonLDString(value) => stringFormatter.validateIri(value, () => throw BadRequestException(s"Invalid knora-api:projectIri: $value"))
+        val projectIri: SmartIri = docObjMap.getOrElse(OntologyConstants.KnoraApiV2WithValueObjects.ProjectIri, throw BadRequestException("No knora-api:projectIri provided")) match {
+            case JsonLDString(value) => stringFormatter.toSmartIriWithErr(value, () => throw BadRequestException(s"Invalid knora-api:projectIri: $value"))
             case other => throw BadRequestException(s"Invalid knora-api:projectIri: $other")
         }
 
@@ -109,7 +109,7 @@ case class CreatePropertyRequestV2(propertyInfoContent: PropertyInfoContentV2,
   * @param propertyIris the IRIs of the property entities to be queried.
   * @param userProfile  the profile of the user making the request.
   */
-case class EntityInfoGetRequestV2(classIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class EntityInfoGetRequestV2(classIris: Set[SmartIri] = Set.empty[SmartIri], propertyIris: Set[SmartIri] = Set.empty[SmartIri], userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
@@ -117,8 +117,8 @@ case class EntityInfoGetRequestV2(classIris: Set[IRI] = Set.empty[IRI], property
   * @param classInfoMap    a [[Map]] of class entity IRIs to [[ReadClassInfoV2]] objects.
   * @param propertyInfoMap a [[Map]] of property entity IRIs to [[ReadPropertyInfoV2]] objects.
   */
-case class EntityInfoGetResponseV2(classInfoMap: Map[IRI, ReadClassInfoV2],
-                                   propertyInfoMap: Map[IRI, ReadPropertyInfoV2])
+case class EntityInfoGetResponseV2(classInfoMap: Map[SmartIri, ReadClassInfoV2],
+                                   propertyInfoMap: Map[SmartIri, ReadPropertyInfoV2])
 
 /**
   * Requests all available information about a list of ontology entities (standoff classes and/or properties). A successful response will be an
@@ -128,7 +128,7 @@ case class EntityInfoGetResponseV2(classInfoMap: Map[IRI, ReadClassInfoV2],
   * @param standoffPropertyIris the IRIs of the property entities to be queried.
   * @param userProfile          the profile of the user making the request.
   */
-case class StandoffEntityInfoGetRequestV2(standoffClassIris: Set[IRI] = Set.empty[IRI], standoffPropertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class StandoffEntityInfoGetRequestV2(standoffClassIris: Set[SmartIri] = Set.empty[SmartIri], standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri], userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
@@ -136,8 +136,8 @@ case class StandoffEntityInfoGetRequestV2(standoffClassIris: Set[IRI] = Set.empt
   * @param standoffClassInfoMap    a [[Map]] of standoff class IRIs to [[ReadClassInfoV2]] objects.
   * @param standoffPropertyInfoMap a [[Map]] of standoff property IRIs to [[ReadPropertyInfoV2]] objects.
   */
-case class StandoffEntityInfoGetResponseV2(standoffClassInfoMap: Map[IRI, ReadClassInfoV2],
-                                           standoffPropertyInfoMap: Map[IRI, ReadPropertyInfoV2])
+case class StandoffEntityInfoGetResponseV2(standoffClassInfoMap: Map[SmartIri, ReadClassInfoV2],
+                                           standoffPropertyInfoMap: Map[SmartIri, ReadPropertyInfoV2])
 
 /**
   * Requests information about all standoff classes that are a subclass of a data type standoff class. A successful response will be an
@@ -152,7 +152,7 @@ case class StandoffClassesWithDataTypeGetRequestV2(userProfile: UserProfileV1) e
   *
   * @param standoffClassInfoMap a [[Map]] of standoff class entity IRIs to [[ReadClassInfoV2]] objects.
   */
-case class StandoffClassesWithDataTypeGetResponseV2(standoffClassInfoMap: Map[IRI, ReadClassInfoV2])
+case class StandoffClassesWithDataTypeGetResponseV2(standoffClassInfoMap: Map[SmartIri, ReadClassInfoV2])
 
 /**
   * Requests information about all standoff property entities. A successful response will be an
@@ -167,7 +167,7 @@ case class StandoffAllPropertyEntitiesGetRequestV2(userProfile: UserProfileV1) e
   *
   * @param standoffAllPropertiesEntityInfoMap a [[Map]] of standoff property IRIs to [[ReadPropertyInfoV2]] objects.
   */
-case class StandoffAllPropertyEntitiesGetResponseV2(standoffAllPropertiesEntityInfoMap: Map[IRI, ReadPropertyInfoV2])
+case class StandoffAllPropertyEntitiesGetResponseV2(standoffAllPropertiesEntityInfoMap: Map[SmartIri, ReadPropertyInfoV2])
 
 /**
   * Checks whether a Knora resource or value class is a subclass of (or identical to) another class.
@@ -176,7 +176,7 @@ case class StandoffAllPropertyEntitiesGetResponseV2(standoffAllPropertiesEntityI
   * @param subClassIri   the IRI of the subclass.
   * @param superClassIri the IRI of the superclass.
   */
-case class CheckSubClassRequestV2(subClassIri: IRI, superClassIri: IRI, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class CheckSubClassRequestV2(subClassIri: SmartIri, superClassIri: SmartIri, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
   * Represents a response to a [[CheckSubClassRequestV2]].
@@ -192,7 +192,7 @@ case class CheckSubClassResponseV2(isSubClass: Boolean)
   * @param resourceClassIri the IRI of the given resource class.
   * @param userProfile      the profile of the user making the request.
   */
-case class SubClassesGetRequestV2(resourceClassIri: IRI, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class SubClassesGetRequestV2(resourceClassIri: SmartIri, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
   * Provides information about the subclasses of a Knora resource class.
@@ -208,7 +208,7 @@ case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV2])
   * @param namedGraph  the IRI of the named graph.
   * @param userProfile the profile of the user making the request.
   */
-case class NamedGraphEntitiesRequestV2(namedGraph: IRI, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class NamedGraphEntitiesRequestV2(namedGraph: SmartIri, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
   * Requests the existing named graphs.
@@ -225,7 +225,7 @@ case class NamedGraphsGetRequestV2(userProfile: UserProfileV1) extends Ontologie
   * @param allLanguages   true if information in all available languages should be returned.
   * @param userProfile    the profile of the user making the request.
   */
-case class NamedGraphEntitiesGetRequestV2(namedGraphIris: Set[IRI], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class NamedGraphEntitiesGetRequestV2(namedGraphIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
   * Requests the entity definitions for the given class IRIs. A successful response will be a [[ReadEntityDefinitionsV2]].
@@ -235,7 +235,7 @@ case class NamedGraphEntitiesGetRequestV2(namedGraphIris: Set[IRI], responseSche
   * @param allLanguages      true if information in all available languages should be returned.
   * @param userProfile       the profile of the user making the request.
   */
-case class ClassesGetRequestV2(resourceClassIris: Set[IRI], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class ClassesGetRequestV2(resourceClassIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
   * Requests the entity definitions for the given property Iris. A successful response will be a [[ReadEntityDefinitionsV2]].
@@ -244,7 +244,7 @@ case class ClassesGetRequestV2(resourceClassIris: Set[IRI], responseSchema: ApiV
   * @param allLanguages true if information in all available languages should be returned.
   * @param userProfile  the profile of the user making the request.
   */
-case class PropertyEntitiesGetRequestV2(propertyIris: Set[IRI], allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class PropertyEntitiesGetRequestV2(propertyIris: Set[SmartIri], allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 
 /**
@@ -258,19 +258,19 @@ case class PropertyEntitiesGetRequestV2(propertyIris: Set[IRI], allLanguages: Bo
   * @param userLang           the preferred language in which the information should be returned, or [[None]] if information
   *                           should be returned in all available languages.
   */
-case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IRI, Set[IRI]],
-                                   classes: Map[IRI, ReadClassInfoV2] = Map.empty[IRI, ReadClassInfoV2],
-                                   properties: Map[IRI, ReadPropertyInfoV2] = Map.empty[IRI, ReadPropertyInfoV2],
-                                   standoffClasses: Map[IRI, ReadClassInfoV2] = Map.empty[IRI, ReadClassInfoV2],
-                                   standoffProperties: Map[IRI, ReadPropertyInfoV2] = Map.empty[IRI, ReadPropertyInfoV2],
+case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Map.empty[SmartIri, Set[SmartIri]],
+                                   classes: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2],
+                                   properties: Map[SmartIri, ReadPropertyInfoV2] = Map.empty[SmartIri, ReadPropertyInfoV2],
+                                   standoffClasses: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2],
+                                   standoffProperties: Map[SmartIri, ReadPropertyInfoV2] = Map.empty[SmartIri, ReadPropertyInfoV2],
                                    userLang: Option[String] = None) extends KnoraResponseV2 {
 
     private val stringFormatter = StringFormatter.getInstance
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
-        def classesToJsonLD(classDefs: Map[IRI, ReadClassInfoV2]): Map[IRI, JsonLDObject] = {
+        def classesToJsonLD(classDefs: Map[SmartIri, ReadClassInfoV2]): Map[SmartIri, JsonLDObject] = {
             classDefs.map {
-                case (classIri: IRI, resourceEntity: ReadClassInfoV2) =>
+                case (classIri: SmartIri, resourceEntity: ReadClassInfoV2) =>
                     val externalClassIri = stringFormatter.toExternalEntityIri(
                         entityIri = classIri,
                         targetSchema = targetSchema
@@ -285,7 +285,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
             }
         }
 
-        def propertiesToJsonLD(propertyDefs: Map[IRI, ReadPropertyInfoV2]): Map[IRI, JsonLDObject] = {
+        def propertiesToJsonLD(propertyDefs: Map[SmartIri, ReadPropertyInfoV2]): Map[SmartIri, JsonLDObject] = {
             propertyDefs.map {
                 case (propertyIri, propertyInfo) =>
                     val externalPropertyIri = stringFormatter.toExternalEntityIri(
@@ -311,7 +311,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
         val allClasses = classes ++ standoffClasses
 
-        val ontologiesFromClasses: Set[IRI] = allClasses.values.flatMap {
+        val ontologiesFromClasses: Set[SmartIri] = allClasses.values.flatMap {
             classInfo =>
                 val entityIris = classInfo.allCardinalities.keySet ++ classInfo.entityInfoContent.subClassOf
 
@@ -320,7 +320,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                         if (stringFormatter.isKnoraEntityIri(entityIri)) {
                             Set(stringFormatter.getOntologyIriFromEntityIri(entityIri, () => throw InconsistentTriplestoreDataException(s"Can't parse $entityIri as an entity IRI")))
                         } else {
-                            Set.empty[IRI]
+                            Set.empty[SmartIri]
                         }
                 } + classInfo.entityInfoContent.ontologyIri
         }.toSet
@@ -329,7 +329,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
         val allProperties = properties ++ standoffProperties
 
-        val ontologiesFromProperties: Set[IRI] = allProperties.values.flatMap {
+        val ontologiesFromProperties: Set[SmartIri] = allProperties.values.flatMap {
             property =>
                 val entityIris = property.entityInfoContent.subPropertyOf ++
                     property.entityInfoContent.getPredicateObjectsWithoutLang(OntologyConstants.KnoraBase.SubjectClassConstraint) ++
@@ -344,12 +344,12 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
                         if (stringFormatter.isKnoraEntityIri(entityIri)) {
                             Set(stringFormatter.getOntologyIriFromEntityIri(entityIri, () => throw InconsistentTriplestoreDataException(s"Can't parse $entityIri as an entity IRI")))
                         } else {
-                            Set.empty[IRI]
+                            Set.empty[SmartIri]
                         }
                 } + property.entityInfoContent.ontologyIri
         }.toSet
 
-        val ontologiesUsed: Set[IRI] = ontologiesFromClasses ++ ontologiesFromProperties
+        val ontologiesUsed: Set[SmartIri] = ontologiesFromClasses ++ ontologiesFromProperties
 
         // Make JSON-LD prefixes for the ontologies used in the response.
         val ontologyPrefixes: Map[String, JsonLDString] = ontologiesUsed.map {
@@ -381,8 +381,8 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
         // ontologies with their classes
 
-        val jsonOntologies: Map[IRI, JsonLDArray] = ontologies.map {
-            case (namedGraphIri: IRI, classIris: Set[IRI]) =>
+        val jsonOntologies: Map[SmartIri, JsonLDArray] = ontologies.map {
+            case (namedGraphIri: SmartIri, classIris: Set[SmartIri]) =>
                 val classIrisInOntology = classIris.toArray.sorted.map {
                     classIri =>
                         JsonLDString(stringFormatter.toExternalEntityIri(
@@ -402,7 +402,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
         // classes
 
-        val jsonClasses: Map[IRI, JsonLDObject] = classesToJsonLD(classes)
+        val jsonClasses: Map[SmartIri, JsonLDObject] = classesToJsonLD(classes)
 
         // properties
 
@@ -415,7 +415,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
             properties
         }
 
-        val jsonProperties: Map[IRI, JsonLDObject] = propertiesToJsonLD(filteredProperties)
+        val jsonProperties: Map[SmartIri, JsonLDObject] = propertiesToJsonLD(filteredProperties)
 
         // standoff classes and properties
 
@@ -429,10 +429,10 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
             case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffProperties
         }
 
-        val jsonStandoffClasses: Map[IRI, JsonLDObject] = classesToJsonLD(standoffClasses)
-        val jsonStandoffProperties: Map[IRI, JsonLDObject] = propertiesToJsonLD(standoffProperties)
+        val jsonStandoffClasses: Map[SmartIri, JsonLDObject] = classesToJsonLD(standoffClasses)
+        val jsonStandoffProperties: Map[SmartIri, JsonLDObject] = propertiesToJsonLD(standoffProperties)
 
-        val jsonStandoffEntities: Map[IRI, JsonLDObject] = Map(
+        val jsonStandoffEntities: Map[SmartIri, JsonLDObject] = Map(
             hasStandoffClassesProp -> JsonLDObject(jsonStandoffClasses),
             hasStandoffPropertiesProp -> JsonLDObject(jsonStandoffProperties)
         )
@@ -463,7 +463,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
 }
 
-case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
+case class ReadNamedGraphsV2(namedGraphs: Set[SmartIri]) extends KnoraResponseV2 {
 
     private val stringFormatter = StringFormatter.getInstance
 
@@ -504,8 +504,8 @@ case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
   * @param objects         the objects of the predicate that have no language codes.
   * @param objectsWithLang the objects of the predicate that have language codes: a Map of language codes to literals.
   */
-case class PredicateInfoV2(predicateIri: IRI,
-                           ontologyIri: IRI,
+case class PredicateInfoV2(predicateIri: SmartIri,
+                           ontologyIri: SmartIri,
                            objects: Set[String] = Set.empty[String],
                            objectsWithLang: Map[String, String] = Map.empty[String, String]) {
     private val stringFormatter: StringFormatter = StringFormatter.getInstance
@@ -640,7 +640,7 @@ sealed trait EntityInfoContentV2 {
     /**
       * The predicates of the entity, and their objects.
       */
-    val predicates: Map[IRI, PredicateInfoV2]
+    val predicates: Map[SmartIri, PredicateInfoV2]
 
     protected val stringFormatter: StringFormatter = StringFormatter.getInstance
 
@@ -654,10 +654,10 @@ sealed trait EntityInfoContentV2 {
       * @param errorFun a function that throws an exception. It will be called if the conversion cannot be performed.
       * @return a map of converted predicate IRIs to converted [[PredicateInfoV2]] objects.
       */
-    protected def convertPredicates(predsWithSchemaSpecificObjs: Set[IRI],
+    protected def convertPredicates(predsWithSchemaSpecificObjs: Set[SmartIri],
                                     sourceSchema: OntologySchema,
                                     targetSchema: OntologySchema,
-                                    errorFun: () => Nothing): Map[IRI, PredicateInfoV2] = {
+                                    errorFun: () => Nothing): Map[SmartIri, PredicateInfoV2] = {
         // TODO: check that this handles non-Knora predicates.
 
         predicates.map {
@@ -692,7 +692,7 @@ sealed trait EntityInfoContentV2 {
       * @param userLang     the language in which the object should to be returned.
       * @return the requested predicate and object.
       */
-    def getPredicateAndObjectWithLang(predicateIri: IRI, settings: SettingsImpl, userLang: String): Option[(IRI, String)] = {
+    def getPredicateAndObjectWithLang(predicateIri: SmartIri, settings: SettingsImpl, userLang: String): Option[(SmartIri, String)] = {
         getPredicateObject(
             predicateIri = predicateIri,
             preferredLangs = Some(userLang, settings.fallbackLanguage)
@@ -708,7 +708,7 @@ sealed trait EntityInfoContentV2 {
       * @return an object for the predicate, or [[None]] if this entity doesn't have the specified predicate, or
       *         if the predicate has no objects.
       */
-    def getPredicateObject(predicateIri: IRI, preferredLangs: Option[(String, String)] = None): Option[String] = {
+    def getPredicateObject(predicateIri: SmartIri, preferredLangs: Option[(String, String)] = None): Option[String] = {
         // Does the predicate exist?
         predicates.get(predicateIri) match {
             case Some(predicateInfo) =>
@@ -764,7 +764,7 @@ sealed trait EntityInfoContentV2 {
       * @param predicateIri the IRI of the predicate.
       * @return the predicate's objects, or an empty set if this entity doesn't have the specified predicate.
       */
-    def getPredicateObjectsWithoutLang(predicateIri: IRI): Set[String] = {
+    def getPredicateObjectsWithoutLang(predicateIri: SmartIri): Set[String] = {
         predicates.get(predicateIri) match {
             case Some(predicateInfo) => predicateInfo.objects
             case None => Set.empty[String]
@@ -777,7 +777,7 @@ sealed trait EntityInfoContentV2 {
       * @param predicateIri the IRI of the predicate.
       * @return a map of language tags to objects, or an empty map if this entity doesn't have the specified predicate.
       */
-    def getPredicateObjectsWithLangs(predicateIri: IRI): Map[String, String] = {
+    def getPredicateObjectsWithLangs(predicateIri: SmartIri): Map[String, String] = {
         predicates.get(predicateIri) match {
             case Some(predicateInfo) => predicateInfo.objectsWithLang
             case None => Map.empty[String, String]
@@ -862,10 +862,10 @@ sealed trait ReadEntityInfoV2 {
   * @param ontologySchema indicates whether this ontology entity belongs to an internal ontology (for use in the
   *                       triplestore) or an external one (for use in the Knora API).
   */
-case class PropertyInfoContentV2(propertyIri: IRI,
-                                 ontologyIri: IRI,
-                                 predicates: Map[IRI, PredicateInfoV2] = Map.empty[IRI, PredicateInfoV2],
-                                 subPropertyOf: Set[IRI] = Set.empty[IRI],
+case class PropertyInfoContentV2(propertyIri: SmartIri,
+                                 ontologyIri: SmartIri,
+                                 predicates: Map[SmartIri, PredicateInfoV2] = Map.empty[SmartIri, PredicateInfoV2],
+                                 subPropertyOf: Set[SmartIri] = Set.empty[SmartIri],
                                  ontologySchema: OntologySchema) extends EntityInfoContentV2 {
 
     import PropertyInfoContentV2._
@@ -1110,10 +1110,10 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
   */
 case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
                            canBeInstantiated: Boolean = false,
-                           inheritedCardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
-                           linkProperties: Set[IRI] = Set.empty[IRI],
-                           linkValueProperties: Set[IRI] = Set.empty[IRI],
-                           fileValueProperties: Set[IRI] = Set.empty[IRI]) extends ReadEntityInfoV2 {
+                           inheritedCardinalities: Map[SmartIri, Cardinality.Value] = Map.empty[SmartIri, Cardinality.Value],
+                           linkProperties: Set[SmartIri] = Set.empty[SmartIri],
+                           linkValueProperties: Set[SmartIri] = Set.empty[SmartIri],
+                           fileValueProperties: Set[SmartIri] = Set.empty[SmartIri]) extends ReadEntityInfoV2 {
     /**
       * All the class's cardinalities, both direct and indirect.
       */
@@ -1269,7 +1269,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
   *
   * @param classIri                    the IRI of the class.
   * @param ontologyIri                 the IRI of the ontology in which the class is defined.
-  * @param rdfType                     the rdf:type of the class (defaults to owl:Class).
+  * @param rdfType                     the rdf:type of the class.
   * @param predicates                  a [[Map]] of predicate IRIs to [[PredicateInfoV2]] objects.
   * @param directCardinalities         a [[Map]] of properties to [[Cardinality.Value]] objects representing the cardinalities
   *                                    that are directly defined on the class (as opposed to inherited) on those properties.
@@ -1282,14 +1282,14 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
   * @param ontologySchema              indicates whether this ontology entity belongs to an internal ontology (for use in the
   *                                    triplestore) or an external one (for use in the Knora API).
   */
-case class ClassInfoContentV2(classIri: IRI,
-                              ontologyIri: IRI,
-                              rdfType: IRI = OntologyConstants.Owl.Class,
-                              predicates: Map[IRI, PredicateInfoV2] = Map.empty[IRI, PredicateInfoV2],
-                              directCardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
+case class ClassInfoContentV2(classIri: SmartIri,
+                              ontologyIri: SmartIri,
+                              rdfType: SmartIri,
+                              predicates: Map[SmartIri, PredicateInfoV2] = Map.empty[SmartIri, PredicateInfoV2],
+                              directCardinalities: Map[SmartIri, Cardinality.Value] = Map.empty[SmartIri, Cardinality.Value],
                               xsdStringRestrictionPattern: Option[String] = None,
                               standoffDataType: Option[StandoffDataTypeClasses.Value] = None,
-                              subClassOf: Set[IRI] = Set.empty[IRI],
+                              subClassOf: Set[SmartIri] = Set.empty[SmartIri],
                               ontologySchema: OntologySchema) extends EntityInfoContentV2 {
     // TODO: add a toOntologySchema method as in PropertyInfoContentV2.
 }
