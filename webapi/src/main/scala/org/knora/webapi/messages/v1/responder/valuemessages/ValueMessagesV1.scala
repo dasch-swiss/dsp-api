@@ -1229,8 +1229,8 @@ case class JulianDayNumberValueV1(dateval1: Int,
   */
 case class DateValueV1(dateval1: String,
                        dateval2: String,
-                       era1:String,
-                       era2:String,
+                       era1: String,
+                       era2: String,
                        calendar: KnoraCalendarV1.Value) extends ApiValueV1 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.DateValue
@@ -1244,7 +1244,7 @@ case class DateValueV1(dateval1: String,
             dateval1 + " " + era1
         } else {
             // period: from to
-            dateval1 + " " + era1+ " - " + dateval2+ " " + era2
+            dateval1 + " " + era1 + " - " + dateval2 + " " + era2
         }
 
     }

@@ -240,7 +240,7 @@ class ProjectsResponderV1 extends Responder {
                 None
             }
 
-        //_ = log.debug("projectInfoByIRIGetV1 - projectInfo: {}", projectInfo)
+            //_ = log.debug("projectInfoByIRIGetV1 - projectInfo: {}", projectInfo)
 
         } yield projectInfo
     }
@@ -466,7 +466,7 @@ class ProjectsResponderV1 extends Responder {
         //log.debug("projectCreateRequestV1 - createRequest: {}", createRequest)
 
         def projectCreateTask(createRequest: CreateProjectApiRequestV1, userProfile: UserProfileV1): Future[ProjectOperationResponseV1] = for {
-        // check if required properties are not empty
+            // check if required properties are not empty
             _ <- Future(if (createRequest.shortname.isEmpty) throw BadRequestException("'Shortname' cannot be empty"))
 
             // check if the requesting user is allowed to create project
@@ -542,7 +542,7 @@ class ProjectsResponderV1 extends Responder {
         } yield projectOperationResponseV1
 
         for {
-        // run user creation with an global IRI lock
+            // run user creation with an global IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 PROJECTS_GLOBAL_LOCK_IRI,
@@ -597,7 +597,7 @@ class ProjectsResponderV1 extends Responder {
         } yield result
 
         for {
-        // run the change status task with an IRI lock
+            // run the change status task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 projectIri,

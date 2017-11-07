@@ -22,21 +22,22 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 
-import akka.pattern._
 import akka.http.scaladsl.util.FastFuture
+import akka.pattern._
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory
+import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsNamedGraphGetV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.OwlCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.responders.Responder
-import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
-import org.knora.webapi.util.{CacheUtil, ErrorHandlingMap, KnoraIdUtil}
-import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.OwlCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, _}
+import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
+import org.knora.webapi.util.StringFormatter.OntologyID
+import org.knora.webapi.util.{CacheUtil, ErrorHandlingMap, KnoraIdUtil}
 
 import scala.concurrent.Future
 
@@ -59,23 +60,30 @@ class OntologyResponderV2 extends Responder {
       * A container for all the cached ontology data.
       *
       * @param namedGraphs                         the set of available named graphs.
-      * @param namedGraphClasses                   a map of named graph IRIs to sets of class IRIs defined in each named graph.
-      * @param namedGraphProperties                a map of property IRIs to sets of property IRIs defined in each named graph.
-      * @param classDefs                           a map of class IRIs to class definitions.
+      * @param namedGraphClasses                   a map of named graph IRIs to sets of non-standoff class IRIs defined in each named graph.
+      * @param namedGraphProperties                a map of property IRIs to sets of non-standoff property IRIs defined in each named graph.
+      * @param classDefs                           a map of class IRIs to definitions.
       * @param resourceAndValueSubClassOfRelations a map of IRIs of resource and value classes to sets of the IRIs of their base classes.
       * @param resourceSuperClassOfRelations       a map of IRIs of resource classes to sets of the IRIs of their subclasses.
       * @param propertyDefs                        a map of property IRIs to property definitions.
+      * @param namedGraphStandoffClasses           a map of named graph IRIs to sets of standoff class IRIs defined in each named graph.
+      * @param namedGraphStandoffProperties        a map of property IRIs to sets of standoff property IRIs defined in each named graph.
+      * @param standoffClassDefs                   a map of standoff class IRIs to definitions.
+      * @param standoffPropertyDefs                a map of property IRIs to property definitions.
+      * @param standoffClassDefsWithDataType       a map of standoff class IRIs to class definitions, including only standoff datatype tags.
       */
     case class OntologyCacheData(namedGraphs: Set[IRI],
                                  namedGraphClasses: Map[IRI, Set[IRI]],
                                  namedGraphProperties: Map[IRI, Set[IRI]],
-                                 classDefs: Map[IRI, ClassEntityInfoV2],
+                                 classDefs: Map[IRI, ReadClassInfoV2],
                                  resourceAndValueSubClassOfRelations: Map[IRI, Set[IRI]],
                                  resourceSuperClassOfRelations: Map[IRI, Set[IRI]],
-                                 propertyDefs: Map[IRI, PropertyEntityInfoV2],
-                                 standoffClassDefs: Map[IRI, StandoffClassEntityInfoV2],
-                                 standoffPropertyDefs: Map[IRI, StandoffPropertyEntityInfoV2],
-                                 standoffClassDefsWithDataType: Map[IRI, StandoffClassEntityInfoV2])
+                                 propertyDefs: Map[IRI, ReadPropertyInfoV2],
+                                 namedGraphStandoffClasses: Map[IRI, Set[IRI]],
+                                 namedGraphStandoffProperties: Map[IRI, Set[IRI]],
+                                 standoffClassDefs: Map[IRI, ReadClassInfoV2],
+                                 standoffPropertyDefs: Map[IRI, ReadPropertyInfoV2],
+                                 standoffClassDefsWithDataType: Map[IRI, ReadClassInfoV2])
 
     def receive = {
         case LoadOntologiesRequestV2(userProfile) => future2Message(sender(), loadOntologies(userProfile), log)
@@ -87,7 +95,7 @@ class OntologyResponderV2 extends Responder {
         case SubClassesGetRequestV2(resourceClassIri, userProfile) => future2Message(sender(), getSubClassesV2(resourceClassIri, userProfile), log)
         case NamedGraphEntitiesRequestV2(namedGraphIri, userProfile) => future2Message(sender(), getNamedGraphEntityInfoV2ForNamedGraphV2(namedGraphIri, userProfile), log)
         case NamedGraphEntitiesGetRequestV2(namedGraphIris, responseSchema, allLanguages, userProfile) => future2Message(sender(), getEntitiesForNamedGraphV2(namedGraphIris, responseSchema, allLanguages, userProfile), log)
-        case ClassesGetRequestV2(resourceClassIris, responseSchema, allLanguages, userProfile) => future2Message(sender(), getClassDefinitionsWithCardinalitiesV2(resourceClassIris, responseSchema, allLanguages, userProfile), log)
+        case ClassesGetRequestV2(resourceClassIris, responseSchema, allLanguages, userProfile) => future2Message(sender(), getClassDefinitionsV2(resourceClassIris, responseSchema, allLanguages, userProfile), log)
         case PropertyEntitiesGetRequestV2(propertyIris, allLanguages, userProfile) => future2Message(sender(), getPropertyDefinitionsV2(propertyIris, allLanguages, userProfile), log)
         case NamedGraphsGetRequestV2(userProfile) => future2Message(sender(), getNamedGraphsV2(userProfile), log)
         case createOntologyRequest: CreateOntologyRequestV2 => future2Message(sender(), createOntology(createOntologyRequest), log)
@@ -118,7 +126,29 @@ class OntologyResponderV2 extends Responder {
                                             cardinalityValue: Int,
                                             isLinkProp: Boolean = false,
                                             isLinkValueProp: Boolean = false,
-                                            isFileValueProp: Boolean = false)
+                                            isFileValueProp: Boolean = false) {
+            if (!OntologyConstants.Owl.cardinalityOWLRestrictions.contains(cardinalityIri)) {
+                throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality property: $cardinalityIri")
+            }
+
+            if (!(cardinalityValue == 0 || cardinalityValue == 1)) {
+                throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality value: $cardinalityValue")
+            }
+
+            /**
+              * Converts this [[OwlCardinalityOnProperty]] to a tuple containing the property IRI and
+              * a [[Cardinality.Value]].
+              */
+            def toClassDefCardinality: (IRI, Cardinality.Value) = {
+                propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
+                    propertyIri = propertyIri,
+                    OwlCardinalityInfo(
+                        owlCardinalityIri = cardinalityIri,
+                        owlCardinalityValue = cardinalityValue
+                    )
+                )
+            }
+        }
 
         /**
           * Gets the IRI of the ontology that an entity belongs to. This is assumed to be the namespace
@@ -297,7 +327,7 @@ class OntologyResponderV2 extends Responder {
             fileValueProps: Set[IRI] = propertyIris.filter(prop => allSubPropertyOfRelations(prop).contains(OntologyConstants.KnoraBase.HasFileValue))
 
             // Make a map of the cardinalities defined directly on each resource class. Each resource class IRI points to a map of
-            // property IRIs to OwlCardinality objects.
+            // property IRIs to OwlCardinalityOnProperty objects.
             directResourceClassCardinalities: Map[IRI, Map[IRI, OwlCardinalityOnProperty]] = resourceDefsGrouped.map {
                 case (resourceClassIri, rows) =>
                     val resourceClassCardinalities: Map[IRI, OwlCardinalityOnProperty] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
@@ -337,8 +367,8 @@ class OntologyResponderV2 extends Responder {
             // instantiated directly.
             concreteResourceDefsGrouped = resourceDefsGrouped -- OntologyConstants.KnoraBase.AbstractResourceClasses
 
-            // Construct a ClassEntityInfoV2 for each resource class.
-            resourceEntityInfos: Map[IRI, ClassEntityInfoV2] = concreteResourceDefsGrouped.map {
+            // Construct a ReadClassInfoV2 for each resource class.
+            resourceEntityInfos: Map[IRI, ReadClassInfoV2] = concreteResourceDefsGrouped.map {
                 case (resourceClassIri, resourceClassRows) =>
                     val ontologyIri = getOntologyIri(resourceClassIri)
 
@@ -362,12 +392,12 @@ class OntologyResponderV2 extends Responder {
                     }
 
                     // Get the OWL cardinalities for the class.
-                    val owlCardinalities = resourceCardinalitiesWithInheritance(resourceClassIri)
+                    val allOwlCardinalitiesForClass: Set[OwlCardinalityOnProperty] = resourceCardinalitiesWithInheritance(resourceClassIri)
 
                     // Identify the link properties, like value properties, and file value properties in the cardinalities.
-                    val linkProps = owlCardinalities.filter(_.isLinkProp).map(_.propertyIri)
-                    val linkValueProps = owlCardinalities.filter(_.isLinkValueProp).map(_.propertyIri)
-                    val fileValueProps = owlCardinalities.filter(_.isFileValueProp).map(_.propertyIri)
+                    val linkProps = allOwlCardinalitiesForClass.filter(_.isLinkProp).map(_.propertyIri)
+                    val linkValueProps = allOwlCardinalitiesForClass.filter(_.isLinkValueProp).map(_.propertyIri)
+                    val fileValueProps = allOwlCardinalitiesForClass.filter(_.isFileValueProp).map(_.propertyIri)
 
                     // Make sure there is a link value property for each link property.
                     val missingLinkValueProps = linkProps.map(linkProp => knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(linkProp)) -- linkValueProps
@@ -381,34 +411,39 @@ class OntologyResponderV2 extends Responder {
                         throw InconsistentTriplestoreDataException(s"Resource class $resourceClassIri has cardinalities for one or more link value properties without corresponding link properties. The missing link property or properties: ${missingLinkProps.mkString(", ")}")
                     }
 
-                    val resourceEntityInfo = ClassEntityInfoV2(
-                        classIri = resourceClassIri,
-                        ontologyIri = getOntologyIri(resourceClassIri),
+                    // Make maps of the class's direct and inherited cardinalities.
+
+                    val directCardinalities: Map[IRI, Cardinality.Value] = directResourceClassCardinalities(resourceClassIri).values.map {
+                        cardinalityOnProperty: OwlCardinalityOnProperty => cardinalityOnProperty.toClassDefCardinality
+                    }.toMap
+
+                    val inheritedCardinalities: Map[IRI, Cardinality.Value] = allOwlCardinalitiesForClass.filterNot {
+                        cardinalityOnProperty: OwlCardinalityOnProperty => directCardinalities.contains(cardinalityOnProperty.propertyIri)
+                    }.map {
+                        cardinalityOnProperty: OwlCardinalityOnProperty => cardinalityOnProperty.toClassDefCardinality
+                    }.toMap
+
+                    val resourceEntityInfo = ReadClassInfoV2(
+                        entityInfoContent = ClassInfoContentV2(
+                            classIri = resourceClassIri,
+                            ontologyIri = getOntologyIri(resourceClassIri),
+                            predicates = new ErrorHandlingMap(predicates, { key: IRI => s"Predicate $key not found for resource class $resourceClassIri" }),
+                            directCardinalities = directCardinalities,
+                            subClassOf = directResourceSubClassOfRelations.getOrElse(resourceClassIri, Set.empty[IRI]),
+                            ontologySchema = InternalSchema
+                        ),
                         canBeInstantiated = ontologyIri != OntologyConstants.KnoraBase.KnoraBaseOntologyIri, // Any resource class defined in a project-specific ontology can be instantiated.
-                        predicates = new ErrorHandlingMap(predicates, { key: IRI => s"Predicate $key not found for resource class $resourceClassIri" }),
-                        cardinalities = owlCardinalities.map {
-                            owlCardinality =>
-                                // Convert the OWL cardinality to a Knora Cardinality enum value.
-                                owlCardinality.propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
-                                    propertyIri = owlCardinality.propertyIri,
-                                    OwlCardinalityInfo(
-                                        owlCardinalityIri = owlCardinality.cardinalityIri,
-                                        owlCardinalityValue = owlCardinality.cardinalityValue
-                                    )
-                                )
-                        }.toMap, // Don't return a cardinality for hasStandoffLinkToValue, because there's nothing the client can do with it.
+                        inheritedCardinalities = inheritedCardinalities,
                         linkProperties = linkProps,
                         linkValueProperties = linkValueProps,
-                        fileValueProperties = fileValueProps,
-                        subClassOf = directResourceSubClassOfRelations.getOrElse(resourceClassIri, Set.empty[IRI]),
-                        ontologySchema = InternalSchema
+                        fileValueProperties = fileValueProps
                     )
 
                     resourceClassIri -> resourceEntityInfo
             }
 
             // Construct a PropertyEntityInfoV2 for each property definition, not taking inheritance into account.
-            propertyEntityInfos: Map[IRI, PropertyEntityInfoV2] = propertyDefsGrouped.map {
+            propertyEntityInfos: Map[IRI, ReadPropertyInfoV2] = propertyDefsGrouped.map {
                 case (propertyIri, propertyRows) =>
                     val ontologyIri = getOntologyIri(propertyIri)
 
@@ -431,16 +466,18 @@ class OntologyResponderV2 extends Responder {
                             )
                     }
 
-                    val propertyEntityInfo = PropertyEntityInfoV2(
-                        propertyIri = propertyIri,
-                        ontologyIri = ontologyIri,
+                    val propertyEntityInfo = ReadPropertyInfoV2(
+                        entityInfoContent = PropertyInfoContentV2(
+                            propertyIri = propertyIri,
+                            ontologyIri = ontologyIri,
+                            predicates = predicates,
+                            subPropertyOf = directSubPropertyOfRelations.getOrElse(propertyIri, Set.empty[IRI]),
+                            ontologySchema = InternalSchema
+                        ),
                         isEditable = ontologyIri != OntologyConstants.KnoraBase.KnoraBaseOntologyIri, // Any property defined in a project-specific ontology is editable.
                         isLinkProp = linkProps.contains(propertyIri),
                         isLinkValueProp = linkValueProps.contains(propertyIri),
-                        isFileValueProp = fileValueProps.contains(propertyIri),
-                        predicates = predicates,
-                        subPropertyOf = directSubPropertyOfRelations.getOrElse(propertyIri, Set.empty[IRI]),
-                        ontologySchema = InternalSchema
+                        isFileValueProp = fileValueProps.contains(propertyIri)
                     )
 
                     propertyIri -> propertyEntityInfo
@@ -454,6 +491,9 @@ class OntologyResponderV2 extends Responder {
             valueBaseClassesSparql <- Future(queries.sparql.v2.txt.getValueBaseClassDefinitions(triplestore = settings.triplestoreType).toString())
             valueBaseClassesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(valueBaseClassesSparql)).mapTo[SparqlSelectResponse]
             valueBaseClassesRows: Seq[VariableResultsRow] = valueBaseClassesResponse.results.bindings
+
+            // Group the rows representing value base class definitions by value base class IRI.
+            valueBaseClassesGrouped: Map[IRI, Seq[VariableResultsRow]] = valueBaseClassesRows.groupBy(_.rowMap("valueBaseClass"))
 
             // get ontology information about the standoff classes
             standoffClassesSparql <- Future(queries.sparql.v2.txt.getStandoffClassDefinitions(triplestore = settings.triplestoreType).toString())
@@ -480,8 +520,17 @@ class OntologyResponderV2 extends Responder {
             standoffPropsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(standoffPropsSparql)).mapTo[SparqlSelectResponse]
             standoffPropsRows: Seq[VariableResultsRow] = standoffPropsResponse.results.bindings
 
-            // Group the rows representing value base class definitions by value base class IRI.
-            valueBaseClassesGrouped: Map[IRI, Seq[VariableResultsRow]] = valueBaseClassesRows.groupBy(_.rowMap("valueBaseClass"))
+            // Make a map of IRIs of named graphs to IRIs of standoff classes defined in each one.
+            standoffGraphClassMap: Map[IRI, Set[IRI]] = allStandoffClassRows.groupBy(_.rowMap("graph")).map {
+                case (graphIri: IRI, graphRows: Seq[VariableResultsRow]) =>
+                    graphIri -> graphRows.map(_.rowMap("standoffClass")).toSet
+            }
+
+            // Make a map of IRIs of named graphs to IRIs of standoff properties defined in each one.
+            standoffGraphPropMap: Map[IRI, Set[IRI]] = standoffPropsRows.groupBy(_.rowMap("graph")).map {
+                case (graphIri, graphRows) =>
+                    graphIri -> graphRows.map(_.rowMap("prop")).toSet
+            }
 
             // Group the rows representing standoff class definitions by standoff class IRI.
             standoffClassesGrouped: Map[IRI, Seq[VariableResultsRow]] = allStandoffClassRows.groupBy(_.rowMap("standoffClass"))
@@ -553,7 +602,7 @@ class OntologyResponderV2 extends Responder {
             }
 
             // Allow each standoff class to inherit cardinalities from its base classes.
-            standoffCardinalitiesWithInheritance = standoffClassIris.map {
+            standoffCardinalitiesWithInheritance: Map[IRI, Set[OwlCardinalityOnProperty]] = standoffClassIris.map {
                 standoffClassIri =>
                     val standoffClassCardinalities: Set[OwlCardinalityOnProperty] = inheritCardinalities(
                         resourceClassIri = standoffClassIri,
@@ -562,21 +611,10 @@ class OntologyResponderV2 extends Responder {
                         directResourceClassCardinalities = directStandoffClassCardinalities ++ valueBaseClassCardinalities
                     ).values.toSet
 
-                    val prop2Card: Map[IRI, Cardinality.Value] = standoffClassCardinalities.map {
-                        (card: OwlCardinalityOnProperty) =>
-                            card.propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
-                                propertyIri = card.propertyIri,
-                                OwlCardinalityInfo(
-                                    owlCardinalityIri = card.cardinalityIri,
-                                    owlCardinalityValue = card.cardinalityValue
-                                )
-                            )
-                    }.toMap
-
-                    standoffClassIri -> prop2Card
+                    standoffClassIri -> standoffClassCardinalities
             }.toMap
 
-            standoffClassEntityInfos: Map[IRI, StandoffClassEntityInfoV2] = standoffClassesGrouped.map {
+            standoffClassEntityInfos: Map[IRI, ReadClassInfoV2] = standoffClassesGrouped.map {
                 case (standoffClassIri, standoffClassRows) =>
 
                     val standoffGroupedByPredicate: Map[IRI, Seq[VariableResultsRow]] = standoffClassRows.filter(_.rowMap.contains("standoffClassPred")).groupBy(_.rowMap("standoffClassPred")) - OntologyConstants.Rdfs.SubClassOf
@@ -597,6 +635,20 @@ class OntologyResponderV2 extends Responder {
                             )
                     }
 
+                    val allOwlCardinalitiesForClass: Set[OwlCardinalityOnProperty] = standoffCardinalitiesWithInheritance(standoffClassIri)
+
+                    // Make maps of the class's direct and inherited cardinalities.
+
+                    val directCardinalities: Map[IRI, Cardinality.Value] = directStandoffClassCardinalities(standoffClassIri).values.map {
+                        cardinalityOnProperty: OwlCardinalityOnProperty => cardinalityOnProperty.toClassDefCardinality
+                    }.toMap
+
+                    val inheritedCardinalities: Map[IRI, Cardinality.Value] = allOwlCardinalitiesForClass.filterNot {
+                        cardinalityOnProperty: OwlCardinalityOnProperty => directCardinalities.contains(cardinalityOnProperty.propertyIri)
+                    }.map {
+                        cardinalityOnProperty: OwlCardinalityOnProperty => cardinalityOnProperty.toClassDefCardinality
+                    }.toMap
+
                     // determine the data type of the given standoff class IRI
                     // if the resulting set is empty, it is not a typed standoff class
                     val standoffDataType: Set[IRI] = allStandoffSubClassOfRelations(standoffClassIri).intersect(StandoffDataTypeClasses.getStandoffClassIris)
@@ -604,15 +656,20 @@ class OntologyResponderV2 extends Responder {
                         throw InconsistentTriplestoreDataException(s"standoff class $standoffClassIri is a subclass of more than one standoff data type class: ${standoffDataType.mkString(", ")}")
                     }
 
-                    val standoffInfo = StandoffClassEntityInfoV2(
-                        standoffClassIri = standoffClassIri,
-                        ontologyIri = getOntologyIri(standoffClassIri),
-                        predicates = predicates,
-                        cardinalities = standoffCardinalitiesWithInheritance(standoffClassIri),
-                        dataType = standoffDataType.headOption match {
-                            case Some(dataType: IRI) => Some(StandoffDataTypeClasses.lookup(dataType, () => throw InconsistentTriplestoreDataException(s"$dataType is not a valid standoff data type")))
-                            case None => None
-                        }
+                    val standoffInfo = ReadClassInfoV2(
+                        entityInfoContent = ClassInfoContentV2(
+                            classIri = standoffClassIri,
+                            ontologyIri = getOntologyIri(standoffClassIri),
+                            predicates = predicates,
+                            directCardinalities = directCardinalities,
+                            standoffDataType = standoffDataType.headOption match {
+                                case Some(dataType: IRI) => Some(StandoffDataTypeClasses.lookup(dataType, () => throw InconsistentTriplestoreDataException(s"$dataType is not a valid standoff data type")))
+                                case None => None
+                            },
+                            subClassOf = directStandoffSubClassOfRelations.getOrElse(standoffClassIri, Set.empty[IRI]),
+                            ontologySchema = InternalSchema
+                        ),
+                        inheritedCardinalities = inheritedCardinalities
                     )
 
                     standoffClassIri -> standoffInfo
@@ -625,8 +682,8 @@ class OntologyResponderV2 extends Responder {
             }.toMap
 
 
-            // Construct a StandoffPropertyEntityInfoV2 for each property definition, not taking inheritance into account.
-            standoffPropertyEntityInfos: Map[IRI, StandoffPropertyEntityInfoV2] = standoffPropertyDefsGrouped.map {
+            // Construct a PropertyEntityInfoV2 for each property definition, not taking inheritance into account.
+            standoffPropertyEntityInfos: Map[IRI, ReadPropertyInfoV2] = standoffPropertyDefsGrouped.map {
                 case (standoffPropertyIri, propertyRows) =>
                     val ontologyIri = getOntologyIri(standoffPropertyIri)
 
@@ -649,20 +706,24 @@ class OntologyResponderV2 extends Responder {
                             )
                     }
 
-                    val standoffPropertyEntityInfo = StandoffPropertyEntityInfoV2(
-                        standoffPropertyIri = standoffPropertyIri,
-                        ontologyIri = ontologyIri,
-                        predicates = predicates,
-                        isSubPropertyOf = allStandoffSubPropertyOfRelations(standoffPropertyIri)
+                    val standoffPropertyEntityInfo = ReadPropertyInfoV2(
+                        entityInfoContent = PropertyInfoContentV2(
+                            propertyIri = standoffPropertyIri,
+                            ontologyIri = ontologyIri,
+                            predicates = predicates,
+                            subPropertyOf = directStandoffSubPropertyOfRelations.getOrElse(standoffPropertyIri, Set.empty[IRI]),
+                            ontologySchema = InternalSchema
+                        ),
+                        isStandoffInternalReferenceProperty = allStandoffSubPropertyOfRelations(standoffPropertyIri).contains(OntologyConstants.KnoraBase.StandoffTagHasInternalReference)
                     )
 
                     standoffPropertyIri -> standoffPropertyEntityInfo
             }
 
             // collect all the standoff classes that have a data type (i.e. are subclasses of a data type standoff class)
-            standoffClassEntityInfosWithDataType: Map[IRI, StandoffClassEntityInfoV2] = standoffClassEntityInfos.filter {
-                case (standoffClassIri: IRI, entityInfo: StandoffClassEntityInfoV2) =>
-                    entityInfo.dataType.isDefined
+            standoffClassEntityInfosWithDataType: Map[IRI, ReadClassInfoV2] = standoffClassEntityInfos.filter {
+                case (standoffClassIri: IRI, entityInfo: ReadClassInfoV2) =>
+                    entityInfo.entityInfoContent.standoffDataType.isDefined
             }
 
             allClassDefs = resourceEntityInfos ++ KnoraApiV2Simple.Classes ++ KnoraApiV2WithValueObjects.Classes
@@ -671,16 +732,18 @@ class OntologyResponderV2 extends Responder {
             // Cache all the data.
 
             ontologyCacheData: OntologyCacheData = OntologyCacheData(
-                namedGraphs = graphClassMap.keySet ++ graphPropMap.keySet,
+                namedGraphs = graphClassMap.keySet ++ graphPropMap.keySet ++ standoffGraphClassMap.keySet ++ standoffGraphPropMap.keySet,
                 namedGraphClasses = new ErrorHandlingMap[IRI, Set[IRI]](graphClassMap, { key => s"Named graph not found: $key" }),
                 namedGraphProperties = new ErrorHandlingMap[IRI, Set[IRI]](graphPropMap, { key => s"Named graph not found: $key" }),
-                classDefs = new ErrorHandlingMap[IRI, ClassEntityInfoV2](allClassDefs, { key => s"Class not found: $key" }),
+                classDefs = new ErrorHandlingMap[IRI, ReadClassInfoV2](allClassDefs, { key => s"Class not found: $key" }),
                 resourceAndValueSubClassOfRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSubClassOfRelations ++ allValueSubClassOfRelations, { key => s"Class not found: $key" }),
                 resourceSuperClassOfRelations = new ErrorHandlingMap[IRI, Set[IRI]](allResourceSuperClassOfRelations, { key => s"Class not found: $key" }),
-                propertyDefs = new ErrorHandlingMap[IRI, PropertyEntityInfoV2](allPropertyDefs, { key => s"Property not found: $key" }),
-                standoffClassDefs = new ErrorHandlingMap[IRI, StandoffClassEntityInfoV2](standoffClassEntityInfos, { key => s"Standoff class def not found $key" }),
-                standoffPropertyDefs = new ErrorHandlingMap[IRI, StandoffPropertyEntityInfoV2](standoffPropertyEntityInfos, { key => s"Standoff property def not found $key" }),
-                standoffClassDefsWithDataType = new ErrorHandlingMap[IRI, StandoffClassEntityInfoV2](standoffClassEntityInfosWithDataType, { key => s"Standoff class def with datatype not found $key" }))
+                propertyDefs = new ErrorHandlingMap[IRI, ReadPropertyInfoV2](allPropertyDefs, { key => s"Property not found: $key" }),
+                namedGraphStandoffClasses = new ErrorHandlingMap[IRI, Set[IRI]](standoffGraphClassMap, { key => s"Named graph not found: $key" }),
+                namedGraphStandoffProperties = new ErrorHandlingMap[IRI, Set[IRI]](standoffGraphPropMap, { key => s"Named graph not found: $key" }),
+                standoffClassDefs = new ErrorHandlingMap[IRI, ReadClassInfoV2](standoffClassEntityInfos, { key => s"Standoff class def not found $key" }),
+                standoffPropertyDefs = new ErrorHandlingMap[IRI, ReadPropertyInfoV2](standoffPropertyEntityInfos, { key => s"Standoff property def not found $key" }),
+                standoffClassDefsWithDataType = new ErrorHandlingMap[IRI, ReadClassInfoV2](standoffClassEntityInfosWithDataType, { key => s"Standoff class def with datatype not found $key" }))
 
             _ = CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = ontologyCacheData)
 
@@ -713,9 +776,8 @@ class OntologyResponderV2 extends Responder {
         for {
             cacheData <- getCacheData
 
-            classDefsAvailable: Map[IRI, ClassEntityInfoV2] = cacheData.classDefs.filterKeys(classIris)
-            propertyDefsAvailable: Map[IRI, PropertyEntityInfoV2] = cacheData.propertyDefs.filterKeys(propertyIris)
-
+            classDefsAvailable: Map[IRI, ReadClassInfoV2] = cacheData.classDefs.filterKeys(classIris)
+            propertyDefsAvailable: Map[IRI, ReadPropertyInfoV2] = cacheData.propertyDefs.filterKeys(propertyIris)
 
             missingClassDefs = classIris -- classDefsAvailable.keySet
             missingPropertyDefs = propertyIris -- propertyDefsAvailable.keySet
@@ -729,8 +791,8 @@ class OntologyResponderV2 extends Responder {
             }
 
             response = EntityInfoGetResponseV2(
-                classEntityInfoMap = new ErrorHandlingMap(classDefsAvailable, { key => s"Resource class $key not found" }),
-                propertyEntityInfoMap = new ErrorHandlingMap(propertyDefsAvailable, { key => s"Property $key not found" })
+                classInfoMap = new ErrorHandlingMap(classDefsAvailable, { key => s"Resource class $key not found" }),
+                propertyInfoMap = new ErrorHandlingMap(propertyDefsAvailable, { key => s"Property $key not found" })
             )
         } yield response
     }
@@ -747,8 +809,8 @@ class OntologyResponderV2 extends Responder {
         for {
             cacheData <- getCacheData
             response = StandoffEntityInfoGetResponseV2(
-                standoffClassEntityInfoMap = cacheData.standoffClassDefs.filterKeys(standoffClassIris),
-                standoffPropertyEntityInfoMap = cacheData.standoffPropertyDefs.filterKeys(standoffPropertyIris)
+                standoffClassInfoMap = cacheData.standoffClassDefs.filterKeys(standoffClassIris),
+                standoffPropertyInfoMap = cacheData.standoffPropertyDefs.filterKeys(standoffPropertyIris)
             )
         } yield response
     }
@@ -763,7 +825,7 @@ class OntologyResponderV2 extends Responder {
         for {
             cacheData <- getCacheData
             response = StandoffClassesWithDataTypeGetResponseV2(
-                standoffClassEntityInfoMap = cacheData.standoffClassDefsWithDataType
+                standoffClassInfoMap = cacheData.standoffClassDefsWithDataType
             )
         } yield response
     }
@@ -772,7 +834,7 @@ class OntologyResponderV2 extends Responder {
       * Gets all standoff property entities.
       *
       * @param userProfile the profile of the user making the request.
-      * @return a [[StandoffAllPropertyEntitiesGetResponseV1]].
+      * @return a [[StandoffAllPropertiesGetResponseV1]].
       */
     private def getAllStandoffPropertyEntitiesV2(userProfile: UserProfileV1): Future[StandoffAllPropertyEntitiesGetResponseV2] = {
         for {
@@ -813,11 +875,11 @@ class OntologyResponderV2 extends Responder {
 
             subClasses = subClassIris.map {
                 subClassIri =>
-                    val resourceClassInfo: ClassEntityInfoV2 = cacheData.classDefs(subClassIri)
+                    val resourceClassInfo: ReadClassInfoV2 = cacheData.classDefs(subClassIri)
 
                     SubClassInfoV2(
                         id = subClassIri,
-                        label = resourceClassInfo.getPredicateObject(
+                        label = resourceClassInfo.entityInfoContent.getPredicateObject(
                             predicateIri = OntologyConstants.Rdfs.Label,
                             preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)
                         ).getOrElse(throw InconsistentTriplestoreDataException(s"Resource class $subClassIri has no rdfs:label"))
@@ -847,7 +909,9 @@ class OntologyResponderV2 extends Responder {
         } yield NamedGraphEntityInfoV2(
             namedGraphIri = namedGraphIri,
             propertyIris = cacheData.namedGraphProperties.getOrElse(namedGraphIri, Set.empty[IRI]),
-            classIris = cacheData.namedGraphClasses.getOrElse(namedGraphIri, Set.empty[IRI])
+            classIris = cacheData.namedGraphClasses.getOrElse(namedGraphIri, Set.empty[IRI]),
+            standoffClassIris = cacheData.namedGraphStandoffClasses.getOrElse(namedGraphIri, Set.empty[IRI]),
+            standoffPropertyIris = cacheData.namedGraphStandoffProperties.getOrElse(namedGraphIri, Set.empty[IRI])
         )
     }
 
@@ -871,34 +935,32 @@ class OntologyResponderV2 extends Responder {
       */
     private def getEntitiesForNamedGraphV2(namedGraphIris: Set[IRI], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
 
+
         for {
+            cacheData <- getCacheData
 
-        // collect resource class IRIs from given named graphs
-            entitiesForNamedGraphsWithFuture: Map[IRI, Future[NamedGraphEntityInfoV2]] <- Future(namedGraphIris.foldLeft(Map.empty[IRI, Future[NamedGraphEntityInfoV2]]) {
-                case (acc: Map[IRI, Future[NamedGraphEntityInfoV2]], namedGraphIri: IRI) =>
-                    val entitiesFuture: Future[NamedGraphEntityInfoV2] = for {
-                        namedGraphEntities <- getNamedGraphEntityInfoV2ForNamedGraphV2(namedGraphIri = namedGraphIri, userProfile = userProfile)
-                    } yield namedGraphEntities
-                    acc + (namedGraphIri -> entitiesFuture)
-            })
+            entitiesForNamedGraphsMap: Map[IRI, NamedGraphEntityInfoV2] = namedGraphIris.map {
+                namedGraphIri =>
 
+                    if (!cacheData.namedGraphs.contains(namedGraphIri)) {
+                        throw NotFoundException(s"Named graph not found: $namedGraphIri")
+                    }
 
+                    namedGraphIri -> NamedGraphEntityInfoV2(
+                        namedGraphIri = namedGraphIri,
+                        propertyIris = cacheData.namedGraphProperties.getOrElse(namedGraphIri, Set.empty[IRI]),
+                        classIris = cacheData.namedGraphClasses.getOrElse(namedGraphIri, Set.empty[IRI]),
+                        standoffClassIris = cacheData.namedGraphStandoffClasses.getOrElse(namedGraphIri, Set.empty[IRI]),
+                        standoffPropertyIris = cacheData.namedGraphStandoffProperties.getOrElse(namedGraphIri, Set.empty[IRI])
+                    )
+            }.toMap
 
-            // get rid of the Future
-            entitiesForNamedGraphs: Iterable[(IRI, NamedGraphEntityInfoV2)] <- Future.traverse(entitiesForNamedGraphsWithFuture) {
-                case (namedGraph, entitiesWithFuture) =>
-                    for {
-                        entities <- entitiesWithFuture
-                    } yield namedGraph -> entities
-            }
+            // Get non-standoff classes and properties.
 
-            entitiesForNamedGraphsMap: Map[IRI, NamedGraphEntityInfoV2] = entitiesForNamedGraphs.toMap
-
-            // collect all class and property IRIs
             classIris: Set[IRI] = entitiesForNamedGraphsMap.values.flatMap(_.classIris).toSet
             propertyIris: Set[IRI] = entitiesForNamedGraphsMap.values.flatMap(_.propertyIris).toSet
 
-            readEntityDefsForClasses: ReadEntityDefinitionsV2 <- getClassDefinitionsWithCardinalitiesV2(
+            readEntityDefsForClasses: ReadEntityDefinitionsV2 <- getClassDefinitionsV2(
                 classIris,
                 responseSchema,
                 allLanguages,
@@ -907,6 +969,13 @@ class OntologyResponderV2 extends Responder {
 
             readEntityDefsForProperties: ReadEntityDefinitionsV2 <- getPropertyDefinitionsV2(propertyIris, allLanguages, userProfile = userProfile)
 
+            // Get standoff classes and properties.
+
+            standoffClassIris: Set[IRI] = entitiesForNamedGraphsMap.values.flatMap(_.standoffClassIris).toSet
+            standoffPropertyIris: Set[IRI] = entitiesForNamedGraphsMap.values.flatMap(_.standoffPropertyIris).toSet
+
+            standoffEntities <- getStandoffEntityInfoResponseV2(standoffClassIris = standoffClassIris, standoffPropertyIris = standoffPropertyIris, userProfile = userProfile)
+
             ontologiesWithClasses: Map[IRI, Set[IRI]] = entitiesForNamedGraphsMap.map {
                 case (namedGraphIri, namedGraphInfo) => (namedGraphIri, namedGraphInfo.classIris)
             }
@@ -914,6 +983,8 @@ class OntologyResponderV2 extends Responder {
             ontologies = ontologiesWithClasses,
             classes = readEntityDefsForClasses.classes,
             properties = readEntityDefsForProperties.properties,
+            standoffClasses = standoffEntities.standoffClassInfoMap,
+            standoffProperties = standoffEntities.standoffPropertyInfoMap,
             userLang = readEntityDefsForClasses.userLang
         )
     }
@@ -921,56 +992,14 @@ class OntologyResponderV2 extends Responder {
     /**
       * Requests information about resource classes and their properties.
       *
-      * @param classIris the Iris of the resource classes to query for.
-      * @param userProfile       the profile of the user making the request.
+      * @param classIris   the Iris of the resource classes to query for.
+      * @param userProfile the profile of the user making the request.
       * @return a [[ReadEntityDefinitionsV2]].
       */
-    private def getClassDefinitionsWithCardinalitiesV2(classIris: Set[IRI], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
+    private def getClassDefinitionsV2(classIris: Set[IRI], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
         for {
-
-        // request information about the given resource class Iris
+            // request information about the given resource class Iris
             classInfoResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(classIris = classIris, userProfile = userProfile)
-
-            // get the subclassOf relations of the given resource classes
-            /*
-            cacheData <- getCacheData
-            subClassOfRelations: Map[IRI, Set[IRI]] = classIris.map {
-                resClass =>
-                    resClass -> cacheData.resourceAndValueSubClassOfRelations(resClass)
-            }.toMap
-            */
-
-            // If a project-specific resource class was requested, include definitions of the built-in properties
-            // that knora-api:Resource has cardinalities for.
-
-            projectSpecificClassRequested = classIris.exists {
-                classIri => stringFormatter.isProjectSpecificEntityIri(classIri)
-            }
-
-            builtInPropertiesToAdd = if (projectSpecificClassRequested) {
-                val knoraApiResourceClass = responseSchema match {
-                    case ApiV2Simple => KnoraApiV2Simple.Resource
-                    case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.Resource
-                }
-
-                knoraApiResourceClass.cardinalities.keySet
-            } else {
-                Set.empty[IRI]
-            }
-
-            // get all property Iris from cardinalities
-            propertyIris: Set[IRI] = classInfoResponse.classEntityInfoMap.values.foldLeft(Set.empty[IRI]) {
-                case (acc: Set[IRI], resourceEntityInfo: ClassEntityInfoV2) =>
-                    acc ++ resourceEntityInfo.cardinalities.keySet
-            } ++ builtInPropertiesToAdd
-
-            // Only try to get definitions for properties that we know about (built-in or project-specific Knora ontology properties).
-            propertyIrisFiltered: Set[IRI] = propertyIris.filter {
-                propertyIri => stringFormatter.isKnoraEntityIri(propertyIri)
-            }
-
-            // request information about the properties for which cardinalities are defined
-            propertiesResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIrisFiltered, userProfile = userProfile)
 
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
@@ -981,7 +1010,7 @@ class OntologyResponderV2 extends Responder {
                 None
             }
 
-        } yield ReadEntityDefinitionsV2(classes = classInfoResponse.classEntityInfoMap, properties = propertiesResponse.propertyEntityInfoMap, userLang = userLang)
+        } yield ReadEntityDefinitionsV2(classes = classInfoResponse.classInfoMap, userLang = userLang)
     }
 
     /**
@@ -1006,7 +1035,7 @@ class OntologyResponderV2 extends Responder {
                 None
             }
 
-        } yield ReadEntityDefinitionsV2(properties = propertiesResponse.propertyEntityInfoMap, userLang = userLang)
+        } yield ReadEntityDefinitionsV2(properties = propertiesResponse.propertyInfoMap, userLang = userLang)
     }
 
     /**
@@ -1015,21 +1044,89 @@ class OntologyResponderV2 extends Responder {
       * @param createOntologyRequest the request message.
       * @return a [[SuccessResponseV2]].
       */
-    private def createOntology(createOntologyRequest: CreateOntologyRequestV2): Future[SuccessResponseV2] = {
+    private def createOntology(createOntologyRequest: CreateOntologyRequestV2): Future[ReadEntityDefinitionsV2] = {
+        def makeTaskFuture(internalOntologyIri: IRI): Future[ReadEntityDefinitionsV2] = {
+            for {
+                currentTime: String <- FastFuture.successful(Instant.now.toString)
+
+                // Make sure the ontology doesn't already exist.
+
+                checkOntologySparql = queries.sparql.v2.txt.getOntologyInfo(
+                    triplestore = settings.triplestoreType,
+                    ontologyIri = internalOntologyIri
+                ).toString
+
+                preUpdateCheckResponse <- (storeManager ? SparqlSelectRequest(checkOntologySparql)).mapTo[SparqlSelectResponse]
+
+                _ = if (preUpdateCheckResponse.results.bindings.nonEmpty) {
+                    throw BadRequestException(s"Ontology $internalOntologyIri cannot be created, because it already exists")
+                }
+
+                // Create the ontology.
+
+                createOntologySparql = queries.sparql.v2.txt.createOntology(
+                    triplestore = settings.triplestoreType,
+                    ontologyNamedGraphIri = internalOntologyIri,
+                    ontologyIri = internalOntologyIri,
+                    currentTime = currentTime
+                ).toString
+
+                createOntologyResponse <- (storeManager ? SparqlUpdateRequest(createOntologySparql)).mapTo[SparqlUpdateResponse]
+
+                // Check that the update was successful.
+
+                postUpdateCheckResponse <- (storeManager ? SparqlSelectRequest(checkOntologySparql)).mapTo[SparqlSelectResponse]
+
+                lastModDate: Set[String] = postUpdateCheckResponse.results.bindings.map {
+                    row => row.rowMap.get("ontologyPred") match {
+                        case Some(OntologyConstants.KnoraBase.LastModificationDate) => row.rowMap.get("ontologyObj")
+                        case _ => None
+                    }
+                }.toSet.flatten
+
+                _ = if (lastModDate.size > 1) {
+                    throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has more than one knora-base:lastModificationDate")
+                }
+
+                _ = if (lastModDate.head != currentTime) {
+                    throw UpdateNotPerformedException()
+                }
+
+                // TODO: tell the projects responder that the ontology was created, so it can add it to the project's admin data.
+
+                externalOntologyIri = stringFormatter.internalOntologyIriToApiV2WithValueObjectsOntologyIri(internalOntologyIri, () => throw AssertionException(s"Invalid internal ontology IRI: $internalOntologyIri"))
+
+            } yield ReadEntityDefinitionsV2(
+                ontologies = Map(externalOntologyIri -> Set.empty[IRI])
+            )
+        }
+
         for {
-            currentTime: String <- FastFuture.successful(Instant.now.toString)
+            userProfile <- FastFuture.successful(createOntologyRequest.userProfile)
 
-            createOntologySparql = queries.sparql.v2.txt.createOntology(
-                triplestore = settings.triplestoreType,
-                ontologyNamedGraphIri = createOntologyRequest.ontologyIri,
-                ontologyIri = createOntologyRequest.ontologyIri,
-                currentTime = currentTime
-            ).toString
+            // TODO: check whether the user is a project or system admin.
 
-            createOntologyResponse <- (storeManager ? SparqlUpdateRequest(createOntologySparql)).mapTo[SparqlUpdateResponse]
+            // TODO: get a real project code from the projects responder.
 
-            // TODO: check whether the ontology was created by querying its lastModificationDate.
+            projectCode: Option[String] = if (createOntologyRequest.ontologyName == "example") {
+                Some("0000")
+            } else {
+                None
+            }
 
-        } yield SuccessResponseV2("Ontology created.")
+            // Check that the ontology name is valid.
+            validOntologyName = stringFormatter.toProjectSpecificOntologyName(createOntologyRequest.ontologyName, () => throw BadRequestException(s"Invalid project-specific ontology name: ${createOntologyRequest.ontologyName}"))
+
+            // Make the internal ontology IRI.
+            externalOntologyID = OntologyID(validOntologyName, projectCode)
+            internalOntologyIri = stringFormatter.externalOntologyIDToInternalOntologyIri(externalOntologyID)
+
+            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            taskResult <- IriLocker.runWithIriLock(
+                createOntologyRequest.apiRequestID,
+                createOntologyRequest.ontologyName,
+                () => makeTaskFuture(internalOntologyIri)
+            )
+        } yield taskResult
     }
 }

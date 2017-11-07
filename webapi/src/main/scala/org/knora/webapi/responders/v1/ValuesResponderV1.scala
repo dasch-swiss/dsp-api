@@ -126,15 +126,15 @@ class ValuesResponderV1 extends Responder {
           * @return a [[Future]] that does pre-update checks and performs the update.
           */
         def makeTaskFuture(userIri: IRI): Future[CreateValueResponseV1] = for {
-        // Check that the submitted value has the correct type for the property.
+            // Check that the submitted value has the correct type for the property.
 
             entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
                 propertyIris = Set(createValueRequest.propertyIri),
                 userProfile = createValueRequest.userProfile
             )).mapTo[EntityInfoGetResponseV1]
 
-            propertyInfo = entityInfoResponse.propertyEntityInfoMap(createValueRequest.propertyIri)
-            propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
+            propertyInfo = entityInfoResponse.propertyInfoMap(createValueRequest.propertyIri)
+            propertyObjectClassConstraint = propertyInfo.entityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
                 throw InconsistentTriplestoreDataException(s"Property ${createValueRequest.propertyIri} has no knora-base:objectClassConstraint")
             }
 
@@ -239,7 +239,7 @@ class ValuesResponderV1 extends Responder {
         } yield apiResponse
 
         for {
-        // Don't allow anonymous users to create values.
+            // Don't allow anonymous users to create values.
             userIri <- createValueRequest.userProfile.userData.user_id match {
                 case Some(iri) => Future(iri)
                 case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to create values"))
@@ -304,14 +304,14 @@ class ValuesResponderV1 extends Responder {
 
 
             for {
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            // Generate SPARQL to create links and LinkValues for standoff resource references in text values
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // Generate SPARQL to create links and LinkValues for standoff resource references in text values
 
-            // To create LinkValues for the standoff resource references in the values to be created, we need to compute
-            // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
-            // that have standoff references to a particular target resource.
+                // To create LinkValues for the standoff resource references in the values to be created, we need to compute
+                // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
+                // that have standoff references to a particular target resource.
 
-            // First, make a single list of all the values to be created.
+                // First, make a single list of all the values to be created.
                 valuesToCreatePerProperty: Map[IRI, Seq[CreateValueV1WithComment]] <- Future(createMultipleValuesRequest.values)
                 valuesToCreateForAllProperties: Iterable[Seq[CreateValueV1WithComment]] = valuesToCreatePerProperty.values
                 allValuesToCreate: Iterable[CreateValueV1WithComment] = valuesToCreateForAllProperties.flatten
@@ -543,7 +543,7 @@ class ValuesResponderV1 extends Responder {
         }
 
         for {
-        // Don't allow anonymous users to create resources.
+            // Don't allow anonymous users to create resources.
             userIri <- createMultipleValuesRequest.userProfile.userData.user_id match {
                 case Some(iri) => Future(iri)
                 case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to create resources"))
@@ -735,11 +735,11 @@ class ValuesResponderV1 extends Responder {
 
         for {
 
-        // Do the preparations of a file value change while already holding an update lock on the resource.
-        // This is necessary because in `makeTaskFuture` the current file value Iris for the given resource IRI have to been retrieved.
-        // Using the lock, we make sure that these are still up to date when `changeValueV1` is being called.
-        //
-        // The method `changeValueV1` will be called using the same lock.
+            // Do the preparations of a file value change while already holding an update lock on the resource.
+            // This is necessary because in `makeTaskFuture` the current file value Iris for the given resource IRI have to been retrieved.
+            // Using the lock, we make sure that these are still up to date when `changeValueV1` is being called.
+            //
+            // The method `changeValueV1` will be called using the same lock.
             taskResult <- IriLocker.runWithIriLock(
                 changeFileValueRequest.apiRequestID,
                 changeFileValueRequest.resourceIri,
@@ -778,7 +778,7 @@ class ValuesResponderV1 extends Responder {
             }
 
             for {
-            // Ensure that the user has permission to modify the value.
+                // Ensure that the user has permission to modify the value.
 
                 maybeCurrentValueQueryResult: Option[ValueQueryResult] <- changeValueRequest.value match {
                     case linkUpdateV1: LinkUpdateV1 =>
@@ -811,8 +811,8 @@ class ValuesResponderV1 extends Responder {
                     userProfile = changeValueRequest.userProfile
                 )).mapTo[EntityInfoGetResponseV1]
 
-                propertyInfo = entityInfoResponse.propertyEntityInfoMap(propertyIri)
-                propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
+                propertyInfo = entityInfoResponse.propertyInfoMap(propertyIri)
+                propertyObjectClassConstraint = propertyInfo.entityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
                     throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
                 }
 
@@ -940,7 +940,7 @@ class ValuesResponderV1 extends Responder {
         }
 
         for {
-        // Don't allow anonymous users to update values.
+            // Don't allow anonymous users to update values.
             userIri <- changeValueRequest.userProfile.userData.user_id match {
                 case Some(iri) => Future(iri)
                 case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to update values"))
@@ -968,7 +968,7 @@ class ValuesResponderV1 extends Responder {
           */
         def makeTaskFuture(userIri: IRI, findResourceWithValueResult: FindResourceWithValueResult): Future[ChangeValueResponseV1] = {
             for {
-            // Ensure that the user has permission to modify the value.
+                // Ensure that the user has permission to modify the value.
 
                 maybeCurrentValueQueryResult: Option[ValueQueryResult] <- findValue(changeCommentRequest.valueIri, changeCommentRequest.userProfile)
 
@@ -1033,7 +1033,7 @@ class ValuesResponderV1 extends Responder {
         }
 
         for {
-        // Don't allow anonymous users to update values.
+            // Don't allow anonymous users to update values.
             userIri <- changeCommentRequest.userProfile.userData.user_id match {
                 case Some(iri) => Future(iri)
                 case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to update values"))
@@ -1069,7 +1069,7 @@ class ValuesResponderV1 extends Responder {
           * @return a [[Future]] that does pre-update checks and performs the update.
           */
         def makeTaskFuture(userIri: IRI, findResourceWithValueResult: FindResourceWithValueResult): Future[DeleteValueResponseV1] = for {
-        // Ensure that the user has permission to mark the value as deleted.
+            // Ensure that the user has permission to mark the value as deleted.
             maybeCurrentValueQueryResult <- findValue(deleteValueRequest.valueIri, deleteValueRequest.userProfile)
             currentValueQueryResult = maybeCurrentValueQueryResult.getOrElse(throw NotFoundException(s"Value ${deleteValueRequest.valueIri} not found (it may have been deleted)"))
 
@@ -1096,7 +1096,7 @@ class ValuesResponderV1 extends Responder {
                     val linkPropertyIri = knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
 
                     for {
-                    // Get project info
+                        // Get project info
                         maybeProjectInfo <- {
                             responderManager ? ProjectInfoByIRIGetV1(
                                 findResourceWithValueResult.projectIri,
@@ -1198,7 +1198,7 @@ class ValuesResponderV1 extends Responder {
         } yield DeleteValueResponseV1(id = deletedValueIri)
 
         for {
-        // Don't allow anonymous users to update values.
+            // Don't allow anonymous users to update values.
             userIri <- deleteValueRequest.userProfile.userData.user_id match {
                 case Some(iri) => Future(iri)
                 case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to mark values as deleted"))
@@ -1245,7 +1245,7 @@ class ValuesResponderV1 extends Responder {
 
 
         for {
-        // Do a SPARQL query to get the versions of the value.
+            // Do a SPARQL query to get the versions of the value.
             sparqlQuery <- Future {
                 queries.sparql.v1.txt.getVersionHistory(
                     triplestore = settings.triplestoreType,
@@ -1801,7 +1801,7 @@ class ValuesResponderV1 extends Responder {
     @throws(classOf[ForbiddenException])
     private def verifyOrdinaryValueUpdate(resourceIri: IRI, propertyIri: IRI, searchValueIri: IRI, userProfile: UserProfileV1): Future[ValueQueryResult] = {
         for {
-        // Do a SPARQL query to look for the value in the resource's version history.
+            // Do a SPARQL query to look for the value in the resource's version history.
             sparqlQuery <- Future {
                 // Run the template function in a Future to handle exceptions (see http://git.iml.unibas.ch/salsah-suite/knora/wikis/futures-with-akka#handling-errors-with-futures)
                 queries.sparql.v1.txt.findValueInVersions(
@@ -2049,7 +2049,7 @@ class ValuesResponderV1 extends Responder {
         val currentTime: String = Instant.now.toString
 
         for {
-        // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
+            // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
             standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- value match {
                 case textValueV1: TextValueWithStandoffV1 =>
                     // Make sure the text value's list of resource references is correct.
@@ -2131,7 +2131,7 @@ class ValuesResponderV1 extends Responder {
                                              valuePermissions: String,
                                              userProfile: UserProfileV1): Future[ChangeValueResponseV1] = {
         for {
-        // Delete the existing link and decrement its LinkValue's reference count.
+            // Delete the existing link and decrement its LinkValue's reference count.
             sparqlTemplateLinkUpdateForCurrentLink <- decrementLinkValue(
                 sourceResourceIri = resourceIri,
                 linkPropertyIri = propertyIri,
@@ -2237,7 +2237,7 @@ class ValuesResponderV1 extends Responder {
                                                  valuePermissions: String,
                                                  userProfile: UserProfileV1): Future[ChangeValueResponseV1] = {
         for {
-        // If we're adding a text value, update direct links and LinkValues for any resource references in Standoff.
+            // If we're adding a text value, update direct links and LinkValues for any resource references in Standoff.
             standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- (currentValueV1, updateValueV1) match {
                 case (currentTextValue: TextValueV1, newTextValue: TextValueV1) =>
                     // Make sure the new text value's list of resource references is correct.
@@ -2382,7 +2382,7 @@ class ValuesResponderV1 extends Responder {
                                    valuePermissions: String,
                                    userProfile: UserProfileV1): Future[SparqlTemplateLinkUpdate] = {
         for {
-        // Check whether a LinkValue already exists for this link.
+            // Check whether a LinkValue already exists for this link.
             maybeLinkValueQueryResult <- findLinkValueByLinkTriple(
                 subjectIri = sourceResourceIri,
                 predicateIri = linkPropertyIri,
@@ -2467,7 +2467,7 @@ class ValuesResponderV1 extends Responder {
                                    valuePermissions: String,
                                    userProfile: UserProfileV1): Future[SparqlTemplateLinkUpdate] = {
         for {
-        // Query the LinkValue to ensure that it exists and to get its contents.
+            // Query the LinkValue to ensure that it exists and to get its contents.
             maybeLinkValueQueryResult <- findLinkValueByLinkTriple(
                 subjectIri = sourceResourceIri,
                 predicateIri = linkPropertyIri,

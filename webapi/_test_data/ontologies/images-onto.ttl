@@ -634,9 +634,9 @@
 
 
 ### ###########################################
-### images:bildformatValue
+### images:hatBildformatValue
 
-:bildformatValue rdf:type owl:ObjectProperty ;
+:hatBildformatValue rdf:type owl:ObjectProperty ;
 
                  rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
@@ -662,7 +662,7 @@
 ### ###########################################
 ### images:bildformat
 
-:bildformat rdf:type owl:ObjectProperty ;
+:hatBildformat rdf:type owl:ObjectProperty ;
 
             rdfs:subPropertyOf knora-base:hasLinkTo ;
 
@@ -1029,11 +1029,11 @@
                          owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
-                         owl:onProperty :bildformatValue ;
+                         owl:onProperty :hatBildformatValue ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
-                         owl:onProperty :bildformat ;
+                         owl:onProperty :hatBildformat ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
@@ -1076,4 +1076,3 @@
                  "Image"@en ;
 
       rdfs:comment """An image of the demo image collection"""@de .
-

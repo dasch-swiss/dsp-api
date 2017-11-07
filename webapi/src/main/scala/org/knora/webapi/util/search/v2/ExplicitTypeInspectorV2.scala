@@ -27,11 +27,11 @@ import org.knora.webapi.util.search._
   * A [[TypeInspector]] that relies on explicit type annotations in SPARQL. There are two kinds of type annotations:
   *
   * 1. For every variable or IRI representing a resource or value, there must be a triple whose subject is the variable
-  *    or IRI, whose predicate is `rdf:type`, and whose object is `knora-api:Resource`, another `knora-api` type
-  *    such as `knora-api:date`, or an XSD type such as `xsd:integer`.
+  * or IRI, whose predicate is `rdf:type`, and whose object is `knora-api:Resource`, another `knora-api` type
+  * such as `knora-api:date`, or an XSD type such as `xsd:integer`.
   * 1. For every variable or IRI representing a property, there must be a triple whose subject is the variable or
-  *    property IRI, whose predicate is `knora-api:objectType`, and whose object is an IRI representing the type
-  *    of object that is required by the property.
+  * property IRI, whose predicate is `knora-api:objectType`, and whose object is an IRI representing the type
+  * of object that is required by the property.
   *
   * @param apiType specifies which API schema is being used in the search query.
   */
@@ -41,6 +41,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
       * An enumeration of the properties that are used in type annotations.
       */
     private object TypeAnnotationPropertiesV2 extends Enumeration {
+
         import Ordering.Tuple2 // scala compiler issue: https://issues.scala-lang.org/browse/SI-8541
 
         val RDF_TYPE: Value = Value(0, OntologyConstants.Rdf.Type)
@@ -87,7 +88,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
       *
       * @param typeableEntity the entity whose type was annotated.
       * @param annotationProp the annotation property.
-      * @param typeIri the type IRI that was given in the annotation.
+      * @param typeIri        the type IRI that was given in the annotation.
       */
     private case class ExplicitAnnotationV2Simple(typeableEntity: TypeableEntity, annotationProp: TypeAnnotationPropertiesV2.Value, typeIri: IRI)
 

@@ -78,7 +78,7 @@ case class ExtendedSearchCountGetRequestV2(constructQuery: ConstructQuery,
   * Requests an extended search. A successful response will be a [[ReadResourcesSequenceV2]].
   *
   * @param constructQuery a Sparql construct query provided by the client.
-  * @param userProfile the profile of the user making the request.
+  * @param userProfile    the profile of the user making the request.
   */
 case class ExtendedSearchGetRequestV2(constructQuery: ConstructQuery,
                                       userProfile: UserProfileV1) extends SearchResponderRequestV2
@@ -87,10 +87,10 @@ case class ExtendedSearchGetRequestV2(constructQuery: ConstructQuery,
 /**
   * Requests a search of resources by their label. A successful response will be a [[ReadResourcesSequenceV2]].
   *
-  * @param searchValue the values to search for.
-  * @param limitToProject limit search to given project.
+  * @param searchValue          the values to search for.
+  * @param limitToProject       limit search to given project.
   * @param limitToResourceClass limit search to given resource class.
-  * @param userProfile the profile of the user making the request.
+  * @param userProfile          the profile of the user making the request.
   */
 case class SearchResourceByLabelCountGetRequestV2(searchValue: String,
                                           limitToProject: Option[IRI],

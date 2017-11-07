@@ -78,7 +78,7 @@ object IriLocker {
       * acquire the lock after the maximum number of retries, it throws [[ApplicationLockException]].
       *
       * @param apiRequestID the ID of the API request that needs the lock.
-      * @param iri  the IRI to be locked.
+      * @param iri          the IRI to be locked.
       * @param task         a function returning a [[Future]] that performs the update. This function will be called only after
       *                     the lock has been acquired. If the task throws an exception or returns a failed `Future`,
       *                     this method will return a failed `Future`.
@@ -103,7 +103,7 @@ object IriLocker {
       * waits and retries. If the lock is still unavailable after the maximum number of retries,
       * throws [[ApplicationLockException]].
       *
-      * @param iri  the IRI to be locked.
+      * @param iri          the IRI to be locked.
       * @param apiRequestID the ID of the API request that needs the lock.
       * @param tries        the number of times to try to acquire the lock.
       */
@@ -147,7 +147,7 @@ object IriLocker {
       * Checks that the specified API request has a lock on the specified IRI, then either decrements
       * the lock's entry count or releases the lock.
       *
-      * @param iri  the IRI that is locked.
+      * @param iri          the IRI that is locked.
       * @param apiRequestID the ID of the API request that has the lock.
       */
     private def decrementOrReleaseLock(iri: IRI, apiRequestID: UUID): Unit = {

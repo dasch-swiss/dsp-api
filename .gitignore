@@ -32,3 +32,4 @@ docs/_format_docu_v2
 .sbtrc
 webapi/_fuseki/run
 triplestores/graphdb-se-7
+idea.vmoptions

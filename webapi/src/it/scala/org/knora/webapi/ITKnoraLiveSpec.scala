@@ -35,7 +35,7 @@ object ITKnoraLiveSpec {
 class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with Suite with BeforeAndAfterAll {
     /* needed by the core trait */
     implicit lazy val settings: SettingsImpl = Settings(system)
-    StringFormatter.init(settings)
+    StringFormatter.initForTest()
 
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraLiveSpec.defaultConfig)))
 

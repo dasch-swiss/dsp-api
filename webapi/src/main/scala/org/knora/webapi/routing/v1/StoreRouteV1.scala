@@ -45,6 +45,7 @@ object StoreRouteV1 extends Authenticator with StoreV1JsonProtocol {
         path("v1" / "store") {
             get {
                 requestContext =>
+
                     /** Maybe return some statistics about the store, e.g., what triplestore, number of triples in
                       * each named graph and in total, etc.
                       */
