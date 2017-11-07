@@ -370,24 +370,24 @@ class OntologyResponderV1 extends Responder {
                             PropertyDefinitionInNamedGraphV1(
                                 id = propertyIri,
                                 name = propertyIri,
-                                label = entityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                description = entityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                vocabulary = entityInfoContent.ontologyIri,
+                                label = entityInfoContent.getPredicateLiteralObject(predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label), preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                description = entityInfoContent.getPredicateLiteralObject(predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Comment), preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                vocabulary = entityInfoContent.ontologyIri.toString,
                                 valuetype_id = OntologyConstants.KnoraBase.LinkValue,
-                                attributes = valueUtilV1.makeAttributeString(entityInfo.entityInfoContent.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
-                                gui_name = entityInfoContent.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+                                attributes = valueUtilV1.makeAttributeString(entityInfo.entityInfoContent.getPredicateLiteralsWithoutLang(stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiAttribute)) + valueUtilV1.makeAttributeRestype(entityInfoContent.getPredicateIriObjects(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint)).headOption.getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")).toString)),
+                                gui_name = entityInfoContent.getPredicateIriObject(stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElement)).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri.toString))
                             )
 
                         } else {
                             PropertyDefinitionInNamedGraphV1(
                                 id = propertyIri,
                                 name = propertyIri,
-                                label = entityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                description = entityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                vocabulary = entityInfoContent.ontologyIri,
-                                valuetype_id = entityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
-                                attributes = valueUtilV1.makeAttributeString(entityInfo.entityInfoContent.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute)),
-                                gui_name = entityInfoContent.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+                                label = entityInfoContent.getPredicateLiteralObject(predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label), preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                description = entityInfoContent.getPredicateLiteralObject(predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Comment), preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                vocabulary = entityInfoContent.ontologyIri.toString,
+                                valuetype_id = entityInfoContent.getPredicateIriObject(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint)).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")).toString,
+                                attributes = valueUtilV1.makeAttributeString(entityInfo.entityInfoContent.getPredicateLiteralsWithoutLang(stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiAttribute))),
+                                gui_name = entityInfoContent.getPredicateIriObject(stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElement)).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri.toString))
                             )
 
                         }

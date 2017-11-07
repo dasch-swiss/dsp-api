@@ -6,14 +6,19 @@ package org.knora.webapi
 sealed trait OntologySchema
 
 /**
+  * The schema of Knora ontologies and entities.
+  */
+sealed trait KnoraSchema extends OntologySchema
+
+/**
   * The schema of Knora ontologies and entities that are used in the triplestore.
   */
-case object InternalSchema extends OntologySchema
+case object InternalSchema extends KnoraSchema
 
 /**
   * The schema of Knora ontologies and entities that are used in API v2.
   */
-sealed trait ApiV2Schema extends OntologySchema
+sealed trait ApiV2Schema extends KnoraSchema
 
 /**
   * The simple schema for representing Knora ontologies and entities. This schema represents values as literals

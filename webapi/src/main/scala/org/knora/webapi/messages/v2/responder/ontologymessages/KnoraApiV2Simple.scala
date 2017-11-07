@@ -21,11 +21,14 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import org.knora.webapi._
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
   * Represents the `knora-api` ontology, version 2, in the [[ApiV2Simple]] schema.
   */
 object KnoraApiV2Simple {
+
+    private val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
     val Resource: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.Resource,
@@ -983,7 +986,7 @@ object KnoraApiV2Simple {
         Geoname,
         Geom
     ).map {
-        classInfo => classInfo.entityInfoContent.classIri -> classInfo
+        classInfo => classInfo.entityInfoContent.classIri.toString -> classInfo
     }.toMap
 
     /**
@@ -1012,7 +1015,7 @@ object KnoraApiV2Simple {
         HasTextFile,
         HasDocumentFile
     ).map {
-        propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
+        propertyInfo => propertyInfo.entityInfoContent.propertyIri.toString -> propertyInfo
     }.toMap
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1030,8 +1033,8 @@ object KnoraApiV2Simple {
                               objects: Set[String] = Set.empty[String],
                               objectsWithLang: Map[String, String] = Map.empty[String, String]): PredicateInfoV2 = {
         PredicateInfoV2(
-            predicateIri = predicateIri,
-            ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri,
+            predicateIri = stringFormatter.toSmartIri(predicateIri),
+            ontologyIri = stringFormatter.toSmartIri(OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri),
             objects = objects,
             objectsWithLang = objectsWithLang
         )
@@ -1079,13 +1082,13 @@ object KnoraApiV2Simple {
 
         ReadPropertyInfoV2(
             entityInfoContent = PropertyInfoContentV2(
-                propertyIri = propertyIri,
-                ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri,
+                propertyIri = stringFormatter.toSmartIri(propertyIri),
+                ontologyIri = stringFormatter.toSmartIri(OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri),
                 ontologySchema = ApiV2Simple,
                 predicates = predsWithTypes.map {
                     pred => pred.predicateIri -> pred
                 }.toMap,
-                subPropertyOf = subPropertyOf
+                subPropertyOf = subPropertyOf.map(iri => stringFormatter.toSmartIri(iri))
             )
         )
     }
@@ -1098,35 +1101,33 @@ object KnoraApiV2Simple {
       * @param predicates             the predicates of the class.
       * @param directCardinalities    the direct cardinalities of the class.
       * @param inheritedCardinalities the inherited cardinalities of the class.
-      * @param linkProperties         the set of the class's link properties.
       * @return a [[ReadClassInfoV2]].
       */
     private def makeClass(classIri: IRI,
                           subClassOf: Set[IRI] = Set.empty[IRI],
                           predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
                           directCardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
-                          inheritedCardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
-                          linkProperties: Set[IRI] = Set.empty[IRI]): ReadClassInfoV2 = {
+                          inheritedCardinalities: Map[SmartIri, Cardinality.Value] = Map.empty[SmartIri, Cardinality.Value]): ReadClassInfoV2 = {
         val predicatesWithType = predicates :+ makePredicate(
             predicateIri = OntologyConstants.Rdf.Type,
             objects = Set(OntologyConstants.Owl.Class)
         )
 
-        // TODO: distinguish between inherited cardinalities and others.
-
         ReadClassInfoV2(
             entityInfoContent = ClassInfoContentV2(
-                classIri = classIri,
+                rdfType = stringFormatter.toSmartIri(OntologyConstants.Owl.Class),
+                classIri = stringFormatter.toSmartIri(classIri),
                 predicates = predicatesWithType.map {
                     pred => pred.predicateIri -> pred
                 }.toMap,
-                directCardinalities = directCardinalities,
-                subClassOf = subClassOf,
-                ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri,
+                directCardinalities = directCardinalities.map {
+                    case (propertyIri, cardinality) => stringFormatter.toSmartIri(propertyIri) -> cardinality
+                },
+                subClassOf = subClassOf.map(iri => stringFormatter.toSmartIri(iri)),
+                ontologyIri = stringFormatter.toSmartIri(OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri),
                 ontologySchema = ApiV2Simple
             ),
-            inheritedCardinalities = inheritedCardinalities,
-            linkProperties = linkProperties
+            inheritedCardinalities = inheritedCardinalities
         )
     }
 
@@ -1152,14 +1153,14 @@ object KnoraApiV2Simple {
 
         ReadClassInfoV2(
             entityInfoContent = ClassInfoContentV2(
-                classIri = datatypeIri,
-                ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri,
-                rdfType = OntologyConstants.Rdfs.Datatype,
+                classIri = stringFormatter.toSmartIri(datatypeIri),
+                ontologyIri = stringFormatter.toSmartIri(OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri),
+                rdfType = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Datatype),
                 xsdStringRestrictionPattern = xsdStringRestrictionPattern,
                 predicates = predicatesWithType.map {
                     pred => pred.predicateIri -> pred
                 }.toMap,
-                subClassOf = subClassOf.toSet,
+                subClassOf = subClassOf.toSet.map(iri => stringFormatter.toSmartIri(iri)),
                 ontologySchema = ApiV2Simple
             )
         )

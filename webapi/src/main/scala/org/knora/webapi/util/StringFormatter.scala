@@ -105,11 +105,12 @@ object StringFormatter {
       */
     case class XmlImportNamespaceInfoV1(namespace: IRI, prefixLabel: String)
 
-
     private var maybeInstance: Option[StringFormatter] = None
 
+    private val instanceForConstantOntologies = new StringFormatter(None)
+
     /**
-      * Gets the singleton instance of [[StringFormatter]].
+      * Gets the singleton instance of [[StringFormatter]] that handles IRIs from data.
       */
     def getInstance: StringFormatter = {
         maybeInstance match {
@@ -117,6 +118,12 @@ object StringFormatter {
             case None => throw AssertionException("StringFormatter not yet initialised")
         }
     }
+
+    /**
+      * Gets the singleton instance of [[StringFormatter]] that can only handle the IRIs in built-in
+      * ontologies.
+      */
+    def getInstanceForConstantOntologies: StringFormatter = instanceForConstantOntologies
 
     /**
       * Initialises the singleton instance of [[StringFormatter]].
@@ -127,7 +134,7 @@ object StringFormatter {
         this.synchronized {
             maybeInstance match {
                 case Some(_) => ()
-                case None => maybeInstance = Some(new StringFormatter(settings.knoraApiHttpBaseUrl))
+                case None => maybeInstance = Some(new StringFormatter(Some(settings.knoraApiHttpBaseUrl)))
             }
         }
     }
@@ -139,7 +146,7 @@ object StringFormatter {
         this.synchronized {
             maybeInstance match {
                 case Some(_) => ()
-                case None => maybeInstance = Some(new StringFormatter("http://0.0.0.0:3333"))
+                case None => maybeInstance = Some(new StringFormatter(Some("http://0.0.0.0:3333")))
             }
         }
     }
@@ -148,7 +155,9 @@ object StringFormatter {
 /**
   * Represents a parsed IRI.
   */
-sealed trait SmartIri {
+sealed trait SmartIri extends Ordered[SmartIri] {
+    def compare(that: SmartIri): Int = this.toString.compare(that.toString)
+
     /**
       * Returns `true` if this is a Knora ontology or entity IRI.
       */
@@ -217,11 +226,14 @@ sealed trait SmartIri {
 /**
   * Handles string formatting and validation.
   */
-class StringFormatter private(val knoraApiHttpBaseUrl: String) {
+class StringFormatter private(val knoraApiHttpBaseUrl: Option[String]) {
 
     import StringFormatter._
 
     private val valueFactory = SimpleValueFactory.getInstance()
+
+    // If true, this is the instance of StringFormatter that is intended for use only with constant ontologies.
+    private val constantOntologiesOnly: Boolean = knoraApiHttpBaseUrl.isEmpty
 
     /**
       * The implementation of [[SmartIri]]. An instance of this class can only be constructed by [[StringFormatter]].
@@ -245,136 +257,162 @@ class StringFormatter private(val knoraApiHttpBaseUrl: String) {
                                         ontologySchema: OntologySchema,
                                         isBuiltIn: Boolean)
 
-        private val iriInfo: SmartIriInfo = iri match {
+        private val nonProjectSpecificKnoraIriInfo: Option[SmartIriInfo] = iri match {
             case InternalOntologyRegex(_, Optional(projectCode), ontologyName) =>
-                SmartIriInfo(
+                Some(SmartIriInfo(
                     projectCode = projectCode,
                     ontologyName = Some(ontologyName),
                     entityName = None,
                     ontologySchema = InternalSchema,
                     isBuiltIn = isBuiltInOntologyName(ontologyName)
-                )
+                ))
 
             case InternalOntologyEntityRegex(_, Optional(projectCode), ontologyName, entityName) =>
-                SmartIriInfo(
+                Some(SmartIriInfo(
                     projectCode = projectCode,
                     ontologyName = Some(ontologyName),
                     entityName = Some(entityName),
                     ontologySchema = InternalSchema,
                     isBuiltIn = isBuiltInOntologyName(ontologyName)
-                )
+                ))
 
             case BuiltInApiV2SimpleOntologyRegex(ontologyName) =>
                 if (!isBuiltInOntologyName(ontologyName)) {
                     errorFun()
                 }
 
-                SmartIriInfo(
+                Some(SmartIriInfo(
                     projectCode = None,
                     ontologyName = Some(ontologyName),
                     entityName = None,
                     ontologySchema = ApiV2Simple,
                     isBuiltIn = true
-                )
+                ))
 
             case BuiltInApiV2WithValueObjectsOntologyRegex(ontologyName) =>
                 if (!isBuiltInOntologyName(ontologyName)) {
                     errorFun()
                 }
 
-                SmartIriInfo(
+                Some(SmartIriInfo(
                     projectCode = None,
                     ontologyName = Some(ontologyName),
                     entityName = None,
                     ontologySchema = ApiV2WithValueObjects,
                     isBuiltIn = true
-                )
+                ))
 
             case BuiltInApiV2SimpleOntologyEntityRegex(ontologyName, entityName) =>
                 if (!isBuiltInOntologyName(ontologyName)) {
                     errorFun()
                 }
 
-                SmartIriInfo(
+                Some(SmartIriInfo(
                     projectCode = None,
                     ontologyName = Some(ontologyName),
                     entityName = Some(entityName),
                     ontologySchema = ApiV2Simple,
                     isBuiltIn = true
-                )
+                ))
 
             case BuiltInApiV2WithValueObjectsOntologyEntityRegex(ontologyName, entityName) =>
                 if (!isBuiltInOntologyName(ontologyName)) {
                     errorFun()
                 }
 
-                SmartIriInfo(
+                Some(SmartIriInfo(
                     projectCode = None,
                     ontologyName = Some(ontologyName),
                     entityName = Some(entityName),
                     ontologySchema = ApiV2WithValueObjects,
                     isBuiltIn = true
-                )
+                ))
 
-            case ProjectSpecificApiV2SimpleOntologyRegex(_, Optional(projectCode), ontologyName) =>
-                if (isBuiltInOntologyName(ontologyName)) {
-                    errorFun()
-                }
+            case _ => None
+        }
 
-                SmartIriInfo(
-                    projectCode = projectCode,
-                    ontologyName = Some(ontologyName),
+        private def requireRegex(maybeRegex: Option[Regex]): Regex = {
+            maybeRegex match {
+                case Some(regex) => regex
+                case None => throw AssertionException("Format of project-specific IRIs was not initialised")
+            }
+        }
+
+        private val projectSpecificKnoraIriInfo: Option[SmartIriInfo] = if (nonProjectSpecificKnoraIriInfo.nonEmpty && !constantOntologiesOnly) {
+            val ProjectSpecificApiV2SimpleOntologyRegex = requireRegex(MaybeProjectSpecificApiV2SimpleOntologyRegex)
+            val ProjectSpecificApiV2WithValueObjectsOntologyRegex = requireRegex(MaybeProjectSpecificApiV2WithValueObjectsOntologyRegex)
+            val ProjectSpecificApiV2SimpleOntologyEntityRegex = requireRegex(MaybeProjectSpecificApiV2SimpleOntologyEntityRegex)
+            val ProjectSpecificApiV2WithValueObjectsOntologyEntityRegex = requireRegex(MaybeProjectSpecificApiV2WithValueObjectsOntologyEntityRegex)
+
+            iri match {
+                case ProjectSpecificApiV2SimpleOntologyRegex(_, Optional(projectCode), ontologyName) =>
+                    if (isBuiltInOntologyName(ontologyName)) {
+                        errorFun()
+                    }
+
+                    Some(SmartIriInfo(
+                        projectCode = projectCode,
+                        ontologyName = Some(ontologyName),
+                        entityName = None,
+                        ontologySchema = ApiV2Simple,
+                        isBuiltIn = false
+                    ))
+
+                case ProjectSpecificApiV2WithValueObjectsOntologyRegex(_, Optional(projectCode), ontologyName) =>
+                    if (isBuiltInOntologyName(ontologyName)) {
+                        errorFun()
+                    }
+
+                    Some(SmartIriInfo(
+                        projectCode = projectCode,
+                        ontologyName = Some(ontologyName),
+                        entityName = None,
+                        ontologySchema = ApiV2WithValueObjects,
+                        isBuiltIn = false
+                    ))
+
+                case ProjectSpecificApiV2SimpleOntologyEntityRegex(_, Optional(projectCode), ontologyName, entityName) =>
+                    if (isBuiltInOntologyName(ontologyName)) {
+                        errorFun()
+                    }
+
+                    Some(SmartIriInfo(
+                        projectCode = projectCode,
+                        ontologyName = Some(ontologyName),
+                        entityName = Some(entityName),
+                        ontologySchema = ApiV2Simple,
+                        isBuiltIn = false
+                    ))
+
+                case ProjectSpecificApiV2WithValueObjectsOntologyEntityRegex(_, Optional(projectCode), ontologyName, entityName) =>
+                    if (isBuiltInOntologyName(ontologyName)) {
+                        errorFun()
+                    }
+
+                    Some(SmartIriInfo(
+                        projectCode = projectCode,
+                        ontologyName = Some(ontologyName),
+                        entityName = Some(entityName),
+                        ontologySchema = ApiV2WithValueObjects,
+                        isBuiltIn = false
+                    ))
+            }
+        } else {
+            None
+        }
+
+        private val iriInfo: SmartIriInfo = nonProjectSpecificKnoraIriInfo match {
+            case Some(info) => info
+            case None => projectSpecificKnoraIriInfo match {
+                case Some(info) => info
+                case None => SmartIriInfo(
+                    projectCode = None,
+                    ontologyName = None,
                     entityName = None,
-                    ontologySchema = ApiV2Simple,
+                    ontologySchema = NonKnoraSchema,
                     isBuiltIn = false
                 )
-
-            case ProjectSpecificApiV2WithValueObjectsOntologyRegex(_, Optional(projectCode), ontologyName) =>
-                if (isBuiltInOntologyName(ontologyName)) {
-                    errorFun()
-                }
-
-                SmartIriInfo(
-                    projectCode = projectCode,
-                    ontologyName = Some(ontologyName),
-                    entityName = None,
-                    ontologySchema = ApiV2WithValueObjects,
-                    isBuiltIn = false
-                )
-
-            case ProjectSpecificApiV2SimpleOntologyEntityRegex(_, Optional(projectCode), ontologyName, entityName) =>
-                if (isBuiltInOntologyName(ontologyName)) {
-                    errorFun()
-                }
-
-                SmartIriInfo(
-                    projectCode = projectCode,
-                    ontologyName = Some(ontologyName),
-                    entityName = Some(entityName),
-                    ontologySchema = ApiV2Simple,
-                    isBuiltIn = false
-                )
-
-            case ProjectSpecificApiV2WithValueObjectsOntologyEntityRegex(_, Optional(projectCode), ontologyName, entityName) =>
-                if (isBuiltInOntologyName(ontologyName)) {
-                    errorFun()
-                }
-
-                SmartIriInfo(
-                    projectCode = projectCode,
-                    ontologyName = Some(ontologyName),
-                    entityName = Some(entityName),
-                    ontologySchema = ApiV2WithValueObjects,
-                    isBuiltIn = false
-                )
-
-            case _ => SmartIriInfo(
-                projectCode = None,
-                ontologyName = None,
-                entityName = None,
-                ontologySchema = NonKnoraSchema,
-                isBuiltIn = false
-            )
+            }
         }
 
         override def toString: String = rdfIri.toString
@@ -506,7 +544,12 @@ class StringFormatter private(val knoraApiHttpBaseUrl: String) {
             val convertedIriStr: IRI = if (isBuiltInIri) {
                 OntologyConstants.KnoraApi.ApiOntologyStart + internalToExternalOntologyName(ontologyName) + versionSegment
             } else {
-                val externalOntologyIri = new StringBuilder(ProjectSpecificApiV2OntologyStart)
+                val projectSpecificApiV2OntologyStart = MaybeProjectSpecificApiV2OntologyStart match {
+                    case Some(ontologyStart) => ontologyStart
+                    case None => throw AssertionException("Format of project-specific IRIs was not initialised")
+                }
+
+                val externalOntologyIri = new StringBuilder(projectSpecificApiV2OntologyStart)
 
                 iriInfo.projectCode match {
                     case Some(projectCode) => externalOntologyIri.append(projectCode).append('/')
@@ -571,7 +614,10 @@ class StringFormatter private(val knoraApiHttpBaseUrl: String) {
       * @param iri the IRI string to be parsed.
       */
     def toSmartIri(iri: IRI): SmartIri = {
-        new SmartIriImpl(iri)
+        commonIris.get(iri) match {
+            case Some(smartIri) => smartIri
+            case None => new SmartIriImpl(iri)
+        }
     }
 
     /**
@@ -581,8 +627,33 @@ class StringFormatter private(val knoraApiHttpBaseUrl: String) {
       * @param errorFun a function that throws an exception. It will be called if the IRI is invalid.
       */
     def toSmartIriWithErr(iri: IRI, errorFun: () => Nothing): SmartIri = {
-        new SmartIriImpl(iri, errorFun)
+        commonIris.get(iri) match {
+            case Some(smartIri) => smartIri
+            case None => new SmartIriImpl(iri, errorFun)
+        }
     }
+
+    private val commonIris: Map[IRI, SmartIri] = Map(
+        OntologyConstants.Rdf.Type -> toSmartIri(OntologyConstants.Rdf.Type),
+        OntologyConstants.Rdf.Property -> toSmartIri(OntologyConstants.Rdf.Property),
+        OntologyConstants.Rdfs.Label -> toSmartIri(OntologyConstants.Rdfs.Label),
+        OntologyConstants.Rdfs.Comment -> toSmartIri(OntologyConstants.Rdfs.Comment),
+        OntologyConstants.Rdfs.Datatype -> toSmartIri(OntologyConstants.Rdfs.Datatype),
+        OntologyConstants.Owl.DatatypeProperty -> toSmartIri(OntologyConstants.Owl.DatatypeProperty),
+        OntologyConstants.Owl.AnnotationProperty -> toSmartIri(OntologyConstants.Owl.AnnotationProperty),
+        OntologyConstants.Owl.ObjectProperty -> toSmartIri(OntologyConstants.Owl.ObjectProperty),
+        OntologyConstants.Owl.Class -> toSmartIri(OntologyConstants.Owl.Class),
+        OntologyConstants.KnoraBase.SubjectClassConstraint -> toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint),
+        OntologyConstants.KnoraBase.ObjectClassConstraint -> toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint),
+        OntologyConstants.SalsahGui.GuiElement -> toSmartIri(OntologyConstants.SalsahGui.GuiElement),
+        OntologyConstants.SalsahGui.GuiAttribute -> toSmartIri(OntologyConstants.SalsahGui.GuiAttribute),
+        OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri -> toSmartIri(OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri),
+        OntologyConstants.KnoraApiV2Simple.SubjectType -> toSmartIri(OntologyConstants.KnoraApiV2Simple.SubjectType),
+        OntologyConstants.KnoraApiV2Simple.ObjectType -> toSmartIri(OntologyConstants.KnoraApiV2Simple.ObjectType),
+        OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri -> toSmartIri(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri),
+        OntologyConstants.KnoraApiV2WithValueObjects.SubjectType -> toSmartIri(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType),
+        OntologyConstants.KnoraApiV2WithValueObjects.ObjectType -> toSmartIri(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType)
+    )
 
     // Reserved words that cannot be used in project-specific ontology names.
     private val reservedIriWords = Set("knora", "ontology", "simple")
@@ -687,33 +758,56 @@ class StringFormatter private(val knoraApiHttpBaseUrl: String) {
         ).r
 
     // The start of the IRI of a project-specific API v2 ontology that is served by this API server.
-    private val ProjectSpecificApiV2OntologyStart: String = knoraApiHttpBaseUrl + "/ontology/"
+    private val MaybeProjectSpecificApiV2OntologyStart: Option[String] = knoraApiHttpBaseUrl match {
+        case Some(url) => Some(url + "/ontology/")
+        case None => None
+    }
 
     // A regex for the IRI of a project-specific API v2 ontology that is served by this server, with the simple schema.
-    private val ProjectSpecificApiV2SimpleOntologyRegex: Regex = (
-        "^" + ProjectSpecificApiV2OntologyStart + "((" +
-            ProjectIDPattern + ")/)?(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2Simple.VersionSegment + "$"
-        ).r
+    private val MaybeProjectSpecificApiV2SimpleOntologyRegex: Option[Regex] =
+        if (constantOntologiesOnly) {
+            None
+        } else {
+            Some(("^" + MaybeProjectSpecificApiV2OntologyStart + "((" +
+                    ProjectIDPattern + ")/)?(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2Simple.VersionSegment + "$"
+                ).r)
+        }
 
     // A regex for the IRI of a project-specific API v2 ontology that is served by this server, with the value object schema.
-    private val ProjectSpecificApiV2WithValueObjectsOntologyRegex: Regex = (
-        "^" + ProjectSpecificApiV2OntologyStart + "((" +
-            ProjectIDPattern + ")/)?(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "$"
-        ).r
+    private val MaybeProjectSpecificApiV2WithValueObjectsOntologyRegex: Option[Regex] =
+        if (constantOntologiesOnly) {
+            None
+        } else {
+            Some((
+                "^" + MaybeProjectSpecificApiV2OntologyStart + "((" +
+                    ProjectIDPattern + ")/)?(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "$"
+                ).r)
+        }
 
     // A regex for the IRI of an entity in a project-specific API v2 simple ontology that is served by this server.
-    private val ProjectSpecificApiV2SimpleOntologyEntityRegex: Regex = (
-        "^" + ProjectSpecificApiV2OntologyStart + "((" +
-            ProjectIDPattern + ")/)?(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2Simple.VersionSegment +
-            "#(" + NCNamePattern + ")$"
-        ).r
+    private val MaybeProjectSpecificApiV2SimpleOntologyEntityRegex: Option[Regex] =
+        if (constantOntologiesOnly) {
+            None
+        } else {
+            Some((
+                "^" + MaybeProjectSpecificApiV2OntologyStart + "((" +
+                    ProjectIDPattern + ")/)?(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2Simple.VersionSegment +
+                    "#(" + NCNamePattern + ")$"
+                ).r)
+        }
+
 
     // A regex for the IRI of an entity in a project-specific API v2 with value objects ontology that is served by this server.
-    private val ProjectSpecificApiV2WithValueObjectsOntologyEntityRegex: Regex = (
-        "^" + ProjectSpecificApiV2OntologyStart + "((" +
-            ProjectIDPattern + ")/)?(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment +
-            "#(" + NCNamePattern + ")$"
-        ).r
+    private val MaybeProjectSpecificApiV2WithValueObjectsOntologyEntityRegex: Option[Regex] =
+        if (constantOntologiesOnly) {
+            None
+        } else {
+            Some(        (
+                "^" + MaybeProjectSpecificApiV2OntologyStart + "((" +
+                    ProjectIDPattern + ")/)?(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment +
+                    "#(" + NCNamePattern + ")$"
+                ).r)
+        }
 
     // A regex for a project-specific XML import namespace.
     private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
@@ -1085,7 +1179,7 @@ class StringFormatter private(val knoraApiHttpBaseUrl: String) {
     def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: () => Nothing): SmartIri = {
         namespace match {
             case ProjectSpecificXmlImportNamespaceRegex(_, _, ontologyName) if !isBuiltInOntologyName(ontologyName) =>
-                val namespaceIri = toSmartIri(namespace.stripSuffix("#"), () => throw BadRequestException(s"Invalid XML namespace: $namespace"))
+                val namespaceIri = toSmartIriWithErr(namespace.stripSuffix("#"), () => throw BadRequestException(s"Invalid XML namespace: $namespace"))
                 namespaceIri.toOntologySchema(InternalSchema)
 
             case _ => errorFun()

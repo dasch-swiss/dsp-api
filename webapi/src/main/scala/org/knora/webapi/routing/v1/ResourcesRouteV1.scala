@@ -384,7 +384,7 @@ object ResourcesRouteV1 extends Authenticator {
                     ontologyIrisFromCardinalities: Set[IRI] = entityInfoResponse.resourceClassInfoMap.foldLeft(Set.empty[IRI]) {
                         case (acc, (resourceClassIri, resourceClassInfo)) =>
                             val resourceCardinalityOntologies: Set[IRI] = resourceClassInfo.allCardinalities.map {
-                                case (propertyIri, _) => stringFormatter.toSmartIri(propertyIri).getOntology.toString
+                                case (propertyIri, _) => propertyIri.getOntology.toString
                             }.toSet
 
                             acc ++ resourceCardinalityOntologies
