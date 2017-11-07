@@ -45,7 +45,7 @@ object ListsRouteV1 extends Authenticator {
             get {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
-                    val listIri = stringFormatter.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
+                    val listIri = stringFormatter.validateIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                     val requestMessage = requestContext.request.uri.query().get("reqtype") match {
                         case Some("node") => NodePathGetRequestV1(listIri, userProfile)
@@ -66,7 +66,7 @@ object ListsRouteV1 extends Authenticator {
                 get {
                     requestContext =>
                         val userProfile = getUserProfileV1(requestContext)
-                        val selIri = stringFormatter.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
+                        val selIri = stringFormatter.validateIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                         val requestMessage = requestContext.request.uri.query().get("reqtype") match {
                             case Some("node") => NodePathGetRequestV1(selIri, userProfile)

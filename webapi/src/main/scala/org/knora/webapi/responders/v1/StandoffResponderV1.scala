@@ -211,7 +211,7 @@ class StandoffResponderV1 extends Responder {
                     case defaultTrans: NodeSeq if defaultTrans.length == 1 =>
 
                         // check if the IRI is valid
-                        val transIri = stringFormatter.toIri(defaultTrans.headOption.getOrElse(throw BadRequestException("could not access <defaultXSLTransformation>")).text, () => throw BadRequestException(s"XSL transformation ${defaultTrans.head.text} is not a valid IRI"))
+                        val transIri = stringFormatter.validateIri(defaultTrans.headOption.getOrElse(throw BadRequestException("could not access <defaultXSLTransformation>")).text, () => throw BadRequestException(s"XSL transformation ${defaultTrans.head.text} is not a valid IRI"))
 
                         // try to obtain the XSL transformation to make sure that it really exists
                         // TODO: add a test to the integration tests
@@ -240,7 +240,7 @@ class StandoffResponderV1 extends Responder {
                         // get the boolean indicating if the element requires a separator in the text once it is converted to standoff
                         val separatorBooleanAsString = (curMappingEle \ "tag" \ "separatesWords").headOption.getOrElse(throw BadRequestException(s"no '<separatesWords>' given for node $curMappingEle")).text
 
-                        val separatorRequired: Boolean = stringFormatter.toBoolean(separatorBooleanAsString, () => throw BadRequestException(s"<separatesWords> could not be converted to Boolean: $separatorBooleanAsString"))
+                        val separatorRequired: Boolean = stringFormatter.validateBoolean(separatorBooleanAsString, () => throw BadRequestException(s"<separatesWords> could not be converted to Boolean: $separatorBooleanAsString"))
 
                         // get the standoff class IRI
                         val standoffClassIri = (curMappingEle \ "standoffClass" \ "classIri").headOption.getOrElse(throw BadRequestException(s"no '<classIri>' given for node $curMappingEle")).text
@@ -263,7 +263,7 @@ class StandoffResponderV1 extends Responder {
                                 MappingXMLAttribute(
                                     attributeName = stringFormatter.toSparqlEncodedString(attrName, () => throw BadRequestException(s"tagname $attrName contains invalid characters")),
                                     namespace = stringFormatter.toSparqlEncodedString(attributeNamespace, () => throw BadRequestException(s"tagname $attributeNamespace contains invalid characters")),
-                                    standoffProperty = stringFormatter.toIri(propIri, () => throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")),
+                                    standoffProperty = stringFormatter.validateIri(propIri, () => throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")),
                                     mappingXMLAttributeElementIri = knoraIdUtil.makeRandomMappingElementIri(mappingIri)
                                 )
 
@@ -292,7 +292,7 @@ class StandoffResponderV1 extends Responder {
                             tagName = stringFormatter.toSparqlEncodedString(tagName, () => throw BadRequestException(s"tagname $tagName contains invalid characters")),
                             namespace = stringFormatter.toSparqlEncodedString(tagNamespace, () => throw BadRequestException(s"namespace $tagNamespace contains invalid characters")),
                             className = stringFormatter.toSparqlEncodedString(className, () => throw BadRequestException(s"classname $className contains invalid characters")),
-                            standoffClass = stringFormatter.toIri(standoffClassIri, () => throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")),
+                            standoffClass = stringFormatter.validateIri(standoffClassIri, () => throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")),
                             attributes = attributes,
                             standoffDataTypeClass = standoffDataTypeOption,
                             mappingElementIri = knoraIdUtil.makeRandomMappingElementIri(mappingIri),

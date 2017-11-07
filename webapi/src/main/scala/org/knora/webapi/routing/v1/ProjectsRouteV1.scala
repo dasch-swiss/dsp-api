@@ -92,7 +92,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             ProjectInfoByShortnameGetRequestV1(shortNameDec, Some(userProfile))
                         } else { // identify project by iri. this is the default case.
-                            val checkedProjectIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
+                            val checkedProjectIri = stringFormatter.validateIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
                             ProjectInfoByIRIGetRequestV1(checkedProjectIri, Some(userProfile))
                         }
 
@@ -110,7 +110,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                     entity(as[ChangeProjectApiRequestV1]) { apiRequest =>
                         requestContext =>
                             val userProfile = getUserProfileV1(requestContext)
-                            val checkedProjectIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
+                            val checkedProjectIri = stringFormatter.validateIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
 
                             /* the api request is already checked at time of creation. see case class. */
 
@@ -134,7 +134,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                     /* update project status to false */
                     requestContext =>
                         val userProfile = getUserProfileV1(requestContext)
-                        val checkedProjectIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
+                        val checkedProjectIri = stringFormatter.validateIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
 
                         val requestMessage = ProjectChangeRequestV1(
                             projectIri = checkedProjectIri,
@@ -164,7 +164,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             ProjectMembersByShortnameGetRequestV1(shortNameDec, userProfile)
                         } else {
-                            val checkedProjectIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
+                            val checkedProjectIri = stringFormatter.validateIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
                             ProjectMembersByIRIGetRequestV1(checkedProjectIri, userProfile)
                         }
 
@@ -190,7 +190,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             ProjectAdminMembersByShortnameGetRequestV1(shortNameDec, userProfile)
                         } else {
-                            val checkedProjectIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
+                            val checkedProjectIri = stringFormatter.validateIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
                             ProjectAdminMembersByIRIGetRequestV1(checkedProjectIri, userProfile)
                         }
 

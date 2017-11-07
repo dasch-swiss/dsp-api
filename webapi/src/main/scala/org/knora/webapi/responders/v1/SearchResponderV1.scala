@@ -361,7 +361,7 @@ class SearchResponderV1 extends Responder {
                                 // It is a date, parse and convert it to JD
                                 //
 
-                                val datestring = stringFormatter.toDate(searchval, () => throw BadRequestException(s"Invalid date format: $searchval"))
+                                val datestring = stringFormatter.validateDate(searchval, () => throw BadRequestException(s"Invalid date format: $searchval"))
 
                                 // parse date: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
                                 val parsedDate = datestring.split(StringFormatter.CalendarSeparator)
@@ -423,22 +423,22 @@ class SearchResponderV1 extends Responder {
 
                             case OntologyConstants.KnoraBase.IntValue =>
                                 // check if string is an integer
-                                val searchString = stringFormatter.toInt(searchval, () => throw BadRequestException(s"Given searchval is not an integer: $searchval")).toString
+                                val searchString = stringFormatter.validateInt(searchval, () => throw BadRequestException(s"Given searchval is not an integer: $searchval")).toString
                                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                             case OntologyConstants.KnoraBase.DecimalValue =>
                                 // check if string is a decimal number
-                                val searchString = stringFormatter.toBigDecimal(searchval, () => throw BadRequestException(s"Given searchval is not a decimal number: $searchval")).toString
+                                val searchString = stringFormatter.validateBigDecimal(searchval, () => throw BadRequestException(s"Given searchval is not a decimal number: $searchval")).toString
                                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                             case OntologyConstants.KnoraBase.Resource =>
                                 // check if string is a valid IRI
-                                val searchString = stringFormatter.toIri(searchval, () => throw BadRequestException(s"Given searchval is not a valid IRI: $searchval"))
+                                val searchString = stringFormatter.validateIri(searchval, () => throw BadRequestException(s"Given searchval is not a valid IRI: $searchval"))
                                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                             case OntologyConstants.KnoraBase.ColorValue =>
                                 // check if string is a hexadecimal RGB-color value
-                                val searchString = stringFormatter.toColor(searchval, () => throw BadRequestException(s"Invalid color format: $searchval"))
+                                val searchString = stringFormatter.validateColor(searchval, () => throw BadRequestException(s"Invalid color format: $searchval"))
                                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                             case OntologyConstants.KnoraBase.GeomValue =>
@@ -447,12 +447,12 @@ class SearchResponderV1 extends Responder {
 
                             case OntologyConstants.KnoraBase.ListValue =>
                                 // check if string represents a node in a list
-                                val searchString = stringFormatter.toIri(searchval, () => throw BadRequestException(s"Given searchval is not a formally valid IRI $searchval"))
+                                val searchString = stringFormatter.validateIri(searchval, () => throw BadRequestException(s"Given searchval is not a formally valid IRI $searchval"))
                                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                             case OntologyConstants.KnoraBase.BooleanValue =>
                                 // check if searchVal is a Boolan value
-                                val searchString = stringFormatter.toBoolean(searchval, () => throw BadRequestException(s"Given searchval is not a valid Boolean value: $searchval")).toString
+                                val searchString = stringFormatter.validateBoolean(searchval, () => throw BadRequestException(s"Given searchval is not a valid Boolean value: $searchval")).toString
                                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                             case other => throw BadRequestException(s"The value type for the given property $prop is unknown.")

@@ -1115,7 +1115,7 @@ class OntologyResponderV2 extends Responder {
             }
 
             // Check that the ontology name is valid.
-            validOntologyName = stringFormatter.toProjectSpecificOntologyName(createOntologyRequest.ontologyName, () => throw BadRequestException(s"Invalid project-specific ontology name: ${createOntologyRequest.ontologyName}"))
+            validOntologyName = stringFormatter.validateProjectSpecificOntologyName(createOntologyRequest.ontologyName, () => throw BadRequestException(s"Invalid project-specific ontology name: ${createOntologyRequest.ontologyName}"))
 
             // Make the internal ontology IRI.
             externalOntologyID = OntologyID(validOntologyName, projectCode)

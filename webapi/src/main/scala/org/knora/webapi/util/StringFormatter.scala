@@ -375,7 +375,7 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
       *                 valid integer.
       * @return the integer value of the string.
       */
-    def toInt(s: String, errorFun: () => Nothing): Int = {
+    def validateInt(s: String, errorFun: () => Nothing): Int = {
         try {
             s.toInt
         } catch {
@@ -391,7 +391,7 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
       *                 valid decimal number.
       * @return the decimal value of the string.
       */
-    def toBigDecimal(s: String, errorFun: () => Nothing): BigDecimal = {
+    def validateBigDecimal(s: String, errorFun: () => Nothing): BigDecimal = {
         try {
             BigDecimal(s)
         } catch {
@@ -407,7 +407,7 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
       *                 a valid datetime.
       * @return the same string.
       */
-    def toDateTime(s: String, errorFun: () => Nothing): String = {
+    def validateDateTime(s: String, errorFun: () => Nothing): String = {
         // check if a string corresponds to the expected format `dateTimeFormat`
 
         try {
@@ -426,7 +426,7 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
       *                 IRI.
       * @return the same string.
       */
-    def toIri(s: String, errorFun: () => Nothing): IRI = {
+    def validateIri(s: String, errorFun: () => Nothing): IRI = {
         val urlEncodedStr = encodeAllowEscapes(s)
 
         if (urlValidator.isValid(urlEncodedStr)) {
@@ -446,14 +446,14 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
       * @param errorFun        a function that throws an exception. It will be called if the form of the string is invalid.
       * @return the same string.
       */
-    def toStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean, errorFun: () => Nothing): IRI = {
+    def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean, errorFun: () => Nothing): IRI = {
         if (acceptClientIDs) {
             s match {
                 case StandoffLinkReferenceToClientIDForResourceRegex(_) => s
-                case _ => toIri(s, () => errorFun())
+                case _ => validateIri(s, () => errorFun())
             }
         } else {
-            toIri(s, () => errorFun())
+            validateIri(s, () => errorFun())
         }
     }
 
@@ -479,7 +479,7 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
       *                                        a reference to a client's ID for a resource.
       * @param clientResourceIDsToResourceIris a map of client resource IDs to real resource IRIs.
       */
-    def toRealStandoffLinkTargetResourceIri(iri: IRI, clientResourceIDsToResourceIris: Map[String, IRI]): String = {
+    def toRealStandoffLinkTargetResourceIri(iri: IRI, clientResourceIDsToResourceIris: Map[String, IRI]): IRI = {
         iri match {
             case StandoffLinkReferenceToClientIDForResourceRegex(clientResourceID) => clientResourceIDsToResourceIris(clientResourceID)
             case _ => iri
@@ -525,7 +525,7 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
       *                 JSON.
       * @return the same string.
       */
-    def toGeometryString(s: String, errorFun: () => Nothing): String = {
+    def validateGeometryString(s: String, errorFun: () => Nothing): String = {
         // TODO: For now, we just make sure that the string is valid JSON. We should stop JSON in the triplestore, and represent geometry in RDF instead (issue 169).
 
         try {
@@ -544,7 +544,7 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
       *                 hexadecimal color code.
       * @return the same string.
       */
-    def toColor(s: String, errorFun: () => Nothing): String = {
+    def validateColor(s: String, errorFun: () => Nothing): String = {
         ColorRegex.findFirstIn(s) match {
             case Some(dateStr) => dateStr
             case None => errorFun() // not a valid color hex value string
@@ -558,7 +558,7 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
       * @param errorFun a function that throws an exception. It will be called if the date's format is invalid.
       * @return the same string.
       */
-    def toDate(s: String, errorFun: () => Nothing): String = {
+    def validateDate(s: String, errorFun: () => Nothing): String = {
         // if the pattern doesn't match (=> None), the date string is formally invalid
         // Please note that this is a mere formal validation,
         // the actual validity check is done in `DateUtilV1.dateString2DateRange`
@@ -576,46 +576,13 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
       *                 a boolean value.
       * @return the boolean value of the string.
       */
-    def toBoolean(s: String, errorFun: () => Nothing): Boolean = {
+    def validateBoolean(s: String, errorFun: () => Nothing): Boolean = {
         try {
             s.toBoolean
         } catch {
             case _: Exception => errorFun() // value could not be converted to Boolean
         }
     }
-
-    // TODO: Move to test case if needed
-    /*
-    def main(args: Array[String]): Unit = {
-        val delimiter = StringUtils.repeat('=', 80)
-        val goodIriStr = "http://foo.bar.org"
-        val unicodeIriStr = "http://اختبار.org"
-        val badIriStr = "http://foo\". DELETE ha ha ha"
-        val junkStr = "Blah blah \"blah\" and 'blah'.\nAnd more \\\" blah."
-
-        println("Good IRI string:")
-        println(goodIriStr)
-        println("Validator result: " + urlValidator.isValid(goodIriStr))
-        println(delimiter)
-
-        println("Unicode IRI string:")
-        println(unicodeIriStr)
-        println("Validator result: " + urlValidator.isValid(unicodeIriStr))
-        println(delimiter)
-
-        println("Bad IRI string:")
-        println(badIriStr)
-        println("Validator result: " + urlValidator.isValid(badIriStr))
-        println(delimiter)
-
-        println("Junk string:")
-        println(junkStr)
-        println(delimiter)
-        println("Junk string, encoded:")
-        println(toSparqlEncodedString(junkStr))
-    }
-    */
-
 
     /**
       * Map over all standoff tags to collect IRIs that are referred to by linking standoff tags.
@@ -655,62 +622,13 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
     }
 
     /**
-      *
-      * @param settings   Knora application settings.
-      * @param binaryData the binary file data to be saved.
-      * @return the location where the file has been written to.
-      */
-    def saveFileToTmpLocation(settings: SettingsImpl, binaryData: Array[Byte]): File = {
-
-        val fileName = createTempFile(settings)
-        // write given file to disk
-        Files.write(fileName.toPath, binaryData)
-
-        fileName
-    }
-
-    /**
-      * Creates an empty file in the default temporary-file directory specified in Knora's application settings.
-      *
-      * @param settings Knora's application settings.
-      * @return the location where the file has been written to.
-      */
-    def createTempFile(settings: SettingsImpl): File = {
-
-        // check if the location for writing temporary files exists
-        if (!Files.exists(Paths.get(settings.tmpDataDir))) {
-            throw FileWriteException(s"Data directory ${
-                settings.tmpDataDir
-            } does not exist on server")
-        }
-
-        val file: File = File.createTempFile("tmp_", ".bin", new File(settings.tmpDataDir))
-
-        if (!file.canWrite)
-            throw FileWriteException(s"File $file cannot be written.")
-        file
-    }
-
-    def deleteFileFromTmpLocation(fileName: File, log: LoggingAdapter): Boolean = {
-
-        val path = fileName.toPath
-
-        if (!fileName.canWrite) {
-            val ex = FileWriteException(s"File $path cannot be deleted.")
-            log.error(ex, ex.getMessage)
-        }
-
-        Files.deleteIfExists(path)
-    }
-
-    /**
       * Checks that a string is a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
       *
       * @param ncName   the string to be checked.
       * @param errorFun a function that throws an exception. It will be called if the string is invalid.
       * @return the same string.
       */
-    def toNCName(ncName: String, errorFun: () => Nothing): String = {
+    def validateNCName(ncName: String, errorFun: () => Nothing): String = {
         NCNameRegex.findFirstIn(ncName) match {
             case Some(value) => value
             case None => errorFun()
@@ -734,7 +652,7 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
       * @param errorFun     a function that throws an exception. It will be called if the name is invalid.
       * @return the same ontology name.
       */
-    def toProjectSpecificOntologyName(ontologyName: String, errorFun: () => Nothing): String = {
+    def validateProjectSpecificOntologyName(ontologyName: String, errorFun: () => Nothing): String = {
         ontologyName match {
             case NCNameRegex(_*) => ()
             case _ => errorFun()
@@ -1211,9 +1129,9 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
       *                 valid for a project-specific internal ontology.
       * @return the same IRI.
       */
-    def toProjectSpecificInternalOntologyIri(iri: IRI, errorFun: () => Nothing): IRI = {
+    def validateProjectSpecificInternalOntologyIri(iri: IRI, errorFun: () => Nothing): IRI = {
         iri match {
-            case InternalOntologyRegex(_, _, ontologyName) if toProjectSpecificOntologyName(ontologyName, errorFun) == ontologyName => iri
+            case InternalOntologyRegex(_, _, ontologyName) if validateProjectSpecificOntologyName(ontologyName, errorFun) == ontologyName => iri
             case _ => errorFun()
         }
     }
@@ -1239,7 +1157,7 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
       * @param errorFun a function that throws an exception. It will be called if the check fails.
       * @return the same IRI.
       */
-    def toProjectSpecificApiV2WithValueObjectsOntologyIri(iri: IRI, errorFun: () => Nothing): IRI = {
+    def validateProjectSpecificApiV2WithValueObjectsOntologyIri(iri: IRI, errorFun: () => Nothing): IRI = {
         iri match {
             case ProjectSpecificApiV2OntologyEntityRegex(_, _, ontologyName, _, _) if !isBuiltInOntologyName(ontologyName) => iri
             case _ => errorFun()
@@ -1356,11 +1274,11 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
       * @param errorFun a function that throws an exception. It will be called if the path is invalid.
       * @return the same path.
       */
-    def toMapPath(mapPath: String, errorFun: () => Nothing): String = {
+    def validateMapPath(mapPath: String, errorFun: () => Nothing): String = {
         val splitPath: Array[String] = mapPath.split('/')
 
         for (name <- splitPath) {
-            toNCName(name, () => errorFun())
+            validateNCName(name, () => errorFun())
         }
 
         mapPath
@@ -1441,7 +1359,7 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
             // The client is asking about a non-constant ontology. Translate its IRI to an internal ontology IRI.
             if (isExternalOntologyIri(requestedOntology)) {
                 val internalOntologyIri = toInternalOntologyIri(requestedOntology, () => throw BadRequestException(s"Invalid external ontology IRI: $requestedOntology"))
-                toIri(internalOntologyIri, () => throw BadRequestException(s"Invalid named graph IRI: $internalOntologyIri"))
+                validateIri(internalOntologyIri, () => throw BadRequestException(s"Invalid named graph IRI: $internalOntologyIri"))
             } else {
                 throw BadRequestException(s"Invalid external ontology IRI: $requestedOntology")
             }
@@ -1465,7 +1383,7 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
                 if (isExternalEntityIri(requestedEntity)) {
                     // The client is asking about a non-constant entity. Translate its IRI to an internal entity IRI.
                     val internalEntityIri = externalToInternalEntityIri(requestedEntity, () => throw BadRequestException(s"Invalid external entity IRI: $requestedEntity"))
-                    toIri(internalEntityIri, () => throw BadRequestException(s"Invalid entity IRI: $internalEntityIri"))
+                    validateIri(internalEntityIri, () => throw BadRequestException(s"Invalid entity IRI: $internalEntityIri"))
                 } else {
                     throw BadRequestException(s"Invalid external entity IRI: $requestedEntity")
                 }

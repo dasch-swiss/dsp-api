@@ -146,7 +146,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     if (stringFormatter.isExternalEntityIri(iriRef.iri)) {
                         IriRef(stringFormatter.externalToInternalEntityIri(iriRef.iri, () => throw BadRequestException(s"${iriRef.iri} is not a valid external knora-api entity Iri")))
                     } else {
-                        IriRef(stringFormatter.toIri(iriRef.iri, () => throw BadRequestException(s"$iriRef is not a valid IRI")))
+                        IriRef(stringFormatter.validateIri(iriRef.iri, () => throw BadRequestException(s"$iriRef is not a valid IRI")))
                     }
 
                 case other => other
@@ -726,7 +726,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                         }
 
                                         // validate Knora  date string
-                                        val dateStr: String = stringFormatter.toDate(dateStringLiteral.value, () => throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"))
+                                        val dateStr: String = stringFormatter.validateDate(dateStringLiteral.value, () => throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"))
 
                                         val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
 
@@ -1611,7 +1611,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                         val internalTypeIri = if (stringFormatter.isExternalEntityIri(nonPropertyTypeInfo.typeIri)) {
                                             IriRef(stringFormatter.externalToInternalEntityIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid external knora-api entity Iri")))
                                         } else {
-                                            IriRef(stringFormatter.toIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid IRI")))
+                                            IriRef(stringFormatter.validateIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid IRI")))
                                         }
                                         literalTypesToValueTypeIris.getOrElse(internalTypeIri.iri, throw SparqlSearchException(s"Type ${internalTypeIri.iri} is not supported in ORDER BY"))
 

@@ -71,12 +71,12 @@ object CreateOntologyRequestV2 {
         val docObjMap = jsonLDDocument.body.value
 
         val ontologyName: String = docObjMap.getOrElse(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName, throw BadRequestException("No knora-api:ontologyName provided")) match {
-            case JsonLDString(value) => stringFormatter.toProjectSpecificOntologyName(value, () => throw BadRequestException(s"Invalid knora-api:ontologyName: $value"))
+            case JsonLDString(value) => stringFormatter.validateProjectSpecificOntologyName(value, () => throw BadRequestException(s"Invalid knora-api:ontologyName: $value"))
             case other => throw BadRequestException(s"Invalid knora-api:ontologyName: $other")
         }
 
         val projectIri: IRI = docObjMap.getOrElse(OntologyConstants.KnoraApiV2WithValueObjects.ProjectIri, throw BadRequestException("No knora-api:projectIri provided")) match {
-            case JsonLDString(value) => stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid knora-api:projectIri: $value"))
+            case JsonLDString(value) => stringFormatter.validateIri(value, () => throw BadRequestException(s"Invalid knora-api:projectIri: $value"))
             case other => throw BadRequestException(s"Invalid knora-api:projectIri: $other")
         }
 

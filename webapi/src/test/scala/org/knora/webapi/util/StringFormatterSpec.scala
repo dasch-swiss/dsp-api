@@ -35,110 +35,110 @@ class StringFormatterSpec extends CoreSpec() {
         "not accept 2017-05-10" in {
             val dateString = "2017-05-10"
             assertThrows[BadRequestException] {
-                stringFormatter.toDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+                stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
             }
         }
 
         "accept GREGORIAN:2017" in {
             val dateString = "GREGORIAN:2017"
-            stringFormatter.toDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept GREGORIAN:2017-05" in {
             val dateString = "GREGORIAN:2017-05"
-            stringFormatter.toDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept GREGORIAN:2017-05-10" in {
             val dateString = "GREGORIAN:2017-05-10"
-            stringFormatter.toDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept GREGORIAN:2017-05-10:2017-05-12" in {
             val dateString = "GREGORIAN:2017-05-10:2017-05-12"
-            stringFormatter.toDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept GREGORIAN:500-05-10 BC" in {
             val dateString = "GREGORIAN:500-05-10 BC"
-            stringFormatter.toDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept GREGORIAN:500-05-10 AD" in {
             val dateString = "GREGORIAN:500-05-10 AD"
-            stringFormatter.toDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept GREGORIAN:500-05-10 BC:5200-05-10 AD" in {
             val dateString = "GREGORIAN:500-05-10 BC:5200-05-10 AD"
-            stringFormatter.toDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept JULIAN:50 BCE" in {
             val dateString = "JULIAN:50 BCE"
-            stringFormatter.toDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept JULIAN:1560-05 CE" in {
             val dateString = "JULIAN:1560-05 CE"
-            stringFormatter.toDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept JULIAN:217-05-10 BCE" in {
             val dateString = "JULIAN:217-05-10 BCE"
-            stringFormatter.toDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept JULIAN:2017-05-10:2017-05-12" in {
             val dateString = "JULIAN:2017-05-10:2017-05-12"
-            stringFormatter.toDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept JULIAN:2017:2017-5-12" in {
             val dateString = "JULIAN:2017:2017-5-12"
-            stringFormatter.toDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
         }
         
         "accept JULIAN:500 BCE:400 BCE" in {
             val dateString = "JULIAN:500 BCE:400 BCE"
-            stringFormatter.toDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
         }
         
         "accept GREGORIAN:10 BC:1 AD" in {
             val dateString = "GREGORIAN:10 BC:1 AD"
-            stringFormatter.toDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
         }
         
         "not accept month 00" in {
             val dateString = "GREGORIAN:2017-00:2017-02"
             assertThrows[BadRequestException] {
-                stringFormatter.toDate(dateString, () => throw BadRequestException(s"month 00 in $dateString Not accepted" ))
+                stringFormatter.validateDate(dateString, () => throw BadRequestException(s"month 00 in $dateString Not accepted" ))
             }
         }
         
         "not accept day 00" in {
             val dateString = "GREGORIAN:2017-01-00"
             assertThrows[BadRequestException] {
-                stringFormatter.toDate(dateString, () => throw BadRequestException(s"day 00 in $dateString Not accepted" ))
+                stringFormatter.validateDate(dateString, () => throw BadRequestException(s"day 00 in $dateString Not accepted" ))
             }
         }
         
         "not accept year 0" in {
             val dateString = "GREGORIAN:0 BC"
             assertThrows[BadRequestException] {
-                stringFormatter.toDate(dateString, () => throw BadRequestException(s"Year 0 is Not accepted $dateString"))
+                stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Year 0 is Not accepted $dateString"))
             }
         }
 
         "recognize the url of the dhlab site as a valid IRI" in {
             val testUrl: String = "http://dhlab.unibas.ch/"
-            val validIri = stringFormatter.toIri(testUrl, () => throw BadRequestException(s"Invalid IRI $testUrl"))
+            val validIri = stringFormatter.validateIri(testUrl, () => throw BadRequestException(s"Invalid IRI $testUrl"))
             validIri should be(testUrl)
         }
 
         "recognize the url of the DaSCH site as a valid IRI" in {
             val testUrl = "http://dasch.swiss"
-            val validIri = stringFormatter.toIri(testUrl, () => throw BadRequestException(s"Invalid IRI $testUrl"))
+            val validIri = stringFormatter.validateIri(testUrl, () => throw BadRequestException(s"Invalid IRI $testUrl"))
             validIri should be(testUrl)
         }
 

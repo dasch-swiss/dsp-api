@@ -53,7 +53,7 @@ object SearchRouteV2 extends Authenticator {
         offsetStr match {
             case Some(offset: String) =>
 
-                val offsetInt: Int = stringFormatter.toInt(offset, () => throw BadRequestException(s"offset is expected to be an Integer, but $offset given"))
+                val offsetInt: Int = stringFormatter.validateInt(offset, () => throw BadRequestException(s"offset is expected to be an Integer, but $offset given"))
 
                 if (offsetInt < 0) throw BadRequestException(s"offset must be an Integer >= 0, but $offsetInt given.")
 
@@ -76,7 +76,7 @@ object SearchRouteV2 extends Authenticator {
         val limitToProjectIri: Option[IRI] = limitToProjectIriStr match {
 
             case Some(projectIriStr: String) =>
-                val projectIri = stringFormatter.toIri(projectIriStr, () => throw BadRequestException(s"$projectIriStr is not a valid Iri"))
+                val projectIri = stringFormatter.validateIri(projectIriStr, () => throw BadRequestException(s"$projectIriStr is not a valid Iri"))
 
                 Some(projectIri)
 
@@ -102,7 +102,7 @@ object SearchRouteV2 extends Authenticator {
 
             case Some(resourceClassIriStr: String) =>
 
-                val externalResourceClassIri = stringFormatter.toIri(resourceClassIriStr, () => throw BadRequestException(s"$resourceClassIriStr is not a valid Iri"))
+                val externalResourceClassIri = stringFormatter.validateIri(resourceClassIriStr, () => throw BadRequestException(s"$resourceClassIriStr is not a valid Iri"))
 
                 Some(stringFormatter.externalToInternalEntityIri(externalResourceClassIri, () => throw BadRequestException(s"$externalResourceClassIri is not a valid knora-api resource class Iri")))
 
