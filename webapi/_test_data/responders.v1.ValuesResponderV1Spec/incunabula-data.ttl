@@ -20,15 +20,15 @@
 	incunabula:publoc <http://data.knora.org/21abac2162/values/40e459f18201> ;
 	incunabula:title <http://data.knora.org/21abac2162/values/f76660458201> ;
 	incunabula:url <http://data.knora.org/21abac2162/values/8abc888d079e04> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	rdfs:label "Lob der Glieder Mariens" .
 
 <http://data.knora.org/21abac2162/values/0fb5f90f8401> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -36,7 +36,7 @@
 	knora-base:valueHasString "ISTC im00266000" .
 
 <http://data.knora.org/21abac2162/values/11111111> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-20T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -44,7 +44,7 @@
 	knora-base:valueHasString "Lob der Glieder Mariens previous 2" .
 
 <http://data.knora.org/21abac2162/values/22222222> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator" ;
 	knora-base:isDeleted false ;
 	knora-base:previousValue <http://data.knora.org/21abac2162/values/11111111> ;
@@ -53,7 +53,7 @@
 	knora-base:valueHasString "Lob der Glieder Mariens previous 1" .
 
 <http://data.knora.org/21abac2162/values/40e459f18201> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember,knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -61,7 +61,7 @@
 	knora-base:valueHasString "Basel" .
 
 <http://data.knora.org/21abac2162/values/4c8ba6d68301> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -69,7 +69,7 @@
 	knora-base:valueHasString "Schramm, Bd. XXI, S. 27" .
 
 <http://data.knora.org/21abac2162/values/4de6dbc6079e04> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -77,7 +77,7 @@
 	knora-base:valueHasString "Zusammengebunden mit zwei weiteren Drucken von Johann Amerbach" .
 
 <http://data.knora.org/21abac2162/values/7dba06b88201> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -85,7 +85,7 @@
 	knora-base:valueHasString "Johann Amerbach" .
 
 <http://data.knora.org/21abac2162/values/8961539d8301> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -93,7 +93,7 @@
 	knora-base:valueHasString "[12] Bl. : Ill. ; 8° " .
 
 <http://data.knora.org/21abac2162/values/8abc888d079e04> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -101,7 +101,7 @@
 	knora-base:valueHasString "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1" .
 
 <http://data.knora.org/21abac2162/values/ba90b37e8201> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -109,7 +109,7 @@
 	knora-base:valueHasString "The author" .
 
 <http://data.knora.org/21abac2162/values/c63700648301> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -117,7 +117,7 @@
 	knora-base:valueHasString "Universitäts- und Stadtbibliothek Köln, Sign: AD+S167" .
 
 <http://data.knora.org/21abac2162/values/c7923554079e04> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -125,7 +125,7 @@
 	knora-base:valueHasString "GW M18561" .
 
 <http://data.knora.org/21abac2162/values/f76660458201> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:previousValue <http://data.knora.org/21abac2162/values/22222222> ;
@@ -140,8 +140,8 @@
 	incunabula:partOf <http://data.knora.org/c5058f3a> ;
 	incunabula:partOfValue <http://data.knora.org/4f11adaf/values/0490c077-a754-460b-9633-c78bfe97c784> ;
 	incunabula:seqnum <http://data.knora.org/4f11adaf/values/f3c585ce03> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	knora-base:hasStillImageFileValue <http://data.knora.org/4f11adaf/reps/3d71f9ab> , <http://data.knora.org/4f11adaf/reps/fc964ce5> ;
@@ -149,7 +149,7 @@
 	rdfs:label "a1v, Titelblatt, Rückseite" .
 
 <http://data.knora.org/4f11adaf/reps/3d71f9ab> a knora-base:StillImageFileValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:dimX 81 ;
 	knora-base:dimY 128 ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
@@ -164,7 +164,7 @@
 	knora-base:valueHasString "ad+s167_druck1=0002.tif" .
 
 <http://data.knora.org/4f11adaf/reps/fc964ce5> a knora-base:StillImageFileValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:dimX 1870 ;
 	knora-base:dimY 2937 ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
@@ -178,7 +178,7 @@
 	knora-base:valueHasString "ad+s167_druck1=0002.tif" .
 
 <http://data.knora.org/4f11adaf/values/0167a0f9e922> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp ;
@@ -186,7 +186,7 @@
 	knora-base:valueHasString "Stempel (rund, blau): Wappen der Stadt Köln mit umlaufender Inschrift \"BIBLIOTHEK . DER. STADT . KOELN *\"" .
 
 <http://data.knora.org/4f11adaf/values/0490c077-a754-460b-9633-c78bfe97c784> a knora-base:LinkValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp ;
@@ -197,7 +197,7 @@
 	rdf:subject <http://data.knora.org/4f11adaf> .
 
 <http://data.knora.org/4f11adaf/values/6d72df5b03> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp ;
@@ -205,7 +205,7 @@
 	knora-base:valueHasString "a1v, Titelblatt, Rückseite" .
 
 <http://data.knora.org/4f11adaf/values/b6efd80704> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp ;
@@ -213,7 +213,7 @@
 	knora-base:valueHasString "ad+s167_druck1=0002.tif" .
 
 <http://data.knora.org/4f11adaf/values/f3c585ce03> a knora-base:IntValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp ;
@@ -222,8 +222,8 @@
 	knora-base:valueHasString "2" .
 
 <http://data.knora.org/5e51519c4407> a knora-base:Region ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:creationDate "Z"^^xsd:dateTimeStamp ;
 	knora-base:hasColor <http://data.knora.org/5e51519c4407/values/59b04e21ed2a> ;
 	knora-base:hasComment <http://data.knora.org/5e51519c4407/values/d35ca8aeec2a> ;
@@ -235,7 +235,7 @@
 	rdfs:label "Defekter Druckstock" .
 
 <http://data.knora.org/5e51519c4407/values/01224a37-e727-4f86-a38b-888ed3957053> a knora-base:LinkValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -246,7 +246,7 @@
 	rdf:subject <http://data.knora.org/5e51519c4407> .
 
 <http://data.knora.org/5e51519c4407/values/59b04e21ed2a> a knora-base:ColorValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -255,7 +255,7 @@
 	knora-base:valueHasString "#ff3333" .
 
 <http://data.knora.org/5e51519c4407/values/9686fbe7ec2a> a knora-base:GeomValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "Z"^^xsd:dateTimeStamp ;
@@ -264,7 +264,7 @@
 	knora-base:valueHasString "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}" .
 
 <http://data.knora.org/5e51519c4407/values/d35ca8aeec2a> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "Z"^^xsd:dateTimeStamp ;
@@ -278,8 +278,8 @@
 	incunabula:pagenum <http://data.knora.org/8a0b1e75/values/61cb927602> ;
 	incunabula:partOf <http://data.knora.org/c5058f3a> ;
 	incunabula:partOfValue <http://data.knora.org/8a0b1e75/values/3a7b5130-22c2-4400-a794-062b7a3e3436> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	knora-base:hasStillImageFileValue <http://data.knora.org/8a0b1e75/reps/bf255339> , <http://data.knora.org/8a0b1e75/reps/7e4ba672> ;
@@ -287,7 +287,7 @@
 	rdfs:label "a1r, Titelblatt" .
 
 <http://data.knora.org/8a0b1e75/reps/7e4ba672> a knora-base:StillImageFileValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:dimX 2613 ;
 	knora-base:dimY 3505 ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
@@ -301,7 +301,7 @@
 	knora-base:valueHasString "ad+s167_druck1=0001.tif" .
 
 <http://data.knora.org/8a0b1e75/reps/bf255339> a knora-base:StillImageFileValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:dimX 95 ;
 	knora-base:dimY 128 ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
@@ -316,7 +316,7 @@
 	knora-base:valueHasString "ad+s167_druck1=0001.tif" .
 
 <http://data.knora.org/8a0b1e75/values/3a7b5130-22c2-4400-a794-062b7a3e3436> a knora-base:LinkValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2011-04-14T11:15:28"^^xsd:dateTimeStamp ;
@@ -327,7 +327,7 @@
 	rdf:subject <http://data.knora.org/8a0b1e75> .
 
 <http://data.knora.org/8a0b1e75/values/3e3d4dc0e922> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2012-01-22T12:05:57"^^xsd:dateTimeStamp ;
@@ -339,7 +339,7 @@ Kolorierung: Rot, Blau, Grün, Gelb, Braun.
 Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 
 <http://data.knora.org/8a0b1e75/values/61cb927602> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2011-04-14T11:15:28"^^xsd:dateTimeStamp ;
@@ -347,7 +347,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "a1r, Titelblatt" .
 
 <http://data.knora.org/8a0b1e75/values/aa488c2203> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2011-04-14T11:15:28"^^xsd:dateTimeStamp ;
@@ -355,7 +355,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "ad+s167_druck1=0001.tif" .
 
 <http://data.knora.org/8a0b1e75/values/e80b2d895f23> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/b83acc5f05> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2012-01-24T18:07:40"^^xsd:dateTimeStamp ;
@@ -364,15 +364,15 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 
 <http://data.knora.org/9935159f67> a incunabula:book ;
 	incunabula:title <http://data.knora.org/9935159f67/values/e6e02fe39801> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	knora-base:isDeleted true ;
 	rdfs:label "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)" .
 
 <http://data.knora.org/9935159f67/values/e6e02fe39801> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2011-04-14T11:19:23"^^xsd:dateTimeStamp ;
@@ -390,15 +390,15 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	incunabula:publoc <http://data.knora.org/c3f913666f/values/965ef721b901> ;
 	incunabula:title <http://data.knora.org/c3f913666f/values/8ab7aa3cb801> , <http://data.knora.org/c3f913666f/values/4de1fd75b801> ;
 	incunabula:url <http://data.knora.org/c3f913666f/values/dfdbf0cdb901> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	rdfs:label "De generatione Christi" .
 
 <http://data.knora.org/c3f913666f/values/03d1d67dbc01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -406,7 +406,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Van der Haegen I: 25,1" .
 
 <http://data.knora.org/c3f913666f/values/0f782363bd01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -414,7 +414,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Oberrhein.Buchill. I,35" .
 
 <http://data.knora.org/c3f913666f/values/100b51afb801> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -422,7 +422,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Franciscus de Retza" .
 
 <http://data.knora.org/c3f913666f/values/1b1f7048be01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -430,7 +430,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Pell 4923" .
 
 <http://data.knora.org/c3f913666f/values/1cb29d94b901> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -438,7 +438,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Basel UB, Sign: FP VII2 5:4" .
 
 <http://data.knora.org/c3f913666f/values/27c6bc2dbf01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -446,7 +446,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Sajó-Soltész 1358" .
 
 <http://data.knora.org/c3f913666f/values/2859ea79ba01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -454,7 +454,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Datierung: Sack(Freiburg) datiert 1487/88 mit der Begründung, dass drei der vier Wasserzeichen in diesen Jahren auch in anderen Basler Archivalien und Drucken nachzuweisen sind (Piccard, Ochsenkopf I 261, X 283 und 506); Hieronymus datiert 1490, da teilweise gleiche Holzstöcke wie in Ysenhuts \"Itinerarium\" von 1489 jedoch in abgenutzterem Zustand (Oberrhein.Buchill. I,35); ISTC und GW datieren zwischen 1487-1500" .
 
 <http://data.knora.org/c3f913666f/values/336d0913c001> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -462,7 +462,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Sheppard 2508" .
 
 <http://data.knora.org/c3f913666f/values/3400375fbb01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -470,7 +470,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Titel fehlt, Bl. 1 leer (vgl. GW Anm. 2 von GW 10275)" .
 
 <http://data.knora.org/c3f913666f/values/3f1456f8c001> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -478,7 +478,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "GW 10275" .
 
 <http://data.knora.org/c3f913666f/values/40a78344bc01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -486,7 +486,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Zusammengebunden mit 10 weiteren Drucken" .
 
 <http://data.knora.org/c3f913666f/values/4c4ed029bd01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -494,7 +494,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "GfT 1015" .
 
 <http://data.knora.org/c3f913666f/values/4de1fd75b801> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -502,7 +502,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Defensorium inviolate perpetueque virginitatis castissime de genitricis Mariae" .
 
 <http://data.knora.org/c3f913666f/values/58f51c0fbe01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -510,7 +510,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Schramm XXII p.42" .
 
 <http://data.knora.org/c3f913666f/values/59884a5bb901> a knora-base:DateValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -523,7 +523,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "1487-01-01 - 1490-12-31" .
 
 <http://data.knora.org/c3f913666f/values/649c69f4be01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -531,7 +531,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "IDL 1860" .
 
 <http://data.knora.org/c3f913666f/values/652f9740ba01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -539,7 +539,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Titel nach Parallelexemplar" .
 
 <http://data.knora.org/c3f913666f/values/7043b6d9bf01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -547,7 +547,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Sack(Freiburg) 1479" .
 
 <http://data.knora.org/c3f913666f/values/71d6e325bb01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -555,7 +555,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Keine Bogensignaturen (3 8er-Bogen und 1 6er-Bogen)" .
 
 <http://data.knora.org/c3f913666f/values/7cea02bfc001> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -563,7 +563,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "BSB-Ink F-253" .
 
 <http://data.knora.org/c3f913666f/values/7d7d300bbc01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -571,7 +571,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Besitzvermerk der Kartause, aus dem Besitz von Johannes de Lapide" .
 
 <http://data.knora.org/c3f913666f/values/89247df0bc01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -579,7 +579,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "HC 6086*" .
 
 <http://data.knora.org/c3f913666f/values/8ab7aa3cb801> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -587,7 +587,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "De generatione Christi" .
 
 <http://data.knora.org/c3f913666f/values/95cbc9d5bd01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -595,7 +595,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Schr 4047" .
 
 <http://data.knora.org/c3f913666f/values/965ef721b901> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember,knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -603,7 +603,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Basel" .
 
 <http://data.knora.org/c3f913666f/values/a17216bbbe01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -611,7 +611,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Polain(B) 1518" .
 
 <http://data.knora.org/c3f913666f/values/a2054407ba01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -619,7 +619,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Extent: [30] Bl.; Other physical details: Ill. (53 Holzschnitte); Dimensions: 23 cm (4°)" .
 
 <http://data.knora.org/c3f913666f/values/ad1963a0bf01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -627,7 +627,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Voull(B) 556" .
 
 <http://data.knora.org/c3f913666f/values/aeac90ecba01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -635,7 +635,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Woodcuts" .
 
 <http://data.knora.org/c3f913666f/values/b9c0af85c001> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -643,7 +643,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "BMC III 780" .
 
 <http://data.knora.org/c3f913666f/values/ba53ddd1bb01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -651,7 +651,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Holzschnitte koloriert" .
 
 <http://data.knora.org/c3f913666f/values/c6fa29b7bc01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -659,7 +659,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Goff R153" .
 
 <http://data.knora.org/c3f913666f/values/d2a1769cbd01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -667,7 +667,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "TFS 1903gg" .
 
 <http://data.knora.org/c3f913666f/values/d334a4e8b801> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -675,7 +675,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Lienhart Ysenhut" .
 
 <http://data.knora.org/c3f913666f/values/de48c381be01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -683,7 +683,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Torchet 807" .
 
 <http://data.knora.org/c3f913666f/values/dfdbf0cdb901> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -691,7 +691,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002237546" .
 
 <http://data.knora.org/c3f913666f/values/eaef0f67bf01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -699,7 +699,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Madsen 3485" .
 
 <http://data.knora.org/c3f913666f/values/eb823db3ba01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -707,7 +707,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Text lateinisch-deutsch" .
 
 <http://data.knora.org/c3f913666f/values/f6965c4cc001> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -715,7 +715,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Pr 7717" .
 
 <http://data.knora.org/c3f913666f/values/f7298a98bb01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
@@ -732,15 +732,15 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	incunabula:publoc <http://data.knora.org/c5058f3a/values/0ca74ce5> ;
 	incunabula:title <http://data.knora.org/c5058f3a/values/c3295339> ;
 	incunabula:url <http://data.knora.org/c5058f3a/values/10e00c7acc2704> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
 
 <http://data.knora.org/c5058f3a/values/0ca74ce5> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember,knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -748,7 +748,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Basel" .
 
 <http://data.knora.org/c5058f3a/values/10e00c7acc2704> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -756,7 +756,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1" .
 
 <http://data.knora.org/c5058f3a/values/184e99ca01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -764,7 +764,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Schramm Bd. XXI, S. 27" .
 
 <http://data.knora.org/c5058f3a/values/497df9ab> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -772,7 +772,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Johann Amerbach" .
 
 <http://data.knora.org/c5058f3a/values/5524469101> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -780,7 +780,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Dimension: 8°" .
 
 <http://data.knora.org/c5058f3a/values/8653a672> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -788,7 +788,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Berthold, der Bruder" .
 
 <http://data.knora.org/c5058f3a/values/92faf25701> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -796,7 +796,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Universitäts- und Stadtbibliothek Köln, Sign: AD+S167" .
 
 <http://data.knora.org/c5058f3a/values/9ea13f3d02> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -804,7 +804,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "ISTC ib00512000" .
 
 <http://data.knora.org/c5058f3a/values/c3295339> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -812,7 +812,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Zeitglöcklein des Lebens und Leidens Christi" .
 
 <http://data.knora.org/c5058f3a/values/cfd09f1e01> a knora-base:DateValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -825,7 +825,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "1492-01-01 - 1492-12-31" .
 
 <http://data.knora.org/c5058f3a/values/db77ec0302> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -833,8 +833,8 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "GW 4168" .
 
 <http://data.knora.org/cb1a74e3e2f6> a knora-base:LinkObj ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
 	knora-base:hasComment <http://data.knora.org/cb1a74e3e2f6/values/dfe0ce1e099e04> ;
 	knora-base:hasLinkTo <http://data.knora.org/e41ab5695c> ;
@@ -844,7 +844,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	rdfs:label "Diese drei Texte sind in einem Band zusammengebunden." .
 
 <http://data.knora.org/cb1a74e3e2f6/values/87fbf1ca-05b7-4cf0-aa2f-4964ee1a7a8d> a knora-base:LinkValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
@@ -855,7 +855,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	rdf:subject <http://data.knora.org/cb1a74e3e2f6> .
 
 <http://data.knora.org/cb1a74e3e2f6/values/dfe0ce1e099e04> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
@@ -873,15 +873,15 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	incunabula:publoc <http://data.knora.org/e41ab5695c/values/45c33d6e6b01> ;
 	incunabula:title <http://data.knora.org/e41ab5695c/values/391cf1886a01> , <http://data.knora.org/e41ab5695c/values/fc4544c26a01> ;
 	incunabula:url <http://data.knora.org/e41ab5695c/values/10102f00089e04> ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	rdfs:label "Orationes" .
 
 <http://data.knora.org/e41ab5695c/values/08ed90a76b01> a knora-base:DateValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -894,7 +894,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "1492-01-01 - 1492-12-31" .
 
 <http://data.knora.org/e41ab5695c/values/10102f00089e04> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -902,7 +902,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1" .
 
 <http://data.knora.org/e41ab5695c/values/1494dd8c6c01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -910,7 +910,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "ISTC ib00684000" .
 
 <http://data.knora.org/e41ab5695c/values/391cf1886a01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -918,7 +918,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Orationes" .
 
 <http://data.knora.org/e41ab5695c/values/45c33d6e6b01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember,knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -926,7 +926,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Basel" .
 
 <http://data.knora.org/e41ab5695c/values/516a8a536c01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -934,7 +934,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "GW 4386" .
 
 <http://data.knora.org/e41ab5695c/values/8299ea346b01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -942,7 +942,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Johann Amerbach" .
 
 <http://data.knora.org/e41ab5695c/values/82db62ef0123> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -950,7 +950,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Schramm, Bd. 21, S. 27." .
 
 <http://data.knora.org/e41ab5695c/values/8e40371a6c01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -958,7 +958,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "[12] Bl. : Ill. ; 8°" .
 
 <http://data.knora.org/e41ab5695c/values/bf6f97fb6a01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -966,18 +966,18 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Birgitta, Hl." .
 
 <http://data.knora.org/e41ab5695c/values/cb16e4e06b01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:valueHasString "Universitäts- und Stadtbibliothek Köln, Sign: AD+S167" .
 
 <http://data.knora.org/e41ab5695c/values/d3398239089e04> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
-	knora-base:valueHasMapping <http://data.knora.org/projects/standoff/mappings/StandardMapping> ;
+	knora-base:valueHasMapping <http://rdfh.ch/projects/standoff/mappings/StandardMapping> ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasStandoff <http://data.knora.org/e41ab5695c/values/d3398239089e04/standoff/mX6z2vBPQ3OuUjQkfYEZRg> , <http://data.knora.org/e41ab5695c/values/d3398239089e04/standoff/cfPKbQw3QPqs9tIDnVrKsg> ;
 	knora-base:valueHasString "Zusammengebunden mit zwei weiteren Drucken von Johann Amerbach" .
@@ -996,7 +996,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:standoffTagHasUUID "4bc24696-5dde-4ced-9687-6f8e4519efe8" .
 
 <http://data.knora.org/e41ab5695c/values/fc4544c26a01> a knora-base:TextValue ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
@@ -1004,8 +1004,8 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Sant Brigitten gebettly" .
 
 <http://data.knora.org/miscResource> a incunabula:misc ;
-	knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
-	knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
