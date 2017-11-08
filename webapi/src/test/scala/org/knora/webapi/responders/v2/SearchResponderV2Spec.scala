@@ -50,6 +50,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val actorUnderTest = TestActorRef[SearchResponderV2]
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+    private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
@@ -78,7 +79,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case response: ReadResourcesSequenceV2 =>
 
                     compareReadResourcesSequenceV2Response(
-                        expected = SearchResponderV2SpecFullData.fulltextSearchForNarr,
+                        expected = searchResponderV2SpecFullData.fulltextSearchForNarr,
                         received = response
                     )
             }
@@ -91,7 +92,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
 
-                    compareReadResourcesSequenceV2Response(expected = SearchResponderV2SpecFullData.fulltextSearchForDinge, received = response)
+                    compareReadResourcesSequenceV2Response(expected = searchResponderV2SpecFullData.fulltextSearchForDinge, received = response)
             }
 
         }
@@ -99,19 +100,19 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         "perform an extended search for books that have the title 'Zeitglöcklein des Lebens'" in {
 
 
-            actorUnderTest ! ExtendedSearchGetRequestV2(SearchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein, SharedAdminTestData.anonymousUser)
+            actorUnderTest ! ExtendedSearchGetRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein, SharedAdminTestData.anonymousUser)
 
             // extended search sorty by resource Iri by default if no order criterion is indicated
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
-                    compareReadResourcesSequenceV2Response(expected = SearchResponderV2SpecFullData.booksWithTitleZeitgloeckleinResponse, received = response)
+                    compareReadResourcesSequenceV2Response(expected = searchResponderV2SpecFullData.booksWithTitleZeitgloeckleinResponse, received = response)
             }
 
         }
 
         "perform an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
 
-            actorUnderTest ! ExtendedSearchGetRequestV2(SearchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein, SharedAdminTestData.anonymousUser)
+            actorUnderTest ! ExtendedSearchGetRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein, SharedAdminTestData.anonymousUser)
 
             // extended search sorty by resource Iri by default if no order criterion is indicated
             expectMsgPF(timeout) {

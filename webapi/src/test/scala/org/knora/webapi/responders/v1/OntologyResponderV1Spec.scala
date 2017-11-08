@@ -1061,7 +1061,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: EntityInfoGetResponseV1 =>
-                    val titleContent = msg.propertyInfoMap("http://www.knora.org/ontology/incunabula#title").entityInfoContent
+                    val titleContent = msg.propertyInfoMap("http://www.knora.org/ontology/incunabula#title")
                     titleContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(("de", "en"))) should ===(Some("Titel"))
                     titleContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(("fr", "en"))) should ===(Some("Titre"))
             }
@@ -1075,7 +1075,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case receivedMsg: NamedGraphsResponseV1 => {
                     checkVocabularies(received = receivedMsg, expected = vocabulariesResponseV1)
-                    receivedMsg.vocabularies should contain allElementsOf(vocabulariesResponseV1.vocabularies)
+                    receivedMsg.vocabularies should contain allElementsOf vocabulariesResponseV1.vocabularies
                 }
             }
 

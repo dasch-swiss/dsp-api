@@ -65,7 +65,8 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future, Promise}
 import scala.util.{Failure, Success, Try}
 import scala.xml._
-
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.SmartIri
 
 /**
   * Provides a spray-routing function for API routes that deal with resources.
@@ -81,7 +82,7 @@ object ResourcesRouteV1 extends Authenticator {
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
         implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
-        val stringFormatter = StringFormatter.getInstance
+        implicit val stringFormatter = StringFormatter.getInstance
 
         val log = Logger(LoggerFactory.getLogger(this.getClass))
 
@@ -89,7 +90,7 @@ object ResourcesRouteV1 extends Authenticator {
                                        resinfo: Boolean,
                                        requestType: String,
                                        userProfile: UserProfileV1): ResourcesResponderRequestV1 = {
-            val validResIri = stringFormatter.validateIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: $resIri"))
+            val validResIri = stringFormatter.validateAndEscapeIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: $resIri"))
 
             requestType match {
                 case "info" => ResourceInfoGetRequestV1(iri = validResIri, userProfile = userProfile)
@@ -113,7 +114,7 @@ object ResourcesRouteV1 extends Authenticator {
                            userProfile: UserProfileV1): Map[IRI, Future[Seq[CreateValueV1WithComment]]] = {
             properties.map {
                 case (propIri: IRI, values: Seq[CreateResourceValueV1]) =>
-                    (stringFormatter.validateIri(propIri, () => throw BadRequestException(s"Invalid property IRI $propIri")), values.map {
+                    (stringFormatter.validateAndEscapeIri(propIri, () => throw BadRequestException(s"Invalid property IRI $propIri")), values.map {
                         case (givenValue: CreateResourceValueV1) =>
 
                             givenValue.getValueClassIri match {
@@ -130,7 +131,7 @@ object ResourcesRouteV1 extends Authenticator {
                                     } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
                                         // XML: text with markup
 
-                                        val mappingIri = stringFormatter.validateIri(richtext.mapping_id.get, () => throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid"))
+                                        val mappingIri = stringFormatter.validateAndEscapeIri(richtext.mapping_id.get, () => throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid"))
 
                                         for {
 
@@ -165,7 +166,7 @@ object ResourcesRouteV1 extends Authenticator {
                                     (givenValue.link_value, givenValue.link_to_client_id) match {
                                         case (Some(targetIri: IRI), None) =>
                                             // This is a link to an existing Knora IRI, so make sure the IRI is valid.
-                                            val validatedTargetIri = stringFormatter.validateIri(targetIri, () => throw BadRequestException(s"Invalid Knora resource IRI: $targetIri"))
+                                            val validatedTargetIri = stringFormatter.validateAndEscapeIri(targetIri, () => throw BadRequestException(s"Invalid Knora resource IRI: $targetIri"))
                                             Future(CreateValueV1WithComment(LinkUpdateV1(validatedTargetIri), givenValue.comment))
 
                                         case (None, Some(clientIDForTargetResource: String)) =>
@@ -185,7 +186,7 @@ object ResourcesRouteV1 extends Authenticator {
                                     Future(CreateValueV1WithComment(BooleanValueV1(givenValue.boolean_value.get), givenValue.comment))
 
                                 case OntologyConstants.KnoraBase.UriValue =>
-                                    val uriValue = stringFormatter.validateIri(givenValue.uri_value.get, () => throw BadRequestException(s"Invalid URI: ${givenValue.uri_value.get}"))
+                                    val uriValue = stringFormatter.validateAndEscapeIri(givenValue.uri_value.get, () => throw BadRequestException(s"Invalid URI: ${givenValue.uri_value.get}"))
                                     Future(CreateValueV1WithComment(UriValueV1(uriValue), givenValue.comment))
 
                                 case OntologyConstants.KnoraBase.DateValue =>
@@ -201,7 +202,7 @@ object ResourcesRouteV1 extends Authenticator {
                                     Future(CreateValueV1WithComment(GeomValueV1(geometryValue), givenValue.comment))
 
                                 case OntologyConstants.KnoraBase.ListValue =>
-                                    val listNodeIri = stringFormatter.validateIri(givenValue.hlist_value.get, () => throw BadRequestException(s"Invalid value IRI: ${givenValue.hlist_value.get}"))
+                                    val listNodeIri = stringFormatter.validateAndEscapeIri(givenValue.hlist_value.get, () => throw BadRequestException(s"Invalid value IRI: ${givenValue.hlist_value.get}"))
                                     Future(CreateValueV1WithComment(HierarchicalListValueV1(listNodeIri), givenValue.comment))
 
                                 case OntologyConstants.KnoraBase.IntervalValue =>
@@ -227,8 +228,8 @@ object ResourcesRouteV1 extends Authenticator {
 
 
         def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, multipartConversionRequest: Option[SipiResponderConversionPathRequestV1] = None, userProfile: UserProfileV1): Future[ResourceCreateRequestV1] = {
-            val projectIri = stringFormatter.validateIri(apiRequest.project_id, () => throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
-            val resourceTypeIri = stringFormatter.validateIri(apiRequest.restype_id, () => throw BadRequestException(s"Invalid resource IRI: ${apiRequest.restype_id}"))
+            val projectIri = stringFormatter.validateAndEscapeIri(apiRequest.project_id, () => throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
+            val resourceTypeIri = stringFormatter.validateAndEscapeIri(apiRequest.restype_id, () => throw BadRequestException(s"Invalid resource IRI: ${apiRequest.restype_id}"))
             val label = stringFormatter.toSparqlEncodedString(apiRequest.label, () => throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
 
             // for GUI-case:
@@ -333,7 +334,7 @@ object ResourcesRouteV1 extends Authenticator {
 
         def makeResourceDeleteMessage(resIri: IRI, deleteComment: Option[String], userProfile: UserProfileV1) = {
             ResourceDeleteRequestV1(
-                resourceIri = stringFormatter.validateIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: $resIri")),
+                resourceIri = stringFormatter.validateAndEscapeIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: $resIri")),
                 deleteComment = deleteComment.map(comment => stringFormatter.toSparqlEncodedString(comment, () => throw BadRequestException(s"Invalid comment: '$comment'"))),
                 userProfile = userProfile,
                 apiRequestID = UUID.randomUUID
@@ -383,8 +384,8 @@ object ResourcesRouteV1 extends Authenticator {
                     // or any other ontologies we've already looked at.
                     ontologyIrisFromCardinalities: Set[IRI] = entityInfoResponse.resourceClassInfoMap.foldLeft(Set.empty[IRI]) {
                         case (acc, (resourceClassIri, resourceClassInfo)) =>
-                            val resourceCardinalityOntologies: Set[IRI] = resourceClassInfo.allCardinalities.map {
-                                case (propertyIri, _) => propertyIri.getOntology.toString
+                            val resourceCardinalityOntologies: Set[IRI] = resourceClassInfo.cardinalities.map {
+                                case (propertyIri, _) => propertyIri.toSmartIri.getOntology.toString
                             }.toSet
 
                             acc ++ resourceCardinalityOntologies
@@ -394,11 +395,11 @@ object ResourcesRouteV1 extends Authenticator {
                     // not including the initial ontology itself or any other ontologies we've already looked at.
                     ontologyIrisFromObjectClassConstraints: Set[IRI] = entityInfoResponse.propertyInfoMap.map {
                         case (propertyIri, propertyInfo) =>
-                            val propertyObjectClassConstraint = propertyInfo.entityInfoContent.getPredicateObject(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint)).getOrElse {
+                            val propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
                                 throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
                             }
 
-                            stringFormatter.toSmartIri(propertyObjectClassConstraint).getOntology.toString
+                            propertyObjectClassConstraint.toSmartIri.getOntology.toString
                     }.toSet -- intermediateResults.keySet - initialOntologyIri
 
                     // Make a set of all the ontologies referenced by the initial ontology.
@@ -453,7 +454,7 @@ object ResourcesRouteV1 extends Authenticator {
               * @return the prefix label that Knora uses to refer to the ontology.
               */
             def getNamespacePrefixLabel(internalEntityIri: IRI): String = {
-                val prefixLabel = stringFormatter.toSmartIri(internalEntityIri).getPrefixLabel
+                val prefixLabel = internalEntityIri.toSmartIri.getPrefixLabel
 
                 // If the schema generation template asks for the prefix label of something in knora-base, return
                 // the prefix label of the Knora XML import v1 namespace instead.
@@ -472,7 +473,9 @@ object ResourcesRouteV1 extends Authenticator {
               * @param internalEntityIri an internal ontology entity IRI.
               * @return the local name of the entity.
               */
-            def getEntityName(internalEntityIri: IRI): String = stringFormatter.toSmartIri(internalEntityIri).getEntityName
+            def getEntityName(internalEntityIri: IRI): String = {
+                internalEntityIri.toSmartIri.getEntityName
+            }
 
             for {
                 // Get a NamedGraphEntityInfoV1 for each ontology that we need to generate an XML schema for.
@@ -498,15 +501,13 @@ object ResourcesRouteV1 extends Authenticator {
 
                 // Collect all the property definitions in a single Map. Since any schema could use any property, we will
                 // pass this Map to the schema generation template for every schema.
-                propertyInfoMap: Map[IRI, ReadPropertyInfoV2] = entityInfoResponsesMap.values.flatMap(_.propertyInfoMap).toMap
+                propertyInfoMap: Map[IRI, PropertyInfoV1] = entityInfoResponsesMap.values.flatMap(_.propertyInfoMap).toMap
 
                 // Make a map of internal ontology IRIs to XmlImportNamespaceInfoV1 objects describing the XML namespace
                 // of each schema to be generated. Don't generate a schema for knora-base, because the built-in Knora
                 // types are specified in the handwritten standard Knora XML import v1 schema.
                 schemasToGenerate: Map[IRI, XmlImportNamespaceInfoV1] = (namedGraphInfos.keySet - OntologyConstants.KnoraBase.KnoraBaseOntologyIri).map {
-                    ontologyIri =>
-                        val ontologySmartIri = stringFormatter.toSmartIri(ontologyIri)
-                        ontologyIri -> stringFormatter.internalOntologyIriToXmlNamespaceInfoV1(ontologySmartIri)
+                    ontologyIri => ontologyIri -> stringFormatter.internalOntologyIriToXmlNamespaceInfoV1(ontologyIri.toSmartIri)
                 }.toMap
 
                 // Make an XmlImportNamespaceInfoV1 for the standard Knora XML import v1 schema's namespace.
@@ -610,13 +611,13 @@ object ResourcesRouteV1 extends Authenticator {
         def validateImportXml(xml: String, defaultNamespace: IRI, userProfile: UserProfileV1): Future[Unit] = {
             // Convert the default namespace of the submitted XML to an internal ontology IRI. This should be the
             // IRI of the main ontology used in the import.
-            val mainOntologyIri: IRI = stringFormatter.xmlImportNamespaceToInternalOntologyIriV1(
+            val mainOntologyIri: SmartIri = stringFormatter.xmlImportNamespaceToInternalOntologyIriV1(
                 defaultNamespace, () => throw BadRequestException(s"Invalid XML import namespace: $defaultNamespace")
-            ).toString
+            )
 
             val validationFuture: Future[Unit] = for {
                 // Generate a bundle of XML schemas for validating the submitted XML.
-                schemaBundle: XmlImportSchemaBundleV1 <- generateSchemasFromOntologies(mainOntologyIri, userProfile)
+                schemaBundle: XmlImportSchemaBundleV1 <- generateSchemasFromOntologies(mainOntologyIri.toString, userProfile)
 
                 // Make a javax.xml.validation.SchemaFactory for instantiating XML schemas.
                 schemaFactory: SchemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
@@ -777,7 +778,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                         maybeMappingID match {
                             case Some(mappingID) =>
-                                val mappingIri: Option[IRI] = Some(stringFormatter.validateIri(mappingID.toString, () => throw BadRequestException(s"Invalid mapping ID in element '${node.label}: '$mappingID")))
+                                val mappingIri: Option[IRI] = Some(stringFormatter.validateAndEscapeIri(mappingID.toString, () => throw BadRequestException(s"Invalid mapping ID in element '${node.label}: '$mappingID")))
                                 val childElements = node.child.filterNot(_.label == "#PCDATA")
 
                                 if (childElements.nonEmpty) {
@@ -804,7 +805,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                                 linkType match {
                                     case "ref" => CreateResourceValueV1(link_to_client_id = Some(target))
-                                    case "iri" => CreateResourceValueV1(link_value = Some(stringFormatter.validateIri(target, () => throw BadRequestException(s"Invalid IRI in element '${node.label}': '$target'"))))
+                                    case "iri" => CreateResourceValueV1(link_value = Some(stringFormatter.validateAndEscapeIri(target, () => throw BadRequestException(s"Invalid IRI in element '${node.label}': '$target'"))))
                                     case other => throw BadRequestException(s"Unrecognised value '$other' in attribute 'linkType' of element '${node.label}'")
                                 }
 
@@ -821,7 +822,7 @@ object ResourcesRouteV1 extends Authenticator {
                         CreateResourceValueV1(boolean_value = Some(stringFormatter.validateBoolean(elementValue, () => throw BadRequestException(s"Invalid boolean value in element '${node.label}: '$elementValue'"))))
 
                     case "uri_value" =>
-                        CreateResourceValueV1(uri_value = Some(stringFormatter.validateIri(elementValue, () => throw BadRequestException(s"Invalid URI value in element '${node.label}: '$elementValue'"))))
+                        CreateResourceValueV1(uri_value = Some(stringFormatter.validateAndEscapeIri(elementValue, () => throw BadRequestException(s"Invalid URI value in element '${node.label}: '$elementValue'"))))
 
                     case "date_value" =>
                         CreateResourceValueV1(date_value = Some(stringFormatter.validateDate(elementValue, () => throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'"))))
@@ -833,7 +834,7 @@ object ResourcesRouteV1 extends Authenticator {
                         CreateResourceValueV1(geom_value = Some(stringFormatter.validateGeometryString(elementValue, () => throw BadRequestException(s"Invalid geometry value in element '${node.label}: '$elementValue'"))))
 
                     case "hlist_value" =>
-                        CreateResourceValueV1(hlist_value = Some(stringFormatter.validateIri(elementValue, () => throw BadRequestException(s"Invalid hlist value in element '${node.label}: '$elementValue'"))))
+                        CreateResourceValueV1(hlist_value = Some(stringFormatter.validateAndEscapeIri(elementValue, () => throw BadRequestException(s"Invalid hlist value in element '${node.label}: '$elementValue'"))))
 
                     case "interval_value" =>
                         Try(elementValue.split(",")) match {
@@ -880,7 +881,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                     val resourceTypeIri: Option[IRI] = restype match {
                         case ("-1") => None
-                        case (restype: IRI) => Some(stringFormatter.validateIri(restype, () => throw BadRequestException(s"Invalid param restype: $restype")))
+                        case (restype: IRI) => Some(stringFormatter.validateAndEscapeIri(restype, () => throw BadRequestException(s"Invalid param restype: $restype")))
                     }
 
                     val numberOfProps: Int = stringFormatter.validateInt(numprops, () => throw BadRequestException(s"Invalid param numprops: $numprops")) match {
@@ -1050,7 +1051,7 @@ object ResourcesRouteV1 extends Authenticator {
                     val userProfile = getUserProfileV1(requestContext)
                     val params = requestContext.request.uri.query().toMap
                     val requestType = params.getOrElse("reqtype", "")
-                    val resIri = stringFormatter.validateIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
+                    val resIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
 
                     val requestMessage = requestType match {
                         case "properties" => ResourceFullGetRequestV1(resIri, userProfile)
@@ -1070,7 +1071,7 @@ object ResourcesRouteV1 extends Authenticator {
             get {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
-                    val resIri = stringFormatter.validateIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
+                    val resIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
                     val requestMessage = makeGetPropertiesRequestMessage(resIri, userProfile)
 
                     RouteUtilV1.runJsonRoute(
@@ -1088,7 +1089,7 @@ object ResourcesRouteV1 extends Authenticator {
                     requestContext =>
                         val userProfile = getUserProfileV1(requestContext)
 
-                        val resIri = stringFormatter.validateIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
+                        val resIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
 
                         val label = stringFormatter.toSparqlEncodedString(apiRequest.label, () => throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
 
@@ -1113,7 +1114,7 @@ object ResourcesRouteV1 extends Authenticator {
                 parameters("depth".as[Int].?) { depth =>
                     requestContext =>
                         val userProfile = getUserProfileV1(requestContext)
-                        val resourceIri = stringFormatter.validateIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
+                        val resourceIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
                         val requestMessage = GraphDataGetRequestV1(resourceIri, depth.getOrElse(4), userProfile)
 
                         RouteUtilV1.runJsonRoute(
@@ -1200,10 +1201,13 @@ object ResourcesRouteV1 extends Authenticator {
         } ~ path("v1" / "resources" / "xmlimportschemas" / Segment) { internalOntologyIri =>
             get {
                 // Get the prefix label of the specified internal ontology.
-                val internalOntologyPrefixLabel: String = stringFormatter.toSmartIriWithErr(
-                    iri = internalOntologyIri,
-                    () => throw BadRequestException(s"Invalid internal ontology IRI: $internalOntologyIri")
-                ).getPrefixLabel
+                val internalOntologySmartIri: SmartIri = internalOntologyIri.toSmartIriWithErr(() => throw BadRequestException(s"Invalid internal project-specific ontology IRI: $internalOntologyIri"))
+
+                if (!internalOntologySmartIri.isKnoraOntologyIri || internalOntologySmartIri.isKnoraBuiltInDefinitionIri) {
+                    throw BadRequestException(s"Invalid internal project-specific ontology IRI: $internalOntologyIri")
+                }
+
+                val internalOntologyPrefixLabel: String = internalOntologySmartIri.getPrefixLabel
 
                 // Respond with a Content-Disposition header specifying the filename of the generated Zip file.
                 respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> (internalOntologyPrefixLabel + "-xml-schemas.zip")))) {

@@ -31,7 +31,8 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util._
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.SmartIri
 
 import scala.concurrent.Future
 
@@ -43,7 +44,6 @@ import scala.concurrent.Future
   */
 class OntologyResponderV1 extends Responder {
 
-    private val knoraIdUtil = new KnoraIdUtil
     private val valueUtilV1 = new ValueUtilV1(settings)
 
     /**
@@ -84,6 +84,24 @@ class OntologyResponderV1 extends Responder {
     }
 
     /**
+      * Wraps OWL class information from `OntologyResponderV2` for use in API v1.
+      */
+    private def classInfoMapV2ToV1(classInfoMap: Map[SmartIri, ReadClassInfoV2]): Map[IRI, ClassInfoV1] = {
+        classInfoMap.map {
+            case (smartIri, classInfoV2) => smartIri.toString -> new ClassInfoV1(classInfoV2)
+        }
+    }
+
+    /**
+      * Wraps OWL property information from `OntologyResponderV2` for use in API v1.
+      */
+    private def propertyInfoMapV2ToV1(propertyInfoMap: Map[SmartIri, ReadPropertyInfoV2]): Map[IRI, PropertyInfoV1] = {
+        propertyInfoMap.map {
+            case (smartIri, propertyInfoV2) => smartIri.toString -> new PropertyInfoV1(propertyInfoV2)
+        }
+    }
+
+    /**
       * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV1]] describing both resource and property entities.
       *
       * @param resourceClassIris the IRIs of the resource entities to be queried.
@@ -93,8 +111,8 @@ class OntologyResponderV1 extends Responder {
       */
     private def getEntityInfoResponseV1(resourceClassIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[EntityInfoGetResponseV1] = {
         for {
-            response: EntityInfoGetResponseV2 <- (responderManager ? EntityInfoGetRequestV2(resourceClassIris, propertyIris, userProfile)).mapTo[EntityInfoGetResponseV2]
-        } yield EntityInfoGetResponseV1(resourceClassInfoMap = response.classInfoMap, propertyInfoMap = response.propertyInfoMap) // TODO: use V2 directly
+            response: EntityInfoGetResponseV2 <- (responderManager ? EntityInfoGetRequestV2(resourceClassIris.map(_.toSmartIri), propertyIris.map(_.toSmartIri), userProfile)).mapTo[EntityInfoGetResponseV2]
+        } yield EntityInfoGetResponseV1(resourceClassInfoMap = classInfoMapV2ToV1(response.classInfoMap), propertyInfoMap = propertyInfoMapV2ToV1(response.propertyInfoMap))
     }
 
 
@@ -108,8 +126,10 @@ class OntologyResponderV1 extends Responder {
       */
     private def getStandoffEntityInfoResponseV1(standoffClassIris: Set[IRI] = Set.empty[IRI], standoffPropertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[StandoffEntityInfoGetResponseV1] = {
         for {
-            response: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, userProfile)).mapTo[StandoffEntityInfoGetResponseV2]
-        } yield StandoffEntityInfoGetResponseV1(standoffClassInfoMap = response.standoffClassInfoMap, standoffPropertyInfoMap = response.standoffPropertyInfoMap) // TODO: use V2 directly
+            response: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(standoffClassIris.map(_.toSmartIri), standoffPropertyIris.map(_.toSmartIri), userProfile)).mapTo[StandoffEntityInfoGetResponseV2]
+
+
+        } yield StandoffEntityInfoGetResponseV1(standoffClassInfoMap = classInfoMapV2ToV1(response.standoffClassInfoMap), standoffPropertyInfoMap = propertyInfoMapV2ToV1(response.standoffPropertyInfoMap))
     }
 
     /**
@@ -121,7 +141,7 @@ class OntologyResponderV1 extends Responder {
     private def getStandoffStandoffClassesWithDataTypeV1(userProfile: UserProfileV1): Future[StandoffClassesWithDataTypeGetResponseV1] = {
         for {
             response: StandoffClassesWithDataTypeGetResponseV2 <- (responderManager ? StandoffClassesWithDataTypeGetRequestV2(userProfile)).mapTo[StandoffClassesWithDataTypeGetResponseV2]
-        } yield StandoffClassesWithDataTypeGetResponseV1(standoffClassInfoMap = response.standoffClassInfoMap) // TODO: use V2 directly
+        } yield StandoffClassesWithDataTypeGetResponseV1(standoffClassInfoMap = classInfoMapV2ToV1(response.standoffClassInfoMap))
     }
 
     /**
@@ -133,7 +153,7 @@ class OntologyResponderV1 extends Responder {
     private def getAllStandoffPropertyEntities(userProfile: UserProfileV1): Future[StandoffAllPropertiesGetResponseV1] = {
         for {
             response: StandoffAllPropertyEntitiesGetResponseV2 <- (responderManager ? StandoffAllPropertyEntitiesGetRequestV2(userProfile)).mapTo[StandoffAllPropertyEntitiesGetResponseV2]
-        } yield StandoffAllPropertiesGetResponseV1(standoffAllPropertiesInfoMap = response.standoffAllPropertiesEntityInfoMap) // TODO: use V2 directly
+        } yield StandoffAllPropertiesGetResponseV1(standoffAllPropertiesInfoMap = propertyInfoMapV2ToV1(response.standoffAllPropertiesEntityInfoMap))
     }
 
     /**
@@ -149,23 +169,20 @@ class OntologyResponderV1 extends Responder {
         for {
             // Get all information about the resource type, including its property cardinalities.
             resourceClassInfoResponse: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(resourceClassIris = Set(resourceTypeIri), userProfile = userProfile)
-            resourceClassInfo: ReadClassInfoV2 = resourceClassInfoResponse.resourceClassInfoMap.getOrElse(resourceTypeIri, throw NotFoundException(s"Resource class $resourceTypeIri not found"))
-            resourceClassInfoContent = resourceClassInfo.entityInfoContent
+            resourceClassInfo: ClassInfoV1 = resourceClassInfoResponse.resourceClassInfoMap.getOrElse(resourceTypeIri, throw NotFoundException(s"Resource class $resourceTypeIri not found"))
 
             // Get all information about those properties.
-            propertyInfo: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = resourceClassInfo.allCardinalities.keySet, userProfile = userProfile)
+            propertyInfo: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = resourceClassInfo.cardinalities.keySet, userProfile = userProfile)
 
             // Build the property definitions.
-            propertyDefinitions: Vector[PropertyDefinitionV1] = resourceClassInfo.allCardinalities.filterNot {
+            propertyDefinitions: Vector[PropertyDefinitionV1] = resourceClassInfo.cardinalities.filterNot {
                 // filter out the properties that point to LinkValue objects
                 case (propertyIri, cardinality) =>
                     resourceClassInfo.linkValueProperties(propertyIri) || propertyIri == OntologyConstants.KnoraBase.HasStandoffLinkTo
             }.map {
                 case (propertyIri: IRI, cardinality: Cardinality.Value) =>
                     propertyInfo.propertyInfoMap.get(propertyIri) match {
-                        case Some(entityInfo: ReadPropertyInfoV2) =>
-
-                            val entityInfoContent = entityInfo.entityInfoContent
+                        case Some(entityInfo: PropertyInfoV1) =>
 
                             if (entityInfo.isLinkProp) {
                                 // It is a linking prop: its valuetype_id is knora-base:LinkValue.
@@ -175,14 +192,14 @@ class OntologyResponderV1 extends Responder {
                                 PropertyDefinitionV1(
                                     id = propertyIri,
                                     name = propertyIri,
-                                    label = entityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                    description = entityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                    vocabulary = entityInfo.entityInfoContent.ontologyIri,
+                                    label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                    description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                    vocabulary = entityInfo.ontologyIri,
                                     occurrence = cardinality.toString,
                                     valuetype_id = OntologyConstants.KnoraBase.LinkValue,
-                                    attributes = valueUtilV1.makeAttributeString(entityInfoContent.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
-                                    gui_name = entityInfoContent.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri)),
-                                    guiorder = entityInfoContent.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt)
+                                    attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
+                                    gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri)),
+                                    guiorder = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt)
                                 )
 
                             } else {
@@ -190,14 +207,14 @@ class OntologyResponderV1 extends Responder {
                                 PropertyDefinitionV1(
                                     id = propertyIri,
                                     name = propertyIri,
-                                    label = entityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                    description = entityInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                    vocabulary = entityInfo.entityInfoContent.ontologyIri,
+                                    label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                    description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                    vocabulary = entityInfo.ontologyIri,
                                     occurrence = cardinality.toString,
-                                    valuetype_id = entityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
-                                    attributes = valueUtilV1.makeAttributeString(entityInfoContent.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute)),
-                                    gui_name = entityInfoContent.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri)),
-                                    guiorder = entityInfoContent.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt)
+                                    valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
+                                    attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute)),
+                                    gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri)),
+                                    guiorder = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt)
                                 )
                             }
                         case None =>
@@ -209,9 +226,9 @@ class OntologyResponderV1 extends Responder {
             resourceTypeResponse = ResourceTypeResponseV1(
                 restype_info = ResTypeInfoV1(
                     name = resourceTypeIri,
-                    label = resourceClassInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                    description = resourceClassInfoContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                    iconsrc = resourceClassInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon),
+                    label = resourceClassInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                    description = resourceClassInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                    iconsrc = resourceClassInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon),
                     properties = propertyDefinitions
                 )
             )
@@ -226,9 +243,9 @@ class OntologyResponderV1 extends Responder {
       */
     private def checkSubClass(checkSubClassRequest: CheckSubClassRequestV1): Future[CheckSubClassResponseV1] = {
         for {
-            response: CheckSubClassResponseV2 <- (responderManager ? CheckSubClassRequestV2(subClassIri = checkSubClassRequest.subClassIri, superClassIri = checkSubClassRequest.superClassIri, checkSubClassRequest.userProfile)).mapTo[CheckSubClassResponseV2]
+            response: CheckSubClassResponseV2 <- (responderManager ? CheckSubClassRequestV2(subClassIri = checkSubClassRequest.subClassIri.toSmartIri, superClassIri = checkSubClassRequest.superClassIri.toSmartIri, checkSubClassRequest.userProfile)).mapTo[CheckSubClassResponseV2]
 
-        } yield CheckSubClassResponseV1(response.isSubClass) // TODO: use V2 directly
+        } yield CheckSubClassResponseV1(response.isSubClass)
     }
 
     /**
@@ -239,10 +256,16 @@ class OntologyResponderV1 extends Responder {
       */
     private def getSubClasses(getSubClassesRequest: SubClassesGetRequestV1): Future[SubClassesGetResponseV1] = {
         for {
+            response: SubClassesGetResponseV2 <- (responderManager ? SubClassesGetRequestV2(getSubClassesRequest.resourceClassIri.toSmartIri, getSubClassesRequest.userProfile)).mapTo[SubClassesGetResponseV2]
 
-            response: SubClassesGetResponseV2 <- (responderManager ? SubClassesGetRequestV2(getSubClassesRequest.resourceClassIri, getSubClassesRequest.userProfile)).mapTo[SubClassesGetResponseV2]
+            subClasses = response.subClasses.map {
+                subClassInfoV2 => SubClassInfoV1(
+                    id = subClassInfoV2.id.toString,
+                    label = subClassInfoV2.label
+                )
+            }
 
-        } yield SubClassesGetResponseV1(response.subClasses) // TODO: use V2 directly
+        } yield SubClassesGetResponseV1(subClasses)
     }
 
     /**
@@ -271,8 +294,8 @@ class OntologyResponderV1 extends Responder {
       */
     def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV1] = {
         for {
-            response: NamedGraphEntityInfoV2 <- (responderManager ? NamedGraphEntitiesRequestV2(namedGraphIri, userProfile)).mapTo[NamedGraphEntityInfoV2]
-        } yield NamedGraphEntityInfoV1(namedGraphIri = response.namedGraphIri, resourceClasses = response.classIris, propertyIris = response.propertyIris) // TODO: use V2 directly
+            response: NamedGraphEntityInfoV2 <- (responderManager ? NamedGraphEntitiesRequestV2(namedGraphIri.toSmartIri, userProfile)).mapTo[NamedGraphEntityInfoV2]
+        } yield NamedGraphEntityInfoV1(namedGraphIri = response.namedGraphIri.toString, resourceClasses = response.classIris.map(_.toString), propertyIris = response.propertyIris.map(_.toString))
     }
 
     /**
@@ -353,14 +376,12 @@ class OntologyResponderV1 extends Responder {
                 namedGraphEntityInfo <- getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
                 propertyIris: Set[IRI] = namedGraphEntityInfo.propertyIris
                 entities: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = propertyIris, userProfile = userProfile)
-                propertyInfoMap: Map[IRI, ReadPropertyInfoV2] = entities.propertyInfoMap.filterNot {
+                propertyInfoMap: Map[IRI, PropertyInfoV1] = entities.propertyInfoMap.filterNot {
                     case (propertyIri, propertyEntityInfo) => propertyEntityInfo.isLinkValueProp
                 }
 
                 propertyDefinitions: Vector[PropertyDefinitionInNamedGraphV1] = propertyInfoMap.map {
-                    case (propertyIri: IRI, entityInfo: ReadPropertyInfoV2) =>
-
-                        val entityInfoContent = entityInfo.entityInfoContent
+                    case (propertyIri: IRI, entityInfo: PropertyInfoV1) =>
 
                         if (entityInfo.isLinkProp) {
                             // It is a linking prop: its valuetype_id is knora-base:LinkValue.
@@ -370,24 +391,24 @@ class OntologyResponderV1 extends Responder {
                             PropertyDefinitionInNamedGraphV1(
                                 id = propertyIri,
                                 name = propertyIri,
-                                label = entityInfoContent.getPredicateLiteralObject(predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label), preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                description = entityInfoContent.getPredicateLiteralObject(predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Comment), preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                vocabulary = entityInfoContent.ontologyIri.toString,
+                                label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                vocabulary = entityInfo.ontologyIri,
                                 valuetype_id = OntologyConstants.KnoraBase.LinkValue,
-                                attributes = valueUtilV1.makeAttributeString(entityInfo.entityInfoContent.getPredicateLiteralsWithoutLang(stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiAttribute)) + valueUtilV1.makeAttributeRestype(entityInfoContent.getPredicateIriObjects(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint)).headOption.getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")).toString)),
-                                gui_name = entityInfoContent.getPredicateIriObject(stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElement)).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri.toString))
+                                attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))),
+                                gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
                             )
 
                         } else {
                             PropertyDefinitionInNamedGraphV1(
                                 id = propertyIri,
                                 name = propertyIri,
-                                label = entityInfoContent.getPredicateLiteralObject(predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label), preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                description = entityInfoContent.getPredicateLiteralObject(predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Comment), preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                                vocabulary = entityInfoContent.ontologyIri.toString,
-                                valuetype_id = entityInfoContent.getPredicateIriObject(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint)).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")).toString,
-                                attributes = valueUtilV1.makeAttributeString(entityInfo.entityInfoContent.getPredicateLiteralsWithoutLang(stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiAttribute))),
-                                gui_name = entityInfoContent.getPredicateIriObject(stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElement)).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri.toString))
+                                label = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                description = entityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Comment, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
+                                vocabulary = entityInfo.ontologyIri,
+                                valuetype_id = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")),
+                                attributes = valueUtilV1.makeAttributeString(entityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute)),
+                                gui_name = entityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
                             )
 
                         }

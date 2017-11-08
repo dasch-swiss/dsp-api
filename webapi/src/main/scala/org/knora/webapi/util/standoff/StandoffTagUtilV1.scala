@@ -24,10 +24,10 @@ import java.util.UUID
 
 import akka.event.LoggingAdapter
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
+import org.knora.webapi.messages.v1.responder.ontologymessages.{PropertyInfoV1, StandoffEntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, ReadPropertyInfoV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.{DateUtilV1, StringFormatter}
 
@@ -80,8 +80,8 @@ object StandoffTagUtilV1 {
       * @param standoffPropertyEntities the ontology information about the standoff properties.
       * @return a sequence of [[StandoffTagAttributeV1]]
       */
-    private def createAttributes(xmlToStandoffMapping: XMLTagToStandoffClass, classSpecificProps: Map[IRI, Cardinality.Value], existingXMLIDs: Seq[String], standoffNodeFromXML: StandoffTag, standoffPropertyEntities: Map[IRI, ReadPropertyInfoV2]): Seq[StandoffTagAttributeV1] = {
-        val stringFormatter = StringFormatter.getInstance
+    private def createAttributes(xmlToStandoffMapping: XMLTagToStandoffClass, classSpecificProps: Map[IRI, Cardinality.Value], existingXMLIDs: Seq[String], standoffNodeFromXML: StandoffTag, standoffPropertyEntities: Map[IRI, PropertyInfoV1]): Seq[StandoffTagAttributeV1] = {
+        val stringFormatter: StringFormatter = StringFormatter.getInstance
 
         if (classSpecificProps.nonEmpty) {
             // this standoff class requires additional standoff properties to the standoff data type properties (contained in `StandoffProperties.dataTypeProperties`).
@@ -97,7 +97,7 @@ object StandoffTagUtilV1 {
                     }
 
                     val standoffTagPropIri = xmlToStandoffMapping.attributesToProps.getOrElse(xmlNamespace, throw BadRequestException(s"namespace $xmlNamespace unknown for attribute ${attr.key} in mapping")).getOrElse(attr.key, throw BadRequestException(s"mapping for attr '${attr.key}' not provided"))
-                    val propPredicates = standoffPropertyEntities(standoffTagPropIri).entityInfoContent.predicates
+                    val propPredicates = standoffPropertyEntities(standoffTagPropIri).predicates
 
                     // check if a cardinality exists for the current attribute
                     if (classSpecificProps.get(standoffTagPropIri).isEmpty) {
@@ -322,8 +322,7 @@ object StandoffTagUtilV1 {
                 val standoffClassIri: IRI = standoffDefFromMapping.standoffClassIri
 
                 // get the cardinalities of the current standoff class
-                val cardinalities: Map[IRI, Cardinality.Value] = standoffEntities.standoffClassInfoMap.getOrElse(standoffClassIri, throw NotFoundException(s"information about standoff class $standoffClassIri was not found in ontology")).allCardinalities
-
+                val cardinalities: Map[IRI, Cardinality.Value] = standoffEntities.standoffClassInfoMap.getOrElse(standoffClassIri, throw NotFoundException(s"information about standoff class $standoffClassIri was not found in ontology")).cardinalities
 
                 // create a standoff base tag with the information available from standoff util
                 val standoffBaseTagV1: StandoffTagV1 = standoffNodeFromXML match {
@@ -364,7 +363,7 @@ object StandoffTagUtilV1 {
                 }
 
                 // check the data type of the given standoff class
-                standoffEntities.standoffClassInfoMap(standoffClassIri).entityInfoContent.standoffDataType match {
+                standoffEntities.standoffClassInfoMap(standoffClassIri).standoffDataType match {
 
                     case Some(StandoffDataTypeClasses.StandoffLinkTag) =>
 
@@ -443,7 +442,7 @@ object StandoffTagUtilV1 {
 
                         val uriString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffUriTag, standoffNodeFromXML)
 
-                        val uriValue = StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasUri, value = stringFormatter.validateIri(uriString, () => throw BadRequestException(s"IRI invalid: $uriString")))
+                        val uriValue = StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasUri, value = stringFormatter.validateAndEscapeIri(uriString, () => throw BadRequestException(s"IRI invalid: $uriString")))
 
                         val classSpecificProps = cardinalities -- StandoffProperties.systemProperties -- StandoffProperties.uriProperties
 
@@ -707,7 +706,7 @@ object StandoffTagUtilV1 {
                 val attributes: Seq[StandoffTagAttributeV1] = (standoffNodes -- StandoffProperties.systemProperties - OntologyConstants.Rdf.Type).map {
                     case (propIri, value) =>
 
-                        val propPredicates = standoffEntities.standoffPropertyInfoMap(propIri).entityInfoContent.predicates
+                        val propPredicates = standoffEntities.standoffPropertyInfoMap(propIri).predicates
 
                         // check if the given property has an object type constraint (linking property) or an object data type constraint
                         if (propPredicates.get(OntologyConstants.KnoraBase.ObjectClassConstraint).isDefined) {
@@ -763,7 +762,7 @@ object StandoffTagUtilV1 {
                     standoffTagClassIri = standoffNodes(OntologyConstants.Rdf.Type),
                     startPosition = standoffNodes(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
                     endPosition = standoffNodes(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
-                    dataType = standoffEntities.standoffClassInfoMap(standoffNodes(OntologyConstants.Rdf.Type)).entityInfoContent.standoffDataType,
+                    dataType = standoffEntities.standoffClassInfoMap(standoffNodes(OntologyConstants.Rdf.Type)).standoffDataType,
                     startIndex = standoffNodes(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt,
                     endIndex = standoffNodes.get(OntologyConstants.KnoraBase.StandoffTagHasEndIndex) match {
                         case Some(endIndex: String) => Some(endIndex.toInt)

@@ -21,7 +21,9 @@
 package org.knora.webapi.util.search.v2
 
 import org.knora.webapi._
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.search._
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
   * A [[TypeInspector]] that relies on explicit type annotations in SPARQL. There are two kinds of type annotations:
@@ -36,6 +38,7 @@ import org.knora.webapi.util.search._
   * @param apiType specifies which API schema is being used in the search query.
   */
 class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
 
     /**
       * An enumeration of the properties that are used in type annotations.
@@ -90,7 +93,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
       * @param annotationProp the annotation property.
       * @param typeIri        the type IRI that was given in the annotation.
       */
-    private case class ExplicitAnnotationV2Simple(typeableEntity: TypeableEntity, annotationProp: TypeAnnotationPropertiesV2.Value, typeIri: IRI)
+    private case class ExplicitAnnotationV2Simple(typeableEntity: TypeableEntity, annotationProp: TypeAnnotationPropertiesV2.Value, typeIri: SmartIri)
 
     if (apiType != ApiV2Simple) {
         throw NotImplementedException("Type inspection with value objects is not yet implemented")
@@ -220,7 +223,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
             case other => throw AssertionException(s"Not a type annotation predicate: $other")
         }
 
-        val annotationProp = TypeAnnotationPropertiesV2.valueMap.getOrElse(annotationPropIri, throw AssertionException(s"Not a type annotation predicate: $annotationPropIri"))
+        val annotationProp = TypeAnnotationPropertiesV2.valueMap.getOrElse(annotationPropIri.toString, throw AssertionException(s"Not a type annotation predicate: $annotationPropIri"))
 
         val typeIri = statementPattern.obj match {
             case IriRef(iri, _) => iri
@@ -243,7 +246,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
     private def isAnnotationStatement(statementPattern: StatementPattern): Boolean = {
         statementPattern.pred match {
             case IriRef(predIri, _) =>
-                TypeAnnotationPropertiesV2.valueMap.get(predIri) match {
+                TypeAnnotationPropertiesV2.valueMap.get(predIri.toString) match {
                     case Some(TypeAnnotationPropertiesV2.RDF_TYPE) =>
                         isValidTypeInAnnotation(statementPattern.obj)
 
@@ -269,7 +272,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
       */
     def isValidTypeInAnnotation(entity: Entity): Boolean = {
         entity match {
-            case IriRef(objIri, _) if TypeInspectionConstantsV2.ApiV2SimpleTypeIris(objIri) => true
+            case IriRef(objIri, _) if TypeInspectionConstantsV2.ApiV2SimpleTypeIris(objIri.toString) => true
             case _ => false
         }
     }
@@ -285,7 +288,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
             case statementPattern: StatementPattern =>
                 // Don't look for a type annotation of an IRI that's the object of rdf:type.
                 statementPattern.pred match {
-                    case IriRef(OntologyConstants.Rdf.Type, _) => toTypeableEntities(Seq(statementPattern.subj, statementPattern.pred))
+                    case iriRef: IriRef if iriRef.iri == OntologyConstants.Rdf.Type.toSmartIri => toTypeableEntities(Seq(statementPattern.subj, statementPattern.pred))
                     case _ => toTypeableEntities(Seq(statementPattern.subj, statementPattern.pred, statementPattern.obj))
                 }
 
@@ -326,7 +329,7 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
     private def toTypeableEntities(entities: Seq[Entity]): Set[TypeableEntity] = {
         entities.collect {
             case QueryVariable(variableName) => TypeableVariable(variableName)
-            case IriRef(iri, _) if !TypeInspectionConstantsV2.ApiV2SimpleNonTypeableIris(iri) => TypeableIri(iri)
+            case IriRef(iri, _) if !TypeInspectionConstantsV2.ApiV2SimpleNonTypeableIris(iri.toString) => TypeableIri(iri)
         }.toSet
     }
 }

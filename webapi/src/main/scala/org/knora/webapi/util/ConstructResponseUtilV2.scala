@@ -84,7 +84,6 @@ object ConstructResponseUtilV2 {
 
                 // check if the subject is a Knora resource
                 assertions.contains((OntologyConstants.Rdf.Type, OntologyConstants.KnoraBase.Resource))
-
         }
 
         // filter out the resources the user does not have permissions to see

@@ -4,24 +4,23 @@ import java.util.UUID
 
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v2.responder.ontologymessages.{CreateOntologyRequestV2, ReadEntityDefinitionsV2}
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi._
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.StringFormatter
 
 import scala.concurrent.duration._
 
-object OntologyResponderV2Spec {
-    private val userProfile = SharedAdminTestData.anythingUser1
-    private val projectWithoutProjectID = SharedAdminTestData.ANYTHING_PROJECT_IRI
-    private val projectWithProjectID = SharedAdminTestData.ANYTHING_PROJECT_IRI // TODO: use a project that has a project ID, when one exists.
-}
-
 class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
-    import OntologyResponderV2Spec._
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+    private val userProfile = SharedAdminTestData.anythingUser1
+    private val projectWithoutProjectID = SharedAdminTestData.ANYTHING_PROJECT_IRI.toSmartIri
+    private val projectWithProjectID = SharedAdminTestData.ANYTHING_PROJECT_IRI.toSmartIri // TODO: use a project that has a project ID, when one exists.
 
     private val actorUnderTest = TestActorRef[OntologyResponderV2]
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)

@@ -61,26 +61,26 @@ object SearchRouteV1 extends Authenticator {
 
         // only one value is expected
         val restypeIri: Option[IRI] = params.get("filter_by_restype") match {
-            case Some(List(restype: IRI)) => Some(stringFormatter.validateIri(restype, () => throw BadRequestException(s"Value for param 'filter_by_restype' for extended search $restype is not a valid IRI. Please make sure that it was correctly URL encoded.")))
+            case Some(List(restype: IRI)) => Some(stringFormatter.validateAndEscapeIri(restype, () => throw BadRequestException(s"Value for param 'filter_by_restype' for extended search $restype is not a valid IRI. Please make sure that it was correctly URL encoded.")))
             case other => None
         }
 
         // only one value is expected
         val projectIri: Option[IRI] = params.get("filter_by_project") match {
-            case Some(List(project: IRI)) => Some(stringFormatter.validateIri(project, () => throw BadRequestException(s"Value for param 'filter_by_project' for extended search $project is not a valid IRI. Please make sure that it was correctly URL encoded.")))
+            case Some(List(project: IRI)) => Some(stringFormatter.validateAndEscapeIri(project, () => throw BadRequestException(s"Value for param 'filter_by_project' for extended search $project is not a valid IRI. Please make sure that it was correctly URL encoded.")))
             case other => None
         }
 
         // only one value is expected
         val ownerIri: Option[IRI] = params.get("filter_by_owner") match {
-            case Some(List(owner: IRI)) => Some(stringFormatter.validateIri(owner, () => throw BadRequestException(s"Value for param 'filter_by_owner' for extended search $owner is not a valid IRI. Please make sure that it was correctly URL encoded.")))
+            case Some(List(owner: IRI)) => Some(stringFormatter.validateAndEscapeIri(owner, () => throw BadRequestException(s"Value for param 'filter_by_owner' for extended search $owner is not a valid IRI. Please make sure that it was correctly URL encoded.")))
             case other => None
         }
 
         // here, also multiple values can be given
         val propertyIri: Seq[IRI] = params.get("property_id") match {
             case Some(propertyList: Seq[IRI]) => propertyList.map(
-                prop => stringFormatter.validateIri(prop, () => throw BadRequestException(s"Value for param 'property_id' for extended search $prop is not a valid IRI. Please make sure that it was correctly URL encoded."))
+                prop => stringFormatter.validateAndEscapeIri(prop, () => throw BadRequestException(s"Value for param 'property_id' for extended search $prop is not a valid IRI. Please make sure that it was correctly URL encoded."))
             )
             case other => Nil
         }
@@ -147,11 +147,11 @@ object SearchRouteV1 extends Authenticator {
         }
 
         val restypeIri: Option[IRI] = params.get("filter_by_restype") match {
-            case Some(restype: IRI) => Some(stringFormatter.validateIri(restype, () => throw BadRequestException(s"Unexpected param 'filter_by_restype' for extended search: $restype")))
+            case Some(restype: IRI) => Some(stringFormatter.validateAndEscapeIri(restype, () => throw BadRequestException(s"Unexpected param 'filter_by_restype' for extended search: $restype")))
             case other => None
         }
         val projectIri: Option[IRI] = params.get("filter_by_project") match {
-            case Some(project: IRI) => Some(stringFormatter.validateIri(project, () => throw BadRequestException(s"Unexpected param 'filter_by_project' for extended search: $project")))
+            case Some(project: IRI) => Some(stringFormatter.validateAndEscapeIri(project, () => throw BadRequestException(s"Unexpected param 'filter_by_project' for extended search: $project")))
             case other => None
         }
 

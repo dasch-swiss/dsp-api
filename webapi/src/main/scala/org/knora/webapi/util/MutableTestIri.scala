@@ -35,7 +35,7 @@ class MutableTestIri {
       * @param iri the IRI to be stored.
       */
     def set(iri: IRI): Unit = {
-        maybeIri = Some(stringFormatter.validateIri(iri, () => throw TestIriException(s"Got an invalid IRI: <$iri>")))
+        maybeIri = Some(stringFormatter.validateAndEscapeIri(iri, () => throw TestIriException(s"Got an invalid IRI: <$iri>")))
     }
 
     /**

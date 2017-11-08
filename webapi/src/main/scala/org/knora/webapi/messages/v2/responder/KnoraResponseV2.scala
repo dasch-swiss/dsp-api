@@ -30,6 +30,7 @@ import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import org.knora.webapi.util.{DateUtilV2, SmartIri, StringFormatter}
+import org.knora.webapi.util.IriConversions._
 
 /**
   * The value of a Knora property in the context of some particular input or output operation.
@@ -664,7 +665,7 @@ object ReadResourceUtil {
     def createJsonLDObjectFromReadResourceV2(resource: ReadResourceV2, targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDObject = {
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        val stringFormatter = StringFormatter.getInstance
+        implicit val stringFormatter = StringFormatter.getInstance
 
         val values: Map[IRI, JsonLDArray] = resource.values.map {
             case (propIri: IRI, readValues: Seq[ReadValueV2]) =>
@@ -678,17 +679,17 @@ object ReadResourceUtil {
                         JsonLDObject(
                             Map(
                                 "@id" -> JsonLDString(readValue.valueIri),
-                                "@type" -> JsonLDString(stringFormatter.toSmartIri(readValue.valueContent.internalValueTypeIri).toOntologySchema(ApiV2WithValueObjects).toString)
+                                "@type" -> JsonLDString(readValue.valueContent.internalValueTypeIri.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString)
                             ) ++ valAsMap
                         )
                 }
 
-                (stringFormatter.toSmartIri(propIri).toOntologySchema(ApiV2WithValueObjects).toString, JsonLDArray(jsonLDValues))
+                (propIri.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString, JsonLDArray(jsonLDValues))
 
         }
 
         JsonLDObject(Map(
-            "@type" -> JsonLDString(stringFormatter.toSmartIri(resource.resourceClass).toOntologySchema(ApiV2WithValueObjects).toString),
+            "@type" -> JsonLDString(resource.resourceClass.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString),
             "http://schema.org/name" -> JsonLDString(resource.label),
             "@id" -> JsonLDString(resource.resourceIri)
         ) ++ values)
@@ -706,20 +707,20 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        val stringFormatter = StringFormatter.getInstance
+        implicit val stringFormatter = StringFormatter.getInstance
 
         // Make JSON-LD prefixes for the project-specific ontologies used in the response.
 
-        val knoraApiV2WithValueObjectsOntologySmartIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.KnoraBaseOntologyIri)
+        val knoraApiV2WithValueObjectsOntologySmartIri = OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri
 
         val internalProjectSpecificOntologiesUsed: Set[SmartIri] = resources.flatMap {
             resource =>
                 val resourceClass = resource.resourceClass
                 val properties = resource.values.keySet
-                val resourceOntology = stringFormatter.toSmartIri(resourceClass).getOntology
+                val resourceOntology = resourceClass.toSmartIri.getOntology
 
                 val propertyOntologies = properties.map {
-                    property => stringFormatter.toSmartIri(property).getOntology
+                    property => property.toSmartIri.getOntology
                 }
 
                 propertyOntologies + resourceOntology

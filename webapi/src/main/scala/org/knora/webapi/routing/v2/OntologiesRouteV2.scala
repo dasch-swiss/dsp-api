@@ -30,8 +30,9 @@ import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -46,9 +47,9 @@ object OntologiesRouteV2 extends Authenticator {
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
         implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
-        val stringFormatter = StringFormatter.getInstance
+        implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
 
-        path("ontology" / Segments) { (segments: List[String]) =>
+        path("ontology" / Segments) { (_: List[String]) =>
             get {
                 requestContext => {
                     // This is the route used to dereference an actual ontology IRI. If the URL path looks like it
@@ -60,7 +61,7 @@ object OntologiesRouteV2 extends Authenticator {
                     val userProfile = getUserProfileV1(requestContext)
                     val urlPath = requestContext.request.uri.path.toString
 
-                    val requestedOntology: IRI = if (stringFormatter.isBuiltInApiV2OntologyUrlPath(urlPath)) {
+                    val requestedOntologyStr: IRI = if (stringFormatter.isBuiltInApiV2OntologyUrlPath(urlPath)) {
                         OntologyConstants.KnoraApi.ApiOntologyHostname + urlPath
                     } else if (stringFormatter.isProjectSpecificApiV2OntologyUrlPath(urlPath)) {
                         settings.knoraApiHttpBaseUrl + urlPath
@@ -68,9 +69,14 @@ object OntologiesRouteV2 extends Authenticator {
                         throw BadRequestException(s"Invalid or unknown URL path for external ontology: $urlPath")
                     }
 
-                    val responseSchema: ApiV2Schema = stringFormatter.getOntologyApiSchema(requestedOntology, () => throw BadRequestException(s"Invalid or unknown external ontology IRI: $requestedOntology"))
-                    val ontologyForResponder = stringFormatter.requestedOntologyToOntologyForResponder(requestedOntology)
-                    val ontologiesForResponder: Set[IRI] = Set(ontologyForResponder)
+                    val requestedOntology = requestedOntologyStr.toSmartIriWithErr(() => throw BadRequestException(s"Invalid ontology IRI: $requestedOntologyStr"))
+                    val ontologyForResponder: SmartIri = stringFormatter.requestedOntologyToOntologyForResponder(requestedOntology)
+                    val ontologiesForResponder: Set[SmartIri] = Set(ontologyForResponder)
+
+                    val responseSchema = requestedOntology.getOntologySchema match {
+                        case apiV2Schema: ApiV2Schema => apiV2Schema
+                        case _ => throw BadRequestException(s"Invalid ontology IRI: $requestedOntologyStr")
+                    }
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
@@ -109,19 +115,25 @@ object OntologiesRouteV2 extends Authenticator {
                     )
                 }
             }
-        } ~ path("v2" / "ontologies" / "namedgraphs" / Segments) { (externalOntologyIris: List[String]) =>
+        } ~ path("v2" / "ontologies" / "namedgraphs" / Segments) { (externalOntologyIris: List[IRI]) =>
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val ontologiesAndSchemas: Set[(IRI, ApiV2Schema)] = externalOntologyIris.map {
-                        (namedGraph: String) =>
-                            val schema = stringFormatter.getOntologyApiSchema(namedGraph, () => throw BadRequestException(s"Invalid or unknown external ontology IRI: $namedGraph"))
-                            val ontologyForResponder = stringFormatter.requestedOntologyToOntologyForResponder(namedGraph)
+                    val ontologiesAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalOntologyIris.map {
+                        (namedGraphStr: IRI) =>
+                            val requestedOntologyIri: SmartIri = namedGraphStr.toSmartIriWithErr(() => throw BadRequestException(s"Invalid ontology IRI: $namedGraphStr"))
+
+                            val schema = requestedOntologyIri.getOntologySchema match {
+                                case apiV2Schema: ApiV2Schema => apiV2Schema
+                                case _ => throw BadRequestException(s"Invalid ontology IRI: $namedGraphStr")
+                            }
+
+                            val ontologyForResponder = stringFormatter.requestedOntologyToOntologyForResponder(requestedOntologyIri)
                             (ontologyForResponder, schema)
                     }.toSet
 
-                    val (ontologiesForResponder: Set[IRI], schemas: Set[ApiV2Schema]) = ontologiesAndSchemas.unzip
+                    val (ontologiesForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = ontologiesAndSchemas.unzip
 
                     // Decide which API schema to use for the response.
                     val responseSchema = if (schemas.size == 1) {
@@ -152,21 +164,26 @@ object OntologiesRouteV2 extends Authenticator {
                     )
                 }
             }
-        } ~ path("v2" / "ontologies" / "classes" / Segments) { (externalResourceClassIris: List[String]) =>
+        } ~ path("v2" / "ontologies" / "classes" / Segments) { (externalResourceClassIris: List[IRI]) =>
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val classesAndSchemas: Set[(IRI, ApiV2Schema)] = externalResourceClassIris.map {
-                        (classIri: String) =>
-                            // Find out what schema the class IRI belongs to.
-                            val schema = stringFormatter.getEntityApiSchema(classIri, () => throw BadRequestException(s"Invalid or unknown external class IRI: $classIri"))
-                            val classForResponder = stringFormatter.requestedEntityToEntityForResponder(classIri)
+                    val classesAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalResourceClassIris.map {
+                        (classIriStr: IRI) =>
+                            val requestedClassIri: SmartIri = classIriStr.toSmartIriWithErr(() => throw BadRequestException(s"Invalid class IRI: $classIriStr"))
+
+                            val schema = requestedClassIri.getOntologySchema match {
+                                case apiV2Schema: ApiV2Schema => apiV2Schema
+                                case _ => throw BadRequestException(s"Invalid class IRI: $classIriStr")
+                            }
+
+                            val classForResponder = stringFormatter.requestedEntityToEntityForResponder(requestedClassIri)
 
                             (classForResponder, schema)
                     }.toSet
 
-                    val (classesForResponder: Set[IRI], schemas: Set[ApiV2Schema]) = classesAndSchemas.unzip
+                    val (classesForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = classesAndSchemas.unzip
 
                     // Decide which API schema to use for the response.
                     val responseSchema = if (schemas.size == 1) {
@@ -197,20 +214,25 @@ object OntologiesRouteV2 extends Authenticator {
                     )
                 }
             }
-        } ~ path("v2" / "ontologies" / "properties" / Segments) { (externalPropertyIris: List[String]) =>
+        } ~ path("v2" / "ontologies" / "properties" / Segments) { (externalPropertyIris: List[IRI]) =>
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val propsAndSchemas: Set[(IRI, ApiV2Schema)] = externalPropertyIris.map {
-                        (propIri: String) =>
-                            // Find out what schema the property IRI belongs to.
-                            val schema = stringFormatter.getEntityApiSchema(propIri, () => throw BadRequestException(s"Invalid or unknown external property IRI: $propIri"))
-                            val propForResponder = stringFormatter.requestedEntityToEntityForResponder(propIri)
+                    val propsAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalPropertyIris.map {
+                        (propIriStr: IRI) =>
+                            val requestedPropIri: SmartIri = propIriStr.toSmartIriWithErr(() => throw BadRequestException(s"Invalid class IRI: $propIriStr"))
+
+                            val schema = requestedPropIri.getOntologySchema match {
+                                case apiV2Schema: ApiV2Schema => apiV2Schema
+                                case _ => throw BadRequestException(s"Invalid class IRI: $propIriStr")
+                            }
+
+                            val propForResponder = stringFormatter.requestedEntityToEntityForResponder(requestedPropIri)
                             (propForResponder, schema)
                     }.toSet
 
-                    val (propsForResponder: Set[IRI], schemas: Set[ApiV2Schema]) = propsAndSchemas.unzip
+                    val (propsForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = propsAndSchemas.unzip
 
                     // Decide which API schema to use for the response.
                     val responseSchema = if (schemas.size == 1) {

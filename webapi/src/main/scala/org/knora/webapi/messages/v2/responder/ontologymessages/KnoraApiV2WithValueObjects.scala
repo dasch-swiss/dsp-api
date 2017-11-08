@@ -22,12 +22,13 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import org.knora.webapi._
 import org.knora.webapi.util.{StringFormatter, SmartIri}
+import org.knora.webapi.util.IriConversions._
 
 /**
   * Represents the `knora-api` ontology, version 2, in the [[ApiV2WithValueObjects]] schema.
   */
 object KnoraApiV2WithValueObjects {
-    private val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
     val Resource: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Resource,
@@ -2187,7 +2188,7 @@ object KnoraApiV2WithValueObjects {
     /**
       * All the classes in the `knora-api` v2 ontology in the [[ApiV2WithValueObjects]] schema.
       */
-    val Classes: Map[IRI, ReadClassInfoV2] = Set(
+    val Classes: Map[SmartIri, ReadClassInfoV2] = Set(
         Resource,
         Region,
         Representation,
@@ -2220,13 +2221,13 @@ object KnoraApiV2WithValueObjects {
         DDDFileValue,
         DocumentFileValue
     ).map {
-        classInfo => classInfo.entityInfoContent.classIri.toString -> classInfo
+        classInfo => classInfo.entityInfoContent.classIri -> classInfo
     }.toMap
 
     /**
       * All the properties in the `knora-api` v2 ontology in the [[ApiV2WithValueObjects]] schema.
       */
-    val Properties: Map[IRI, ReadPropertyInfoV2] = Set(
+    val Properties: Map[SmartIri, ReadPropertyInfoV2] = Set(
         Result,
         IsEditable,
         IsInherited,
@@ -2292,7 +2293,7 @@ object KnoraApiV2WithValueObjects {
         MovingImageFileValueHasDuration,
         AudioFileValueHasDuration
     ).map {
-        propertyInfo => propertyInfo.entityInfoContent.propertyIri.toString -> propertyInfo
+        propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
     }.toMap
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2310,8 +2311,8 @@ object KnoraApiV2WithValueObjects {
                               objects: Set[String] = Set.empty[String],
                               objectsWithLang: Map[String, String] = Map.empty[String, String]): PredicateInfoV2 = {
         PredicateInfoV2(
-            predicateIri = stringFormatter.toSmartIri(predicateIri),
-            ontologyIri = stringFormatter.toSmartIri(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri),
+            predicateIri = predicateIri.toSmartIri,
+            ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
             objects = objects,
             objectsWithLang = objectsWithLang
         )
@@ -2361,13 +2362,13 @@ object KnoraApiV2WithValueObjects {
 
         ReadPropertyInfoV2(
             entityInfoContent = PropertyInfoContentV2(
-                propertyIri = stringFormatter.toSmartIri(propertyIri),
-                ontologyIri = stringFormatter.toSmartIri(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri),
+                propertyIri = propertyIri.toSmartIri,
+                ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                 ontologySchema = ApiV2WithValueObjects,
                 predicates = predsWithTypes.map {
                     pred => pred.predicateIri -> pred
                 }.toMap,
-                subPropertyOf = subPropertyOf.map(iri => stringFormatter.toSmartIri(iri))
+                subPropertyOf = subPropertyOf.map(iri => iri.toSmartIri)
             ),
             isEditable = isEditable
         )
@@ -2397,16 +2398,16 @@ object KnoraApiV2WithValueObjects {
 
         ReadClassInfoV2(
             entityInfoContent = ClassInfoContentV2(
-                rdfType = stringFormatter.toSmartIri(OntologyConstants.Owl.Class),
-                classIri = stringFormatter.toSmartIri(classIri),
+                rdfType = OntologyConstants.Owl.Class.toSmartIri,
+                classIri = classIri.toSmartIri,
                 predicates = predicatesWithType.map {
                     pred => pred.predicateIri -> pred
                 }.toMap,
                 directCardinalities = directCardinalities.map {
-                    case (propertyIri, cardinality) => stringFormatter.toSmartIri(propertyIri) -> cardinality
+                    case (propertyIri, cardinality) => propertyIri.toSmartIri -> cardinality
                 },
-                subClassOf = subClassOf.map(iri => stringFormatter.toSmartIri(iri)),
-                ontologyIri = stringFormatter.toSmartIri(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri),
+                subClassOf = subClassOf.map(iri => iri.toSmartIri),
+                ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                 ontologySchema = ApiV2WithValueObjects
             ),
             inheritedCardinalities = inheritedCardinalities,

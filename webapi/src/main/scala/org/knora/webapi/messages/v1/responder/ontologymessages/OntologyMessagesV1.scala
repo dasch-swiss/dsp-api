@@ -22,9 +22,12 @@ package org.knora.webapi.messages.v1.responder.ontologymessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.util.IriConversions._
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,11 +67,11 @@ case class EntityInfoGetRequestV1(resourceClassIris: Set[IRI] = Set.empty[IRI], 
 /**
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
   *
-  * @param resourceClassInfoMap a [[Map]] of resource class IRIs to [[ReadClassInfoV2]] objects.
-  * @param propertyInfoMap      a [[Map]] of property IRIs to [[ReadPropertyInfoV2]] objects.
+  * @param resourceClassInfoMap a [[Map]] of resource class IRIs to [[ClassInfoV1]] objects.
+  * @param propertyInfoMap      a [[Map]] of property IRIs to [[PropertyInfoV1]] objects.
   */
-case class EntityInfoGetResponseV1(resourceClassInfoMap: Map[IRI, ReadClassInfoV2],
-                                   propertyInfoMap: Map[IRI, ReadPropertyInfoV2])
+case class EntityInfoGetResponseV1(resourceClassInfoMap: Map[IRI, ClassInfoV1],
+                                   propertyInfoMap: Map[IRI, PropertyInfoV1])
 
 
 /**
@@ -85,11 +88,11 @@ case class StandoffEntityInfoGetRequestV1(standoffClassIris: Set[IRI] = Set.empt
 /**
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
   *
-  * @param standoffClassInfoMap    a [[Map]] of resource class IRIs to [[ReadClassInfoV2]] objects.
-  * @param standoffPropertyInfoMap a [[Map]] of property IRIs to [[ReadPropertyInfoV2]] objects.
+  * @param standoffClassInfoMap    a [[Map]] of resource class IRIs to [[ClassInfoV1]] objects.
+  * @param standoffPropertyInfoMap a [[Map]] of property IRIs to [[PropertyInfoV1]] objects.
   */
-case class StandoffEntityInfoGetResponseV1(standoffClassInfoMap: Map[IRI, ReadClassInfoV2],
-                                           standoffPropertyInfoMap: Map[IRI, ReadPropertyInfoV2])
+case class StandoffEntityInfoGetResponseV1(standoffClassInfoMap: Map[IRI, ClassInfoV1],
+                                           standoffPropertyInfoMap: Map[IRI, PropertyInfoV1])
 
 /**
   * Requests information about all standoff classes that are a subclass of a data type standoff class. A successful response will be an
@@ -103,9 +106,9 @@ case class StandoffClassesWithDataTypeGetRequestV1(userProfile: UserProfileV1) e
 /**
   * Represents assertions about all standoff classes that are a subclass of a data type standoff class.
   *
-  * @param standoffClassInfoMap a [[Map]] of resource class IRIs to [[ReadClassInfoV2]] objects.
+  * @param standoffClassInfoMap a [[Map]] of resource class IRIs to [[ClassInfoV1]] objects.
   */
-case class StandoffClassesWithDataTypeGetResponseV1(standoffClassInfoMap: Map[IRI, ReadClassInfoV2])
+case class StandoffClassesWithDataTypeGetResponseV1(standoffClassInfoMap: Map[IRI, ClassInfoV1])
 
 /**
   * Requests information about all standoff properties. A successful response will be an
@@ -119,9 +122,9 @@ case class StandoffAllPropertiesGetRequestV1(userProfile: UserProfileV1) extends
 /**
   * Represents assertions about all standoff all standoff property entities.
   *
-  * @param standoffAllPropertiesInfoMap a [[Map]] of resource entity IRIs to [[ReadPropertyInfoV2]] objects.
+  * @param standoffAllPropertiesInfoMap a [[Map]] of resource entity IRIs to [[PropertyInfoV1]] objects.
   */
-case class StandoffAllPropertiesGetResponseV1(standoffAllPropertiesInfoMap: Map[IRI, ReadPropertyInfoV2])
+case class StandoffAllPropertiesGetResponseV1(standoffAllPropertiesInfoMap: Map[IRI, PropertyInfoV1])
 
 
 /**
@@ -244,9 +247,9 @@ case class SubClassesGetRequestV1(resourceClassIri: IRI, userProfile: UserProfil
 /**
   * Provides information about the subclasses of a Knora resource class.
   *
-  * @param subClasses a list of [[SubClassInfoV2]] representing the subclasses of the specified class.
+  * @param subClasses a list of [[SubClassInfoV1]] representing the subclasses of the specified class.
   */
-case class SubClassesGetResponseV1(subClasses: Seq[SubClassInfoV2]) extends KnoraResponseV1 {
+case class SubClassesGetResponseV1(subClasses: Seq[SubClassInfoV1]) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.subClassesGetResponseV1Format.write(this)
 }
 
@@ -263,6 +266,162 @@ case class NamedGraphEntityInfoRequestV1(namedGraphIri: IRI, userProfile: UserPr
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
+/**
+  * Represents a predicate that is asserted about a given ontology entity, and the objects of that predicate.
+  */
+class PredicateInfoV1(predicateInfoV2: PredicateInfoV2) {
+
+    /**
+      * Returns the IRI of the predicate.
+      */
+    def predicateIri: IRI = predicateInfoV2.predicateIri.toString
+
+    /**
+      * Returns the IRI of the ontology in which the assertions occur.
+      */
+    def ontologyIri: IRI = predicateInfoV2.ontologyIri.toString
+
+    /**
+      * Returns the objects of the predicate that have no language codes.
+      */
+    def objects: Set[String] = predicateInfoV2.objects
+
+    /**
+      * Returns the objects of the predicate that have language codes: a Map of language codes to literals.
+      */
+    def objectsWithLang: Map[String, String] = predicateInfoV2.objectsWithLang
+}
+
+/**
+  * Represents information about an OWL class or property.
+  */
+sealed trait EntityInfoV1 {
+    protected implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+
+    protected def entityInfoContent: EntityInfoContentV2
+
+    /**
+      * Returns a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
+      */
+    def predicates: Map[IRI, PredicateInfoV1] = {
+        entityInfoContent.predicates.map {
+            case (smartIri, predicateInfoV2) => smartIri.toString -> new PredicateInfoV1(predicateInfoV2)
+        }
+    }
+
+    /**
+      * Returns an object for a given predicate. If requested, attempts to return the object in the user's preferred
+      * language, in the system's default language, or in any language, in that order.
+      *
+      * @param predicateIri   the IRI of the predicate.
+      * @param preferredLangs the user's preferred language and the system's default language.
+      * @return an object for the predicate, or [[None]] if this entity doesn't have the specified predicate, or
+      *         if the predicate has no objects.
+      */
+    def getPredicateObject(predicateIri: IRI, preferredLangs: Option[(String, String)] = None): Option[String] = {
+        entityInfoContent.getPredicateLiteralObject(
+            predicateIri = predicateIri.toSmartIri,
+            preferredLangs = preferredLangs
+        )
+    }
+
+    /**
+      * Returns all the objects specified for a given predicate.
+      *
+      * @param predicateIri the IRI of the predicate.
+      * @return the predicate's objects, or an empty set if this entity doesn't have the specified predicate.
+      */
+    def getPredicateObjectsWithoutLang(predicateIri: IRI): Set[String] = {
+        entityInfoContent.getPredicateLiteralsWithoutLang(predicateIri.toSmartIri)
+    }
+}
+
+/**
+  * Represents the assertions about an OWL class.
+  */
+class ClassInfoV1(classInfoV2: ReadClassInfoV2) extends EntityInfoV1 {
+    override protected def entityInfoContent: EntityInfoContentV2 = classInfoV2.entityInfoContent
+
+    /**
+      * Returns the IRI of the resource class.
+      */
+    def resourceClassIri: IRI = classInfoV2.entityInfoContent.classIri.toString
+
+    /**
+      * Returns the IRI of the ontology in which the resource class.
+      */
+    def ontologyIri: IRI = classInfoV2.entityInfoContent.ontologyIri.toString
+
+    /**
+      * Returns a [[Map]] of properties to [[Cardinality.Value]] objects representing the resource class's
+      *                            cardinalities on those properties.
+      */
+    def cardinalities: Map[IRI, Cardinality.Value] = {
+        classInfoV2.allCardinalities.map {
+            case (smartIri, cardinality) => smartIri.toString -> cardinality
+        }
+    }
+
+    /**
+      * Returns a [[Set]] of IRIs of properties of the resource class that point to other resources.
+      */
+    def linkProperties: Set[IRI] = classInfoV2.linkProperties.map(_.toString)
+
+    /**
+      * Returns a [[Set]] of IRIs of properties of the resource class that point to `LinkValue` objects.
+      */
+    def linkValueProperties: Set[IRI] = classInfoV2.linkValueProperties.map(_.toString)
+
+    /**
+      * Returns a [[Set]] of IRIs of properties of the resource class that point to `FileValue` objects.
+      */
+    def fileValueProperties: Set[IRI] = classInfoV2.fileValueProperties.map(_.toString)
+
+    /**
+      * If this is a standoff tag class, returns the standoff datatype tag class (if any) that it
+      * is a subclass of.
+      */
+    def standoffDataType: Option[StandoffDataTypeClasses.Value] = classInfoV2.entityInfoContent.standoffDataType
+}
+
+/**
+  * Represents the assertions about an OWL property.
+  */
+class PropertyInfoV1(propertyInfoV2: ReadPropertyInfoV2) extends EntityInfoV1 {
+
+    override protected def entityInfoContent: EntityInfoContentV2 = propertyInfoV2.entityInfoContent
+
+    /**
+      * Returns the IRI of the queried property.
+      */
+    def propertyIri: IRI = propertyInfoV2.entityInfoContent.propertyIri.toString
+
+    /**
+      * Returns the IRI of the ontology in which the property is defined.
+      */
+    def ontologyIri: IRI = propertyInfoV2.entityInfoContent.ontologyIri.toString
+
+    /**
+      * Returns `true` if the property is a subproperty of `knora-base:hasLinkTo`.
+      */
+    def isLinkProp: Boolean = propertyInfoV2.isLinkProp
+
+    /**
+      * Returns `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
+      */
+    def isLinkValueProp: Boolean = propertyInfoV2.isLinkValueProp
+
+    /**
+      * Returns `true` if the property is a subproperty of `knora-base:hasFileValue`.
+      */
+    def isFileValueProp: Boolean = propertyInfoV2.isFileValueProp
+
+    /**
+      * Returns `true` if this is a subproperty (directly or indirectly) of
+      * [[OntologyConstants.KnoraBase.StandoffTagHasInternalReference]].
+      */
+    def isStandoffInternalReferenceProperty: Boolean = propertyInfoV2.isStandoffInternalReferenceProperty
+}
 
 /**
   * Represents the assertions about a given named graph entity.
@@ -375,6 +534,14 @@ case class NamedGraphV1(id: IRI,
 }
 
 /**
+  * Represents information about a subclass of a resource class.
+  *
+  * @param id    the IRI of the subclass.
+  * @param label the `rdfs:label` of the subclass.
+  */
+case class SubClassInfoV1(id: IRI, label: String)
+
+/**
   * Represents a resource class and its properties.
   *
   * @param id         the IRI of the resource class.
@@ -414,6 +581,6 @@ object ResourceTypeV1JsonProtocol extends SprayJsonSupport with DefaultJsonProto
     implicit val resourceTypesForNamedGraphResponseV1Format: RootJsonFormat[ResourceTypesForNamedGraphResponseV1] = jsonFormat1(ResourceTypesForNamedGraphResponseV1)
     implicit val propertyTypesForNamedGraphResponseV1Format: RootJsonFormat[PropertyTypesForNamedGraphResponseV1] = jsonFormat1(PropertyTypesForNamedGraphResponseV1)
     implicit val propertyTypesForResourceTypeResponseV1Format: RootJsonFormat[PropertyTypesForResourceTypeResponseV1] = jsonFormat1(PropertyTypesForResourceTypeResponseV1)
-    implicit val subClassInfoV1Format: JsonFormat[SubClassInfoV2] = jsonFormat2(SubClassInfoV2)
+    implicit val subClassInfoV1Format: JsonFormat[SubClassInfoV1] = jsonFormat2(SubClassInfoV1)
     implicit val subClassesGetResponseV1Format: RootJsonFormat[SubClassesGetResponseV1] = jsonFormat1(SubClassesGetResponseV1)
 }

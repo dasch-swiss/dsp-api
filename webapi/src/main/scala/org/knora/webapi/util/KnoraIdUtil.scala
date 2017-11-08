@@ -24,6 +24,7 @@ import java.nio.ByteBuffer
 import java.util.{Base64, UUID}
 
 import org.knora.webapi._
+import org.knora.webapi.util.IriConversions._
 
 object KnoraIdUtil {
     private val CanonicalUuidLength = 36
@@ -32,7 +33,7 @@ object KnoraIdUtil {
     /**
       * The domain name used to construct Knora IRIs.
       */
-    private val IriDomain = "rdfh.ch"
+    val IriDomain = "rdfh.ch"
 }
 
 /**
@@ -45,7 +46,7 @@ class KnoraIdUtil {
 
     private val base64Encoder = Base64.getUrlEncoder.withoutPadding
     private val base64Decoder = Base64.getUrlDecoder
-    private val stringFormatter = StringFormatter.getInstance
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
 
     /**
       * Generates a type 4 UUID using [[java.util.UUID]], and Base64-encodes it using a URL and filename safe
@@ -162,7 +163,7 @@ class KnoraIdUtil {
     def makeProjectMappingIri(projectIri: IRI, mappingName: String): IRI = {
         val mappingIri = s"$projectIri/mappings/$mappingName"
         // check that the mapping IRI is valid (mappingName is user input)
-        stringFormatter.validateIri(mappingIri, () => throw BadRequestException(s"the created mapping IRI $mappingIri is invalid"))
+        stringFormatter.validateAndEscapeIri(mappingIri, () => throw BadRequestException(s"the created mapping IRI $mappingIri is invalid"))
     }
 
     /**
@@ -234,7 +235,7 @@ class KnoraIdUtil {
       * @param linkPropertyIri the IRI of the property that points to a resource.
       * @return the IRI of the corresponding link value property.
       */
-    def linkPropertyIriToLinkValuePropertyIri(linkPropertyIri: IRI): IRI = linkPropertyIri + "Value"
+    def linkPropertyIriToLinkValuePropertyIri(linkPropertyIri: IRI): IRI = linkPropertyIri.toSmartIri.fromLinkPropToLinkValueProp.toString
 
     /**
       * Converts the IRI of a property that points to a `knora-base:LinkValue` into the IRI of the corresponding link property.
@@ -242,13 +243,7 @@ class KnoraIdUtil {
       * @param linkValuePropertyIri the IRI of the property that points to the `LinkValue`.
       * @return the IRI of the corresponding link property.
       */
-    def linkValuePropertyIri2LinkPropertyIri(linkValuePropertyIri: IRI): IRI = {
-        if (linkValuePropertyIri.endsWith("Value")) {
-            linkValuePropertyIri.substring(0, linkValuePropertyIri.length - "Value".length)
-        } else {
-            throw InconsistentTriplestoreDataException(s"Link value predicate IRI $linkValuePropertyIri does not end with 'Value'")
-        }
-    }
+    def linkValuePropertyIri2LinkPropertyIri(linkValuePropertyIri: IRI): IRI = linkValuePropertyIri.toSmartIri.fromLinkValuePropToLinkProp.toString
 
     /**
       * Creates a new permission IRI based on a UUID.

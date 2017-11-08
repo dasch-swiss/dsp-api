@@ -20,7 +20,8 @@
 
 package org.knora.webapi.util
 
-import org.knora.webapi.{AssertionException, BadRequestException, CoreSpec}
+import org.knora.webapi._
+import org.knora.webapi.util.IriConversions._
 
 /**
   * Tests [[StringFormatter]].
@@ -28,7 +29,7 @@ import org.knora.webapi.{AssertionException, BadRequestException, CoreSpec}
   * Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
   */
 class StringFormatterSpec extends CoreSpec() {
-    private val stringFormatter = StringFormatter.getInstance
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
 
     "The StringFormatter class" should {
 
@@ -132,158 +133,158 @@ class StringFormatterSpec extends CoreSpec() {
 
         "recognize the url of the dhlab site as a valid IRI" in {
             val testUrl: String = "http://dhlab.unibas.ch/"
-            val validIri = stringFormatter.validateIri(testUrl, () => throw BadRequestException(s"Invalid IRI $testUrl"))
+            val validIri = stringFormatter.validateAndEscapeIri(testUrl, () => throw BadRequestException(s"Invalid IRI $testUrl"))
             validIri should be(testUrl)
         }
 
         "recognize the url of the DaSCH site as a valid IRI" in {
             val testUrl = "http://dasch.swiss"
-            val validIri = stringFormatter.validateIri(testUrl, () => throw BadRequestException(s"Invalid IRI $testUrl"))
+            val validIri = stringFormatter.validateAndEscapeIri(testUrl, () => throw BadRequestException(s"Invalid IRI $testUrl"))
             validIri should be(testUrl)
         }
 
         "convert http://www.knora.org/ontology/knora-base to http://api.knora.org/ontology/knora-api/simple/v2" in {
-            val internalOntologyIri = "http://www.knora.org/ontology/knora-base"
-            val externalOntologyIri = stringFormatter.internalOntologyIriToApiV2SimpleOntologyIri(internalOntologyIri, () => throw AssertionException(s"Couldn't parse $internalOntologyIri"))
-            externalOntologyIri should ===("http://api.knora.org/ontology/knora-api/simple/v2")
+            val internalOntologyIri = "http://www.knora.org/ontology/knora-base".toSmartIri
+            val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Simple)
+            externalOntologyIri.toString should ===("http://api.knora.org/ontology/knora-api/simple/v2")
         }
 
         "convert http://www.knora.org/ontology/knora-base#Resource to http://api.knora.org/ontology/knora-api/simple/v2#Resource" in {
-            val internalEntityIri = "http://www.knora.org/ontology/knora-base#Resource"
-            val externalEntityIri = stringFormatter.internalEntityIriToApiV2SimpleEntityIri(internalEntityIri, () => throw AssertionException(s"Couldn't parse $internalEntityIri"))
-            externalEntityIri should ===("http://api.knora.org/ontology/knora-api/simple/v2#Resource")
+            val internalEntityIri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri
+            val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Simple)
+            externalEntityIri.toString should ===("http://api.knora.org/ontology/knora-api/simple/v2#Resource")
         }
 
         "convert http://www.knora.org/ontology/knora-base to http://api.knora.org/ontology/knora-api/v2" in {
-            val internalOntologyIri = "http://www.knora.org/ontology/knora-base"
-            val externalOntologyIri = stringFormatter.internalOntologyIriToApiV2WithValueObjectsOntologyIri(internalOntologyIri, () => throw AssertionException(s"Couldn't parse $internalOntologyIri"))
-            externalOntologyIri should ===("http://api.knora.org/ontology/knora-api/v2")
+            val internalOntologyIri = "http://www.knora.org/ontology/knora-base".toSmartIri
+            val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)
+            externalOntologyIri.toString should ===("http://api.knora.org/ontology/knora-api/v2")
         }
 
         "convert http://www.knora.org/ontology/knora-base#Resource to http://api.knora.org/ontology/knora-api/v2#Resource" in {
-            val internalEntityIri = "http://www.knora.org/ontology/knora-base#Resource"
-            val externalEntityIri = stringFormatter.internalEntityIriToApiV2WithValueObjectEntityIri(internalEntityIri, () => throw AssertionException(s"Couldn't parse $internalEntityIri"))
-            externalEntityIri should ===("http://api.knora.org/ontology/knora-api/v2#Resource")
+            val internalEntityIri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri
+            val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2WithValueObjects)
+            externalEntityIri.toString should ===("http://api.knora.org/ontology/knora-api/v2#Resource")
         }
 
         "convert http://api.knora.org/ontology/knora-api/simple/v2 to http://www.knora.org/ontology/knora-base" in {
-            val externalOntologyIri = "http://api.knora.org/ontology/knora-api/simple/v2"
-            val internalOntologyIri = stringFormatter.toInternalOntologyIri(externalOntologyIri, () => throw AssertionException(s"Couldn't parse $externalOntologyIri"))
-            internalOntologyIri should ===("http://www.knora.org/ontology/knora-base")
+            val externalOntologyIri = "http://api.knora.org/ontology/knora-api/simple/v2".toSmartIri
+            val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+            internalOntologyIri.toString should ===("http://www.knora.org/ontology/knora-base")
         }
 
         "convert http://api.knora.org/ontology/knora-api/simple/v2#Resource to http://www.knora.org/ontology/knora-base#Resource" in {
-            val externalEntityIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource"
-            val internalEntityIri = stringFormatter.externalToInternalEntityIri(externalEntityIri, () => throw AssertionException(s"Couldn't parse $externalEntityIri"))
-            internalEntityIri should ===("http://www.knora.org/ontology/knora-base#Resource")
+            val externalEntityIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri
+            val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
+            internalEntityIri.toString should ===("http://www.knora.org/ontology/knora-base#Resource")
         }
 
         "convert http://api.knora.org/ontology/knora-api/v2 to http://www.knora.org/ontology/knora-base" in {
-            val externalOntologyIri = "http://api.knora.org/ontology/knora-api/v2"
-            val internalOntologyIri = stringFormatter.toInternalOntologyIri(externalOntologyIri, () => throw AssertionException(s"Couldn't parse $externalOntologyIri"))
-            internalOntologyIri should ===("http://www.knora.org/ontology/knora-base")
+            val externalOntologyIri = "http://api.knora.org/ontology/knora-api/v2".toSmartIri
+            val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+            internalOntologyIri.toString should ===("http://www.knora.org/ontology/knora-base")
         }
 
         "convert http://api.knora.org/ontology/knora-api/v2#Resource to http://www.knora.org/ontology/knora-base#Resource" in {
-            val externalEntityIri = "http://api.knora.org/ontology/knora-api/v2#Resource"
-            val internalEntityIri = stringFormatter.externalToInternalEntityIri(externalEntityIri, () => throw AssertionException(s"Couldn't parse $externalEntityIri"))
-            internalEntityIri should ===("http://www.knora.org/ontology/knora-base#Resource")
+            val externalEntityIri = "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
+            val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
+            internalEntityIri.toString should ===("http://www.knora.org/ontology/knora-base#Resource")
         }
 
         "convert http://www.knora.org/ontology/0001/example to http://0.0.0.0:3333/ontology/0001/example/simple/v2" in {
-            val internalOntologyIri = "http://www.knora.org/ontology/0001/example"
-            val externalOntologyIri = stringFormatter.internalOntologyIriToApiV2SimpleOntologyIri(internalOntologyIri, () => throw AssertionException(s"Couldn't parse $internalOntologyIri"))
-            externalOntologyIri should ===("http://0.0.0.0:3333/ontology/0001/example/simple/v2")
+            val internalOntologyIri = "http://www.knora.org/ontology/0001/example".toSmartIri
+            val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Simple)
+            externalOntologyIri.toString should ===("http://0.0.0.0:3333/ontology/0001/example/simple/v2")
         }
 
         "convert http://www.knora.org/ontology/0001/example#ExampleThing to http://0.0.0.0:3333/ontology/0001/example/simple/v2#ExampleThing" in {
-            val internalEntityIri = "http://www.knora.org/ontology/0001/example#ExampleThing"
-            val externalEntityIri = stringFormatter.internalEntityIriToApiV2SimpleEntityIri(internalEntityIri, () => throw AssertionException(s"Couldn't parse $internalEntityIri"))
-            externalEntityIri should ===("http://0.0.0.0:3333/ontology/0001/example/simple/v2#ExampleThing")
+            val internalEntityIri = "http://www.knora.org/ontology/0001/example#ExampleThing".toSmartIri
+            val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Simple)
+            externalEntityIri.toString should ===("http://0.0.0.0:3333/ontology/0001/example/simple/v2#ExampleThing")
         }
 
         "convert http://www.knora.org/ontology/0001/example to http://0.0.0.0:3333/ontology/0001/example/v2" in {
-            val internalOntologyIri = "http://www.knora.org/ontology/0001/example"
-            val externalOntologyIri = stringFormatter.internalOntologyIriToApiV2WithValueObjectsOntologyIri(internalOntologyIri, () => throw AssertionException(s"Couldn't parse $internalOntologyIri"))
-            externalOntologyIri should ===("http://0.0.0.0:3333/ontology/0001/example/v2")
+            val internalOntologyIri = "http://www.knora.org/ontology/0001/example".toSmartIri
+            val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)
+            externalOntologyIri.toString should ===("http://0.0.0.0:3333/ontology/0001/example/v2")
         }
 
         "convert http://www.knora.org/ontology/0001/example#ExampleThing to http://0.0.0.0:3333/ontology/0001/example/v2#ExampleThing" in {
-            val internalEntityIri = "http://www.knora.org/ontology/0001/example#ExampleThing"
-            val externalEntityIri = stringFormatter.internalEntityIriToApiV2WithValueObjectEntityIri(internalEntityIri, () => throw AssertionException(s"Couldn't parse $internalEntityIri"))
-            externalEntityIri should ===("http://0.0.0.0:3333/ontology/0001/example/v2#ExampleThing")
+            val internalEntityIri = "http://www.knora.org/ontology/0001/example#ExampleThing".toSmartIri
+            val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2WithValueObjects)
+            externalEntityIri.toString should ===("http://0.0.0.0:3333/ontology/0001/example/v2#ExampleThing")
         }
 
         "convert http://0.0.0.0:3333/ontology/0001/example/simple/v2 to http://www.knora.org/ontology/0001/example" in {
-            val externalOntologyIri = "http://0.0.0.0:3333/ontology/0001/example/simple/v2"
-            val internalOntologyIri = stringFormatter.toInternalOntologyIri(externalOntologyIri, () => throw AssertionException(s"Couldn't parse $externalOntologyIri"))
-            internalOntologyIri should ===("http://www.knora.org/ontology/0001/example")
+            val externalOntologyIri = "http://0.0.0.0:3333/ontology/0001/example/simple/v2".toSmartIri
+            val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+            internalOntologyIri.toString should ===("http://www.knora.org/ontology/0001/example")
         }
 
         "convert http://0.0.0.0:3333/ontology/0001/example/simple/v2#ExampleThing to http://www.knora.org/ontology/0001/example#ExampleThing" in {
-            val externalEntityIri = "http://0.0.0.0:3333/ontology/0001/example/simple/v2#ExampleThing"
-            val internalEntityIri = stringFormatter.externalToInternalEntityIri(externalEntityIri, () => throw AssertionException(s"Couldn't parse $externalEntityIri"))
-            internalEntityIri should ===("http://www.knora.org/ontology/0001/example#ExampleThing")
+            val externalEntityIri = "http://0.0.0.0:3333/ontology/0001/example/simple/v2#ExampleThing".toSmartIri
+            val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
+            internalEntityIri.toString should ===("http://www.knora.org/ontology/0001/example#ExampleThing")
         }
 
         "convert http://0.0.0.0:3333/ontology/0001/example/v2 to http://www.knora.org/ontology/0001/example" in {
-            val externalOntologyIri = "http://0.0.0.0:3333/ontology/0001/example/v2"
-            val internalOntologyIri = stringFormatter.toInternalOntologyIri(externalOntologyIri, () => throw AssertionException(s"Couldn't parse $externalOntologyIri"))
-            internalOntologyIri should ===("http://www.knora.org/ontology/0001/example")
+            val externalOntologyIri = "http://0.0.0.0:3333/ontology/0001/example/v2".toSmartIri
+            val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+            internalOntologyIri.toString should ===("http://www.knora.org/ontology/0001/example")
         }
 
         "convert http://0.0.0.0:3333/ontology/0001/example/v2#ExampleThing to http://www.knora.org/ontology/0001/example#ExampleThing" in {
-            val externalEntityIri = "http://0.0.0.0:3333/ontology/0001/example/v2#ExampleThing"
-            val internalEntityIri = stringFormatter.externalToInternalEntityIri(externalEntityIri, () => throw AssertionException(s"Couldn't parse $externalEntityIri"))
-            internalEntityIri should ===("http://www.knora.org/ontology/0001/example#ExampleThing")
+            val externalEntityIri = "http://0.0.0.0:3333/ontology/0001/example/v2#ExampleThing".toSmartIri
+            val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
+            internalEntityIri.toString should ===("http://www.knora.org/ontology/0001/example#ExampleThing")
         }
 
         "convert http://www.knora.org/ontology/incunabula to http://0.0.0.0:3333/ontology/incunabula/simple/v2" in {
-            val internalOntologyIri = "http://www.knora.org/ontology/incunabula"
-            val externalOntologyIri = stringFormatter.internalOntologyIriToApiV2SimpleOntologyIri(internalOntologyIri, () => throw AssertionException(s"Couldn't parse $internalOntologyIri"))
-            externalOntologyIri should ===("http://0.0.0.0:3333/ontology/incunabula/simple/v2")
+            val internalOntologyIri = "http://www.knora.org/ontology/incunabula".toSmartIri
+            val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Simple)
+            externalOntologyIri.toString should ===("http://0.0.0.0:3333/ontology/incunabula/simple/v2")
         }
 
         "convert http://www.knora.org/ontology/incunabula#book to http://0.0.0.0:3333/ontology/incunabula/simple/v2#book" in {
-            val internalEntityIri = "http://www.knora.org/ontology/incunabula#book"
-            val externalEntityIri = stringFormatter.internalEntityIriToApiV2SimpleEntityIri(internalEntityIri, () => throw AssertionException(s"Couldn't parse $internalEntityIri"))
-            externalEntityIri should ===("http://0.0.0.0:3333/ontology/incunabula/simple/v2#book")
+            val internalEntityIri = "http://www.knora.org/ontology/incunabula#book".toSmartIri
+            val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Simple)
+            externalEntityIri.toString should ===("http://0.0.0.0:3333/ontology/incunabula/simple/v2#book")
         }
 
         "convert http://www.knora.org/ontology/incunabula to http://0.0.0.0:3333/ontology/incunabula/v2" in {
-            val internalOntologyIri = "http://www.knora.org/ontology/incunabula"
-            val externalOntologyIri = stringFormatter.internalOntologyIriToApiV2WithValueObjectsOntologyIri(internalOntologyIri, () => throw AssertionException(s"Couldn't parse $internalOntologyIri"))
-            externalOntologyIri should ===("http://0.0.0.0:3333/ontology/incunabula/v2")
+            val internalOntologyIri = "http://www.knora.org/ontology/incunabula".toSmartIri
+            val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)
+            externalOntologyIri.toString should ===("http://0.0.0.0:3333/ontology/incunabula/v2")
         }
 
         "convert http://www.knora.org/ontology/incunabula#book to http://0.0.0.0:3333/ontology/incunabula/v2#book" in {
-            val internalEntityIri = "http://www.knora.org/ontology/incunabula#book"
-            val externalEntityIri = stringFormatter.internalEntityIriToApiV2WithValueObjectEntityIri(internalEntityIri, () => throw AssertionException(s"Couldn't parse $internalEntityIri"))
-            externalEntityIri should ===("http://0.0.0.0:3333/ontology/incunabula/v2#book")
+            val internalEntityIri = "http://www.knora.org/ontology/incunabula#book".toSmartIri
+            val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2WithValueObjects)
+            externalEntityIri.toString should ===("http://0.0.0.0:3333/ontology/incunabula/v2#book")
         }
 
         "convert http://0.0.0.0:3333/ontology/incunabula/simple/v2 to http://www.knora.org/ontology/incunabula" in {
-            val externalOntologyIri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2"
-            val internalOntologyIri = stringFormatter.toInternalOntologyIri(externalOntologyIri, () => throw AssertionException(s"Couldn't parse $externalOntologyIri"))
-            internalOntologyIri should ===("http://www.knora.org/ontology/incunabula")
+            val externalOntologyIri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2".toSmartIri
+            val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+            internalOntologyIri.toString should ===("http://www.knora.org/ontology/incunabula")
         }
 
         "convert http://0.0.0.0:3333/ontology/incunabula/simple/v2#book to http://www.knora.org/ontology/incunabula#book" in {
-            val externalEntityIri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#book"
-            val internalEntityIri = stringFormatter.externalToInternalEntityIri(externalEntityIri, () => throw AssertionException(s"Couldn't parse $externalEntityIri"))
-            internalEntityIri should ===("http://www.knora.org/ontology/incunabula#book")
+            val externalEntityIri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#book".toSmartIri
+            val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
+            internalEntityIri.toString should ===("http://www.knora.org/ontology/incunabula#book")
         }
 
         "convert http://0.0.0.0:3333/ontology/incunabula/v2 to http://www.knora.org/ontology/incunabula" in {
-            val externalOntologyIri = "http://0.0.0.0:3333/ontology/incunabula/v2"
-            val internalOntologyIri = stringFormatter.toInternalOntologyIri(externalOntologyIri, () => throw AssertionException(s"Couldn't parse $externalOntologyIri"))
-            internalOntologyIri should ===("http://www.knora.org/ontology/incunabula")
+            val externalOntologyIri = "http://0.0.0.0:3333/ontology/incunabula/v2".toSmartIri
+            val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+            internalOntologyIri.toString should ===("http://www.knora.org/ontology/incunabula")
         }
 
         "convert http://0.0.0.0:3333/ontology/incunabula/v2#book to http://www.knora.org/ontology/incunabula#book" in {
-            val externalEntityIri = "http://0.0.0.0:3333/ontology/incunabula/v2#book"
-            val internalEntityIri = stringFormatter.externalToInternalEntityIri(externalEntityIri, () => throw AssertionException(s"Couldn't parse $externalEntityIri"))
-            internalEntityIri should ===("http://www.knora.org/ontology/incunabula#book")
+            val externalEntityIri = "http://0.0.0.0:3333/ontology/incunabula/v2#book".toSmartIri
+            val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
+            internalEntityIri.toString should ===("http://www.knora.org/ontology/incunabula#book")
         }
     }
 }
