@@ -193,8 +193,9 @@ class KnoraIdUtil {
     }
 
     /**
-      * Creates a new project IRI based on a UUID.
+      * Creates a new project IRI based on a UUID or project shortcode.
       *
+      * @param maybeShortcode the optional project shortcode.
       * @return a new project IRI.
       */
     def makeRandomProjectIri(maybeShortcode: Option[String]): IRI = {
@@ -210,11 +211,17 @@ class KnoraIdUtil {
     /**
       * Creates a new group IRI based on a UUID.
       *
+      * @param maybeShortcode the optional project shortcode.
       * @return a new group IRI.
       */
-    def makeRandomGroupIri: String = {
+    def makeRandomGroupIri(maybeShortcode: Option[String]): String = {
         val knoraGroupUuid = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/groups/$knoraGroupUuid"
+
+        if (maybeShortcode.isDefined) {
+            s"http://$IriDomain/groups/${maybeShortcode.get}/$knoraGroupUuid"
+        } else {
+            s"http://$IriDomain/groups/$knoraGroupUuid"
+        }
     }
 
     /**

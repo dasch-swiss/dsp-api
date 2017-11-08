@@ -70,8 +70,8 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
         "return user's max permission for a specific resource (incunabula normal project member user)" in {
             PermissionUtilV1.getUserPermissionV1(
-                subjectIri = "http://data.knora.org/00014b43f902",
-                subjectCreator = "http://data.knora.org/users/91e19f1e01",
+                subjectIri = "http://rdfh.ch/00014b43f902",
+                subjectCreator = "http://rdfh.ch/users/91e19f1e01",
                 subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
                 userProfile = SharedAdminTestData.incunabulaMemberUser
@@ -80,8 +80,8 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
         "return user's max permission for a specific resource (incunabula project admin user)" in {
             PermissionUtilV1.getUserPermissionV1(
-                subjectIri = "http://data.knora.org/00014b43f902",
-                subjectCreator = "http://data.knora.org/users/91e19f1e01",
+                subjectIri = "http://rdfh.ch/00014b43f902",
+                subjectCreator = "http://rdfh.ch/users/91e19f1e01",
                 subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
                 userProfile = SharedAdminTestData.incunabulaProjectAdminUser
@@ -90,8 +90,8 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
         "return user's max permission for a specific resource (incunabula creator user)" in {
             PermissionUtilV1.getUserPermissionV1(
-                subjectIri = "http://data.knora.org/00014b43f902",
-                subjectCreator = "http://data.knora.org/users/91e19f1e01",
+                subjectIri = "http://rdfh.ch/00014b43f902",
+                subjectCreator = "http://rdfh.ch/users/91e19f1e01",
                 subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
                 userProfile = SharedAdminTestData.incunabulaCreatorUser
@@ -100,8 +100,8 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
         "return user's max permission for a specific resource (root user)" in {
             PermissionUtilV1.getUserPermissionV1(
-                subjectIri = "http://data.knora.org/00014b43f902",
-                subjectCreator = "http://data.knora.org/users/91e19f1e01",
+                subjectIri = "http://rdfh.ch/00014b43f902",
+                subjectCreator = "http://rdfh.ch/users/91e19f1e01",
                 subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
                 userProfile = SharedAdminTestData.rootUser
@@ -110,8 +110,8 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
         "return user's max permission for a specific resource (normal user)" in {
             PermissionUtilV1.getUserPermissionV1(
-                subjectIri = "http://data.knora.org/00014b43f902",
-                subjectCreator = "http://data.knora.org/users/91e19f1e01",
+                subjectIri = "http://rdfh.ch/00014b43f902",
+                subjectCreator = "http://rdfh.ch/users/91e19f1e01",
                 subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
                 userProfile = SharedAdminTestData.normalUser
@@ -120,8 +120,8 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
         "return user's max permission for a specific resource (anonymous user)" in {
             PermissionUtilV1.getUserPermissionV1(
-                subjectIri = "http://data.knora.org/00014b43f902",
-                subjectCreator = "http://data.knora.org/users/91e19f1e01",
+                subjectIri = "http://rdfh.ch/00014b43f902",
+                subjectCreator = "http://rdfh.ch/users/91e19f1e01",
                 subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
                 userProfile = SharedAdminTestData.anonymousUser
@@ -130,12 +130,12 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
         "return user's max permission from assertions for a specific resource" in {
             val assertions: Seq[(IRI, String)] = Seq(
-                (OntologyConstants.KnoraBase.AttachedToUser, "http://data.knora.org/users/91e19f1e01"),
+                (OntologyConstants.KnoraBase.AttachedToUser, "http://rdfh.ch/users/91e19f1e01"),
                 (OntologyConstants.KnoraBase.AttachedToProject, SharedAdminTestData.INCUNABULA_PROJECT_IRI),
                 (OntologyConstants.KnoraBase.HasPermissions, permissionLiteral)
             )
             PermissionUtilV1.getUserPermissionV1FromAssertions(
-                subjectIri = "http://data.knora.org/00014b43f902",
+                subjectIri = "http://rdfh.ch/00014b43f902",
                 assertions = assertions,
                 userProfile = SharedAdminTestData.incunabulaMemberUser
             ) should equal(Some(6)) // modify permissions
@@ -152,13 +152,13 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
 
         "return parsed permissions string as 'Set[PermissionV1]' (object access permissions)" in {
-            val hasPermissionsString = "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser,http://data.knora.org/groups/customgroup|RV knora-base:UnknownUser"
+            val hasPermissionsString = "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser,http://rdfh.ch/groups/customgroup|RV knora-base:UnknownUser"
 
             val permissionsSet = Set(
                 PermissionV1.modifyPermission(OntologyConstants.KnoraBase.Creator),
                 PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
                 PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
-                PermissionV1.viewPermission("http://data.knora.org/groups/customgroup"),
+                PermissionV1.viewPermission("http://rdfh.ch/groups/customgroup"),
                 PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
             )
 

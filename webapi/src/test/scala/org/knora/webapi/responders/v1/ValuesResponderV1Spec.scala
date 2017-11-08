@@ -707,7 +707,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             actorUnderTest ! CreateValueRequestV1(
                 resourceIri = zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
-                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"),
+                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -724,7 +724,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             actorUnderTest ! CreateValueRequestV1(
                 resourceIri = zeitglöckleinIri,
                 propertyIri = "http://www.knora.org/ontology/incunabula#book_comment",
-                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"),
+                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -741,7 +741,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             actorUnderTest ! ChangeValueRequestV1(
                 valueIri = commentIri.get,
-                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"),
+                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -757,7 +757,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             actorUnderTest ! ChangeValueRequestV1(
                 valueIri = commentIri.get,
-                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"),
+                value = TextValueWithStandoffV1(utf8str = utf8str, standoff = sampleStandoff, mapping = dummyMapping, mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -784,7 +784,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     )
                 ),
                 resource_reference = Set(zeitglöckleinIri),
-                mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping",
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
                 mapping = dummyMapping
             )
 
@@ -873,7 +873,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 ),
                 resource_reference = Set(zeitglöckleinIri),
                 mapping = dummyMapping,
-                mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
             )
 
             actorUnderTest ! ChangeValueRequestV1(
@@ -948,7 +948,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 ),
                 resource_reference = Set(zeitglöckleinIri),
                 mapping = dummyMapping,
-                mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
             )
 
             actorUnderTest ! CreateValueRequestV1(
@@ -1148,7 +1148,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 ),
                 resource_reference = Set(zeitglöckleinIri),
                 mapping = dummyMapping,
-                mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
             )
 
             actorUnderTest ! ChangeValueRequestV1(
@@ -1950,7 +1950,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 ),
                 resource_reference = Set(nonexistentIri),
                 mapping = ResourcesResponderV1SpecFullData.dummyMapping,
-                mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
             )
 
             actorUnderTest ! CreateValueRequestV1(

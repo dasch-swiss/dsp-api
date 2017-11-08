@@ -7,12 +7,12 @@
       "@id" : "http://data.knora.org/a-thing-with-text-values/values/1",
       "@type" : "knora-api:TextValue",
       "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Ich liebe die <a href=\"http://data.knora.org/a-thing\" class=\"salsah-link\">Dinge</a>, sie sind alles für mich.</text>",
-      "knora-api:textValueHasMapping" : "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+      "knora-api:textValueHasMapping" : "http://rdfh.ch/standoff/mappings/StandardMapping"
     }, {
       "@id" : "http://data.knora.org/a-thing-with-text-values/values/2",
       "@type" : "knora-api:TextValue",
       "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Na ja, die <a href=\"http://data.knora.org/a-thing\" class=\"salsah-link\">Dinge</a> sind OK.</text>",
-      "knora-api:textValueHasMapping" : "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+      "knora-api:textValueHasMapping" : "http://rdfh.ch/standoff/mappings/StandardMapping"
     } ],
     "schema:name" : "Ein Ding für jemanden, dem die Dinge gefallen"
   },

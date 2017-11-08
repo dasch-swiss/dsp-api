@@ -208,7 +208,7 @@ class SearchV1R2RSpec extends R2RSpec {
         "perform an extended search for an anything:Thing that has a Boolean value set to true" in {
 
             val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fanything%23hasBoolean&compop=EQ&searchval=true"
-            val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Fdata.knora.org%2Fprojects%2Fanything"
+            val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Frdfh.ch%2Fprojects%2Fanything"
 
             Get("/v1/search/?searchtype=extended" + props + filter) ~> searchPath ~> check {
 
@@ -223,7 +223,7 @@ class SearchV1R2RSpec extends R2RSpec {
         "perform an extended search for an anything:Thing that has a Boolean value that is not false" in {
 
             val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fanything%23hasBoolean&compop=!EQ&searchval=false"
-            val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Fdata.knora.org%2Fprojects%2Fanything"
+            val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Frdfh.ch%2Fprojects%2Fanything"
 
             Get("/v1/search/?searchtype=extended" + props + filter) ~> searchPath ~> check {
 
@@ -238,7 +238,7 @@ class SearchV1R2RSpec extends R2RSpec {
         "perform an extended search for an anything:Thing that has a Boolean value (EXISTS)" in {
 
             val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fanything%23hasBoolean&compop=EXISTS&searchval="
-            val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Fdata.knora.org%2Fprojects%2Fanything"
+            val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Frdfh.ch%2Fprojects%2Fanything"
 
             Get("/v1/search/?searchtype=extended" + props + filter) ~> searchPath ~> check {
 

@@ -160,8 +160,8 @@ object ResourcesResponderV1Spec {
             restype_label = Some("Ding"),
             restype_name = Some("http://www.knora.org/ontology/anything#Thing"),
             restype_id = "http://www.knora.org/ontology/anything#Thing",
-            person_id = "http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q",
-            project_id = "http://data.knora.org/projects/anything"
+            person_id = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+            project_id = "http://rdfh.ch/projects/anything"
         ),
         ext_res_id = ExternalResourceIDV1(
             pid = "http://www.knora.org/ontology/anything#hasOtherThing",
@@ -182,8 +182,8 @@ object ResourcesResponderV1Spec {
             restype_label = Some("Ding"),
             restype_name = Some("http://www.knora.org/ontology/anything#Thing"),
             restype_id = "http://www.knora.org/ontology/anything#Thing",
-            person_id = "http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q",
-            project_id = "http://data.knora.org/projects/anything"
+            person_id = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+            project_id = "http://rdfh.ch/projects/anything"
         ),
         ext_res_id = ExternalResourceIDV1(
             pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
@@ -711,7 +711,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                         // convert CreateValueResponseV1 to a ResourceCreateValueResponseV1
                         MessageUtil.convertCreateValueResponseV1ToResourceCreateValueResponseV1(
                             resourceIri = "http://www.knora.org/test",
-                            creatorIri = "http://data.knora.org/users/b83acc5f05",
+                            creatorIri = "http://rdfh.ch/users/b83acc5f05",
                             propertyIri = propIri,
                             valueResponse = valueResponse
                         )
@@ -1021,7 +1021,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             val resourceCreateRequest = ResourceCreateRequestV1(
                 resourceTypeIri = "http://www.knora.org/ontology/incunabula#misc",
                 label = "Test-Misc",
-                projectIri = "http://data.knora.org/projects/77275339",
+                projectIri = "http://rdfh.ch/projects/77275339",
                 values = valuesToBeCreated,
                 userProfile = SharedAdminTestData.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
@@ -1059,7 +1059,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             val resourceCreateRequest = ResourceCreateRequestV1(
                 resourceTypeIri = "http://www.knora.org/ontology/incunabula#book",
                 label = "Test-Book",
-                projectIri = "http://data.knora.org/projects/77275339",
+                projectIri = "http://rdfh.ch/projects/77275339",
                 values = valuesToBeCreated,
                 userProfile = SharedAdminTestData.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
@@ -1093,7 +1093,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 ),
                 resource_reference = Set(nonexistentIri),
                 mapping = ResourcesResponderV1SpecFullData.dummyMapping,
-                mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
             )
 
             val publoc = TextValueSimpleV1("Entenhausen")
@@ -1112,7 +1112,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             actorUnderTest ! ResourceCreateRequestV1(
                 resourceTypeIri = "http://www.knora.org/ontology/incunabula#book",
                 label = "Book with reference to nonexistent resource",
-                projectIri = "http://data.knora.org/projects/77275339",
+                projectIri = "http://rdfh.ch/projects/77275339",
                 values = valuesToBeCreated,
                 userProfile = SharedAdminTestData.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
@@ -1151,7 +1151,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                     )
                 ),
                 mapping = ResourcesResponderV1SpecFullData.dummyMapping,
-                mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping",
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
                 resource_reference = Set("http://data.knora.org/c5058f3a")
             )
             val citation3 = TextValueSimpleV1("und noch eines")
@@ -1447,7 +1447,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             actorUnderTest ! ResourceCreateRequestV1(
                 resourceTypeIri = "http://www.knora.org/ontology/knora-base#Resource",
                 label = "Test Resource",
-                projectIri = "http://data.knora.org/projects/77275339",
+                projectIri = "http://rdfh.ch/projects/77275339",
                 values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
                 file = None,
                 userProfile = SharedAdminTestData.incunabulaProjectAdminUser,
@@ -1484,7 +1484,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             actorUnderTest ! ResourceCreateRequestV1(
                 resourceTypeIri = "http://www.knora.org/ontology/anything#Thing",
                 label = "Test Thing",
-                projectIri = "http://data.knora.org/projects/anything",
+                projectIri = "http://rdfh.ch/projects/anything",
                 values = valuesToBeCreated,
                 file = None,
                 userProfile = SharedAdminTestData.anythingUser1,

@@ -175,7 +175,7 @@
 
                                          knora-base:isInProject <http://rdfh.ch/projects/00FF> ;
 
-                                         knora-base:isInGroup <http://rdfh.ch/groups/images-reviewer> ;
+                                         knora-base:isInGroup <http://rdfh.ch/groups/00FF/images-reviewer> ;
 
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -197,13 +197,13 @@
 
                                          knora-base:isInProject <http://rdfh.ch/projects/00FF> ;
 
-                                         knora-base:isInGroup <http://rdfh.ch/groups/images-reviewer> ;
+                                         knora-base:isInGroup <http://rdfh.ch/groups/00FF/images-reviewer> ;
 
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
 
-<http://rdfh.ch/groups/images-reviewer> rdf:type knora-base:UserGroup ;
+<http://rdfh.ch/groups/00FF/images-reviewer> rdf:type knora-base:UserGroup ;
 
                                                knora-base:groupName "Image reviewer"^^xsd:string ;
 
@@ -356,7 +356,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                                                          <http://rdfh.ch/projects/00FF> ,
                                                                          <http://rdfh.ch/projects/anything> ;
 
-                                        knora-base:isInGroup <http://rdfh.ch/groups/images-reviewer> .
+                                        knora-base:isInGroup <http://rdfh.ch/groups/00FF/images-reviewer> .
 
 
 

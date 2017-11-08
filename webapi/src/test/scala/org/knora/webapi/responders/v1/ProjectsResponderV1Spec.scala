@@ -118,8 +118,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
             "return 'NotFoundException' when the project IRI is unknown" in {
 
-                actorUnderTest ! ProjectInfoByIRIGetRequestV1("http://data.knora.org/projects/notexisting", Some(rootUserProfileV1))
-                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found")))
+                actorUnderTest ! ProjectInfoByIRIGetRequestV1("http://rdfh.ch/projects/notexisting", Some(rootUserProfileV1))
+                expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found")))
 
             }
 
@@ -251,7 +251,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         description = Some("updated project description"),
                         keywords = Some("updated keywords"),
                         logo = Some("/fu/bar/baz-updated.jpg"),
-                        institution = Some("http://data.knora.org/institutions/dhlab-basel"),
+                        institution = Some("http://rdfh.ch/institutions/dhlab-basel"),
                         status = Some(false),
                         selfjoin = Some(true)
                     ),
@@ -263,7 +263,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 received.project_info.description should be (Some("updated project description"))
                 received.project_info.keywords should be (Some("updated keywords"))
                 received.project_info.logo should be (Some("/fu/bar/baz-updated.jpg"))
-                received.project_info.institution should be (Some("http://data.knora.org/institutions/dhlab-basel"))
+                received.project_info.institution should be (Some("http://rdfh.ch/institutions/dhlab-basel"))
                 received.project_info.ontologies.isEmpty should be (true)
                 received.project_info.status should be (false)
                 received.project_info.selfjoin should be (true)
@@ -272,18 +272,18 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             "ADD an ontology to the project" in {
                 actorUnderTest ! ProjectOntologyAddV1(
                     projectIri = newProjectIri.get,
-                    ontologyIri = "http://data.knora.org/ontology/blabla1",
+                    ontologyIri = "http://www.knora.org/ontology/blabla1",
                     apiRequestID = UUID.randomUUID()
                 )
 
                 val received: ProjectInfoV1 = expectMsgType[ProjectInfoV1](timeout)
-                received.ontologies should be (Seq("http://data.knora.org/ontology/blabla1"))
+                received.ontologies should be (Seq("http://www.knora.org/ontology/blabla1"))
             }
 
             "REMOVE an ontology from the project" in {
                 actorUnderTest ! ProjectOntologyRemoveV1(
                     projectIri = newProjectIri.get,
-                    ontologyIri = "http://data.knora.org/ontology/blabla1",
+                    ontologyIri = "http://www.knora.org/ontology/blabla1",
                     apiRequestID = UUID.randomUUID()
                 )
 
@@ -293,12 +293,12 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
             "return 'NotFound' if a not existing project IRI is submitted during update" in {
                 actorUnderTest ! ProjectChangeRequestV1(
-                    projectIri = "http://data.knora.org/projects/notexisting",
+                    projectIri = "http://rdfh.ch/projects/notexisting",
                     changeProjectRequest = ChangeProjectApiRequestV1(longname = Some("new long name")),
                     SharedAdminTestData.rootUser,
                     UUID.randomUUID()
                 )
-                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found. Aborting update request.")))
+                expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found. Aborting update request.")))
             }
 
             "return 'BadRequest' if nothing would be changed during the update" in {
@@ -328,7 +328,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             "return all named graphs after adding a new ontology" in {
                 actorUnderTest ! ProjectOntologyAddV1(
                     projectIri = IMAGES_PROJECT_IRI,
-                    ontologyIri = "http://data.knora.org/ontology/00FF/blabla1",
+                    ontologyIri = "http://wwww.knora.org/ontology/00FF/blabla1",
                     apiRequestID = UUID.randomUUID()
                 )
                 val received01: ProjectInfoV1 = expectMsgType[ProjectInfoV1](timeout)
@@ -368,8 +368,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             }
 
             "return 'NotFound' when the project IRI is unknown (project membership)" in {
-                actorUnderTest ! ProjectMembersByIRIGetRequestV1("http://data.knora.org/projects/notexisting", SharedAdminTestData.rootUser)
-                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found.")))
+                actorUnderTest ! ProjectMembersByIRIGetRequestV1("http://rdfh.ch/projects/notexisting", SharedAdminTestData.rootUser)
+                expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
             }
 
             "return 'NotFound' when the project shortname is unknown (project membership)" in {
@@ -398,8 +398,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             }
 
             "return 'NotFound' when the project IRI is unknown (project admin membership)" in {
-                actorUnderTest ! ProjectAdminMembersByIRIGetRequestV1("http://data.knora.org/projects/notexisting", SharedAdminTestData.rootUser)
-                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found.")))
+                actorUnderTest ! ProjectAdminMembersByIRIGetRequestV1("http://rdfh.ch/projects/notexisting", SharedAdminTestData.rootUser)
+                expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
             }
 
             "return 'NotFound' when the project shortname is unknown (project admin membership)" in {

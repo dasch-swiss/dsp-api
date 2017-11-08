@@ -177,7 +177,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     SharedAdminTestData.rootUser
                 )
                 expectMsg(AdministrativePermissionsForProjectGetResponseV1(
-                    Seq(perm002_a2.p, perm002_a1.p, perm002_a3.p)
+                    Seq(perm002_a3.p, perm002_a2.p, perm002_a1.p)
                 ))
             }
 
@@ -248,7 +248,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     SharedAdminTestData.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionsForProjectGetResponseV1(
-                    defaultObjectAccessPermissions = Seq(perm002_d1.p, perm002_d2.p)
+                    defaultObjectAccessPermissions = Seq(perm002_d2.p, perm002_d1.p)
                 ))
             }
 
@@ -440,7 +440,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             }
 
             "return a combined and max set of permissions (default object access permissions) defined on the supplied groups (helper method used in queries before)" in {
-                val groups = List("http://data.knora.org/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
+                val groups = List("http://rdfh.ch/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
                 val expected = Set(
                         PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
                         PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),

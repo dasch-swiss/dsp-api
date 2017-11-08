@@ -402,7 +402,7 @@ object OntologyConstants {
         val StandoffUriTag: IRI = KnoraBasePrefixExpansion + "StandoffUriTag"
         val StandoffInternalReferenceTag: IRI = KnoraBasePrefixExpansion + "StandoffInternalReferenceTag"
 
-        val StandardMapping: IRI = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+        val StandardMapping: IRI = "http://rdfh.ch/standoff/mappings/StandardMapping"
 
         val AdministrativePermission: IRI = KnoraBasePrefixExpansion + "AdministrativePermission"
         val DefaultObjectAccessPermission: IRI = KnoraBasePrefixExpansion + "DefaultObjectAccessPermission"

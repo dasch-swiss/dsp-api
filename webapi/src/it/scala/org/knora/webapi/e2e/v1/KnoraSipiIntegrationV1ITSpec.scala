@@ -314,7 +314,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                                     Map(
                                         "richtext_value" -> JsObject(
                                             "xml" -> JsString(standoffXml),
-                                            "mapping_id" -> JsString("http://data.knora.org/projects/standoff/mappings/StandardMapping")
+                                            "mapping_id" -> JsString("http://rdfh.ch/standoff/mappings/StandardMapping")
                                         )
                                     )
                                 )

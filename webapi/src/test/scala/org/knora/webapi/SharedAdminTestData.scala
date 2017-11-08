@@ -41,7 +41,7 @@ object SharedAdminTestData {
     /* represents the user profile of 'root' as found in admin-data.ttl */
     def rootUser = UserProfileV1(
         UserDataV1(
-            user_id = Some("http://data.knora.org/users/root"),
+            user_id = Some("http://rdfh.ch/users/root"),
             email = Some("root@example.com"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             firstname = Some("System"),
@@ -64,7 +64,7 @@ object SharedAdminTestData {
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
     def superUser = UserProfileV1(
         UserDataV1(
-            user_id = Some("http://data.knora.org/users/superuser"),
+            user_id = Some("http://rdfh.ch/users/superuser"),
             firstname = Some("Super"),
             lastname = Some("User"),
             email = Some("super.user@example.com"),
@@ -86,7 +86,7 @@ object SharedAdminTestData {
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
     def normalUser = UserProfileV1(
         UserDataV1(
-            user_id = Some("http://data.knora.org/users/normaluser"),
+            user_id = Some("http://rdfh.ch/users/normaluser"),
             firstname = Some("Normal"),
             lastname = Some("User"),
             email = Some("normal.user@example.com"),
@@ -105,7 +105,7 @@ object SharedAdminTestData {
     /* represents the user profile of 'inactive user' as found in admin-data.ttl */
     def inactiveUser = UserProfileV1(
         UserDataV1(
-            user_id = Some("http://data.knora.org/users/inactiveuser"),
+            user_id = Some("http://rdfh.ch/users/inactiveuser"),
             firstname = Some("Inactive"),
             lastname = Some("User"),
             email = Some("inactive.user@example.com"),
@@ -137,7 +137,7 @@ object SharedAdminTestData {
     /* represents the 'multiuser' as found in admin-data.ttl */
     def multiuserUser = UserProfileV1(
         userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/multiuser"),
+            user_id = Some("http://rdfh.ch/users/multiuser"),
             firstname = Some("Multi"),
             lastname = Some("User"),
             email = Some("multi.user@example.com"),
@@ -146,13 +146,13 @@ object SharedAdminTestData {
             status = Some(true),
             lang = "de"
         ),
-        groups = List("http://data.knora.org/groups/images-reviewer"),
+        groups = List("http://rdfh.ch/groups/00FF/images-reviewer"),
         projects_info = Map(INCUNABULA_PROJECT_IRI -> incunabulaProjectInfo, IMAGES_PROJECT_IRI -> imagesProjectInfo),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
                 INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}"),
-                IMAGES_PROJECT_IRI -> List("http://data.knora.org/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
+                IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
             ),
             administrativePermissionsPerProject = Map(
                 INCUNABULA_PROJECT_IRI -> Set(
@@ -189,12 +189,12 @@ object SharedAdminTestData {
     /** Images Demo Project Admin Data  **/
     /*************************************/
 
-    val IMAGES_PROJECT_IRI = "http://data.knora.org/projects/00FF"
+    val IMAGES_PROJECT_IRI = "http://rdfh.ch/projects/00FF"
 
     /* represents 'user01' as found in admin-data.ttl  */
     def imagesUser01 = UserProfileV1(
         userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/c266a56709"),
+            user_id = Some("http://rdfh.ch/users/c266a56709"),
             firstname = Some("User01"),
             lastname = Some("User"),
             email = Some("user01.user1@example.com"),
@@ -223,7 +223,7 @@ object SharedAdminTestData {
     /* represents 'user02' as found in admin-data.ttl  */
     def imagesUser02 = UserProfileV1(
         userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/97cec4000f"),
+            user_id = Some("http://rdfh.ch/users/97cec4000f"),
             firstname = Some("User02"),
             lastname = Some("User"),
             email = Some("user02.user@example.com"),
@@ -251,7 +251,7 @@ object SharedAdminTestData {
     /* represents 'images-reviewer-user' as found in admin-data.ttl  */
     def imagesReviewerUser = UserProfileV1(
         userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/images-reviewer-user"),
+            user_id = Some("http://rdfh.ch/users/images-reviewer-user"),
             firstname = Some("User03"),
             lastname = Some("User"),
             email = Some("images-reviewer-user@example.com"),
@@ -260,12 +260,12 @@ object SharedAdminTestData {
             status = Some(true),
             lang = "de"
         ),
-        groups = List("http://data.knora.org/groups/images-reviewer"),
+        groups = List("http://rdfh.ch/groups/00FF/images-reviewer"),
         projects_info = Map(IMAGES_PROJECT_IRI -> imagesProjectInfo),
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                IMAGES_PROJECT_IRI -> List("http://data.knora.org/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}")
+                IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}")
             ),
             administrativePermissionsPerProject = Map(
                 IMAGES_PROJECT_IRI -> Set(
@@ -314,7 +314,7 @@ object SharedAdminTestData {
 
     /* represents the full GroupInfoV1 of the images project reviewer group */
     def imagesReviewerGroupInfo = GroupInfoV1(
-        id = "http://data.knora.org/groups/images-reviewer",
+        id = "http://rdfh.ch/groups/00FF/images-reviewer",
         name = "Image reviewer",
         description = Some("A group for image reviewers."),
         project = IMAGES_PROJECT_IRI,
@@ -327,12 +327,12 @@ object SharedAdminTestData {
     /** Incunabula Project Admin Data   **/
     /*************************************/
 
-    val INCUNABULA_PROJECT_IRI = "http://data.knora.org/projects/77275339"
+    val INCUNABULA_PROJECT_IRI = "http://rdfh.ch/projects/77275339"
 
     /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
     def incunabulaProjectAdminUser = UserProfileV1(
         userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/b83acc5f05"),
+            user_id = Some("http://rdfh.ch/users/b83acc5f05"),
             firstname = Some("User"),
             lastname = Some("Test"),
             email = Some("user.test@example.com"),
@@ -361,7 +361,7 @@ object SharedAdminTestData {
     /* represents 'root-alt' (Incunabula ProjectMember) as found in admin-data.ttl  */
     def incunabulaCreatorUser = UserProfileV1(
         userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/91e19f1e01"),
+            user_id = Some("http://rdfh.ch/users/91e19f1e01"),
             firstname = Some("Administrator-alt"),
             lastname = Some("Admin-alt"),
             email = Some("root-alt@example.com"),
@@ -389,7 +389,7 @@ object SharedAdminTestData {
     /* represents 'root-alt' (Incunabula Creator and ProjectMember) as found in admin-data.ttl  */
     def incunabulaMemberUser = UserProfileV1(
         userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/incunabulaMemberUser"),
+            user_id = Some("http://rdfh.ch/users/incunabulaMemberUser"),
             firstname = Some("User"),
             lastname = Some("Test2"),
             email = Some("user.test2t@test.ch"),
@@ -433,11 +433,11 @@ object SharedAdminTestData {
     /** Anything Admin Data            **/
     /************************************/
 
-    val ANYTHING_PROJECT_IRI = "http://data.knora.org/projects/anything"
+    val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/anything"
 
     def anythingUser1 = UserProfileV1(
         userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q"),
+            user_id = Some("http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"),
             firstname = Some("Anything"),
             lastname = Some("User01"),
             email = Some("anything.user01@example.org"),
@@ -465,7 +465,7 @@ object SharedAdminTestData {
 
     def anythingUser2 = UserProfileV1(
         userData = UserDataV1(
-            user_id = Some("http://data.knora.org/users/BhkfBc3hTeS_IDo-JgXRbQ"),
+            user_id = Some("http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"),
             firstname = Some("Anything"),
             lastname = Some("User02"),
             email = Some("anything.user02@example.org"),
@@ -509,7 +509,7 @@ object SharedAdminTestData {
     /** BEOL                           **/
     /************************************/
 
-    val BEOL_PROJECT_IRI = "http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF"
+    val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
 
     def beolProjectInfo = ProjectInfoV1(
         id = BEOL_PROJECT_IRI,
@@ -530,7 +530,7 @@ object SharedAdminTestData {
     /** BIBLIO                         **/
     /************************************/
 
-    val BIBLIO_PROJECT_IRI = "http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ"
+    val BIBLIO_PROJECT_IRI = "http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ"
 
     def biblioProjectInfo = ProjectInfoV1(
         id = BIBLIO_PROJECT_IRI,
@@ -549,7 +549,7 @@ object SharedAdminTestData {
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
     def biblioUser = UserProfileV1(
         UserDataV1(
-            user_id = Some("http://data.knora.org/users/Q-6Sssu8TBWrcCGuVJ0lVw"),
+            user_id = Some("http://rdfh.ch/users/Q-6Sssu8TBWrcCGuVJ0lVw"),
             firstname = Some("biblio"),
             lastname = Some("biblio"),
             email = Some("biblio@example.com"),
@@ -568,7 +568,7 @@ object SharedAdminTestData {
     /** DOKUBIB                        **/
     /************************************/
 
-    val DOKUBIB_PROJECT_IRI = "http://data.knora.org/projects/b83b99ca01"
+    val DOKUBIB_PROJECT_IRI = "http://rdfh.ch/projects/b83b99ca01"
 
     def dokubibProjectInfo = ProjectInfoV1(
         id = DOKUBIB_PROJECT_IRI,

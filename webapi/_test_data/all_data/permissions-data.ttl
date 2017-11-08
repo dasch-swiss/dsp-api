@@ -90,7 +90,7 @@
 
                       knora-base:forProject <http://rdfh.ch/projects/00FF> ;
 
-                      knora-base:forGroup <http://rdfh.ch/groups/images-reviewer> ;
+                      knora-base:forGroup <http://rdfh.ch/groups/00FF/images-reviewer> ;
 
                       knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/00FF/images#bild,http://www.knora.org/ontology/00FF/images#bildformat"^^xsd:string .
 

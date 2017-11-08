@@ -977,7 +977,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
-	knora-base:valueHasMapping <http://rdfh.ch/projects/standoff/mappings/StandardMapping> ;
+	knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> ;
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasStandoff <http://data.knora.org/e41ab5695c/values/d3398239089e04/standoff/mX6z2vBPQ3OuUjQkfYEZRg> , <http://data.knora.org/e41ab5695c/values/d3398239089e04/standoff/cfPKbQw3QPqs9tIDnVrKsg> ;
 	knora-base:valueHasString "Zusammengebunden mit zwei weiteren Drucken von Johann Amerbach" .
