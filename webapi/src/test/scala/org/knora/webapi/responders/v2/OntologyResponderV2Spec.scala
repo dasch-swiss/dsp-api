@@ -3,6 +3,7 @@ package org.knora.webapi.responders.v2
 import java.util.UUID
 
 import akka.actor.Props
+import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi.messages.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
@@ -14,9 +15,10 @@ import org.knora.webapi._
 import scala.concurrent.duration._
 
 object OntologyResponderV2Spec {
-    private val userProfile = SharedAdminTestData.anythingUser1
+    private val userProfile = SharedAdminTestData.rootUser
     private val projectWithoutProjectID = SharedAdminTestData.ANYTHING_PROJECT_IRI
-    private val projectWithProjectID = SharedAdminTestData.ANYTHING_PROJECT_IRI // TODO: use a project that has a project ID, when one exists.
+    private val projectWithProjectID = SharedAdminTestData.IMAGES_PROJECT_IRI
+
 }
 
 class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
@@ -50,25 +52,21 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 userProfile = userProfile
             )
 
-            expectMsgPF(timeout) {
-                case response: ReadEntityDefinitionsV2 =>
-                    response.ontologies should ===(Map("http://0.0.0.0:3333/ontology/foo/v2" -> Set.empty[IRI]))
-            }
+            val response = expectMsgType[ReadEntityDefinitionsV2](timeout)
+            response.ontologies should ===(Map("http://0.0.0.0:3333/ontology/foo/v2" -> Set.empty[IRI]))
         }
 
-        "create an empty ontology called 'example' with a project code" in {
+        "create an empty ontology called 'bar' with a project code" in {
 
             actorUnderTest ! CreateOntologyRequestV2(
-                ontologyName = "example",
+                ontologyName = "bar",
                 projectIri = projectWithProjectID,
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )
 
-            expectMsgPF(timeout) {
-                case response: ReadEntityDefinitionsV2 =>
-                    response.ontologies should ===(Map("http://0.0.0.0:3333/ontology/0000/example/v2" -> Set.empty[IRI]))
-            }
+            val response = expectMsgType[ReadEntityDefinitionsV2](timeout)
+            response.ontologies should ===(Map("http://0.0.0.0:3333/ontology/00FF/bar/v2" -> Set.empty[IRI]))
         }
 
         "not create 'foo' again" in {
@@ -84,9 +82,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "not create 'example' again" in {
+        "not create 'bar' again" in {
             actorUnderTest ! CreateOntologyRequestV2(
-                ontologyName = "example",
+                ontologyName = "bar",
                 projectIri = projectWithProjectID,
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
