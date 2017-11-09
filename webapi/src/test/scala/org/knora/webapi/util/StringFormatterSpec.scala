@@ -20,8 +20,7 @@
 
 package org.knora.webapi.util
 
-import org.knora.webapi.SharedAdminTestData
-import org.knora.webapi.{AssertionException, BadRequestException, CoreSpec}
+import org.knora.webapi._
 
 /**
   * Tests [[StringFormatter]].
@@ -300,6 +299,20 @@ class StringFormatterSpec extends CoreSpec() {
             val expected = s"http://www.knora.org/data/$shortcode/$shortname"
             val result = stringFormatter.projectDataNamedGraph(SharedAdminTestData.imagesProjectInfo)
             result should be(expected)
+        }
+
+        "validate project shortcode" in {
+            stringFormatter.toProjectShortcode("00FF", () => throw AssertionException("not valid")) should be ("00FF")
+            stringFormatter.toProjectShortcode("00ff", () => throw AssertionException("not valid")) should be ("00FF")
+            stringFormatter.toProjectShortcode("12aF", () => throw AssertionException("not valid")) should be ("12AF")
+
+            an [AssertionException] should be thrownBy {
+                stringFormatter.toProjectShortcode("000", () => throw AssertionException("not valid"))
+            }
+
+            an [AssertionException] should be thrownBy {
+                stringFormatter.toProjectShortcode("wxyz", () => throw AssertionException("not valid"))
+            }
         }
 
     }

@@ -232,12 +232,15 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
     private val NCNamePattern: String =
     """[\p{L}_][\p{L}0-9_.-]*"""
 
-    // A regex sub-pattern for project ideas, which consist of at least 4 hexadecimal digits.
+    // A regex for matching a string containing only an ontology prefix label or a local entity name.
+    private val NCNameRegex: Regex = ("^" + NCNamePattern + "$").r
+
+    // A regex sub-pattern for project IDs, which consist of at least 4 hexadecimal digits.
     private val ProjectIDPattern: String =
         """\p{XDigit}{4,}"""
 
-    // A regex for matching a string containing only an ontology prefix label or a local entity name.
-    private val NCNameRegex: Regex = ("^" + NCNamePattern + "$").r
+    // A regex for matching a string containing the project ID.
+    private val ProjectIDRegex: Regex = (ProjectIDPattern).r
 
     // A regex for the URL path of an API v2 ontology (built-in or project-specific).
     private val ApiV2OntologyUrlPathRegex: Regex = (
@@ -1517,8 +1520,19 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
         }
     }
 
-    def isValidShortcode(shortcode: String): Boolean = {
-        // ToDo: do some checking
-        true
+    /**
+      * Given the project shortcode, check if it is in a valid format.
+      *
+      * @param shortcode the project's shortcode.
+      * @return a [[String]].
+      */
+    def toProjectShortcode(shortcode: String, errorFun: () => Nothing): String = {
+
+        val uppercaseShortcode = shortcode.toUpperCase
+
+        shortcode match {
+            case ProjectIDRegex(_*) => uppercaseShortcode
+            case _ => errorFun()
+        }
     }
 }

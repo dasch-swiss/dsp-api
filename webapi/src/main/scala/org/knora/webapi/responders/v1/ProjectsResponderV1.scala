@@ -483,12 +483,11 @@ class ProjectsResponderV1 extends Responder {
 
             // check if the optionally supplied shortcode is valid and unique
             shortcodeExists <- if (createRequest.shortcode.isDefined) {
-                val shortcode = createRequest.shortcode.get
-                if (StringFormatter.getInstance.isValidShortcode(shortcode)) {
-                    projectByShortcodeExists(shortcode)
-                } else {
-                    throw BadRequestException(s"The supplied short code: '$shortcode' is not valid.")
-                }
+                val shortcode = StringFormatter.getInstance.toProjectShortcode(
+                    createRequest.shortcode.get,
+                    errorFun = () => throw BadRequestException(s"The supplied short code: '${createRequest.shortcode.get}' is not valid.")
+                )
+                projectByShortcodeExists(shortcode)
             } else {
                 FastFuture.successful(false)
             }
