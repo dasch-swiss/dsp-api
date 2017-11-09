@@ -65,8 +65,8 @@ class ResourceCreationSpec extends SalsahSpec {
 
     private val testPassword = "test"
 
-    private val anythingProjectIri = "http://data.knora.org/projects/anything"
-    private val incunabulaProjectIri = "http://data.knora.org/projects/77275339"
+    private val anythingProjectIri = "http://rdfh.ch/projects/anything"
+    private val incunabulaProjectIri = "http://rdfh.ch/projects/77275339"
 
     // In order to run these tests, start `webapi` using the option `allowReloadOverHTTP`
 
