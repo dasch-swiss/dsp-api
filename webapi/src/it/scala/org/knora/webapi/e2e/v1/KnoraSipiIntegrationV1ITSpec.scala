@@ -306,7 +306,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                 Map(
                     "restype_id" -> JsString("http://www.knora.org/ontology/anything#Thing"),
                     "label" -> JsString("Wild thing"),
-                    "project_id" -> JsString("http://data.knora.org/projects/anything"),
+                    "project_id" -> JsString("http://rdfh.ch/projects/anything"),
                     "properties" -> JsObject(
                         Map(
                             "http://www.knora.org/ontology/anything#hasText" -> JsArray(
