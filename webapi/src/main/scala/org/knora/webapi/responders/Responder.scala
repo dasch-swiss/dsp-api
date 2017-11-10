@@ -43,7 +43,7 @@ trait Responder extends Actor with ActorLogging {
     /**
       * A string formatter.
       */
-    protected implicit val stringFormatter = StringFormatter.getInstance
+    protected implicit val stringFormatter = StringFormatter.getGeneralInstance
 
     /**
       * The application's default timeout for `ask` messages.

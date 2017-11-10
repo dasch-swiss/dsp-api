@@ -11,7 +11,7 @@ import org.knora.webapi.{ApiV2Simple, CoreSpec}
   */
 class TypeInspectorSpec extends CoreSpec() {
     val searchParserV2Spec = new SearchParserV2Spec
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     "TypeInspector" should {
         "get type information from a simple query" in {

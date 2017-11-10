@@ -49,7 +49,7 @@ object SearchRouteV2 extends Authenticator {
       * @return the offset to be used for paging.
       */
     private def getOffsetFromParams(params: Map[String, String]): Int = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val offsetStr = params.get(OFFSET)
 
         offsetStr match {
@@ -73,7 +73,7 @@ object SearchRouteV2 extends Authenticator {
       * @return the project Iri, if any.
       */
     private def getProjectFromParams(params: Map[String, String]): Option[IRI] = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val limitToProjectIriStr = params.get(LIMIT_TO_PROJECT)
 
         val limitToProjectIri: Option[IRI] = limitToProjectIriStr match {
@@ -98,7 +98,7 @@ object SearchRouteV2 extends Authenticator {
       * @return the internal resource class, if any.
       */
     private def getResourceClassFromParams(params: Map[String, String]): Option[IRI] = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val limitToResourceClassIriStr = params.get(LIMIT_TO_RESOURCE_CLASS)
 
         val limitToResourceClassIri: Option[IRI] = limitToResourceClassIriStr match {
@@ -121,7 +121,7 @@ object SearchRouteV2 extends Authenticator {
         implicit val system: ActorSystem = _system
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
         implicit val timeout: Timeout = settings.defaultTimeout
-        implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val responderManager = system.actorSelection("/user/responderManager")
 
         path("v2" / "search" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space

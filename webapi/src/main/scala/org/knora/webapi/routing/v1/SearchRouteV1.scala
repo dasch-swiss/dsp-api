@@ -45,7 +45,7 @@ object SearchRouteV1 extends Authenticator {
     private val defaultShowNRows = 25
 
     def makeExtendedSearchRequestMessage(userProfile: UserProfileV1, reverseParams: Map[String, Seq[String]]): ExtendedSearchGetRequestV1 = {
-        val stringFormatter = StringFormatter.getInstance
+        val stringFormatter = StringFormatter.getGeneralInstance
 
         // Spray returns the parameters in reverse order, so reverse them before processing, because the JavaScript GUI expects the order to be preserved.
         val params = reverseParams.map {
@@ -139,7 +139,7 @@ object SearchRouteV1 extends Authenticator {
     }
 
     def makeFulltextSearchRequestMessage(userProfile: UserProfileV1, searchval: String, params: Map[String, String]): FulltextSearchGetRequestV1 = {
-        val stringFormatter = StringFormatter.getInstance
+        val stringFormatter = StringFormatter.getGeneralInstance
 
         params.get("searchtype") match {
             case Some("fulltext") => ()

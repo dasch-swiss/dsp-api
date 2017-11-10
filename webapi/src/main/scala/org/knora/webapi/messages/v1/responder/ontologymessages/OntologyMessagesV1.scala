@@ -296,7 +296,7 @@ class PredicateInfoV1(predicateInfoV2: PredicateInfoV2) {
   * Represents information about an OWL class or property.
   */
 sealed trait EntityInfoV1 {
-    protected implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+    protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     protected def entityInfoContent: EntityInfoContentV2
 

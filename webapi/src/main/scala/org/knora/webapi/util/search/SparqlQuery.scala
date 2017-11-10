@@ -165,7 +165,7 @@ object StatementPattern {
       * @return the statement pattern.
       */
     def makeExplicit(subj: Entity, pred: Entity, obj: Entity): StatementPattern = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         StatementPattern(
             subj = subj,

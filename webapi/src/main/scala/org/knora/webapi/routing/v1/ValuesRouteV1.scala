@@ -56,7 +56,7 @@ object ValuesRouteV1 extends Authenticator {
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
-        val stringFormatter = StringFormatter.getInstance
+        val stringFormatter = StringFormatter.getGeneralInstance
 
         def makeVersionHistoryRequestMessage(iris: Seq[IRI], userProfile: UserProfileV1): ValueVersionHistoryGetRequestV1 = {
             if (iris.length != 3) throw BadRequestException("Version history request requires resource IRI, property IRI, and current value IRI")

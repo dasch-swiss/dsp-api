@@ -44,7 +44,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
-        val stringFormatter = StringFormatter.getInstance
+        val stringFormatter = StringFormatter.getGeneralInstance
 
         path("v1" / "projects") {
             get {

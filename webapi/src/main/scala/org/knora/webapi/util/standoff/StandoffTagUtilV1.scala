@@ -81,7 +81,7 @@ object StandoffTagUtilV1 {
       * @return a sequence of [[StandoffTagAttributeV1]]
       */
     private def createAttributes(xmlToStandoffMapping: XMLTagToStandoffClass, classSpecificProps: Map[IRI, Cardinality.Value], existingXMLIDs: Seq[String], standoffNodeFromXML: StandoffTag, standoffPropertyEntities: Map[IRI, PropertyInfoV1]): Seq[StandoffTagAttributeV1] = {
-        val stringFormatter: StringFormatter = StringFormatter.getInstance
+        val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         if (classSpecificProps.nonEmpty) {
             // this standoff class requires additional standoff properties to the standoff data type properties (contained in `StandoffProperties.dataTypeProperties`).
@@ -277,7 +277,7 @@ object StandoffTagUtilV1 {
                                                      mappingXMLtoStandoff: MappingXMLtoStandoff,
                                                      standoffEntities: StandoffEntityInfoGetResponseV1,
                                                      acceptStandoffLinksToClientIDs: Boolean): Seq[StandoffTagV1] = {
-        val stringFormatter = StringFormatter.getInstance
+        val stringFormatter = StringFormatter.getGeneralInstance
 
         // collect al the existing ids from the standoff tags
         val existingXMLIDs: Seq[String] = textWithStandoff.standoff.filter((standoffTag: StandoffTag) => standoffTag.originalID.isDefined).map {

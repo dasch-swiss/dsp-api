@@ -665,7 +665,7 @@ object ReadResourceUtil {
     def createJsonLDObjectFromReadResourceV2(resource: ReadResourceV2, targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDObject = {
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        implicit val stringFormatter = StringFormatter.getInstance
+        implicit val stringFormatter = StringFormatter.getGeneralInstance
 
         val values: Map[IRI, JsonLDArray] = resource.values.map {
             case (propIri: IRI, readValues: Seq[ReadValueV2]) =>
@@ -707,7 +707,7 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        implicit val stringFormatter = StringFormatter.getInstance
+        implicit val stringFormatter = StringFormatter.getGeneralInstance
 
         // Make JSON-LD prefixes for the project-specific ontologies used in the response.
 

@@ -69,7 +69,7 @@ object SearchParserV2 {
       * An RDF4J [[algebra.QueryModelVisitor]] that converts a [[ParsedQuery]] into a [[ConstructQuery]].
       */
     class ConstructQueryModelVisitor extends algebra.QueryModelVisitor[SparqlSearchException] {
-        private implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+        private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Represents a statement pattern in the CONSTRUCT clause. Each string could be a variable name or a parser-generated
         // constant. These constants can be replaced by their values only after valueConstants is populated.

@@ -46,7 +46,7 @@ class KnoraIdUtil {
 
     private val base64Encoder = Base64.getUrlEncoder.withoutPadding
     private val base64Decoder = Base64.getUrlDecoder
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
       * Generates a type 4 UUID using [[java.util.UUID]], and Base64-encodes it using a URL and filename safe

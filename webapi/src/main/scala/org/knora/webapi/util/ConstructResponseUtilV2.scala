@@ -314,7 +314,7 @@ object ConstructResponseUtilV2 {
       * @return a [[ValueContentV2]] representing a value.
       */
     def createValueContentV2FromValueRdfData(valueObject: ValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation]): ValueContentV2 = {
-        val stringFormatter = StringFormatter.getInstance
+        val stringFormatter = StringFormatter.getGeneralInstance
 
         // every knora-base:Value (any of its subclasses) has a string representation
         val valueObjectValueHasString: String = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasString)

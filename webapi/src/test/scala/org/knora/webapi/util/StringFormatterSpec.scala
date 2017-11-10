@@ -29,7 +29,7 @@ import org.knora.webapi.util.IriConversions._
   * Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
   */
 class StringFormatterSpec extends CoreSpec() {
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     "The StringFormatter class" should {
 
@@ -285,6 +285,31 @@ class StringFormatterSpec extends CoreSpec() {
             val externalEntityIri = "http://0.0.0.0:3333/ontology/incunabula/v2#book".toSmartIri
             val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
             internalEntityIri.toString should ===("http://www.knora.org/ontology/incunabula#book")
+        }
+
+        "convert 100,000 IRIs" in {
+            val parseStart = System.currentTimeMillis
+
+            for (i <- 1 to 100000) {
+                val iriStr = s"http://0.0.0.0:3333/ontology/incunabula/v2#class$i"
+                val iri = iriStr.toSmartIri
+            }
+
+            val parseEnd = System.currentTimeMillis
+            println(s"Parse and store time in ms: ${parseEnd - parseStart}")
+
+            val retrieveStart = System.currentTimeMillis
+            var totalDefs = 0
+
+            for (i <- 1 to 100000) {
+                val iriStr = s"http://0.0.0.0:3333/ontology/incunabula/v2#class$i"
+                val iri = iriStr.toSmartIri
+                if (iri.isKnoraApiV2DefinitionIri) totalDefs += 1
+            }
+
+            val retrieveEnd = System.currentTimeMillis
+
+            println(s"Retrieve time for $totalDefs defs: ${retrieveEnd - retrieveStart}")
         }
     }
 }

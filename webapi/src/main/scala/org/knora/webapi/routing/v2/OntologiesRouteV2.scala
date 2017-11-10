@@ -47,7 +47,7 @@ object OntologiesRouteV2 extends Authenticator {
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
         implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
-        implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         path("ontology" / Segments) { (_: List[String]) =>
             get {

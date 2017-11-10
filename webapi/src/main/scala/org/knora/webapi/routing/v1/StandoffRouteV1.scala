@@ -50,7 +50,7 @@ object StandoffRouteV1 extends Authenticator {
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
         implicit val materializer = ActorMaterializer()
-        val stringFormatter = StringFormatter.getInstance
+        val stringFormatter = StringFormatter.getGeneralInstance
 
         val responderManager = system.actorSelection("/user/responderManager")
 

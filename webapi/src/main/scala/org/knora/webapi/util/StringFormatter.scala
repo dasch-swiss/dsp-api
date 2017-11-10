@@ -32,6 +32,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeC
 import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.JavaUtil.Optional
 import spray.json.JsonParser
+import java.util.concurrent.ConcurrentHashMap
 
 import scala.util.matching.Regex
 
@@ -105,15 +106,38 @@ object StringFormatter {
       */
     case class XmlImportNamespaceInfoV1(namespace: IRI, prefixLabel: String)
 
-    private var maybeInstance: Option[StringFormatter] = None
+    /*
 
+    In order to parse project-specific API v2 ontology IRIs, the StringFormatter
+    class contains regular expressions that are generated based on the Knora API server's
+    hostname, which is set in application.conf, which is not read until the Akka
+    ActorSystem starts. Therefore, IRI parsing is done in the StringFormatter
+    class, rather than in the StringFormatter object.
+
+    There are two instances of StringFormatter, defined below.
+
+     */
+
+    /**
+      * The instance of [[StringFormatter]] that is initialised after the ActorSystem starts,
+      * and can parse project-specific API v2 ontology IRIs. This instance is used almost
+      * everywhere in the API server.
+      */
+    private var generalInstance: Option[StringFormatter] = None
+
+    /**
+      * The instance of [[StringFormatter]] that can be used as soon as the JVM starts, but
+      * can't parse project-specific API v2 ontology IRIs. This instance is used
+      * only to initialise the hard-coded API v2 ontologies [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraApiV2Simple]]
+      * and [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraApiV2WithValueObjects]].
+      */
     private val instanceForConstantOntologies = new StringFormatter(None)
 
     /**
       * Gets the singleton instance of [[StringFormatter]] that handles IRIs from data.
       */
-    def getInstance: StringFormatter = {
-        maybeInstance match {
+    def getGeneralInstance: StringFormatter = {
+        generalInstance match {
             case Some(instance) => instance
             case None => throw AssertionException("StringFormatter not yet initialised")
         }
@@ -126,15 +150,15 @@ object StringFormatter {
     def getInstanceForConstantOntologies: StringFormatter = instanceForConstantOntologies
 
     /**
-      * Initialises the singleton instance of [[StringFormatter]].
+      * Initialises the general instance of [[StringFormatter]].
       *
       * @param settings the application settings.
       */
     def init(settings: SettingsImpl): Unit = {
         this.synchronized {
-            maybeInstance match {
+            generalInstance match {
                 case Some(_) => ()
-                case None => maybeInstance = Some(new StringFormatter(Some(settings.knoraApiHttpBaseUrl)))
+                case None => generalInstance = Some(new StringFormatter(Some(s"${settings.knoraApiHost}:${settings.knoraApiHttpPort}")))
             }
         }
     }
@@ -144,9 +168,9 @@ object StringFormatter {
       */
     def initForTest(): Unit = {
         this.synchronized {
-            maybeInstance match {
+            generalInstance match {
                 case Some(_) => ()
-                case None => maybeInstance = Some(new StringFormatter(Some("http://0.0.0.0:3333")))
+                case None => generalInstance = Some(new StringFormatter(Some("0.0.0.0:3333")))
             }
         }
     }
@@ -187,25 +211,65 @@ object StringFormatter {
                                     entityName: Option[String] = None,
                                     ontologySchema: OntologySchema,
                                     isBuiltInDef: Boolean = false)
+
+    /**
+      * A cache that maps IRI strings to [[SmartIri]] instances. To keep the cache from getting too large,
+      * Knora data IRIs are not cached.
+      */
+    private lazy val smartIriCache = new ConcurrentHashMap[IRI, SmartIri](120000)
 }
 
+/**
+  * Provides automatic conversion of IRI strings to [[SmartIri]] objects.
+  */
 object IriConversions {
 
     implicit class ConvertibleIri(val self: IRI) extends AnyVal {
+        /**
+          * Converts an IRI string to a [[SmartIri]].
+          */
         def toSmartIri(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIri(self)
 
+        /**
+          * Converts an IRI string to a [[SmartIri]], verifying that the resulting [[SmartIri]] is a Knora internal definition IRI,
+          * and throwing [[DataConversionException]] otherwise.
+          */
         def toKnoraInternalSmartIri(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIri(self, requireInternal = true)
 
+        /**
+          * Converts an IRI string to a [[SmartIri]]. If the string cannot be converted, a function is called to report
+          * the error.
+          *
+          * @param errorFun A function that throws an exception. It will be called if the string cannot be converted.
+          */
         def toSmartIriWithErr(errorFun: () => Nothing)(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIriWithErr(self, errorFun)
     }
 
 }
 
 /**
-  * Represents a parsed IRI.
+  * Represents a parsed IRI as an instance of [[rdf4j.model.IRI]] with additional Knora-specific functionality.
   */
 sealed trait SmartIri extends Ordered[SmartIri] {
-    def compare(that: SmartIri): Int = this.toString.compare(that.toString)
+    val rdf4jIri: rdf4j.model.IRI
+
+    /*
+
+    The smart IRI implementation, SmartIriImpl, is nested in the StringFormatter
+    class because it needs access to private members of that class (especially the
+    regular expressions that are computed when a StringFormatter instance is
+    constructed). However, this means that the type of a SmartIriImpl instance is
+    dependent on the instance of StringFormatter that constructed it. Therefore,
+    you can't compare two instances of SmartIriImpl created by two different
+    instances of StringFormatter.
+
+    To make it possible to compare smart IRI objects, the publicly visible smart IRI
+    type is the SmartIri trait. Since SmartIri is a top-level definition, two instances
+    of SmartIri can be compared, even if they were made by different instances of
+    StringFormatter. To make this work, SmartIri provides its own equals and hashCode
+    methods, which delegate to the rdf4j.model.IRI object.
+
+     */
 
     /**
       * Returns `true` if this is a Knora data IRI.
@@ -309,18 +373,20 @@ sealed trait SmartIri extends Ordered[SmartIri] {
 
     override def equals(obj: scala.Any): Boolean = {
         obj match {
-            case that: SmartIri => this.toString == that.toString
+            case that: SmartIri => rdf4jIri == that.rdf4jIri
             case _ => false
         }
     }
 
-    override def hashCode: Int = this.toString.hashCode
+    override def hashCode: Int = this.rdf4jIri.hashCode
+
+    def compare(that: SmartIri): Int = this.toString.compare(that.toString)
 }
 
 /**
   * Handles string formatting and validation.
   */
-class StringFormatter private(val knoraApiHttpBaseUrl: Option[String]) {
+class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
     import StringFormatter._
 
@@ -333,7 +399,7 @@ class StringFormatter private(val knoraApiHttpBaseUrl: Option[String]) {
     private val urlValidator = new UrlValidator(schemes, UrlValidator.ALLOW_LOCAL_URLS) // local urls are URL-encoded Knora IRIs as part of the whole URL
 
     // If true, this is the instance of StringFormatter that is intended for use only with constant ontologies.
-    private val constantOntologiesOnly: Boolean = knoraApiHttpBaseUrl.isEmpty
+    private val constantOntologiesOnly: Boolean = knoraApiHostAndPort.isEmpty
 
     // Reserved words that cannot be used in project-specific ontology names.
     private val reservedIriWords = Set("knora", "ontology", "simple")
@@ -446,8 +512,8 @@ class StringFormatter private(val knoraApiHttpBaseUrl: Option[String]) {
         ).r
 
     // The start of the IRI of a project-specific API v2 ontology that is served by this API server.
-    private val MaybeProjectSpecificApiV2OntologyStart: Option[String] = knoraApiHttpBaseUrl match {
-        case Some(url) => Some(url + "/ontology/")
+    private val MaybeProjectSpecificApiV2OntologyStart: Option[String] = knoraApiHostAndPort match {
+        case Some(hostAndPort) => Some("http://" + hostAndPort + "/ontology/")
         case None => None
     }
 
@@ -525,14 +591,65 @@ class StringFormatter private(val knoraApiHttpBaseUrl: Option[String]) {
       * @param iri      the IRI string to be parsed.
       * @param errorFun a function that throws an exception. It will be called if the IRI is invalid.
       */
-    private class SmartIriImpl(iri: IRI, requireInternal: Boolean, errorFun: () => Nothing) extends SmartIri {
-        def this(iri: IRI, requireInternal: Boolean = false) = this(iri, requireInternal, () => throw DataConversionException(s"Couldn't parse IRI: $iri"))
+    private class SmartIriImpl(iri: IRI, errorFun: () => Nothing) extends SmartIri {
+        def this(iri: IRI) = this(iri, () => throw DataConversionException(s"Couldn't parse IRI: $iri"))
 
-        private val rdfIri: rdf4j.model.IRI = try {
+        override val rdf4jIri: rdf4j.model.IRI = try {
             valueFactory.createIRI(validateAndEscapeIri(iri, errorFun))
         } catch {
             case _: Exception => errorFun()
         }
+
+        private val isKnoraData = isKnoraDataIriStr(iri)
+
+        private def parseApiV2VersionSegments(segments: Array[String]): ApiV2Schema = {
+            val lastSegment = segments.last
+            val lastTwoSegments = segments.slice(segments.length - 2, segments.length)
+
+            if (lastTwoSegments.sameElements(Array("simple", "v2"))) {
+                ApiV2Simple
+            } else if (lastSegment == "v2") {
+                ApiV2WithValueObjects
+            } else {
+                errorFun()
+            }
+        }
+/*
+        private val iriInfo = if (isKnoraData) {
+            SmartIriInfo(
+                iriType = KnoraDataIri,
+                ontologySchema = InternalSchema
+            )
+        } else {
+            val namespace = rdf4jIri.getNamespace
+            val body = namespace.substring(namespace.indexOf("//") + 2)
+            val segments = body.split('/')
+
+            val hostname = segments.head
+
+            val ontologySchema = hostname match {
+                case "www.knora.org" => InternalSchema
+                case "api.knora.org" => parseApiV2VersionSegments(segments)
+                case _ =>
+                    knoraApiHostAndPort match {
+                        case Some(hostAndPort) =>
+                            if (hostname == hostAndPort) {
+                                parseApiV2VersionSegments(segments)
+                            } else {
+                                NonKnoraSchema
+                            }
+                    }
+            }
+
+            val projectCode = ontologySchema match {
+                case _: KnoraSchema =>
+                    if (segments(1) != "ontology") {
+                        errorFun()
+                    }
+            }
+
+        }
+*/
 
         // Is it an internal Knora ontology or entity IRI?
         private val iriInfo: SmartIriInfo = iri match {
@@ -556,12 +673,8 @@ class StringFormatter private(val knoraApiHttpBaseUrl: Option[String]) {
                 )
 
             case _ =>
-                if (requireInternal) {
-                    throw DataConversionException(s"$rdfIri is not an internal Knora IRI")
-                }
-
                 // Is this a data IRI?
-                if (DataIriStarts.exists(startStr => iri.startsWith(startStr))) {
+                if (isKnoraDataIriStr(iri)) {
                     SmartIriInfo(
                         iriType = KnoraDataIri,
                         ontologySchema = InternalSchema
@@ -695,7 +808,7 @@ class StringFormatter private(val knoraApiHttpBaseUrl: Option[String]) {
             }
         }
 
-        override def toString: String = rdfIri.toString
+        override def toString: String = rdf4jIri.toString
 
         override def isKnoraDataIri: Boolean = iriInfo.iriType == KnoraDataIri
 
@@ -727,21 +840,21 @@ class StringFormatter private(val knoraApiHttpBaseUrl: Option[String]) {
             if (isKnoraOntologyIri) {
                 this
             } else {
-                new SmartIriImpl(rdfIri.getNamespace.stripSuffix("#").stripSuffix("/"))
+                new SmartIriImpl(rdf4jIri.getNamespace.stripSuffix("#").stripSuffix("/"))
             }
         }
 
         override def getOntologyName: String = {
             iriInfo.ontologyName match {
                 case Some(name) => name
-                case None => throw DataConversionException(s"Expected a Knora ontology IRI: $rdfIri")
+                case None => throw DataConversionException(s"Expected a Knora ontology IRI: $rdf4jIri")
             }
         }
 
         override def getEntityName: String = {
             iriInfo.entityName match {
                 case Some(name) => name
-                case None => throw DataConversionException(s"Expected a Knora entity IRI: $rdfIri")
+                case None => throw DataConversionException(s"Expected a Knora entity IRI: $rdf4jIri")
             }
         }
 
@@ -760,7 +873,7 @@ class StringFormatter private(val knoraApiHttpBaseUrl: Option[String]) {
 
         override def toOntologySchema(targetSchema: OntologySchema): SmartIri = {
             if (targetSchema == NonKnoraSchema) {
-                throw DataConversionException(s"Cannot convert IRI to non-Knora schema: $rdfIri")
+                throw DataConversionException(s"Cannot convert IRI to non-Knora schema: $rdf4jIri")
             }
 
             if (!isKnoraDefinitionIri || iriInfo.ontologySchema == targetSchema) {
@@ -770,26 +883,26 @@ class StringFormatter private(val knoraApiHttpBaseUrl: Option[String]) {
                     if (iriInfo.ontologySchema == InternalSchema) {
                         targetSchema match {
                             case externalSchema: ApiV2Schema => internalToExternalOntologyIri(externalSchema)
-                            case _ => throw DataConversionException(s"Cannot convert $rdfIri to $targetSchema")
+                            case _ => throw DataConversionException(s"Cannot convert $rdf4jIri to $targetSchema")
                         }
                     } else if (targetSchema == InternalSchema) {
                         externalToInternalOntologyIri
                     } else {
-                        throw DataConversionException(s"Cannot convert IRI $rdfIri from ${iriInfo.ontologySchema} to $targetSchema")
+                        throw DataConversionException(s"Cannot convert IRI $rdf4jIri from ${iriInfo.ontologySchema} to $targetSchema")
                     }
                 } else if (isKnoraOntologyEntityIri) {
                     if (iriInfo.ontologySchema == InternalSchema) {
                         targetSchema match {
                             case externalSchema: ApiV2Schema => internalToExternalOntologyEntityIri(externalSchema)
-                            case _ => throw DataConversionException(s"Cannot convert $rdfIri to $targetSchema")
+                            case _ => throw DataConversionException(s"Cannot convert $rdf4jIri to $targetSchema")
                         }
                     } else if (targetSchema == InternalSchema) {
                         externalToInternalOntologyEntityIri
                     } else {
-                        throw DataConversionException(s"Cannot convert $rdfIri to $targetSchema")
+                        throw DataConversionException(s"Cannot convert $rdf4jIri to $targetSchema")
                     }
                 } else {
-                    throw AssertionException(s"IRI $rdfIri is a Knora IRI, but is neither an ontology IRI nor an entity IRI")
+                    throw AssertionException(s"IRI $rdf4jIri is a Knora IRI, but is neither an ontology IRI nor an entity IRI")
                 }
             }
         }
@@ -888,10 +1001,10 @@ class StringFormatter private(val knoraApiHttpBaseUrl: Option[String]) {
 
         override def fromLinkValuePropToLinkProp: SmartIri = {
             if (!isKnoraOntologyEntityIri) {
-                throw DataConversionException(s"IRI $rdfIri is not a Knora entity IRI, so it cannot be a link value property IRI")
+                throw DataConversionException(s"IRI $rdf4jIri is not a Knora entity IRI, so it cannot be a link value property IRI")
             }
 
-            val iriStr = rdfIri.toString
+            val iriStr = rdf4jIri.toString
 
             if (iriStr.endsWith("Value")) {
                 new SmartIriImpl(iriStr.substring(0, iriStr.length - "Value".length))
@@ -902,77 +1015,11 @@ class StringFormatter private(val knoraApiHttpBaseUrl: Option[String]) {
 
         override def fromLinkPropToLinkValueProp: SmartIri = {
             if (!isKnoraOntologyEntityIri) {
-                throw DataConversionException(s"IRI $rdfIri is not a Knora entity IRI, so it cannot be a link property IRI")
+                throw DataConversionException(s"IRI $rdf4jIri is not a Knora entity IRI, so it cannot be a link property IRI")
             }
 
-            new SmartIriImpl(rdfIri.toString + "Value")
+            new SmartIriImpl(rdf4jIri.toString + "Value")
         }
-    }
-
-    private val commonIris: Map[IRI, SmartIri] = Map(
-        OntologyConstants.Rdf.Type -> toSmartIriForCache(OntologyConstants.Rdf.Type),
-        OntologyConstants.Rdf.Property -> toSmartIriForCache(OntologyConstants.Rdf.Property),
-        OntologyConstants.Rdf.Subject -> toSmartIriForCache(OntologyConstants.Rdf.Subject),
-        OntologyConstants.Rdf.Object -> toSmartIriForCache(OntologyConstants.Rdf.Object),
-        OntologyConstants.Rdfs.Label -> toSmartIriForCache(OntologyConstants.Rdfs.Label),
-        OntologyConstants.Rdfs.Comment -> toSmartIriForCache(OntologyConstants.Rdfs.Comment),
-        OntologyConstants.Rdfs.Datatype -> toSmartIriForCache(OntologyConstants.Rdfs.Datatype),
-        OntologyConstants.Rdfs.SubClassOf -> toSmartIriForCache(OntologyConstants.Rdfs.SubClassOf),
-        OntologyConstants.Owl.DatatypeProperty -> toSmartIriForCache(OntologyConstants.Owl.DatatypeProperty),
-        OntologyConstants.Owl.AnnotationProperty -> toSmartIriForCache(OntologyConstants.Owl.AnnotationProperty),
-        OntologyConstants.Owl.ObjectProperty -> toSmartIriForCache(OntologyConstants.Owl.ObjectProperty),
-        OntologyConstants.Owl.Class -> toSmartIriForCache(OntologyConstants.Owl.Class),
-        OntologyConstants.Xsd.Boolean -> toSmartIriForCache(OntologyConstants.Xsd.Boolean),
-        OntologyConstants.Xsd.String -> toSmartIriForCache(OntologyConstants.Xsd.String),
-        OntologyConstants.Xsd.Integer -> toSmartIriForCache(OntologyConstants.Xsd.Integer),
-        OntologyConstants.Xsd.Decimal -> toSmartIriForCache(OntologyConstants.Xsd.Decimal),
-        OntologyConstants.KnoraBase.IsDeleted -> toSmartIriForCache(OntologyConstants.KnoraBase.IsDeleted),
-        OntologyConstants.KnoraBase.Resource -> toSmartIriForCache(OntologyConstants.KnoraBase.Resource),
-        OntologyConstants.KnoraBase.ExternalResource -> toSmartIriForCache(OntologyConstants.KnoraBase.ExternalResource),
-        OntologyConstants.KnoraBase.Representation -> toSmartIriForCache(OntologyConstants.KnoraBase.Representation),
-        OntologyConstants.KnoraBase.AudioRepresentation -> toSmartIriForCache(OntologyConstants.KnoraBase.AudioRepresentation),
-        OntologyConstants.KnoraBase.DDDRepresentation -> toSmartIriForCache(OntologyConstants.KnoraBase.DDDRepresentation),
-        OntologyConstants.KnoraBase.DocumentRepresentation -> toSmartIriForCache(OntologyConstants.KnoraBase.DocumentRepresentation),
-        OntologyConstants.KnoraBase.MovingImageRepresentation -> toSmartIriForCache(OntologyConstants.KnoraBase.MovingImageRepresentation),
-        OntologyConstants.KnoraBase.StillImageRepresentation -> toSmartIriForCache(OntologyConstants.KnoraBase.StillImageRepresentation),
-        OntologyConstants.KnoraBase.TextRepresentation -> toSmartIriForCache(OntologyConstants.KnoraBase.TextRepresentation),
-        OntologyConstants.KnoraBase.ResourceProperty -> toSmartIriForCache(OntologyConstants.KnoraBase.ResourceProperty),
-        OntologyConstants.KnoraBase.SubjectClassConstraint -> toSmartIriForCache(OntologyConstants.KnoraBase.SubjectClassConstraint),
-        OntologyConstants.KnoraBase.ObjectClassConstraint -> toSmartIriForCache(OntologyConstants.KnoraBase.ObjectClassConstraint),
-        OntologyConstants.KnoraBase.ObjectDatatypeConstraint -> toSmartIriForCache(OntologyConstants.KnoraBase.ObjectDatatypeConstraint),
-        OntologyConstants.KnoraBase.HasValue -> toSmartIriForCache(OntologyConstants.KnoraBase.HasValue),
-        OntologyConstants.KnoraBase.HasLinkTo -> toSmartIriForCache(OntologyConstants.KnoraBase.HasLinkTo),
-        OntologyConstants.KnoraBase.HasLinkToValue -> toSmartIriForCache(OntologyConstants.KnoraBase.HasLinkToValue),
-        OntologyConstants.KnoraBase.HasStandoffLinkTo -> toSmartIriForCache(OntologyConstants.KnoraBase.HasStandoffLinkTo),
-        OntologyConstants.KnoraBase.HasFileValue -> toSmartIriForCache(OntologyConstants.KnoraBase.HasFileValue),
-        OntologyConstants.KnoraBase.ResourceIcon -> toSmartIriForCache(OntologyConstants.KnoraBase.ResourceIcon),
-        OntologyConstants.KnoraBase.ValueHasString -> toSmartIriForCache(OntologyConstants.KnoraBase.ValueHasString),
-        OntologyConstants.KnoraBase.ValueHasBoolean -> toSmartIriForCache(OntologyConstants.KnoraBase.ValueHasBoolean),
-        OntologyConstants.KnoraBase.ValueHasInteger -> toSmartIriForCache(OntologyConstants.KnoraBase.ValueHasInteger),
-        OntologyConstants.KnoraBase.ValueHasDecimal -> toSmartIriForCache(OntologyConstants.KnoraBase.ValueHasDecimal),
-        OntologyConstants.KnoraBase.ValueHasCalendar -> toSmartIriForCache(OntologyConstants.KnoraBase.ValueHasCalendar),
-        OntologyConstants.KnoraBase.ValueHasColor -> toSmartIriForCache(OntologyConstants.KnoraBase.ValueHasColor),
-        OntologyConstants.KnoraBase.ValueHasComment -> toSmartIriForCache(OntologyConstants.KnoraBase.ValueHasComment),
-        OntologyConstants.KnoraBase.ValueHasStartJDN -> toSmartIriForCache(OntologyConstants.KnoraBase.ValueHasStartJDN),
-        OntologyConstants.KnoraBase.ValueHasEndJDN -> toSmartIriForCache(OntologyConstants.KnoraBase.ValueHasEndJDN),
-        OntologyConstants.KnoraBase.ValueHasStartPrecision -> toSmartIriForCache(OntologyConstants.KnoraBase.ValueHasStartPrecision),
-        OntologyConstants.KnoraBase.ValueHasEndPrecision -> toSmartIriForCache(OntologyConstants.KnoraBase.ValueHasEndPrecision),
-        OntologyConstants.KnoraBase.ValueHasStandoff -> toSmartIriForCache(OntologyConstants.KnoraBase.ValueHasStandoff),
-        OntologyConstants.KnoraBase.LinkValue -> toSmartIriForCache(OntologyConstants.KnoraBase.LinkValue),
-        OntologyConstants.SalsahGui.GuiElement -> toSmartIriForCache(OntologyConstants.SalsahGui.GuiElement),
-        OntologyConstants.SalsahGui.GuiAttribute -> toSmartIriForCache(OntologyConstants.SalsahGui.GuiAttribute),
-        OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri -> toSmartIriForCache(OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri),
-        OntologyConstants.KnoraApiV2Simple.SubjectType -> toSmartIriForCache(OntologyConstants.KnoraApiV2Simple.SubjectType),
-        OntologyConstants.KnoraApiV2Simple.ObjectType -> toSmartIriForCache(OntologyConstants.KnoraApiV2Simple.ObjectType),
-        OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri -> toSmartIriForCache(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri),
-        OntologyConstants.KnoraApiV2WithValueObjects.SubjectType -> toSmartIriForCache(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType),
-        OntologyConstants.KnoraApiV2WithValueObjects.ObjectType -> toSmartIriForCache(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType),
-        OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph -> toSmartIriForCache(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph),
-        OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph -> toSmartIriForCache(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph)
-    )
-
-    private def toSmartIriForCache(iri: IRI): SmartIri = {
-        new SmartIriImpl(iri)
     }
 
     /**
@@ -982,15 +1029,22 @@ class StringFormatter private(val knoraApiHttpBaseUrl: Option[String]) {
       * @param iri the IRI string to be parsed.
       */
     def toSmartIri(iri: IRI, requireInternal: Boolean = false): SmartIri = {
-        commonIris.get(iri) match {
-            case Some(smartIri) =>
-                if (requireInternal && smartIri.getOntologySchema != InternalSchema) {
-                    throw DataConversionException(s"$smartIri is not an internal IRI")
-                } else {
-                    smartIri
-                }
+        // Is this a Knora data IRI?
+        val smartIri: SmartIri = if (!isKnoraDataIriStr(iri)) {
+            // No. Return it from the cache, or cache it if it's not already cached.
+            smartIriCache.computeIfAbsent(
+                iri,
+                JavaUtil.function({ _ => new SmartIriImpl(iri) })
+            )
+        } else {
+            // Yes. Convert it to a SmartIri without caching it.
+            new SmartIriImpl(iri)
+        }
 
-            case None => new SmartIriImpl(iri, requireInternal)
+        if (requireInternal && smartIri.getOntologySchema != InternalSchema) {
+            throw DataConversionException(s"$smartIri is not an internal IRI")
+        } else {
+            smartIri
         }
     }
 
@@ -1001,9 +1055,16 @@ class StringFormatter private(val knoraApiHttpBaseUrl: Option[String]) {
       * @param errorFun a function that throws an exception. It will be called if the IRI is invalid.
       */
     def toSmartIriWithErr(iri: IRI, errorFun: () => Nothing): SmartIri = {
-        commonIris.get(iri) match {
-            case Some(smartIri) => smartIri
-            case None => new SmartIriImpl(iri, false, errorFun)
+        // Is this a Knora data IRI?
+        if (!isKnoraDataIriStr(iri)) {
+            // No. Return it from the cache, or cache it if it's not already cached.
+            smartIriCache.computeIfAbsent(
+                iri,
+                JavaUtil.function({ _ => new SmartIriImpl(iri, errorFun) })
+            )
+        } else {
+            // Yes. Convert it to a SmartIri without caching it.
+            new SmartIriImpl(iri, errorFun)
         }
     }
 
@@ -1084,6 +1145,15 @@ class StringFormatter private(val knoraApiHttpBaseUrl: Option[String]) {
         } else {
             errorFun()
         }
+    }
+
+    /**
+      * Returns `true` if an IRI string looks like a Knora data IRI.
+      *
+      * @param iri the IRI to be checked.
+      */
+    def isKnoraDataIriStr(iri: IRI): Boolean = {
+        DataIriStarts.exists(startStr => iri.startsWith(startStr))
     }
 
     /**

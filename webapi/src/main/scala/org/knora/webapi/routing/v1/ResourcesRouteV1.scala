@@ -82,7 +82,7 @@ object ResourcesRouteV1 extends Authenticator {
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
         implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
-        implicit val stringFormatter = StringFormatter.getInstance
+        implicit val stringFormatter = StringFormatter.getGeneralInstance
 
         val log = Logger(LoggerFactory.getLogger(this.getClass))
 

@@ -17,7 +17,7 @@ import scala.concurrent.duration._
 
 class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     private val userProfile = SharedAdminTestData.anythingUser1
     private val projectWithoutProjectID = SharedAdminTestData.ANYTHING_PROJECT_IRI.toSmartIri
     private val projectWithProjectID = SharedAdminTestData.ANYTHING_PROJECT_IRI.toSmartIri // TODO: use a project that has a project ID, when one exists.

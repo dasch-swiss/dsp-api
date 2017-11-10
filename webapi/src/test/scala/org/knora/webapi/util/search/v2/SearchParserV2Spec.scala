@@ -29,7 +29,7 @@ import org.knora.webapi.{CoreSpec, SparqlSearchException}
   * Tests [[SearchParserV2]].
   */
 class SearchParserV2Spec extends CoreSpec() {
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     "The SearchParserV2 object" should {
         "parse a CONSTRUCT query for an extended search" in {

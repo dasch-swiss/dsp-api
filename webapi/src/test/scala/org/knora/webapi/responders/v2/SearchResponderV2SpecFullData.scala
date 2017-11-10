@@ -14,7 +14,7 @@ class SearchResponderV2SpecFullData {
     implicit lazy val system: ActorSystem = ActorSystem("webapi")
 
     val settings = Settings(system)
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     val fulltextSearchForNarr = ReadResourcesSequenceV2(
         resources = Vector(

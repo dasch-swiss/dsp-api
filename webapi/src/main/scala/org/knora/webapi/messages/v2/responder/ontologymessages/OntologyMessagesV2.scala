@@ -68,7 +68,7 @@ case class CreateOntologyRequestV2(ontologyName: String,
   */
 object CreateOntologyRequestV2 {
     def fromJsonLD(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, userProfile: UserProfileV1): CreateOntologyRequestV2 = {
-        val stringFormatter = StringFormatter.getInstance
+        val stringFormatter = StringFormatter.getGeneralInstance
         val docObjMap = jsonLDDocument.body.value
 
         val ontologyName: String = docObjMap.getOrElse(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName, throw BadRequestException("No knora-api:ontologyName provided")) match {
@@ -266,7 +266,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
                                    standoffProperties: Map[SmartIri, ReadPropertyInfoV2] = Map.empty[SmartIri, ReadPropertyInfoV2],
                                    userLang: Option[String] = None) extends KnoraResponseV2 {
 
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     def toOntologySchema(targetSchema: ApiV2Schema): ReadEntityDefinitionsV2 = {
         copy(
@@ -506,7 +506,7 @@ case class PredicateInfoV2(predicateIri: SmartIri,
     // TODO: This class should really store its IRI objects as SmartIris. But this would need more help
     // from OntologyResponderV2 and probably also from the store package.
 
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
       * Converts this [[PredicateInfoV2]], including its objects (which must all be IRIs), from one ontology schema to another.
@@ -615,7 +615,7 @@ sealed trait EntityInfoContentV2 {
       */
     val predicates: Map[SmartIri, PredicateInfoV2]
 
-    protected implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+    protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
       * Converts this entity's predicates from one ontology schema to another. Each predicate's IRI is converted,
@@ -764,7 +764,7 @@ sealed trait ReadEntityInfoV2 {
       */
     val entityInfoContent: EntityInfoContentV2
 
-    protected implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+    protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
       * Returns the contents of a JSON-LD object containing non-language-specific information about the entity.

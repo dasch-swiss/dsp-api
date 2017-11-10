@@ -38,7 +38,7 @@ import org.knora.webapi.util.{SmartIri, StringFormatter}
   * @param apiType specifies which API schema is being used in the search query.
   */
 class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getInstance
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
       * An enumeration of the properties that are used in type annotations.
