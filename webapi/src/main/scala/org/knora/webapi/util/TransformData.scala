@@ -828,7 +828,7 @@ object TransformData extends App {
                     statement.getPredicate.stringValue match {
                         case OntologyConstants.KnoraBase.ValueHasString =>
                             // Replace \r with INFORMATION SEPARATOR TWO.
-                            val objectWithSeparators = statement.getObject.stringValue.replace('\r', FormatConstants.INFORMATION_SEPARATOR_TWO)
+                            val objectWithSeparators = statement.getObject.stringValue.replace('\r', StringFormatter.INFORMATION_SEPARATOR_TWO)
 
                             // Insert linefeeds that were previously represented as "linebreak" standoff tags.
                             val objectWithLinefeeds: String = linefeedsToInsert.get(statement.getSubject.stringValue) match {
@@ -904,7 +904,7 @@ object TransformData extends App {
                     val statementsWithoutCreatorOrPermissions = statements.filterNot {
                         (statement: Statement) =>
                             statement.getPredicate.stringValue == OntologyConstants.KnoraBase.AttachedToUser ||
-                            statement.getPredicate.stringValue == OntologyConstants.KnoraBase.HasPermissions
+                                statement.getPredicate.stringValue == OntologyConstants.KnoraBase.HasPermissions
                     }
 
                     val creatorStatement = valueFactory.createStatement(
@@ -1159,7 +1159,7 @@ object TransformData extends App {
                     }
 
                     statementsToWrite.foreach {
-                        statement =>  turtleWriter.handleStatement(statement)
+                        statement => turtleWriter.handleStatement(statement)
                     }
             }
 

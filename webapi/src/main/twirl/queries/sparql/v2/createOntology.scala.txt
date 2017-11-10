@@ -26,19 +26,23 @@
  * @param triplestore the name of the triplestore being used.
  * @param ontologyNamedGraphIri the IRI of the named graph where the ontology should be stored.
  * @param ontologyIri the IRI of the ontology to be created.
+ * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
  *@
 @(triplestore: String,
   ontologyNamedGraphIri: IRI,
-  ontologyIri: IRI)
+  ontologyIri: IRI,
+  currentTime: String)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 INSERT {
     GRAPH ?ontologyNamedGraph {
         ?ontology rdf:type owl:Ontology .
+        ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@

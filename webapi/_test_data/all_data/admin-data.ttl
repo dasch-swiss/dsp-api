@@ -14,7 +14,7 @@
 ##########################################################
 
 
-<http://data.knora.org/users/root> rdf:type knora-base:User ;
+<http://rdfh.ch/users/root> rdf:type knora-base:User ;
 
                                    knora-base:email "root@example.com"^^xsd:string ;
 
@@ -33,7 +33,7 @@
                                    knora-base:isInSystemAdminGroup "true"^^xsd:boolean .
 
 
-<http://data.knora.org/users/superuser> rdf:type knora-base:User ;
+<http://rdfh.ch/users/superuser> rdf:type knora-base:User ;
 
                                         knora-base:email "super.user@example.com"^^xsd:string ;
 
@@ -52,7 +52,7 @@
                                         knora-base:isInSystemAdminGroup "true"^^xsd:boolean .
 
 
-<http://data.knora.org/users/normaluser> rdf:type knora-base:User ;
+<http://rdfh.ch/users/normaluser> rdf:type knora-base:User ;
 
                                          knora-base:email "normal.user@example.com"^^xsd:string ;
 
@@ -71,7 +71,7 @@
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
-<http://data.knora.org/users/inactiveuser> rdf:type knora-base:User ;
+<http://rdfh.ch/users/inactiveuser> rdf:type knora-base:User ;
 
                                            knora-base:email "inactive.user@example.com"^^xsd:string ;
 
@@ -97,27 +97,27 @@
 ##########################################################
 
 
-<http://data.knora.org/projects/images> rdf:type knora-base:knoraProject ;
+<http://rdfh.ch/projects/00FF> rdf:type knora-base:knoraProject ;
 
-                                        knora-base:projectShortname "images"^^xsd:string ;
+                                             knora-base:projectShortname "images"^^xsd:string ;
 
-                                        knora-base:projectLongname "Image Collection Demo"^^xsd:string ;
+                                             knora-base:projectShortcode "00FF"^^xsd:string ;
 
-                                        knora-base:projectDescription "A demo project of a collection of images"^^xsd:string ;
+                                             knora-base:projectLongname "Image Collection Demo"^^xsd:string ;
 
-                                        knora-base:projectKeywords "images, collection"^^xsd:string ;
+                                             knora-base:projectDescription "A demo project of a collection of images"^^xsd:string ;
 
-                                        knora-base:projectOntologyGraph "http://www.knora.org/ontology/images"^^xsd:string ;
+                                             knora-base:projectKeywords "images, collection"^^xsd:string ;
 
-                                        knora-base:projectDataGraph "http://www.knora.org/data/images"^^xsd:string ;
+                                             knora-base:projectOntology <http://www.knora.org/ontology/00FF/images> ;
 
-                                        knora-base:status "true"^^xsd:boolean ;
+                                             knora-base:status "true"^^xsd:boolean ;
 
-                                        knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+                                             knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
 ## Project Admin
-<http://data.knora.org/users/c266a56709> rdf:type knora-base:User ;
+<http://rdfh.ch/users/c266a56709> rdf:type knora-base:User ;
 
                                          knora-base:email "user01.user1@example.com"^^xsd:string ;
 
@@ -131,15 +131,15 @@
 
                                          knora-base:status "true"^^xsd:boolean ;
 
-                                         knora-base:isInProject <http://data.knora.org/projects/images> ;
+                                         knora-base:isInProject <http://rdfh.ch/projects/00FF> ;
 
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
 
-                                         knora-base:isInProjectAdminGroup <http://data.knora.org/projects/images> .
+                                         knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/00FF> .
 
 
 ## Project Member
-<http://data.knora.org/users/97cec4000f> rdf:type knora-base:User ;
+<http://rdfh.ch/users/97cec4000f> rdf:type knora-base:User ;
 
                                          knora-base:email "user02.user@example.com"^^xsd:string ;
 
@@ -153,13 +153,13 @@
 
                                          knora-base:status "true"^^xsd:boolean ;
 
-                                         knora-base:isInProject <http://data.knora.org/projects/images> ;
+                                         knora-base:isInProject <http://rdfh.ch/projects/00FF> ;
 
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
 ## Images Reviewer
-<http://data.knora.org/users/images-reviewer-user> rdf:type knora-base:User ;
+<http://rdfh.ch/users/images-reviewer-user> rdf:type knora-base:User ;
 
                                          knora-base:email "images-reviewer-user@example.com"^^xsd:string ;
 
@@ -173,15 +173,15 @@
 
                                          knora-base:status "true"^^xsd:boolean ;
 
-                                         knora-base:isInProject <http://data.knora.org/projects/images> ;
+                                         knora-base:isInProject <http://rdfh.ch/projects/00FF> ;
 
-                                         knora-base:isInGroup <http://data.knora.org/groups/images-reviewer> ;
+                                         knora-base:isInGroup <http://rdfh.ch/groups/00FF/images-reviewer> ;
 
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
 ## Images Reviewer
-<http://data.knora.org/users/images-reviewer-user> rdf:type knora-base:User ;
+<http://rdfh.ch/users/images-reviewer-user> rdf:type knora-base:User ;
 
                                          knora-base:email "images-reviewer-user@example.com"^^xsd:string ;
 
@@ -195,28 +195,28 @@
 
                                          knora-base:status "true"^^xsd:boolean ;
 
-                                         knora-base:isInProject <http://data.knora.org/projects/images> ;
+                                         knora-base:isInProject <http://rdfh.ch/projects/00FF> ;
 
-                                         knora-base:isInGroup <http://data.knora.org/groups/images-reviewer> ;
+                                         knora-base:isInGroup <http://rdfh.ch/groups/00FF/images-reviewer> ;
 
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
 
-<http://data.knora.org/groups/images-reviewer> rdf:type knora-base:UserGroup ;
+<http://rdfh.ch/groups/00FF/images-reviewer> rdf:type knora-base:UserGroup ;
 
                                                knora-base:groupName "Image reviewer"^^xsd:string ;
 
                                                knora-base:groupDescription "A group for image reviewers."^^xsd:string ;
 
-                                               knora-base:belongsToProject <http://data.knora.org/projects/images> ;
+                                               knora-base:belongsToProject <http://rdfh.ch/projects/00FF> ;
 
                                                knora-base:status "true"^^xsd:boolean ;
 
                                                knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
-<http://data.knora.org/institutions/dhlab-basel> rdf:type knora-base:Institution ;
+<http://rdfh.ch/institutions/dhlab-basel> rdf:type knora-base:Institution ;
                                                  knora-base:institutionName "Digital Humanities Lab, Basel" .
 
 
@@ -227,9 +227,9 @@
 ##########################################################
 
 ### ###########################################
-### <http://data.knora.org/projects/77275339>
+### <http://rdfh.ch/projects/77275339>
 
-<http://data.knora.org/projects/77275339> rdf:type knora-base:knoraProject ;
+<http://rdfh.ch/projects/77275339> rdf:type knora-base:knoraProject ;
 
                                           knora-base:projectShortname "incunabula"^^xsd:string ;
 
@@ -247,9 +247,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                           knora-base:projectKeywords """Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images"""^^xsd:string ;
 
-                                          knora-base:projectOntologyGraph "http://www.knora.org/ontology/incunabula"^^xsd:string ;
-
-                                          knora-base:projectDataGraph "http://www.knora.org/data/incunabula"^^xsd:string ;
+                                          knora-base:projectOntology <http://www.knora.org/ontology/incunabula> ;
 
                                           knora-base:projectLogo "incunabula_logo.png"^^xsd:string ;
 
@@ -260,7 +258,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 
 ## Project Admin
-<http://data.knora.org/users/b83acc5f05> rdf:type knora-base:User ;
+<http://rdfh.ch/users/b83acc5f05> rdf:type knora-base:User ;
 
                                          knora-base:givenName "User"^^xsd:string ;
 
@@ -274,15 +272,15 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:status "true"^^xsd:boolean ;
 
-                                         knora-base:isInProject <http://data.knora.org/projects/77275339> ;
+                                         knora-base:isInProject <http://rdfh.ch/projects/77275339> ;
 
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
 
-                                         knora-base:isInProjectAdminGroup <http://data.knora.org/projects/77275339> .
+                                         knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/77275339> .
 
 
 ## Project Creator and Member
-<http://data.knora.org/users/91e19f1e01> rdf:type knora-base:User ;
+<http://rdfh.ch/users/91e19f1e01> rdf:type knora-base:User ;
 
                                          knora-base:familyName "Admin-alt"^^xsd:string ;
 
@@ -298,13 +296,13 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:status "true"^^xsd:boolean ;
 
-                                         knora-base:isInProject <http://data.knora.org/projects/77275339> ;
+                                         knora-base:isInProject <http://rdfh.ch/projects/77275339> ;
 
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
 ## Project Member
-<http://data.knora.org/users/incunabulaMemberUser> rdf:type knora-base:User ;
+<http://rdfh.ch/users/incunabulaMemberUser> rdf:type knora-base:User ;
 
                                          knora-base:familyName "User2"^^xsd:string ;
 
@@ -320,7 +318,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:status "true"^^xsd:boolean ;
 
-                                         knora-base:isInProject <http://data.knora.org/projects/77275339> ;
+                                         knora-base:isInProject <http://rdfh.ch/projects/77275339> ;
 
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -330,7 +328,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 # MULTI-PROJECT / GROUPS USER     #
 ###################################
 
-<http://data.knora.org/users/multiuser> rdf:type knora-base:User ;
+<http://rdfh.ch/users/multiuser> rdf:type knora-base:User ;
 
                                         knora-base:userid "multiuser"^^xsd:string ;
 
@@ -348,17 +346,17 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                         knora-base:status "true"^^xsd:boolean ;
 
-                                        knora-base:isInProject <http://data.knora.org/projects/77275339> ,
-                                                               <http://data.knora.org/projects/images> ,
-                                                               <http://data.knora.org/projects/anything> ;
+                                        knora-base:isInProject <http://rdfh.ch/projects/77275339> ,
+                                                               <http://rdfh.ch/projects/00FF> ,
+                                                               <http://rdfh.ch/projects/anything> ;
 
                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
 
-                                        knora-base:isInProjectAdminGroup <http://data.knora.org/projects/77275339> ,
-                                                                         <http://data.knora.org/projects/images> ,
-                                                                         <http://data.knora.org/projects/anything> ;
+                                        knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/77275339> ,
+                                                                         <http://rdfh.ch/projects/00FF> ,
+                                                                         <http://rdfh.ch/projects/anything> ;
 
-                                        knora-base:isInGroup <http://data.knora.org/groups/images-reviewer> .
+                                        knora-base:isInGroup <http://rdfh.ch/groups/00FF/images-reviewer> .
 
 
 
@@ -367,16 +365,15 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 # ANYTHING PROJECT                #
 ###################################
 
-<http://data.knora.org/projects/anything> a knora-base:knoraProject ;
+<http://rdfh.ch/projects/anything> a knora-base:knoraProject ;
   knora-base:projectShortname "anything"^^xsd:string ;
   knora-base:projectLongname "Anything Project"^^xsd:string ;
   knora-base:projectDescription "Anything Project"^^xsd:string ;
-  knora-base:projectOntologyGraph "http://www.knora.org/ontology/anything"^^xsd:string ;
-  knora-base:projectDataGraph "http://www.knora.org/data/anything"^^xsd:string ;
+  knora-base:projectOntology <http://www.knora.org/ontology/anything> ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
-<http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> a knora-base:User ;
+<http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> a knora-base:User ;
   knora-base:userid "anything-user"^^xsd:string ;
   knora-base:givenName "Anything"^^xsd:string ;
   knora-base:familyName "User01"^^xsd:string ;
@@ -384,11 +381,11 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:email "anything.user01@example.org"^^xsd:string ;
   knora-base:preferredLanguage "de"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
-  knora-base:isInProject <http://data.knora.org/projects/anything> ;
+  knora-base:isInProject <http://rdfh.ch/projects/anything> ;
   knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
-  knora-base:isInProjectAdminGroup <http://data.knora.org/projects/anything> .
+  knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/anything> .
 
-<http://data.knora.org/users/BhkfBc3hTeS_IDo-JgXRbQ> a knora-base:User ;
+<http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> a knora-base:User ;
   knora-base:userid "anything-user-2" ;
   knora-base:givenName "Anything" ;
   knora-base:familyName "User02" ;
@@ -396,19 +393,18 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:email "anything.user02@example.org" ;
   knora-base:preferredLanguage "de"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
-  knora-base:isInProject <http://data.knora.org/projects/anything> ;
+  knora-base:isInProject <http://rdfh.ch/projects/anything> ;
   knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 ###################################
 # DOKUBIB                         #
 ###################################
 
-<http://data.knora.org/projects/b83b99ca01> a knora-base:knoraProject ;
+<http://rdfh.ch/projects/b83b99ca01> a knora-base:knoraProject ;
   knora-base:projectShortname "dokubib"^^xsd:string ;
   knora-base:projectLongname "Dokubib"^^xsd:string ;
   knora-base:projectDescription "Dokubib"^^xsd:string ;
-  knora-base:projectOntologyGraph "http://www.knora.org/ontology/dokubib"^^xsd:string ;
-  knora-base:projectDataGraph "http://www.knora.org/data/dokubib"^^xsd:string ;
+  knora-base:projectOntology <http://www.knora.org/ontology/dokubib> ;
   knora-base:status "false"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -417,17 +413,16 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 # BEOL                            #
 ###################################
 
-<http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> a knora-base:knoraProject ;
+<http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> a knora-base:knoraProject ;
   knora-base:projectShortname "beol"^^xsd:string ;
   knora-base:projectLongname "Bernoulli-Euler Online"^^xsd:string ;
   knora-base:projectDescription "Bernoulli-Euler Online"^^xsd:string ;
-  knora-base:projectOntologyGraph "http://www.knora.org/ontology/beol"^^xsd:string ;
-  knora-base:projectDataGraph "http://www.knora.org/data/beol"^^xsd:string ;
+  knora-base:projectOntology <http://www.knora.org/ontology/beol> ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
-<http://data.knora.org/users/PSGbemdjZi4kQ6GHJVkLGF> a knora-base:User ;
+<http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> a knora-base:User ;
   knora-base:userid "beol"^^xsd:string ;
   knora-base:familyName "BEOL"^^xsd:string ;
   knora-base:givenName "BEOL"^^xsd:string ;
@@ -435,26 +430,36 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:email "t.schweizer@unibas.ch"^^xsd:string ;
   knora-base:preferredLanguage "de"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
-  knora-base:isInProject <http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+  knora-base:isInProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
   knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
+<http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE> a knora-base:User ;
+  knora-base:userid "beol"^^xsd:string ;
+  knora-base:familyName "BEOL"^^xsd:string ;
+  knora-base:givenName "BEOL"^^xsd:string ;
+  knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+  knora-base:email "beol@example.com"^^xsd:string ;
+  knora-base:preferredLanguage "de"^^xsd:string ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:isInProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+  knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
+  knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> .
 
 
 ###################################
 # BIBLIO                          #
 ###################################
 
-<http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> a knora-base:knoraProject ;
+<http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> a knora-base:knoraProject ;
   knora-base:projectShortname "biblio"^^xsd:string ;
   knora-base:projectLongname "Bibliography"^^xsd:string ;
   knora-base:projectDescription "Bibliography"^^xsd:string ;
-  knora-base:projectOntologyGraph "http://www.knora.org/ontology/biblio"^^xsd:string ;
-  knora-base:projectDataGraph "http://www.knora.org/data/biblio"^^xsd:string ;
+  knora-base:projectOntology <http://www.knora.org/ontology/biblio> ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
-<http://data.knora.org/users/Q-6Sssu8TBWrcCGuVJ0lVw> a knora-base:User ;
+<http://rdfh.ch/users/Q-6Sssu8TBWrcCGuVJ0lVw> a knora-base:User ;
   knora-base:userid "biblio"^^xsd:string ;
   knora-base:familyName "biblio"^^xsd:string ;
   knora-base:givenName "biblio"^^xsd:string ;
@@ -462,6 +467,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:email "biblio@example.com"^^xsd:string ;
   knora-base:preferredLanguage "de"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
-  knora-base:isInProject <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> ;
+  knora-base:isInProject <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> ;
   knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
-  knora-base:isInProjectAdminGroup <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> .
+  knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> .

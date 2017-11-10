@@ -29,15 +29,13 @@
  * @param projectIri the IRI of the new user
  * @param projectClassIri the IRI of the OWL class that the new project should belong to.
  * @param shortname the new project's shortname (required / unique).
- * @param longname the new project's longname.
- * @param description the new project's description.
- * @param keywords the new project's keywords.
- * @param logo the new project's logo.
- * @param basepath the new project's basepath.
- * @param isActiveProject the new project's status.
+ * @param maybeShortcode the new project's shortcode (optional / unique)
+ * @param maybeLongname the new project's longname.
+ * @param maybeDescription the new project's description.
+ * @param maybeKeywords the new project's keywords.
+ * @param maybeLogo the new project's logo.
+ * @param status the new project's status.
  * @param hasSelfJoinEnabled the new project's self join status.
- * @param projectOntologyGraph the new project's ontology graph (required / unique).
- * @param projectDataGraph the new project's data graph (required / unique).
  *
  *@
 @(adminNamedGraphIri: IRI,
@@ -45,14 +43,13 @@
   projectIri: IRI,
   projectClassIri: IRI,
   shortname: String,
+  maybeShortcode: Option[String],
   maybeLongname: Option[String],
   maybeDescription: Option[String],
   maybeKeywords: Option[String],
   maybeLogo: Option[String],
   status: Boolean,
-  hasSelfJoinEnabled: Boolean,
-  projectOntologyGraph: String,
-  projectDataGraph: String)
+  hasSelfJoinEnabled: Boolean)
 
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -66,6 +63,10 @@ INSERT {
         ?projectIri rdf:type ?projectClassIri ;
 
             knora-base:projectShortname "@shortname"^^xsd:string ;
+
+            @if(maybeShortcode.nonEmpty) {
+                knora-base:projectShortcode "@maybeShortcode.get"^^xsd:string ;
+            }
 
             @if(maybeLongname.nonEmpty) {
                 knora-base:projectLongname "@maybeLongname.get"^^xsd:string ;
@@ -85,11 +86,7 @@ INSERT {
 
             knora-base:status "@status"^^xsd:boolean ;
 
-            knora-base:hasSelfJoinEnabled "@hasSelfJoinEnabled"^^xsd:boolean ;
-
-            knora-base:projectOntologyGraph "@projectOntologyGraph"^^xsd:string ;
-
-            knora-base:projectDataGraph "@projectDataGraph"^^xsd:string .
+            knora-base:hasSelfJoinEnabled "@hasSelfJoinEnabled"^^xsd:boolean .
     }
 }
 @*
@@ -112,4 +109,9 @@ WHERE {
     BIND(IRI("@projectClassIri") AS ?projectClassIri)
 
     FILTER NOT EXISTS { ?s knora-base:projectShortname "@shortname"^^xsd:string . }
+
+    @if(maybeShortcode.nonEmpty) {
+        FILTER NOT EXISTS { ?s knora-base:projectShortcode "@maybeShortcode.get"^^xsd:string . }
+    }
+
 }

@@ -20,6 +20,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
+@import org.knora.webapi.util.search.ApacheLuceneSupport.MatchStringWhileTyping
 
 @*
  * Performs a search for resources by their label.
@@ -29,27 +30,41 @@
  *
  * @param triplestore the name of the triplestore being used.
  * @param searchTerms search terms.
+ * @param limitToProject limit search to the given project.
+ * @param limitToResourceClass limit search to given resource class.
+ * @param limit maximum amount of resources to be returned.
+ * @param offset offset to be used for paging.
+ * @param countQuery indicates whether it is a count query or the actual resources should be returned.
  *@
 @(triplestore: String,
-  searchTerms: String,
+  searchTerm: MatchStringWhileTyping,
   limitToProject: Option[IRI],
-  limitToResourceClass: Option[IRI])
+  limitToResourceClass: Option[IRI],
+  limit: Int,
+  offset: Int,
+  countQuery: Boolean)
 
 @if(triplestore.startsWith("graphdb")) {
     @{
         queries.sparql.v2.txt.searchResourceByLabelGraphDB(
-            searchTerms = searchTerms,
+            searchTerm = searchTerm,
             limitToProject = limitToProject,
-            limitToResourceClass = limitToResourceClass
+            limitToResourceClass = limitToResourceClass,
+            limit = limit,
+            offset = offset,
+            countQuery = countQuery
         )
     }
 } else {
     @{
         queries.sparql.v2.txt.searchResourceByLabelStandard(
             triplestore = triplestore,
-            searchTerms = searchTerms,
+            searchTerm = searchTerm,
             limitToProject = limitToProject,
-            limitToResourceClass = limitToResourceClass
+            limitToResourceClass = limitToResourceClass,
+            limit = limit,
+            offset = offset,
+            countQuery = countQuery
         )
     }
 }

@@ -59,11 +59,11 @@ case class CreateResourceApiRequestV1(restype_id: IRI,
 /**
   * Used internally to represent a request to create a resource from an XML import.
   *
-  * @param restype_id   the IRI of the resource class.
-  * @param label        the resource's label.
-  * @param client_id    the client's unique ID for the resource.
-  * @param properties   the resource's properties.
-  * @param file         a file on disk that should be attached to the resource.
+  * @param restype_id the IRI of the resource class.
+  * @param label      the resource's label.
+  * @param client_id  the client's unique ID for the resource.
+  * @param properties the resource's properties.
+  * @param file       a file on disk that should be attached to the resource.
   */
 case class CreateResourceFromXmlImportRequestV1(restype_id: IRI,
                                                 client_id: String,
@@ -258,7 +258,7 @@ case class MultipleResourceCreateResponseV1(createdResources: Seq[OneOfMultipleR
   * Represents one of multiple resources that were created in response to a single API request.
   *
   * @param clientResourceID the client's ID for the resource.
-  * @param resourceIri the IRI that was assigned to the resource.
+  * @param resourceIri      the IRI that was assigned to the resource.
   */
 case class OneOfMultipleResourcesCreateResponseV1(clientResourceID: String, resourceIri: IRI, label: String)
 
@@ -366,7 +366,7 @@ case class ResourceSearchResponseV1(resources: Seq[ResourceSearchResultRowV1] = 
   *
   * @param res_id  the IRI ow the new resource.
   * @param results the values that have been attached to the resource. The key in the Map refers
-  *                to the property Iri and the Seq contains all instances of values of this type.
+  *                to the property IRI and the Seq contains all instances of values of this type.
   */
 case class ResourceCreateResponseV1(res_id: IRI,
                                     results: Map[IRI, Seq[ResourceCreateValueResponseV1]] = Map.empty[IRI, Seq[ResourceCreateValueResponseV1]]) extends KnoraResponseV1 {
@@ -396,7 +396,7 @@ case class PropertiesGetResponseV1(properties: PropsGetV1) extends KnoraResponse
 /**
   * Requests the label of a resource to be changed.
   *
-  * @param resourceIri  the Iri of the resource whose label should be changed.
+  * @param resourceIri  the IRI of the resource whose label should be changed.
   * @param label        the new value of the label.
   * @param userProfile  the profile of the user making the request.
   * @param apiRequestID the ID of the API request.
@@ -688,7 +688,7 @@ case class PropertyGetV1(pid: IRI,
   * @param comment     any comment attached to the value.
   * @param textval     the string representation of the value object.
   * @param value       literal(s) representing this value object.
-  * @param id          the Iri of this value object.
+  * @param id          the IRI of this value object.
   * @param lastmod     the date of the last modification of this value.
   * @param lastmod_utc the date of the last modification of this value as UTC.
   *
@@ -711,11 +711,11 @@ case class PropsGetV1(properties: Seq[PropertyGetV1])
 
 /**
   * Holds a list of [[PropertyGetV1]] objects representing the properties of a region in the format requested for the context query. If a resource
-  * is pointed to by regions, these are returned in the resource's context query (`resinfo.regions`). Additionally, the region's Iri and the icon of its resource class are given
+  * is pointed to by regions, these are returned in the resource's context query (`resinfo.regions`). Additionally, the region's IRI and the icon of its resource class are given
   * (see [[ResourceV1JsonProtocol.PropsGetForRegionV1JsonFormat]]).
   *
   * @param properties a list of [[PropertyGetV1]] objects.
-  * @param res_id     the region's Iri.
+  * @param res_id     the region's IRI.
   * @param iconsrc    the icon of the region's resource class.
   */
 case class PropsGetForRegionV1(properties: Seq[PropertyGetV1], res_id: IRI, iconsrc: Option[String])
@@ -723,7 +723,7 @@ case class PropsGetForRegionV1(properties: Seq[PropertyGetV1], res_id: IRI, icon
 /**
   * Represents information about one resource matching the criteria of a [[ResourceSearchGetRequestV1]]
   *
-  * @param id    Iri
+  * @param id    IRI
   * @param value property value(s) of the resource (the amount depends on `numberOfProps` defined in [[ResourceSearchGetRequestV1]])
   */
 case class ResourceSearchResultRowV1(id: IRI,
@@ -798,7 +798,7 @@ object SalsahGuiConversions {
   * Describes values that have been attached to a new resource.
   *
   * @param value the value that has been attached to the resource.
-  * @param id    the value object Iri of the value.
+  * @param id    the value object IRI of the value.
   */
 case class ResourceCreateValueResponseV1(value: ResourceCreateValueObjectResponseV1, id: IRI) {
     def toJsValue = ResourceV1JsonProtocol.resourceCreateValueResponseV1Format.write(this)
@@ -839,8 +839,8 @@ object LiteralValueType extends Enumeration {
   * @param calendar       the date's calendar if it is a [[DateValueV1]].
   * @param timeval1       start time value if it is an [[IntervalValueV1]].
   * @param timeval2       end time value if it is an [[IntervalValueV1]].
-  * @param resource_id    the Iri of the new resource.
-  * @param property_id    the Iri of the property the value belongs to.
+  * @param resource_id    the IRI of the new resource.
+  * @param property_id    the IRI of the property the value belongs to.
   * @param person_id      the person that created the value.
   * @param order          the order of the value (valueHasOrder).
   */

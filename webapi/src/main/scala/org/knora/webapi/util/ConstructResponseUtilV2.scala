@@ -30,8 +30,6 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
 
-import scala.collection.immutable.ListMap
-
 
 object ConstructResponseUtilV2 {
 
@@ -43,7 +41,7 @@ object ConstructResponseUtilV2 {
     /**
       * Represents the RDF data about a value, possibly including standoff.
       *
-      * @param valueObjectIri the value object's Iri.
+      * @param valueObjectIri the value object's IRI.
       * @param assertions     the value objects assertions.
       * @param standoff       standoff assertions, if any.
       */
@@ -74,7 +72,7 @@ object ConstructResponseUtilV2 {
       * The resource Iris represent main resources, dependent resources are contained in the link values as nested structures.
       *
       * @param constructQueryResults the results of a SPARQL construct query representing resources and their values.
-      * @return a Map[resource Iri -> [[ResourceWithValueRdfData]]].
+      * @return a Map[resource IRI -> [[ResourceWithValueRdfData]]].
       */
     def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlConstructResponse, userProfile: UserProfileV1): Map[IRI, ResourceWithValueRdfData] = {
 
@@ -166,18 +164,18 @@ object ConstructResponseUtilV2 {
                             valObjIri: IRI =>
 
                                 // get all the standoff node Iris possibly belonging to this value object
-                                // do so by accessing the non resource statements using the value object Iri as a key
+                                // do so by accessing the non resource statements using the value object IRI as a key
                                 val standoffNodeIris: Set[IRI] = nonResourceStatements(valObjIri).filter {
                                     case (pred: IRI, _) =>
                                         pred == OntologyConstants.KnoraBase.ValueHasStandoff
                                 }.map {
                                     case (_, obj: IRI) =>
-                                        // we are only interested in the standoff node Iri
+                                        // we are only interested in the standoff node IRI
                                         obj
                                 }.toSet
 
                                 // given the standoff node Iris, get the standoff assertions
-                                // do so by accessing the non resource statements using the standoff node Iri as a key
+                                // do so by accessing the non resource statements using the standoff node IRI as a key
                                 val (standoffAssertions: Map[IRI, Seq[(IRI, String)]], valueAssertions: Map[IRI, Seq[(IRI, String)]]) = nonResourceStatements.partition {
                                     case (subjIri: IRI, _) =>
                                         standoffNodeIris(subjIri)
@@ -317,6 +315,7 @@ object ConstructResponseUtilV2 {
       * @return a [[ValueContentV2]] representing a value.
       */
     def createValueContentV2FromValueRdfData(valueObject: ValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation]): ValueContentV2 = {
+        val stringFormatter = StringFormatter.getInstance
 
         // every knora-base:Value (any of its subclasses) has a string representation
         val valueObjectValueHasString: String = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasString)
@@ -329,8 +328,8 @@ object ConstructResponseUtilV2 {
 
                 if (valueObject.standoff.nonEmpty) {
                     // standoff nodes given
-                    // get the Iri of the mapping
-                    val mappingIri: IRI = valueObject.assertions.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping Iri associated with standoff belonging to textValue ${valueObject.valueObjectIri}"))
+                    // get the IRI of the mapping
+                    val mappingIri: IRI = valueObject.assertions.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping IRI associated with standoff belonging to textValue ${valueObject.valueObjectIri}"))
 
                     val mapping: MappingAndXSLTransformation = mappings(mappingIri)
 
@@ -412,7 +411,7 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.StillImageFileValue =>
 
                 val isPreviewStr = valueObject.assertions.get(OntologyConstants.KnoraBase.IsPreview)
-                val isPreview = InputValidation.optionStringToBoolean(isPreviewStr, () => throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
+                val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, () => throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
 
                 StillImageFileValueContentV2(
                     internalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.InternalMimeType),
@@ -448,7 +447,7 @@ object ConstructResponseUtilV2 {
       *
       * Creates a [[ReadResourceV2]] from a [[ResourceWithValueRdfData]].
       *
-      * @param resourceIri              the Iri of the resource.
+      * @param resourceIri              the IRI of the resource.
       * @param resourceWithValueRdfData the Rdf data belonging to the resource.
       * @return a [[ReadResourceV2]].
       */
@@ -493,7 +492,7 @@ object ConstructResponseUtilV2 {
     /**
       * Creates a response to a full resource request.
       *
-      * @param resourceIri     the Iri of the requested resource.
+      * @param resourceIri     the IRI of the requested resource.
       * @param resourceRdfData the results returned by the triplestore.
       * @param mappings        the mappings needed for standoff conversions and XSL transformations.
       * @return a [[ReadResourceV2]].
@@ -507,40 +506,32 @@ object ConstructResponseUtilV2 {
     /**
       * Creates a response to a fulltext or extended search.
       *
-      * @param searchResults the results returned by the triplestore.
+      * @param searchResults      the resources that matched the query and the client has permissions to see.
       * @param orderByResourceIri the order in which the resources should be returned.
       * @return a collection of [[ReadResourceV2]] representing the search results.
       */
-    def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData], orderByResourceIri: Seq[IRI] = Seq.empty[IRI]): Vector[ReadResourceV2] = {
+    def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData], orderByResourceIri: Seq[IRI], mappings: Map[IRI, MappingAndXSLTransformation] = Map.empty[IRI, MappingAndXSLTransformation], forbiddenResource: Option[ReadResourceV2]): Vector[ReadResourceV2] = {
 
-        // if orderByResourceIris is given, use it to sort search results
-        // attention: orderByResourceIris does not consider permissions
-        if (orderByResourceIri.nonEmpty) {
+        if (orderByResourceIri.toSet != searchResults.keySet && forbiddenResource.isEmpty) throw AssertionException(s"Not all resources are visible, but forbiddenResource is None")
 
-            // iterate over orderByResourceIris and construct the response in the correct order
-            orderByResourceIri.foldLeft(Vector.empty[ReadResourceV2]) {
-                (acc: Vector[ReadResourceV2], resourceIri: IRI) =>
+        // iterate over orderByResourceIris and construct the response in the correct order
+        orderByResourceIri.map {
+            (resourceIri: IRI) =>
 
-                    // the user may not have the permissions to see the resource
-                    // i.e. it may not be contained in searchResults
-                    searchResults.get(resourceIri) match {
-                        case Some(assertions: ResourceWithValueRdfData) =>
-                            // sufficient permissions
-                            // add the resource to the list of results
-                            acc :+ constructReadResourceV2(resourceIri, assertions, mappings = Map.empty[IRI, MappingAndXSLTransformation])
+                // the user may not have the permissions to see the resource
+                // i.e. it may not be contained in searchResults
+                searchResults.get(resourceIri) match {
+                    case Some(assertions: ResourceWithValueRdfData) =>
+                        // sufficient permissions
+                        // add the resource to the list of results
+                        constructReadResourceV2(resourceIri, assertions, mappings = mappings)
 
-                        case None => acc // insufficient permissions on resource, skip it
-                    }
-            }
-        } else {
-            // no order given
-            searchResults.map {
-                case (resourceIri: IRI, assertions: ResourceWithValueRdfData) =>
-                    constructReadResourceV2(resourceIri, assertions, mappings = Map.empty[IRI, MappingAndXSLTransformation])
-            }.toVector
+                    case None =>
+                        // include the forbidden resource instead of skipping (the amount of results should be constant -> limit)
+                        forbiddenResource.getOrElse(throw AssertionException(s"Not all resources are visible, but forbiddenResource is None"))
 
-        }
-
+                }
+        }.toVector
 
     }
 }

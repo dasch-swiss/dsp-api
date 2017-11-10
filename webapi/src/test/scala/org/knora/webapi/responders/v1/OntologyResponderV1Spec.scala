@@ -616,66 +616,66 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         vocabularies = Vector(
             NamedGraphV1( // SystemProject
                 active = true,
-                uri = SharedAdminTestData.systemProjectInfo.ontologyNamedGraph,
+                uri = SharedAdminTestData.systemProjectInfo.ontologies.head,
                 project_id = SharedAdminTestData.systemProjectInfo.id,
                 description = SharedAdminTestData.systemProjectInfo.description.get,
                 longname = SharedAdminTestData.systemProjectInfo.longname.get,
                 shortname = SharedAdminTestData.systemProjectInfo.shortname,
-                id = SharedAdminTestData.systemProjectInfo.ontologyNamedGraph
+                id = SharedAdminTestData.systemProjectInfo.ontologies.head
             ),
             NamedGraphV1( // Incunabula
                 active = true,
-                uri = SharedAdminTestData.incunabulaProjectInfo.ontologyNamedGraph,
+                uri = SharedAdminTestData.incunabulaProjectInfo.ontologies.head,
                 project_id = SharedAdminTestData.incunabulaProjectInfo.id,
                 description = SharedAdminTestData.incunabulaProjectInfo.description.get,
                 longname = SharedAdminTestData.incunabulaProjectInfo.longname.get,
                 shortname = SharedAdminTestData.incunabulaProjectInfo.shortname,
-                id = SharedAdminTestData.incunabulaProjectInfo.ontologyNamedGraph
+                id = SharedAdminTestData.incunabulaProjectInfo.ontologies.head
             ),
             NamedGraphV1( // BEOL
                 active = true,
-                uri = SharedAdminTestData.beolProjectInfo.ontologyNamedGraph,
+                uri = SharedAdminTestData.beolProjectInfo.ontologies.head,
                 project_id = SharedAdminTestData.beolProjectInfo.id,
                 description = SharedAdminTestData.beolProjectInfo.description.get,
                 longname = SharedAdminTestData.beolProjectInfo.longname.get,
                 shortname = SharedAdminTestData.beolProjectInfo.shortname,
-                id = SharedAdminTestData.beolProjectInfo.ontologyNamedGraph
+                id = SharedAdminTestData.beolProjectInfo.ontologies.head
             ),
             NamedGraphV1( // BIBLIO
                 active = true,
-                uri = SharedAdminTestData.biblioProjectInfo.ontologyNamedGraph,
+                uri = SharedAdminTestData.biblioProjectInfo.ontologies.head,
                 project_id = SharedAdminTestData.biblioProjectInfo.id,
                 description = SharedAdminTestData.biblioProjectInfo.description.get,
                 longname = SharedAdminTestData.biblioProjectInfo.longname.get,
                 shortname = SharedAdminTestData.biblioProjectInfo.shortname,
-                id = SharedAdminTestData.biblioProjectInfo.ontologyNamedGraph
+                id = SharedAdminTestData.biblioProjectInfo.ontologies.head
             ),
             NamedGraphV1( // Images
                 active = true,
-                uri = SharedAdminTestData.imagesProjectInfo.ontologyNamedGraph,
+                uri = SharedAdminTestData.imagesProjectInfo.ontologies.head,
                 project_id = SharedAdminTestData.imagesProjectInfo.id,
                 description = SharedAdminTestData.imagesProjectInfo.description.get,
                 longname = SharedAdminTestData.imagesProjectInfo.longname.get,
                 shortname = SharedAdminTestData.imagesProjectInfo.shortname,
-                id = SharedAdminTestData.imagesProjectInfo.ontologyNamedGraph
+                id = SharedAdminTestData.imagesProjectInfo.ontologies.head
             ),
             NamedGraphV1( // Anything
                 active = true,
-                uri = SharedAdminTestData.anythingProjectInfo.ontologyNamedGraph,
+                uri = SharedAdminTestData.anythingProjectInfo.ontologies.head,
                 project_id = SharedAdminTestData.anythingProjectInfo.id,
                 description = SharedAdminTestData.anythingProjectInfo.description.get,
                 longname = SharedAdminTestData.anythingProjectInfo.longname.get,
                 shortname = SharedAdminTestData.anythingProjectInfo.shortname,
-                id = SharedAdminTestData.anythingProjectInfo.ontologyNamedGraph
+                id = SharedAdminTestData.anythingProjectInfo.ontologies.head
             ),
             NamedGraphV1( // Dokubib
                 active = false,
-                uri = SharedAdminTestData.dokubibProjectInfo.ontologyNamedGraph,
+                uri = SharedAdminTestData.dokubibProjectInfo.ontologies.head,
                 project_id = SharedAdminTestData.dokubibProjectInfo.id,
                 description = SharedAdminTestData.dokubibProjectInfo.description.get,
                 longname = SharedAdminTestData.dokubibProjectInfo.longname.get,
                 shortname = SharedAdminTestData.dokubibProjectInfo.shortname,
-                id = SharedAdminTestData.dokubibProjectInfo.ontologyNamedGraph
+                id = SharedAdminTestData.dokubibProjectInfo.ontologies.head
             )
         )
     )
@@ -1061,8 +1061,9 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: EntityInfoGetResponseV1 =>
-                    msg.propertyEntityInfoMap("http://www.knora.org/ontology/incunabula#title").getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(("de", "en"))) should ===(Some("Titel"))
-                    msg.propertyEntityInfoMap("http://www.knora.org/ontology/incunabula#title").getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(("fr", "en"))) should ===(Some("Titre"))
+                    val titleContent = msg.propertyInfoMap("http://www.knora.org/ontology/incunabula#title").entityInfoContent
+                    titleContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(("de", "en"))) should ===(Some("Titel"))
+                    titleContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(("fr", "en"))) should ===(Some("Titre"))
             }
         }
 

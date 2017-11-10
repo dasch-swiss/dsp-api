@@ -23,7 +23,7 @@ package org.knora.webapi.responders.v2
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.v2.responder.{ReadResourceV2, ReadResourcesSequenceV2, ReadValueV2}
 
-object ResponseCheckerV2 {
+object ResponseCheckerResponderV2 {
 
     /**
       * Compares the response to a full resource request with the expected response.
@@ -31,26 +31,32 @@ object ResponseCheckerV2 {
       * @param received the response returned by the resource responder.
       * @param expected the expected response.
       */
-    def compareReadResourcesSequenceV2Response(received: ReadResourcesSequenceV2, expected: ReadResourcesSequenceV2): Unit = {
-        assert(received.numberOfResources == expected.numberOfResources, "number of resources are not equal")
+    def compareReadResourcesSequenceV2Response(expected: ReadResourcesSequenceV2, received: ReadResourcesSequenceV2): Unit = {
+        assert(expected.numberOfResources == received.numberOfResources, "number of resources are not equal")
 
         // compare the resources one by one: resources have to returned in the correct order
-        received.resources.zip(expected.resources).foreach {
-            case (receivedResource: ReadResourceV2, expectedResource: ReadResourceV2) =>
+        expected.resources.zip(received.resources).foreach {
+            case (expectedResource: ReadResourceV2, receivedResource: ReadResourceV2) =>
 
                 // compare resource information
-                assert(receivedResource.resourceIri == expectedResource.resourceIri, "resource Iri does not match")
-                assert(receivedResource.label == expectedResource.label, "label does not match")
-                assert(receivedResource.resourceClass == expectedResource.resourceClass, "resource class does not match")
+                assert(expectedResource.resourceIri == receivedResource.resourceIri, "resource Iri does not match")
+                assert(expectedResource.label == receivedResource.label, "label does not match")
+                assert(expectedResource.resourceClass == receivedResource.resourceClass, "resource class does not match")
 
                 // compare the properties
                 // convert Map to a sequence of tuples and sort by property Iri)
-                receivedResource.values.toSeq.sortBy(_._1).zip(expectedResource.values.toSeq.sortBy(_._1)).foreach {
-                    case ((receivedPropIri: IRI, receivedPropValues: Seq[ReadValueV2]), (expectedPropIri: IRI, expectedPropValues: Seq[ReadValueV2])) =>
+                expectedResource.values.toSeq.sortBy(_._1).zip(receivedResource.values.toSeq.sortBy(_._1)).foreach {
+                    case ((expectedPropIri: IRI, expectedPropValues: Seq[ReadValueV2]), (receivedPropIri: IRI, receivedPropValues: Seq[ReadValueV2])) =>
 
-                        assert(receivedPropIri == expectedPropIri)
+                        assert(expectedPropIri == receivedPropIri)
 
-                        assert(receivedPropValues.sortBy(_.valueIri) == expectedPropValues.sortBy(_.valueIri))
+                        expectedPropValues.sortBy(_.valueIri).zip(receivedPropValues.sortBy(_.valueIri)).foreach {
+                            case (expectedVal: ReadValueV2, receivedVal: ReadValueV2) =>
+
+                                assert(expectedVal == receivedVal,  s"value objects does not match: ${expectedVal} != ${receivedVal}")
+                        }
+
+
 
                 }
 

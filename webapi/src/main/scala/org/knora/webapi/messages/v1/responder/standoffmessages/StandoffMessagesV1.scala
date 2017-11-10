@@ -49,9 +49,9 @@ sealed trait StandoffResponderRequestV1 extends KnoraRequestV1
 case class CreateMappingRequestV1(xml: String, label: String, projectIri: IRI, mappingName: String, userProfile: UserProfileV1, apiRequestID: UUID) extends StandoffResponderRequestV1
 
 /**
-  * Provides the Iri of the created mapping.
+  * Provides the IRI of the created mapping.
   *
-  * @param mappingIri the Iri of the resource (knora-base:XMLToStandoffMapping) representing the mapping that has been created.
+  * @param mappingIri the IRI of the resource (knora-base:XMLToStandoffMapping) representing the mapping that has been created.
   */
 case class CreateMappingResponseV1(mappingIri: IRI) extends KnoraResponseV1 {
     def toJsValue = RepresentationV1JsonProtocol.createMappingResponseV1Format.write(this)
@@ -68,7 +68,7 @@ case class GetMappingRequestV1(mappingIri: IRI, userProfile: UserProfileV1) exte
 /**
   * Represents a response to a [[GetMappingRequestV1]].
   *
-  * @param mappingIri       the Iri of the requested mapping.
+  * @param mappingIri       the IRI of the requested mapping.
   * @param mapping          the requested mapping.
   * @param standoffEntities the standoff entities referred to in the mapping.
   */
@@ -77,15 +77,15 @@ case class GetMappingResponseV1(mappingIri: IRI, mapping: MappingXMLtoStandoff, 
 /**
   * Represents a request that gets an XSL Transformation represented by a `knora-base:XSLTransformation`.
   *
-  * @param xsltTextRepresentationIri    the IRI of the `knora-base:XSLTransformation`.
-  * @param userProfile                  the profile of the user making the request.
+  * @param xsltTextRepresentationIri the IRI of the `knora-base:XSLTransformation`.
+  * @param userProfile               the profile of the user making the request.
   */
 case class GetXSLTransformationRequestV1(xsltTextRepresentationIri: IRI, userProfile: UserProfileV1) extends StandoffResponderRequestV1
 
 /**
   * Represents a response to a [[GetXSLTransformationRequestV1]].
   *
-  * @param xslt      the XSLT to be applied to the XML created from standoff.
+  * @param xslt the XSLT to be applied to the XML created from standoff.
   */
 case class GetXSLTransformationResponseV1(xslt: String)
 
@@ -98,8 +98,8 @@ case class GetXSLTransformationResponseV1(xslt: String)
   *
   * The class names allow for the ruse of the same tag name. This is important when using HTML since the tag set is very limited.
   *
-  * @param namespace a Map of XML namespaces and a Map of tag names and [[XMLTag]].
-  * @param defaultXSLTransformation the Iri of the default XSL transformation for the resulting XML, if any.
+  * @param namespace                a Map of XML namespaces and a Map of tag names and [[XMLTag]].
+  * @param defaultXSLTransformation the IRI of the default XSL transformation for the resulting XML, if any.
   */
 case class MappingXMLtoStandoff(namespace: Map[String, Map[String, Map[String, XMLTag]]], defaultXSLTransformation: Option[IRI])
 
@@ -120,7 +120,7 @@ case class XMLTag(name: String, mapping: XMLTagToStandoffClass, separatorRequire
   *
   * attributesToProps = Map("myXMLNamespace" -> Map("myXMLAttributeName" -> "standoffPropertyIri"))
   *
-  * @param standoffClassIri  the Iri of the standoff class.
+  * @param standoffClassIri  the IRI of the standoff class.
   * @param attributesToProps a mapping between XML namespaces and attribute names and standoff properties.
   * @param dataType          the data type of the standoff class (e.g., a date).
   */
@@ -139,7 +139,7 @@ case class XMLStandoffDataTypeClass(standoffDataTypeClass: StandoffDataTypeClass
   *
   * @param project_id  the project in which the mapping is to be added.
   * @param label       the label describing the mapping.
-  * @param mappingName the name of the mapping (will be appended to the mapping Iri).
+  * @param mappingName the name of the mapping (will be appended to the mapping IRI).
   */
 case class CreateMappingApiRequestV1(project_id: IRI, label: String, mappingName: String) {
 
@@ -152,29 +152,29 @@ case class CreateMappingApiRequestV1(project_id: IRI, label: String, mappingName
   */
 object StandoffDataTypeClasses extends Enumeration {
 
-    val StandoffLinkTag = Value(OntologyConstants.KnoraBase.StandoffLinkTag)
+    val StandoffLinkTag: Value = Value(OntologyConstants.KnoraBase.StandoffLinkTag)
 
-    val StandoffDateTag = Value(OntologyConstants.KnoraBase.StandoffDateTag)
+    val StandoffDateTag: Value = Value(OntologyConstants.KnoraBase.StandoffDateTag)
 
-    val StandoffUriTag = Value(OntologyConstants.KnoraBase.StandoffUriTag)
+    val StandoffUriTag: Value = Value(OntologyConstants.KnoraBase.StandoffUriTag)
 
-    val StandoffColorTag = Value(OntologyConstants.KnoraBase.StandoffColorTag)
+    val StandoffColorTag: Value = Value(OntologyConstants.KnoraBase.StandoffColorTag)
 
-    val StandoffIntegerTag = Value(OntologyConstants.KnoraBase.StandoffIntegerTag)
+    val StandoffIntegerTag: Value = Value(OntologyConstants.KnoraBase.StandoffIntegerTag)
 
-    val StandoffDecimalTag = Value(OntologyConstants.KnoraBase.StandoffDecimalTag)
+    val StandoffDecimalTag: Value = Value(OntologyConstants.KnoraBase.StandoffDecimalTag)
 
-    val StandoffIntervalTag = Value(OntologyConstants.KnoraBase.StandoffIntervalTag)
+    val StandoffIntervalTag: Value = Value(OntologyConstants.KnoraBase.StandoffIntervalTag)
 
-    val StandoffBooleanTag = Value(OntologyConstants.KnoraBase.StandoffBooleanTag)
+    val StandoffBooleanTag: Value = Value(OntologyConstants.KnoraBase.StandoffBooleanTag)
 
-    val StandoffInternalReferenceTag = Value(OntologyConstants.KnoraBase.StandoffInternalReferenceTag)
+    val StandoffInternalReferenceTag: Value = Value(OntologyConstants.KnoraBase.StandoffInternalReferenceTag)
 
     val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
     /**
       * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-      * [[org.knora.webapi.BadRequestException]].
+      * exception.
       *
       * @param name     the name of the value.
       * @param errorFun the function to be called in case of an error.

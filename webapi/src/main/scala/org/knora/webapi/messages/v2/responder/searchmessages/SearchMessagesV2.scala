@@ -34,12 +34,43 @@ sealed trait SearchResponderRequestV2 extends KnoraRequestV2 {
 }
 
 /**
+  * Requests the amount of results (resources count) of a given fulltext search. A successful response will be a [[ReadResourcesSequenceV2]].
+  *
+  * @param searchValue the values to search for.
+  * @param limitToProject limit search to given project.
+  * @param limitToResourceClass limit search to given resource class.
+  * @param userProfile the profile of the user making the request.
+  */
+case class FullTextSearchCountGetRequestV2(searchValue: String,
+                                           limitToProject: Option[IRI],
+                                           limitToResourceClass: Option[IRI],
+                                           userProfile: UserProfileV1) extends SearchResponderRequestV2
+
+/**
   * Requests a fulltext search. A successful response will be a [[ReadResourcesSequenceV2]].
   *
   * @param searchValue the values to search for.
+  * @param offset the offset to be used for paging.
+  * @param limitToProject limit search to given project.
+  * @param limitToResourceClass limit search to given resource class.
   * @param userProfile the profile of the user making the request.
   */
 case class FulltextSearchGetRequestV2(searchValue: String,
+                                      offset: Int,
+                                      limitToProject: Option[IRI],
+                                      limitToResourceClass: Option[IRI],
+                                      userProfile: UserProfileV1) extends SearchResponderRequestV2
+
+
+/**
+  *
+  * Requests the amount of results (resources count) of a given extended search. A successful response will be a [[ReadResourcesSequenceV2]].
+  *
+  * @param constructQuery a Sparql construct query provided by the client.
+  * @param userProfile the profile of the user making the request.
+  */
+
+case class ExtendedSearchCountGetRequestV2(constructQuery: ConstructQuery,
                                       userProfile: UserProfileV1) extends SearchResponderRequestV2
 
 /**
@@ -47,7 +78,7 @@ case class FulltextSearchGetRequestV2(searchValue: String,
   * Requests an extended search. A successful response will be a [[ReadResourcesSequenceV2]].
   *
   * @param constructQuery a Sparql construct query provided by the client.
-  * @param userProfile the profile of the user making the request.
+  * @param userProfile    the profile of the user making the request.
   */
 case class ExtendedSearchGetRequestV2(constructQuery: ConstructQuery,
                                       userProfile: UserProfileV1) extends SearchResponderRequestV2
@@ -56,12 +87,27 @@ case class ExtendedSearchGetRequestV2(constructQuery: ConstructQuery,
 /**
   * Requests a search of resources by their label. A successful response will be a [[ReadResourcesSequenceV2]].
   *
+  * @param searchValue          the values to search for.
+  * @param limitToProject       limit search to given project.
+  * @param limitToResourceClass limit search to given resource class.
+  * @param userProfile          the profile of the user making the request.
+  */
+case class SearchResourceByLabelCountGetRequestV2(searchValue: String,
+                                          limitToProject: Option[IRI],
+                                          limitToResourceClass: Option[IRI],
+                                          userProfile: UserProfileV1) extends SearchResponderRequestV2
+
+/**
+  * Requests a search of resources by their label. A successful response will be a [[ReadResourcesSequenceV2]].
+  *
   * @param searchValue the values to search for.
+  * @param offset the offset to be used for paging.
   * @param limitToProject limit search to given project.
   * @param limitToResourceClass limit search to given resource class.
   * @param userProfile the profile of the user making the request.
   */
-case class SearchResourceByLabelRequestV2(searchValue: String,
-                                          limitToProject: Option[IRI],
-                                          limitToResourceClass: Option[IRI],
-                                          userProfile: UserProfileV1) extends SearchResponderRequestV2
+case class SearchResourceByLabelGetRequestV2(searchValue: String,
+                                             offset: Int,
+                                             limitToProject: Option[IRI],
+                                             limitToResourceClass: Option[IRI],
+                                             userProfile: UserProfileV1) extends SearchResponderRequestV2

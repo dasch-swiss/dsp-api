@@ -34,6 +34,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.SharedAdminTestData._
 
 import scala.concurrent.duration._
 
@@ -105,7 +106,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
             "CREATE the group and return the group's info if the supplied group name is unique" in {
                 actorUnderTest ! GroupCreateRequestV1(
-                    CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
+                    CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), SharedAdminTestData.IMAGES_PROJECT_IRI, true, false),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )
@@ -115,7 +116,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
                 newGroupInfo.name should equal ("NewGroup")
                 newGroupInfo.description should equal (Some("NewGroupDescription"))
-                newGroupInfo.project should equal ("http://data.knora.org/projects/images")
+                newGroupInfo.project should equal (IMAGES_PROJECT_IRI)
                 newGroupInfo.status should equal (true)
                 newGroupInfo.selfjoin should equal (false)
 
@@ -125,7 +126,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
             "return a 'DuplicateValueException' if the supplied group name is not unique" in {
                 actorUnderTest ! GroupCreateRequestV1(
-                    CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), "http://data.knora.org/projects/images", true, false),
+                    CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), SharedAdminTestData.IMAGES_PROJECT_IRI, true, false),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )
@@ -136,7 +137,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
                 /* missing group name */
                 actorUnderTest ! GroupCreateRequestV1(
-                    CreateGroupApiRequestV1("", Some("NoNameGroupDescription"), "http://data.knora.org/projects/images", true, false),
+                    CreateGroupApiRequestV1("", Some("NoNameGroupDescription"), SharedAdminTestData.IMAGES_PROJECT_IRI, true, false),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )
@@ -164,7 +165,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
                 updatedGroupInfo.name should equal ("UpdatedGroupName")
                 updatedGroupInfo.description should equal (Some("UpdatedDescription"))
-                updatedGroupInfo.project should equal ("http://data.knora.org/projects/images")
+                updatedGroupInfo.project should equal (SharedAdminTestData.IMAGES_PROJECT_IRI)
                 updatedGroupInfo.status should equal (true)
                 updatedGroupInfo.selfjoin should equal (false)
             }
@@ -224,7 +225,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
             "return all members of a group identified by shortname / project IRI combination" in {
                 actorUnderTest ! GroupMembersByNameGetRequestV1(
-                    projectIri = SharedAdminTestData.imagesProjectInfo.id,
+                    projectIri = IMAGES_PROJECT_IRI,
                     groupName = SharedAdminTestData.imagesReviewerGroupInfo.name,
                     userProfileV1 = SharedAdminTestData.rootUser
                 )
@@ -245,7 +246,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
             "return 'NotFound' when the group shortname / project IRI combination is unknown" in {
                 actorUnderTest ! GroupMembersByNameGetRequestV1(
-                    projectIri = SharedAdminTestData.imagesProjectInfo.id,
+                    projectIri = IMAGES_PROJECT_IRI,
                     groupName = "groupwrong",
                     SharedAdminTestData.rootUser
                 )

@@ -54,8 +54,8 @@ case class LoadOntologiesResponse() extends KnoraResponseV1 {
   * Requests all available information about a list of ontology entities (resource classes and/or properties). A successful response will be an
   * [[EntityInfoGetResponseV1]].
   *
-  * @param resourceClassIris the IRIs of the resource entities to be queried.
-  * @param propertyIris      the IRIs of the property entities to be queried.
+  * @param resourceClassIris the IRIs of the resource classes to be queried.
+  * @param propertyIris      the IRIs of the properties to be queried.
   * @param userProfile       the profile of the user making the request.
   */
 case class EntityInfoGetRequestV1(resourceClassIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1) extends OntologyResponderRequestV1
@@ -64,11 +64,11 @@ case class EntityInfoGetRequestV1(resourceClassIris: Set[IRI] = Set.empty[IRI], 
 /**
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
   *
-  * @param resourceEntityInfoMap a [[Map]] of resource entity IRIs to [[ResourceEntityInfoV2]] objects.
-  * @param propertyEntityInfoMap a [[Map]] of property entity IRIs to [[PropertyEntityInfoV2]] objects.
+  * @param resourceClassInfoMap a [[Map]] of resource class IRIs to [[ReadClassInfoV2]] objects.
+  * @param propertyInfoMap      a [[Map]] of property IRIs to [[ReadPropertyInfoV2]] objects.
   */
-case class EntityInfoGetResponseV1(resourceEntityInfoMap: Map[IRI, ResourceEntityInfoV2],
-                                   propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2])
+case class EntityInfoGetResponseV1(resourceClassInfoMap: Map[IRI, ReadClassInfoV2],
+                                   propertyInfoMap: Map[IRI, ReadPropertyInfoV2])
 
 
 /**
@@ -85,11 +85,11 @@ case class StandoffEntityInfoGetRequestV1(standoffClassIris: Set[IRI] = Set.empt
 /**
   * Represents assertions about one or more ontology entities (resource classes and/or properties).
   *
-  * @param standoffClassEntityInfoMap    a [[Map]] of resource entity IRIs to [[StandoffClassEntityInfoV2]] objects.
-  * @param standoffPropertyEntityInfoMap a [[Map]] of property entity IRIs to [[StandoffPropertyEntityInfoV2]] objects.
+  * @param standoffClassInfoMap    a [[Map]] of resource class IRIs to [[ReadClassInfoV2]] objects.
+  * @param standoffPropertyInfoMap a [[Map]] of property IRIs to [[ReadPropertyInfoV2]] objects.
   */
-case class StandoffEntityInfoGetResponseV1(standoffClassEntityInfoMap: Map[IRI, StandoffClassEntityInfoV2],
-                                           standoffPropertyEntityInfoMap: Map[IRI, StandoffPropertyEntityInfoV2])
+case class StandoffEntityInfoGetResponseV1(standoffClassInfoMap: Map[IRI, ReadClassInfoV2],
+                                           standoffPropertyInfoMap: Map[IRI, ReadPropertyInfoV2])
 
 /**
   * Requests information about all standoff classes that are a subclass of a data type standoff class. A successful response will be an
@@ -103,25 +103,25 @@ case class StandoffClassesWithDataTypeGetRequestV1(userProfile: UserProfileV1) e
 /**
   * Represents assertions about all standoff classes that are a subclass of a data type standoff class.
   *
-  * @param standoffClassEntityInfoMap a [[Map]] of resource entity IRIs to [[StandoffClassEntityInfoV2]] objects.
+  * @param standoffClassInfoMap a [[Map]] of resource class IRIs to [[ReadClassInfoV2]] objects.
   */
-case class StandoffClassesWithDataTypeGetResponseV1(standoffClassEntityInfoMap: Map[IRI, StandoffClassEntityInfoV2])
+case class StandoffClassesWithDataTypeGetResponseV1(standoffClassInfoMap: Map[IRI, ReadClassInfoV2])
 
 /**
-  * Requests information about all standoff property entities. A successful response will be an
-  * [[StandoffAllPropertyEntitiesGetResponseV1]].
+  * Requests information about all standoff properties. A successful response will be an
+  * [[StandoffAllPropertiesGetResponseV1]].
   *
   * @param userProfile the profile of the user making the request.
   */
-case class StandoffAllPropertyEntitiesGetRequestV1(userProfile: UserProfileV1) extends OntologyResponderRequestV1
+case class StandoffAllPropertiesGetRequestV1(userProfile: UserProfileV1) extends OntologyResponderRequestV1
 
 
 /**
   * Represents assertions about all standoff all standoff property entities.
   *
-  * @param standoffAllPropertiesEntityInfoMap a [[Map]] of resource entity IRIs to [[StandoffPropertyEntityInfoV2]] objects.
+  * @param standoffAllPropertiesInfoMap a [[Map]] of resource entity IRIs to [[ReadPropertyInfoV2]] objects.
   */
-case class StandoffAllPropertyEntitiesGetResponseV1(standoffAllPropertiesEntityInfoMap: Map[IRI, StandoffPropertyEntityInfoV2])
+case class StandoffAllPropertiesGetResponseV1(standoffAllPropertiesInfoMap: Map[IRI, ReadPropertyInfoV2])
 
 
 /**
@@ -217,7 +217,7 @@ case class PropertyTypesForNamedGraphResponseV1(properties: Seq[PropertyDefiniti
 /**
   * Gets all property types that are defined for the given resource class.
   *
-  * @param resourceClassIri the Iri of the resource class to query for.
+  * @param resourceClassIri the IRI of the resource class to query for.
   * @param userProfile      the profile of the user making the request.
   */
 case class PropertyTypesForResourceTypeGetRequestV1(resourceClassIri: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
@@ -264,11 +264,10 @@ case class NamedGraphEntityInfoRequestV1(namedGraphIri: IRI, userProfile: UserPr
 // Components of messages
 
 
-
 /**
   * Represents the assertions about a given named graph entity.
   *
-  * @param namedGraphIri   the Iri of the named graph.
+  * @param namedGraphIri   the IRI of the named graph.
   * @param resourceClasses the resource classes defined in the named graph.
   * @param propertyIris    the properties defined in the named graph.
   */
@@ -362,7 +361,7 @@ case class PropertyDefinitionInNamedGraphV1(id: IRI,
   * @param longname    the full name of the named graph.
   * @param description a description of the named graph.
   * @param project_id  the project belonging to the named graph.
-  * @param uri         the Iri of the named graph.
+  * @param uri         the IRI of the named graph.
   * @param active      indicates if this is named graph the user's project belongs to.
   */
 case class NamedGraphV1(id: IRI,

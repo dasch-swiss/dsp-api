@@ -34,9 +34,9 @@ object DateUtilV2 {
     /**
       * Represents a date as year, month, day including the given precision.
       *
-      * @param year the date's year.
-      * @param month the date's month.
-      * @param day the date's day.
+      * @param year      the date's year.
+      * @param month     the date's month.
+      * @param day       the date's day.
       * @param precision the given date's precision.
       */
     case class DateYearMonthDay(year: Int, month: Int, day: Int, precision: KnoraPrecisionV1.Value) {
@@ -52,20 +52,20 @@ object DateUtilV2 {
 
                 case KnoraPrecisionV1.YEAR =>
                     Map(
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartYear -> year
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear -> year
                     )
 
                 case KnoraPrecisionV1.MONTH =>
                     Map(
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartYear -> year,
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartMonth -> month
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear -> year,
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth -> month
                     )
 
                 case KnoraPrecisionV1.DAY =>
                     Map(
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartYear -> year,
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartMonth -> month,
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasStartDay -> day
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear -> year,
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth -> month,
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay -> day
                     )
 
             }
@@ -83,20 +83,20 @@ object DateUtilV2 {
 
                 case KnoraPrecisionV1.YEAR =>
                     Map(
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndYear -> year
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear -> year
                     )
 
                 case KnoraPrecisionV1.MONTH =>
                     Map(
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndYear -> year,
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndMonth -> month
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear -> year,
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth -> month
                     )
 
                 case KnoraPrecisionV1.DAY =>
                     Map(
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndYear -> year,
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndMonth -> month,
-                        OntologyConstants.KnoraApiV2WithValueObject.DateValueHasEndDay -> day
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear -> year,
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth -> month,
+                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay -> day
                     )
 
             }
@@ -110,8 +110,8 @@ object DateUtilV2 {
       * Converts a JDN to a [[DateYearMonthDay]] using the given calendar.
       *
       * @param julianDayNumber the Julian Day Number.
-      * @param precision the precision for the given JDN.
-      * @param calendar the calendar to which the JDN should be converted.
+      * @param precision       the precision for the given JDN.
+      * @param calendar        the calendar to which the JDN should be converted.
       * @return a [[DateYearMonthDay]].
       */
     def convertJDNToDate(julianDayNumber: Int, precision: KnoraPrecisionV1.Value, calendar: KnoraCalendarV1.Value): DateYearMonthDay = {

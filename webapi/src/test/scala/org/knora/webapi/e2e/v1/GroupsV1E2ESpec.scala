@@ -104,7 +104,7 @@ class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with GroupV1JsonPr
                        |{
                        |    "name": "NewGroup",
                        |    "description": "NewGroupDescription",
-                       |    "project": "http://data.knora.org/projects/images",
+                       |    "project": "${SharedAdminTestData.IMAGES_PROJECT_IRI}",
                        |    "status": true,
                        |    "selfjoin": false
                        |}
@@ -120,7 +120,7 @@ class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with GroupV1JsonPr
 
                 groupInfo.name should be ("NewGroup")
                 groupInfo.description should be (Some("NewGroupDescription"))
-                groupInfo.project should be ("http://data.knora.org/projects/images")
+                groupInfo.project should be (SharedAdminTestData.IMAGES_PROJECT_IRI)
                 groupInfo.status should be (true)
                 groupInfo.selfjoin should be (false)
 
@@ -149,7 +149,7 @@ class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with GroupV1JsonPr
 
                 groupInfo.name should be ("UpdatedGroupName")
                 groupInfo.description should be (Some("UpdatedGroupDescription"))
-                groupInfo.project should be ("http://data.knora.org/projects/images")
+                groupInfo.project should be (SharedAdminTestData.IMAGES_PROJECT_IRI)
                 groupInfo.status should be (true)
                 groupInfo.selfjoin should be (false)
 
@@ -167,7 +167,7 @@ class GroupsV1E2ESpec extends E2ESpec(GroupsV1E2ESpec.config) with GroupV1JsonPr
 
                 groupInfo.name should be ("UpdatedGroupName")
                 groupInfo.description should be (Some("UpdatedGroupDescription"))
-                groupInfo.project should be ("http://data.knora.org/projects/images")
+                groupInfo.project should be (SharedAdminTestData.IMAGES_PROJECT_IRI)
                 groupInfo.status should be (false)
                 groupInfo.selfjoin should be (false)
 

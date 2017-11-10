@@ -25,7 +25,7 @@ import org.eclipse.rdf4j.query.algebra
 import org.eclipse.rdf4j.query.parser.ParsedQuery
 import org.eclipse.rdf4j.query.parser.sparql._
 import org.eclipse.rdf4j.query.MalformedQueryException
-import org.knora.webapi.util.{InputValidation, search}
+import org.knora.webapi.util.{StringFormatter, search}
 import org.knora.webapi.util.search._
 import org.knora.webapi._
 
@@ -56,7 +56,7 @@ object SearchParserV2 {
         val visitor = new ConstructQueryModelVisitor
 
         val parsedQuery = try {
-            sparqlParser.parseQuery(query, OntologyConstants.KnoraApi.KnoraApiOntologyIri + OntologyConstants.KnoraApiV2Simplified.VersionSegment + "#")
+            sparqlParser.parseQuery(query, OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion)
         } catch {
             case malformed: MalformedQueryException => throw SparqlSearchException(s"Invalid search query: ${malformed.getMessage}")
         }
@@ -88,6 +88,8 @@ object SearchParserV2 {
 
         // The OFFSET specified in the input query.
         private var offset: Long = 0
+
+        private val stringFormatter = StringFormatter.getInstance
 
         /**
           * After this visitor has visited the parse tree, this method returns a [[ConstructQuery]] representing
@@ -144,7 +146,7 @@ object SearchParserV2 {
           * Returns the WHERE patterns found in the query.
           */
         private def getWherePatterns: Seq[QueryPattern] = {
-            wherePatterns.toVector
+            wherePatterns
         }
 
         private def unsupported(node: algebra.QueryModelNode) {
@@ -175,7 +177,7 @@ object SearchParserV2 {
             if (objVar.isAnonymous || objVar.isConstant) {
                 objVar.getValue match {
                     case iri: rdf4j.model.IRI =>
-                        if (InputValidation.isInternalEntityIri(iri.stringValue)) {
+                        if (stringFormatter.isInternalEntityIri(iri.stringValue)) {
                             throw SparqlSearchException(s"Internal ontology entity IRI not allowed in search query: $iri")
                         }
 
@@ -581,7 +583,7 @@ object SearchParserV2 {
                         valueConstant.getValue match {
                             case literal: rdf4j.model.Literal => XsdLiteral(value = literal.stringValue, datatype = literal.getDatatype.stringValue)
                             case iri: org.eclipse.rdf4j.model.IRI =>
-                                if (InputValidation.isInternalEntityIri(iri.stringValue)) {
+                                if (stringFormatter.isInternalEntityIri(iri.stringValue)) {
                                     throw SparqlSearchException(s"Internal ontology entity IRI not allowed in search query: $iri")
                                 }
 
