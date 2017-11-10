@@ -3,6 +3,8 @@ package org.knora.webapi.messages.v1.responder.permissionmessages
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1
 import org.scalatest.{Matchers, WordSpecLike}
+import SharedOntologyTestData._
+import SharedAdminTestData._
 
 /**
   * This spec is used to test subclasses of the [[UsersResponderRequestV1]] class.
@@ -13,8 +15,8 @@ class PermissionMessagesV1Spec extends WordSpecLike with Matchers {
 
         "return true if the user is allowed to create a resource (root user)" in {
 
-            val projectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI
-            val resourceClassIri = "http://www.knora.org/ontology/incunabula#book"
+            val projectIri = INCUNABULA_PROJECT_IRI
+            val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
             val result = SharedAdminTestData.rootUser.permissionData.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri, None)
 
@@ -24,8 +26,8 @@ class PermissionMessagesV1Spec extends WordSpecLike with Matchers {
 
         "return true if the user is allowed to create a resource (project admin user)" in {
 
-            val projectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI
-            val resourceClassIri = "http://www.knora.org/ontology/incunabula#book"
+            val projectIri = INCUNABULA_PROJECT_IRI
+            val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
             val result = SharedAdminTestData.incunabulaProjectAdminUser.permissionData.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri, None)
 
@@ -34,8 +36,8 @@ class PermissionMessagesV1Spec extends WordSpecLike with Matchers {
 
         "return true if the user is allowed to create a resource (project member user)" in {
 
-            val projectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI
-            val resourceClassIri = "http://www.knora.org/ontology/incunabula#book"
+            val projectIri = INCUNABULA_PROJECT_IRI
+            val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
             val result = SharedAdminTestData.incunabulaMemberUser.permissionData.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri, None)
 
@@ -44,8 +46,8 @@ class PermissionMessagesV1Spec extends WordSpecLike with Matchers {
 
 
         "return false if the user is not allowed to create a resource" in {
-            val projectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI
-            val resourceClassIri = "http://www.knora.org/ontology/incunabula#book"
+            val projectIri = INCUNABULA_PROJECT_IRI
+            val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
             val result = SharedAdminTestData.normalUser.permissionData.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri, None)
 
@@ -53,10 +55,10 @@ class PermissionMessagesV1Spec extends WordSpecLike with Matchers {
         }
 
         "return true if the user is allowed to create a resource (ProjectResourceCreateRestrictedPermission)" in {
-            val projectIri = SharedAdminTestData.IMAGES_PROJECT_IRI
-            val allowedResourceClassIri01 = "http://www.knora.org/ontology/images#bild"
-            val allowedResourceClassIri02 = "http://www.knora.org/ontology/images#bildformat"
-            val notAllowedResourceClassIri = "http://www.knora.org/ontology/images#person"
+            val projectIri = IMAGES_PROJECT_IRI
+            val allowedResourceClassIri01 = s"$IMAGES_ONTOLOGY_IRI#bild"
+            val allowedResourceClassIri02 = s"$IMAGES_ONTOLOGY_IRI#bildformat"
+            val notAllowedResourceClassIri = s"$IMAGES_ONTOLOGY_IRI#person"
 
             val result1 = SharedAdminTestData.imagesReviewerUser.permissionData.hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri01), projectIri, None)
             result1 should be(true)
@@ -66,8 +68,8 @@ class PermissionMessagesV1Spec extends WordSpecLike with Matchers {
         }
 
         "return false if the user is not allowed to create a resource (ProjectResourceCreateRestrictedPermission)" in {
-            val projectIri = SharedAdminTestData.IMAGES_PROJECT_IRI
-            val notAllowedResourceClassIri = "http://www.knora.org/ontology/images#person"
+            val projectIri = IMAGES_PROJECT_IRI
+            val notAllowedResourceClassIri = s"$IMAGES_ONTOLOGY_IRI#person"
 
             val result = SharedAdminTestData.imagesReviewerUser.permissionData.hasPermissionFor(ResourceCreateOperation(notAllowedResourceClassIri), projectIri, None)
             result should be(false)
@@ -77,14 +79,14 @@ class PermissionMessagesV1Spec extends WordSpecLike with Matchers {
     "querying the user's 'PermissionsProfileV1' with 'hasProjectAdminAllPermissionFor'" should {
 
         "return true if the user has the 'ProjectAdminAllPermission' (incunabula project admin user)" in {
-            val projectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI
+            val projectIri = INCUNABULA_PROJECT_IRI
             val result = SharedAdminTestData.incunabulaProjectAdminUser.permissionData.hasProjectAdminAllPermissionFor(projectIri)
 
             result should be(true)
         }
 
         "return false if the user has the 'ProjectAdminAllPermission' (incunabula member user)" in {
-            val projectIri = SharedAdminTestData.INCUNABULA_PROJECT_IRI
+            val projectIri = INCUNABULA_PROJECT_IRI
             val result = SharedAdminTestData.incunabulaMemberUser.permissionData.hasProjectAdminAllPermissionFor(projectIri)
 
             result should be(false)

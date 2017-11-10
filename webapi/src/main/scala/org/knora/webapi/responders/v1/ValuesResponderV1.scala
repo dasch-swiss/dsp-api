@@ -218,7 +218,7 @@ class ValuesResponderV1 extends Responder {
             // Everything seems OK, so create the value.
 
             unverifiedValue <- createValueV1AfterChecks(
-                dataNamedGraph = projectInfo.dataNamedGraph,
+                dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                 projectIri = resourceFullResponse.resinfo.get.project_id,
                 resourceIri = createValueRequest.resourceIri,
                 propertyIri = createValueRequest.propertyIri,
@@ -904,7 +904,7 @@ class ValuesResponderV1 extends Responder {
                         // We'll need to create a new LinkValue.
 
                         changeLinkValueV1AfterChecks(projectIri = currentValueQueryResult.projectIri,
-                            dataNamedGraph = projectInfo.dataNamedGraph,
+                            dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                             resourceIri = findResourceWithValueResult.resourceIri,
                             propertyIri = propertyIri,
                             currentLinkValueV1 = currentLinkValueQueryResult.value,
@@ -1004,7 +1004,7 @@ class ValuesResponderV1 extends Responder {
 
                 // Generate a SPARQL update.
                 sparqlUpdate = queries.sparql.v1.txt.changeComment(
-                    dataNamedGraph = projectInfo.dataNamedGraph,
+                    dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                     triplestore = settings.triplestoreType,
                     resourceIri = findResourceWithValueResult.resourceIri,
                     propertyIri = findResourceWithValueResult.propertyIri,
@@ -1119,7 +1119,7 @@ class ValuesResponderV1 extends Responder {
                         )
 
                         sparqlUpdate = queries.sparql.v1.txt.deleteLink(
-                            dataNamedGraph = projectInfo.dataNamedGraph,
+                            dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                             triplestore = settings.triplestoreType,
                             linkSourceIri = findResourceWithValueResult.resourceIri,
                             linkUpdate = sparqlTemplateLinkUpdate,
@@ -1169,7 +1169,7 @@ class ValuesResponderV1 extends Responder {
                         }
 
                         sparqlUpdate = queries.sparql.v1.txt.deleteValue(
-                            dataNamedGraph = projectInfo.dataNamedGraph,
+                            dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                             triplestore = settings.triplestoreType,
                             resourceIri = findResourceWithValueResult.resourceIri,
                             propertyIri = findResourceWithValueResult.propertyIri,
@@ -2169,7 +2169,7 @@ class ValuesResponderV1 extends Responder {
 
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.changeLink(
-                dataNamedGraph = projectInfo.dataNamedGraph,
+                dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                 triplestore = settings.triplestoreType,
                 linkSourceIri = resourceIri,
                 linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
@@ -2314,7 +2314,7 @@ class ValuesResponderV1 extends Responder {
 
             // Generate a SPARQL update.
             sparqlUpdate = queries.sparql.v1.txt.addValueVersion(
-                dataNamedGraph = projectInfo.dataNamedGraph,
+                dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,

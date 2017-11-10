@@ -311,5 +311,39 @@ class StringFormatterSpec extends CoreSpec() {
 
             println(s"Retrieve time for $totalDefs defs: ${retrieveEnd - retrieveStart}")
         }
+
+        "return the data named graph of a project without short code" in {
+            val shortname = SharedAdminTestData.incunabulaProjectInfo.shortname
+            val expected = s"http://www.knora.org/data/$shortname"
+            val result = stringFormatter.projectDataNamedGraph(SharedAdminTestData.incunabulaProjectInfo)
+            result should be(expected)
+        }
+
+        "return the data named graph of a project with short code" in {
+            val shortcode = SharedAdminTestData.imagesProjectInfo.shortcode.get
+            val shortname = SharedAdminTestData.imagesProjectInfo.shortname
+            val expected = s"http://www.knora.org/data/$shortcode/$shortname"
+            val result = stringFormatter.projectDataNamedGraph(SharedAdminTestData.imagesProjectInfo)
+            result should be(expected)
+        }
+
+        "validate project shortcode" in {
+            stringFormatter.validateProjectShortcode("00FF", () => throw AssertionException("not valid")) should be ("00FF")
+            stringFormatter.validateProjectShortcode("00ff", () => throw AssertionException("not valid")) should be ("00FF")
+            stringFormatter.validateProjectShortcode("12aF", () => throw AssertionException("not valid")) should be ("12AF")
+
+            an [AssertionException] should be thrownBy {
+                stringFormatter.validateProjectShortcode("000", () => throw AssertionException("not valid"))
+            }
+
+            an [AssertionException] should be thrownBy {
+                stringFormatter.validateProjectShortcode("00000", () => throw AssertionException("not valid"))
+            }
+
+            an [AssertionException] should be thrownBy {
+                stringFormatter.validateProjectShortcode("wxyz", () => throw AssertionException("not valid"))
+            }
+        }
+
     }
 }

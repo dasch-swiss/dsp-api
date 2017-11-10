@@ -24,6 +24,7 @@ import java.nio.ByteBuffer
 import java.util.{Base64, UUID}
 
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.util.IriConversions._
 
 object KnoraIdUtil {
@@ -135,12 +136,16 @@ class KnoraIdUtil {
     /**
       * Creates a new resource IRI based on a UUID.
       *
-      * @param projectCode the project's unique, short identifier.
+      * @param projectInfo the project's info.
       * @return a new resource IRI.
       */
-    def makeRandomResourceIri(projectCode: String): IRI = {
-        val knoraResourceUuid = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/$projectCode/$knoraResourceUuid"
+    def makeRandomResourceIri(projectInfo: ProjectInfoV1): IRI = {
+        val knoraResourceID = makeRandomBase64EncodedUuid
+        if (projectInfo.shortcode.isDefined) {
+            s"http://$IriDomain/${projectInfo.shortcode.get}/${projectInfo.shortname}/$knoraResourceID"
+        } else {
+            s"http://$IriDomain/${projectInfo.shortname}/$knoraResourceID"
+        }
     }
 
     /**
@@ -189,23 +194,35 @@ class KnoraIdUtil {
     }
 
     /**
-      * Creates a new project IRI based on a UUID.
+      * Creates a new project IRI based on a UUID or project shortcode.
       *
+      * @param maybeShortcode the optional project shortcode.
       * @return a new project IRI.
       */
-    def makeRandomProjectIri: IRI = {
-        val knoraProjectUuid = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/projects/$knoraProjectUuid"
+    def makeRandomProjectIri(maybeShortcode: Option[String]): IRI = {
+
+        if (maybeShortcode.isDefined) {
+            s"http://$IriDomain/projects/${maybeShortcode.get}"
+        } else {
+            val knoraProjectID = makeRandomBase64EncodedUuid
+            s"http://$IriDomain/projects/$knoraProjectID"
+        }
     }
 
     /**
       * Creates a new group IRI based on a UUID.
       *
+      * @param maybeShortcode the optional project shortcode.
       * @return a new group IRI.
       */
-    def makeRandomGroupIri: String = {
+    def makeRandomGroupIri(maybeShortcode: Option[String]): String = {
         val knoraGroupUuid = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/groups/$knoraGroupUuid"
+
+        if (maybeShortcode.isDefined) {
+            s"http://$IriDomain/groups/${maybeShortcode.get}/$knoraGroupUuid"
+        } else {
+            s"http://$IriDomain/groups/$knoraGroupUuid"
+        }
     }
 
     /**

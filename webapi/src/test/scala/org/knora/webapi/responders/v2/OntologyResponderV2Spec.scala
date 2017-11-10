@@ -49,25 +49,21 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 userProfile = userProfile
             )
 
-            expectMsgPF(timeout) {
-                case response: ReadEntityDefinitionsV2 =>
-                    response.ontologies should ===(Map("http://0.0.0.0:3333/ontology/foo/v2" -> Set.empty[IRI]))
-            }
+            val response = expectMsgType[ReadEntityDefinitionsV2](timeout)
+            response.ontologies should ===(Map("http://0.0.0.0:3333/ontology/foo/v2" -> Set.empty[IRI]))
         }
 
-        "create an empty ontology called 'example' with a project code" in {
+        "create an empty ontology called 'bar' with a project code" in {
 
             actorUnderTest ! CreateOntologyRequestV2(
-                ontologyName = "example",
+                ontologyName = "bar",
                 projectIri = projectWithProjectID,
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )
 
-            expectMsgPF(timeout) {
-                case response: ReadEntityDefinitionsV2 =>
-                    response.ontologies should ===(Map("http://0.0.0.0:3333/ontology/0000/example/v2" -> Set.empty[IRI]))
-            }
+            val response = expectMsgType[ReadEntityDefinitionsV2](timeout)
+            response.ontologies should ===(Map("http://0.0.0.0:3333/ontology/00FF/bar/v2" -> Set.empty[IRI]))
         }
 
         "not create 'foo' again" in {
@@ -83,9 +79,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "not create 'example' again" in {
+        "not create 'bar' again" in {
             actorUnderTest ! CreateOntologyRequestV2(
-                ontologyName = "example",
+                ontologyName = "bar",
                 projectIri = projectWithProjectID,
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile

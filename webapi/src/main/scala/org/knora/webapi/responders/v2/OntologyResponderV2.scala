@@ -27,7 +27,7 @@ import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsNamedGraphGetV1
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1, ProjectOntologyAddV1, ProjectsNamedGraphGetV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -1079,7 +1079,8 @@ class OntologyResponderV2 extends Responder {
                     throw UpdateNotPerformedException()
                 }
 
-                // TODO: tell the projects responder that the ontology was created, so it can add it to the project's admin data.
+                // tell the projects responder that the ontology was created, so it can add it to the project's admin data.
+                newProjectInfo <- (responderManager ? ProjectOntologyAddV1(createOntologyRequest.projectIri.toString, internalOntologyIri.toString, createOntologyRequest.apiRequestID)).mapTo[ProjectInfoV1]
 
                 externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)
 
@@ -1090,15 +1091,19 @@ class OntologyResponderV2 extends Responder {
 
         for {
             userProfile <- FastFuture.successful(createOntologyRequest.userProfile)
+            projectIri = createOntologyRequest.projectIri
 
-            // TODO: check whether the user is a project or system admin.
+            // check if the requesting user is allowed to create an ontology
+            _ = if (!userProfile.permissionData.isProjectAdmin(projectIri.toString) && !userProfile.permissionData.isSystemAdmin) {
+                // not a project or system admin
+                throw ForbiddenException("A new ontology can only be created by a project or system admin.")
+            }
 
-            // TODO: get a real project code from the projects responder.
-
-            projectCode: Option[String] = if (createOntologyRequest.ontologyName == "example") {
-                Some("0000")
-            } else {
-                None
+            // Get project info for the shortcode.
+            maybeProjectInfo: Option[ProjectInfoV1] <- (responderManager ? ProjectInfoByIRIGetV1(projectIri.toString, None)).mapTo[Option[ProjectInfoV1]]
+            projectCode: Option[String] = maybeProjectInfo match {
+                case Some(pi: ProjectInfoV1) => pi.shortcode
+                case None => throw NotFoundException(s"Project '$projectIri' cannot be found. Cannot add ontology to a nonexistent project.")
             }
 
             // Check that the ontology name is valid.

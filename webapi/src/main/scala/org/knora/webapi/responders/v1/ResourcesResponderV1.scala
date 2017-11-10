@@ -1211,11 +1211,11 @@ class ResourcesResponderV1 extends Responder {
                 )
             }.mapTo[ProjectInfoResponseV1]
 
-            namedGraph = projectInfoResponse.project_info.dataNamedGraph
+            namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfoResponse.project_info)
 
             // Create random IRIs for resources, collect in Map[clientResourceID, IRI]
             clientResourceIDsToResourceIris: Map[String, IRI] = new ErrorHandlingMap(
-                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info.shortname)).toMap,
+                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info)).toMap,
                 errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
                 errorFun = { errorMsg => throw BadRequestException(errorMsg) }
             )
@@ -1824,9 +1824,8 @@ class ResourcesResponderV1 extends Responder {
                 )
             }.mapTo[ProjectInfoResponseV1]
 
-            //namedGraph = settings.projectNamedGraphs(projectIri).data
-            namedGraph = projectInfoResponse.project_info.dataNamedGraph
-            resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info.shortname)
+            namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfoResponse.project_info)
+            resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info)
 
             // Check user's PermissionProfile (part of UserProfileV1) to see if the user has the permission to
             // create a new resource in the given project.
@@ -1900,7 +1899,7 @@ class ResourcesResponderV1 extends Responder {
 
                 // Create update sparql string
                 sparqlUpdate = queries.sparql.v1.txt.deleteResource(
-                    dataNamedGraph = projectInfo.dataNamedGraph,
+                    dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceDeleteRequest.resourceIri,
                     maybeDeleteComment = resourceDeleteRequest.deleteComment,
@@ -2005,7 +2004,7 @@ class ResourcesResponderV1 extends Responder {
                 }
 
                 // get the named graph the resource is contained in by the resource's project
-                namedGraph = projectInfo.dataNamedGraph
+                namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo)
 
                 // Make a timestamp to indicate when the resource was updated.
                 currentTime: String = Instant.now.toString

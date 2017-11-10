@@ -28,6 +28,8 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
+import org.knora.webapi.util.JavaUtil.Optional
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.JavaUtil.Optional
@@ -453,10 +455,6 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     private val NCNamePattern: String =
     """[\p{L}_][\p{L}0-9_.-]*"""
 
-    // A regex sub-pattern for project ideas, which consist of at least 4 hexadecimal digits.
-    private val ProjectIDPattern: String =
-        """\p{XDigit}{4,}"""
-
     // A regex for matching a string containing only an ontology prefix label or a local entity name.
     private val NCNameRegex: Regex = ("^" + NCNamePattern + "$").r
 
@@ -467,6 +465,13 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         "http://" + KnoraIdUtil.IriDomain + "/",
         "http://data.knora.org/"
     )
+
+    // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.
+    private val ProjectIDPattern: String =
+        """\p{XDigit}{4,4}"""
+
+    // A regex for matching a string containing the project ID.
+    private val ProjectIDRegex: Regex = ("^" + ProjectIDPattern + "$").r
 
     // A regex for the URL path of an API v2 ontology (built-in or project-specific).
     private val ApiV2OntologyUrlPathRegex: Regex = (
@@ -1560,6 +1565,34 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         urlPath match {
             case ApiV2OntologyUrlPathRegex(_, _, ontologyName, _) if !isBuiltInOntologyName(ontologyName) => true
             case _ => false
+        }
+    }
+
+    /**
+      * Given the projectInfo calculates the project's data named graph.
+      *
+      * @param projectInfo the project's [[ProjectInfoV1]].
+      * @return the IRI of the project's data named graph.
+      */
+    def projectDataNamedGraph(projectInfo: ProjectInfoV1): IRI = {
+        if (projectInfo.shortcode.isDefined) {
+            OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortcode.get + "/" + projectInfo.shortname
+        } else {
+            OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortname
+        }
+    }
+
+    /**
+      * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
+      *
+      * @param shortcode the project's shortcode.
+      * @return the short ode in upper case.
+      */
+    def validateProjectShortcode(shortcode: String, errorFun: () => Nothing): String = {
+
+        ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
+            case Some(value) => value
+            case None => errorFun()
         }
     }
 }

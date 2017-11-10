@@ -23,11 +23,11 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
 object OntologyV2R2RSpec {
-    private val userProfile = SharedAdminTestData.anythingUser1
+    private val userProfile = SharedAdminTestData.imagesUser01
     private val username = userProfile.userData.email.get
     private val password = "test"
     private val projectWithoutProjectID = SharedAdminTestData.ANYTHING_PROJECT_IRI
-    private val projectWithProjectID = SharedAdminTestData.ANYTHING_PROJECT_IRI // TODO: use a project that has a project ID, when one exists.
+    private val projectWithProjectID = SharedAdminTestData.IMAGES_PROJECT_IRI
 }
 
 /**
@@ -256,7 +256,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
                 responseJsonDoc.body.value(OntologyConstants.KnoraApiV2WithValueObjects.HasOntologiesWithClasses) match {
                     case ontologies: JsonLDObject =>
-                        assert(ontologies.value("http://0.0.0.0:3333/ontology/0000/example/v2") == JsonLDArray(Seq.empty[JsonLDValue]))
+                        assert(ontologies.value("http://0.0.0.0:3333/ontology/00FF/example/v2") == JsonLDArray(Seq.empty[JsonLDValue]))
                     case _ => throw AssertionException(s"Unexpected response: $responseJsonDoc")
                 }
             }
