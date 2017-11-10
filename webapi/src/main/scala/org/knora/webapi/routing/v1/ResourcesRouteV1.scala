@@ -385,7 +385,7 @@ object ResourcesRouteV1 extends Authenticator {
                     ontologyIrisFromCardinalities: Set[IRI] = entityInfoResponse.resourceClassInfoMap.foldLeft(Set.empty[IRI]) {
                         case (acc, (resourceClassIri, resourceClassInfo)) =>
                             val resourceCardinalityOntologies: Set[IRI] = resourceClassInfo.cardinalities.map {
-                                case (propertyIri, _) => propertyIri.toSmartIri.getOntology.toString
+                                case (propertyIri, _) => propertyIri.toSmartIri.getOntologyFromEntity.toString
                             }.toSet
 
                             acc ++ resourceCardinalityOntologies
@@ -399,7 +399,7 @@ object ResourcesRouteV1 extends Authenticator {
                                 throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
                             }
 
-                            propertyObjectClassConstraint.toSmartIri.getOntology.toString
+                            propertyObjectClassConstraint.toSmartIri.getOntologyFromEntity.toString
                     }.toSet -- intermediateResults.keySet - initialOntologyIri
 
                     // Make a set of all the ontologies referenced by the initial ontology.

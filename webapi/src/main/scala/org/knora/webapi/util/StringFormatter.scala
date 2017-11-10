@@ -111,10 +111,9 @@ object StringFormatter {
     /*
 
     In order to parse project-specific API v2 ontology IRIs, the StringFormatter
-    class contains regular expressions that are generated based on the Knora API server's
-    hostname, which is set in application.conf, which is not read until the Akka
-    ActorSystem starts. Therefore, IRI parsing is done in the StringFormatter
-    class, rather than in the StringFormatter object.
+    class needs the Knora API server's hostname, which is set in application.conf,
+    which is not read until the Akka ActorSystem starts. Therefore, IRI parsing is
+    done in the StringFormatter class, rather than in the StringFormatter object.
 
     There are two instances of StringFormatter, defined below.
 
@@ -213,12 +212,6 @@ object StringFormatter {
                                     entityName: Option[String] = None,
                                     ontologySchema: OntologySchema,
                                     isBuiltInDef: Boolean = false)
-
-    /**
-      * A cache that maps IRI strings to [[SmartIri]] instances. To keep the cache from getting too large,
-      * Knora data IRIs are not cached.
-      */
-    private lazy val smartIriCache = new ConcurrentHashMap[IRI, SmartIri](120000)
 }
 
 /**
@@ -250,26 +243,24 @@ object IriConversions {
 }
 
 /**
-  * Represents a parsed IRI as an instance of [[rdf4j.model.IRI]] with additional Knora-specific functionality.
+  * Represents a parsed IRI with Knora-specific functionality.
   */
 sealed trait SmartIri extends Ordered[SmartIri] {
-    val rdf4jIri: rdf4j.model.IRI
 
     /*
 
     The smart IRI implementation, SmartIriImpl, is nested in the StringFormatter
-    class because it needs access to private members of that class (especially the
-    regular expressions that are computed when a StringFormatter instance is
-    constructed). However, this means that the type of a SmartIriImpl instance is
-    dependent on the instance of StringFormatter that constructed it. Therefore,
-    you can't compare two instances of SmartIriImpl created by two different
-    instances of StringFormatter.
+    class because it uses the Knora API server's hostname, which isn't available
+    until the Akka ActorSystem has started. However, this means that the type of a
+    SmartIriImpl instance is dependent on the instance of StringFormatter that
+    constructed it. Therefore, you can't compare two instances of SmartIriImpl
+    created by two different instances of StringFormatter.
 
     To make it possible to compare smart IRI objects, the publicly visible smart IRI
     type is the SmartIri trait. Since SmartIri is a top-level definition, two instances
     of SmartIri can be compared, even if they were made by different instances of
     StringFormatter. To make this work, SmartIri provides its own equals and hashCode
-    methods, which delegate to the rdf4j.model.IRI object.
+    methods, which delegate to the string representation of the IRI.
 
      */
 
@@ -330,7 +321,7 @@ sealed trait SmartIri extends Ordered[SmartIri] {
     /**
       * If this is an ontology entity IRI, returns its ontology IRI.
       */
-    def getOntology: SmartIri
+    def getOntologyFromEntity: SmartIri
 
     /**
       * If this is a Knora ontology or entity IRI, returns the name of the ontology. Otherwise, throws [[DataConversionException]].
@@ -375,14 +366,14 @@ sealed trait SmartIri extends Ordered[SmartIri] {
 
     override def equals(obj: scala.Any): Boolean = {
         obj match {
-            case that: SmartIri => rdf4jIri == that.rdf4jIri
+            case that: SmartIri => this.toString == that.toString
             case _ => false
         }
     }
 
-    override def hashCode: Int = this.rdf4jIri.hashCode
+    override def hashCode: Int = toString.hashCode
 
-    def compare(that: SmartIri): Int = this.toString.compare(that.toString)
+    def compare(that: SmartIri): Int = toString.compare(that.toString)
 }
 
 /**
@@ -392,16 +383,23 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
     import StringFormatter._
 
-    private val valueFactory = SimpleValueFactory.getInstance()
-
     // Valid URL schemes.
     private val schemes = Array("http", "https")
 
     // A validator for URLs.
     private val urlValidator = new UrlValidator(schemes, UrlValidator.ALLOW_LOCAL_URLS) // local urls are URL-encoded Knora IRIs as part of the whole URL
 
-    // If true, this is the instance of StringFormatter that is intended for use only with constant ontologies.
-    private val constantOntologiesOnly: Boolean = knoraApiHostAndPort.isEmpty
+    // The hostname used in internal Knora IRIs.
+    private val InternalIriHostname = "www.knora.org"
+
+    // The hostname used in built-in Knora API v2 IRIs.
+    private val BuiltInKnoraApiHostname = "api.knora.org"
+
+    // The strings that Knora data IRIs can start with.
+    private val DataIriStarts: Set[String] = Set(
+        "http://" + KnoraIdUtil.IriDomain + "/",
+        "http://data.knora.org/"
+    )
 
     // Reserved words that cannot be used in project-specific ontology names.
     private val reservedIriWords = Set("knora", "ontology", "simple")
@@ -458,14 +456,6 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     // A regex for matching a string containing only an ontology prefix label or a local entity name.
     private val NCNameRegex: Regex = ("^" + NCNamePattern + "$").r
 
-    /**
-      * The strings that Knora data IRIs can start with.
-      */
-    private val DataIriStarts: Set[String] = Set(
-        "http://" + KnoraIdUtil.IriDomain + "/",
-        "http://data.knora.org/"
-    )
-
     // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.
     private val ProjectIDPattern: String =
         """\p{XDigit}{4,4}"""
@@ -480,82 +470,11 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")$"
         ).r
 
-    // A regex for any internal ontology (built-in or project-specific).
-    private val InternalOntologyRegex: Regex = (
-        "^" + OntologyConstants.KnoraInternal.InternalOntologyStart + "((" +
-            ProjectIDPattern + ")/)?(" + NCNamePattern + ")$"
-        ).r
-
-    // A regex for the IRI of an entity in any internal ontology (built-in or project-specific).
-    private val InternalOntologyEntityRegex: Regex = (
-        "^" + OntologyConstants.KnoraInternal.InternalOntologyStart + "((" +
-            ProjectIDPattern + ")/)?(" + NCNamePattern + ")#(" + NCNamePattern + ")$"
-        ).r
-
-    // A regex for the IRI of any built-in API v2 simple ontology (knora-api, salsah-gui, etc.).
-    private val BuiltInApiV2SimpleOntologyRegex: Regex = (
-        "^" + OntologyConstants.KnoraApi.ApiOntologyHostname + "/ontology/(" +
-            NCNamePattern + ")" + OntologyConstants.KnoraApiV2Simple.VersionSegment + "$"
-        ).r
-
-    // A regex for the IRI of any built-in API v2 with value objects ontology (knora-api, salsah-gui, etc.).
-    private val BuiltInApiV2WithValueObjectsOntologyRegex: Regex = (
-        "^" + OntologyConstants.KnoraApi.ApiOntologyHostname + "/ontology/(" +
-            NCNamePattern + ")" + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "$"
-        ).r
-
-    // A regex for the IRI of an entity in any built-in API v2 simple ontology (knora-api, salsah-gui, etc.).
-    private val BuiltInApiV2SimpleOntologyEntityRegex = (
-        "^" + OntologyConstants.KnoraApi.ApiOntologyHostname + "/ontology/(" +
-            NCNamePattern + ")" + OntologyConstants.KnoraApiV2Simple.VersionSegment + "#(" + NCNamePattern + ")$"
-        ).r
-
-    // A regex for the IRI of an entity in any built-in API v2 with value objects ontology (knora-api, salsah-gui, etc.).
-    private val BuiltInApiV2WithValueObjectsOntologyEntityRegex = (
-        "^" + OntologyConstants.KnoraApi.ApiOntologyHostname + "/ontology/(" +
-            NCNamePattern + ")" + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "#(" + NCNamePattern + ")$"
-        ).r
-
     // The start of the IRI of a project-specific API v2 ontology that is served by this API server.
     private val MaybeProjectSpecificApiV2OntologyStart: Option[String] = knoraApiHostAndPort match {
         case Some(hostAndPort) => Some("http://" + hostAndPort + "/ontology/")
         case None => None
     }
-
-    // A regex for the IRI of a project-specific API v2 ontology that is served by this server, with the simple schema.
-    private val MaybeProjectSpecificApiV2SimpleOntologyRegex: Option[Regex] =
-        MaybeProjectSpecificApiV2OntologyStart.map {
-            startStr =>
-                ("^" + startStr + "((" +
-                    ProjectIDPattern + ")/)?(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2Simple.VersionSegment + "$").r
-        }
-
-    // A regex for the IRI of a project-specific API v2 ontology that is served by this server, with the value object schema.
-    private val MaybeProjectSpecificApiV2WithValueObjectsOntologyRegex: Option[Regex] =
-        MaybeProjectSpecificApiV2OntologyStart.map {
-            startStr =>
-                ("^" + startStr + "((" +
-                    ProjectIDPattern + ")/)?(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "$").r
-        }
-
-    // A regex for the IRI of an entity in a project-specific API v2 simple ontology that is served by this server.
-    private val MaybeProjectSpecificApiV2SimpleOntologyEntityRegex: Option[Regex] =
-        MaybeProjectSpecificApiV2OntologyStart.map {
-            startStr =>
-                ("^" + startStr + "((" +
-                    ProjectIDPattern + ")/)?(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2Simple.VersionSegment +
-                    "#(" + NCNamePattern + ")$").r
-        }
-
-
-    // A regex for the IRI of an entity in a project-specific API v2 with value objects ontology that is served by this server.
-    private val MaybeProjectSpecificApiV2WithValueObjectsOntologyEntityRegex: Option[Regex] =
-        MaybeProjectSpecificApiV2OntologyStart.map {
-            startStr =>
-                ("^" + startStr + "((" +
-                    ProjectIDPattern + ")/)?(" + NCNamePattern + ")" + OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment +
-                    "#(" + NCNamePattern + ")$").r
-        }
 
     // A regex for a project-specific XML import namespace.
     private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
@@ -593,25 +512,25 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * The implementation of [[SmartIri]]. An instance of this class can only be constructed by [[StringFormatter]].
       * The constructor validates and parses the IRI.
       *
-      * @param iri      the IRI string to be parsed.
+      * @param iriStr   the IRI string to be parsed.
       * @param errorFun a function that throws an exception. It will be called if the IRI is invalid.
       */
-    private class SmartIriImpl(iri: IRI, errorFun: () => Nothing) extends SmartIri {
+    private class SmartIriImpl(iriStr: IRI, errorFun: () => Nothing) extends SmartIri {
         def this(iri: IRI) = this(iri, () => throw DataConversionException(s"Couldn't parse IRI: $iri"))
 
-        override val rdf4jIri: rdf4j.model.IRI = try {
-            valueFactory.createIRI(validateAndEscapeIri(iri, errorFun))
-        } catch {
-            case _: Exception => errorFun()
-        }
+        private val iri = validateAndEscapeIri(iriStr, errorFun)
 
-        private val isKnoraData = isKnoraDataIriStr(iri)
-
-        private def parseApiV2VersionSegments(segments: Array[String]): ApiV2Schema = {
+        /**
+          * Determines the API v2 schema of an external IRI.
+          *
+          * @param segments the segments of the namespace.
+          * @return the IRI's API schema.
+          */
+        private def parseApiV2VersionSegments(segments: Vector[String]): ApiV2Schema = {
             val lastSegment = segments.last
             val lastTwoSegments = segments.slice(segments.length - 2, segments.length)
 
-            if (lastTwoSegments.sameElements(Array("simple", "v2"))) {
+            if (lastTwoSegments == Vector("simple", "v2")) {
                 ApiV2Simple
             } else if (lastSegment == "v2") {
                 ApiV2WithValueObjects
@@ -619,201 +538,101 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                 errorFun()
             }
         }
-/*
-        private val iriInfo = if (isKnoraData) {
-            SmartIriInfo(
-                iriType = KnoraDataIri,
-                ontologySchema = InternalSchema
-            )
-        } else {
-            val namespace = rdf4jIri.getNamespace
-            val body = namespace.substring(namespace.indexOf("//") + 2)
-            val segments = body.split('/')
 
-            val hostname = segments.head
-
-            val ontologySchema = hostname match {
-                case "www.knora.org" => InternalSchema
-                case "api.knora.org" => parseApiV2VersionSegments(segments)
-                case _ =>
-                    knoraApiHostAndPort match {
-                        case Some(hostAndPort) =>
-                            if (hostname == hostAndPort) {
-                                parseApiV2VersionSegments(segments)
-                            } else {
-                                NonKnoraSchema
-                            }
-                    }
-            }
-
-            val projectCode = ontologySchema match {
-                case _: KnoraSchema =>
-                    if (segments(1) != "ontology") {
-                        errorFun()
-                    }
-            }
-
-        }
-*/
-
-        // Is it an internal Knora ontology or entity IRI?
-        private val iriInfo: SmartIriInfo = iri match {
-            case InternalOntologyRegex(_, Optional(projectCode), ontologyName) =>
+        // Extract Knora-specific information from the IRI.
+        private val iriInfo = try {
+            if (isKnoraDataIriStr(iri)) {
+                // This is a Knora data IRI. Nothing else to do.
                 SmartIriInfo(
-                    iriType = KnoraDefinitionIri,
-                    projectCode = projectCode,
-                    ontologyName = Some(ontologyName),
-                    ontologySchema = InternalSchema,
-                    isBuiltInDef = isBuiltInOntologyName(ontologyName)
+                    iriType = KnoraDataIri,
+                    ontologySchema = InternalSchema
                 )
+            } else {
+                // If this is an entity IRI in a hash namespace, separate the entity name from the namespace.
 
-            case InternalOntologyEntityRegex(_, Optional(projectCode), ontologyName, entityName) =>
-                SmartIriInfo(
-                    iriType = KnoraDefinitionIri,
-                    projectCode = projectCode,
-                    ontologyName = Some(ontologyName),
-                    entityName = Some(entityName),
-                    ontologySchema = InternalSchema,
-                    isBuiltInDef = isBuiltInOntologyName(ontologyName)
-                )
+                val hashPos = iri.lastIndexOf('#')
 
-            case _ =>
-                // Is this a data IRI?
-                if (isKnoraDataIriStr(iri)) {
-                    SmartIriInfo(
-                        iriType = KnoraDataIri,
-                        ontologySchema = InternalSchema
-                    )
+                val (namespace: String, entityName: Option[String]) = if (hashPos >= 0 && hashPos < iri.length) {
+                    (iri.substring(0, hashPos), Some(iri.substring(hashPos + 1)))
                 } else {
-                    iri match {
-                        case BuiltInApiV2SimpleOntologyRegex(ontologyName) =>
-                            if (!isBuiltInOntologyName(ontologyName)) {
-                                errorFun()
-                            }
-
-                            SmartIriInfo(
-                                iriType = KnoraDefinitionIri,
-                                ontologyName = Some(ontologyName),
-                                ontologySchema = ApiV2Simple,
-                                isBuiltInDef = true
-                            )
-
-                        case BuiltInApiV2WithValueObjectsOntologyRegex(ontologyName) =>
-                            if (!isBuiltInOntologyName(ontologyName)) {
-                                errorFun()
-                            }
-
-                            SmartIriInfo(
-                                iriType = KnoraDefinitionIri,
-                                ontologyName = Some(ontologyName),
-                                ontologySchema = ApiV2WithValueObjects,
-                                isBuiltInDef = true
-                            )
-
-                        case BuiltInApiV2SimpleOntologyEntityRegex(ontologyName, entityName) =>
-                            if (!isBuiltInOntologyName(ontologyName)) {
-                                errorFun()
-                            }
-
-                            SmartIriInfo(
-                                iriType = KnoraDefinitionIri,
-                                projectCode = None,
-                                ontologyName = Some(ontologyName),
-                                entityName = Some(entityName),
-                                ontologySchema = ApiV2Simple,
-                                isBuiltInDef = true
-                            )
-
-                        case BuiltInApiV2WithValueObjectsOntologyEntityRegex(ontologyName, entityName) =>
-                            if (!isBuiltInOntologyName(ontologyName)) {
-                                errorFun()
-                            }
-
-                            SmartIriInfo(
-                                iriType = KnoraDefinitionIri,
-                                ontologyName = Some(ontologyName),
-                                entityName = Some(entityName),
-                                ontologySchema = ApiV2WithValueObjects,
-                                isBuiltInDef = true
-                            )
-
-                        case _ =>
-                            if (!constantOntologiesOnly) {
-                                val ProjectSpecificApiV2SimpleOntologyRegex = requireRegex(MaybeProjectSpecificApiV2SimpleOntologyRegex)
-                                val ProjectSpecificApiV2WithValueObjectsOntologyRegex = requireRegex(MaybeProjectSpecificApiV2WithValueObjectsOntologyRegex)
-                                val ProjectSpecificApiV2SimpleOntologyEntityRegex = requireRegex(MaybeProjectSpecificApiV2SimpleOntologyEntityRegex)
-                                val ProjectSpecificApiV2WithValueObjectsOntologyEntityRegex = requireRegex(MaybeProjectSpecificApiV2WithValueObjectsOntologyEntityRegex)
-
-                                iri match {
-                                    case ProjectSpecificApiV2SimpleOntologyRegex(_, Optional(projectCode), ontologyName) =>
-                                        if (isBuiltInOntologyName(ontologyName)) {
-                                            errorFun()
-                                        }
-
-                                        SmartIriInfo(
-                                            iriType = KnoraDefinitionIri,
-                                            projectCode = projectCode,
-                                            ontologyName = Some(ontologyName),
-                                            entityName = None,
-                                            ontologySchema = ApiV2Simple
-                                        )
-
-                                    case ProjectSpecificApiV2WithValueObjectsOntologyRegex(_, Optional(projectCode), ontologyName) =>
-                                        if (isBuiltInOntologyName(ontologyName)) {
-                                            errorFun()
-                                        }
-
-                                        SmartIriInfo(
-                                            iriType = KnoraDefinitionIri,
-                                            projectCode = projectCode,
-                                            ontologyName = Some(ontologyName),
-                                            entityName = None,
-                                            ontologySchema = ApiV2WithValueObjects
-                                        )
-
-                                    case ProjectSpecificApiV2SimpleOntologyEntityRegex(_, Optional(projectCode), ontologyName, entityName) =>
-                                        if (isBuiltInOntologyName(ontologyName)) {
-                                            errorFun()
-                                        }
-
-                                        SmartIriInfo(
-                                            iriType = KnoraDefinitionIri,
-                                            projectCode = projectCode,
-                                            ontologyName = Some(ontologyName),
-                                            entityName = Some(entityName),
-                                            ontologySchema = ApiV2Simple
-                                        )
-
-                                    case ProjectSpecificApiV2WithValueObjectsOntologyEntityRegex(_, Optional(projectCode), ontologyName, entityName) =>
-                                        if (isBuiltInOntologyName(ontologyName)) {
-                                            errorFun()
-                                        }
-
-                                        SmartIriInfo(
-                                            iriType = KnoraDefinitionIri,
-                                            projectCode = projectCode,
-                                            ontologyName = Some(ontologyName),
-                                            entityName = Some(entityName),
-                                            ontologySchema = ApiV2WithValueObjects
-                                        )
-
-                                    case _ => UnknownIriInfo
-                                }
-                            } else {
-                                UnknownIriInfo
-                            }
-                    }
+                    (iri, None)
                 }
-        }
 
-        private def requireRegex(maybeRegex: Option[Regex]): Regex = {
-            maybeRegex match {
-                case Some(regex) => regex
-                case None => throw AssertionException("Format of project-specific IRIs was not initialised")
+                // Remove the URL scheme (http://), and split the remainder of the namespace into slash-delimited segments.
+                val body = namespace.substring(namespace.indexOf("//") + 2)
+                val segments = body.split('/').toVector
+
+                // Determine the ontology schema by looking at the hostname and the version segment.
+
+                val hostname = segments.head
+
+                val ontologySchema = hostname match {
+                    case InternalIriHostname => InternalSchema
+                    case BuiltInKnoraApiHostname => parseApiV2VersionSegments(segments)
+
+                    case _ =>
+                        // If our StringFormatter instance was initialised with the Knora API server's hostname,
+                        // use that to identify project-specific Knora API v2 IRIs.
+                        knoraApiHostAndPort match {
+                            case Some(hostAndPort) =>
+                                if (hostname == hostAndPort) {
+                                    parseApiV2VersionSegments(segments)
+                                } else {
+                                    NonKnoraSchema
+                                }
+
+                            case None =>
+                                // If we don't recognise the hostname, this isn't a Knora IRI.
+                                NonKnoraSchema
+                        }
+                }
+
+                // If this is a Knora IRI, get its name and optional project code.
+                ontologySchema match {
+                    case _: KnoraSchema =>
+                        // A Knora IRI must have "ontology" as its second segment.
+                        if (segments(1) != "ontology") {
+                            errorFun()
+                        }
+
+                        // Determine the length of the version segment, if any.
+                        val versionSegmentsLength = ontologySchema match {
+                            case InternalSchema => 0
+                            case ApiV2WithValueObjects => 1
+                            case ApiV2Simple => 2
+                            case NonKnoraSchema => throw AssertionException("Unreachable code")
+                        }
+
+                        // Make a Vector containing just the optional project code and the ontology name.
+                        val projectCodeAndOntologyName: Vector[String] = segments.slice(2, segments.length - versionSegmentsLength)
+
+                        // Extract the ontology name.
+                        val ontologyName = validateNCName(projectCodeAndOntologyName.last, errorFun)
+
+                        // Extract the project code.
+                        val projectCode: Option[String] = if (projectCodeAndOntologyName.length == 2) {
+                            Some(validateProjectShortcode(projectCodeAndOntologyName.head, errorFun))
+                        } else {
+                            None
+                        }
+
+                        SmartIriInfo(
+                            iriType = KnoraDefinitionIri,
+                            projectCode = projectCode,
+                            ontologyName = Some(ontologyName),
+                            entityName = entityName,
+                            ontologySchema = ontologySchema,
+                            isBuiltInDef = isBuiltInOntologyName(ontologyName)
+                        )
+
+                    case _ => UnknownIriInfo
+                }
             }
+        } catch {
+            case _: Exception => errorFun()
         }
 
-        override def toString: String = rdf4jIri.toString
+        override def toString: String = iri
 
         override def isKnoraDataIri: Boolean = iriInfo.iriType == KnoraDataIri
 
@@ -841,25 +660,39 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
         override def getProjectCode: Option[String] = iriInfo.projectCode
 
-        override def getOntology: SmartIri = {
-            if (isKnoraOntologyIri) {
-                this
+        lazy val ontologyFromEntity: SmartIri = if (isKnoraOntologyIri) {
+            this
+        } else {
+            val lastHashPos = iri.lastIndexOf('#')
+
+            val entityDelimPos = if (lastHashPos >= 0) {
+                lastHashPos
             } else {
-                new SmartIriImpl(rdf4jIri.getNamespace.stripSuffix("#").stripSuffix("/"))
+                val lastSlashPos = iri.lastIndexOf('/')
+
+                if (lastSlashPos < iri.length - 1) {
+                    lastSlashPos
+                } else {
+                    throw DataConversionException(s"Can't interpret IRI $iri as an entity IRI")
+                }
             }
+
+            new SmartIriImpl(iri.substring(0, entityDelimPos))
         }
+
+        override def getOntologyFromEntity: SmartIri = ontologyFromEntity
 
         override def getOntologyName: String = {
             iriInfo.ontologyName match {
                 case Some(name) => name
-                case None => throw DataConversionException(s"Expected a Knora ontology IRI: $rdf4jIri")
+                case None => throw DataConversionException(s"Expected a Knora ontology IRI: $iri")
             }
         }
 
         override def getEntityName: String = {
             iriInfo.entityName match {
                 case Some(name) => name
-                case None => throw DataConversionException(s"Expected a Knora entity IRI: $rdf4jIri")
+                case None => throw DataConversionException(s"Expected a Knora entity IRI: $iri")
             }
         }
 
@@ -878,7 +711,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
         override def toOntologySchema(targetSchema: OntologySchema): SmartIri = {
             if (targetSchema == NonKnoraSchema) {
-                throw DataConversionException(s"Cannot convert IRI to non-Knora schema: $rdf4jIri")
+                throw DataConversionException(s"Cannot convert IRI to non-Knora schema: $iri")
             }
 
             if (!isKnoraDefinitionIri || iriInfo.ontologySchema == targetSchema) {
@@ -888,26 +721,26 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                     if (iriInfo.ontologySchema == InternalSchema) {
                         targetSchema match {
                             case externalSchema: ApiV2Schema => internalToExternalOntologyIri(externalSchema)
-                            case _ => throw DataConversionException(s"Cannot convert $rdf4jIri to $targetSchema")
+                            case _ => throw DataConversionException(s"Cannot convert $iri to $targetSchema")
                         }
                     } else if (targetSchema == InternalSchema) {
                         externalToInternalOntologyIri
                     } else {
-                        throw DataConversionException(s"Cannot convert IRI $rdf4jIri from ${iriInfo.ontologySchema} to $targetSchema")
+                        throw DataConversionException(s"Cannot convert IRI $iri from ${iriInfo.ontologySchema} to $targetSchema")
                     }
                 } else if (isKnoraOntologyEntityIri) {
                     if (iriInfo.ontologySchema == InternalSchema) {
                         targetSchema match {
                             case externalSchema: ApiV2Schema => internalToExternalOntologyEntityIri(externalSchema)
-                            case _ => throw DataConversionException(s"Cannot convert $rdf4jIri to $targetSchema")
+                            case _ => throw DataConversionException(s"Cannot convert $iri to $targetSchema")
                         }
                     } else if (targetSchema == InternalSchema) {
                         externalToInternalOntologyEntityIri
                     } else {
-                        throw DataConversionException(s"Cannot convert $rdf4jIri to $targetSchema")
+                        throw DataConversionException(s"Cannot convert $iri to $targetSchema")
                     }
                 } else {
-                    throw AssertionException(s"IRI $rdf4jIri is a Knora IRI, but is neither an ontology IRI nor an entity IRI")
+                    throw AssertionException(s"IRI $iri is a Knora IRI, but is neither an ontology IRI nor an entity IRI")
                 }
             }
         }
@@ -937,7 +770,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
         private def internalToExternalOntologyEntityIri(targetSchema: ApiV2Schema): SmartIri = {
             val entityName = getEntityName
-            val convertedOntologyIri = getOntology.toOntologySchema(targetSchema)
+            val convertedOntologyIri = getOntologyFromEntity.toOntologySchema(targetSchema)
             val convertedEntityIriStr = convertedOntologyIri.toString + "#" + entityName
             new SmartIriImpl(convertedEntityIriStr)
         }
@@ -1006,24 +839,22 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
         override def fromLinkValuePropToLinkProp: SmartIri = {
             if (!isKnoraOntologyEntityIri) {
-                throw DataConversionException(s"IRI $rdf4jIri is not a Knora entity IRI, so it cannot be a link value property IRI")
+                throw DataConversionException(s"IRI $iri is not a Knora entity IRI, so it cannot be a link value property IRI")
             }
 
-            val iriStr = rdf4jIri.toString
-
-            if (iriStr.endsWith("Value")) {
-                new SmartIriImpl(iriStr.substring(0, iriStr.length - "Value".length))
+            if (iri.endsWith("Value")) {
+                new SmartIriImpl(iri.substring(0, iri.length - "Value".length))
             } else {
-                throw InconsistentTriplestoreDataException(s"Link value predicate IRI $iriStr does not end with 'Value'")
+                throw InconsistentTriplestoreDataException(s"Link value predicate IRI $iri does not end with 'Value'")
             }
         }
 
         override def fromLinkPropToLinkValueProp: SmartIri = {
             if (!isKnoraOntologyEntityIri) {
-                throw DataConversionException(s"IRI $rdf4jIri is not a Knora entity IRI, so it cannot be a link property IRI")
+                throw DataConversionException(s"IRI $iri is not a Knora entity IRI, so it cannot be a link property IRI")
             }
 
-            new SmartIriImpl(rdf4jIri.toString + "Value")
+            new SmartIriImpl(iri + "Value")
         }
     }
 
@@ -1034,17 +865,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @param iri the IRI string to be parsed.
       */
     def toSmartIri(iri: IRI, requireInternal: Boolean = false): SmartIri = {
-        // Is this a Knora data IRI?
-        val smartIri: SmartIri = if (!isKnoraDataIriStr(iri)) {
-            // No. Return it from the cache, or cache it if it's not already cached.
-            smartIriCache.computeIfAbsent(
-                iri,
-                JavaUtil.function({ _ => new SmartIriImpl(iri) })
-            )
-        } else {
-            // Yes. Convert it to a SmartIri without caching it.
-            new SmartIriImpl(iri)
-        }
+        val smartIri = new SmartIriImpl(iri)
 
         if (requireInternal && smartIri.getOntologySchema != InternalSchema) {
             throw DataConversionException(s"$smartIri is not an internal IRI")
@@ -1060,17 +881,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @param errorFun a function that throws an exception. It will be called if the IRI is invalid.
       */
     def toSmartIriWithErr(iri: IRI, errorFun: () => Nothing): SmartIri = {
-        // Is this a Knora data IRI?
-        if (!isKnoraDataIriStr(iri)) {
-            // No. Return it from the cache, or cache it if it's not already cached.
-            smartIriCache.computeIfAbsent(
-                iri,
-                JavaUtil.function({ _ => new SmartIriImpl(iri, errorFun) })
-            )
-        } else {
-            // Yes. Convert it to a SmartIri without caching it.
-            new SmartIriImpl(iri, errorFun)
-        }
+        new SmartIriImpl(iri, errorFun)
     }
 
     /**
@@ -1533,7 +1344,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @return the IRI of an entity that the ontology responder can provide.
       */
     def requestedEntityToEntityForResponder(requestedEntity: SmartIri): SmartIri = {
-        if (OntologyConstants.ConstantOntologies.contains(requestedEntity.getOntology.toString)) {
+        if (OntologyConstants.ConstantOntologies.contains(requestedEntity.getOntologyFromEntity.toString)) {
             // The client is asking about an entity in a constant ontology, so don't translate its IRI.
             requestedEntity
         } else {

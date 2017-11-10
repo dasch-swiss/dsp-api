@@ -369,7 +369,7 @@ class OntologyResponderV2 extends Responder {
 
                             predicateIri -> PredicateInfoV2(
                                 predicateIri = predicateIri,
-                                ontologyIri = resourceClassIri.getOntology,
+                                ontologyIri = resourceClassIri.getOntologyFromEntity,
                                 objects = objects,
                                 objectsWithLang = objectsWithLang
                             )
@@ -407,7 +407,7 @@ class OntologyResponderV2 extends Responder {
                         cardinalityOnProperty: OwlCardinalityOnProperty => cardinalityOnProperty.toClassDefCardinality
                     }.toMap
 
-                    val ontologyIri = resourceClassIri.getOntology
+                    val ontologyIri = resourceClassIri.getOntologyFromEntity
 
                     val resourceEntityInfo = ReadClassInfoV2(
                         entityInfoContent = ClassInfoContentV2(
@@ -445,13 +445,13 @@ class OntologyResponderV2 extends Responder {
 
                             predicateIri -> PredicateInfoV2(
                                 predicateIri = predicateIri,
-                                ontologyIri = predicateIri.getOntology,
+                                ontologyIri = predicateIri.getOntologyFromEntity,
                                 objects = objects,
                                 objectsWithLang = objectsWithLang
                             )
                     }
 
-                    val ontologyIri = propertyIri.getOntology
+                    val ontologyIri = propertyIri.getOntologyFromEntity
 
                     val propertyEntityInfo = ReadPropertyInfoV2(
                         entityInfoContent = PropertyInfoContentV2(
@@ -616,7 +616,7 @@ class OntologyResponderV2 extends Responder {
 
                             predicateIri -> PredicateInfoV2(
                                 predicateIri = predicateIri,
-                                ontologyIri = standoffClassIri.getOntology,
+                                ontologyIri = standoffClassIri.getOntologyFromEntity,
                                 objects = objects,
                                 objectsWithLang = objectsWithLang
                             )
@@ -686,7 +686,7 @@ class OntologyResponderV2 extends Responder {
 
                             predicateIri -> PredicateInfoV2(
                                 predicateIri = predicateIri,
-                                ontologyIri = predicateIri.getOntology,
+                                ontologyIri = predicateIri.getOntologyFromEntity,
                                 objects = objects,
                                 objectsWithLang = objectsWithLang
                             )
@@ -695,7 +695,7 @@ class OntologyResponderV2 extends Responder {
                     val standoffPropertyEntityInfo = ReadPropertyInfoV2(
                         entityInfoContent = PropertyInfoContentV2(
                             propertyIri = standoffPropertyIri,
-                            ontologyIri = standoffPropertyIri.getOntology,
+                            ontologyIri = standoffPropertyIri.getOntologyFromEntity,
                             predicates = predicates,
                             subPropertyOf = directStandoffSubPropertyOfRelations.getOrElse(standoffPropertyIri, Set.empty[SmartIri]),
                             ontologySchema = InternalSchema

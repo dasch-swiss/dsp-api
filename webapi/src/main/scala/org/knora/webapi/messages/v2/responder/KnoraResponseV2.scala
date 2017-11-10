@@ -717,10 +717,10 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
             resource =>
                 val resourceClass = resource.resourceClass
                 val properties = resource.values.keySet
-                val resourceOntology = resourceClass.toSmartIri.getOntology
+                val resourceOntology = resourceClass.toSmartIri.getOntologyFromEntity
 
                 val propertyOntologies = properties.map {
-                    property => property.toSmartIri.getOntology
+                    property => property.toSmartIri.getOntologyFromEntity
                 }
 
                 propertyOntologies + resourceOntology

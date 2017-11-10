@@ -334,7 +334,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
                 entityIris.flatMap {
                     entityIri =>
                         if (entityIri.isKnoraOntologyEntityIri) {
-                            Set(entityIri.getOntology)
+                            Set(entityIri.getOntologyFromEntity)
                         } else {
                             Set.empty[SmartIri]
                         }
@@ -356,7 +356,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
                 entityIris.flatMap {
                     entityIri =>
                         if (entityIri.isKnoraOntologyEntityIri) {
-                            Set(entityIri.getOntology)
+                            Set(entityIri.getOntologyFromEntity)
                         } else {
                             Set.empty[SmartIri]
                         }

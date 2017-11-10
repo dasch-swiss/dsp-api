@@ -287,31 +287,6 @@ class StringFormatterSpec extends CoreSpec() {
             internalEntityIri.toString should ===("http://www.knora.org/ontology/incunabula#book")
         }
 
-        "convert 100,000 IRIs" in {
-            val parseStart = System.currentTimeMillis
-
-            for (i <- 1 to 100000) {
-                val iriStr = s"http://0.0.0.0:3333/ontology/incunabula/v2#class$i"
-                val iri = iriStr.toSmartIri
-            }
-
-            val parseEnd = System.currentTimeMillis
-            println(s"Parse and store time in ms: ${parseEnd - parseStart}")
-
-            val retrieveStart = System.currentTimeMillis
-            var totalDefs = 0
-
-            for (i <- 1 to 100000) {
-                val iriStr = s"http://0.0.0.0:3333/ontology/incunabula/v2#class$i"
-                val iri = iriStr.toSmartIri
-                if (iri.isKnoraApiV2DefinitionIri) totalDefs += 1
-            }
-
-            val retrieveEnd = System.currentTimeMillis
-
-            println(s"Retrieve time for $totalDefs defs: ${retrieveEnd - retrieveStart}")
-        }
-
         "return the data named graph of a project without short code" in {
             val shortname = SharedAdminTestData.incunabulaProjectInfo.shortname
             val expected = s"http://www.knora.org/data/$shortname"
