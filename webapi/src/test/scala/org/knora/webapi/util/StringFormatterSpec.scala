@@ -20,7 +20,7 @@
 
 package org.knora.webapi.util
 
-import org.knora.webapi.{AssertionException, BadRequestException, CoreSpec}
+import org.knora.webapi._
 
 /**
   * Tests [[StringFormatter]].
@@ -285,5 +285,39 @@ class StringFormatterSpec extends CoreSpec() {
             val internalEntityIri = stringFormatter.externalToInternalEntityIri(externalEntityIri, () => throw AssertionException(s"Couldn't parse $externalEntityIri"))
             internalEntityIri should ===("http://www.knora.org/ontology/incunabula#book")
         }
+
+        "return the data named graph of a project without short code" in {
+            val shortname = SharedAdminTestData.incunabulaProjectInfo.shortname
+            val expected = s"http://www.knora.org/data/$shortname"
+            val result = stringFormatter.projectDataNamedGraph(SharedAdminTestData.incunabulaProjectInfo)
+            result should be(expected)
+        }
+
+        "return the data named graph of a project with short code" in {
+            val shortcode = SharedAdminTestData.imagesProjectInfo.shortcode.get
+            val shortname = SharedAdminTestData.imagesProjectInfo.shortname
+            val expected = s"http://www.knora.org/data/$shortcode/$shortname"
+            val result = stringFormatter.projectDataNamedGraph(SharedAdminTestData.imagesProjectInfo)
+            result should be(expected)
+        }
+
+        "validate project shortcode" in {
+            stringFormatter.toProjectShortcode("00FF", () => throw AssertionException("not valid")) should be ("00FF")
+            stringFormatter.toProjectShortcode("00ff", () => throw AssertionException("not valid")) should be ("00FF")
+            stringFormatter.toProjectShortcode("12aF", () => throw AssertionException("not valid")) should be ("12AF")
+
+            an [AssertionException] should be thrownBy {
+                stringFormatter.toProjectShortcode("000", () => throw AssertionException("not valid"))
+            }
+
+            an [AssertionException] should be thrownBy {
+                stringFormatter.toProjectShortcode("00000", () => throw AssertionException("not valid"))
+            }
+
+            an [AssertionException] should be thrownBy {
+                stringFormatter.toProjectShortcode("wxyz", () => throw AssertionException("not valid"))
+            }
+        }
+
     }
 }

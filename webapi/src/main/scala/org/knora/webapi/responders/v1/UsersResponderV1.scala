@@ -48,7 +48,7 @@ class UsersResponderV1 extends Responder {
     val knoraIdUtil = new KnoraIdUtil
 
     // The IRI used to lock user creation and update
-    val USERS_GLOBAL_LOCK_IRI = "http://data.knora.org/users"
+    val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
 
     val USER_PROFILE_CACHE_NAME = "userProfileCache"
 

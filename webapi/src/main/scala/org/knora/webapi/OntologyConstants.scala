@@ -297,13 +297,13 @@ object OntologyConstants {
         /* Project */
         val KnoraProject: IRI = KnoraBasePrefixExpansion + "knoraProject"
         val ProjectShortname: IRI = KnoraBasePrefixExpansion + "projectShortname"
+        val ProjectShortcode: IRI = KnoraBasePrefixExpansion + "projectShortcode"
         val ProjectLongname: IRI = KnoraBasePrefixExpansion + "projectLongname"
         val ProjectDescription: IRI = KnoraBasePrefixExpansion + "projectDescription"
         val ProjectKeywords: IRI = KnoraBasePrefixExpansion + "projectKeywords"
         val ProjectLogo: IRI = KnoraBasePrefixExpansion + "projectLogo"
         val BelongsToInstitution: IRI = KnoraBasePrefixExpansion + "belongsToInstitution"
-        val ProjectOntologyGraph: IRI = KnoraBasePrefixExpansion + "projectOntologyGraph"
-        val ProjectDataGraph: IRI = KnoraBasePrefixExpansion + "projectDataGraph"
+        val ProjectOntology: IRI = KnoraBasePrefixExpansion + "projectOntology"
         val HasSelfJoinEnabled: IRI = KnoraBasePrefixExpansion + "hasSelfJoinEnabled"
 
         /* Group */
@@ -402,7 +402,7 @@ object OntologyConstants {
         val StandoffUriTag: IRI = KnoraBasePrefixExpansion + "StandoffUriTag"
         val StandoffInternalReferenceTag: IRI = KnoraBasePrefixExpansion + "StandoffInternalReferenceTag"
 
-        val StandardMapping: IRI = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+        val StandardMapping: IRI = "http://rdfh.ch/standoff/mappings/StandardMapping"
 
         val AdministrativePermission: IRI = KnoraBasePrefixExpansion + "AdministrativePermission"
         val DefaultObjectAccessPermission: IRI = KnoraBasePrefixExpansion + "DefaultObjectAccessPermission"
@@ -770,6 +770,7 @@ object OntologyConstants {
     }
 
     object NamedGraphs {
+        val DataNamedGraphStart: IRI = "http://www.knora.org/data"
         val AdminNamedGraph: IRI = "http://www.knora.org/data/admin"
         val PersistentMapNamedGraph: IRI = "http://www.knora.org/data/maps"
         val KnoraExplicitNamedGraph: IRI = "http://www.knora.org/explicit"

@@ -22,6 +22,7 @@ import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.SharedAdminTestData._
 import org.knora.webapi.SharedPermissionsTestData._
+import org.knora.webapi.SharedOntologyTestData._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringForResourceClassGetV1, _}
@@ -96,7 +97,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 actorUnderTest ! PermissionDataGetV1(
                     projectIris = SharedAdminTestData.multiuserUser.projects_info.keys.toSeq,
                     groupIris = SharedAdminTestData.multiuserUser.groups,
-                    isInProjectAdminGroups = Seq("http://data.knora.org/projects/77275339", "http://data.knora.org/projects/images"),
+                    isInProjectAdminGroups = Seq(INCUNABULA_PROJECT_IRI, IMAGES_PROJECT_IRI),
                     isInSystemAdminGroup = false
                 )
                 expectMsg(SharedAdminTestData.multiuserUser.permissionData)
@@ -106,7 +107,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 actorUnderTest ! PermissionDataGetV1(
                     projectIris = SharedAdminTestData.incunabulaProjectAdminUser.projects_info.keys.toSeq,
                     groupIris = SharedAdminTestData.incunabulaProjectAdminUser.groups,
-                    isInProjectAdminGroups = Seq("http://data.knora.org/projects/77275339"),
+                    isInProjectAdminGroups = Seq(INCUNABULA_PROJECT_IRI),
                     isInSystemAdminGroup = false
                 )
                 expectMsg(SharedAdminTestData.incunabulaProjectAdminUser.permissionData)
@@ -136,7 +137,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 actorUnderTest ! PermissionDataGetV1(
                     projectIris = SharedAdminTestData.imagesUser01.projects_info.keys.toSeq,
                     groupIris = SharedAdminTestData.imagesUser01.groups,
-                    isInProjectAdminGroups = Seq("http://data.knora.org/projects/images"),
+                    isInProjectAdminGroups = Seq(IMAGES_PROJECT_IRI),
                     isInSystemAdminGroup = false
                 )
                 expectMsg(SharedAdminTestData.imagesUser01.permissionData)
@@ -176,7 +177,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     SharedAdminTestData.rootUser
                 )
                 expectMsg(AdministrativePermissionsForProjectGetResponseV1(
-                    Seq(perm002_a2.p, perm002_a1.p, perm002_a3.p)
+                    Seq(perm002_a3.p, perm002_a2.p, perm002_a1.p)
                 ))
             }
 
@@ -247,7 +248,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     SharedAdminTestData.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionsForProjectGetResponseV1(
-                    defaultObjectAccessPermissions = Seq(perm002_d1.p, perm002_d2.p)
+                    defaultObjectAccessPermissions = Seq(perm002_d2.p, perm002_d1.p)
                 ))
             }
 
@@ -385,8 +386,8 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             "return the default object access permissions 'string' for the 'images:jahreszeit' property" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
                     projectIri = IMAGES_PROJECT_IRI,
-                    resourceClassIri = "http://www.knora.org/ontology/images#bild",
-                    propertyIri = "http://www.knora.org/ontology/images#jahreszeit",
+                    resourceClassIri = s"$IMAGES_ONTOLOGY_IRI#bild",
+                    propertyIri = s"$IMAGES_ONTOLOGY_IRI#jahreszeit",
                     imagesUser01.permissionData
                 )
                 expectMsg(DefaultObjectAccessPermissionsStringResponseV1("CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"))
@@ -424,7 +425,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             "return the default object access permissions 'string' for the 'images:Bild' class and 'anything:hasText' property" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetV1(
                     projectIri = ANYTHING_PROJECT_IRI,
-                    resourceClassIri = "http://www.knora.org/ontology/images#bild",
+                    resourceClassIri = s"$IMAGES_ONTOLOGY_IRI#bild",
                     propertyIri = "http://www.knora.org/ontology/anything#hasText",
                     anythingUser1.permissionData
                 )
@@ -439,7 +440,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             }
 
             "return a combined and max set of permissions (default object access permissions) defined on the supplied groups (helper method used in queries before)" in {
-                val groups = List("http://data.knora.org/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
+                val groups = List("http://rdfh.ch/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
                 val expected = Set(
                         PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
                         PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
