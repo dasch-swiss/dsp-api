@@ -18,9 +18,9 @@ import scala.concurrent.duration._
 class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    private val userProfile = SharedAdminTestData.anythingUser1
-    private val projectWithoutProjectID = SharedAdminTestData.ANYTHING_PROJECT_IRI.toSmartIri
-    private val projectWithProjectID = SharedAdminTestData.ANYTHING_PROJECT_IRI.toSmartIri // TODO: use a project that has a project ID, when one exists.
+
+    private val userProfile = SharedAdminTestData.imagesUser01
+    private val projectWithProjectID = SharedAdminTestData.IMAGES_PROJECT_IRI.toSmartIri
 
     private val actorUnderTest = TestActorRef[OntologyResponderV2]
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
@@ -40,61 +40,37 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "The ontology responder v2" should {
-        "create an empty ontology called 'foo' without a project code" in {
+        "create an empty ontology called 'foo' with a project code" in {
 
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "foo",
-                projectIri = projectWithoutProjectID,
-                apiRequestID = UUID.randomUUID,
-                userProfile = userProfile
-            )
-
-            val response = expectMsgType[ReadEntityDefinitionsV2](timeout)
-            response.ontologies should ===(Map("http://0.0.0.0:3333/ontology/foo/v2" -> Set.empty[IRI]))
-        }
-
-        "create an empty ontology called 'bar' with a project code" in {
-
-            actorUnderTest ! CreateOntologyRequestV2(
-                ontologyName = "bar",
                 projectIri = projectWithProjectID,
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )
 
             val response = expectMsgType[ReadEntityDefinitionsV2](timeout)
-            response.ontologies should ===(Map("http://0.0.0.0:3333/ontology/00FF/bar/v2" -> Set.empty[IRI]))
+            response.ontologies should ===(Map("http://0.0.0.0:3333/ontology/00FF/foo/v2".toSmartIri -> Set.empty[IRI]))
         }
 
         "not create 'foo' again" in {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "foo",
-                projectIri = projectWithoutProjectID,
-                apiRequestID = UUID.randomUUID,
-                userProfile = userProfile
-            )
-
-            expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
-            }
-        }
-
-        "not create 'bar' again" in {
-            actorUnderTest ! CreateOntologyRequestV2(
-                ontologyName = "bar",
                 projectIri = projectWithProjectID,
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
         }
+
         "not create an ontology called '0000'" in {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "0000",
-                projectIri = projectWithoutProjectID,
+                projectIri = projectWithProjectID,
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )
@@ -108,7 +84,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not create an ontology called '-foo'" in {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "-foo",
-                projectIri = projectWithoutProjectID,
+                projectIri = projectWithProjectID,
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )
@@ -122,7 +98,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not create an ontology called 'v3'" in {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "v3",
-                projectIri = projectWithoutProjectID,
+                projectIri = projectWithProjectID,
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )
@@ -136,7 +112,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not create an ontology called 'ontology'" in {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "ontology",
-                projectIri = projectWithoutProjectID,
+                projectIri = projectWithProjectID,
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )
@@ -150,7 +126,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not create an ontology called 'knora'" in {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "knora",
-                projectIri = projectWithoutProjectID,
+                projectIri = projectWithProjectID,
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )
@@ -164,7 +140,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not create an ontology called 'simple'" in {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "simple",
-                projectIri = projectWithoutProjectID,
+                projectIri = projectWithProjectID,
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )
