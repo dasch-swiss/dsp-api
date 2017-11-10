@@ -276,7 +276,9 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
             classes = classes.map {
                 case (classIri, readClassInfo) => classIri.toOntologySchema(targetSchema) -> readClassInfo.toOntologySchema(targetSchema)
             },
-            properties = properties.map {
+            properties = properties.filterNot {
+                case (_, propertyInfo) => propertyInfo.isLinkValueProp
+            }.map {
                 case (propertyIri, readPropertyInfo) => propertyIri.toOntologySchema(targetSchema) -> readPropertyInfo.toOntologySchema(targetSchema)
             },
             standoffClasses = standoffClasses.map {
@@ -403,16 +405,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
 
         // properties
 
-        // If we're using the simplified API, don't return link value properties.
-        val filteredProperties = if (targetSchema == ApiV2Simple) {
-            properties.filterNot {
-                case (_, propertyInfo) => propertyInfo.isLinkValueProp
-            }
-        } else {
-            properties
-        }
-
-        val jsonProperties: Map[IRI, JsonLDObject] = propertiesToJsonLD(filteredProperties)
+        val jsonProperties: Map[IRI, JsonLDObject] = propertiesToJsonLD(properties)
 
         // standoff classes and properties
 
@@ -502,22 +495,39 @@ case class ReadNamedGraphsV2(namedGraphs: Set[SmartIri]) extends KnoraResponseV2
 case class PredicateInfoV2(predicateIri: SmartIri,
                            ontologyIri: SmartIri,
                            objects: Set[String] = Set.empty[String],
-                           objectsWithLang: Map[String, String] = Map.empty[String, String]) {
+                           objectsWithLang: Map[String, String] = Map.empty[String, String]) extends PredicateConverter {
     // TODO: This class should really store its IRI objects as SmartIris. But this would need more help
     // from OntologyResponderV2 and probably also from the store package.
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
-      * Converts this [[PredicateInfoV2]], including its objects (which must all be IRIs), from one ontology schema to another.
-      * May be used only if the predicate is known to have IRIs as objects.
+      * Converts this [[PredicateInfoV2]] to another ontology schema, without converting its objects.
       *
       * @param targetSchema the target schema.
       * @return the converted [[PredicateInfoV2]].
       */
-    def toOntologySchema(targetSchema: KnoraSchema): PredicateInfoV2 = {
+    def justPredicateToOntologySchema(targetSchema: KnoraSchema): PredicateInfoV2 = {
         copy(
-            predicateIri = predicateIri.toOntologySchema(targetSchema),
+            predicateIri = predicateIriToOntologySchema(predicateIri, targetSchema),
+            ontologyIri = ontologyIri.toOntologySchema(targetSchema)
+        )
+    }
+
+    /**
+      * Converts this [[PredicateInfoV2]] and all its objects (which must all be non-language-specific)
+      * from one ontology schema to another. May be used only if the predicate is known to have IRIs as objects.
+      *
+      * @param targetSchema the target schema.
+      * @return the converted [[PredicateInfoV2]].
+      */
+    def predicateAndObjectsToOntologySchema(targetSchema: KnoraSchema): PredicateInfoV2 = {
+        if (objectsWithLang.nonEmpty) {
+            throw DataConversionException(s"The objects of $predicateIri cannot be converted to schema $targetSchema, because they are not IRIs")
+        }
+
+        copy(
+            predicateIri = predicateIriToOntologySchema(predicateIri, targetSchema),
             ontologyIri = ontologyIri.toOntologySchema(targetSchema),
             objects = objects.map(_.toSmartIri.toOntologySchema(targetSchema).toString)
         )
@@ -607,9 +617,47 @@ object Cardinality extends Enumeration {
 }
 
 /**
+  * Helps convert predicate IRIs from one ontology schema to another.
+  */
+sealed trait PredicateConverter {
+    /**
+      * Converts a predicate IRI from one ontology schema to another, taking into account the corresponding
+      * predicates in [[OntologyConstants.CorrespondingPredicates]].
+      *
+      * @param predicateIri the predicate IRI to be converted.
+      * @param targetSchema the target schema.
+      * @return the converted IRI.
+      */
+    protected def predicateIriToOntologySchema(predicateIri: SmartIri, targetSchema: KnoraSchema)(implicit stringFormatter: StringFormatter): SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val sourceSchema = predicateIri.getOntologySchema
+
+        if (sourceSchema == targetSchema) {
+            predicateIri
+        } else {
+            predicateIri.getOntologySchema match {
+                case knoraSourceSchema: KnoraSchema =>
+                    OntologyConstants.CorrespondingPredicates.get((knoraSourceSchema, targetSchema)) match {
+                        case Some(predicateMap: Map[IRI, IRI]) =>
+                            predicateMap.get(predicateIri.toString) match {
+                                case Some(convertedIri) => convertedIri.toSmartIri
+                                case None => predicateIri.toOntologySchema(targetSchema)
+                            }
+
+                        case None => throw DataConversionException(s"Conversion from $knoraSourceSchema to $targetSchema is not supported")
+                    }
+
+                case _ => predicateIri
+            }
+        }
+    }
+}
+
+/**
   * Represents information about an ontology entity (a class or property definition).
   */
-sealed trait EntityInfoContentV2 {
+sealed trait EntityInfoContentV2 extends PredicateConverter {
     /**
       * The predicates of the entity, and their objects.
       */
@@ -621,21 +669,20 @@ sealed trait EntityInfoContentV2 {
       * Converts this entity's predicates from one ontology schema to another. Each predicate's IRI is converted,
       * and its objects are also optionally converted.
       *
-      * @param predsWithIriObjs a set of the predicates whose objects are known to be IRIs.
-      * @param targetSchema the target schema.
+      * @param predsWithKnoraDefinitionIriObjs a set of the predicates whose objects are known to be Knora definition IRIs.
+      *                                        The objects of these predicates will be converted.
+      * @param targetSchema                    the target schema.
       * @return a map of converted predicate IRIs to converted [[PredicateInfoV2]] objects.
       */
-    protected def convertPredicates(predsWithIriObjs: Set[SmartIri], targetSchema: KnoraSchema): Map[SmartIri, PredicateInfoV2] = {
+    protected def convertPredicates(predsWithKnoraDefinitionIriObjs: Set[SmartIri], targetSchema: KnoraSchema): Map[SmartIri, PredicateInfoV2] = {
         predicates.map {
             case (predicateIri, predicateInfo) =>
-                val convertedPredicateIri = predicateIri.toOntologySchema(targetSchema)
+                val convertedPredicateIri = predicateIriToOntologySchema(predicateIri, targetSchema)
 
-                val convertedPredicateInfo = if (predsWithIriObjs.contains(predicateIri)) {
-                    predicateInfo.toOntologySchema(targetSchema)
+                val convertedPredicateInfo = if (predsWithKnoraDefinitionIriObjs.contains(predicateIri)) {
+                    predicateInfo.predicateAndObjectsToOntologySchema(targetSchema)
                 } else {
-                    predicateInfo.copy(
-                        predicateIri = convertedPredicateIri
-                    )
+                    predicateInfo.justPredicateToOntologySchema(targetSchema)
                 }
 
                 convertedPredicateIri -> convertedPredicateInfo
@@ -840,20 +887,80 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
     import PropertyInfoContentV2._
 
     def toOntologySchema(targetSchema: KnoraSchema): PropertyInfoContentV2 = {
-        PropertyInfoContentV2(
+
+        // Are we converting from the internal schema to the API v2 simple schema?
+        val predicatesWithAdjustedRdfType: Map[SmartIri, PredicateInfoV2] = if (ontologySchema == InternalSchema && targetSchema == ApiV2Simple) {
+            // Yes. Is this an object property?
+            val rdfTypeIri = OntologyConstants.Rdf.Type.toSmartIri
+            val sourcePropertyType: SmartIri = getPredicateIriObject(rdfTypeIri).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdf:type"))
+
+            if (sourcePropertyType.toString == OntologyConstants.Owl.ObjectProperty) {
+                // Yes. See if we need to change it to a datatype property. Does it have a knora-base:objectClassConstraint?
+                val objectClassConstraintIri = OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri
+                val maybeObjectType: Option[SmartIri] = getPredicateIriObject(objectClassConstraintIri)
+
+                maybeObjectType match {
+                    case Some(objectTypeObj) =>
+                        // Yes. Is there a corresponding type in the API v2 simple ontology?
+                        OntologyConstants.KnoraApiV2Simple.ValueClassesToSimplifiedTypes.get(objectTypeObj.toString) match {
+                            case Some(simplifiedType) =>
+                                // Yes. Is it a datatype?
+                                val isDatatype = simplifiedType.startsWith(OntologyConstants.Xsd.XsdPrefixExpansion) ||
+                                    (KnoraApiV2Simple.Classes.get(simplifiedType.toSmartIri) match {
+                                    case Some(simpleClass: ReadClassInfoV2) if simpleClass.entityInfoContent.rdfType.toString == OntologyConstants.Rdfs.Datatype => true
+                                    case _ => false
+                                })
+
+                                if (isDatatype) {
+                                    // Yes. Make this a datatype property.
+                                    (predicates - objectClassConstraintIri) +
+                                        (rdfTypeIri -> PredicateInfoV2(
+                                            predicateIri = rdfTypeIri,
+                                            ontologyIri = rdfTypeIri.getOntologyFromEntity,
+                                            objects = Set(OntologyConstants.Owl.DatatypeProperty)
+                                        ))
+                                } else {
+                                    predicates
+                                }
+
+                            case None => predicates
+                        }
+                    case None => predicates
+                }
+            } else {
+                predicates
+            }
+        } else {
+            predicates
+        }
+
+        // Make a copy of this PredicateInfoContentV2 with the adjusted rdf:type, so we can call convertPredicates() on it.
+        val copyWithAdjustedPredicates = copy(
             propertyIri = propertyIri.toOntologySchema(targetSchema),
             ontologyIri = ontologyIri.toOntologySchema(targetSchema),
-            predicates = convertPredicates(
-                predsWithIriObjs = PredicatesWithIriObjects.map(iri => iri.toSmartIri),
-                targetSchema = targetSchema
-            ),
+            predicates = predicatesWithAdjustedRdfType,
             subPropertyOf = subPropertyOf.map(_.toOntologySchema(targetSchema)),
             ontologySchema = targetSchema
+        )
+
+        // Call its convertPredicates() method to convert the rest of the predicates.
+        copyWithAdjustedPredicates.copy(
+            predicates = copyWithAdjustedPredicates.convertPredicates(
+                predsWithKnoraDefinitionIriObjs = PredicatesWithIriObjects.map(iri => iri.toSmartIri),
+                targetSchema = targetSchema
+            )
         )
     }
 }
 
+/**
+  * Constants used by [[PropertyInfoContentV2]].
+  */
 object PropertyInfoContentV2 {
+    /**
+      * A set of property predicates that are used in API v2 requests and responses and whose objects are known to be
+      * Knora definition IRIs.
+      */
     private val PredicatesWithIriObjects = Set(
         OntologyConstants.KnoraApiV2Simple.SubjectType,
         OntologyConstants.KnoraApiV2Simple.ObjectType,
@@ -913,48 +1020,8 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
         val subjectTypeStatement: Option[(IRI, JsonLDString)] = maybeSubjectType.map(subjectTypeObj => (subjectTypePred, JsonLDString(subjectTypeObj.toString)))
         val objectTypeStatement: Option[(IRI, JsonLDString)] = maybeObjectType.map(objectTypeObj => (objectTypePred, JsonLDString(objectTypeObj.toString)))
 
-        // Get the property's rdf:type, which should be rdf:Property, owl:ObjectProperty, or owl:DatatypeProperty.
-        val sourcePropertyType: SmartIri = entityInfoContent.getPredicateIriObject(OntologyConstants.Rdf.Type.toSmartIri).getOrElse(throw InconsistentTriplestoreDataException(s"Property ${entityInfoContent.propertyIri} has no rdf:type"))
-
-        val DatatypeProperty = OntologyConstants.Owl.DatatypeProperty.toSmartIri
-        val RdfProperty = OntologyConstants.Rdf.Property.toSmartIri
-        val AnnotationProperty = OntologyConstants.Owl.AnnotationProperty.toSmartIri
-        val ObjectProperty = OntologyConstants.Owl.ObjectProperty.toSmartIri
-
-        // Determine the type that we will return as the property's JSON-LD @type.
-        val convertedPropertyType: SmartIri = sourcePropertyType match {
-            case DatatypeProperty | RdfProperty | AnnotationProperty =>
-                // The property doesn't claim to be an object property, so use whatever type it provides.
-                sourcePropertyType
-
-            case ObjectProperty =>
-                // The property says it's an object property. Are we using the simplified API?
-                targetSchema match {
-                    case ApiV2Simple =>
-                        // Yes. Are we going to return an object type for the property?
-                        maybeObjectType match {
-                            case Some(objectTypeObj) =>
-                                // Yes. Are we going to use an datatype as the object type?
-                                if (OntologyConstants.KnoraApiV2Simple.Datatypes.contains(objectTypeObj.toString)) {
-                                    // Yes. Say that this is a datatype property.
-                                    DatatypeProperty
-                                } else {
-                                    // No. Say it's an object property.
-                                    sourcePropertyType
-                                }
-
-                            case None =>
-                                // We don't know the property's object type, so leave it as an object property.
-                                sourcePropertyType
-                        }
-
-                    case _ =>
-                        // We're not using the simplified API, so leave it as an object property.
-                        sourcePropertyType
-                }
-
-            case other => throw InconsistentTriplestoreDataException(s"Unsupported rdf:type for property $entityInfoContent.propertyIri: $other")
-        }
+        // Get the property's rdf:type.
+        val propertyType: SmartIri = entityInfoContent.getPredicateIriObject(OntologyConstants.Rdf.Type.toSmartIri).getOrElse(throw InconsistentTriplestoreDataException(s"Property ${entityInfoContent.propertyIri} has no rdf:type"))
 
         val belongsToOntologyPred: IRI = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.BelongsToOntology
@@ -979,7 +1046,7 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
 
         Map(
             "@id" -> JsonLDString(entityInfoContent.propertyIri.toString),
-            "@type" -> JsonLDString(convertedPropertyType.toString),
+            "@type" -> JsonLDString(propertyType.toString),
             belongsToOntologyPred -> JsonLDString(entityInfoContent.ontologyIri.toString)
         ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++ isEditableStatement
     }
@@ -1009,33 +1076,48 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
       */
     lazy val allCardinalities: Map[SmartIri, Cardinality.Value] = inheritedCardinalities ++ entityInfoContent.directCardinalities
 
-    def toOntologySchema(targetSchema: ApiV2Schema): ReadClassInfoV2 = copy(
-        entityInfoContent = entityInfoContent.toOntologySchema(targetSchema)
-    )
+    def toOntologySchema(targetSchema: ApiV2Schema): ReadClassInfoV2 = {
+        // If we're converting to the simplified API v2 schema, remove references to link value properties.
+
+        val filteredInheritedCardinalities = if (targetSchema == ApiV2Simple) {
+            inheritedCardinalities.filterNot {
+                case (propertyIri, _) => linkValueProperties.contains(propertyIri)
+            }
+        } else {
+            inheritedCardinalities
+        }
+
+        val filteredLinkValueProperties = if (targetSchema == ApiV2Simple) {
+            Set.empty[SmartIri]
+        } else {
+            linkValueProperties
+        }
+
+        copy(
+            entityInfoContent = entityInfoContent.toOntologySchema(targetSchema),
+            inheritedCardinalities = filteredInheritedCardinalities.map {
+                case (propertyIri, cardinality) => propertyIri.toOntologySchema(targetSchema) -> cardinality
+            },
+            linkProperties = linkProperties.map(_.toOntologySchema(targetSchema)),
+            linkValueProperties = filteredLinkValueProperties.map(_.toOntologySchema(targetSchema)),
+            fileValueProperties = fileValueProperties.map(_.toOntologySchema(targetSchema))
+        )
+    }
 
     def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
         if (entityInfoContent.ontologySchema != targetSchema) {
             throw DataConversionException(s"ReadClassInfoV2 for class ${entityInfoContent.classIri} is not in schema $targetSchema")
         }
 
-        // If we're using the simplified API, don't return link value properties.
-        val filteredCardinalities = targetSchema match {
-            case ApiV2Simple => allCardinalities.filterNot {
-                case (propertyIri, _) => linkValueProperties.contains(propertyIri)
-            }
-
-            case ApiV2WithValueObjects => allCardinalities
-        }
-
         // If this is a project-specific class, add the standard cardinalities from knora-api:Resource for the target
         // schema.
         val completedCardinalities: Map[SmartIri, Cardinality.Value] = if (!entityInfoContent.classIri.isKnoraBuiltInDefinitionIri) {
             targetSchema match {
-                case ApiV2Simple => filteredCardinalities ++ KnoraApiV2Simple.Resource.allCardinalities
-                case ApiV2WithValueObjects => filteredCardinalities ++ KnoraApiV2WithValueObjects.Resource.allCardinalities
+                case ApiV2Simple => allCardinalities ++ KnoraApiV2Simple.Resource.allCardinalities
+                case ApiV2WithValueObjects => allCardinalities ++ KnoraApiV2WithValueObjects.Resource.allCardinalities
             }
         } else {
-            filteredCardinalities
+            allCardinalities
         }
 
         // Convert OWL cardinalities to JSON-LD.
@@ -1112,13 +1194,6 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
     }
 }
 
-object ClassInfoContentV2 {
-    private val PredicatesWithIriObjects = Set(
-        OntologyConstants.Rdfs.Label,
-        OntologyConstants.Rdfs.Comment
-    )
-}
-
 /**
   * Represents assertions about an OWL class.
   *
@@ -1146,13 +1221,11 @@ case class ClassInfoContentV2(classIri: SmartIri,
                               standoffDataType: Option[StandoffDataTypeClasses.Value] = None,
                               subClassOf: Set[SmartIri] = Set.empty[SmartIri],
                               ontologySchema: KnoraSchema) extends EntityInfoContentV2 {
-    import ClassInfoContentV2._
-
     def toOntologySchema(targetSchema: KnoraSchema): ClassInfoContentV2 = {
         copy(
             classIri = classIri.toOntologySchema(targetSchema),
             ontologyIri = ontologyIri.toOntologySchema(targetSchema),
-            predicates = convertPredicates(PredicatesWithIriObjects.map(_.toSmartIri), targetSchema),
+            predicates = predicates,
             directCardinalities = directCardinalities.map {
                 case (propertyIri, cardinality) => propertyIri.toOntologySchema(targetSchema) -> cardinality
             },

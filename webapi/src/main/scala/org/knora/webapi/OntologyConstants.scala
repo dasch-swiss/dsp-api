@@ -739,9 +739,9 @@ object OntologyConstants {
         val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
 
         /**
-          * Maps internal knora-base value types to the datatypes that represent them in the simplified API.
+          * A map of internal knora-base value types to the types that represent them in the simplified API.
           */
-        val LiteralValueTypes: Map[IRI, IRI] = Map(
+        val ValueClassesToSimplifiedTypes: Map[IRI, IRI] = Map(
             KnoraBase.TextValue -> Xsd.String,
             KnoraBase.IntValue -> Xsd.Integer,
             KnoraBase.BooleanValue -> Xsd.Boolean,
@@ -763,11 +763,33 @@ object OntologyConstants {
         )
 
         /**
-          * The datatypes that are used in the simplified API.
+          * A map of simplified API types to internal knora-base value types.
           */
-        val Datatypes: Set[IRI] = LiteralValueTypes.values.toSet + Xsd.DateTimeStamp
+        val SimplifiedTypesToValueClasses: Map[IRI, IRI] = ValueClassesToSimplifiedTypes.map(_.swap)
 
     }
+
+    /**
+      * A map of predicates in each possible source schema to the corresponding predicates in each possible target schema.
+      */
+    val CorrespondingPredicates: Map[(KnoraSchema, KnoraSchema), Map[IRI, IRI]] = Map(
+        (InternalSchema, ApiV2Simple) -> Map(
+            OntologyConstants.KnoraBase.SubjectClassConstraint -> OntologyConstants.KnoraApiV2Simple.SubjectType,
+            OntologyConstants.KnoraBase.ObjectClassConstraint -> OntologyConstants.KnoraApiV2Simple.ObjectType
+        ),
+        (InternalSchema, ApiV2WithValueObjects) -> Map(
+            OntologyConstants.KnoraBase.SubjectClassConstraint -> OntologyConstants.KnoraApiV2WithValueObjects.SubjectType,
+            OntologyConstants.KnoraBase.ObjectClassConstraint -> OntologyConstants.KnoraApiV2WithValueObjects.ObjectType
+        ),
+        (ApiV2Simple, InternalSchema) -> Map(
+            OntologyConstants.KnoraApiV2Simple.SubjectType -> OntologyConstants.KnoraBase.SubjectClassConstraint,
+            OntologyConstants.KnoraApiV2Simple.ObjectType -> OntologyConstants.KnoraBase.ObjectClassConstraint
+        ),
+        (ApiV2WithValueObjects, InternalSchema) -> Map(
+            OntologyConstants.KnoraApiV2WithValueObjects.SubjectType -> OntologyConstants.KnoraBase.SubjectClassConstraint,
+            OntologyConstants.KnoraApiV2WithValueObjects.ObjectType -> OntologyConstants.KnoraBase.ObjectClassConstraint
+        )
+    )
 
     object NamedGraphs {
         val DataNamedGraphStart: IRI = "http://www.knora.org/data"
