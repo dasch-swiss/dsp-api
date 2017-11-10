@@ -235,12 +235,12 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
     // A regex for matching a string containing only an ontology prefix label or a local entity name.
     private val NCNameRegex: Regex = ("^" + NCNamePattern + "$").r
 
-    // A regex sub-pattern for project IDs, which consist of at least 4 hexadecimal digits.
+    // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.
     private val ProjectIDPattern: String =
-        """\p{XDigit}{4,}"""
+        """\p{XDigit}{4,4}"""
 
     // A regex for matching a string containing the project ID.
-    private val ProjectIDRegex: Regex = (ProjectIDPattern).r
+    private val ProjectIDRegex: Regex = ("^" + ProjectIDPattern + "$").r
 
     // A regex for the URL path of an API v2 ontology (built-in or project-specific).
     private val ApiV2OntologyUrlPathRegex: Regex = (
@@ -1528,11 +1528,9 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
       */
     def toProjectShortcode(shortcode: String, errorFun: () => Nothing): String = {
 
-        val uppercaseShortcode = shortcode.toUpperCase
-
-        shortcode match {
-            case ProjectIDRegex(_*) => uppercaseShortcode
-            case _ => errorFun()
+        ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
+            case Some(value) => value
+            case None => errorFun()
         }
     }
 }

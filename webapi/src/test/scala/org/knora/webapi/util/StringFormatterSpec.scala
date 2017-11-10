@@ -311,6 +311,10 @@ class StringFormatterSpec extends CoreSpec() {
             }
 
             an [AssertionException] should be thrownBy {
+                stringFormatter.toProjectShortcode("00000", () => throw AssertionException("not valid"))
+            }
+
+            an [AssertionException] should be thrownBy {
                 stringFormatter.toProjectShortcode("wxyz", () => throw AssertionException("not valid"))
             }
         }
