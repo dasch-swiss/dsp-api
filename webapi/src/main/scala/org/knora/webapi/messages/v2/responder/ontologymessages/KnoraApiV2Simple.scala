@@ -509,7 +509,7 @@ object KnoraApiV2Simple {
 
     val HasColor: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2Simple.HasColor,
-        propertyType = OntologyConstants.Owl.ObjectProperty,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2Simple.Region),
         objectType = Some(OntologyConstants.Xsd.String),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.HasValue),
@@ -534,7 +534,7 @@ object KnoraApiV2Simple {
 
     val HasComment: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2Simple.HasComment,
-        propertyType = OntologyConstants.Owl.ObjectProperty,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),
         objectType = Some(OntologyConstants.Xsd.String),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.HasValue),

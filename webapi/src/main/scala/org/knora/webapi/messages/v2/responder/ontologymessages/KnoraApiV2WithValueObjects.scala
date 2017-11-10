@@ -568,7 +568,8 @@ object KnoraApiV2WithValueObjects {
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Value,
         directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> Cardinality.MustHaveOne
         )
     )
 

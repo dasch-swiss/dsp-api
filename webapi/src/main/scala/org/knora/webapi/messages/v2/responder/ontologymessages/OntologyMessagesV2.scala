@@ -269,6 +269,20 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     def toOntologySchema(targetSchema: ApiV2Schema): ReadEntityDefinitionsV2 = {
+        // If we're converting to the API v2 simple schema, filter out link value properties.
+        val filteredProperties = targetSchema match {
+            case ApiV2Simple =>
+                properties.filterNot {
+                    case (_, propertyInfo) => propertyInfo.isLinkValueProp
+                }
+
+            case _ => properties
+        }
+
+        val convertedProperties = filteredProperties.map {
+            case (propertyIri, readPropertyInfo) => propertyIri.toOntologySchema(targetSchema) -> readPropertyInfo.toOntologySchema(targetSchema)
+        }
+
         copy(
             ontologies = ontologies.map {
                 case (ontologyIri, classIris) => ontologyIri.toOntologySchema(targetSchema) -> classIris.map(_.toOntologySchema(targetSchema))
@@ -276,11 +290,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
             classes = classes.map {
                 case (classIri, readClassInfo) => classIri.toOntologySchema(targetSchema) -> readClassInfo.toOntologySchema(targetSchema)
             },
-            properties = properties.filterNot {
-                case (_, propertyInfo) => propertyInfo.isLinkValueProp
-            }.map {
-                case (propertyIri, readPropertyInfo) => propertyIri.toOntologySchema(targetSchema) -> readPropertyInfo.toOntologySchema(targetSchema)
-            },
+            properties = convertedProperties,
             standoffClasses = standoffClasses.map {
                 case (classIri, readClassInfo) => classIri.toOntologySchema(targetSchema) -> readClassInfo.toOntologySchema(targetSchema)
             },
@@ -913,7 +923,7 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
 
                                 if (isDatatype) {
                                     // Yes. Make this a datatype property.
-                                    (predicates - objectClassConstraintIri) +
+                                    (predicates - rdfTypeIri) +
                                         (rdfTypeIri -> PredicateInfoV2(
                                             predicateIri = rdfTypeIri,
                                             ontologyIri = rdfTypeIri.getOntologyFromEntity,
@@ -1087,18 +1097,32 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
             inheritedCardinalities
         }
 
+        val filteredDirectCardinalities = if (targetSchema == ApiV2Simple) {
+            entityInfoContent.directCardinalities.filterNot {
+                case (propertyIri, _) => linkValueProperties.contains(propertyIri)
+            }
+        } else {
+            entityInfoContent.directCardinalities
+        }
+
         val filteredLinkValueProperties = if (targetSchema == ApiV2Simple) {
             Set.empty[SmartIri]
         } else {
             linkValueProperties
         }
 
+        // Make a copy of the ClassInfoContentV2 without the filtered direct cardinalities, so we can then call
+        // toOntologySchema() on it.
+        val entityInfoContentWithFilteredCardinalities = entityInfoContent.copy(
+            directCardinalities = filteredDirectCardinalities
+        )
+
         copy(
-            entityInfoContent = entityInfoContent.toOntologySchema(targetSchema),
+            entityInfoContent = entityInfoContentWithFilteredCardinalities.toOntologySchema(targetSchema),
             inheritedCardinalities = filteredInheritedCardinalities.map {
                 case (propertyIri, cardinality) => propertyIri.toOntologySchema(targetSchema) -> cardinality
             },
-            linkProperties = linkProperties.map(_.toOntologySchema(targetSchema)),
+            linkProperties = filteredLinkValueProperties.map(_.toOntologySchema(targetSchema)),
             linkValueProperties = filteredLinkValueProperties.map(_.toOntologySchema(targetSchema)),
             fileValueProperties = fileValueProperties.map(_.toOntologySchema(targetSchema))
         )

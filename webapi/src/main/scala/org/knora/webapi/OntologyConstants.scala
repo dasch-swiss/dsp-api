@@ -716,10 +716,10 @@ object OntologyConstants {
         val HasColor: IRI = KnoraApiV2PrefixExpansion + "hasColor"
         val HasComment: IRI = KnoraApiV2PrefixExpansion + "hasComment"
 
-        val HasFile: IRI = KnoraApiV2PrefixExpansion + "HasFile"
+        val HasFile: IRI = KnoraApiV2PrefixExpansion + "hasFile"
 
-        val HasStillImageFile: IRI = KnoraApiV2PrefixExpansion + "HasStillImageFile"
-        val HasMovingImageFile: IRI = KnoraApiV2PrefixExpansion + "HasMovingImageFile"
+        val HasStillImageFile: IRI = KnoraApiV2PrefixExpansion + "hasStillImageFile"
+        val HasMovingImageFile: IRI = KnoraApiV2PrefixExpansion + "hasMovingImageFile"
         val HasAudioFile: IRI = KnoraApiV2PrefixExpansion + "hasAudioFile"
         val HasDDDFile: IRI = KnoraApiV2PrefixExpansion + "hasDDDFile"
         val HasTextFile: IRI = KnoraApiV2PrefixExpansion + "hasTextFile"
