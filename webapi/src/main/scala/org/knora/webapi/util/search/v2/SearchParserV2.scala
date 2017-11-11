@@ -155,8 +155,16 @@ object SearchParserV2 {
         private def makeIri(rdf4jIri: rdf4j.model.IRI): IriRef = {
             val smartIri: SmartIri = rdf4jIri.stringValue.toSmartIriWithErr(() => throw SparqlSearchException(s"Invalid IRI: ${rdf4jIri.stringValue}"))
 
-            if (!(smartIri.isKnoraApiV2OntologyEntityIri && smartIri.getOntologySchema == ApiV2Simple)) {
-                throw SparqlSearchException(s"Invalid IRI in search query: $smartIri")
+            if (smartIri.isKnoraInternalDefinitionIri) {
+                throw SparqlSearchException(s"Internal ontology entity IRI not allowed in search query: $smartIri")
+            }
+
+            if (smartIri.isKnoraOntologyIri) {
+                throw SparqlSearchException(s"Ontology IRI not allowed in search query: $smartIri")
+            }
+
+            if (smartIri.isKnoraApiV2OntologyEntityIri && smartIri.getOntologySchema != ApiV2Simple) {
+                throw SparqlSearchException(s"Ontology schema in not allowed in search query: $smartIri")
             }
 
             IriRef(smartIri)
