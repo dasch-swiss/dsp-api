@@ -213,7 +213,7 @@ object StringFormatter {
 
     /**
       * A cache that maps IRI strings to [[SmartIri]] instances. To keep the cache from getting too large,
-      * only IRIs from known Knora ontologies are cached.
+      * only IRIs from known ontologies are cached.
       */
     private lazy val smartIriCache = new ConcurrentHashMap[IRI, SmartIri](2048)
 }
@@ -410,6 +410,20 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         "http://data.knora.org/"
     )
 
+    // The beginnings of Knora definition IRIs that we know we can cache.
+    private val KnoraDefinitionIriStarts = (Set(
+        InternalIriHostname,
+        BuiltInKnoraApiHostname
+    ) ++ knoraApiHostAndPort).map(hostname => "http://" + hostname)
+
+    // The beginnings of all definition IRIs that we know we can cache.
+    private val CacheableIriStarts = KnoraDefinitionIriStarts ++ Set(
+        OntologyConstants.Rdf.RdfPrefixExpansion,
+        OntologyConstants.Rdfs.RdfsPrefixExpansion,
+        OntologyConstants.Xsd.XsdPrefixExpansion,
+        OntologyConstants.Owl.OwlPrefixExpansion
+    )
+
     // Reserved words that cannot be used in project-specific ontology names.
     private val reservedIriWords = Set("knora", "ontology", "simple")
 
@@ -484,14 +498,6 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         case Some(hostAndPort) => Some("http://" + hostAndPort + "/ontology/")
         case None => None
     }
-
-    /**
-      * The beginnings of Knora definition IRIs, which we know we can cache.
-      */
-    private val CacheableIriStarts = (Set(
-        InternalIriHostname,
-        BuiltInKnoraApiHostname
-    ) ++ knoraApiHostAndPort).map(hostname => "http://" + hostname)
 
     // A regex for a project-specific XML import namespace.
     private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
