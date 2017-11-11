@@ -1053,7 +1053,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the amount of resources that have been found.
       */
-    private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         val searchTerms: CombineSearchTerms = CombineSearchTerms(searchValue)
 
@@ -1062,7 +1062,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 triplestore = settings.triplestoreType,
                 searchTerms = searchTerms,
                 limitToProject = limitToProject,
-                limitToResourceClass = limitToResourceClass,
+                limitToResourceClass = limitToResourceClass.map(_.toString),
                 separator = None, // no separator needed for count query
                 limit = 1,
                 offset = 0,
@@ -1096,7 +1096,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         import SearchResponderV2Constants.FullTextSearchConstants._
 
@@ -1197,7 +1197,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 triplestore = settings.triplestoreType,
                 searchTerms = searchTerms,
                 limitToProject = limitToProject,
-                limitToResourceClass = limitToResourceClass,
+                limitToResourceClass = limitToResourceClass.map(_.toString),
                 separator = Some(groupConcatSeparator),
                 limit = settings.v2ResultsPerPage,
                 offset = offset * settings.v2ResultsPerPage, // determine the actual offset
@@ -2199,7 +2199,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[IRI], userProfile: UserProfileV1) = {
+    private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserProfileV1) = {
 
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
@@ -2208,7 +2208,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 triplestore = settings.triplestoreType,
                 searchTerm = searchPhrase,
                 limitToProject = limitToProject,
-                limitToResourceClass = limitToResourceClass,
+                limitToResourceClass = limitToResourceClass.map(_.toString),
                 limit = 1,
                 offset = 0,
                 countQuery = true
@@ -2242,7 +2242,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def searchResourcesByLabelV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def searchResourcesByLabelV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
@@ -2251,7 +2251,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 triplestore = settings.triplestoreType,
                 searchTerm = searchPhrase,
                 limitToProject = limitToProject,
-                limitToResourceClass = limitToResourceClass,
+                limitToResourceClass = limitToResourceClass.map(_.toString),
                 limit = settings.v2ResultsPerPage,
                 offset = offset * settings.v2ResultsPerPage,
                 countQuery = false

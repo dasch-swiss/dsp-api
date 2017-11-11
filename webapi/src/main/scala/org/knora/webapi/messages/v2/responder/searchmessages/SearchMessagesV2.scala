@@ -23,6 +23,7 @@ package org.knora.webapi.messages.v2.responder.searchmessages
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.util.SmartIri
 import org.knora.webapi.util.search.ConstructQuery
 
 /**
@@ -43,7 +44,7 @@ sealed trait SearchResponderRequestV2 extends KnoraRequestV2 {
   */
 case class FullTextSearchCountGetRequestV2(searchValue: String,
                                            limitToProject: Option[IRI],
-                                           limitToResourceClass: Option[IRI],
+                                           limitToResourceClass: Option[SmartIri],
                                            userProfile: UserProfileV1) extends SearchResponderRequestV2
 
 /**
@@ -58,7 +59,7 @@ case class FullTextSearchCountGetRequestV2(searchValue: String,
 case class FulltextSearchGetRequestV2(searchValue: String,
                                       offset: Int,
                                       limitToProject: Option[IRI],
-                                      limitToResourceClass: Option[IRI],
+                                      limitToResourceClass: Option[SmartIri],
                                       userProfile: UserProfileV1) extends SearchResponderRequestV2
 
 
@@ -94,7 +95,7 @@ case class ExtendedSearchGetRequestV2(constructQuery: ConstructQuery,
   */
 case class SearchResourceByLabelCountGetRequestV2(searchValue: String,
                                           limitToProject: Option[IRI],
-                                          limitToResourceClass: Option[IRI],
+                                          limitToResourceClass: Option[SmartIri],
                                           userProfile: UserProfileV1) extends SearchResponderRequestV2
 
 /**
@@ -109,5 +110,5 @@ case class SearchResourceByLabelCountGetRequestV2(searchValue: String,
 case class SearchResourceByLabelGetRequestV2(searchValue: String,
                                              offset: Int,
                                              limitToProject: Option[IRI],
-                                             limitToResourceClass: Option[IRI],
+                                             limitToResourceClass: Option[SmartIri],
                                              userProfile: UserProfileV1) extends SearchResponderRequestV2

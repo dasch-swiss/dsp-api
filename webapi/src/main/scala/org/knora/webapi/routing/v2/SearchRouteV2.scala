@@ -28,8 +28,8 @@ import akka.util.Timeout
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.search.v2.SearchParserV2
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 import org.knora.webapi.{BadRequestException, IRI, InternalSchema, SettingsImpl}
 
 import scala.concurrent.ExecutionContextExecutor
@@ -97,11 +97,11 @@ object SearchRouteV2 extends Authenticator {
       * @param params the GET parameters.
       * @return the internal resource class, if any.
       */
-    private def getResourceClassFromParams(params: Map[String, String]): Option[IRI] = {
+    private def getResourceClassFromParams(params: Map[String, String]): Option[SmartIri] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val limitToResourceClassIriStr = params.get(LIMIT_TO_RESOURCE_CLASS)
 
-        val limitToResourceClassIri: Option[IRI] = limitToResourceClassIriStr match {
+        limitToResourceClassIriStr match {
             case Some(resourceClassIriStr: String) =>
                 val externalResourceClassIri = resourceClassIriStr.toSmartIriWithErr(() => throw BadRequestException(s"Invalid resource class IRI: $resourceClassIriStr"))
 
@@ -109,12 +109,10 @@ object SearchRouteV2 extends Authenticator {
                     throw BadRequestException(s"$resourceClassIriStr is not a valid knora-api resource class IRI")
                 }
 
-                Some(externalResourceClassIri.toOntologySchema(InternalSchema).toString)
+                Some(externalResourceClassIri.toOntologySchema(InternalSchema))
 
             case None => None
         }
-
-        limitToResourceClassIri
     }
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
@@ -140,7 +138,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToProject: Option[IRI] = getProjectFromParams(params)
 
-                    val limitToResourceClass: Option[IRI] = getResourceClassFromParams(params)
+                    val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
                     val requestMessage = FullTextSearchCountGetRequestV2(searchValue = searchString, limitToProject = limitToProject, limitToResourceClass = limitToResourceClass, userProfile = userProfile)
 
@@ -169,7 +167,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToProject: Option[IRI] = getProjectFromParams(params)
 
-                    val limitToResourceClass: Option[IRI] = getResourceClassFromParams(params)
+                    val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
                     val requestMessage = FulltextSearchGetRequestV2(searchValue = searchString, offset = offset, limitToProject = limitToProject, limitToResourceClass = limitToResourceClass, userProfile = userProfile)
 
@@ -238,7 +236,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToProject: Option[IRI] = getProjectFromParams(params)
 
-                    val limitToResourceClass: Option[IRI] = getResourceClassFromParams(params)
+                    val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
                     val requestMessage = SearchResourceByLabelCountGetRequestV2(
                         searchValue = searchString,
@@ -274,7 +272,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToProject: Option[IRI] = getProjectFromParams(params)
 
-                    val limitToResourceClass: Option[IRI] = getResourceClassFromParams(params)
+                    val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
                     val requestMessage = SearchResourceByLabelGetRequestV2(
                         searchValue = searchString,
