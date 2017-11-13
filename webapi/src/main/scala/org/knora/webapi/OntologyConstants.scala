@@ -772,7 +772,7 @@ object OntologyConstants {
     /**
       * A map of predicates in each possible source schema to the corresponding predicates in each possible target schema.
       */
-    val CorrespondingPredicates: Map[(KnoraSchema, KnoraSchema), Map[IRI, IRI]] = Map(
+    val CorrespondingPredicates: Map[(OntologySchema, OntologySchema), Map[IRI, IRI]] = Map(
         (InternalSchema, ApiV2Simple) -> Map(
             OntologyConstants.KnoraBase.SubjectClassConstraint -> OntologyConstants.KnoraApiV2Simple.SubjectType,
             OntologyConstants.KnoraBase.ObjectClassConstraint -> OntologyConstants.KnoraApiV2Simple.ObjectType

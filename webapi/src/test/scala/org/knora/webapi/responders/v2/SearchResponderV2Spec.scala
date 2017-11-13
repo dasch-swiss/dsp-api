@@ -29,8 +29,9 @@ import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.v2.ResponseCheckerResponderV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.util.MessageUtil
 import org.knora.webapi.{CoreSpec, LiveActorMaker, SharedAdminTestData}
+import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.IriConversions._
 
 import scala.concurrent.duration._
 
@@ -51,6 +52,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
     private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
@@ -129,7 +131,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
                 searchValue = "Narrenschiff",
                 offset = 0,
                 limitToProject = None,
-                limitToResourceClass = Some("http://www.knora.org/ontology/incunabula#book"), // internal Iri!
+                limitToResourceClass = Some("http://www.knora.org/ontology/incunabula#book".toSmartIri), // internal Iri!
                 userProfile = SharedAdminTestData.anonymousUser
             )
 

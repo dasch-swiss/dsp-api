@@ -295,7 +295,7 @@ class StringFormatterSpec extends CoreSpec() {
 
             for (i <- 1 to totalIris) {
                 val iriStr = s"http://0.0.0.0:3333/ontology/incunabula/v2#class$i"
-                val iri = iriStr.toSmartIri
+                val iri = iriStr.toSmartIri.toOntologySchema(InternalSchema)
             }
 
             val parseEnd = System.currentTimeMillis
@@ -307,7 +307,7 @@ class StringFormatterSpec extends CoreSpec() {
 
             for (i <- 1 to totalIris) {
                 val iriStr = s"http://0.0.0.0:3333/ontology/incunabula/v2#class$i"
-                val iri = iriStr.toSmartIri
+                val iri = iriStr.toSmartIri.toOntologySchema(InternalSchema)
             }
 
             val retrieveEnd = System.currentTimeMillis

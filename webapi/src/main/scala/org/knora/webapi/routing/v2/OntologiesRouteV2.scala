@@ -74,7 +74,7 @@ object OntologiesRouteV2 extends Authenticator {
                     val ontologiesForResponder: Set[SmartIri] = Set(ontologyForResponder)
 
                     val responseSchema = requestedOntology.getOntologySchema match {
-                        case apiV2Schema: ApiV2Schema => apiV2Schema
+                        case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
                         case _ => throw BadRequestException(s"Invalid ontology IRI: $requestedOntologyStr")
                     }
 
@@ -125,7 +125,7 @@ object OntologiesRouteV2 extends Authenticator {
                             val requestedOntologyIri: SmartIri = namedGraphStr.toSmartIriWithErr(() => throw BadRequestException(s"Invalid ontology IRI: $namedGraphStr"))
 
                             val schema = requestedOntologyIri.getOntologySchema match {
-                                case apiV2Schema: ApiV2Schema => apiV2Schema
+                                case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
                                 case _ => throw BadRequestException(s"Invalid ontology IRI: $namedGraphStr")
                             }
 
@@ -174,7 +174,7 @@ object OntologiesRouteV2 extends Authenticator {
                             val requestedClassIri: SmartIri = classIriStr.toSmartIriWithErr(() => throw BadRequestException(s"Invalid class IRI: $classIriStr"))
 
                             val schema = requestedClassIri.getOntologySchema match {
-                                case apiV2Schema: ApiV2Schema => apiV2Schema
+                                case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
                                 case _ => throw BadRequestException(s"Invalid class IRI: $classIriStr")
                             }
 
@@ -224,7 +224,7 @@ object OntologiesRouteV2 extends Authenticator {
                             val requestedPropIri: SmartIri = propIriStr.toSmartIriWithErr(() => throw BadRequestException(s"Invalid class IRI: $propIriStr"))
 
                             val schema = requestedPropIri.getOntologySchema match {
-                                case apiV2Schema: ApiV2Schema => apiV2Schema
+                                case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
                                 case _ => throw BadRequestException(s"Invalid class IRI: $propIriStr")
                             }
 

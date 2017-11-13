@@ -517,7 +517,7 @@ case class PredicateInfoV2(predicateIri: SmartIri,
       * @param targetSchema the target schema.
       * @return the converted [[PredicateInfoV2]].
       */
-    def justPredicateToOntologySchema(targetSchema: KnoraSchema): PredicateInfoV2 = {
+    def justPredicateToOntologySchema(targetSchema: OntologySchema): PredicateInfoV2 = {
         copy(
             predicateIri = predicateIriToOntologySchema(predicateIri, targetSchema),
             ontologyIri = ontologyIri.toOntologySchema(targetSchema)
@@ -531,7 +531,7 @@ case class PredicateInfoV2(predicateIri: SmartIri,
       * @param targetSchema the target schema.
       * @return the converted [[PredicateInfoV2]].
       */
-    def predicateAndObjectsToOntologySchema(targetSchema: KnoraSchema): PredicateInfoV2 = {
+    def predicateAndObjectsToOntologySchema(targetSchema: OntologySchema): PredicateInfoV2 = {
         if (objectsWithLang.nonEmpty) {
             throw DataConversionException(s"The objects of $predicateIri cannot be converted to schema $targetSchema, because they are not IRIs")
         }
@@ -638,29 +638,33 @@ sealed trait PredicateConverter {
       * @param targetSchema the target schema.
       * @return the converted IRI.
       */
-    protected def predicateIriToOntologySchema(predicateIri: SmartIri, targetSchema: KnoraSchema)(implicit stringFormatter: StringFormatter): SmartIri = {
+    protected def predicateIriToOntologySchema(predicateIri: SmartIri, targetSchema: OntologySchema)(implicit stringFormatter: StringFormatter): SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val sourceSchema = predicateIri.getOntologySchema
+        predicateIri.getOntologySchema match {
+            case Some(sourceSchema) =>
+                if (sourceSchema == targetSchema) {
+                    predicateIri
+                } else {
+                    sourceSchema match {
+                        case knoraSourceSchema: OntologySchema =>
+                            OntologyConstants.CorrespondingPredicates.get((knoraSourceSchema, targetSchema)) match {
+                                case Some(predicateMap: Map[IRI, IRI]) =>
+                                    predicateMap.get(predicateIri.toString) match {
+                                        case Some(convertedIri) => convertedIri.toSmartIri
+                                        case None => predicateIri.toOntologySchema(targetSchema)
+                                    }
 
-        if (sourceSchema == targetSchema) {
-            predicateIri
-        } else {
-            predicateIri.getOntologySchema match {
-                case knoraSourceSchema: KnoraSchema =>
-                    OntologyConstants.CorrespondingPredicates.get((knoraSourceSchema, targetSchema)) match {
-                        case Some(predicateMap: Map[IRI, IRI]) =>
-                            predicateMap.get(predicateIri.toString) match {
-                                case Some(convertedIri) => convertedIri.toSmartIri
-                                case None => predicateIri.toOntologySchema(targetSchema)
+                                case None => throw DataConversionException(s"Conversion from $knoraSourceSchema to $targetSchema is not supported")
                             }
 
-                        case None => throw DataConversionException(s"Conversion from $knoraSourceSchema to $targetSchema is not supported")
+                        case _ => predicateIri
                     }
+                }
 
-                case _ => predicateIri
-            }
+            case None => throw DataConversionException(s"$predicateIri has no ontology schema")
         }
+
     }
 }
 
@@ -684,7 +688,7 @@ sealed trait EntityInfoContentV2 extends PredicateConverter {
       * @param targetSchema                    the target schema.
       * @return a map of converted predicate IRIs to converted [[PredicateInfoV2]] objects.
       */
-    protected def convertPredicates(predsWithKnoraDefinitionIriObjs: Set[SmartIri], targetSchema: KnoraSchema): Map[SmartIri, PredicateInfoV2] = {
+    protected def convertPredicates(predsWithKnoraDefinitionIriObjs: Set[SmartIri], targetSchema: OntologySchema): Map[SmartIri, PredicateInfoV2] = {
         predicates.map {
             case (predicateIri, predicateInfo) =>
                 val convertedPredicateIri = predicateIriToOntologySchema(predicateIri, targetSchema)
@@ -892,11 +896,11 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
                                  ontologyIri: SmartIri,
                                  predicates: Map[SmartIri, PredicateInfoV2] = Map.empty[SmartIri, PredicateInfoV2],
                                  subPropertyOf: Set[SmartIri] = Set.empty[SmartIri],
-                                 ontologySchema: KnoraSchema) extends EntityInfoContentV2 {
+                                 ontologySchema: OntologySchema) extends EntityInfoContentV2 {
 
     import PropertyInfoContentV2._
 
-    def toOntologySchema(targetSchema: KnoraSchema): PropertyInfoContentV2 = {
+    def toOntologySchema(targetSchema: OntologySchema): PropertyInfoContentV2 = {
 
         // Are we converting from the internal schema to the API v2 simple schema?
         val predicatesWithAdjustedRdfType: Map[SmartIri, PredicateInfoV2] = if (ontologySchema == InternalSchema && targetSchema == ApiV2Simple) {
@@ -1244,8 +1248,8 @@ case class ClassInfoContentV2(classIri: SmartIri,
                               xsdStringRestrictionPattern: Option[String] = None,
                               standoffDataType: Option[StandoffDataTypeClasses.Value] = None,
                               subClassOf: Set[SmartIri] = Set.empty[SmartIri],
-                              ontologySchema: KnoraSchema) extends EntityInfoContentV2 {
-    def toOntologySchema(targetSchema: KnoraSchema): ClassInfoContentV2 = {
+                              ontologySchema: OntologySchema) extends EntityInfoContentV2 {
+    def toOntologySchema(targetSchema: OntologySchema): ClassInfoContentV2 = {
         copy(
             classIri = classIri.toOntologySchema(targetSchema),
             ontologyIri = ontologyIri.toOntologySchema(targetSchema),
