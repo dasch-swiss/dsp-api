@@ -105,7 +105,7 @@ class PersistentMapResponderV2 extends Responder {
             val currentTime = Instant.now.toString
 
             val updateFuture = for {
-            // Create the persistent map if it doesn't exist already.
+                // Create the persistent map if it doesn't exist already.
 
                 createMapSparql <- Future(queries.sparql.v2.txt.createMap(
                     mapNamedGraphIri = OntologyConstants.NamedGraphs.PersistentMapNamedGraph,
@@ -145,7 +145,7 @@ class PersistentMapResponderV2 extends Responder {
         val mapIri = knoraIdUtil.makeMapIri(request.mapPath)
 
         for {
-        // Run the update while holding an update lock on the map.
+            // Run the update while holding an update lock on the map.
             taskResult <- IriLocker.runWithIriLock(
                 request.apiRequestID,
                 mapIri,
@@ -185,7 +185,7 @@ class PersistentMapResponderV2 extends Responder {
         val mapIri = knoraIdUtil.makeMapIri(request.mapPath)
 
         for {
-        // Run the update while holding an update lock on the map.
+            // Run the update while holding an update lock on the map.
             taskResult <- IriLocker.runWithIriLock(
                 request.apiRequestID,
                 mapIri,
@@ -224,7 +224,7 @@ class PersistentMapResponderV2 extends Responder {
         val mapIri = knoraIdUtil.makeMapIri(request.mapPath)
 
         for {
-        // Run the update while holding an update lock on the map.
+            // Run the update while holding an update lock on the map.
             taskResult <- IriLocker.runWithIriLock(
                 request.apiRequestID,
                 mapIri,

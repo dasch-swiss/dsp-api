@@ -62,26 +62,26 @@ object ListsRouteV1 extends Authenticator {
                     )
             }
         } ~
-        path("v1" / "selections" / Segment) { iri =>
-            get {
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-                    val selIri = stringFormatter.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
+            path("v1" / "selections" / Segment) { iri =>
+                get {
+                    requestContext =>
+                        val userProfile = getUserProfileV1(requestContext)
+                        val selIri = stringFormatter.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = requestContext.request.uri.query().get("reqtype") match {
-                        case Some("node") => NodePathGetRequestV1(selIri, userProfile)
-                        case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
-                        case None => SelectionGetRequestV1(selIri, userProfile)
-                    }
+                        val requestMessage = requestContext.request.uri.query().get("reqtype") match {
+                            case Some("node") => NodePathGetRequestV1(selIri, userProfile)
+                            case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
+                            case None => SelectionGetRequestV1(selIri, userProfile)
+                        }
 
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
             }
-        }
     }
 }

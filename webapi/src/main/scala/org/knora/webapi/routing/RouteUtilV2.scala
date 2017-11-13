@@ -66,7 +66,7 @@ object RouteUtilV2 {
         }
 
         val httpResponse: Future[HttpResponse] = for {
-        // Make sure the responder sent a reply of type KnoraResponseV2.
+            // Make sure the responder sent a reply of type KnoraResponseV2.
             knoraResponse <- (responderManager ? requestMessage).map {
                 case replyMessage: KnoraResponseV2 => replyMessage
 

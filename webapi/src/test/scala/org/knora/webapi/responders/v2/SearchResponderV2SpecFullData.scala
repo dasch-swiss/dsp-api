@@ -655,7 +655,7 @@ object SearchResponderV2SpecFullData {
                                     ))
                                 ))
                             ),
-                            mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping",
+                            mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
                             standoff = Vector(
                                 StandoffTagV1(
                                     attributes = Vector(StandoffTagIriAttributeV1(
@@ -971,7 +971,7 @@ object SearchResponderV2SpecFullData {
                                     ))
                                 ))
                             ),
-                            mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping",
+                            mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
                             standoff = Vector(
                                 StandoffTagV1(
                                     attributes = Vector(StandoffTagIriAttributeV1(

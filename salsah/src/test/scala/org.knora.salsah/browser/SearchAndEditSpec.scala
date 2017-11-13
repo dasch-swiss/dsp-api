@@ -49,7 +49,7 @@ class SearchAndEditSpec extends SalsahSpec {
         """
             [
                 {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/incunabula"},
-                {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/images"},
+                {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/00FF/images"},
                 {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/anything"},
                 {"path": "_test_data/all_data/biblio-data.ttl", "name": "http://www.knora.org/data/biblio"}
             ]
@@ -254,9 +254,9 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.selectVocabulary("0") // select all
 
-            page.selectRestype("http://www.knora.org/ontology/images#bild")
+            page.selectRestype("http://www.knora.org/ontology/00FF/images#bild")
 
-            page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/images#titel")
+            page.getExtendedSearchSelectionByName(1, "selprop").selectByValue("http://www.knora.org/ontology/00FF/images#titel")
 
             var selections = page.getHierarchicalListSelectionsInExtendedSearch(1)
 
@@ -685,7 +685,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.selectVocabulary("0") // select all
 
-            page.selectRestype("http://www.knora.org/ontology/images#bild")
+            page.selectRestype("http://www.knora.org/ontology/00FF/images#bild")
 
             page.submitExtendedSearch()
 
@@ -733,7 +733,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.selectVocabulary("0") // select all
 
-            page.selectRestype("http://www.knora.org/ontology/images#bild")
+            page.selectRestype("http://www.knora.org/ontology/00FF/images#bild")
 
             page.submitExtendedSearch()
 

@@ -59,11 +59,11 @@ case class CreateResourceApiRequestV1(restype_id: IRI,
 /**
   * Used internally to represent a request to create a resource from an XML import.
   *
-  * @param restype_id   the IRI of the resource class.
-  * @param label        the resource's label.
-  * @param client_id    the client's unique ID for the resource.
-  * @param properties   the resource's properties.
-  * @param file         a file on disk that should be attached to the resource.
+  * @param restype_id the IRI of the resource class.
+  * @param label      the resource's label.
+  * @param client_id  the client's unique ID for the resource.
+  * @param properties the resource's properties.
+  * @param file       a file on disk that should be attached to the resource.
   */
 case class CreateResourceFromXmlImportRequestV1(restype_id: IRI,
                                                 client_id: String,
@@ -258,7 +258,7 @@ case class MultipleResourceCreateResponseV1(createdResources: Seq[OneOfMultipleR
   * Represents one of multiple resources that were created in response to a single API request.
   *
   * @param clientResourceID the client's ID for the resource.
-  * @param resourceIri the IRI that was assigned to the resource.
+  * @param resourceIri      the IRI that was assigned to the resource.
   */
 case class OneOfMultipleResourcesCreateResponseV1(clientResourceID: String, resourceIri: IRI, label: String)
 

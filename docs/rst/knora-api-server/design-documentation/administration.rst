@@ -203,9 +203,9 @@ all resources (*ProjectResourceCreateAllPermission*), the resulting administrati
 form literal would be:
 ::
 
-  <http://data.knora.org/permissions/001>
+  <http://rdfh.ch/permissions/001>
           rdf:type knora-base:AdministrativePermission ;
-          knora-base:forProject <http://data.knora.org/projects/images> ;
+          knora-base:forProject <http://rdfh.ch/projects/00FF> ;
           knora-base:forGroup knora-base:ProjectMember ;
           knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
 
@@ -261,9 +261,9 @@ Example default object access permission instance:
 
 ::
 
-  <http://data.knora.org/permissions/002>
+  <http://rdfh.ch/permissions/002>
           rdf:type knora-base:DefaultObjectAccessPermission ;
-          knora-base:forProject <http://data.knora.org/projects/images> ;
+          knora-base:forProject <http://rdfh.ch/projects/00FF> ;
           knora-base:forGroup knora-base:ProjectMember ;
           knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"^^xsd:string .
 
@@ -540,14 +540,14 @@ The following graphs show the class hierarchy and the structure of each permissi
 and the same as RDF:
 ::
   
-  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
-       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
-       knora-base:forGroup <http://data.knora.org/groups/[UUID]> ; 
+  <http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
+       knora-base:forProject <http://rdfh.ch/projects/[shortcode]> ;
+       knora-base:forGroup <http://rdfh.ch/groups/[shortcode]/[UUID]> ;
        knora-base:hasPermissions "ProjectResourceCreateAllPermission|
                                   ProjectResourceCreateRestrictedPermission "<Resource Class IRI>"|
                                   ProjectAdminAllPermission|
                                   ProjectAdminGroupAllPermission|
-                                  ProjectAdminGroupRestrictedPermission "<http://data.knora.org/groups/[UUID]>, <http://data.knora.org/groups/[UUID]>"|
+                                  ProjectAdminGroupRestrictedPermission "<http://rdfh.ch/groups/[shortcode]/[UUID]>, <http://rdfh.ch/groups/[shortcode]/[UUID]>"|
                                   ProjectAdminRightsAllPermission|
                                   ProjectAdminOntologyAllPermission"^^xsd:string .
 
@@ -577,16 +577,16 @@ and the same as RDF:
 and the same as RDF:
 ::
   
-  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
-       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
-       knora-base:forGroup <http://data.knora.org/groups/[UUID]> ; 
+  <http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
+       knora-base:forProject <http://rdfh.ch/projects/[shortcode]> ;
+       knora-base:forGroup <http://rdfh.ch/groups/[shortcode]/[UUID]> ;
        knora-base:forResourceClass "Resource Class Name" ;
        knora-base:forProperty "Resource Property Name" ; 
-       knora-base:hasPermissions "RV <http://data.knora.org/groups/[UUID]>|
-                                   V <http://data.knora.org/groups/[UUID]>|
-                                   M <http://data.knora.org/groups/[UUID]>|
-                                   D <http://data.knora.org/groups/[UUID]>|
-                                  CR <http://data.knora.org/groups/[UUID]>"^^xsd:string .
+       knora-base:hasPermissions "RV <http://rdfh.ch/groups/[shortcode]/[UUID]>|
+                                   V <http://rdfh.ch/groups/[shortcode]/[UUID]>|
+                                   M <http://rdfh.ch/groups/[shortcode]/[UUID]>|
+                                   D <http://rdfh.ch/groups/[shortcode]/[UUID]>|
+                                  CR <http://rdfh.ch/groups/[shortcode]/[UUID]>"^^xsd:string .
 
 
 Querying Permission Instances
@@ -612,8 +612,8 @@ Example Data stored in the permissions graph
 **Administrative permissions on a 'ProjectAdmin' group:**
 ::
 
-  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
-       knora-base:forProject <http://data.knora.org/projects/images> ;
+  <http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
+       knora-base:forProject <http://rdfh.ch/projects/00FF> ;
        knora-base:forGroup knora-base:ProjectAdmin ;
        knora-base:hasPermissions "ProjectResourceCreateAllPermission|
                                   ProjectAdminAllPermission"^^xsd:string .
@@ -622,8 +622,8 @@ Example Data stored in the permissions graph
 **Administrative permissions on a 'ProjectMember' group:**
 ::
 
-  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
-       knora-base:forProject <http://data.knora.org/projects/images> ;
+  <http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
+       knora-base:forProject <http://rdfh.ch/projects/00FF> ;
        knora-base:forGroup knora-base:ProjectMember ;
        knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
 
@@ -631,38 +631,38 @@ Example Data stored in the permissions graph
 **Administrative permission restricting project admin permission on a group:**
 ::
 
-  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:Permission ;
-       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
-       knora-base:forGroup <http://data.knora.org/groups/[UUID]> ;
-       knora-base:hasPermissions "ProjectGroupAdminRestrictedPermission <http://data.knora.org/groups/[UUID]>"^^xsd:string .
+  <http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:Permission ;
+       knora-base:forProject <http://rdfh.ch/projects/[shortcode]> ;
+       knora-base:forGroup <http://rdfh.ch/groups/[shortcode]/[UUID]> ;
+       knora-base:hasPermissions "ProjectGroupAdminRestrictedPermission <http://rdfh.ch/groups/[shortcode]/[UUID]>"^^xsd:string .
 
 
 **Administrative permission restricting resource creation for a group:**
 ::
 
-  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
-       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
-       knora-base:forGroup <http://data.knora.org/groups/[UUID]> ;
+  <http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
+       knora-base:forProject <http://rdfh.ch/projects/[shortcode]> ;
+       knora-base:forGroup <http://rdfh.ch/groups/[shortcode]/[UUID]> ;
        knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission <http://www.knora.org/ontology/images#Person>"^^xsd:string .
 
 
 **Default object access permission on a 'ProjectMember' group:**
 ::
 
-  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
-       knora-base:forProject <http://data.knora.org/projects/images> ;
+  <http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
+       knora-base:forProject <http://rdfh.ch/projects/00FF> ;
        knora-base:forGroup knora-base:ProjectMember ;
        knora-base:hasPermissions "CR knora-base:Creator|
-                                   M <http://data.knora.org/groups/[UUID]>|
+                                   M <http://rdfh.ch/groups/[shortcode]/[UUID]>|
                                    V knora-base:KnownUser"^^xsd:string .
 
 
 **Default object access permission on a resource class:**
 ::
 
-  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
-       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
-       knora-base:forResourceClass <http://www.knora.org/ontology/images#person> ;
+  <http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
+       knora-base:forProject <http://rdfh.ch/projects/[shortcode]> ;
+       knora-base:forResourceClass <http://www.knora.org/ontology/00FF/images#person> ;
        knora-base:hasPermissions "CR knora-base:Creator,knora-base:ProjectMember|
                                    V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
 
@@ -670,9 +670,9 @@ Example Data stored in the permissions graph
 **Default object access permission on a resource property:**
 ::
 
-  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
-       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
-       knora-base:forProperty <http://www.knora.org/ontology/images#lastname> ;
+  <http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
+       knora-base:forProject <http://rdfh.ch/projects/[shortcode]> ;
+       knora-base:forProperty <http://www.knora.org/ontology/00FF/images#lastname> ;
        knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Creator|
                                   V knora-base:KnownUser,knora-base:UnknownUser"^^ .
 
@@ -680,10 +680,10 @@ Example Data stored in the permissions graph
 **Default object access permission on a resource class and property:**
 ::
 
-  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
-       knora-base:forProject <http://data.knora.org/projects/[UUID]> ;
-       knora-base:forResourceClass <http://www.knora.org/ontology/images#person> ;
-       knora-base:forProperty <http://www.knora.org/ontology/images#lastname> ;
+  <http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
+       knora-base:forProject <http://rdfh.ch/projects/[shortcode]> ;
+       knora-base:forResourceClass <http://www.knora.org/ontology/00FF/images#person> ;
+       knora-base:forProperty <http://www.knora.org/ontology/00FF/images#lastname> ;
        knora-base:hasPermissions "CR knora-base:Creator,knora-base:ProjectMember|
                                    V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
 
@@ -691,7 +691,7 @@ Example Data stored in the permissions graph
 **Default object access permission on a knora-base property:**
 ::
 
-  <http://data.knora.org/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
+  <http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
        knora-base:forProject knora-base:SystemProject ;
        knora-base:forProperty <http://www.knora.org/ontology/knora-base#hasStillImageFileValue> ;
        knora-base:hasPermissions "RV knora-base:UnknownUser|
@@ -895,7 +895,7 @@ Users Endpoint
 Example User Information stored in admin graph:
 ::
 
-  <http://data.knora.org/users/91e19f1e01> rdf:type knora-base:User ;
+  <http://rdfh.ch/users/91e19f1e01> rdf:type knora-base:User ;
        knora-base:email "test@test.ch"^^xsd:string ;
        knora-base:givenName "Administrator"^^xsd:string ;
        knora-base:familyName "Admin"^^xsd:string ;
@@ -903,10 +903,10 @@ Example User Information stored in admin graph:
        knora-base:phone "123456" ;
        knora-base:preferredLanguage "de"^^xsd:string ;
        knora-base:status "true"^^xsd:boolean ;
-       knora-base:isInProject <http://data.knora.org/projects/[UUID]> ;
+       knora-base:isInProject <http://rdfh.ch/projects/[shortcode]> ;
        knora-base:isInSystemAdminGroup "true"^^xsd:boolean ;
-       knora-base:isInProjectAdminGroup <http://data.knora.org/projects/[UUID]> ;
-       knora-base:isInGroup <http://data.knora.org/groups/[UUID]> .
+       knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/[shortcode]> ;
+       knora-base:isInGroup <http://rdfh.ch/groups/[shortcode]/[UUID]> .
 
 
 Projects Endpoint
@@ -969,15 +969,19 @@ Projects Endpoint
 Example Project Information stored in admin named graph:
 ::
 
-   <http://data.knora.org/projects/[UUID]>
+   <http://rdfh.ch/projects/[shortcode]>
         rdf:type knora-base:knoraProject ;
-        knora-base:projectBasepath "/imldata/SALSAH-TEST-01/images" ;
         knora-base:projectShortname "images" ;
+        knora-base:projectShortcode "00FF" ;
         knora-base:projectLongname "Images Collection Demo" ;
-        knora-base:projectOntologyGraph "http://www.knora.org/ontology/images" ;
-        knora-base:projectDataGraph "http://www.knora.org/data/images" ;
+        knora-base:projectOntology <http://www.knora.org/ontology/00FF/images> ;
         knora-base:isActiveProject "true"^^xsd:boolean ;
         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+
+Migration Notes:
+
+The ``knora-base:projectOntologyGraph`` was renamed to ``knora-base:projectOntology``. Also before it was a ``xsd:string``, where now it needs to be an IRI. The ``knora-base:projectDataGraph`` is removed. The ``knora-base:projectShortcode`` property was added.
 
 
 Groups Endpoint
@@ -997,7 +1001,7 @@ Groups Endpoint
   {
     "name": "NewGroup",
     "description": "NewGroupDescription",
-    "project": "http://data.knora.org/projects/images",
+    "project": "http://rdfh.ch/projects/00FF",
     "status": true,
     "selfjoin": false
   }
@@ -1028,11 +1032,11 @@ Groups Endpoint
 Example Group Information stored in admin named graph:
 ::
 
-   <http://data.knora.org/groups/[UUID]>
+   <http://rdfh.ch/groups/[shortcode]/[UUID]>
         rdf:type knora-base:UserGroup ;
         knora-base:groupName "Name of the group" ;
         knora-base:groupDescription "A description of the group" ;
-        knora-base:belongsToProject <http://data.knora.org/projects/[UUID]> ;
+        knora-base:belongsToProject <http://rdfh.ch/projects/[UUID]> ;
         knora-base:status "true"^^xsd:boolean ;
         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 

@@ -449,7 +449,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
                 actorUnderTest ! UserProjectMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
                 val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseV1](timeout)
-                membershipsAfterUpdate.projects should equal (Seq("http://data.knora.org/projects/images"))
+                membershipsAfterUpdate.projects should equal (Seq(imagesProjectIri))
 
                 responderManager ! ProjectMembersByIRIGetRequestV1(imagesProjectIri, rootUser)
                 val received: ProjectMembersGetResponseV1 = expectMsgType[ProjectMembersGetResponseV1](timeout)
@@ -461,7 +461,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
                 actorUnderTest ! UserProjectMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
                 val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseV1](timeout)
-                membershipsBeforeUpdate.projects should equal (Seq("http://data.knora.org/projects/images"))
+                membershipsBeforeUpdate.projects should equal (Seq(imagesProjectIri))
 
                 actorUnderTest ! UserProjectMembershipRemoveRequestV1(normalUserIri, imagesProjectIri, rootUser, UUID.randomUUID())
                 expectMsgType[UserOperationResponseV1](timeout)
@@ -502,7 +502,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
                 actorUnderTest ! UserProjectAdminMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
                 val membershipsAfterUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseV1](timeout)
-                membershipsAfterUpdate.projects should equal (Seq("http://data.knora.org/projects/images"))
+                membershipsAfterUpdate.projects should equal (Seq(imagesProjectIri))
 
                 responderManager ! ProjectAdminMembersByIRIGetRequestV1(imagesProjectIri, rootUser)
                 val received: ProjectAdminMembersGetResponseV1 = expectMsgType[ProjectAdminMembersGetResponseV1](timeout)
@@ -513,7 +513,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             "DELETE user from project admin group" in {
                 actorUnderTest ! UserProjectAdminMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
                 val membershipsBeforeUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseV1](timeout)
-                membershipsBeforeUpdate.projects should equal (Seq("http://data.knora.org/projects/images"))
+                membershipsBeforeUpdate.projects should equal (Seq(imagesProjectIri))
 
                 actorUnderTest ! UserProjectAdminMembershipRemoveRequestV1(normalUserIri, imagesProjectIri, rootUser, UUID.randomUUID())
                 expectMsgType[UserOperationResponseV1](timeout)

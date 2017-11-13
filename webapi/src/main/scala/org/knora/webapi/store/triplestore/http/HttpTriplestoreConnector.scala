@@ -140,7 +140,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         }
 
         for {
-        // Are we using the fake triplestore?
+            // Are we using the fake triplestore?
             resultStr <- if (settings.useFakeTriplestore) {
                 // Yes: get the response from it.
                 Future(FakeTriplestore.data(sparql))
@@ -240,7 +240,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         // println(logDelimiter + sparqlUpdate)
 
         for {
-        // Send the request to the triplestore.
+            // Send the request to the triplestore.
             _ <- getTriplestoreHttpResponse(sparqlUpdate, isUpdate = true)
 
             // If we're using GraphDB, update the full-text search index.
@@ -274,7 +274,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         log.debug("resetTripleStoreContent")
         val resetTriplestoreResult = for {
 
-        // drop old content
+            // drop old content
             dropResult <- dropAllTriplestoreContent()
 
             // insert new content
@@ -407,7 +407,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         }
 
         val triplestoreResponseFuture = for {
-        // _ = println(request.toString())
+            // _ = println(request.toString())
 
             requestStartTime: Long <- FastFuture.successful {
                 if (settings.profileQueries) {

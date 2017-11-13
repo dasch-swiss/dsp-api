@@ -46,6 +46,7 @@ object CORSSupport extends Directives {
       * Adds CORS support to a route. Also, any exceptions thrown inside the route are handled by
       * the [[KnoraExceptionHandler]]. Finally, all rejections are handled by the [[CorsDirectives.corsRejectionHandler]]
       * so that all responses (correct and failures) have the correct CORS headers attached.
+      *
       * @param route the route for which CORS support is enabled
       * @return the enabled route.
       */

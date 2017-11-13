@@ -25332,7 +25332,7 @@
       "restype_label": "Buch",
       "resclass_has_location": false,
       "preview": null,
-      "person_id": "http://data.knora.org/users/91e19f1e01",
+      "person_id": "http://rdfh.ch/users/91e19f1e01",
       "value_of": 0,
       "lastmod": "0000-00-00 00:00:00",
       "resclass_name": "object",
@@ -25341,7 +25341,7 @@
       "restype_name": "http://www.knora.org/ontology/incunabula#book",
       "regions": null,
       "restype_description": "Diese Resource-Klasse beschreibt ein Buch",
-      "project_id": "http://data.knora.org/projects/77275339",
+      "project_id": "http://rdfh.ch/projects/77275339",
       "locdata": null,
       "restype_id": "http://www.knora.org/ontology/incunabula#book"
     },

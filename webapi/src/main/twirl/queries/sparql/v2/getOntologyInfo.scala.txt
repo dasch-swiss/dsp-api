@@ -21,7 +21,7 @@
 @import org.knora.webapi.IRI
 
 @*
- * Checks the last modification date of an ontology, to determine whether an update was performed.
+ * Gets the predicates and objects of an ontology IRI.
  *
  * @param triplestore the name of the triplestore being used.
  * @param ontologyIri the IRI of the ontology.
@@ -35,10 +35,9 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?lastModificationDate
+SELECT ?ontologyPred ?ontologyObj
 WHERE {
     BIND(IRI("@ontologyIri") AS ?ontology)
 
-    ?ontology rdf:type owl:Ontology ;
-        knora-base:lastModificationDate ?lastModificationDate .
+    ?ontology ?ontologyPred ?ontologyObj .
 }

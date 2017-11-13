@@ -36,7 +36,7 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
   * Requests a description of a resource. A successful response will be a [[ReadResourcesSequenceV2]].
   *
   * @param resourceIris the IRIs of the resources to be queried.
-  * @param userProfile the profile of the user making the request.
+  * @param userProfile  the profile of the user making the request.
   */
 case class ResourcesGetRequestV2(resourceIris: Seq[IRI], userProfile: UserProfileV1) extends ResourcesResponderRequestV2
 
@@ -44,6 +44,6 @@ case class ResourcesGetRequestV2(resourceIris: Seq[IRI], userProfile: UserProfil
   * Requests a preview of a resource.
   *
   * @param resourceIris the Iris of the resources to obtain a preview for.
-  * @param userProfile the profile of the user making the request.
+  * @param userProfile  the profile of the user making the request.
   */
 case class ResourcePreviewRequestV2(resourceIris: Seq[IRI], userProfile: UserProfileV1) extends ResourcesResponderRequestV2

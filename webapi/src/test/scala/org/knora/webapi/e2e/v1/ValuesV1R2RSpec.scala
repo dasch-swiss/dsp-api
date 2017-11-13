@@ -73,7 +73,7 @@ class ValuesV1R2RSpec extends R2RSpec {
     private val anythingUserEmail = anythingUser.userData.email.get
     private val testPass = "test"
 
-    private val mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+    private val mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
