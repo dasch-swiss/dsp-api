@@ -18,15 +18,15 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.routing.v2
+package org.knora.webapi.routing.admin
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import org.knora.webapi.messages.v2.responder.listmessages._
-import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
+import org.knora.webapi.messages.admin.responder.listadminmessages.{ListGetAdminRequest, ListNodeInfoGetAdminRequest, ListsGetAdminRequest}
+import org.knora.webapi.routing.{Authenticator, RouteUtilAdmin}
 import org.knora.webapi.util.InputValidation
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
@@ -35,7 +35,7 @@ import scala.concurrent.ExecutionContextExecutor
 /**
   * Provides a spray-routing function for API routes that deal with lists.
   */
-object ListsRouteV2 extends Authenticator {
+object ListsAdminRoute extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
@@ -43,16 +43,16 @@ object ListsRouteV2 extends Authenticator {
         implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
-        path("v2" / "lists") {
+        path("admin" / "lists") {
             get {
                 /* return all lists */
                 parameters("projectIri".?) { projectIri: Option[IRI] =>
                     requestContext =>
                         val userProfile = getUserProfileV1(requestContext)
 
-                        val requestMessage = ListsGetRequestV2(projectIri, userProfile)
+                        val requestMessage = ListsGetAdminRequest(projectIri, userProfile)
 
-                        RouteUtilV2.runJsonRoute(
+                        RouteUtilAdmin.runJsonRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -66,16 +66,16 @@ object ListsRouteV2 extends Authenticator {
                 ???
             }
         } ~
-        path("v2" / "lists" / Segment) {iri =>
+        path("admin" / "lists" / Segment) {iri =>
             get {
                 /* return a list (a graph with all list nodes) */
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
                     val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = ListGetRequestV2(listIri, userProfile)
+                    val requestMessage = ListGetAdminRequest(listIri, userProfile)
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilAdmin.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -92,16 +92,16 @@ object ListsRouteV2 extends Authenticator {
                 ???
             }
         } ~
-        path("v2" / "lists" / "nodes" / Segment) {iri =>
+        path("admin" / "lists" / "nodes" / Segment) {iri =>
             get {
                 /* return a single list node */
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
                     val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = ListNodeInfoGetRequestV2(listIri, userProfile)
+                    val requestMessage = ListNodeInfoGetAdminRequest(listIri, userProfile)
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilAdmin.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,

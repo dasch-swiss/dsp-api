@@ -37,6 +37,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProf
 import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v2.responder.ontologymessages.{LoadOntologiesRequestV2, LoadOntologiesResponseV2}
 import org.knora.webapi.responders.{ResponderManager, _}
+import org.knora.webapi.routing.admin.ListsAdminRoute
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
 import org.knora.webapi.store._
@@ -133,7 +134,7 @@ trait KnoraService {
             OntologiesRouteV2.knoraApiPath(system, settings, log) ~ // This is a V2 responder !
             SearchRouteV2.knoraApiPath(system, settings, log) ~  // This is a V2 responder !
             ResourcesRouteV2.knoraApiPath(system, settings, log) ~ // This is a V2 responder !
-            ListsRouteV2.knoraApiPath(system, settings, log) ~ // This is a V2 responder !
+            ListsAdminRoute.knoraApiPath(system, settings, log) ~ // This is a V2 responder !
             AuthenticationRouteV2.knoraApiPath(system, settings, log),
         settings,
         log
