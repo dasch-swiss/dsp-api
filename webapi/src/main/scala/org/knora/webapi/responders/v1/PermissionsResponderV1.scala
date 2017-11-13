@@ -16,13 +16,14 @@
 
 package org.knora.webapi.responders.v1
 
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionForProjectGroupGetResponseV1, AdministrativePermissionV1, DefaultObjectAccessPermissionGetResponseV1, DefaultObjectAccessPermissionV1, PermissionType, _}
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilV1}
@@ -1067,12 +1068,23 @@ class PermissionsResponderV1 extends Responder {
                 }
             }
 
+            ///////////////////////
+            // FALLBACK PERMISSION IF NONE COULD BE FOUND
+            ///////////////////////
+            /* Set 'CR knora-base:Creator' as the fallback permission */
+            _ = if (permissionsListBuffer.isEmpty) {
+                    val defaultFallbackPermission = Set(PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator))
+                    permissionsListBuffer += (("Fallback", defaultFallbackPermission))
+                    log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultFallbackPermission: $defaultFallbackPermission")
+                } else {
+                    FastFuture.successful(Set.empty[PermissionV1])
+                }
+            
             /* Create permissions string */
             result = permissionsListBuffer.length match {
                 case 1 => {
                     PermissionUtilV1.formatPermissions(permissionsListBuffer.head._2, PermissionType.OAP)
                 }
-                case 0 => throw BadRequestException("The resulting request would lead to an empty permissions string, which is not allowed. Are all the necessary default object access permissions defined?")
                 case _ => throw AssertionException("The permissions list buffer holding default object permissions should never be larger then 1.")
             }
             _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - project: {}, precedence: {}, defaultObjectAccessPermissions: {}", projectIri, permissionsListBuffer.head._1, result)
