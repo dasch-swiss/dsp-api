@@ -17,6 +17,7 @@
 package org.knora.webapi.responders.v1
 
 import akka.pattern._
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionForProjectGroupGetResponseV1, AdministrativePermissionV1, DefaultObjectAccessPermissionGetResponseV1, DefaultObjectAccessPermissionV1, PermissionType, _}
@@ -702,10 +703,10 @@ class PermissionsResponderV1 extends Responder {
                 maybeResourceClassIri = resourceClassIri,
                 maybePropertyIri = propertyIri
             ).toString()
-            _ = log.debug(s"defaultObjectAccessPermissionGetV1 - query: $sparqlQueryString")
+            // _ = log.debug(s"defaultObjectAccessPermissionGetV1 - query: $sparqlQueryString")
 
             permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            //_ = log.debug(s"defaultObjectAccessPermissionGetV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
+            // _ = log.debug(s"defaultObjectAccessPermissionGetV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
 
             permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
 
@@ -728,7 +729,7 @@ class PermissionsResponderV1 extends Responder {
             } else {
                 None
             }
-            //_ = log.debug(s"defaultObjectAccessPermissionGetV1 - p: $projectIRI, g: $groupIRI, r: $resourceClassIRI, p: $propertyIRI, permission: $permission")
+            _ = log.debug(s"defaultObjectAccessPermissionGetV1 - p: $projectIri, g: $groupIri, r: $resourceClassIri, p: $propertyIri, permission: $permission")
         } yield permission
     }
 
@@ -899,6 +900,8 @@ class PermissionsResponderV1 extends Responder {
             } else {
                 OntologyConstants.KnoraBase.KnownUser :: userGroups.toList
             }
+
+            _ = log.debug("defaultObjectAccessPermissionsStringForEntityGetV1 - extendedUserGroups: {}", extendedUserGroups)
 
             /* List buffer holding default object access permissions tagged with the precedence level:
                0. ProjectAdmin > 1. ProjectEntity > 2. SystemEntity > 3. CustomGroups > 4. ProjectMember > 5. KnownUser

@@ -18,19 +18,18 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.other.v1
+package org.knora.webapi.e2e.v1
 
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
+import spray.json._
 
 import scala.concurrent.duration._
 
-import spray.json._
-
-object PermissionHandlingV1E2ESpec {
+object PermissionsHandlingV1E2ESpec {
     val config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -41,7 +40,7 @@ object PermissionHandlingV1E2ESpec {
 /**
   * End-to-end test specification for testing the handling of permissions.
   */
-class PermissionHandlingV1E2ESpec extends E2ESpec(PermissionHandlingV1E2ESpec.config) with TriplestoreJsonProtocol {
+class PermissionsHandlingV1E2ESpec extends E2ESpec(PermissionsHandlingV1E2ESpec.config) with TriplestoreJsonProtocol {
 
     private val rootUser = SharedAdminTestData.rootUser
     private val rootUserEmail = rootUser.userData.email.get
@@ -56,7 +55,7 @@ class PermissionHandlingV1E2ESpec extends E2ESpec(PermissionHandlingV1E2ESpec.co
 
     private val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
 
@@ -74,12 +73,12 @@ class PermissionHandlingV1E2ESpec extends E2ESpec(PermissionHandlingV1E2ESpec.co
             val params =
                 """
                   |{
-                  |    "restype_id": "http://www.knora.org/ontology/images#person",
+                  |    "restype_id": "http://www.knora.org/ontology/00FF/images#person",
                   |    "label": "Testperson",
-                  |    "project_id": "http://data.knora.org/projects/images",
+                  |    "project_id": "http://rdfh.ch/projects/00FF",
                   |    "properties": {
-                  |        "http://www.knora.org/ontology/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
-                  |        "http://www.knora.org/ontology/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
+                  |        "http://www.knora.org/ontology/00FF/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
+                  |        "http://www.knora.org/ontology/00FF/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
                   |    }
                   |}
                 """.stripMargin
@@ -96,12 +95,12 @@ class PermissionHandlingV1E2ESpec extends E2ESpec(PermissionHandlingV1E2ESpec.co
             val params =
                 """
                   |{
-                  |    "restype_id": "http://www.knora.org/ontology/images#person",
+                  |    "restype_id": "http://www.knora.org/ontology/00FF/images#person",
                   |    "label": "Testperson",
-                  |    "project_id": "http://data.knora.org/projects/images",
+                  |    "project_id": "http://rdfh.ch/projects/00FF",
                   |    "properties": {
-                  |        "http://www.knora.org/ontology/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
-                  |        "http://www.knora.org/ontology/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
+                  |        "http://www.knora.org/ontology/00FF/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
+                  |        "http://www.knora.org/ontology/00FF/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
                   |    }
                   |}
                 """.stripMargin
@@ -115,12 +114,12 @@ class PermissionHandlingV1E2ESpec extends E2ESpec(PermissionHandlingV1E2ESpec.co
             val params =
                 """
                   |{
-                  |    "restype_id": "http://www.knora.org/ontology/images#person",
+                  |    "restype_id": "http://www.knora.org/ontology/00FF/images#person",
                   |    "label": "Testperson",
-                  |    "project_id": "http://data.knora.org/projects/images",
+                  |    "project_id": "http://rdfh.ch/projects/00FF",
                   |    "properties": {
-                  |        "http://www.knora.org/ontology/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
-                  |        "http://www.knora.org/ontology/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
+                  |        "http://www.knora.org/ontology/00FF/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
+                  |        "http://www.knora.org/ontology/00FF/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
                   |    }
                   |}
                 """.stripMargin

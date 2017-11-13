@@ -8,14 +8,13 @@
 
 
 ### parole-religieuse project
-<http://data.knora.org/projects/parole-religieuse> rdf:type knora-base:knoraProject ;
-        knora-base:projectShortname "drawings-of-gods"^^xsd:string ;
+<http://rdfh.ch/projects/0105> rdf:type knora-base:knoraProject ;
+        knora-base:projectShortname "drawings-gods"^^xsd:string ;
+        knora-base:projectShortcode "0105"^^sd:string ;
         knora-base:projectLongname "Drawings of Gods"^^xsd:string ;
         knora-base:projectDescription "Drawings of Gods"^^xsd:string ;
         knora-base:projectKeywords "gods, collection"^^xsd:string ;
-        knora-base:projectOntologyGraph "http://www.knora.org/ontology/anything"^^xsd:string ;
-        knora-base:projectDataGraph "http://www.knora.org/data/parole-religieuse"^^xsd:string ;
-        knora-base:projectBasepath "-"^^xsd:string ;
+        knora-base:projectOntology <http://www.knora.org/ontology/0105/drawings-gods> ;
         knora-base:status "true"^^xsd:boolean ;
         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -27,7 +26,7 @@
         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
         knora-base:preferredLanguage "fr"^^xsd:string ;
         knora-base:status "true"^^xsd:boolean ;
-        knora-base:isInProject <http://data.knora.org/projects/parole-religieuse> ;
-        knora-base:isInProjectAdminGroup <http://data.knora.org/projects/parole-religieuse> ;
+        knora-base:isInProject <http://rdfh.ch/projects/0105> ;
+        knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/0105> ;
         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 

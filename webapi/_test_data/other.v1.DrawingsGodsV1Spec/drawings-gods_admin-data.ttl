@@ -6,44 +6,44 @@
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
-@prefix drawings-gods: <http://www.knora.org/ontology/0105#> .
+@prefix drawings-gods: <http://www.knora.org/ontology/0105/drawings-gods#> .
 
-<http://data.knora.org/projects/0105> a knora-base:knoraProject ;
+<http://rdfh.ch/projects/0105> a knora-base:knoraProject ;
         knora-base:projectBasepath "/data/SALSAH/drawings-gods"^^xsd:string ;
         knora-base:projectLongname "Dessins de Dieux"^^xsd:string ;
         knora-base:projectShortname "drawings-gods"^^xsd:string ;
+        knora-base:projectShortcode "0105"^^xsd:string ;
         knora-base:projectDescription """Sur la base d’une collecte de plusieurs centaines de dessins dans diverses régions du monde, notamment au Brésil, en Iran, au Japon, aux Pays-Bas, en Roumanie, en Russie et en Suisse, ce projet prévoit d’étudier l’évolution de la représentation de Dieu ou d’autres êtres surnaturels (dieux, esprits, génies, etc) chez des enfants et des adolescents entre 5 et 18 ans. Il s’intéressera tout spécialement aux stratégies mises en place par les enfants : recours à des représentations religieuses traditionnelles, à des images d’êtres surnaturels véhiculées par des films d’animation ou des bandes dessinées. Au terme du projet, l’objectif est d’avoir pu décrire les stratégies principales utilisées les enfants en ayant pu mettre en évidence comment le choix d’une stratégie plutôt qu’une autre est influencé par l’âge, le sexe, l’éducation religieuse et l’environnement culturel de l’enfant."""^^xsd:string ;
         knora-base:projectKeywords "supernatural agents, cross-cultural, digital humanities, drawings, child development, interdisciplinarity, database"^^xsd:string ;
-		knora-base:projectOntologyGraph "http://www.knora.org/ontology/drawings-gods"^^xsd:string ;
-        knora-base:projectDataGraph "http://www.knora.org/data/drawings-gods"^^xsd:string ;
+		    knora-base:projectOntology <http://www.knora.org/ontology/0105/drawings-gods> ;
         knora-base:status "true"^^xsd:boolean ;
         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
-<http://rdfh.ch/groups/drawings-gods-meta-annotators> rdf:type knora-base:UserGroup ;
+<http://rdfh.ch/groups/0105/drawings-gods-meta-annotators> rdf:type knora-base:UserGroup ;
                                                knora-base:groupName "Meta-annotators"^^xsd:string ;
                                                knora-base:groupDescription "A group of users allowed to annotate data. Does not upload images nor files. Does not access to personal data."^^xsd:string ;
-                                               knora-base:belongsToProject <http://data.knora.org/projects/0105> ;
+                                               knora-base:belongsToProject <http://rdfh.ch/projects/0105> ;
                                                knora-base:status "true"^^xsd:boolean ;
                                                knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
-<http://rdfh.ch/groups/drawings-gods-add-drawings> rdf:type knora-base:UserGroup ;
+<http://rdfh.ch/groups/0105/drawings-gods-add-drawings> rdf:type knora-base:UserGroup ;
                                                knora-base:groupName "Drawings contributors"^^xsd:string ;
                                                knora-base:groupDescription "A group of users allowed to upload images, files and annotate data. Does not access to personal data."^^xsd:string ;
-                                               knora-base:belongsToProject <http://data.knora.org/projects/0105> ;
+                                               knora-base:belongsToProject <http://rdfh.ch/projects/0105> ;
                                                knora-base:status "true"^^xsd:boolean ;
                                                knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
-<http://rdfh.ch/groups/drawings-gods-snf-team> rdf:type knora-base:UserGroup ;
+<http://rdfh.ch/groups/0105/drawings-gods-snf-team> rdf:type knora-base:UserGroup ;
                                                knora-base:groupName "SNF team"^^xsd:string ;
                                                knora-base:groupDescription "A core group of members from the SNF project. Access to any data, including sensitive."^^xsd:string ;
-                                               knora-base:belongsToProject <http://data.knora.org/projects/0105> ;
+                                               knora-base:belongsToProject <http://rdfh.ch/projects/0105> ;
                                                knora-base:status "true"^^xsd:boolean ;
                                                knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
-<http://rdfh.ch/groups/drawings-gods-admin> rdf:type knora-base:UserGroup ;
+<http://rdfh.ch/groups/0105/drawings-gods-admin> rdf:type knora-base:UserGroup ;
                                                knora-base:groupName "Administrators"^^xsd:string ;
                                                knora-base:groupDescription "A custom admin group created to apply permission precedence rules. Replaces the built-in knora-base:ProjectAdmin group, not used for this project."^^xsd:string ;
-                                               knora-base:belongsToProject <http://data.knora.org/projects/0105> ;
+                                               knora-base:belongsToProject <http://rdfh.ch/projects/0105> ;
                                                knora-base:status "true"^^xsd:boolean ;
                                                knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -56,8 +56,8 @@
         knora-base:email "ddd1@unil.ch"^^xsd:string ;
         knora-base:preferredLanguage "fr"^^xsd:string ;
         knora-base:status "true"^^xsd:boolean ;
-        knora-base:isInProject <http://data.knora.org/projects/0105> ;
-        knora-base:isInGroup <http://rdfh.ch/groups/drawings-gods-snf-team> ;
+        knora-base:isInProject <http://rdfh.ch/projects/0105> ;
+        knora-base:isInGroup <http://rdfh.ch/groups/0105/drawings-gods-snf-team> ;
         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/drawings-gods-test-ddd2> a knora-base:User ;
@@ -68,8 +68,8 @@
         knora-base:email "ddd2@unil.ch"^^xsd:string ;
         knora-base:preferredLanguage "fr"^^xsd:string ;
         knora-base:status "true"^^xsd:boolean ;
-        knora-base:isInProject <http://data.knora.org/projects/0105> ;
-        knora-base:isInGroup <http://rdfh.ch/groups/drawings-gods-admin> ;
+        knora-base:isInProject <http://rdfh.ch/projects/0105> ;
+        knora-base:isInGroup <http://rdfh.ch/groups/0105/drawings-gods-admin> ;
         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
@@ -81,8 +81,8 @@
         knora-base:email "metaannotator@unil.ch"^^xsd:string ;
         knora-base:preferredLanguage "fr"^^xsd:string ;
         knora-base:status "true"^^xsd:boolean ;
-        knora-base:isInProject <http://data.knora.org/projects/0105> ;
-        knora-base:isInGroup <http://rdfh.ch/groups/drawings-gods-meta-annotators> ;
+        knora-base:isInProject <http://rdfh.ch/projects/0105> ;
+        knora-base:isInGroup <http://rdfh.ch/groups/0105/drawings-gods-meta-annotators> ;
         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/drawings-gods-user-adddrawings> a knora-base:User ;
@@ -93,8 +93,8 @@
         knora-base:email "adddrawings@unil.ch"^^xsd:string ;
         knora-base:preferredLanguage "fr"^^xsd:string ;
         knora-base:status "true"^^xsd:boolean ;
-        knora-base:isInProject <http://data.knora.org/projects/0105> ;
-        knora-base:isInGroup <http://rdfh.ch/groups/drawings-gods-add-drawings> ;
+        knora-base:isInProject <http://rdfh.ch/projects/0105> ;
+        knora-base:isInGroup <http://rdfh.ch/groups/0105/drawings-gods-add-drawings> ;
         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 #
 #<http://rdfh.ch/users/drawings-gods-user-projectmember> a knora-base:User ;
@@ -105,7 +105,7 @@
 #        knora-base:email "projectmember@unil.ch"^^xsd:string ;
 #        knora-base:preferredLanguage "fr"^^xsd:string ;
 #        knora-base:status "true"^^xsd:boolean ;
-#        knora-base:isInProject <http://data.knora.org/projects/0105> ;
+#        knora-base:isInProject <http://rdfh.ch/projects/0105> ;
 #        knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 

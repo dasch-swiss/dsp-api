@@ -5,7 +5,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
-@prefix drawings-gods: <http://www.knora.org/ontology/0105#> .
+@prefix drawings-gods: <http://www.knora.org/ontology/0105/drawings-gods#> .
 
 #
 ##
@@ -17,37 +17,37 @@
 ### Administrative Permissions on ProjectMember
 ### No AP on this group : cannot create any resource (or an empty AP ? knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission """^^xsd:string)
 #<http://rdfh.ch/permissions/drawings-gods-a1> a knora-base:AdministrativePermission ;
-#                      knora-base:forProject <http://data.knora.org/projects/0105> ;
+#                      knora-base:forProject <http://rdfh.ch/projects/0105> ;
 #                      knora-base:forGroup knora-base:ProjectMember ;
 #                      knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
 
 #### Administrative Permissions on Meta-annotators
 <http://rdfh.ch/permissions/drawings-gods-a2> a knora-base:AdministrativePermission ;
-                      knora-base:forProject <http://data.knora.org/projects/0105> ;
-                      knora-base:forGroup <http://rdfh.ch/groups/drawings-gods-meta-annotators> ;
-                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/0105#Annotation,http://www.knora.org/ontology/0105#QualityData,http://www.knora.org/ontology/0105#QuestionnaireIndividual,http://www.knora.org/ontology/0105#TextOnDrawing"^^xsd:string .
+                      knora-base:forProject <http://rdfh.ch/projects/0105> ;
+                      knora-base:forGroup <http://rdfh.ch/groups/0105/drawings-gods-meta-annotators> ;
+                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/0105/drawings-gods#Annotation,http://www.knora.org/ontology/0105/drawings-gods#QualityData,http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireIndividual,http://www.knora.org/ontology/0105/drawings-gods#TextOnDrawing"^^xsd:string .
 
 #### Administrative Permissions on Drawings contributors
 <http://rdfh.ch/permissions/drawings-gods-a3> a knora-base:AdministrativePermission ;
-                      knora-base:forProject <http://data.knora.org/projects/0105> ;
-                      knora-base:forGroup <http://rdfh.ch/groups/drawings-gods-add-drawings> ;
-                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/0105#Annotation,http://www.knora.org/ontology/0105#DrawingPrivate,http://www.knora.org/ontology/0105#DrawingPublic,http://www.knora.org/ontology/0105#Person,http://www.knora.org/ontology/0105#QualityData,http://www.knora.org/ontology/0105#QuestionnaireBase,http://www.knora.org/ontology/0105#QuestionnaireIndividual,http://www.knora.org/ontology/0105#QuestionnairePage,http://www.knora.org/ontology/0105#TextOnDrawing,http://www.knora.org/ontology/0105#Verso"^^xsd:string .
+                      knora-base:forProject <http://rdfh.ch/projects/0105> ;
+                      knora-base:forGroup <http://rdfh.ch/groups/0105/drawings-gods-add-drawings> ;
+                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/0105/drawings-gods#Annotation,http://www.knora.org/ontology/0105/drawings-gods#DrawingPrivate,http://www.knora.org/ontology/0105/drawings-gods#DrawingPublic,http://www.knora.org/ontology/0105/drawings-gods#Person,http://www.knora.org/ontology/0105/drawings-gods#QualityData,http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBase,http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireIndividual,http://www.knora.org/ontology/0105/drawings-gods#QuestionnairePage,http://www.knora.org/ontology/0105/drawings-gods#TextOnDrawing,http://www.knora.org/ontology/0105/drawings-gods#Verso"^^xsd:string .
 
 ### Administrative Permissions on SNFTeam group
 <http://rdfh.ch/permissions/drawings-gods-a4> a knora-base:AdministrativePermission ;
-                      knora-base:forProject <http://data.knora.org/projects/0105> ;
-                      knora-base:forGroup <http://rdfh.ch/groups/drawings-gods-snf-team> ;
-                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/0105#Annotation,http://www.knora.org/ontology/0105#Campaign,http://www.knora.org/ontology/0105#CollectionSite,http://www.knora.org/ontology/0105#DrawingPrivate,http://www.knora.org/ontology/0105#DrawingPublic,http://www.knora.org/ontology/0105#Instruction,http://www.knora.org/ontology/0105#Passage,http://www.knora.org/ontology/0105#Person,http://www.knora.org/ontology/0105#PersonLinkedFile,http://www.knora.org/ontology/0105#QualityData,http://www.knora.org/ontology/0105#QuestionnaireBase,http://www.knora.org/ontology/0105#QuestionnaireBaseEn,http://www.knora.org/ontology/0105#QuestionnaireBaseFr,http://www.knora.org/ontology/0105#QuestionnaireBaseOriginal,http://www.knora.org/ontology/0105#QuestionnaireIndividual,http://www.knora.org/ontology/0105#QuestionnairePage,http://www.knora.org/ontology/0105#TextOnDrawing,http://www.knora.org/ontology/0105#Verso"^^xsd:string .
+                      knora-base:forProject <http://rdfh.ch/projects/0105> ;
+                      knora-base:forGroup <http://rdfh.ch/groups/0105/drawings-gods-snf-team> ;
+                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/0105/drawings-gods#Annotation,http://www.knora.org/ontology/0105/drawings-gods#Campaign,http://www.knora.org/ontology/0105/drawings-gods#CollectionSite,http://www.knora.org/ontology/0105/drawings-gods#DrawingPrivate,http://www.knora.org/ontology/0105/drawings-gods#DrawingPublic,http://www.knora.org/ontology/0105/drawings-gods#Instruction,http://www.knora.org/ontology/0105/drawings-gods#Passage,http://www.knora.org/ontology/0105/drawings-gods#Person,http://www.knora.org/ontology/0105/drawings-gods#PersonLinkedFile,http://www.knora.org/ontology/0105/drawings-gods#QualityData,http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBase,http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBaseEn,http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBaseFr,http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBaseOriginal,http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireIndividual,http://www.knora.org/ontology/0105/drawings-gods#QuestionnairePage,http://www.knora.org/ontology/0105/drawings-gods#TextOnDrawing,http://www.knora.org/ontology/0105/drawings-gods#Verso"^^xsd:string .
 
 
 ### Administrative Permissions on ProjectAdmin
-### Transfered on group <http://rdfh.ch/groups/drawings-gods-admin>
+### Transfered on group <http://rdfh.ch/groups/0105/drawings-gods-admin>
 
 ### Administrative Permissions on Administrators Group
 <http://rdfh.ch/permissions/drawings-gods-a5> a knora-base:AdministrativePermission ;
-                      knora-base:forProject <http://data.knora.org/projects/0105> ;
-                      knora-base:forGroup <http://rdfh.ch/groups/drawings-gods-admin> ;
-                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/0105#Annotation,http://www.knora.org/ontology/0105#Campaign,http://www.knora.org/ontology/0105#CollectionSite,http://www.knora.org/ontology/0105#DrawingPrivate,http://www.knora.org/ontology/0105#DrawingPublic,http://www.knora.org/ontology/0105#Instruction,http://www.knora.org/ontology/0105#Passage,http://www.knora.org/ontology/0105#Person,http://www.knora.org/ontology/0105#PersonLinkedFile,http://www.knora.org/ontology/0105#QualityData,http://www.knora.org/ontology/0105#QuestionnaireBase,http://www.knora.org/ontology/0105#QuestionnaireBaseEn,http://www.knora.org/ontology/0105#QuestionnaireBaseFr,http://www.knora.org/ontology/0105#QuestionnaireBaseOriginal,http://www.knora.org/ontology/0105#QuestionnaireIndividual,http://www.knora.org/ontology/0105#QuestionnairePage,http://www.knora.org/ontology/0105#TextOnDrawing,http://www.knora.org/ontology/0105#Verso"^^xsd:string .
+                      knora-base:forProject <http://rdfh.ch/projects/0105> ;
+                      knora-base:forGroup <http://rdfh.ch/groups/0105/drawings-gods-admin> ;
+                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/0105/drawings-gods#Annotation,http://www.knora.org/ontology/0105/drawings-gods#Campaign,http://www.knora.org/ontology/0105/drawings-gods#CollectionSite,http://www.knora.org/ontology/0105/drawings-gods#DrawingPrivate,http://www.knora.org/ontology/0105/drawings-gods#DrawingPublic,http://www.knora.org/ontology/0105/drawings-gods#Instruction,http://www.knora.org/ontology/0105/drawings-gods#Passage,http://www.knora.org/ontology/0105/drawings-gods#Person,http://www.knora.org/ontology/0105/drawings-gods#PersonLinkedFile,http://www.knora.org/ontology/0105/drawings-gods#QualityData,http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBase,http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBaseEn,http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBaseFr,http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBaseOriginal,http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireIndividual,http://www.knora.org/ontology/0105/drawings-gods#QuestionnairePage,http://www.knora.org/ontology/0105/drawings-gods#TextOnDrawing,http://www.knora.org/ontology/0105/drawings-gods#Verso"^^xsd:string .
 #                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .
 
 
@@ -60,34 +60,34 @@
 
 #### Default Object Access Permissions on ProjectMember Group
 #<http://rdfh.ch/permissions/drawings-gods-o001> rdf:type knora-base:DefaultObjectAccessPermission ;
-#                      knora-base:forProject <http://data.knora.org/projects/0105> ;
+#                      knora-base:forProject <http://rdfh.ch/projects/0105> ;
 #                      knora-base:forGroup knora-base:ProjectMember ;
-#                      knora-base:hasPermissions "RV knora-base:UnknownUser,knora-base:KnownUser|V knora-base:ProjectMember,http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR knora-base:ProjectAdmin"^^xsd:string .
+#                      knora-base:hasPermissions "RV knora-base:UnknownUser,knora-base:KnownUser|V knora-base:ProjectMember,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR knora-base:ProjectAdmin"^^xsd:string .
 
 ### Default Object Access Permissions on Meta-annotators Group
 <http://rdfh.ch/permissions/drawings-gods-o002> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
-     knora-base:forGroup <http://rdfh.ch/groups/drawings-gods-meta-annotators> ;
-     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-add-drawings,http://rdfh.ch/groups/drawings-gods-meta-annotators|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
+     knora-base:forGroup <http://rdfh.ch/groups/0105/drawings-gods-meta-annotators> ;
+     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-add-drawings,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on AddDrawings Group
 <http://rdfh.ch/permissions/drawings-gods-o003> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
-     knora-base:forGroup <http://rdfh.ch/groups/drawings-gods-add-drawings> ;
-     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-add-drawings,http://rdfh.ch/groups/drawings-gods-meta-annotators|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
+     knora-base:forGroup <http://rdfh.ch/groups/0105/drawings-gods-add-drawings> ;
+     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-add-drawings,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 
 ### Default Object Access Permissions on SNFTeam Group
 <http://rdfh.ch/permissions/drawings-gods-o004> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
-     knora-base:forGroup <http://rdfh.ch/groups/drawings-gods-snf-team> ;
-     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
+     knora-base:forGroup <http://rdfh.ch/groups/0105/drawings-gods-snf-team> ;
+     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on Administrators Group
 <http://rdfh.ch/permissions/drawings-gods-o005> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
-     knora-base:forGroup <http://rdfh.ch/groups/drawings-gods-admin> ;
-     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings,http://rdfh.ch/groups/drawings-gods-snf-team|D knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
+     knora-base:forGroup <http://rdfh.ch/groups/0105/drawings-gods-admin> ;
+     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings,http://rdfh.ch/groups/0105/drawings-gods-snf-team|D knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 #
 ##
@@ -97,128 +97,128 @@
 
 ### Default Object Access Permissions on resource class Annotation
 <http://rdfh.ch/permissions/drawings-gods-o011> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forResourceClass drawings-gods:Annotation ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators|D http://rdfh.ch/groups/drawings-gods-add-drawings,http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators|D http://rdfh.ch/groups/0105/drawings-gods-add-drawings,http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on resource class Campaign
 <http://rdfh.ch/permissions/drawings-gods-o012> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forResourceClass drawings-gods:Campaign ;
-     knora-base:hasPermissions "V knora-base:ProjectMember,http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 #### Default Object Access Permissions on resource class CollectionSite
 ### Not usefull anymore given the DOAP on Groups.
 #<http://rdfh.ch/permissions/drawings-gods-o013> rdf:type knora-base:DefaultObjectAccessPermission ;
-#     knora-base:forProject <http://data.knora.org/projects/0105> ;
-#     knora-base:forResourceClass <http://www.knora.org/ontology/0105#CollectionSite> ;
-#     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember,<http://rdfh.ch/groups/drawings-gods-meta-annotators,<http://rdfh.ch/groups/drawings-gods-add-drawings|D <http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR <http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+#     knora-base:forProject <http://rdfh.ch/projects/0105> ;
+#     knora-base:forResourceClass <http://www.knora.org/ontology/0105/drawings-gods#CollectionSite> ;
+#     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember,<http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,<http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D <http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR <http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 #
 #### Default Object Access Permissions on resource class Drawing
 #<http://rdfh.ch/permissions/drawings-gods-o014> rdf:type knora-base:DefaultObjectAccessPermission ;
-#     knora-base:forProject <http://data.knora.org/projects/0105> ;
+#     knora-base:forProject <http://rdfh.ch/projects/0105> ;
 #     knora-base:forResourceClass drawings-gods:Drawing ;
-#     knora-base:hasPermissions "CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+#     knora-base:hasPermissions "CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 #### Default Object Access Permissions on resource class DrawingPublic
 #### Not usefull anymore given the DOAP on Groups.
 #<http://rdfh.ch/permissions/drawings-gods-o015> rdf:type knora-base:DefaultObjectAccessPermission ;
-#     knora-base:forProject <http://data.knora.org/projects/0105> ;
-#     knora-base:forResourceClass <http://www.knora.org/ontology/0105#DrawingPublic> ;
-#     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|M <http://rdfh.ch/groups/drawings-gods-meta-annotators,<http://rdfh.ch/groups/drawings-gods-add-drawings|D <http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR <http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+#     knora-base:forProject <http://rdfh.ch/projects/0105> ;
+#     knora-base:forResourceClass <http://www.knora.org/ontology/0105/drawings-gods#DrawingPublic> ;
+#     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|M <http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,<http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D <http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR <http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on resource class DrawingPrivate
 <http://rdfh.ch/permissions/drawings-gods-o016> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forResourceClass drawings-gods:DrawingPrivate ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on resource class Instruction
 <http://rdfh.ch/permissions/drawings-gods-o017> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forResourceClass drawings-gods:Instruction ;
-     knora-base:hasPermissions "V knora-base:ProjectMember,http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on resource class Passage
 <http://rdfh.ch/permissions/drawings-gods-o018> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forResourceClass drawings-gods:Passage ;
-     knora-base:hasPermissions "V knora-base:ProjectMember,http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 #### Default Object Access Permissions on resource class Person
 ### Not usefull anymore given the DOAP on Groups.
 #<http://rdfh.ch/permissions/drawings-gods-o019> rdf:type knora-base:DefaultObjectAccessPermission ;
-#     knora-base:forProject <http://data.knora.org/projects/0105> ;
-#     knora-base:forResourceClass <http://www.knora.org/ontology/0105#Person> ;
-#     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+#     knora-base:forProject <http://rdfh.ch/projects/0105> ;
+#     knora-base:forResourceClass <http://www.knora.org/ontology/0105/drawings-gods#Person> ;
+#     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on resource class QualityData
 <http://rdfh.ch/permissions/drawings-gods-o020> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forResourceClass drawings-gods:QualityData ;
-     knora-base:hasPermissions "M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on resource class QuestionnaireBase
 <http://rdfh.ch/permissions/drawings-gods-o021> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forResourceClass drawings-gods:QuestionnaireBase ;
-     knora-base:hasPermissions "V knora-base:ProjectMember,http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on resource class QuestionnaireBaseEn
 <http://rdfh.ch/permissions/drawings-gods-o022> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forResourceClass drawings-gods:QuestionnaireBaseEn ;
-     knora-base:hasPermissions "V knora-base:ProjectMember,http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on resource class QuestionnaireBaseFr
 <http://rdfh.ch/permissions/drawings-gods-o023> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forResourceClass drawings-gods:QuestionnaireBaseFr ;
-     knora-base:hasPermissions "V knora-base:ProjectMember,http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on resource class QuestionnaireBaseOriginal
 <http://rdfh.ch/permissions/drawings-gods-o024> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forResourceClass drawings-gods:QuestionnaireBaseOriginal ;
-     knora-base:hasPermissions "V knora-base:ProjectMember,http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on resource class QuestionnaireIndividual
 <http://rdfh.ch/permissions/drawings-gods-o025> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forResourceClass drawings-gods:QuestionnaireIndividual ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on resource class QuestionnairePage
 <http://rdfh.ch/permissions/drawings-gods-o026> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forResourceClass drawings-gods:QuestionnairePage ;
-     knora-base:hasPermissions "V http://rdfh.ch/groups/drawings-gods-meta-annotators|M http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V http://rdfh.ch/groups/0105/drawings-gods-meta-annotators|M http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on resource class TextOnDrawing
 <http://rdfh.ch/permissions/drawings-gods-o027> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forResourceClass drawings-gods:TextOnDrawing ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 #### Default Object Access Permissions on resource class Verso
 # Deleted. drawings-gods:Verso is accessible to knora-base:UnknownUser, but only through selected properties. Only drawings-gods:hasDescriptionFr and drawings-gods:hasDescriptionEn have no DOA restricted.
 #<http://rdfh.ch/permissions/drawings-gods-o028> rdf:type knora-base:DefaultObjectAccessPermission ;
-#     knora-base:forProject <http://data.knora.org/projects/0105> ;
+#     knora-base:forProject <http://rdfh.ch/projects/0105> ;
 #     knora-base:forResourceClass drawings-gods:Verso ;
-#     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+#     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 #### Default Object Access Permissions on resource class QuestionnaireBaseImage
 ### Not used directly. So no need DOAP.
 #<http://rdfh.ch/permissions/drawings-gods-o029> rdf:type knora-base:DefaultObjectAccessPermission ;
-#     knora-base:forProject <http://data.knora.org/projects/0105> ;
-#     knora-base:forResourceClass <http://www.knora.org/ontology/0105#QuestionnaireBaseImage> ;
-#     knora-base:hasPermissions "V knora-base:ProjectMember,http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+#     knora-base:forProject <http://rdfh.ch/projects/0105> ;
+#     knora-base:forResourceClass <http://www.knora.org/ontology/0105/drawings-gods#QuestionnaireBaseImage> ;
+#     knora-base:hasPermissions "V knora-base:ProjectMember,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on resource class PersonLinkedFile
 <http://rdfh.ch/permissions/drawings-gods-o030> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forResourceClass drawings-gods:PersonLinkedFile ;
-     knora-base:hasPermissions "M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 #
 ##
@@ -230,123 +230,123 @@
 
 ### Default Object Access Permissions on hasLastname
 <http://rdfh.ch/permissions/drawings-gods-o101> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasLastname ;
-     knora-base:hasPermissions "D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasCampaignDescription
 <http://rdfh.ch/permissions/drawings-gods-o102> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasCampaignDescription ;
-     knora-base:hasPermissions "D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasCampaignPersonContact
 <http://rdfh.ch/permissions/drawings-gods-o104> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasCampaignPersonContact ;
-     knora-base:hasPermissions "D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasCollectorMain
 <http://rdfh.ch/permissions/drawings-gods-o105> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasCollectorMain ;
-     knora-base:hasPermissions "D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasGeonameCode
 <http://rdfh.ch/permissions/drawings-gods-o106> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasGeonameCode ;
-     knora-base:hasPermissions "D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasSchoolLocation
 <http://rdfh.ch/permissions/drawings-gods-o107> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasSchoolLocation ;
-     knora-base:hasPermissions "D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasSiteName
 <http://rdfh.ch/permissions/drawings-gods-o108> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasSiteName ;
-     knora-base:hasPermissions "D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasCollector
 <http://rdfh.ch/permissions/drawings-gods-o109> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasCollector ;
-     knora-base:hasPermissions "D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasPassagePersonContact
 <http://rdfh.ch/permissions/drawings-gods-o110> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasPassagePersonContact ;
-     knora-base:hasPermissions "D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasPassageReligiousIdentity
 <http://rdfh.ch/permissions/drawings-gods-o111> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasPassageReligiousIdentity ;
-     knora-base:hasPermissions "D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasCollectRulesPlace
 <http://rdfh.ch/permissions/drawings-gods-o112> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasCollectRulesPlace ;
-     knora-base:hasPermissions "D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasContext
 <http://rdfh.ch/permissions/drawings-gods-o113> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasContext ;
-     knora-base:hasPermissions "D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasDiary
 <http://rdfh.ch/permissions/drawings-gods-o114> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasDiary ;
-     knora-base:hasPermissions "D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasPassageDate
 <http://rdfh.ch/permissions/drawings-gods-o115> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasPassageDate ;
-     knora-base:hasPermissions "D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasBirthDate
 <http://rdfh.ch/permissions/drawings-gods-o116> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasBirthDate ;
-     knora-base:hasPermissions "M http://rdfh.ch/groups/drawings-gods-meta-annotators>,http://rdfh.ch/groups/drawings-gods-add-drawings>|D http://rdfh.ch/groups/drawings-gods-snf-team>|CR http://rdfh.ch/groups/drawings-gods-admin>"^^xsd:string .
+     knora-base:hasPermissions "M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators>,http://rdfh.ch/groups/0105/drawings-gods-add-drawings>|D http://rdfh.ch/groups/0105/drawings-gods-snf-team>|CR http://rdfh.ch/groups/0105/drawings-gods-admin>"^^xsd:string .
 
 ### Default Object Access Permissions on hasNationality (Person)
 <http://rdfh.ch/permissions/drawings-gods-o117> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasNationality ;
-     knora-base:hasPermissions "M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasBirthCountry (Person)
 <http://rdfh.ch/permissions/drawings-gods-o118> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasBirthCountry ;
-     knora-base:hasPermissions "M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasBirthCountry (Person)
 <http://rdfh.ch/permissions/drawings-gods-o119> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasEthnicity ;
-     knora-base:hasPermissions "M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasBirthCountry (Person)
 <http://rdfh.ch/permissions/drawings-gods-o120> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasFirstname ;
-     knora-base:hasPermissions "M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasBirthCountry (Person)
 <http://rdfh.ch/permissions/drawings-gods-o121> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasLanguageNative ;
-     knora-base:hasPermissions "M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 
 #
@@ -360,40 +360,40 @@
 # ### Default Object Access Permissions on Internal comment & subproperties
 # DOAP has to be defined on each of its subclasses.
 #<http://rdfh.ch/permissions/drawings-gods-o202> rdf:type knora-base:DefaultObjectAccessPermission ;
-#     knora-base:forProject <http://data.knora.org/projects/0105> ;
+#     knora-base:forProject <http://rdfh.ch/projects/0105> ;
 #     knora-base:forProperty drawings-gods:hasInternalComment ;
-#     knora-base:hasPermissions "M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+#     knora-base:hasPermissions "M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 
 ### Default Object Access Permissions on Public Drawing internal comment
 <http://rdfh.ch/permissions/drawings-gods-o203> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasDrawingPublicComment ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on Private Drawing internal comment
 <http://rdfh.ch/permissions/drawings-gods-o204> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasDrawingPrivateComment ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on Collection site internal comment
 <http://rdfh.ch/permissions/drawings-gods-o205> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasSiteComment ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on Person internal comment
 <http://rdfh.ch/permissions/drawings-gods-o206> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasPersonComment ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on Verso internal comment
 <http://rdfh.ch/permissions/drawings-gods-o207> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasVersoComment ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 
 ### Other DOA on hasInternalComment subproperties are redundant with by DOA on resource classes.
@@ -412,111 +412,111 @@
 
 ### Default Object Access Permissions on hasVillageLocation (Collection site)
 <http://rdfh.ch/permissions/drawings-gods-o208> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasVillageLocation ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasCommentOriginalLanguage (Verso)
 <http://rdfh.ch/permissions/drawings-gods-o209> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasCommentOriginalLanguage ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasDescriptionOriginalLanguage (Verso)
 <http://rdfh.ch/permissions/drawings-gods-o210> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasDescriptionOriginalLanguage ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasInstructionRestitutionOriginalLanguage (Verso)
 <http://rdfh.ch/permissions/drawings-gods-o211> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasInstructionRestitutionOriginalLanguage ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasVersoTranslatorEn (Verso)
 <http://rdfh.ch/permissions/drawings-gods-o212> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasVersoTranslatorEn ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasVersoTranslatorFr (Verso)
 <http://rdfh.ch/permissions/drawings-gods-o213> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasVersoTranslatorFr ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasCodeVerso (Verso)
 <http://rdfh.ch/permissions/drawings-gods-o214> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasCodeVerso ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasCommentAuthor (Verso)
 <http://rdfh.ch/permissions/drawings-gods-o215> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasCommentAuthor ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasCommentEn (Verso)
 <http://rdfh.ch/permissions/drawings-gods-o216> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasCommentEn ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasCommentFr (Verso)
 <http://rdfh.ch/permissions/drawings-gods-o217> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasCommentFr ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasCommentOriginal (Verso)
 <http://rdfh.ch/permissions/drawings-gods-o218> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasCommentOriginal ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasDescriptionAsIsOriginal (Verso)
 <http://rdfh.ch/permissions/drawings-gods-o219> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasDescriptionAsIsOriginal ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasDescriptionAuthor (Verso)
 <http://rdfh.ch/permissions/drawings-gods-o220> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasDescriptionAuthor ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasDescriptionOriginal (Verso)
 <http://rdfh.ch/permissions/drawings-gods-o221> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasDescriptionOriginal ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasInstructionRestitutionAsIsOriginal (Verso)
 <http://rdfh.ch/permissions/drawings-gods-o222> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasInstructionRestitutionAsIsOriginal ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasInstructionRestitutionEn (Verso)
 <http://rdfh.ch/permissions/drawings-gods-o223> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasInstructionRestitutionEn ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasInstructionRestitutionFr (Verso)
 <http://rdfh.ch/permissions/drawings-gods-o224> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasInstructionRestitutionFr ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on hasInstructionRestitutionOriginal (Verso)
 <http://rdfh.ch/permissions/drawings-gods-o225> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
      knora-base:forProperty drawings-gods:hasInstructionRestitutionOriginal ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 
 #
@@ -527,16 +527,16 @@
 
 ### Default Object Access Permissions on drawings-gods:DrawingPublic for knora-base:hasStillImageFileValue
 <http://rdfh.ch/permissions/drawings-gods-o301> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
-	 knora-base:forResourceClass <http://www.knora.org/ontology/0105#DrawingPublic> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
+	 knora-base:forResourceClass <http://www.knora.org/ontology/0105/drawings-gods#DrawingPublic> ;
      knora-base:forProperty <http://www.knora.org/ontology/knora-base#hasStillImageFileValue> ;
-     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember,http://rdfh.ch/groups/drawings-gods-meta-annotators|M http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators|M http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 ### Default Object Access Permissions on drawings-gods:DrawingPrivate for knora-base:hasStillImageFileValue
 <http://rdfh.ch/permissions/drawings-gods-o302> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://data.knora.org/projects/0105> ;
-	 knora-base:forResourceClass <http://www.knora.org/ontology/0105#DrawingPrivate> ;
+     knora-base:forProject <http://rdfh.ch/projects/0105> ;
+	 knora-base:forResourceClass <http://www.knora.org/ontology/0105/drawings-gods#DrawingPrivate> ;
      knora-base:forProperty <http://www.knora.org/ontology/knora-base#hasStillImageFileValue> ;
-     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/drawings-gods-meta-annotators,http://rdfh.ch/groups/drawings-gods-add-drawings|D http://rdfh.ch/groups/drawings-gods-snf-team|CR http://rdfh.ch/groups/drawings-gods-admin"^^xsd:string .
+     knora-base:hasPermissions "V knora-base:ProjectMember|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|CR http://rdfh.ch/groups/0105/drawings-gods-admin"^^xsd:string .
 
 

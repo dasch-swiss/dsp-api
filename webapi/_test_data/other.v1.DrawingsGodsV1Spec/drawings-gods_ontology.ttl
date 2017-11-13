@@ -8,10 +8,10 @@
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#>.
 @base <http://www.knora.org/ontology/0105>.
 
-@prefix drawings-gods: <http://www.knora.org/ontology/0105#>.
-@prefix : <http://www.knora.org/ontology/0105#>.
+@prefix drawings-gods: <http://www.knora.org/ontology/0105/drawings-gods#>.
+@prefix : <http://www.knora.org/ontology/0105/drawings-gods#>.
 
-<http://www.knora.org/ontology/0105> rdf:type owl:Ontology .
+<http://www.knora.org/ontology/0105/drawings-gods> rdf:type owl:Ontology .
 
 
 #################################################################
@@ -4669,11 +4669,11 @@
         rdfs:subClassOf knora-base:Resource ,
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasDrawing ;
-                          owl:minCardinality "1"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ] ,
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasDrawingValue ;
-                          owl:minCardinality "1"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ] ,
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasLanguageOther ;
