@@ -204,6 +204,7 @@ object OntologyConstants {
 
         val ResourceProperty: IRI = KnoraBasePrefixExpansion + "resourceProperty"
         val HasValue: IRI = KnoraBasePrefixExpansion + "hasValue"
+        val HasIncomingLinks = KnoraBasePrefixExpansion + "hasIncomingLinks"
         val HasFileValue: IRI = KnoraBasePrefixExpansion + "hasFileValue"
         val HasStillImageFileValue: IRI = KnoraBasePrefixExpansion + "hasStillImageFileValue"
         val HasMovingImageFileValue: IRI = KnoraBasePrefixExpansion + "hasMovingImageFileValue"
@@ -230,11 +231,8 @@ object OntologyConstants {
         val UriValue: IRI = KnoraBasePrefixExpansion + "UriValue"
         val DecimalValue: IRI = KnoraBasePrefixExpansion + "DecimalValue"
         val DateValue: IRI = KnoraBasePrefixExpansion + "DateValue"
-        val Date: IRI = KnoraBasePrefixExpansion + "Date" // TODO: find a better solution for v2 simple
         val ColorValue: IRI = KnoraBasePrefixExpansion + "ColorValue"
-        val Color: IRI = KnoraBasePrefixExpansion + "Color" // TODO: find a better solution for v2 simple
         val GeomValue: IRI = KnoraBasePrefixExpansion + "GeomValue"
-        val Geom: IRI = KnoraBasePrefixExpansion + "Geom" // TODO: find a better solution for v2 simple
         val ListValue: IRI = KnoraBasePrefixExpansion + "ListValue"
         val IntervalValue: IRI = KnoraBasePrefixExpansion + "IntervalValue"
         val LinkValue: IRI = KnoraBasePrefixExpansion + "LinkValue"
@@ -244,7 +242,6 @@ object OntologyConstants {
         val DDDFileValue: IRI = KnoraBasePrefixExpansion + "DDDFileValue"
         val DocumentFileValue: IRI = KnoraBasePrefixExpansion + "DocumentFileValue"
         val StillImageFileValue: IRI = KnoraBasePrefixExpansion + "StillImageFileValue"
-        val StillImageFile: IRI = KnoraBasePrefixExpansion + "StillImageFile" // TODO: find a better solution for v2 simple
         val MovingImageFileValue: IRI = KnoraBasePrefixExpansion + "MovingImageFileValue"
         val TextFileValue: IRI = KnoraBasePrefixExpansion + "TextFileValue"
 
@@ -532,11 +529,15 @@ object OntologyConstants {
 
         val HasOntologies: IRI = KnoraApiV2PrefixExpansion + "hasOntologies"
 
+        val HasShortname: IRI = KnoraApiV2PrefixExpansion + "hasShortname"
+
         val HasOntologiesWithClasses: IRI = KnoraApiV2PrefixExpansion + "hasOntologiesWithClasses"
 
         val BelongsToOntology: IRI = KnoraApiV2PrefixExpansion + "belongsToOntology"
 
         val IsEditable: IRI = KnoraApiV2PrefixExpansion + "isEditable"
+        val IsLinkProperty: IRI = KnoraApiV2PrefixExpansion + "isLinkProperty"
+        val IsLinkValueProperty: IRI = KnoraApiV2PrefixExpansion + "isLinkValueProperty"
         val CanBeInstantiated: IRI = KnoraApiV2PrefixExpansion + "canBeInstantiated"
         val IsInherited: IRI = KnoraApiV2PrefixExpansion + "isInherited"
         val OntologyName: IRI = KnoraApiV2PrefixExpansion + "ontologyName"
@@ -559,6 +560,7 @@ object OntologyConstants {
         val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
 
         val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
+        val ForbiddenResource: IRI = KnoraApiV2PrefixExpansion + "ForbiddenResource"
         val Region: IRI = KnoraApiV2PrefixExpansion + "Region"
         val Representation: IRI = KnoraApiV2PrefixExpansion + "Representation"
         val StillImageRepresentation: IRI = KnoraApiV2PrefixExpansion + "StillImageRepresentation"
@@ -569,6 +571,7 @@ object OntologyConstants {
         val DocumentRepresentation: IRI = KnoraApiV2PrefixExpansion + "DocumentRepresentation"
         val XMLToStandoffMapping: IRI = KnoraApiV2PrefixExpansion + "XMLToStandoffMapping"
         val ListNode: IRI = KnoraApiV2PrefixExpansion + "ListNode"
+        val LinkObj: IRI = KnoraApiV2PrefixExpansion + "LinkObj"
 
         val Value: IRI = KnoraApiV2PrefixExpansion + "Value"
         val TextValue: IRI = KnoraApiV2PrefixExpansion + "TextValue"
@@ -595,8 +598,12 @@ object OntologyConstants {
         val HasValue: IRI = KnoraApiV2PrefixExpansion + "hasValue"
         val ValueHas: IRI = KnoraApiV2PrefixExpansion + "valueHas"
         val HasLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasLinkTo"
+        val HasLinkToValue: IRI = KnoraApiV2PrefixExpansion + "hasLinkToValue"
 
+        val IsPartOf: IRI = KnoraApiV2PrefixExpansion + "isPartOf"
+        val IsPartOfValue: IRI = KnoraApiV2PrefixExpansion + "isPartOfValue"
         val IsRegionOf: IRI = KnoraApiV2PrefixExpansion + "isRegionOf"
+        val IsRegionOfValue: IRI = KnoraApiV2PrefixExpansion + "isRegionOfValue"
         val HasGeometry: IRI = KnoraApiV2PrefixExpansion + "hasGeometry"
         val HasColor: IRI = KnoraApiV2PrefixExpansion + "hasColor"
         val HasComment: IRI = KnoraApiV2PrefixExpansion + "hasComment"
@@ -628,6 +635,8 @@ object OntologyConstants {
 
         val LinkValueHasTarget: IRI = KnoraApiV2PrefixExpansion + "linkValueHasTarget"
         val LinkValueHasTargetIri: IRI = KnoraApiV2PrefixExpansion + "linkValueHasTargetIri"
+        val LinkValueHasSource: IRI = KnoraApiV2PrefixExpansion + "linkValueHasSource"
+        val LinkValueHasSourceIri: IRI = KnoraApiV2PrefixExpansion + "linkValueHasSourceIri"
 
         val FileValueAsUrl: IRI = KnoraApiV2PrefixExpansion + "fileValueAsUrl"
         val FileValueIsPreview: IRI = KnoraApiV2PrefixExpansion + "fileValueIsPreview"
@@ -685,6 +694,7 @@ object OntologyConstants {
         val DDDRepresentation: IRI = KnoraApiV2PrefixExpansion + "DDDRepresentation"
         val TextRepresentation: IRI = KnoraApiV2PrefixExpansion + "TextRepresentation"
         val DocumentRepresentation: IRI = KnoraApiV2PrefixExpansion + "DocumentRepresentation"
+        val LinkObj: IRI = KnoraApiV2PrefixExpansion + "LinkObj"
 
         val Date: IRI = KnoraApiV2PrefixExpansion + "Date"
         val Geom: IRI = KnoraApiV2PrefixExpansion + "Geom"
@@ -693,12 +703,15 @@ object OntologyConstants {
         val Geoname: IRI = KnoraApiV2PrefixExpansion + "Geoname"
 
         val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
+        val ForbiddenResource: IRI = KnoraApiV2PrefixExpansion + "ForbiddenResource"
 
         val ResourceIcon: IRI = KnoraApiV2PrefixExpansion + "resourceIcon"
 
         val BelongsToOntology: IRI = KnoraApiV2PrefixExpansion + "belongsToOntology"
 
         val HasOntologies: IRI = KnoraApiV2PrefixExpansion + "hasOntologies"
+
+        val HasShortname: IRI = KnoraApiV2PrefixExpansion + "hasShortname"
 
         val HasOntologiesWithClasses: IRI = KnoraApiV2PrefixExpansion + "hasOntologiesWithClasses"
 
@@ -711,6 +724,7 @@ object OntologyConstants {
 
         val HasLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasLinkTo"
 
+        val IsPartOf: IRI = KnoraApiV2PrefixExpansion + "isPartOf"
         val IsRegionOf: IRI = KnoraApiV2PrefixExpansion + "isRegionOf"
         val HasGeometry: IRI = KnoraApiV2PrefixExpansion + "hasGeometry"
         val HasColor: IRI = KnoraApiV2PrefixExpansion + "hasColor"

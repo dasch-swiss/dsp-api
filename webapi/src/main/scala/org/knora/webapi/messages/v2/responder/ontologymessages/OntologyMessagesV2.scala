@@ -23,7 +23,9 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import java.util.UUID
 
+import org.knora.webapi
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
@@ -465,9 +467,9 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
 
 }
 
-case class ReadOntologiesV2(ontologies: Set[OntologyInfoV2]) extends KnoraResponseV2 {
+case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends KnoraResponseV2 {
 
-    def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologiesV2 = {
+    def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyMetadataV2 = {
         copy(
             ontologies = ontologies.map(_.toOntologySchema(targetSchema))
         )
@@ -480,7 +482,8 @@ case class ReadOntologiesV2(ontologies: Set[OntologyInfoV2]) extends KnoraRespon
         }
 
         val context = JsonLDObject(Map(
-            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(knoraApiOntologyPrefixExpansion)
+            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(knoraApiOntologyPrefixExpansion),
+            "rdfs" -> JsonLDString(OntologyConstants.Rdfs.RdfsPrefixExpansion)
         ))
 
         val ontologiesJson: Vector[JsonLDObject] = ontologies.toVector.sortBy(_.ontologyIri).map(_.toJsonLD)
@@ -672,7 +675,7 @@ sealed trait PredicateConverter {
                     }
                 }
 
-            case None => throw DataConversionException(s"$predicateIri has no ontology schema")
+            case None => predicateIri
         }
 
     }
@@ -1068,11 +1071,23 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
             None
         }
 
+        val isLinkValuePropertyStatement: Option[(IRI, JsonLDBoolean)] = if (isLinkValueProp && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkValueProperty -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
+        val isLinkPropertyStatement = if (isLinkProp && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkProperty -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
         Map(
             "@id" -> JsonLDString(entityInfoContent.propertyIri.toString),
             "@type" -> JsonLDString(propertyType.toString),
             belongsToOntologyPred -> JsonLDString(entityInfoContent.ontologyIri.toString)
-        ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++ isEditableStatement
+        ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++ isEditableStatement ++ isLinkValuePropertyStatement ++ isLinkPropertyStatement
     }
 }
 
@@ -1298,14 +1313,14 @@ case class OntologyEntitiesIriInfoV2(ontologyIri: SmartIri,
 case class SubClassInfoV2(id: SmartIri, label: String)
 
 /**
-  * Returns information about an ontology.
+  * Returns metadata about an ontology.
   *
   * @param ontologyIri the IRI of the ontology.
   * @param label       the label of the ontology.
   */
-case class OntologyInfoV2(ontologyIri: SmartIri,
-                          label: String) {
-    def toOntologySchema(targetSchema: OntologySchema): OntologyInfoV2 = {
+case class OntologyMetadataV2(ontologyIri: SmartIri,
+                              label: String) {
+    def toOntologySchema(targetSchema: OntologySchema): OntologyMetadataV2 = {
         copy(
             ontologyIri = ontologyIri.toOntologySchema(targetSchema)
         )
@@ -1314,7 +1329,7 @@ case class OntologyInfoV2(ontologyIri: SmartIri,
     def toJsonLD: JsonLDObject = {
         JsonLDObject(Map(
             "@id" -> JsonLDString(ontologyIri.toString),
-            OntologyConstants.SchemaOrg.Name -> JsonLDString(label)
+            OntologyConstants.Rdfs.Label -> JsonLDString(label)
         ))
     }
 }

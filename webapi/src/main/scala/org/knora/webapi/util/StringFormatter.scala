@@ -567,7 +567,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
         def this(iriStr: IRI, parsedIriInfo: Option[SmartIriInfo]) = this(iriStr, parsedIriInfo, () => throw DataConversionException(s"Couldn't parse IRI: $iriStr"))
 
-        private val iri = validateAndEscapeIri(iriStr, errorFun)
+        private val iri: IRI = validateAndEscapeIri(iriStr, errorFun)
 
         /**
           * Determines the API v2 schema of an external IRI.
@@ -593,7 +593,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         }
 
         // Extract Knora-specific information from the IRI.
-        private val iriInfo = parsedIriInfo match {
+        private val iriInfo: SmartIriInfo = parsedIriInfo match {
             case Some(info) =>
                 // This smart IRI is the result of a conversion from another smart IRI. Use the SmartIriInfo
                 // we were given.

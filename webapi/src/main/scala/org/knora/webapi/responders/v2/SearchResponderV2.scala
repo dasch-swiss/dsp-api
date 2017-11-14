@@ -504,7 +504,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             OntologyConstants.Xsd.Decimal -> OntologyConstants.KnoraBase.ValueHasDecimal,
             OntologyConstants.Xsd.Boolean -> OntologyConstants.KnoraBase.ValueHasBoolean,
             OntologyConstants.Xsd.String -> OntologyConstants.KnoraBase.ValueHasString,
-            OntologyConstants.KnoraBase.Date -> OntologyConstants.KnoraBase.ValueHasStartJDN
+            OntologyConstants.KnoraApiV2Simple.Date -> OntologyConstants.KnoraBase.ValueHasStartJDN
         )
 
         /**
@@ -604,18 +604,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                             case nonPropInfo: NonPropertyTypeInfo =>
 
-                                // the left arg queryVar is a variable representing a value
-                                // get the internal Iri of the value type, if possible (xsd types are not internal types).
-                                val typeIriInternal = if (nonPropInfo.typeIri.isKnoraApiV2DefinitionIri) {
-                                    nonPropInfo.typeIri.toOntologySchema(InternalSchema)
-                                } else {
-                                    nonPropInfo.typeIri
-                                }
-
                                 // depending on the value type, transform the given Filter expression.
                                 // add an extra level by getting the value literal from the value object.
                                 // queryVar refers to the value object, for the value literal an extra variable has to be created, taking its type into account.
-                                typeIriInternal.toString match {
+                                nonPropInfo.typeIri.toString match {
 
                                     case OntologyConstants.Xsd.Integer =>
 
@@ -719,7 +711,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                             )
                                         )
 
-                                    case OntologyConstants.KnoraBase.Date =>
+                                    case OntologyConstants.KnoraApiV2Simple.Date =>
 
                                         // make sure that the right argument is a string literal (dates are represented as knora date strings in knora-api simple)
                                         val dateStringLiteral: _root_.org.knora.webapi.util.search.XsdLiteral = filterCompare.rightArg match {
@@ -996,17 +988,20 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         val resAndValObjIris: Seq[ResourceIrisAndValueObjectIris] = valuePropertyAssertions.values.flatten.foldLeft(Seq.empty[ResourceIrisAndValueObjectIris]) {
             (acc: Seq[ResourceIrisAndValueObjectIris], assertion) =>
 
-                if (assertion.targetResource.nonEmpty) {
+                if (assertion.nestedResource.nonEmpty) {
                     // this is a link value
                     // recursively traverse the dependent resource's values
 
-                    val dependentRes: ConstructResponseUtilV2.ResourceWithValueRdfData = assertion.targetResource.get
+                    val dependentRes: ConstructResponseUtilV2.ResourceWithValueRdfData = assertion.nestedResource.get
 
                     // recursively traverse the link value's nested resource and its assertions
                     val resAndValObjIrisForDependentRes: ResourceIrisAndValueObjectIris = traverseValuePropertyAssertions(dependentRes.valuePropertyAssertions)
-                    // get the dependent resource's Iri from the current link value's rdf:object
-                    val dependentResIri: IRI = assertion.assertions.getOrElse(OntologyConstants.Rdf.Object, throw InconsistentTriplestoreDataException(s"expected ${OntologyConstants.Rdf.Object} for link value ${assertion.valueObjectIri}"))
-
+                    // get the dependent resource's Iri from the current link value's rdf:object or rdf:subject in case of an incoming link
+                    val dependentResIri: IRI = if (!assertion.incomingLink) {
+                        assertion.assertions.getOrElse(OntologyConstants.Rdf.Object, throw InconsistentTriplestoreDataException(s"expected ${OntologyConstants.Rdf.Object} for link value ${assertion.valueObjectIri}"))
+                    } else {
+                        assertion.assertions.getOrElse(OntologyConstants.Rdf.Subject, throw InconsistentTriplestoreDataException(s"expected ${OntologyConstants.Rdf.Subject} for link value ${assertion.valueObjectIri}"))
+                    }
                     // append results from recursion and current value object
                     ResourceIrisAndValueObjectIris(resourceIris = resAndValObjIrisForDependentRes.resourceIris + dependentResIri, valueObjectIris = resAndValObjIrisForDependentRes.valueObjectIris + assertion.valueObjectIri) +: acc
                 } else {
@@ -1609,13 +1604,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                 // Get the corresponding knora-base:valueHas* property so we can generate an appropriate variable name.
                                 val propertyIri: SmartIri = typeInfo match {
                                     case nonPropertyTypeInfo: NonPropertyTypeInfo =>
-                                        val internalTypeIri = if (nonPropertyTypeInfo.typeIri.isKnoraApiV2DefinitionIri) {
-                                            nonPropertyTypeInfo.typeIri.toOntologySchema(InternalSchema)
-                                        } else {
-                                            nonPropertyTypeInfo.typeIri
-                                        }
-
-                                        literalTypesToValueTypeIris.getOrElse(internalTypeIri.toString, throw SparqlSearchException(s"Type $internalTypeIri is not supported in ORDER BY")).toSmartIri
+                                        literalTypesToValueTypeIris.getOrElse(nonPropertyTypeInfo.typeIri.toString, throw SparqlSearchException(s"Type $nonPropertyTypeInfo.typeIri is not supported in ORDER BY")).toSmartIri
 
                                     case _: PropertyTypeInfo => throw SparqlSearchException(s"Variable ${criterion.queryVariable.variableName} represents a property, and therefore cannot be used in ORDER BY")
                                 }
@@ -1697,7 +1686,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
         /**
           *
-          * Recursively collects variables representing values that are present in the CONSTRUCT clause of the input query for the given [[Entity]] representing a resource.
+          * Collects variables representing values that are present in the CONSTRUCT clause of the input query for the given [[Entity]] representing a resource.
           *
           * @param constructClause      the Construct clause to be looked at.
           * @param resource             the [[Entity]] representing the resource whose properties are to be collected
@@ -1767,14 +1756,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             // linking prop: get value object var and information which values are requested for dependent resource
                             case OntologyConstants.KnoraBase.Resource =>
 
-                                // recursively get value objects requested for dependent resource: statement.obj represents a dependent resource (query variable or IRI)
-                                val valObjVarsForDependentRes: Set[QueryVariable] = collectValueVariablesForResource(constructClause, statementPattern.obj, typeInspection, variableConcatSuffix)
-
                                 // link value object variable
                                 val valObjVar = createUniqueVariableNameFromEntityAndProperty(statementPattern.obj, OntologyConstants.KnoraBase.LinkValue)
 
                                 // return link value object variable and value objects requested for the dependent resource
-                                valObjVarsForDependentRes + QueryVariable(valObjVar.variableName + variableConcatSuffix)
+                                Set(QueryVariable(valObjVar.variableName + variableConcatSuffix))
 
                             case _ =>
                                 statementPattern.obj match {
@@ -1950,7 +1936,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // a sequence of resource Iris that match the search criteria
             // attention: no permission checking has been done so far
             mainResourceIris: Seq[IRI] = prequeryResponse.results.bindings.map {
-                case resultRow: VariableResultsRow =>
+                resultRow: VariableResultsRow =>
                     resultRow.rowMap(mainResourceVar.variableName)
             }
 
@@ -1975,6 +1961,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                         acc + (mainResIri -> dependentResIris)
                 }
+
+                // collect all variables representing resources
+                val allResourceVariablesFromTypeInspection: Set[QueryVariable] = typeInspectionResult.typedEntities.collect {
+                    case (queryVar: TypeableVariable, nonPropTypeInfo: NonPropertyTypeInfo) if nonPropTypeInfo.typeIri.toString == OntologyConstants.KnoraApiV2Simple.Resource => QueryVariable(queryVar.variableName)
+                }.toSet
 
                 // the user may have defined Iris of dependent resources in the input query (type annotations)
                 val dependentResourceIrisFromTypeInspection: Set[IRI] = typeInspectionResult.typedEntities.collect {
@@ -2075,17 +2066,25 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     }
 
                     // sort out those value objects that the user did not ask for in the input query's CONSTRUCT clause
+                    valueObjectVariablesForAllResVars: Set[QueryVariable] = allResourceVariablesFromTypeInspection.flatMap {
+                        depResVar =>
+                            collectValueVariablesForResource(preprocessedQuery.constructClause, depResVar, typeInspectionResult, nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableAppendix)
+                    }
 
-                    // get all the requested value object vars (for main and dependent resources)
-                    valueObjectVariablesForAllResources: Set[QueryVariable] = collectValueVariablesForResource(preprocessedQuery.constructClause, mainResourceVar, typeInspectionResult, nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableAppendix)
+                    valueObjectVariablesForDependentResIris: Set[QueryVariable] = dependentResourceIrisFromTypeInspection.flatMap {
+                        depResIri =>
+                            collectValueVariablesForResource(preprocessedQuery.constructClause, IriRef(iri = depResIri.toSmartIri), typeInspectionResult, nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableAppendix)
+                    }
 
-                    // collect requested valu object Iris for each resource
+                    allValueObjectVariables: Set[QueryVariable] = valueObjectVariablesForAllResVars ++ valueObjectVariablesForDependentResIris
+
+                    // collect requested value object Iris for each resource
                     requestedValObjIrisPerResource: Map[IRI, Set[IRI]] = queryResWithFullQueryPath.map {
                         case (resIri: IRI, assertions: ConstructResponseUtilV2.ResourceWithValueRdfData) =>
 
                             val valueObjIrisForRes: Map[QueryVariable, Set[IRI]] = valueObjectIrisPerMainResource(resIri)
 
-                            val valObjIrisRequestedForRes: Set[IRI] = valueObjectVariablesForAllResources.flatMap {
+                            val valObjIrisRequestedForRes: Set[IRI] = allValueObjectVariables.flatMap {
                                 (requestedQueryVar: QueryVariable) =>
                                     valueObjIrisForRes.getOrElse(requestedQueryVar, throw AssertionException(s"key $requestedQueryVar is absent in prequery's value object Iris collection for resource $resIri"))
                             }
@@ -2120,15 +2119,15 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                         // if there are link values including a target resource, apply filter to their values too
                                         val valuesFilteredRecursively: Seq[ConstructResponseUtilV2.ValueRdfData] = valuesFiltered.map {
                                             (valObj: ConstructResponseUtilV2.ValueRdfData) =>
-                                                if (valObj.targetResource.nonEmpty) {
+                                                if (valObj.nestedResource.nonEmpty) {
 
-                                                    val targetResourceAssertions: ConstructResponseUtilV2.ResourceWithValueRdfData = valObj.targetResource.get
+                                                    val targetResourceAssertions: ConstructResponseUtilV2.ResourceWithValueRdfData = valObj.nestedResource.get
 
                                                     // apply filter to the target resource's values
                                                     val targetResourceAssertionsFiltered: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = traverseAndFilterValues(targetResourceAssertions)
 
                                                     valObj.copy(
-                                                        targetResource = Some(targetResourceAssertions.copy(
+                                                        nestedResource = Some(targetResourceAssertions.copy(
                                                             valuePropertyAssertions = targetResourceAssertionsFiltered
                                                         ))
                                                     )

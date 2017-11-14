@@ -901,7 +901,7 @@ class OntologyResponderV2 extends Responder {
         )
     }
 
-    private def getOntologyMetadataV2(projectIris: Set[IRI], userProfile: UserProfileV1): Future[ReadOntologiesV2] = {
+    private def getOntologyMetadataV2(projectIris: Set[IRI], userProfile: UserProfileV1): Future[ReadOntologyMetadataV2] = {
         for {
             namedGraphInfos: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
 
@@ -915,13 +915,13 @@ class OntologyResponderV2 extends Responder {
                 namedGraphInfo =>
                     val ontologyIri = namedGraphInfo.id.toSmartIri
 
-                    OntologyInfoV2(
+                    OntologyMetadataV2(
                         ontologyIri = ontologyIri,
                         label = ontologyIri.getOntologyName
                     )
             }.toSet
 
-            response = ReadOntologiesV2(
+            response = ReadOntologyMetadataV2(
                 ontologies = ontologyInfoV2s
             )
         } yield response

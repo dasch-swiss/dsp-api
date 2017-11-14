@@ -42,6 +42,29 @@ object KnoraApiV2Simple {
         )
     )
 
+    val ForbiddenResource: ReadClassInfoV2 = makeClass(
+        classIri = OntologyConstants.KnoraApiV2Simple.ForbiddenResource,
+        subClassOf = Set(OntologyConstants.KnoraApiV2Simple.Resource),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraApiV2Simple.HasComment -> Cardinality.MustHaveSome
+        ),
+        inheritedCardinalities = Resource.allCardinalities
+    )
+
     val Result: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2Simple.Result,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -184,6 +207,30 @@ object KnoraApiV2Simple {
         inheritedCardinalities = Resource.allCardinalities
     )
 
+    val IsPartOf: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Simple.IsPartOf,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),
+        objectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.HasLinkTo),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "ist Teil von",
+                    LanguageCodes.EN -> "is part of",
+                    LanguageCodes.FR -> "fait partie de",
+                    LanguageCodes.IT -> "fa parte di"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates that this resource is part of another resource"
+                )
+            )
+        )
+    )
 
     val IsRegionOf: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2Simple.IsRegionOf,
@@ -233,6 +280,30 @@ object KnoraApiV2Simple {
                 )
             )
         )
+    )
+
+    val LinkObject: ReadClassInfoV2 = makeClass(
+        classIri = OntologyConstants.KnoraApiV2Simple.LinkObj,
+        subClassOf = Set(OntologyConstants.KnoraApiV2Simple.Resource),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Link Object"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents a generic link object."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraApiV2Simple.HasComment -> Cardinality.MayHaveMany,
+            OntologyConstants.KnoraApiV2Simple.HasLinkTo -> Cardinality.MustHaveOne
+        ),
+        inheritedCardinalities = Resource.allCardinalities
     )
 
     val Representation: ReadClassInfoV2 = makeClass(
@@ -966,7 +1037,9 @@ object KnoraApiV2Simple {
       */
     val Classes: Map[SmartIri, ReadClassInfoV2] = Set(
         Resource,
+        ForbiddenResource,
         Region,
+        LinkObject,
         Representation,
         StillImageRepresentation,
         MovingImageRepresentation,
@@ -1004,6 +1077,7 @@ object KnoraApiV2Simple {
         SubjectType,
         ObjectType,
         ResourceIcon,
+        IsPartOf,
         IsRegionOf,
         HasGeometry,
         HasColor,
