@@ -144,7 +144,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             entity match {
                 case iriRef: IriRef => // if an Iri is an external knora-api entity (with value object or simple), convert it to an internal Iri
-                    if (iriRef.iri.isKnoraApiV2OntologyEntityIri) {
+                    if (iriRef.iri.isKnoraApiV2EntityIri) {
                         IriRef(iriRef.iri.toOntologySchema(InternalSchema))
                     } else {
                         iriRef
@@ -1756,7 +1756,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         }
 
                         // convert the type information into an internal Knora Iri if possible
-                        val objectIri: SmartIri = if (propTypeInfo.objectTypeIri.isKnoraApiV2OntologyEntityIri) {
+                        val objectIri: SmartIri = if (propTypeInfo.objectTypeIri.isKnoraApiV2EntityIri) {
                             propTypeInfo.objectTypeIri.toOntologySchema(InternalSchema)
                         } else {
                             propTypeInfo.objectTypeIri

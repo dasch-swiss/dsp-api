@@ -145,26 +145,38 @@ class StringFormatterSpec extends CoreSpec() {
 
         "convert http://www.knora.org/ontology/knora-base to http://api.knora.org/ontology/knora-api/simple/v2" in {
             val internalOntologyIri = "http://www.knora.org/ontology/knora-base".toSmartIri
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) && internalOntologyIri.isKnoraOntologyIri)
+
             val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Simple)
             externalOntologyIri.toString should ===("http://api.knora.org/ontology/knora-api/simple/v2")
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Simple) && externalOntologyIri.isKnoraOntologyIri)
         }
 
         "convert http://www.knora.org/ontology/knora-base#Resource to http://api.knora.org/ontology/knora-api/simple/v2#Resource" in {
             val internalEntityIri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri
+            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) && internalEntityIri.isKnoraInternalEntityIri)
+
             val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Simple)
             externalEntityIri.toString should ===("http://api.knora.org/ontology/knora-api/simple/v2#Resource")
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2Simple) && externalEntityIri.isKnoraApiV2EntityIri)
         }
 
         "convert http://www.knora.org/ontology/knora-base to http://api.knora.org/ontology/knora-api/v2" in {
             val internalOntologyIri = "http://www.knora.org/ontology/knora-base".toSmartIri
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) && internalOntologyIri.isKnoraOntologyIri)
+
             val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)
             externalOntologyIri.toString should ===("http://api.knora.org/ontology/knora-api/v2")
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) && externalOntologyIri.isKnoraOntologyIri)
         }
 
         "convert http://www.knora.org/ontology/knora-base#Resource to http://api.knora.org/ontology/knora-api/v2#Resource" in {
             val internalEntityIri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri
+            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) && internalEntityIri.isKnoraInternalEntityIri)
+
             val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2WithValueObjects)
             externalEntityIri.toString should ===("http://api.knora.org/ontology/knora-api/v2#Resource")
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) && externalEntityIri.isKnoraApiV2EntityIri)
         }
 
         "convert http://api.knora.org/ontology/knora-api/simple/v2 to http://www.knora.org/ontology/knora-base" in {

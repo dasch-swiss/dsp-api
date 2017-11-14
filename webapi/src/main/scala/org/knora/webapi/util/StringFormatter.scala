@@ -324,7 +324,7 @@ sealed trait SmartIri extends Ordered[SmartIri] {
     /**
       * Returns `true` if this is a Knora entity IRI.
       */
-    def isKnoraOntologyEntityIri: Boolean
+    def isKnoraEntityIri: Boolean
 
     /**
       * Returns `true` if this is a Knora API v2 ontology or entity IRI.
@@ -334,7 +334,7 @@ sealed trait SmartIri extends Ordered[SmartIri] {
     /**
       * Returns `true` if this is a Knora API v2 ontology entity IRI.
       */
-    def isKnoraApiV2OntologyEntityIri: Boolean
+    def isKnoraApiV2EntityIri: Boolean
 
     /**
       * Returns the IRI's project code, if any.
@@ -691,20 +691,20 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
         override def isKnoraInternalDefinitionIri: Boolean = iriInfo.iriType == KnoraDefinitionIri && iriInfo.ontologySchema.contains(InternalSchema)
 
-        override def isKnoraInternalEntityIri: Boolean = isKnoraInternalDefinitionIri && isKnoraOntologyEntityIri
+        override def isKnoraInternalEntityIri: Boolean = isKnoraInternalDefinitionIri && isKnoraEntityIri
 
         override def isKnoraApiV2DefinitionIri: Boolean = iriInfo.iriType == KnoraDefinitionIri && (iriInfo.ontologySchema match {
             case Some(_: ApiV2Schema) => true
             case _ => false
         })
 
-        override def isKnoraApiV2OntologyEntityIri: Boolean = isKnoraApiV2DefinitionIri && isKnoraOntologyEntityIri
+        override def isKnoraApiV2EntityIri: Boolean = isKnoraApiV2DefinitionIri && isKnoraEntityIri
 
         override def isKnoraBuiltInDefinitionIri: Boolean = iriInfo.isBuiltInDef
 
         override def isKnoraOntologyIri: Boolean = iriInfo.iriType == KnoraDefinitionIri && iriInfo.ontologyName.nonEmpty && iriInfo.entityName.isEmpty
 
-        override def isKnoraOntologyEntityIri: Boolean = iriInfo.iriType == KnoraDefinitionIri && iriInfo.entityName.nonEmpty
+        override def isKnoraEntityIri: Boolean = iriInfo.iriType == KnoraDefinitionIri && iriInfo.entityName.nonEmpty
 
         override def getProjectCode: Option[String] = iriInfo.projectCode
 
@@ -774,14 +774,14 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                     } else {
                         throw DataConversionException(s"Cannot convert IRI $iri from ${iriInfo.ontologySchema} to $targetSchema")
                     }
-                } else if (isKnoraOntologyEntityIri) {
+                } else if (isKnoraEntityIri) {
                     if (iriInfo.ontologySchema.contains(InternalSchema)) {
                         targetSchema match {
-                            case externalSchema: ApiV2Schema => internalToExternalOntologyEntityIri(externalSchema)
+                            case externalSchema: ApiV2Schema => internalToExternalEntityIri(externalSchema)
                             case _ => throw DataConversionException(s"Cannot convert $iri to $targetSchema")
                         }
                     } else if (targetSchema == InternalSchema) {
-                        externalToInternalOntologyEntityIri
+                        externalToInternalEntityIri
                     } else {
                         throw DataConversionException(s"Cannot convert $iri to $targetSchema")
                     }
@@ -798,7 +798,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             }
         }
 
-        private lazy val asInternalOntologyEntityIri: SmartIri = {
+        private lazy val asInternalEntityIri: SmartIri = {
             // If we're converting from API v2 simple schema, replace built-in simplified datatypes with value classes.
             val valueClass: Option[IRI] = iriInfo.ontologySchema match {
                 case Some(ApiV2Simple) =>
@@ -859,9 +859,9 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             }
         }
 
-        private def externalToInternalOntologyEntityIri: SmartIri = asInternalOntologyEntityIri
+        private def externalToInternalEntityIri: SmartIri = asInternalEntityIri
 
-        private def internalToExternalOntologyEntityIri(targetSchema: ApiV2Schema): SmartIri = {
+        private def internalToExternalEntityIri(targetSchema: ApiV2Schema): SmartIri = {
             // If we're converting to API v2 simple schema, replace value classes with built-in simplified datatypes.
             val simplifiedDatatype: Option[IRI] = if (iriInfo.ontologySchema.contains(InternalSchema) && targetSchema == ApiV2Simple) {
                 OntologyConstants.KnoraApiV2Simple.ValueClassesToSimplifiedTypes.get(iri) match {
@@ -978,7 +978,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         private def externalToInternalOntologyIri: SmartIri = asInternalOntologyIri
 
         private lazy val asLinkProp: SmartIri = {
-            if (!isKnoraOntologyEntityIri) {
+            if (!isKnoraEntityIri) {
                 throw DataConversionException(s"IRI $iri is not a Knora entity IRI, so it cannot be a link value property IRI")
             }
 
@@ -1003,7 +1003,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         override def fromLinkValuePropToLinkProp: SmartIri = asLinkProp
 
         private lazy val asLinkValueProp: SmartIri = {
-            if (!isKnoraOntologyEntityIri) {
+            if (!isKnoraEntityIri) {
                 throw DataConversionException(s"IRI $iri is not a Knora entity IRI, so it cannot be a link property IRI")
             }
 

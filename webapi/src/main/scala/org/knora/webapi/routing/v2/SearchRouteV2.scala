@@ -105,7 +105,7 @@ object SearchRouteV2 extends Authenticator {
             case Some(resourceClassIriStr: String) =>
                 val externalResourceClassIri = resourceClassIriStr.toSmartIriWithErr(() => throw BadRequestException(s"Invalid resource class IRI: $resourceClassIriStr"))
 
-                if (!externalResourceClassIri.isKnoraApiV2OntologyEntityIri) {
+                if (!externalResourceClassIri.isKnoraApiV2EntityIri) {
                     throw BadRequestException(s"$resourceClassIriStr is not a valid knora-api resource class IRI")
                 }
 
