@@ -82,8 +82,8 @@ object OntologiesRouteV2 extends Authenticator {
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
                     val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
-                    val requestMessage = NamedGraphEntitiesGetRequestV2(
-                        namedGraphIris = ontologiesForResponder,
+                    val requestMessage = OntologyEntitiesGetRequestV2(
+                        ontologyGraphIris = ontologiesForResponder,
                         responseSchema = responseSchema,
                         allLanguages = allLanguages,
                         userProfile = userProfile
@@ -104,7 +104,7 @@ object OntologiesRouteV2 extends Authenticator {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val requestMessage = NamedGraphsGetRequestV2(userProfile = userProfile)
+                    val requestMessage = OntologyMetadataGetRequestV2(userProfile = userProfile)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,
@@ -147,8 +147,8 @@ object OntologiesRouteV2 extends Authenticator {
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
                     val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
-                    val requestMessage = NamedGraphEntitiesGetRequestV2(
-                        namedGraphIris = ontologiesForResponder,
+                    val requestMessage = OntologyEntitiesGetRequestV2(
+                        ontologyGraphIris = ontologiesForResponder,
                         responseSchema = responseSchema,
                         allLanguages = allLanguages,
                         userProfile = userProfile

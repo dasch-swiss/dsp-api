@@ -189,7 +189,7 @@ class ProjectsResponderV1 extends Responder {
                     }
             }.toSeq
 
-            // _ = log.debug("projectsNamedGraphGetV1 - namedGraphs: {}", namedGraphs)
+            // _ = log.debug("projectsNamedGraphGetV1 - ontologies: {}", ontologies)
         } yield namedGraphs
     }
 

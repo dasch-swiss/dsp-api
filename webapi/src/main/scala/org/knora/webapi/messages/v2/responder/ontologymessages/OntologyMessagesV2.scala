@@ -204,29 +204,31 @@ case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV2])
 
 /**
   *
-  * Request information about the entities of a named graph. A succesful response will be a [[NamedGraphEntityInfoV2]].
+  * Request information about the entities of a named graph. A succesful response will be a [[OntologyEntitiesIriInfoV2]].
   *
-  * @param namedGraph  the IRI of the named graph.
+  * @param ontologyIri the IRI of the named graph.
   * @param userProfile the profile of the user making the request.
   */
-case class NamedGraphEntitiesRequestV2(namedGraph: SmartIri, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class OntologyEntityIrisGetRequestV2(ontologyIri: SmartIri, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
-  * Requests the existing named graphs.
+  * Requests metadata about ontologies.
   *
+  * @param projectIris the IRIs of the projects for which ontologies should be returned. If this set is empty, information
+  *                    about all ontologies is returned.
   * @param userProfile the profile of the user making the request.
   */
-case class NamedGraphsGetRequestV2(userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class OntologyMetadataGetRequestV2(projectIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
-  * Requests entity definitions for the given named graphs.
+  * Requests entity definitions for the given ontologies.
   *
-  * @param namedGraphIris the named graphs to query for.
-  * @param responseSchema the API schema that will be used for the response.
-  * @param allLanguages   true if information in all available languages should be returned.
-  * @param userProfile    the profile of the user making the request.
+  * @param ontologyGraphIris the ontologies to query for.
+  * @param responseSchema    the API schema that will be used for the response.
+  * @param allLanguages      true if information in all available languages should be returned.
+  * @param userProfile       the profile of the user making the request.
   */
-case class NamedGraphEntitiesGetRequestV2(namedGraphIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class OntologyEntitiesGetRequestV2(ontologyGraphIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
   * Requests the entity definitions for the given class IRIs. A successful response will be a [[ReadEntityDefinitionsV2]].
@@ -300,7 +302,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
         )
     }
 
-    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
     }
 
@@ -463,9 +465,15 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
 
 }
 
-case class ReadNamedGraphsV2(namedGraphs: Set[SmartIri]) extends KnoraResponseV2 {
+case class ReadOntologiesV2(ontologies: Set[OntologyInfoV2]) extends KnoraResponseV2 {
 
-    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+    def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologiesV2 = {
+        copy(
+            ontologies = ontologies.map(_.toOntologySchema(targetSchema))
+        )
+    }
+
+    private def generateJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         val knoraApiOntologyPrefixExpansion = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
             case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
@@ -475,9 +483,7 @@ case class ReadNamedGraphsV2(namedGraphs: Set[SmartIri]) extends KnoraResponseV2
             OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(knoraApiOntologyPrefixExpansion)
         ))
 
-        val namedGraphIris: Seq[JsonLDString] = namedGraphs.toSeq.map {
-            namedGraphIri => JsonLDString(namedGraphIri.toOntologySchema(targetSchema).toString)
-        }
+        val ontologiesJson: Vector[JsonLDObject] = ontologies.toVector.sortBy(_.ontologyIri).map(_.toJsonLD)
 
         val hasOntologiesProp = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasOntologies
@@ -485,10 +491,14 @@ case class ReadNamedGraphsV2(namedGraphs: Set[SmartIri]) extends KnoraResponseV2
         }
 
         val body = JsonLDObject(Map(
-            hasOntologiesProp -> JsonLDArray(namedGraphIris)
+            hasOntologiesProp -> JsonLDArray(ontologiesJson)
         ))
 
         JsonLDDocument(body = body, context = context)
+    }
+
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+        toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
     }
 }
 
@@ -921,9 +931,9 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
                                 // Yes. Is it a datatype?
                                 val isDatatype = simplifiedType.startsWith(OntologyConstants.Xsd.XsdPrefixExpansion) ||
                                     (KnoraApiV2Simple.Classes.get(simplifiedType.toSmartIri) match {
-                                    case Some(simpleClass: ReadClassInfoV2) if simpleClass.entityInfoContent.rdfType.toString == OntologyConstants.Rdfs.Datatype => true
-                                    case _ => false
-                                })
+                                        case Some(simpleClass: ReadClassInfoV2) if simpleClass.entityInfoContent.rdfType.toString == OntologyConstants.Rdfs.Datatype => true
+                                        case _ => false
+                                    })
 
                                 if (isDatatype) {
                                     // Yes. Make this a datatype property.
@@ -1265,19 +1275,19 @@ case class ClassInfoContentV2(classIri: SmartIri,
 }
 
 /**
-  * Represents the assertions about a given named graph entity.
+  * Represents the IRIs of entities defined in a particular ontology.
   *
-  * @param namedGraphIri        the IRI of the named graph.
-  * @param classIris            the classes defined in the named graph.
-  * @param propertyIris         the properties defined in the named graph.
-  * @param standoffClassIris    the standoff classes defined in the named graph.
-  * @param standoffPropertyIris the standoff properties defined in the named graph.
+  * @param ontologyIri          the IRI of the ontology.
+  * @param classIris            the classes defined in the ontology.
+  * @param propertyIris         the properties defined in the ontology.
+  * @param standoffClassIris    the standoff classes defined in the ontology.
+  * @param standoffPropertyIris the standoff properties defined in the ontology.
   */
-case class NamedGraphEntityInfoV2(namedGraphIri: SmartIri,
-                                  classIris: Set[SmartIri],
-                                  propertyIris: Set[SmartIri],
-                                  standoffClassIris: Set[SmartIri],
-                                  standoffPropertyIris: Set[SmartIri])
+case class OntologyEntitiesIriInfoV2(ontologyIri: SmartIri,
+                                     classIris: Set[SmartIri],
+                                     propertyIris: Set[SmartIri],
+                                     standoffClassIris: Set[SmartIri],
+                                     standoffPropertyIris: Set[SmartIri])
 
 /**
   * Represents information about a subclass of a resource class.
@@ -1286,3 +1296,25 @@ case class NamedGraphEntityInfoV2(namedGraphIri: SmartIri,
   * @param label the `rdfs:label` of the subclass.
   */
 case class SubClassInfoV2(id: SmartIri, label: String)
+
+/**
+  * Returns information about an ontology.
+  *
+  * @param ontologyIri the IRI of the ontology.
+  * @param label       the label of the ontology.
+  */
+case class OntologyInfoV2(ontologyIri: SmartIri,
+                          label: String) {
+    def toOntologySchema(targetSchema: OntologySchema): OntologyInfoV2 = {
+        copy(
+            ontologyIri = ontologyIri.toOntologySchema(targetSchema)
+        )
+    }
+
+    def toJsonLD: JsonLDObject = {
+        JsonLDObject(Map(
+            "@id" -> JsonLDString(ontologyIri.toString),
+            OntologyConstants.SchemaOrg.Name -> JsonLDString(label)
+        ))
+    }
+}

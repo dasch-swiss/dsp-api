@@ -55,28 +55,28 @@ class OntologyResponderV2 extends Responder {
     /**
       * A container for all the cached ontology data.
       *
-      * @param namedGraphs                         the set of available named graphs.
-      * @param namedGraphClasses                   a map of named graph IRIs to sets of non-standoff class IRIs defined in each named graph.
-      * @param namedGraphProperties                a map of property IRIs to sets of non-standoff property IRIs defined in each named graph.
+      * @param ontologies                          the set of available ontologies.
+      * @param ontologyClasses                     a map of ontology IRIs to sets of non-standoff class IRIs defined in each ontology.
+      * @param ontologyProperties                  a map of property IRIs to sets of non-standoff property IRIs defined in each ontology.
       * @param classDefs                           a map of class IRIs to definitions.
       * @param resourceAndValueSubClassOfRelations a map of IRIs of resource and value classes to sets of the IRIs of their base classes.
       * @param resourceSuperClassOfRelations       a map of IRIs of resource classes to sets of the IRIs of their subclasses.
       * @param propertyDefs                        a map of property IRIs to property definitions.
-      * @param namedGraphStandoffClasses           a map of named graph IRIs to sets of standoff class IRIs defined in each named graph.
-      * @param namedGraphStandoffProperties        a map of property IRIs to sets of standoff property IRIs defined in each named graph.
+      * @param ontologyStandoffClasses             a map of ontology IRIs to sets of standoff class IRIs defined in each ontology.
+      * @param ontologyStandoffProperties          a map of property IRIs to sets of standoff property IRIs defined in each ontology.
       * @param standoffClassDefs                   a map of standoff class IRIs to definitions.
       * @param standoffPropertyDefs                a map of property IRIs to property definitions.
       * @param standoffClassDefsWithDataType       a map of standoff class IRIs to class definitions, including only standoff datatype tags.
       */
-    case class OntologyCacheData(namedGraphs: Set[SmartIri],
-                                 namedGraphClasses: Map[SmartIri, Set[SmartIri]],
-                                 namedGraphProperties: Map[SmartIri, Set[SmartIri]],
+    case class OntologyCacheData(ontologies: Set[SmartIri],
+                                 ontologyClasses: Map[SmartIri, Set[SmartIri]],
+                                 ontologyProperties: Map[SmartIri, Set[SmartIri]],
                                  classDefs: Map[SmartIri, ReadClassInfoV2],
                                  resourceAndValueSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                  resourceSuperClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                  propertyDefs: Map[SmartIri, ReadPropertyInfoV2],
-                                 namedGraphStandoffClasses: Map[SmartIri, Set[SmartIri]],
-                                 namedGraphStandoffProperties: Map[SmartIri, Set[SmartIri]],
+                                 ontologyStandoffClasses: Map[SmartIri, Set[SmartIri]],
+                                 ontologyStandoffProperties: Map[SmartIri, Set[SmartIri]],
                                  standoffClassDefs: Map[SmartIri, ReadClassInfoV2],
                                  standoffPropertyDefs: Map[SmartIri, ReadPropertyInfoV2],
                                  standoffClassDefsWithDataType: Map[SmartIri, ReadClassInfoV2])
@@ -89,11 +89,11 @@ class OntologyResponderV2 extends Responder {
         case StandoffAllPropertyEntitiesGetRequestV2(userProfile) => future2Message(sender(), getAllStandoffPropertyEntitiesV2(userProfile), log)
         case CheckSubClassRequestV2(subClassIri, superClassIri, userProfile) => future2Message(sender(), checkSubClassV2(subClassIri, superClassIri, userProfile), log)
         case SubClassesGetRequestV2(resourceClassIri, userProfile) => future2Message(sender(), getSubClassesV2(resourceClassIri, userProfile), log)
-        case NamedGraphEntitiesRequestV2(namedGraphIri, userProfile) => future2Message(sender(), getNamedGraphEntityInfoV2ForNamedGraphV2(namedGraphIri, userProfile), log)
-        case NamedGraphEntitiesGetRequestV2(namedGraphIris, responseSchema, allLanguages, userProfile) => future2Message(sender(), getEntitiesForNamedGraphV2(namedGraphIris, responseSchema, allLanguages, userProfile), log)
+        case OntologyEntityIrisGetRequestV2(namedGraphIri, userProfile) => future2Message(sender(), getNamedGraphEntityInfoV2ForNamedGraphV2(namedGraphIri, userProfile), log)
+        case OntologyEntitiesGetRequestV2(namedGraphIris, responseSchema, allLanguages, userProfile) => future2Message(sender(), getOntologyEntitiesV2(namedGraphIris, responseSchema, allLanguages, userProfile), log)
         case ClassesGetRequestV2(resourceClassIris, responseSchema, allLanguages, userProfile) => future2Message(sender(), getClassDefinitionsV2(resourceClassIris, responseSchema, allLanguages, userProfile), log)
         case PropertyEntitiesGetRequestV2(propertyIris, allLanguages, userProfile) => future2Message(sender(), getPropertyDefinitionsV2(propertyIris, allLanguages, userProfile), log)
-        case NamedGraphsGetRequestV2(userProfile) => future2Message(sender(), getNamedGraphsV2(userProfile), log)
+        case OntologyMetadataGetRequestV2(projectIris, userProfile) => future2Message(sender(), getOntologyMetadataV2(projectIris, userProfile), log)
         case createOntologyRequest: CreateOntologyRequestV2 => future2Message(sender(), createOntology(createOntologyRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
@@ -226,7 +226,7 @@ class OntologyResponderV2 extends Responder {
             propertyDefsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(propertyDefsSparql)).mapTo[SparqlSelectResponse]
             propertyDefsRows: Seq[VariableResultsRow] = propertyDefsResponse.results.bindings
 
-            // Make a map of IRIs of named graphs to IRIs of resource classes defined in each one, excluding resource
+            // Make a map of IRIs of ontologies to IRIs of resource classes defined in each one, excluding resource
             // classes that can't be instantiated directly.
             graphClassMap: Map[SmartIri, Set[SmartIri]] = resourceDefsRows.groupBy(_.rowMap("graph").toKnoraInternalSmartIri).map {
                 case (graphIri: SmartIri, graphRows: Seq[VariableResultsRow]) =>
@@ -234,7 +234,7 @@ class OntologyResponderV2 extends Responder {
             } + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2Simple.Classes.keySet) +
                 (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2WithValueObjects.Classes.keySet)
 
-            // Make a map of IRIs of named graphs to IRIs of properties defined in each one, excluding knora-base:resourceProperty,
+            // Make a map of IRIs of ontologies to IRIs of properties defined in each one, excluding knora-base:resourceProperty,
             // which is never used directly.
             graphPropMap: Map[SmartIri, Set[SmartIri]] = propertyDefsRows.groupBy(_.rowMap("graph").toKnoraInternalSmartIri).map {
                 case (graphIri, graphRows) =>
@@ -507,13 +507,13 @@ class OntologyResponderV2 extends Responder {
             standoffPropsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(standoffPropsSparql)).mapTo[SparqlSelectResponse]
             standoffPropsRows: Seq[VariableResultsRow] = standoffPropsResponse.results.bindings
 
-            // Make a map of IRIs of named graphs to IRIs of standoff classes defined in each one.
+            // Make a map of IRIs of ontologies to IRIs of standoff classes defined in each one.
             standoffGraphClassMap: Map[SmartIri, Set[SmartIri]] = allStandoffClassRows.groupBy(_.rowMap("graph").toKnoraInternalSmartIri).map {
                 case (graphIri: SmartIri, graphRows: Seq[VariableResultsRow]) =>
                     graphIri -> graphRows.map(_.rowMap("standoffClass").toKnoraInternalSmartIri).toSet
             }
 
-            // Make a map of IRIs of named graphs to IRIs of standoff properties defined in each one.
+            // Make a map of IRIs of ontologies to IRIs of standoff properties defined in each one.
             standoffGraphPropMap: Map[SmartIri, Set[SmartIri]] = standoffPropsRows.groupBy(_.rowMap("graph").toKnoraInternalSmartIri).map {
                 case (graphIri, graphRows) =>
                     graphIri -> graphRows.map(_.rowMap("prop").toKnoraInternalSmartIri).toSet
@@ -718,15 +718,15 @@ class OntologyResponderV2 extends Responder {
             // Cache all the data.
 
             ontologyCacheData: OntologyCacheData = OntologyCacheData(
-                namedGraphs = graphClassMap.keySet ++ graphPropMap.keySet ++ standoffGraphClassMap.keySet ++ standoffGraphPropMap.keySet,
-                namedGraphClasses = new ErrorHandlingMap[SmartIri, Set[SmartIri]](graphClassMap, { key => s"Named graph not found: $key" }),
-                namedGraphProperties = new ErrorHandlingMap[SmartIri, Set[SmartIri]](graphPropMap, { key => s"Named graph not found: $key" }),
+                ontologies = graphClassMap.keySet ++ graphPropMap.keySet ++ standoffGraphClassMap.keySet ++ standoffGraphPropMap.keySet,
+                ontologyClasses = new ErrorHandlingMap[SmartIri, Set[SmartIri]](graphClassMap, { key => s"Ontology not found: $key" }),
+                ontologyProperties = new ErrorHandlingMap[SmartIri, Set[SmartIri]](graphPropMap, { key => s"Ontology not found: $key" }),
                 classDefs = new ErrorHandlingMap[SmartIri, ReadClassInfoV2](allClassDefs, { key => s"Class not found: $key" }),
                 resourceAndValueSubClassOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allResourceSubClassOfRelations ++ allValueSubClassOfRelations, { key => s"Class not found: $key" }),
                 resourceSuperClassOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allResourceSuperClassOfRelations, { key => s"Class not found: $key" }),
                 propertyDefs = new ErrorHandlingMap[SmartIri, ReadPropertyInfoV2](allPropertyDefs, { key => s"Property not found: $key" }),
-                namedGraphStandoffClasses = new ErrorHandlingMap[SmartIri, Set[SmartIri]](standoffGraphClassMap, { key => s"Named graph not found: $key" }),
-                namedGraphStandoffProperties = new ErrorHandlingMap[SmartIri, Set[SmartIri]](standoffGraphPropMap, { key => s"Named graph not found: $key" }),
+                ontologyStandoffClasses = new ErrorHandlingMap[SmartIri, Set[SmartIri]](standoffGraphClassMap, { key => s"Ontology not found: $key" }),
+                ontologyStandoffProperties = new ErrorHandlingMap[SmartIri, Set[SmartIri]](standoffGraphPropMap, { key => s"Ontology not found: $key" }),
                 standoffClassDefs = new ErrorHandlingMap[SmartIri, ReadClassInfoV2](standoffClassEntityInfos, { key => s"Standoff class def not found $key" }),
                 standoffPropertyDefs = new ErrorHandlingMap[SmartIri, ReadPropertyInfoV2](standoffPropertyEntityInfos, { key => s"Standoff property def not found $key" }),
                 standoffClassDefsWithDataType = new ErrorHandlingMap[SmartIri, ReadClassInfoV2](standoffClassEntityInfosWithDataType, { key => s"Standoff class def with datatype not found $key" }))
@@ -879,72 +879,85 @@ class OntologyResponderV2 extends Responder {
     }
 
     /**
-      * Gets the [[NamedGraphEntityInfoV1]] for a named graph
+      * Gets the [[OntologyEntitiesIriInfoV2]] for an ontology.
       *
-      * @param namedGraphIri the IRI of the named graph to query
+      * @param namedGraphIri the IRI of the ontology to query
       * @param userProfile   the profile of the user making the request.
-      * @return a [[NamedGraphEntityInfoV1]].
+      * @return an [[OntologyEntitiesIriInfoV2]].
       */
-    private def getNamedGraphEntityInfoV2ForNamedGraphV2(namedGraphIri: SmartIri, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV2] = {
+    private def getNamedGraphEntityInfoV2ForNamedGraphV2(namedGraphIri: SmartIri, userProfile: UserProfileV1): Future[OntologyEntitiesIriInfoV2] = {
         for {
             cacheData <- getCacheData
 
-            _ = if (!cacheData.namedGraphs.contains(namedGraphIri)) {
-                throw NotFoundException(s"Named graph not found: $namedGraphIri")
+            _ = if (!cacheData.ontologies.contains(namedGraphIri)) {
+                throw NotFoundException(s"Ontology not found: $namedGraphIri")
             }
-        } yield NamedGraphEntityInfoV2(
-            namedGraphIri = namedGraphIri,
-            propertyIris = cacheData.namedGraphProperties.getOrElse(namedGraphIri, Set.empty[SmartIri]),
-            classIris = cacheData.namedGraphClasses.getOrElse(namedGraphIri, Set.empty[SmartIri]),
-            standoffClassIris = cacheData.namedGraphStandoffClasses.getOrElse(namedGraphIri, Set.empty[SmartIri]),
-            standoffPropertyIris = cacheData.namedGraphStandoffProperties.getOrElse(namedGraphIri, Set.empty[SmartIri])
+        } yield OntologyEntitiesIriInfoV2(
+            ontologyIri = namedGraphIri,
+            propertyIris = cacheData.ontologyProperties.getOrElse(namedGraphIri, Set.empty[SmartIri]),
+            classIris = cacheData.ontologyClasses.getOrElse(namedGraphIri, Set.empty[SmartIri]),
+            standoffClassIris = cacheData.ontologyStandoffClasses.getOrElse(namedGraphIri, Set.empty[SmartIri]),
+            standoffPropertyIris = cacheData.ontologyStandoffProperties.getOrElse(namedGraphIri, Set.empty[SmartIri])
         )
     }
 
-    private def getNamedGraphsV2(userProfile: UserProfileV1): Future[ReadNamedGraphsV2] = {
+    private def getOntologyMetadataV2(projectIris: Set[IRI], userProfile: UserProfileV1): Future[ReadOntologiesV2] = {
         for {
-            // TODO: refactor this for V2
-            projectsNamedGraph: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
+            namedGraphInfos: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
 
-            response = ReadNamedGraphsV2(
-                namedGraphs = projectsNamedGraph.map(_.id.toKnoraInternalSmartIri).toSet
+            namedGraphsToReturn = if (projectIris.isEmpty) {
+                namedGraphInfos
+            } else {
+                namedGraphInfos.filter(namedGraphInfo => projectIris.contains(namedGraphInfo.project_id))
+            }
+
+            ontologyInfoV2s = namedGraphsToReturn.map {
+                namedGraphInfo =>
+                    val ontologyIri = namedGraphInfo.id.toSmartIri
+
+                    OntologyInfoV2(
+                        ontologyIri = ontologyIri,
+                        label = ontologyIri.getOntologyName
+                    )
+            }.toSet
+
+            response = ReadOntologiesV2(
+                ontologies = ontologyInfoV2s
             )
         } yield response
     }
 
     /**
-      * Requests the resource classes defined in the given named graphs.
+      * Requests the entities defined in the given ontologies.
       *
-      * @param namedGraphIris the Iris of the named graphs to be queried.
-      * @param userProfile    the profile of the user making the request.
+      * @param ontologyIris the Iris of the ontologies to be queried.
+      * @param userProfile  the profile of the user making the request.
       * @return a [[ReadEntityDefinitionsV2]].
       */
-    private def getEntitiesForNamedGraphV2(namedGraphIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
-
-
+    private def getOntologyEntitiesV2(ontologyIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
         for {
             cacheData <- getCacheData
 
-            entitiesForNamedGraphsMap: Map[SmartIri, NamedGraphEntityInfoV2] = namedGraphIris.map {
+            entitiesForOntologiesMap: Map[SmartIri, OntologyEntitiesIriInfoV2] = ontologyIris.map {
                 namedGraphIri =>
 
-                    if (!cacheData.namedGraphs.contains(namedGraphIri)) {
-                        throw NotFoundException(s"Named graph not found: $namedGraphIri")
+                    if (!cacheData.ontologies.contains(namedGraphIri)) {
+                        throw NotFoundException(s"Ontology not found: $namedGraphIri")
                     }
 
-                    namedGraphIri -> NamedGraphEntityInfoV2(
-                        namedGraphIri = namedGraphIri,
-                        propertyIris = cacheData.namedGraphProperties.getOrElse(namedGraphIri, Set.empty[SmartIri]),
-                        classIris = cacheData.namedGraphClasses.getOrElse(namedGraphIri, Set.empty[SmartIri]),
-                        standoffClassIris = cacheData.namedGraphStandoffClasses.getOrElse(namedGraphIri, Set.empty[SmartIri]),
-                        standoffPropertyIris = cacheData.namedGraphStandoffProperties.getOrElse(namedGraphIri, Set.empty[SmartIri])
+                    namedGraphIri -> OntologyEntitiesIriInfoV2(
+                        ontologyIri = namedGraphIri,
+                        propertyIris = cacheData.ontologyProperties.getOrElse(namedGraphIri, Set.empty[SmartIri]),
+                        classIris = cacheData.ontologyClasses.getOrElse(namedGraphIri, Set.empty[SmartIri]),
+                        standoffClassIris = cacheData.ontologyStandoffClasses.getOrElse(namedGraphIri, Set.empty[SmartIri]),
+                        standoffPropertyIris = cacheData.ontologyStandoffProperties.getOrElse(namedGraphIri, Set.empty[SmartIri])
                     )
             }.toMap
 
             // Get non-standoff classes and properties.
 
-            classIris: Set[SmartIri] = entitiesForNamedGraphsMap.values.flatMap(_.classIris).toSet
-            propertyIris: Set[SmartIri] = entitiesForNamedGraphsMap.values.flatMap(_.propertyIris).toSet
+            classIris: Set[SmartIri] = entitiesForOntologiesMap.values.flatMap(_.classIris).toSet
+            propertyIris: Set[SmartIri] = entitiesForOntologiesMap.values.flatMap(_.propertyIris).toSet
 
             readEntityDefsForClasses: ReadEntityDefinitionsV2 <- getClassDefinitionsV2(
                 classIris,
@@ -957,12 +970,12 @@ class OntologyResponderV2 extends Responder {
 
             // Get standoff classes and properties.
 
-            standoffClassIris: Set[SmartIri] = entitiesForNamedGraphsMap.values.flatMap(_.standoffClassIris).toSet
-            standoffPropertyIris: Set[SmartIri] = entitiesForNamedGraphsMap.values.flatMap(_.standoffPropertyIris).toSet
+            standoffClassIris: Set[SmartIri] = entitiesForOntologiesMap.values.flatMap(_.standoffClassIris).toSet
+            standoffPropertyIris: Set[SmartIri] = entitiesForOntologiesMap.values.flatMap(_.standoffPropertyIris).toSet
 
             standoffEntities <- getStandoffEntityInfoResponseV2(standoffClassIris = standoffClassIris, standoffPropertyIris = standoffPropertyIris, userProfile = userProfile)
 
-            ontologiesWithClasses: Map[SmartIri, Set[SmartIri]] = entitiesForNamedGraphsMap.map {
+            ontologiesWithClasses: Map[SmartIri, Set[SmartIri]] = entitiesForOntologiesMap.map {
                 case (namedGraphIri, namedGraphInfo) => (namedGraphIri, namedGraphInfo.classIris)
             }
         } yield ReadEntityDefinitionsV2(
@@ -1065,10 +1078,11 @@ class OntologyResponderV2 extends Responder {
                 postUpdateCheckResponse <- (storeManager ? SparqlSelectRequest(checkOntologySparql)).mapTo[SparqlSelectResponse]
 
                 lastModDate: Set[String] = postUpdateCheckResponse.results.bindings.map {
-                    row => row.rowMap.get("ontologyPred") match {
-                        case Some(OntologyConstants.KnoraBase.LastModificationDate) => row.rowMap.get("ontologyObj")
-                        case _ => None
-                    }
+                    row =>
+                        row.rowMap.get("ontologyPred") match {
+                            case Some(OntologyConstants.KnoraBase.LastModificationDate) => row.rowMap.get("ontologyObj")
+                            case _ => None
+                        }
                 }.toSet.flatten
 
                 _ = if (lastModDate.size > 1) {

@@ -294,8 +294,8 @@ class OntologyResponderV1 extends Responder {
       */
     def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV1] = {
         for {
-            response: NamedGraphEntityInfoV2 <- (responderManager ? NamedGraphEntitiesRequestV2(namedGraphIri.toSmartIri, userProfile)).mapTo[NamedGraphEntityInfoV2]
-        } yield NamedGraphEntityInfoV1(namedGraphIri = response.namedGraphIri.toString, resourceClasses = response.classIris.map(_.toString), propertyIris = response.propertyIris.map(_.toString))
+            response: OntologyEntitiesIriInfoV2 <- (responderManager ? OntologyEntityIrisGetRequestV2(namedGraphIri.toSmartIri, userProfile)).mapTo[OntologyEntitiesIriInfoV2]
+        } yield NamedGraphEntityInfoV1(namedGraphIri = response.ontologyIri.toString, resourceClasses = response.classIris.map(_.toString), propertyIris = response.propertyIris.map(_.toString))
     }
 
     /**
