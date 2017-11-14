@@ -137,18 +137,21 @@ case class OntologyConstraintException(message: String) extends RequestRejectedE
 
 /**
   * An exception indicating that the submitted standoff is not valid.
+  *
   * @param message a description of the error.
   */
 case class InvalidStandoffException(message: String) extends RequestRejectedException(message)
 
 /**
   * An exception indicating that an error occurred when converting standoff markup to or from another format.
+  *
   * @param message a description of the error.
   */
 case class StandoffConversionException(message: String) extends RequestRejectedException(message)
 
 /**
   * An exception indicating that the SPARQL submitted to the API v2 search route was invalid.
+  *
   * @param message a description of the error.
   */
 case class SparqlSearchException(message: String) extends RequestRejectedException(message)

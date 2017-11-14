@@ -66,7 +66,7 @@ object RouteUtilV1 {
         }
 
         val httpResponse: Future[HttpResponse] = for {
-        // Make sure the responder sent a reply of type KnoraResponseV1.
+            // Make sure the responder sent a reply of type KnoraResponseV1.
             knoraResponse <- (responderManager ? requestMessage).map {
                 case replyMessage: KnoraResponseV1 => replyMessage
 
@@ -153,7 +153,7 @@ object RouteUtilV1 {
         }
 
         val httpResponse: Future[HttpResponse] = for {
-        // Make sure the responder sent a reply of type ReplyMessageT.
+            // Make sure the responder sent a reply of type ReplyMessageT.
             knoraResponse <- (responderManager ? requestMessage).map {
                 case replyMessage: ReplyMessageT => replyMessage
 
@@ -207,7 +207,7 @@ object RouteUtilV1 {
 
         for {
 
-        // get the mapping
+            // get the mapping
             mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV1]
 
             textWithStandoffTagV1 = StandoffTagUtilV1.convertXMLtoStandoffTagV1(

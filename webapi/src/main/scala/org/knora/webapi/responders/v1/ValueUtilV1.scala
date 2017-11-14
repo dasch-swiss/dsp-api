@@ -33,7 +33,7 @@ import org.knora.webapi.messages.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
-import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, InputValidation}
+import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -42,6 +42,8 @@ import scala.concurrent.{ExecutionContext, Future}
   * Converts data from SPARQL query results into [[ApiValueV1]] objects.
   */
 class ValueUtilV1(private val settings: SettingsImpl) {
+
+    private val stringFormatter = StringFormatter.getInstance
 
     /**
       * Given a [[ValueProps]] containing details of a `knora-base:Value` object, creates a [[ApiValueV1]].
@@ -467,7 +469,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
         for {
 
-        // get the mapping and the related standoff entities
+            // get the mapping and the related standoff entities
             mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV1]
 
             standoffTags: Seq[StandoffTagV1] = StandoffTagUtilV1.createStandoffTagsV1FromSparqlResults(mappingResponse.standoffEntities, valueProps.standoff)
@@ -477,7 +479,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             standoff = standoffTags,
             mappingIri = mappingIri,
             mapping = mappingResponse.mapping,
-            resource_reference = InputValidation.getResourceIrisFromStandoffTags(standoffTags)
+            resource_reference = stringFormatter.getResourceIrisFromStandoffTags(standoffTags)
         )
 
     }
@@ -562,7 +564,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         val predicates = valueProps.literalData
 
         val isPreviewStr = predicates.get(OntologyConstants.KnoraBase.IsPreview).flatMap(_.literals.headOption)
-        val isPreview = InputValidation.optionStringToBoolean(isPreviewStr, () => throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
+        val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, () => throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
 
         Future(StillImageFileValueV1(
             internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,

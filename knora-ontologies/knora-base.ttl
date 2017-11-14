@@ -2400,6 +2400,20 @@
                     rdfs:comment "A resource containing text files"@en .
 
 
+### http://www.knora.org/ontology/knora-base#ForbiddenResource
+
+:ForbiddenResource  rdf:type owl:Class ;
+
+                    rdfs:subClassOf :Resource ,
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :hasComment ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ];
+
+                    rdfs:label """A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."""@en ;
+
+                    rdfs:comment """A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."""@en .
+
 ### http://www.knora.org/ontology/knora-base#XSLTransformation
 
 :XSLTransformation  rdf:type owl:Class ;

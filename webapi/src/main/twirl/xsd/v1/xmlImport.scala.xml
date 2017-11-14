@@ -20,7 +20,7 @@
 
 @import org.knora.webapi._
 @import org.knora.webapi.messages.v2.responder.ontologymessages._
-@import org.knora.webapi.util.InputValidation.XmlImportNamespaceInfoV1
+@import org.knora.webapi.util.StringFormatter.XmlImportNamespaceInfoV1
 
 @**
  * Generates an XML schema based on ontology definitions.
@@ -28,16 +28,16 @@
  * @param targetNamespaceInfo information about the target XML namespace of the schema.
  * @param importedNamespaces information about other namespaces to be imported, including the standard Knora XML import V1 namespace.
  * @param knoraXmlImportNamespacePrefixLabel the prefix label to be used for the standard Knora XML import V1 namespace.
- * @param information about the resource classes defined in the internal ontology.
- * @param information about the properties defined in the internal ontology.
+ * @param resourceClassInfoMap information about the resource classes defined in the internal ontology.
+ * @param propertyInfoMap information about the properties defined in the internal ontology.
  * @param getNamespacePrefixLabel a function that takes an internal ontology entity IRI and returns the corresponding XML namespace prefix label.
  * @param getEntityName a function that takes an internal ontology entity IRI and returns the corresponding XML element label.
  *@
 @(targetNamespaceInfo: XmlImportNamespaceInfoV1,
   importedNamespaces: Seq[XmlImportNamespaceInfoV1],
   knoraXmlImportNamespacePrefixLabel: String,
-  resourceEntityInfoMap: Map[IRI, ClassEntityInfoV2],
-  propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2],
+  resourceClassInfoMap: Map[IRI, ReadClassInfoV2],
+  propertyInfoMap: Map[IRI, ReadPropertyInfoV2],
   getNamespacePrefixLabel: IRI => String,
   getEntityName: IRI => String)
 
@@ -71,7 +71,7 @@
         <xs:import namespace="@{namespaceInfo.namespace}" schemaLocation="@{namespaceInfo.prefixLabel}.xsd"/>
     }
 
-    @for((resourceClassIri, resourceClassInfo) <- resourceEntityInfoMap.toVector.sortBy(_._1)) {
+    @for((resourceClassIri, resourceClassInfo) <- resourceClassInfoMap.toVector.sortBy(_._1)) {
 
         @defining(getEntityName(resourceClassIri)) { resourceClassName =>
 
@@ -86,9 +86,9 @@
                                     <xs:element ref="@{knoraXmlImportNamespacePrefixLabel}:file" minOccurs="1" maxOccurs="1"/>
                                 }
 
-                                @for((propertyIri, cardinality) <- resourceClassInfo.cardinalities.toVector.sortBy(_._1)) {
+                                @for((propertyIri, cardinality) <- resourceClassInfo.allCardinalities.toVector.sortBy(_._1)) {
 
-                                    @defining(propertyEntityInfoMap.getOrElse(propertyIri, throw AssertionException(s"The definition of the property $propertyIri is needed but was not read"))) { propertyInfo =>
+                                    @defining(propertyInfoMap.getOrElse(propertyIri, throw AssertionException(s"The definition of the property $propertyIri is needed but was not read"))) { propertyInfo =>
 
                                         @if(!(propertyIri == OntologyConstants.KnoraBase.HasStandoffLinkTo || propertyInfo.isLinkValueProp || propertyInfo.isFileValueProp)) {
 
@@ -134,7 +134,7 @@
                                                     }
                                                 }
 
-                                                @defining(propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint"))) { propertyObjectClassConstraint =>
+                                                @defining(propertyInfo.entityInfoContent.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint"))) { propertyObjectClassConstraint =>
 
                                                     @if(propertyInfo.isLinkProp) {
 

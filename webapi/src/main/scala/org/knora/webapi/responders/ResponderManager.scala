@@ -289,7 +289,7 @@ class ResponderManager extends Actor with ActorLogging {
         case ckanResponderRequestV1: CkanResponderRequestV1 => ckanRouterV1.forward(ckanResponderRequestV1)
         case storeResponderRequestV1: StoreResponderRequestV1 => storeRouterV1.forward(storeResponderRequestV1)
         case standoffResponderRequestV1: StandoffResponderRequestV1 => standoffRouterV1.forward(standoffResponderRequestV1)
-		case permissionsResponderRequestV1: PermissionsResponderRequestV1 => permissionsRouterV1.forward(permissionsResponderRequestV1)
+        case permissionsResponderRequestV1: PermissionsResponderRequestV1 => permissionsRouterV1.forward(permissionsResponderRequestV1)
         case usersResponderRequestV1: UsersResponderRequestV1 => usersRouterV1.forward(usersResponderRequestV1)
         case projectsResponderRequestV1: ProjectsResponderRequestV1 => projectsRouterV1.forward(projectsResponderRequestV1)
         case groupsResponderRequestV1: GroupsResponderRequestV1 => groupsRouterV1.forward(groupsResponderRequestV1)

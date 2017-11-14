@@ -190,7 +190,7 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
                        |    "description": "updated project description",
                        |    "keywords": "updated keywords",
                        |    "logo": "/fu/bar/baz-updated.jpg",
-                       |    "institution": "http://data.knora.org/institutions/dhlab-basel",
+                       |    "institution": "http://rdfh.ch/institutions/dhlab-basel",
                        |    "status": true,
                        |    "selfjoin": true
                        |}

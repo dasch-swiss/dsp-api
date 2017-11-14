@@ -379,7 +379,7 @@ object Authenticator {
         // return found credentials based on precedence: 1. url parameters, 2. header (basic auth, token)
         val credentials = if (credentialsFromParameters.nonEmpty) {
             credentialsFromParameters
-        } else  {
+        } else {
             credentialsFromHeaders
         }
 
@@ -466,7 +466,7 @@ object Authenticator {
                 val (maybeEmail, maybePassword) = maybeBasicAuthValue match {
                     case Some(value) =>
                         val trimmedValue = value.substring(5).trim() // remove 'Basic '
-                        val decodedValue = ByteString.fromArray(Base64.getDecoder.decode(trimmedValue)).decodeString("UTF8")
+                    val decodedValue = ByteString.fromArray(Base64.getDecoder.decode(trimmedValue)).decodeString("UTF8")
                         val decodedValueArr = decodedValue.split(":", 2)
                         (Some(decodedValueArr(0)), Some(decodedValueArr(1)))
                     case None =>
@@ -514,6 +514,7 @@ object Authenticator {
       * Tries to retrieve a [[UserProfileV1]] based on the supplied credentials. If both email/password and session
       * token are supplied, then the user profile for the session token is returned. This method should only be used
       * with authenticated credentials.
+      *
       * @param credentials the user supplied credentials.
       * @return a [[UserProfileV1]]
       * @throws AuthenticationException when the IRI can not be found inside the token, which is probably a bug.

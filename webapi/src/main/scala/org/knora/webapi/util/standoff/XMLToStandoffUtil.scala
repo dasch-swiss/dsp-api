@@ -30,7 +30,7 @@ import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
 import org.apache.commons.lang3.StringEscapeUtils
 import org.knora.webapi._
-import org.knora.webapi.util.{ErrorHandlingMap, FormatConstants, KnoraIdUtil}
+import org.knora.webapi.util.{ErrorHandlingMap, StringFormatter, KnoraIdUtil}
 
 import scala.xml._
 
@@ -395,13 +395,13 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
         // replace PARAGRAPH SEPARATOR with INFORMATION SEPARATOR TWO.
 
         // check that the original XML does not already contain PARAGRAPH SEPARATOR.
-        if (xmlStr.contains(FormatConstants.PARAGRAPH_SEPARATOR)) throw BadRequestException("XML contains special separator character PARAGRAPH_SEPARATOR '\\u2029'")
+        if (xmlStr.contains(StringFormatter.PARAGRAPH_SEPARATOR)) throw BadRequestException("XML contains special separator character PARAGRAPH_SEPARATOR '\\u2029'")
 
         val xmlStrWithSeparator = if (tagsWithSeparator.nonEmpty) {
             // build an XSLT to add separators to the XML
             val xPAthExpression: String = tagsWithSeparator.map(_.toXPath).mkString("|") // build a union of the collected elements' expressions
 
-            val XSLT = insertSeparatorsXSLT(xPAthExpression, FormatConstants.PARAGRAPH_SEPARATOR)
+            val XSLT = insertSeparatorsXSLT(xPAthExpression, StringFormatter.PARAGRAPH_SEPARATOR)
 
             // apply XSLT to XML
             // preprocess XML to separate structures
@@ -450,7 +450,7 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
         }
 
         // Replace PARAGRAPH SEPARATOR with INFORMATION SEPARATOR TWO.
-        val textWithInformationSeparatorTwo = nodes.text.replace(FormatConstants.PARAGRAPH_SEPARATOR.toString, FormatConstants.INFORMATION_SEPARATOR_TWO.toString)
+        val textWithInformationSeparatorTwo = nodes.text.replace(StringFormatter.PARAGRAPH_SEPARATOR.toString, StringFormatter.INFORMATION_SEPARATOR_TWO.toString)
 
         TextWithStandoff(
             text = textWithInformationSeparatorTwo,
@@ -512,7 +512,7 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
         groupedTags.get(None) match {
             case Some(children) if children.size == 1 =>
                 standoffTags2XmlString(
-                    text = textWithStandoff.text.replace(FormatConstants.INFORMATION_SEPARATOR_TWO.toString, FormatConstants.PARAGRAPH_SEPARATOR.toString), // replace information separator (which is an invalid XML character) with paragraph separator
+                    text = textWithStandoff.text.replace(StringFormatter.INFORMATION_SEPARATOR_TWO.toString, StringFormatter.PARAGRAPH_SEPARATOR.toString), // replace information separator (which is an invalid XML character) with paragraph separator
                     groupedTags = groupedTags,
                     posBeforeSiblings = 0,
                     siblings = children,
@@ -528,7 +528,7 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
         }
 
         // get rid of separator in XML before sending the XML back
-        val xmlStr: String = stringBuilder.toString.replace(FormatConstants.PARAGRAPH_SEPARATOR.toString, "")
+        val xmlStr: String = stringBuilder.toString.replace(StringFormatter.PARAGRAPH_SEPARATOR.toString, "")
 
         // make sure that the XML is well formed
         val saxParser = saxParserFactory.newSAXParser()

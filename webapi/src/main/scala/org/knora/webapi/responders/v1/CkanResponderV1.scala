@@ -459,9 +459,9 @@ class CkanResponderV1 extends Responder {
     private def dateValue2String(date: DateValueV1): String = {
 
         if (date.dateval1 == date.dateval2) {
-            date.dateval1.toString + " " + date.era1+ ", " + date.calendar.toString + " " + date.era2
+            date.dateval1.toString + " " + date.era1 + ", " + date.calendar.toString + " " + date.era2
         } else {
-            date.dateval1.toString + " " + date.era1+ ", " + date.dateval2 + ", " + date.calendar.toString + " " + date.era2
+            date.dateval1.toString + " " + date.era1 + ", " + date.dateval2 + ", " + date.calendar.toString + " " + date.era2
         }
     }
 

@@ -26,9 +26,10 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Reset
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v2.responder.ReadResourcesSequenceV2
 import org.knora.webapi.messages.v2.responder.searchmessages._
-import org.knora.webapi.responders.v2.ResponseCheckerV2.compareReadResourcesSequenceV2Response
+import org.knora.webapi.responders.v2.ResponseCheckerResponderV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
+import org.knora.webapi.util.MessageUtil
 import org.knora.webapi.{CoreSpec, LiveActorMaker, SharedAdminTestData}
 
 import scala.concurrent.duration._
@@ -52,7 +53,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
 
@@ -71,32 +72,26 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "perform a fulltext search for 'Narr'" in {
 
-            actorUnderTest ! FulltextSearchGetRequestV2("Narr", SharedAdminTestData.anonymousUser)
+            actorUnderTest ! FulltextSearchGetRequestV2(searchValue = "Narr", offset = 0, limitToProject = None, limitToResourceClass = None, SharedAdminTestData.anonymousUser)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
 
-
-                    // TODO: since the order is not defined in the response of a fulltext search, sort received and expected resources by their Iri before comparing them
                     compareReadResourcesSequenceV2Response(
-                        received = response.copy(
-                            resources = response.resources.sortBy(_.resourceIri)
-                        ),
-                        expected = SearchResponderV2SpecFullData.fulltextSearchForNarr.copy(
-                            resources = SearchResponderV2SpecFullData.fulltextSearchForNarr.resources.sortBy(_.resourceIri)
-                        )
+                        expected = SearchResponderV2SpecFullData.fulltextSearchForNarr,
+                        received = response
                     )
             }
         }
 
         "perform a fulltext search for 'Dinge'" in {
 
-            actorUnderTest ! FulltextSearchGetRequestV2("Dinge", SharedAdminTestData.anythingUser1)
+            actorUnderTest ! FulltextSearchGetRequestV2(searchValue = "Dinge", offset = 0, limitToProject = None, limitToResourceClass = None, SharedAdminTestData.anythingUser1)
 
-            // TODO: only one resource is expected, so order does not matter.
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
-                    compareReadResourcesSequenceV2Response(received = response, expected = SearchResponderV2SpecFullData.fulltextSearchForDinge)
+
+                    compareReadResourcesSequenceV2Response(expected = SearchResponderV2SpecFullData.fulltextSearchForDinge, received = response)
             }
 
         }
@@ -109,7 +104,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
             // extended search sorty by resource Iri by default if no order criterion is indicated
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
-                    compareReadResourcesSequenceV2Response(received = response, expected = SearchResponderV2SpecFullData.booksWithTitleZeitgloeckleinResponse)
+                    compareReadResourcesSequenceV2Response(expected = SearchResponderV2SpecFullData.booksWithTitleZeitgloeckleinResponse, received = response)
             }
 
         }
@@ -129,8 +124,9 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "perform a search by label for incunabula:book that contain 'Narrenschiff'" in {
 
-            actorUnderTest ! SearchResourceByLabelRequestV2(
+            actorUnderTest ! SearchResourceByLabelGetRequestV2(
                 searchValue = "Narrenschiff",
+                offset = 0,
                 limitToProject = None,
                 limitToResourceClass = Some("http://www.knora.org/ontology/incunabula#book"), // internal Iri!
                 userProfile = SharedAdminTestData.anonymousUser

@@ -48,7 +48,7 @@ class UsersResponderV1 extends Responder {
     val knoraIdUtil = new KnoraIdUtil
 
     // The IRI used to lock user creation and update
-    val USERS_GLOBAL_LOCK_IRI = "http://data.knora.org/users"
+    val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
 
     val USER_PROFILE_CACHE_NAME = "userProfileCache"
 
@@ -304,7 +304,7 @@ class UsersResponderV1 extends Responder {
     private def createNewUserV1(createRequest: CreateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         def createNewUserTask(createRequest: CreateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID) = for {
-        // check if required information is supplied
+            // check if required information is supplied
             _ <- Future(if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty"))
             _ = if (createRequest.password.isEmpty) throw BadRequestException("Password cannot be empty")
             _ = if (createRequest.givenName.isEmpty) throw BadRequestException("Given name cannot be empty")
@@ -368,7 +368,7 @@ class UsersResponderV1 extends Responder {
         } yield userOperationResponseV1
 
         for {
-        // run user creation with an global IRI lock
+            // run user creation with an global IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 USERS_GLOBAL_LOCK_IRI,
@@ -398,7 +398,7 @@ class UsersResponderV1 extends Responder {
           */
         def changeBasicUserDataTask(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
-        // check if the requesting user is allowed to perform updates
+            // check if the requesting user is allowed to perform updates
             _ <- Future(
                 if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionData.isSystemAdmin) {
                     // not the user or a system admin
@@ -424,7 +424,7 @@ class UsersResponderV1 extends Responder {
         } yield result
 
         for {
-        // run the user update with an global IRI lock
+            // run the user update with an global IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
@@ -456,7 +456,7 @@ class UsersResponderV1 extends Responder {
           */
         def changePasswordTask(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
-        // check if necessary information is present
+            // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
             _ = if (changeUserRequest.oldPassword.isEmpty || changeUserRequest.newPassword.isEmpty) throw BadRequestException("The user's old and new password need to be both supplied")
 
@@ -486,7 +486,7 @@ class UsersResponderV1 extends Responder {
         } yield result
 
         for {
-        // run the change password task with an IRI lock
+            // run the change password task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
@@ -536,7 +536,7 @@ class UsersResponderV1 extends Responder {
         } yield result
 
         for {
-        // run the change status task with an IRI lock
+            // run the change status task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
@@ -565,7 +565,7 @@ class UsersResponderV1 extends Responder {
           */
         def changeUserSystemAdminMembershipStatusTask(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
-        // check if necessary information is present
+            // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
             _ = if (changeUserRequest.systemAdmin.isEmpty) throw BadRequestException("New user system admin membership status cannot be empty")
 
@@ -585,7 +585,7 @@ class UsersResponderV1 extends Responder {
 
 
         for {
-        // run the change status task with an IRI lock
+            // run the change status task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
@@ -646,7 +646,7 @@ class UsersResponderV1 extends Responder {
           */
         def userProjectMembershipAddRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
-        // check if necessary information is present
+            // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
             _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
 
@@ -690,7 +690,7 @@ class UsersResponderV1 extends Responder {
 
 
         for {
-        // run the task with an IRI lock
+            // run the task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
@@ -718,7 +718,7 @@ class UsersResponderV1 extends Responder {
           */
         def userProjectMembershipRemoveRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
-        // check if necessary information is present
+            // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
             _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
 
@@ -762,7 +762,7 @@ class UsersResponderV1 extends Responder {
 
 
         for {
-        // run the task with an IRI lock
+            // run the task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
@@ -823,7 +823,7 @@ class UsersResponderV1 extends Responder {
           */
         def userProjectAdminMembershipAddRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
-        // check if necessary information is present
+            // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
             _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
 
@@ -867,7 +867,7 @@ class UsersResponderV1 extends Responder {
 
 
         for {
-        // run the task with an IRI lock
+            // run the task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
@@ -895,7 +895,7 @@ class UsersResponderV1 extends Responder {
           */
         def userProjectAdminMembershipRemoveRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
-        // check if necessary information is present
+            // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
             _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
 
@@ -939,7 +939,7 @@ class UsersResponderV1 extends Responder {
 
 
         for {
-        // run the task with an IRI lock
+            // run the task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
@@ -969,7 +969,7 @@ class UsersResponderV1 extends Responder {
                 case Some(projects) => projects
                 case None => Seq.empty[IRI]
             }
-        //_ = log.debug("userDataByIriGetV1 - maybeUserDataV1: {}", maybeUserDataV1)
+            //_ = log.debug("userDataByIriGetV1 - maybeUserDataV1: {}", maybeUserDataV1)
 
         } yield UserGroupMembershipsGetResponseV1(groups = groupIris)
 
@@ -984,7 +984,7 @@ class UsersResponderV1 extends Responder {
           */
         def userGroupMembershipAddRequestTask(userIri: IRI, groupIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
-        // check if necessary information is present
+            // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
             _ = if (groupIri.isEmpty) throw BadRequestException("Group IRI cannot be empty")
 
@@ -1032,7 +1032,7 @@ class UsersResponderV1 extends Responder {
 
 
         for {
-        // run the task with an IRI lock
+            // run the task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
@@ -1051,7 +1051,7 @@ class UsersResponderV1 extends Responder {
           */
         def userGroupMembershipRemoveRequestTask(userIri: IRI, groupIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
-        // check if necessary information is present
+            // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
             _ = if (groupIri.isEmpty) throw BadRequestException("Group IRI cannot be empty")
 
@@ -1296,7 +1296,7 @@ class UsersResponderV1 extends Responder {
             val isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).exists(p => p.head.toBoolean)
 
             for {
-            /* get the user's permission profile from the permissions responder */
+                /* get the user's permission profile from the permissions responder */
                 permissionData <- (responderManager ? PermissionDataGetV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionDataV1]
 
                 maybeProjectInfoFutures: Seq[Future[Option[ProjectInfoV1]]] = projectIris.map {
@@ -1415,7 +1415,7 @@ class UsersResponderV1 extends Responder {
       * Removes the user profile from cache.
       *
       * @param userIri the user's IRI und which a profile could be cached.
-      * @param email the user's email under which a profile could be cached.
+      * @param email   the user's email under which a profile could be cached.
       */
     private def invalidateCachedUserProfileV1(userIri: Option[IRI] = None, email: Option[String] = None): Unit = {
 
