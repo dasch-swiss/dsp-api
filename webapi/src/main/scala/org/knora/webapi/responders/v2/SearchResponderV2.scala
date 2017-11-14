@@ -993,11 +993,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         val resAndValObjIris: Seq[ResourceIrisAndValueObjectIris] = valuePropertyAssertions.values.flatten.foldLeft(Seq.empty[ResourceIrisAndValueObjectIris]) {
             (acc: Seq[ResourceIrisAndValueObjectIris], assertion) =>
 
-                if (assertion.targetResource.nonEmpty) {
+                if (assertion.nestedResource.nonEmpty) {
                     // this is a link value
                     // recursively traverse the dependent resource's values
 
-                    val dependentRes: ConstructResponseUtilV2.ResourceWithValueRdfData = assertion.targetResource.get
+                    val dependentRes: ConstructResponseUtilV2.ResourceWithValueRdfData = assertion.nestedResource.get
 
                     // recursively traverse the link value's nested resource and its assertions
                     val resAndValObjIrisForDependentRes: ResourceIrisAndValueObjectIris = traverseValuePropertyAssertions(dependentRes.valuePropertyAssertions)
@@ -2133,15 +2133,15 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                         // if there are link values including a target resource, apply filter to their values too
                                         val valuesFilteredRecursively: Seq[ConstructResponseUtilV2.ValueRdfData] = valuesFiltered.map {
                                             (valObj: ConstructResponseUtilV2.ValueRdfData) =>
-                                                if (valObj.targetResource.nonEmpty) {
+                                                if (valObj.nestedResource.nonEmpty) {
 
-                                                    val targetResourceAssertions: ConstructResponseUtilV2.ResourceWithValueRdfData = valObj.targetResource.get
+                                                    val targetResourceAssertions: ConstructResponseUtilV2.ResourceWithValueRdfData = valObj.nestedResource.get
 
                                                     // apply filter to the target resource's values
                                                     val targetResourceAssertionsFiltered: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = traverseAndFilterValues(targetResourceAssertions)
 
                                                     valObj.copy(
-                                                        targetResource = Some(targetResourceAssertions.copy(
+                                                        nestedResource = Some(targetResourceAssertions.copy(
                                                             valuePropertyAssertions = targetResourceAssertionsFiltered
                                                         ))
                                                     )

@@ -43,12 +43,12 @@ object ConstructResponseUtilV2 {
       *
       * @param valueObjectIri   the value object's IRI.
       * @param valueObjectClass the type (class) of the value object.
-      * @param targetResource   the referred resource in case of a link value.
-      * @param incomingLink     indicates if it is an incoming link in case of a link value.
+      * @param nestedResource   the nested resource in case of a link value (either the source or the target of a link value, depending on [[incomingLink]]).
+      * @param incomingLink     indicates if it is an incoming or outgoing link in case of a link value.
       * @param assertions       the value objects assertions.
       * @param standoff         standoff assertions, if any.
       */
-    case class ValueRdfData(valueObjectIri: IRI, valueObjectClass: IRI, targetResource: Option[ResourceWithValueRdfData] = None, incomingLink: Boolean = false, assertions: Map[IRI, String], standoff: Map[IRI, Map[IRI, String]])
+    case class ValueRdfData(valueObjectIri: IRI, valueObjectClass: IRI, nestedResource: Option[ResourceWithValueRdfData] = None, incomingLink: Boolean = false, assertions: Map[IRI, String], standoff: Map[IRI, Map[IRI, String]])
 
     /**
       * Represents a resource and its values.
@@ -257,10 +257,10 @@ object ConstructResponseUtilV2 {
                                 if (alreadyTraversed(dependentResourceIri)) {
                                     value
                                 } else {
-                                    val dependentResource = nestResources(dependentResourceIri, alreadyTraversed + resourceIri)
+                                    val dependentResource: ResourceWithValueRdfData = nestResources(dependentResourceIri, alreadyTraversed + resourceIri)
 
                                     value.copy(
-                                        targetResource = Some(dependentResource)
+                                        nestedResource = Some(dependentResource)
                                     )
                                 }
                             } else {
@@ -329,7 +329,7 @@ object ConstructResponseUtilV2 {
                         val source = Some(nestResources(linkValue.assertions(OntologyConstants.Rdf.Subject), alreadyTraversed + resourceIri))
 
                         linkValue.copy(
-                            targetResource = source,
+                            nestedResource = source,
                             incomingLink = true
                         )
                 }
@@ -455,29 +455,33 @@ object ConstructResponseUtilV2 {
                 IntervalValueContentV2(valueHasString = valueObjectValueHasString, valueHasIntervalStart = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalStart)), valueHasIntervalEnd = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalEnd)), comment = valueCommentOption)
 
             case OntologyConstants.KnoraBase.LinkValue =>
-                val referredResourceIri = if (!valueObject.incomingLink) {
-                    valueObject.assertions(OntologyConstants.Rdf.Object)
-                } else {
-                    valueObject.assertions(OntologyConstants.Rdf.Subject)
-                }
+
+                val sourceResourceIri = valueObject.assertions(OntologyConstants.Rdf.Subject)
+                val targetResourceIri = valueObject.assertions(OntologyConstants.Rdf.Object)
 
                 val linkValue = LinkValueContentV2(
                     valueHasString = valueObjectValueHasString,
-                    subject = valueObject.assertions(OntologyConstants.Rdf.Subject),
+                    subject = sourceResourceIri,
                     predicate = valueObject.assertions(OntologyConstants.Rdf.Predicate),
-                    referredResourceIri = referredResourceIri,
+                    target = targetResourceIri,
                     comment = valueCommentOption,
                     incomingLink = valueObject.incomingLink,
                     referredResource = None
                 )
 
-                valueObject.targetResource match {
+                valueObject.nestedResource match {
 
-                    case Some(referredResourceAssertions: ResourceWithValueRdfData) =>
+                    case Some(nestedResourceAssertions: ResourceWithValueRdfData) =>
+
+                        val nestedResourceIri = if (!valueObject.incomingLink) {
+                            targetResourceIri
+                        } else {
+                            sourceResourceIri
+                        }
 
                         // add information about the referred resource
                         linkValue.copy(
-                            referredResource = Some(constructReadResourceV2(referredResourceIri, referredResourceAssertions, mappings)) // construct a `ReadResourceV2`
+                            referredResource = Some(constructReadResourceV2(nestedResourceIri, nestedResourceAssertions, mappings)) // construct a `ReadResourceV2`
                         )
 
                     case None => linkValue // do not include information about the referred resource

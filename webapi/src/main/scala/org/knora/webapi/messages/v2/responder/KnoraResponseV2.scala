@@ -507,14 +507,14 @@ case class TextFileValueContentV2(valueHasString: String, internalMimeType: Stri
   * Represents a Knora link value.
   *
   * @param valueHasString      the string representation of the referred resource.
-  * @param subject             the source of the link.
+  * @param subject             the Iri of the link's source resource.
   * @param predicate           the link's predicate.
-  * @param referredResourceIri the link's target.
+  * @param target              the Iri of the link's target resource.
   * @param comment             a comment on the link.
   * @param incomingLink        indicates if it is an incoming link.
   * @param referredResource    information about the referred resource, if given.
   */
-case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: IRI, referredResourceIri: IRI, comment: Option[String], incomingLink: Boolean, referredResource: Option[ReadResourceV2]) extends ValueContentV2 {
+case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: IRI, target: IRI, comment: Option[String], incomingLink: Boolean, referredResource: Option[ReadResourceV2]) extends ValueContentV2 {
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.LinkValue
 
@@ -539,9 +539,9 @@ case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: I
             case None =>
                 // just include the referred resource's IRI
                 if (!incomingLink) {
-                    Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri -> JsonLDString(referredResourceIri))
+                    Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri -> JsonLDString(target))
                 } else {
-                    Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSourceIri -> JsonLDString(referredResourceIri))
+                    Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSourceIri -> JsonLDString(subject))
                 }
         }
 

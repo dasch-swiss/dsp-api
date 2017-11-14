@@ -1010,7 +1010,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "get a book a page points to and only include the page's partof link in the results (none of the other properties)" in {
+        "get a book a page points to and only include the page's partOf link in the results (none of the other properties)" in {
             val sparqlSimplified =
                 """
             PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
