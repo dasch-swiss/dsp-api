@@ -524,20 +524,21 @@ case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: I
         // check if the referred resource has to be included in the JSON response
         val objectMap: Map[IRI, JsonLDValue] = nestedResource match {
             case Some(targetResource: ReadResourceV2) =>
-                // include the referred resource as a nested structure
+                // include the nested resource in the response
                 val referredResourceAsJsonLDValue: JsonLDObject = ReadResourceUtil.createJsonLDObjectFromReadResourceV2(
                     resource = targetResource,
                     targetSchema = targetSchema,
                     settings = settings
                 )
 
+                // check whether the nested resource is the target or the source of the link
                 if (!incomingLink) {
                     Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTarget -> referredResourceAsJsonLDValue)
                 } else {
                     Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSource -> referredResourceAsJsonLDValue)
                 }
             case None =>
-                // just include the referred resource's IRI
+                // check whether it is an outgoing or incoming link
                 if (!incomingLink) {
                     Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri -> JsonLDString(target))
                 } else {
