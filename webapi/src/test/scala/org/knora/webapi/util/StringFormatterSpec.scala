@@ -99,31 +99,31 @@ class StringFormatterSpec extends CoreSpec() {
             val dateString = "JULIAN:2017:2017-5-12"
             stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
         }
-        
+
         "accept JULIAN:500 BCE:400 BCE" in {
             val dateString = "JULIAN:500 BCE:400 BCE"
             stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
         }
-        
+
         "accept GREGORIAN:10 BC:1 AD" in {
             val dateString = "GREGORIAN:10 BC:1 AD"
             stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
         }
-        
+
         "not accept month 00" in {
             val dateString = "GREGORIAN:2017-00:2017-02"
             assertThrows[BadRequestException] {
-                stringFormatter.validateDate(dateString, () => throw BadRequestException(s"month 00 in $dateString Not accepted" ))
+                stringFormatter.validateDate(dateString, () => throw BadRequestException(s"month 00 in $dateString Not accepted"))
             }
         }
-        
+
         "not accept day 00" in {
             val dateString = "GREGORIAN:2017-01-00"
             assertThrows[BadRequestException] {
-                stringFormatter.validateDate(dateString, () => throw BadRequestException(s"day 00 in $dateString Not accepted" ))
+                stringFormatter.validateDate(dateString, () => throw BadRequestException(s"day 00 in $dateString Not accepted"))
             }
         }
-        
+
         "not accept year 0" in {
             val dateString = "GREGORIAN:0 BC"
             assertThrows[BadRequestException] {
@@ -145,158 +145,528 @@ class StringFormatterSpec extends CoreSpec() {
 
         "convert http://www.knora.org/ontology/knora-base to http://api.knora.org/ontology/knora-api/simple/v2" in {
             val internalOntologyIri = "http://www.knora.org/ontology/knora-base".toSmartIri
-            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) && internalOntologyIri.isKnoraOntologyIri)
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
+                internalOntologyIri.isKnoraOntologyIri &&
+                internalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                internalOntologyIri.getProjectCode.isEmpty)
 
             val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Simple)
             externalOntologyIri.toString should ===("http://api.knora.org/ontology/knora-api/simple/v2")
-            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Simple) && externalOntologyIri.isKnoraOntologyIri)
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Simple) &&
+                externalOntologyIri.isKnoraOntologyIri &&
+                externalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                externalOntologyIri.getProjectCode.isEmpty)
         }
 
         "convert http://www.knora.org/ontology/knora-base#Resource to http://api.knora.org/ontology/knora-api/simple/v2#Resource" in {
             val internalEntityIri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri
-            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) && internalEntityIri.isKnoraInternalEntityIri)
+            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) &&
+                internalEntityIri.isKnoraInternalEntityIri &&
+                internalEntityIri.isKnoraBuiltInDefinitionIri &&
+                internalEntityIri.getProjectCode.isEmpty)
 
             val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Simple)
             externalEntityIri.toString should ===("http://api.knora.org/ontology/knora-api/simple/v2#Resource")
-            assert(externalEntityIri.getOntologySchema.contains(ApiV2Simple) && externalEntityIri.isKnoraApiV2EntityIri)
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2Simple) &&
+                externalEntityIri.isKnoraApiV2EntityIri &&
+                externalEntityIri.isKnoraBuiltInDefinitionIri &&
+                externalEntityIri.getProjectCode.isEmpty)
         }
 
         "convert http://www.knora.org/ontology/knora-base to http://api.knora.org/ontology/knora-api/v2" in {
             val internalOntologyIri = "http://www.knora.org/ontology/knora-base".toSmartIri
-            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) && internalOntologyIri.isKnoraOntologyIri)
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
+                internalOntologyIri.isKnoraOntologyIri &&
+                internalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                internalOntologyIri.getProjectCode.isEmpty)
 
             val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)
             externalOntologyIri.toString should ===("http://api.knora.org/ontology/knora-api/v2")
-            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) && externalOntologyIri.isKnoraOntologyIri)
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+                externalOntologyIri.isKnoraOntologyIri &&
+                externalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                externalOntologyIri.getProjectCode.isEmpty)
         }
 
         "convert http://www.knora.org/ontology/knora-base#Resource to http://api.knora.org/ontology/knora-api/v2#Resource" in {
             val internalEntityIri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri
-            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) && internalEntityIri.isKnoraInternalEntityIri)
+            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) &&
+                internalEntityIri.isKnoraInternalEntityIri &&
+                internalEntityIri.isKnoraBuiltInDefinitionIri &&
+                internalEntityIri.getProjectCode.isEmpty)
 
             val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2WithValueObjects)
             externalEntityIri.toString should ===("http://api.knora.org/ontology/knora-api/v2#Resource")
-            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) && externalEntityIri.isKnoraApiV2EntityIri)
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+                externalEntityIri.isKnoraApiV2EntityIri &&
+                externalEntityIri.isKnoraBuiltInDefinitionIri &&
+                externalEntityIri.getProjectCode.isEmpty)
         }
 
         "convert http://api.knora.org/ontology/knora-api/simple/v2 to http://www.knora.org/ontology/knora-base" in {
             val externalOntologyIri = "http://api.knora.org/ontology/knora-api/simple/v2".toSmartIri
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Simple) &&
+                externalOntologyIri.isKnoraOntologyIri &&
+                externalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                externalOntologyIri.getProjectCode.isEmpty)
+
             val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
             internalOntologyIri.toString should ===("http://www.knora.org/ontology/knora-base")
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
+                internalOntologyIri.isKnoraOntologyIri &&
+                internalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                internalOntologyIri.getProjectCode.isEmpty)
         }
 
         "convert http://api.knora.org/ontology/knora-api/simple/v2#Resource to http://www.knora.org/ontology/knora-base#Resource" in {
             val externalEntityIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2Simple) &&
+                externalEntityIri.isKnoraApiV2EntityIri &&
+                externalEntityIri.isKnoraBuiltInDefinitionIri &&
+                externalEntityIri.getProjectCode.isEmpty)
+
             val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
             internalEntityIri.toString should ===("http://www.knora.org/ontology/knora-base#Resource")
+            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) &&
+                internalEntityIri.isKnoraInternalEntityIri &&
+                internalEntityIri.isKnoraBuiltInDefinitionIri &&
+                internalEntityIri.getProjectCode.isEmpty)
         }
 
         "convert http://api.knora.org/ontology/knora-api/v2 to http://www.knora.org/ontology/knora-base" in {
             val externalOntologyIri = "http://api.knora.org/ontology/knora-api/v2".toSmartIri
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+                externalOntologyIri.isKnoraOntologyIri &&
+                externalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                externalOntologyIri.getProjectCode.isEmpty)
+
             val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
             internalOntologyIri.toString should ===("http://www.knora.org/ontology/knora-base")
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
+                internalOntologyIri.isKnoraOntologyIri &&
+                internalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                internalOntologyIri.getProjectCode.isEmpty)
         }
 
         "convert http://api.knora.org/ontology/knora-api/v2#Resource to http://www.knora.org/ontology/knora-base#Resource" in {
             val externalEntityIri = "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+                externalEntityIri.isKnoraApiV2EntityIri &&
+                externalEntityIri.isKnoraBuiltInDefinitionIri &&
+                externalEntityIri.getProjectCode.isEmpty)
+
             val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
             internalEntityIri.toString should ===("http://www.knora.org/ontology/knora-base#Resource")
+            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) &&
+                internalEntityIri.isKnoraInternalEntityIri &&
+                internalEntityIri.isKnoraBuiltInDefinitionIri &&
+                internalEntityIri.getProjectCode.isEmpty)
         }
 
         "convert http://www.knora.org/ontology/0001/example to http://0.0.0.0:3333/ontology/0001/example/simple/v2" in {
             val internalOntologyIri = "http://www.knora.org/ontology/0001/example".toSmartIri
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
+                internalOntologyIri.isKnoraOntologyIri &&
+                !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                internalOntologyIri.getProjectCode.contains("0001"))
+
             val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Simple)
             externalOntologyIri.toString should ===("http://0.0.0.0:3333/ontology/0001/example/simple/v2")
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Simple) &&
+                externalOntologyIri.isKnoraOntologyIri &&
+                !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                externalOntologyIri.getProjectCode.contains("0001"))
         }
 
         "convert http://www.knora.org/ontology/0001/example#ExampleThing to http://0.0.0.0:3333/ontology/0001/example/simple/v2#ExampleThing" in {
             val internalEntityIri = "http://www.knora.org/ontology/0001/example#ExampleThing".toSmartIri
+            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) &&
+                internalEntityIri.isKnoraInternalEntityIri &&
+                !internalEntityIri.isKnoraBuiltInDefinitionIri &&
+                internalEntityIri.getProjectCode.contains("0001"))
+
             val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Simple)
             externalEntityIri.toString should ===("http://0.0.0.0:3333/ontology/0001/example/simple/v2#ExampleThing")
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2Simple) &&
+                externalEntityIri.isKnoraApiV2EntityIri &&
+                !externalEntityIri.isKnoraBuiltInDefinitionIri &&
+                externalEntityIri.getProjectCode.contains("0001"))
         }
 
         "convert http://www.knora.org/ontology/0001/example to http://0.0.0.0:3333/ontology/0001/example/v2" in {
             val internalOntologyIri = "http://www.knora.org/ontology/0001/example".toSmartIri
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
+                internalOntologyIri.isKnoraOntologyIri &&
+                !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                internalOntologyIri.getProjectCode.contains("0001"))
+
             val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)
             externalOntologyIri.toString should ===("http://0.0.0.0:3333/ontology/0001/example/v2")
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+                externalOntologyIri.isKnoraOntologyIri &&
+                !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                externalOntologyIri.getProjectCode.contains("0001"))
         }
 
         "convert http://www.knora.org/ontology/0001/example#ExampleThing to http://0.0.0.0:3333/ontology/0001/example/v2#ExampleThing" in {
             val internalEntityIri = "http://www.knora.org/ontology/0001/example#ExampleThing".toSmartIri
+            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) &&
+                internalEntityIri.isKnoraInternalEntityIri &&
+                !internalEntityIri.isKnoraBuiltInDefinitionIri &&
+                internalEntityIri.getProjectCode.contains("0001"))
+
             val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2WithValueObjects)
             externalEntityIri.toString should ===("http://0.0.0.0:3333/ontology/0001/example/v2#ExampleThing")
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+                externalEntityIri.isKnoraApiV2EntityIri &&
+                !externalEntityIri.isKnoraBuiltInDefinitionIri &&
+                externalEntityIri.getProjectCode.contains("0001"))
         }
 
         "convert http://0.0.0.0:3333/ontology/0001/example/simple/v2 to http://www.knora.org/ontology/0001/example" in {
             val externalOntologyIri = "http://0.0.0.0:3333/ontology/0001/example/simple/v2".toSmartIri
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Simple) &&
+                externalOntologyIri.isKnoraOntologyIri &&
+                !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                externalOntologyIri.getProjectCode.contains("0001"))
+
             val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
             internalOntologyIri.toString should ===("http://www.knora.org/ontology/0001/example")
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
+                internalOntologyIri.isKnoraOntologyIri &&
+                !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                internalOntologyIri.getProjectCode.contains("0001"))
         }
 
         "convert http://0.0.0.0:3333/ontology/0001/example/simple/v2#ExampleThing to http://www.knora.org/ontology/0001/example#ExampleThing" in {
             val externalEntityIri = "http://0.0.0.0:3333/ontology/0001/example/simple/v2#ExampleThing".toSmartIri
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2Simple) &&
+                externalEntityIri.isKnoraApiV2EntityIri &&
+                !externalEntityIri.isKnoraBuiltInDefinitionIri &&
+                externalEntityIri.getProjectCode.contains("0001"))
+
             val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
             internalEntityIri.toString should ===("http://www.knora.org/ontology/0001/example#ExampleThing")
+            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) &&
+                internalEntityIri.isKnoraInternalEntityIri &&
+                !internalEntityIri.isKnoraBuiltInDefinitionIri &&
+                internalEntityIri.getProjectCode.contains("0001"))
         }
 
         "convert http://0.0.0.0:3333/ontology/0001/example/v2 to http://www.knora.org/ontology/0001/example" in {
             val externalOntologyIri = "http://0.0.0.0:3333/ontology/0001/example/v2".toSmartIri
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+                externalOntologyIri.isKnoraOntologyIri &&
+                !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                externalOntologyIri.getProjectCode.contains("0001"))
+
             val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
             internalOntologyIri.toString should ===("http://www.knora.org/ontology/0001/example")
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
+                internalOntologyIri.isKnoraOntologyIri &&
+                !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                internalOntologyIri.getProjectCode.contains("0001"))
         }
 
         "convert http://0.0.0.0:3333/ontology/0001/example/v2#ExampleThing to http://www.knora.org/ontology/0001/example#ExampleThing" in {
             val externalEntityIri = "http://0.0.0.0:3333/ontology/0001/example/v2#ExampleThing".toSmartIri
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+                externalEntityIri.isKnoraApiV2EntityIri &&
+                !externalEntityIri.isKnoraBuiltInDefinitionIri &&
+                externalEntityIri.getProjectCode.contains("0001"))
+
             val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
             internalEntityIri.toString should ===("http://www.knora.org/ontology/0001/example#ExampleThing")
+            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) &&
+                internalEntityIri.isKnoraInternalEntityIri &&
+                !internalEntityIri.isKnoraBuiltInDefinitionIri &&
+                internalEntityIri.getProjectCode.contains("0001"))
         }
 
         "convert http://www.knora.org/ontology/incunabula to http://0.0.0.0:3333/ontology/incunabula/simple/v2" in {
             val internalOntologyIri = "http://www.knora.org/ontology/incunabula".toSmartIri
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
+                internalOntologyIri.isKnoraOntologyIri &&
+                !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                internalOntologyIri.getProjectCode.isEmpty)
+
             val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Simple)
             externalOntologyIri.toString should ===("http://0.0.0.0:3333/ontology/incunabula/simple/v2")
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Simple) &&
+                externalOntologyIri.isKnoraOntologyIri &&
+                !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                externalOntologyIri.getProjectCode.isEmpty)
         }
 
         "convert http://www.knora.org/ontology/incunabula#book to http://0.0.0.0:3333/ontology/incunabula/simple/v2#book" in {
             val internalEntityIri = "http://www.knora.org/ontology/incunabula#book".toSmartIri
+            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) &&
+                internalEntityIri.isKnoraInternalEntityIri &&
+                !internalEntityIri.isKnoraBuiltInDefinitionIri &&
+                internalEntityIri.getProjectCode.isEmpty)
+
             val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Simple)
             externalEntityIri.toString should ===("http://0.0.0.0:3333/ontology/incunabula/simple/v2#book")
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2Simple) &&
+                externalEntityIri.isKnoraApiV2EntityIri &&
+                !externalEntityIri.isKnoraBuiltInDefinitionIri &&
+                externalEntityIri.getProjectCode.isEmpty)
         }
 
         "convert http://www.knora.org/ontology/incunabula to http://0.0.0.0:3333/ontology/incunabula/v2" in {
             val internalOntologyIri = "http://www.knora.org/ontology/incunabula".toSmartIri
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
+                internalOntologyIri.isKnoraOntologyIri &&
+                !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                internalOntologyIri.getProjectCode.isEmpty)
+
             val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)
             externalOntologyIri.toString should ===("http://0.0.0.0:3333/ontology/incunabula/v2")
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+                externalOntologyIri.isKnoraOntologyIri &&
+                !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                externalOntologyIri.getProjectCode.isEmpty)
         }
 
         "convert http://www.knora.org/ontology/incunabula#book to http://0.0.0.0:3333/ontology/incunabula/v2#book" in {
             val internalEntityIri = "http://www.knora.org/ontology/incunabula#book".toSmartIri
+            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) &&
+                internalEntityIri.isKnoraInternalEntityIri &&
+                !internalEntityIri.isKnoraBuiltInDefinitionIri &&
+                internalEntityIri.getProjectCode.isEmpty)
+
             val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2WithValueObjects)
             externalEntityIri.toString should ===("http://0.0.0.0:3333/ontology/incunabula/v2#book")
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+                externalEntityIri.isKnoraApiV2EntityIri &&
+                !externalEntityIri.isKnoraBuiltInDefinitionIri &&
+                externalEntityIri.getProjectCode.isEmpty)
         }
 
         "convert http://0.0.0.0:3333/ontology/incunabula/simple/v2 to http://www.knora.org/ontology/incunabula" in {
             val externalOntologyIri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2".toSmartIri
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Simple) &&
+                externalOntologyIri.isKnoraOntologyIri &&
+                !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                externalOntologyIri.getProjectCode.isEmpty)
+
             val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
             internalOntologyIri.toString should ===("http://www.knora.org/ontology/incunabula")
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
+                internalOntologyIri.isKnoraOntologyIri &&
+                !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                internalOntologyIri.getProjectCode.isEmpty)
         }
 
         "convert http://0.0.0.0:3333/ontology/incunabula/simple/v2#book to http://www.knora.org/ontology/incunabula#book" in {
             val externalEntityIri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#book".toSmartIri
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2Simple) &&
+                externalEntityIri.isKnoraApiV2EntityIri &&
+                !externalEntityIri.isKnoraBuiltInDefinitionIri &&
+                externalEntityIri.getProjectCode.isEmpty)
+
             val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
             internalEntityIri.toString should ===("http://www.knora.org/ontology/incunabula#book")
+            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) &&
+                internalEntityIri.isKnoraInternalEntityIri &&
+                !internalEntityIri.isKnoraBuiltInDefinitionIri &&
+                internalEntityIri.getProjectCode.isEmpty)
         }
 
         "convert http://0.0.0.0:3333/ontology/incunabula/v2 to http://www.knora.org/ontology/incunabula" in {
             val externalOntologyIri = "http://0.0.0.0:3333/ontology/incunabula/v2".toSmartIri
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+                externalOntologyIri.isKnoraOntologyIri &&
+                !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                externalOntologyIri.getProjectCode.isEmpty)
+
             val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
             internalOntologyIri.toString should ===("http://www.knora.org/ontology/incunabula")
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
+                internalOntologyIri.isKnoraOntologyIri &&
+                !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                internalOntologyIri.getProjectCode.isEmpty)
         }
 
         "convert http://0.0.0.0:3333/ontology/incunabula/v2#book to http://www.knora.org/ontology/incunabula#book" in {
             val externalEntityIri = "http://0.0.0.0:3333/ontology/incunabula/v2#book".toSmartIri
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+                externalEntityIri.isKnoraApiV2EntityIri &&
+                !externalEntityIri.isKnoraBuiltInDefinitionIri &&
+                externalEntityIri.getProjectCode.isEmpty)
+
             val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
             internalEntityIri.toString should ===("http://www.knora.org/ontology/incunabula#book")
+            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) &&
+                internalEntityIri.isKnoraInternalEntityIri &&
+                !internalEntityIri.isKnoraBuiltInDefinitionIri &&
+                internalEntityIri.getProjectCode.isEmpty)
+        }
+
+        "parse http://rdfh.ch/0000/0123456789abcdef" in {
+            val dataIri = "http://rdfh.ch/0000/0123456789abcdef".toSmartIri
+            assert(dataIri.isKnoraDataIri)
+        }
+
+        "parse http://data.knora.org/0123456789abcdef" in {
+            val dataIri = "http://data.knora.org/0123456789abcdef".toSmartIri
+            assert(dataIri.isKnoraDataIri)
+        }
+
+        "parse http://www.knora.org/explicit" in {
+            val namedGraphIri = "http://www.knora.org/explicit".toSmartIri
+            assert(namedGraphIri.isKnoraDataIri)
+        }
+
+        "parse http://www.ontotext.com/explicit" in {
+            val namedGraphIri = "http://www.ontotext.com/explicit".toSmartIri
+            assert(!namedGraphIri.isKnoraIri)
+        }
+
+        "parse http://www.w3.org/2001/XMLSchema#integer" in {
+            val xsdIri = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
+            assert(!xsdIri.isKnoraOntologyIri &&
+                !xsdIri.isKnoraDataIri &&
+                xsdIri.getOntologySchema.isEmpty &&
+                xsdIri.getProjectCode.isEmpty)
+        }
+
+        "reject an empty IRI string" in {
+            assertThrows[BadRequestException] {
+                "".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject the IRI 'foo'" in {
+            assertThrows[BadRequestException] {
+                "foo".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://" in {
+            assertThrows[BadRequestException] {
+                "http://".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject ftp://www.knora.org/ontology/incunabula (wrong URL scheme)" in {
+            assertThrows[BadRequestException] {
+                "ftp://www.knora.org/ontology/incunabula".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject https://www.knora.org/ontology/incunabula (wrong URL scheme)" in {
+            assertThrows[BadRequestException] {
+                "https://www.knora.org/ontology/incunabula".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://www.knora.org/" in {
+            assertThrows[BadRequestException] {
+                "http://www.knora.org/".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://api.knora.org/" in {
+            assertThrows[BadRequestException] {
+                "http://api.knora.org/".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://0.0.0.0:3333/" in {
+            assertThrows[BadRequestException] {
+                "http://api.knora.org/".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://www.knora.org/ontology" in {
+            assertThrows[BadRequestException] {
+                "http://www.knora.org/ontology".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://api.knora.org/ontology" in {
+            assertThrows[BadRequestException] {
+                "http://api.knora.org/".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://0.0.0.0:3333/ontology" in {
+            assertThrows[BadRequestException] {
+                "http://api.knora.org/ontology".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://www.knora.org/ontology/0000 (invalid shortcode)" in {
+            assertThrows[BadRequestException] {
+                "http://0.0.0.0:3333/ontology/0000/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://0.0.0.0:3333/ontology/0000/v2 (invalid shortcode)" in {
+            assertThrows[BadRequestException] {
+                "http://0.0.0.0:3333/ontology/0000/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://0.0.0.0:3333/ontology/0000/simple/v2 (invalid shortcode)" in {
+            assertThrows[BadRequestException] {
+                "http://0.0.0.0:3333/ontology/0000/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://www.knora.org/ontology/incunabula/v2 (wrong hostname)" in {
+            assertThrows[BadRequestException] {
+                "http://www.knora.org/ontology/incunabula/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://www.knora.org/ontology/incunabula/simple/v2 (wrong hostname)" in {
+            assertThrows[BadRequestException] {
+                "http://www.knora.org/ontology/incunabula/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://api.knora.org/ontology/incunabula/v2 (wrong hostname)" in {
+            assertThrows[BadRequestException] {
+                "http://api.knora.org/ontology/incunabula/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://api.knora.org/ontology/incunabula/simple/v2 (wrong hostname)" in {
+            assertThrows[BadRequestException] {
+                "http://api.knora.org/ontology/incunabula/simple/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://0.0.0.0:3333/ontology/v2 (invalid ontology name)" in {
+            assertThrows[BadRequestException] {
+                "http://0.0.0.0:3333/ontology/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://0.0.0.0:3333/ontology/0000/v2 (invalid ontology name)" in {
+            assertThrows[BadRequestException] {
+                "http://0.0.0.0:3333/ontology/0000/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://0.0.0.0:3333/ontology/ontology (invalid ontology name)" in {
+            assertThrows[BadRequestException] {
+                "http://0.0.0.0:3333/ontology/ontology".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://0.0.0.0:3333/ontology/0000/ontology (invalid ontology name)" in {
+            assertThrows[BadRequestException] {
+                "http://0.0.0.0:3333/ontology/0000/ontology".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
+        "reject http://0.0.0.0:3333/ontology/0000/simple/simple/v2 (invalid ontology name)" in {
+            assertThrows[BadRequestException] {
+                "http://0.0.0.0:3333/ontology/0000/simple/simple/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+            }
         }
 
         /*
@@ -346,19 +716,19 @@ class StringFormatterSpec extends CoreSpec() {
         }
 
         "validate project shortcode" in {
-            stringFormatter.validateProjectShortcode("00FF", () => throw AssertionException("not valid")) should be ("00FF")
-            stringFormatter.validateProjectShortcode("00ff", () => throw AssertionException("not valid")) should be ("00FF")
-            stringFormatter.validateProjectShortcode("12aF", () => throw AssertionException("not valid")) should be ("12AF")
+            stringFormatter.validateProjectShortcode("00FF", () => throw AssertionException("not valid")) should be("00FF")
+            stringFormatter.validateProjectShortcode("00ff", () => throw AssertionException("not valid")) should be("00FF")
+            stringFormatter.validateProjectShortcode("12aF", () => throw AssertionException("not valid")) should be("12AF")
 
-            an [AssertionException] should be thrownBy {
+            an[AssertionException] should be thrownBy {
                 stringFormatter.validateProjectShortcode("000", () => throw AssertionException("not valid"))
             }
 
-            an [AssertionException] should be thrownBy {
+            an[AssertionException] should be thrownBy {
                 stringFormatter.validateProjectShortcode("00000", () => throw AssertionException("not valid"))
             }
 
-            an [AssertionException] should be thrownBy {
+            an[AssertionException] should be thrownBy {
                 stringFormatter.validateProjectShortcode("wxyz", () => throw AssertionException("not valid"))
             }
         }

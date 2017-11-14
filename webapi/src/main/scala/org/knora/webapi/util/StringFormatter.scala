@@ -288,6 +288,11 @@ sealed trait SmartIri extends Ordered[SmartIri] {
      */
 
     /**
+      * Returns `true` if this is a Knora data or definition IRI.
+      */
+    def isKnoraIri: Boolean
+
+    /**
       * Returns `true` if this is a Knora data IRI.
       */
     def isKnoraDataIri: Boolean
@@ -438,8 +443,11 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         OntologyConstants.Owl.OwlPrefixExpansion
     )
 
+    // Reserved words used in Knora API v2 IRI version segments.
+    private val versionSegmentWords = Set("simple", "v2")
+
     // Reserved words that cannot be used in project-specific ontology names.
-    private val reservedIriWords = Set("knora", "ontology", "simple")
+    private val reservedIriWords = Set("knora", "ontology") ++ versionSegmentWords
 
     // The expected format of a Knora date.
     // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
@@ -568,6 +576,10 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
           * @return the IRI's API schema.
           */
         private def parseApiV2VersionSegments(segments: Vector[String]): ApiV2Schema = {
+            if (segments.length < 2) {
+                errorFun()
+            }
+
             val lastSegment = segments.last
             val lastTwoSegments = segments.slice(segments.length - 2, segments.length)
 
@@ -589,101 +601,122 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
             case None =>
                 // Parse the IRI from scratch.
-                try {
-                    if (isKnoraDataIriStr(iri) ||
-                        iri.startsWith(OntologyConstants.NamedGraphs.DataNamedGraphStart) ||
-                        iri == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph) {
-                        // This is a Knora data or named graph IRI. Nothing else to do.
+                if (isKnoraDataIriStr(iri) ||
+                    iri.startsWith(OntologyConstants.NamedGraphs.DataNamedGraphStart) ||
+                    iri == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph) {
+                    // This is a Knora data or named graph IRI. Nothing else to do.
+                    SmartIriInfo(
+                        iriType = KnoraDataIri,
+                        ontologySchema = None
+                    )
+                } else {
+                    // If this is an entity IRI in a hash namespace, separate the entity name from the namespace.
+
+                    val hashPos = iri.lastIndexOf('#')
+
+                    val (namespace: String, entityName: Option[String]) = if (hashPos >= 0 && hashPos < iri.length) {
+                        (iri.substring(0, hashPos), Some(iri.substring(hashPos + 1)))
+                    } else {
+                        (iri, None)
+                    }
+
+                    // Remove the URL scheme (http://), and split the remainder of the namespace into slash-delimited segments.
+                    val body = namespace.substring(namespace.indexOf("//") + 2)
+                    val segments = body.split('/').toVector
+
+                    // The segments must contain at least a hostname.
+                    if (segments.isEmpty) {
+                        errorFun()
+                    }
+
+                    // Determine the ontology schema by looking at the hostname and the version segment.
+
+                    val hostname = segments.head
+
+                    val (ontologySchema: Option[OntologySchema], hasProjectSpecificHostname: Boolean) = hostname match {
+                        case InternalIriHostname => (Some(InternalSchema), false)
+                        case BuiltInKnoraApiHostname => (Some(parseApiV2VersionSegments(segments)), false)
+
+                        case _ =>
+                            // If our StringFormatter instance was initialised with the Knora API server's hostname,
+                            // use that to identify project-specific Knora API v2 IRIs.
+                            knoraApiHostAndPort match {
+                                case Some(hostAndPort) =>
+                                    if (hostname == hostAndPort) {
+                                        (Some(parseApiV2VersionSegments(segments)), true)
+                                    } else {
+                                        (None, false)
+                                    }
+
+                                case None =>
+                                    // If we don't recognise the hostname, this isn't a Knora IRI.
+                                    (None, false)
+                            }
+                    }
+
+                    // If this is a Knora definition IRI, get its name and optional project code.
+                    if (ontologySchema.nonEmpty) {
+                        // A Knora definition IRI must start with "http://" and have "ontology" as its second segment.
+                        if (!(iri.startsWith("http://") && segments.length >= 3 && segments(1) == "ontology")) {
+                            errorFun()
+                        }
+
+                        // Determine the length of the version segment, if any.
+                        val versionSegmentsLength = ontologySchema match {
+                            case Some(InternalSchema) => 0
+                            case Some(ApiV2WithValueObjects) => 1
+                            case Some(ApiV2Simple) => 2
+                            case None => throw AssertionException("Unreachable code")
+                        }
+
+                        // Make a Vector containing just the optional project code and the ontology name.
+                        val projectCodeAndOntologyName: Vector[String] = segments.slice(2, segments.length - versionSegmentsLength)
+
+                        if (projectCodeAndOntologyName.isEmpty || projectCodeAndOntologyName.length > 2) {
+                            errorFun()
+                        }
+
+                        if (projectCodeAndOntologyName.exists(segment => versionSegmentWords.contains(segment))) {
+                            errorFun()
+                        }
+
+                        // Extract the project code.
+                        val projectCode: Option[String] = if (projectCodeAndOntologyName.length == 2) {
+                            Some(validateProjectShortcode(projectCodeAndOntologyName.head, errorFun))
+                        } else {
+                            None
+                        }
+
+                        // Extract the ontology name.
+                        val ontologyName = projectCodeAndOntologyName.last
+                        val hasBuiltInOntologyName = isBuiltInOntologyName(ontologyName)
+
+                        if (!hasBuiltInOntologyName) {
+                            validateProjectSpecificOntologyName(ontologyName, errorFun)
+                        }
+
+                        if ((hasProjectSpecificHostname && hasBuiltInOntologyName) ||
+                            (hostname == BuiltInKnoraApiHostname && !hasBuiltInOntologyName)) {
+                            errorFun()
+                        }
+
                         SmartIriInfo(
-                            iriType = KnoraDataIri,
-                            ontologySchema = None
+                            iriType = KnoraDefinitionIri,
+                            projectCode = projectCode,
+                            ontologyName = Some(ontologyName),
+                            entityName = entityName,
+                            ontologySchema = ontologySchema,
+                            isBuiltInDef = hasBuiltInOntologyName
                         )
                     } else {
-                        // If this is an entity IRI in a hash namespace, separate the entity name from the namespace.
-
-                        val hashPos = iri.lastIndexOf('#')
-
-                        val (namespace: String, entityName: Option[String]) = if (hashPos >= 0 && hashPos < iri.length) {
-                            (iri.substring(0, hashPos), Some(iri.substring(hashPos + 1)))
-                        } else {
-                            (iri, None)
-                        }
-
-                        // Remove the URL scheme (http://), and split the remainder of the namespace into slash-delimited segments.
-                        val body = namespace.substring(namespace.indexOf("//") + 2)
-                        val segments = body.split('/').toVector
-
-                        // Determine the ontology schema by looking at the hostname and the version segment.
-
-                        val hostname = segments.head
-
-                        val ontologySchema: Option[OntologySchema] = hostname match {
-                            case InternalIriHostname => Some(InternalSchema)
-                            case BuiltInKnoraApiHostname => Some(parseApiV2VersionSegments(segments))
-
-                            case _ =>
-                                // If our StringFormatter instance was initialised with the Knora API server's hostname,
-                                // use that to identify project-specific Knora API v2 IRIs.
-                                knoraApiHostAndPort match {
-                                    case Some(hostAndPort) =>
-                                        if (hostname == hostAndPort) {
-                                            Some(parseApiV2VersionSegments(segments))
-                                        } else {
-                                            None
-                                        }
-
-                                    case None =>
-                                        // If we don't recognise the hostname, this isn't a Knora IRI.
-                                        None
-                                }
-                        }
-
-                        // If this is a Knora IRI, get its name and optional project code.
-                        if (ontologySchema.nonEmpty) {
-                            // A Knora IRI must have "ontology" as its second segment.
-                            if (segments(1) != "ontology") {
-                                errorFun()
-                            }
-
-                            // Determine the length of the version segment, if any.
-                            val versionSegmentsLength = ontologySchema match {
-                                case Some(InternalSchema) => 0
-                                case Some(ApiV2WithValueObjects) => 1
-                                case Some(ApiV2Simple) => 2
-                                case None => throw AssertionException("Unreachable code")
-                            }
-
-                            // Make a Vector containing just the optional project code and the ontology name.
-                            val projectCodeAndOntologyName: Vector[String] = segments.slice(2, segments.length - versionSegmentsLength)
-
-                            // Extract the ontology name.
-                            val ontologyName = validateNCName(projectCodeAndOntologyName.last, errorFun)
-
-                            // Extract the project code.
-                            val projectCode: Option[String] = if (projectCodeAndOntologyName.length == 2) {
-                                Some(validateProjectShortcode(projectCodeAndOntologyName.head, errorFun))
-                            } else {
-                                None
-                            }
-
-                            SmartIriInfo(
-                                iriType = KnoraDefinitionIri,
-                                projectCode = projectCode,
-                                ontologyName = Some(ontologyName),
-                                entityName = entityName,
-                                ontologySchema = ontologySchema,
-                                isBuiltInDef = isBuiltInOntologyName(ontologyName)
-                            )
-                        } else {
-                            UnknownIriInfo
-                        }
+                        UnknownIriInfo
                     }
-                } catch {
-                    case _: Exception => errorFun()
                 }
         }
 
         override def toString: String = iri
+
+        override def isKnoraIri: Boolean = iriInfo.iriType != UnknownIriType
 
         override def isKnoraDataIri: Boolean = iriInfo.iriType == KnoraDataIri
 
