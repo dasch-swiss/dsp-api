@@ -466,7 +466,7 @@ object ConstructResponseUtilV2 {
                     target = targetResourceIri,
                     comment = valueCommentOption,
                     incomingLink = valueObject.incomingLink,
-                    referredResource = None
+                    nestedResource = None
                 )
 
                 valueObject.nestedResource match {
@@ -481,7 +481,7 @@ object ConstructResponseUtilV2 {
 
                         // add information about the referred resource
                         linkValue.copy(
-                            referredResource = Some(constructReadResourceV2(nestedResourceIri, nestedResourceAssertions, mappings)) // construct a `ReadResourceV2`
+                            nestedResource = Some(constructReadResourceV2(nestedResourceIri, nestedResourceAssertions, mappings)) // construct a `ReadResourceV2`
                         )
 
                     case None => linkValue // do not include information about the referred resource

@@ -512,9 +512,9 @@ case class TextFileValueContentV2(valueHasString: String, internalMimeType: Stri
   * @param target              the Iri of the link's target resource.
   * @param comment             a comment on the link.
   * @param incomingLink        indicates if it is an incoming link.
-  * @param referredResource    information about the referred resource, if given.
+  * @param nestedResource      information about the nested resource, if given.
   */
-case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: IRI, target: IRI, comment: Option[String], incomingLink: Boolean, referredResource: Option[ReadResourceV2]) extends ValueContentV2 {
+case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: IRI, target: IRI, comment: Option[String], incomingLink: Boolean, nestedResource: Option[ReadResourceV2]) extends ValueContentV2 {
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.LinkValue
 
@@ -522,7 +522,7 @@ case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: I
         // TODO: check targetSchema and return JSON-LD accordingly.
 
         // check if the referred resource has to be included in the JSON response
-        val objectMap: Map[IRI, JsonLDValue] = referredResource match {
+        val objectMap: Map[IRI, JsonLDValue] = nestedResource match {
             case Some(targetResource: ReadResourceV2) =>
                 // include the referred resource as a nested structure
                 val referredResourceAsJsonLDValue: JsonLDObject = ReadResourceUtil.createJsonLDObjectFromReadResourceV2(
