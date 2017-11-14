@@ -172,7 +172,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
             val valuesToBeCreated = Map(
                 s"$drawingsGodsOntologyIri#hasLastname" -> Vector(CreateValueV1WithComment(TextValueSimpleV1("PersonTest DDD1"))),
                 s"$drawingsGodsOntologyIri#hasCodePerson" -> Vector(CreateValueV1WithComment(TextValueSimpleV1("Code"))),
-                s"$drawingsGodsOntologyIri#hasPersonGender" -> Vector(CreateValueV1WithComment(HierarchicalListValueV1("http://data.knora.org/lists/0105/drawings-gods-2016-list-FiguresHList-polysexual"))),
+                s"$drawingsGodsOntologyIri#hasPersonGender" -> Vector(CreateValueV1WithComment(HierarchicalListValueV1("http://rdfh.ch/lists/0105/drawings-gods-2016-list-FiguresHList-polysexual"))),
                 s"$drawingsGodsOntologyIri#hasDrawingChildTotal" -> Vector(CreateValueV1WithComment(IntegerValueV1(99)))
             )
 

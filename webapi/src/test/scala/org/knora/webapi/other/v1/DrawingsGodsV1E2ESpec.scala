@@ -80,7 +80,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/anything#Thing",
                    |    "label": "A thing",
-                   |    "project_id": "http://rdfh.ch/projects/0105",
+                   |    "project_id": "http://rdfh.ch/projects/0106",
                    |    "properties": {}
                    |}
                 """.stripMargin
