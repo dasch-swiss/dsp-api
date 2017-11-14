@@ -27,7 +27,7 @@ import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi.messages.admin.responder.listadminmessages.{ListGetAdminRequest, ListNodeInfoGetAdminRequest, ListsGetAdminRequest}
 import org.knora.webapi.routing.{Authenticator, RouteUtilAdmin}
-import org.knora.webapi.util.InputValidation
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
 import scala.concurrent.ExecutionContextExecutor
@@ -42,6 +42,7 @@ object ListsAdminRoute extends Authenticator {
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
         implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
+        val stringFormatter = StringFormatter.getInstance
 
         path("admin" / "lists") {
             get {
@@ -71,7 +72,7 @@ object ListsAdminRoute extends Authenticator {
                 /* return a list (a graph with all list nodes) */
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
-                    val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
+                    val listIri = stringFormatter.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                     val requestMessage = ListGetAdminRequest(listIri, userProfile)
 
@@ -97,7 +98,7 @@ object ListsAdminRoute extends Authenticator {
                 /* return a single list node */
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
-                    val listIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
+                    val listIri = stringFormatter.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                     val requestMessage = ListNodeInfoGetAdminRequest(listIri, userProfile)
 

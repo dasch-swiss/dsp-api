@@ -18,6 +18,8 @@ package org.knora.jsonld
 
 import org.knora.webapi.util.jsonld.JsonLDDocument
 
+import scala.language.implicitConversions
+
 import scala.annotation.implicitNotFound
 
 /**

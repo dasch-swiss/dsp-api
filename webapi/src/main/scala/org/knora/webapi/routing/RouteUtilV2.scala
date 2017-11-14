@@ -48,6 +48,7 @@ object RouteUtilV2 {
       * @param settings         the application's settings.
       * @param responderManager a reference to the responder manager.
       * @param log              a logging adapter.
+      * @param responseSchema   the API schema that should be used in the response.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
       * @return a [[Future]] containing a [[RouteResult]].
@@ -56,7 +57,8 @@ object RouteUtilV2 {
                      requestContext: RequestContext,
                      settings: SettingsImpl,
                      responderManager: ActorSelection,
-                     log: LoggingAdapter)
+                     log: LoggingAdapter,
+                     responseSchema: ApiV2Schema = ApiV2WithValueObjects)
                     (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         // Optionally log the request message. TODO: move this to the testing framework.
         if (settings.dumpMessages) {

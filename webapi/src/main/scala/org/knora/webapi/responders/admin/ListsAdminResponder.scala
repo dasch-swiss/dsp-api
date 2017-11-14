@@ -35,9 +35,10 @@ import scala.concurrent.Future
 class ListsAdminResponder extends Responder {
 
     def receive = {
-        case ListsGetAdminRequest(projectIri, userProfile) => future2Message(sender(), listsGetRequestV2(projectIri, userProfile), log)
-        case ListGetAdminRequest(listIri, userProfile) => future2Message(sender(), listGetRequestV2(listIri, userProfile), log)
-        case ListNodeInfoGetAdminRequest(listIri, userProfile) => future2Message(sender(), listNodeInfoGetRequestV2(listIri, userProfile), log)
+        case ListsGetAdminRequest(projectIri, userProfile) => future2Message(sender(), listsGetAdminRequest(projectIri, userProfile), log)
+        case ListGetAdminRequest(listIri, userProfile) => future2Message(sender(), listGetAdminRequest(listIri, userProfile), log)
+        case ListNodeInfoGetAdminRequest(listIri, userProfile) => future2Message(sender(), listNodeInfoGetAdminRequest(listIri, userProfile), log)
+        case NodePathGetAdminRequest(iri, userProfile) => future2Message(sender(), nodePathGetAdminRequest(iri, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -51,7 +52,7 @@ class ListsAdminResponder extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[ListsGetAdminResponse]].
       */
-    def listsGetRequestV2(projectIri: Option[IRI], userProfile: UserProfileV1): Future[ListsGetAdminResponse] = {
+    def listsGetAdminRequest(projectIri: Option[IRI], userProfile: UserProfileV1): Future[ListsGetAdminResponse] = {
 
         // log.debug("listsGetRequestV2")
 
@@ -68,10 +69,10 @@ class ListsAdminResponder extends Responder {
             // Seq(subjectIri, (objectIri -> Seq(stringWithOptionalLand))
             statements = listsResponse.statements.toList
 
-            items: Seq[ListInfo] = statements.map {
+            items: Seq[ListRootNodeInfo] = statements.map {
                 case (listIri: IRI, propsMap: Map[IRI, Seq[StringV2]]) =>
 
-                    ListInfo(
+                    ListRootNodeInfo(
                         id = listIri,
                         projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
                         labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
@@ -89,7 +90,7 @@ class ListsAdminResponder extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[ListGetAdminResponse]].
       */
-    def listGetRequestV2(rootNodeIri: IRI, userProfile: UserProfileV1): Future[ListGetAdminResponse] = {
+    def listGetAdminRequest(rootNodeIri: IRI, userProfile: UserProfileV1): Future[ListGetAdminResponse] = {
 
         for {
             // this query will give us only the information about the root node.
@@ -107,13 +108,13 @@ class ListsAdminResponder extends Responder {
             // _ = log.debug(s"listExtendedGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
 
             // here we know that the list exists and it is fine if children is an empty list
-            children: Seq[ListChildNode] <- listGetChildrenV2(rootNodeIri, userProfile)
+            children: Seq[ListChildNode] <- listGetChildren(rootNodeIri, userProfile)
 
             // _ = log.debug(s"listGetRequestV2 - children count: {}", children.size)
 
             // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
             statements = listInfoResponse.statements
-            nodes = statements.head match {
+            node = statements.head match {
                 case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringV2]]) =>
                     ListRootNode(
                         id = nodeIri,
@@ -126,7 +127,7 @@ class ListsAdminResponder extends Responder {
 
             // _ = log.debug(s"listGetRequestV2 - list: {}", MessageUtil.toSource(list))
 
-        } yield ListGetAdminResponse(info = , modes = nodes)
+        } yield ListGetAdminResponse(list = node)
     }
 
 
@@ -135,9 +136,9 @@ class ListsAdminResponder extends Responder {
       *
       * @param nodeIri the Iri if the child node to be queried.
       * @param userProfile the profile of the user making the request.
-      * @return a [[ReadListsSequenceV2]].
+      * @return a [[ListNodeInfoGetAdminResponse]].
       */
-    def listNodeInfoGetRequestV2(nodeIri: IRI, userProfile: UserProfileV1): Future[ReadListsSequenceV2] = {
+    def listNodeInfoGetAdminRequest(nodeIri: IRI, userProfile: UserProfileV1): Future[ListNodeInfoGetAdminResponse] = {
         for {
             sparqlQuery <- Future(queries.sparql.v2.txt.getListNode(
                 triplestore = settings.triplestoreType,
@@ -157,33 +158,31 @@ class ListsAdminResponder extends Responder {
 
             // _ = log.debug(s"listNodeInfoGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
 
-            node: ListNode = statements.head match {
+            node: ListNodeInfo = statements.head match {
                 case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringV2]]) =>
 
                     if (propsMap.get(OntologyConstants.KnoraBase.HasRootNode).nonEmpty) {
                         // we have a child node, as only the child node has this property attached
-                        listadminmessages.ListChildNode (
+                        ListChildNodeInfo (
                             id = nodeIri,
                             name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.value),
                             labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
                             comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2]),
-                            children = Seq.empty[ListChildNode],
                             position = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.value.toInt)
                         )
                     } else {
-                        listadminmessages.ListRootNode(
+                        ListRootNodeInfo (
                             id = nodeIri,
                             projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
                             labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
-                            comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2]),
-                            children = Seq.empty[ListChildNode]
+                            comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2])
                         )
                     }
             }
 
             // _ = log.debug(s"listNodeInfoGetRequestV2 - node: {}", MessageUtil.toSource(node))
 
-        } yield ReadListsSequenceV2(Seq(node))
+        } yield ListNodeInfoGetAdminResponse(nodeinfo = node)
     }
 
 
@@ -194,7 +193,7 @@ class ListsAdminResponder extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a sequence of [[ListNode]].
       */
-    private def listGetChildrenV2(rootNodeIri: IRI, userProfile: UserProfileV1): Future[Seq[ListChildNode]] = {
+    private def listGetChildren(rootNodeIri: IRI, userProfile: UserProfileV1): Future[Seq[ListChildNode]] = {
 
         /**
           * Compares the `position`-values of two nodes
@@ -219,7 +218,7 @@ class ListsAdminResponder extends Responder {
           *                         of SPARQL query results representing that node's children.
           * @return a [[ListNode]].
           */
-        def createListChildNodeV2(nodeIri: IRI, groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]], level: Int): ListChildNode = {
+        def createListChildNode(nodeIri: IRI, groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]], level: Int): ListChildNode = {
 
             val childRows = groupedByNodeIri(nodeIri)
 
@@ -259,7 +258,7 @@ class ListsAdminResponder extends Responder {
                     Seq.empty[ListChildNode]
                 } else {
                     // Recursively get the child nodes.
-                    childRows.map(childRow => createListChildNodeV2(childRow.rowMap("child"), groupedByNodeIri, level + 1)).sortWith(orderNodes)
+                    childRows.map(childRow => createListChildNode(childRow.rowMap("child"), groupedByNodeIri, level + 1)).sortWith(orderNodes)
                 },
                 position = firstRowMap.get("position").map(_.toInt)
             )
@@ -288,7 +287,7 @@ class ListsAdminResponder extends Responder {
             } else {
                 // Process each child of the root node.
                 rootNodeChildren.map {
-                    childRow => createListChildNodeV2(childRow.rowMap("child"), groupedByNodeIri, 0)
+                    childRow => createListChildNode(childRow.rowMap("child"), groupedByNodeIri, 0)
                 }.sortWith(orderNodes)
             }
 
@@ -301,7 +300,7 @@ class ListsAdminResponder extends Responder {
       * @param queryNodeIri the IRI of the node whose path is to be queried.
       * @param userProfile  the profile of the user making the request.
       */
-    private def getNodePathResponseV2(queryNodeIri: IRI, userProfile: UserProfileV1): Future[ReadListsSequenceV2] = {
+    private def nodePathGetAdminRequest(queryNodeIri: IRI, userProfile: UserProfileV1): Future[NodePathGetAdminResponse] = {
         /**
           * Recursively constructs the path to a node.
           *
@@ -384,6 +383,6 @@ class ListsAdminResponder extends Responder {
                         case None => acc
                     }
             }
-        } yield listadminmessages.ReadListsSequenceV2(items = makePath(queryNodeIri, nodeMap, parentMap, Nil))
+        } yield NodePathGetAdminResponse(nodelist = makePath(queryNodeIri, nodeMap, parentMap, Nil))
     }
 }
