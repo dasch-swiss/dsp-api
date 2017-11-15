@@ -365,6 +365,7 @@ sealed trait SmartIri extends Ordered[SmartIri] {
     def fromLinkPropToLinkValueProp: SmartIri
 
     override def equals(obj: scala.Any): Boolean = {
+        // See the comment at the top of the SmartIri trait.
         obj match {
             case that: SmartIri => this.toString == that.toString
             case _ => false
@@ -381,11 +382,13 @@ sealed trait SmartIri extends Ordered[SmartIri] {
   */
 object SmartIri {
     def apply(iriStr: IRI)(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIri(iriStr)
+
     def unapply(iri: SmartIri): Option[String] = Some(iri.toString)
 }
 
 /**
-  * Provides automatic conversion of IRI strings to [[SmartIri]] objects.
+  * Provides automatic conversion of IRI strings to [[SmartIri]] objects. See [[https://www.scala-lang.org/api/current/scala/AnyVal.html]]
+  * for details.
   */
 object IriConversions {
 
@@ -846,103 +849,66 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             }
         }
 
-        private lazy val asInternalEntityIri: SmartIri = {
-            // If we're converting from API v2 simple schema, replace built-in simplified datatypes with value classes.
-            val valueClass: Option[IRI] = iriInfo.ontologySchema match {
-                case Some(ApiV2Simple) =>
-                    OntologyConstants.KnoraApiV2Simple.SimplifiedTypesToValueClasses.get(iri) match {
-                        case Some(vClass) => Some(vClass)
+        private def externalToInternalEntityIri: SmartIri = {
+            // Construct the string representation of this IRI in the target schema.
+            val ontologyName = getOntologyName
+            val entityName = getEntityName
+
+            val internalOntologyIri = new StringBuilder(OntologyConstants.KnoraInternal.InternalOntologyStart)
+
+            iriInfo.projectCode match {
+                case Some(projectCode) => internalOntologyIri.append(projectCode).append('/')
+                case None => ()
+            }
+
+            val convertedIriStr = internalOntologyIri.append(externalToInternalOntologyName(ontologyName)).append("#").append(entityName).toString
+
+            // Get it from the cache, or construct it and cache it if it's not there.
+            getOrCacheSmartIri(
+                iriStr = convertedIriStr,
+                creationFun = {
+                    () =>
+                        val convertedSmartIriInfo = iriInfo.copy(
+                            ontologyName = Some(externalToInternalOntologyName(getOntologyName)),
+                            ontologySchema = Some(InternalSchema)
+                        )
+
+                        new SmartIriImpl(
+                            iriStr = convertedIriStr,
+                            parsedIriInfo = Some(convertedSmartIriInfo)
+                        )
+                }
+            )
+        }
+
+        private def internalToExternalEntityIri(targetSchema: ApiV2Schema): SmartIri = {
+            // If we're converting to API v2 simple schema, replace value classes with simplified datatypes.
+            val datatype: Option[IRI] = targetSchema match {
+                case ApiV2Simple =>
+                    OntologyConstants.KnoraApiV2Simple.ValueClassesToSimplifiedTypes.get(iri) match {
+                        case Some(dType) => Some(dType)
                         case None => None
                     }
 
                 case _ => None
             }
 
-            valueClass match {
-                case Some(vClass) =>
+            // Are we converting to a simplified datatype?
+            datatype match {
+                case Some(dType) =>
                     getOrCacheSmartIri(
-                        iriStr = vClass,
+                        iriStr = dType,
                         creationFun = {
-                            () =>
-                                val convertedSmartIriInfo = iriInfo.copy(
-                                    ontologyName = Some(externalToInternalOntologyName(getOntologyName)),
-                                    ontologySchema = Some(InternalSchema)
-                                )
-
-                                new SmartIriImpl(
-                                    iriStr = vClass,
-                                    parsedIriInfo = Some(convertedSmartIriInfo)
-                                )
-                        }
-                    )
+                            () => new SmartIriImpl(dType)
+                        })
 
                 case None =>
-                    val ontologyName = getOntologyName
-                    val entityName = getEntityName
-
-                    val internalOntologyIri = new StringBuilder(OntologyConstants.KnoraInternal.InternalOntologyStart)
-
-                    iriInfo.projectCode match {
-                        case Some(projectCode) => internalOntologyIri.append(projectCode).append('/')
-                        case None => ()
-                    }
-
-                    val convertedIriStr = internalOntologyIri.append(externalToInternalOntologyName(ontologyName)).append("#").append(entityName).toString
-
-                    getOrCacheSmartIri(
-                        iriStr = convertedIriStr,
-                        creationFun = {
-                            () =>
-                                val convertedSmartIriInfo = iriInfo.copy(
-                                    ontologyName = Some(externalToInternalOntologyName(getOntologyName)),
-                                    ontologySchema = Some(InternalSchema)
-                                )
-
-                                new SmartIriImpl(
-                                    iriStr = convertedIriStr,
-                                    parsedIriInfo = Some(convertedSmartIriInfo)
-                                )
-                        }
-                    )
-            }
-        }
-
-        private def externalToInternalEntityIri: SmartIri = asInternalEntityIri
-
-        private def internalToExternalEntityIri(targetSchema: ApiV2Schema): SmartIri = {
-            // If we're converting to API v2 simple schema, replace value classes with built-in simplified datatypes.
-            val simplifiedDatatype: Option[IRI] = if (iriInfo.ontologySchema.contains(InternalSchema) && targetSchema == ApiV2Simple) {
-                OntologyConstants.KnoraApiV2Simple.ValueClassesToSimplifiedTypes.get(iri) match {
-                    case Some(datatype) => Some(datatype)
-                    case None => None
-                }
-            } else {
-                None
-            }
-
-            simplifiedDatatype match {
-                case Some(datatype) =>
-                    getOrCacheSmartIri(
-                        iriStr = datatype,
-                        creationFun = {
-                            () =>
-                                val convertedSmartIriInfo = iriInfo.copy(
-                                    ontologyName = Some(internalToExternalOntologyName(getOntologyName)),
-                                    ontologySchema = Some(targetSchema)
-                                )
-
-                                new SmartIriImpl(
-                                    iriStr = datatype,
-                                    parsedIriInfo = Some(convertedSmartIriInfo)
-                                )
-                        }
-                    )
-
-                case None =>
+                    // No. Construct the string representation of this IRI in the target schema.
                     val entityName = getEntityName
                     val convertedOntologyIri = getOntologyFromEntity.toOntologySchema(targetSchema)
                     val convertedEntityIriStr = convertedOntologyIri.toString + "#" + entityName
 
+                    // Get it from the cache, or construct it and cache it if it's not there.
                     getOrCacheSmartIri(
                         iriStr = convertedEntityIriStr,
                         creationFun = {

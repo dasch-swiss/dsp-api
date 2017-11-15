@@ -50,19 +50,19 @@ object SearchResponderV2Constants {
       * Constants for fulltext query.
       */
     object FullTextSearchConstants {
-        val resourceVar = QueryVariable("resource")
-        val resourcePropVar = QueryVariable("resourceProp")
-        val resourceObjectVar = QueryVariable("resourceObj")
-        val resourceValueObject = QueryVariable("resourceValueObject")
-        val resourceValueProp = QueryVariable("resourceValueProp")
-        val resourceValueObjectProp = QueryVariable("resourceValueObjectProp")
-        val resourceValueObjectObj = QueryVariable("resourceValueObjectObj")
+        val resourceVar: QueryVariable = QueryVariable("resource")
+        val resourcePropVar: QueryVariable = QueryVariable("resourceProp")
+        val resourceObjectVar: QueryVariable = QueryVariable("resourceObj")
+        val resourceValueObject: QueryVariable = QueryVariable("resourceValueObject")
+        val resourceValueProp: QueryVariable = QueryVariable("resourceValueProp")
+        val resourceValueObjectProp: QueryVariable = QueryVariable("resourceValueObjectProp")
+        val resourceValueObjectObj: QueryVariable = QueryVariable("resourceValueObjectObj")
 
-        val standoffNodeVar = QueryVariable("standoffNode")
-        val standoffPropVar = QueryVariable("standoffProp")
-        val standoffValueVar = QueryVariable("standoffValue")
+        val standoffNodeVar: QueryVariable = QueryVariable("standoffNode")
+        val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
+        val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
 
-        val valueObjectConcatVar = QueryVariable("valueObjectConcat")
+        val valueObjectConcatVar: QueryVariable = QueryVariable("valueObjectConcat")
     }
 
     /**
@@ -71,30 +71,28 @@ object SearchResponderV2Constants {
     object ExtendedSearchConstants {
 
         // variables representing the main resource and its properties
-        val mainResourceVar = QueryVariable("mainResourceVar")
+        val mainResourceVar: QueryVariable = QueryVariable("mainResourceVar")
 
         // variables representing main and dependent resources. direct assertions about them as well as their values
-        val mainAndDependentResourceVar = QueryVariable("mainAndDependentResource")
-        val mainAndDependentResourcePropVar = QueryVariable("mainAndDependentResourceProp")
-        val mainAndDependentResourceObjectVar = QueryVariable("mainAndDependentResourceObj")
-        val mainAndDependentResourceValueObject = QueryVariable("mainAndDependentResourceValueObject")
-        val mainAndDependentResourceValueProp = QueryVariable("mainAndDependentResourceValueProp")
-        val mainAndDependentResourceValueObjectProp = QueryVariable("mainAndDependentResourceValueObjectProp")
-        val mainAndDependentResourceValueObjectObj = QueryVariable("mainAndDependentResourceValueObjectObj")
+        val mainAndDependentResourceVar: QueryVariable = QueryVariable("mainAndDependentResource")
+        val mainAndDependentResourcePropVar: QueryVariable = QueryVariable("mainAndDependentResourceProp")
+        val mainAndDependentResourceObjectVar: QueryVariable = QueryVariable("mainAndDependentResourceObj")
+        val mainAndDependentResourceValueObject: QueryVariable = QueryVariable("mainAndDependentResourceValueObject")
+        val mainAndDependentResourceValueProp: QueryVariable = QueryVariable("mainAndDependentResourceValueProp")
+        val mainAndDependentResourceValueObjectProp: QueryVariable = QueryVariable("mainAndDependentResourceValueObjectProp")
+        val mainAndDependentResourceValueObjectObj: QueryVariable = QueryVariable("mainAndDependentResourceValueObjectObj")
 
-        val standoffNodeVar = QueryVariable("standoffNode")
-        val standoffPropVar = QueryVariable("standoffProp")
-        val standoffValueVar = QueryVariable("standoffValue")
+        val standoffNodeVar: QueryVariable = QueryVariable("standoffNode")
+        val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
+        val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
 
-        val forbiddenResourceIri = "http://data.knora.org/permissions/forbiddenResource"
+        val forbiddenResourceIri: IRI = s"http://${KnoraIdUtil.IriDomain}/permissions/forbiddenResource"
 
     }
 
 }
 
 class SearchResponderV2 extends ResponderWithStandoffV2 {
-
-    val knoraIdUtil = new KnoraIdUtil
 
     def receive = {
         case FullTextSearchCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, userProfile), log)
@@ -143,7 +141,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // convert external Iris to internal Iris if needed
 
             entity match {
-                case iriRef: IriRef => // if an Iri is an external knora-api entity (with value object or simple), convert it to an internal Iri
+                case iriRef: IriRef => // if an Iri is an external knora-api entity (assumed to be API v2 simple because otherwise the KnarQL parser would have rejected it), convert it to an internal Iri
                     if (iriRef.iri.isKnoraApiV2EntityIri) {
                         IriRef(iriRef.iri.toOntologySchema(InternalSchema))
                     } else {
@@ -694,7 +692,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                     case OntologyConstants.KnoraApiV2Simple.Date =>
 
                                         // make sure that the right argument is a string literal (dates are represented as knora date strings in knora-api simple)
-                                        val dateStringLiteral: _root_.org.knora.webapi.util.search.XsdLiteral = filterCompare.rightArg match {
+                                        val dateStringLiteral: XsdLiteral = filterCompare.rightArg match {
                                             case dateStrLiteral: XsdLiteral if dateStrLiteral.datatype.toString == OntologyConstants.Xsd.String => dateStrLiteral
 
                                             case other => throw SparqlSearchException(s"right argument in CompareExpression for date property was expected to be a string literal representing a date, but $other is given.")
@@ -1399,7 +1397,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             // Do type inspection and remove type annotations from the WHERE clause.
 
-            typeInspector <- FastFuture.successful(new ExplicitTypeInspectorV2(apiSchema))
+            typeInspector <- FastFuture.successful(new ExplicitTypeInspectorV2())
             whereClauseWithoutAnnotations: WhereClause = typeInspector.removeTypeAnnotations(inputQuery.whereClause)
             typeInspectionResult: TypeInspectionResult = typeInspector.inspectTypes(inputQuery.whereClause)
 
@@ -1460,11 +1458,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def extendedSearchV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
-
-        if (apiSchema != ApiV2Simple) {
-            throw SparqlSearchException("Only api v2 simple is supported in v2 extended search")
-        }
+    private def extendedSearchV2(inputQuery: ConstructQuery, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         /**
           * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -1850,7 +1844,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         for {
         // Do type inspection and remove type annotations from the WHERE clause.
 
-            typeInspector <- FastFuture.successful(new ExplicitTypeInspectorV2(apiSchema))
+            typeInspector <- FastFuture.successful(new ExplicitTypeInspectorV2())
             whereClauseWithoutAnnotations: WhereClause = typeInspector.removeTypeAnnotations(inputQuery.whereClause)
             typeInspectionResult: TypeInspectionResult = typeInspector.inspectTypes(inputQuery.whereClause)
 

@@ -152,20 +152,22 @@ object SearchParserV2 {
             throw SparqlSearchException(s"SPARQL feature not supported in search query: $node")
         }
 
-        private def makeIri(rdf4jIri: rdf4j.model.IRI): IriRef = {
-            val smartIri: SmartIri = rdf4jIri.stringValue.toSmartIriWithErr(() => throw SparqlSearchException(s"Invalid IRI: ${rdf4jIri.stringValue}"))
-
+        private def checkIriSchema(smartIri: SmartIri): Unit = {
             if (smartIri.isKnoraOntologyIri) {
                 throw SparqlSearchException(s"Ontology IRI not allowed in search query: $smartIri")
             }
 
-            if (smartIri.isKnoraDefinitionIri) {
+            if (smartIri.isKnoraEntityIri) {
                 smartIri.getOntologySchema match {
                     case Some(ApiV2Simple) => ()
                     case _ => throw SparqlSearchException(s"Ontology schema not allowed in search query: $smartIri")
                 }
             }
+        }
 
+        private def makeIri(rdf4jIri: rdf4j.model.IRI): IriRef = {
+            val smartIri: SmartIri = rdf4jIri.stringValue.toSmartIriWithErr(() => throw SparqlSearchException(s"Invalid IRI: ${rdf4jIri.stringValue}"))
+            checkIriSchema(smartIri)
             IriRef(smartIri)
         }
 
@@ -193,7 +195,12 @@ object SearchParserV2 {
             if (objVar.isAnonymous || objVar.isConstant) {
                 objVar.getValue match {
                     case iri: rdf4j.model.IRI => makeIri(iri)
-                    case literal: rdf4j.model.Literal => XsdLiteral(value = literal.stringValue, datatype = literal.getDatatype.stringValue.toSmartIriWithErr(() => throw SparqlSearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}")))
+
+                    case literal: rdf4j.model.Literal =>
+                        val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(() => throw SparqlSearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
+                        checkIriSchema(datatype)
+                        XsdLiteral(value = literal.stringValue, datatype = datatype)
+
                     case other => throw SparqlSearchException(s"Invalid object for triple patterns: $other")
                 }
             } else {
@@ -592,7 +599,11 @@ object SearchParserV2 {
                     case valueConstant: algebra.ValueConstant =>
                         valueConstant.getValue match {
                             case iri: rdf4j.model.IRI => makeIri(iri)
-                            case literal: rdf4j.model.Literal => XsdLiteral(value = literal.stringValue, datatype = literal.getDatatype.stringValue.toSmartIriWithErr(() => throw SparqlSearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}")))
+
+                            case literal: rdf4j.model.Literal =>
+                                val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(() => throw SparqlSearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
+                                checkIriSchema(datatype)
+                                XsdLiteral(value = literal.stringValue, datatype = datatype)
                             case other => throw SparqlSearchException(s"Unsupported ValueConstant: $other with class ${other.getClass.getName}")
                         }
 

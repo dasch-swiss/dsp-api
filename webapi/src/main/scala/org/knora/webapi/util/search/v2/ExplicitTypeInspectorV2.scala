@@ -34,10 +34,8 @@ import org.knora.webapi.util.{SmartIri, StringFormatter}
   * 1. For every variable or IRI representing a property, there must be a triple whose subject is the variable or
   * property IRI, whose predicate is `knora-api:objectType`, and whose object is an IRI representing the type
   * of object that is required by the property.
-  *
-  * @param apiType specifies which API schema is being used in the search query.
   */
-class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
+class ExplicitTypeInspectorV2 extends TypeInspector {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
@@ -94,10 +92,6 @@ class ExplicitTypeInspectorV2(apiType: ApiV2Schema) extends TypeInspector {
       * @param typeIri        the type IRI that was given in the annotation.
       */
     private case class ExplicitAnnotationV2Simple(typeableEntity: TypeableEntity, annotationProp: TypeAnnotationPropertiesV2.Value, typeIri: SmartIri)
-
-    if (apiType != ApiV2Simple) {
-        throw NotImplementedException("Type inspection with value objects is not yet implemented")
-    }
 
     def inspectTypes(whereClause: WhereClause): TypeInspectionResult = {
         val maybeTypedEntities = collection.mutable.Map.empty[TypeableEntity, Option[SparqlEntityTypeInfo]]

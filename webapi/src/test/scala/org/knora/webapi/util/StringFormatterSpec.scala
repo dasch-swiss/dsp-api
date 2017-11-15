@@ -503,6 +503,25 @@ class StringFormatterSpec extends CoreSpec() {
                 internalEntityIri.getProjectCode.isEmpty)
         }
 
+        "convert http://www.knora.org/ontology/knora-base#TextValue to http://www.w3.org/2001/XMLSchema#string" in {
+            val internalEntityIri = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri
+            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) &&
+                internalEntityIri.isKnoraInternalEntityIri &&
+                internalEntityIri.isKnoraBuiltInDefinitionIri &&
+                internalEntityIri.getProjectCode.isEmpty)
+
+            val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Simple)
+            assert(externalEntityIri.toString == "http://www.w3.org/2001/XMLSchema#string" && !externalEntityIri.isKnoraIri)
+        }
+
+        "not change http://www.w3.org/2001/XMLSchema#string when converting to InternalSchema" in {
+            val externalEntityIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
+            assert(!externalEntityIri.isKnoraIri)
+
+            val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
+            assert(internalEntityIri.toString == externalEntityIri.toString && !externalEntityIri.isKnoraIri)
+        }
+
         "parse http://rdfh.ch/0000/0123456789abcdef" in {
             val dataIri = "http://rdfh.ch/0000/0123456789abcdef".toSmartIri
             assert(dataIri.isKnoraDataIri)
@@ -664,8 +683,7 @@ class StringFormatterSpec extends CoreSpec() {
             assert(isResource)
         }
 
-        /*
-        "convert 100,000 IRIs" in {
+        "convert 100,000 IRIs" ignore {
             val totalIris = 100000
 
             val parseStart = System.currentTimeMillis
@@ -693,7 +711,6 @@ class StringFormatterSpec extends CoreSpec() {
 
             println(s"Retrieve time $retrieveDuration ms, time per IRI $retrieveDurationPerIri")
         }
-        */
 
         "return the data named graph of a project without short code" in {
             val shortname = SharedAdminTestData.incunabulaProjectInfo.shortname
