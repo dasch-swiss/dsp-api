@@ -28,6 +28,7 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.admin.responder.listadminmessages
 import org.knora.webapi.messages.admin.responder.listadminmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
@@ -4269,23 +4270,21 @@ class ListsAdminE2ESpec extends E2ESpec(ListsAdminE2ESpec.config) with SessionJs
         "used to query information about lists" should {
 
             "return all lists" in {
-                val request = Get(baseApiUrl + s"/v2/lists") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val request = Get(baseApiUrl + s"/admin/lists") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 log.debug(s"response: ${response.toString}")
 
                 response.status should be(StatusCodes.OK)
 
-                // val expanded: Map[String, Any] = AkkaHttpUtils.httpResponseToJsonLDExpanded(response)
-                // log.debug("expanded: {}", expanded.toString)
+                val lists: Seq[ListNodeInfo] = AkkaHttpUtils.httpResponseToJson(response).fields("items").convertTo[Seq[ListNodeInfo]]
 
-                // val converted: ReadListsSequenceV2 = expanded.convertToV2[ReadListsSequenceV2]
-                // log.debug("converted: {}", converted)
+                // log.debug("lists: {}", lists)
 
-                // converted.items.size should be (6)
+                lists.size should be (6)
             }
 
             "return all lists belonging to the images project" in {
-                val request = Get(baseApiUrl + s"/v2/lists?projectIri=http%3A%2F%2Fdata.knora.org%2Fprojects%2Fimages") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val request = Get(baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Fdata.knora.org%2Fprojects%2Fimages") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 log.debug(s"response: ${response.toString}")
 
@@ -4301,7 +4300,7 @@ class ListsAdminE2ESpec extends E2ESpec(ListsAdminE2ESpec.config) with SessionJs
             }
 
             "return basic list node information" in {
-                val request = Get(baseApiUrl + s"/v2/lists/nodes/http%3A%2F%2Fdata.knora.org%2Flists%2F73d0ec0302") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val request = Get(baseApiUrl + s"/admin/lists/nodes/http%3A%2F%2Fdata.knora.org%2Flists%2F73d0ec0302") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 log.debug(s"response: ${response.toString}")
 
@@ -4327,7 +4326,7 @@ class ListsAdminE2ESpec extends E2ESpec(ListsAdminE2ESpec.config) with SessionJs
             }
 
             "return a complete list" in {
-                val request = Get(baseApiUrl + s"/v2/lists/http%3A%2F%2Fdata.knora.org%2Flists%2F73d0ec0302") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Fdata.knora.org%2Flists%2F73d0ec0302") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 log.debug(s"response: ${response.toString}")
 

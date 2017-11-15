@@ -257,51 +257,7 @@ case class ListChildNode(id: IRI, name: Option[String], labels: Seq[StringV2], c
   * @param value    the string value.
   * @param language the optional language tag.
   */
-case class StringV2(value: String, language: Option[String] = None) {
-
-    /**
-      * Returns the string representation.
-      *
-      * @return
-      */
-    override def toString: String = {
-        if (language.nonEmpty) {
-            "StringV2(%s, %s)".format(value, language.get)
-        } else {
-            value
-        }
-    }
-
-    /**
-      * Returns the value as an integer.
-      *
-      * @return
-      */
-    def toInt: Int = value.toInt
-
-    /**
-      * Returns the value as an IRI.
-      *
-      * @return
-      */
-    def toIri: IRI = value
-
-    /**
-      * Returns a java object.
-      *
-      * @return
-      */
-    def toJsonLDValue: JsonLDValue = {
-        if (language.nonEmpty) {
-            JsonLDObject(Map(
-                "@language" -> JsonLDString(language.get),
-                "@value" -> JsonLDString(value)
-            ))
-        } else {
-            JsonLDString(value)
-        }
-    }
-}
+case class StringV2(value: String, language: Option[String] = None)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -336,9 +292,22 @@ trait ListAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
         }
 
         /**
-          * Not implemented.
+          * Converts a [[JsValue]] to a [[StringV2]].
+          *
+          * @param json a [[JsValue]].
+          * @return a [[StringV2]].
           */
-        def read(value: JsValue): StringV2 = ???
+        def read(json: JsValue): StringV2 = json match {
+            case stringWithLang: JsObject => stringWithLang.getFields("value", "language") match {
+                case Seq(JsString(value), JsString(language)) => StringV2(
+                    value = value,
+                    language = Some(language)
+                )
+                case _ => throw DeserializationException("JSON object with 'value' and 'language' fields expected.")
+            }
+            case JsString(value) => StringV2(value, None)
+            case _ => throw DeserializationException("Either a JSON object with 'value' and 'language', or plain string expected. ")
+        }
     }
 
     implicit object ListNodeInfoFormat extends JsonFormat[ListNodeInfo] {
@@ -349,35 +318,92 @@ trait ListAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
           * @return a [[JsValue]].
           */
         def write(nodeInfo: ListNodeInfo): JsValue = {
-            // Do we have a Root of Child node
+            // Do we have a Root or Child node?
             nodeInfo match {
                 case rootNode: ListRootNodeInfo => {
-                    val fields = Map (
+                    JsObject(
                         "id" -> rootNode.id.toJson,
                         "projectIri" -> rootNode.projectIri.toJson,
                         "labels" -> JsArray(rootNode.labels.map(_.toJson).toVector),
                         "comments" -> JsArray(rootNode.comments.map(_.toJson).toVector)
                     )
-                    JsObject(fields)
                 }
                 case childNode: ListChildNodeInfo => {
-                    val fields = Map (
+                    JsObject(
                         "id" -> childNode.id.toJson,
                         "name" -> childNode.name.toJson,
                         "labels" -> JsArray(childNode.labels.map(_.toJson).toVector),
                         "comments" -> JsArray(childNode.comments.map(_.toJson).toVector),
                         "position" -> childNode.position.toJson
                     )
-                    JsObject(fields)
                 }
                 case _ => throw NotImplementedException("Only ListRootNodeInfo or ListChildNodeInfo types are allowed.") // "Only ListRootNodeInfo or ListChildNodeInfo types are allowed.")
             }
         }
 
         /**
-          * Not implemented.
+          * Converts a [[JsValue]] to a [[ListNodeInfo]].
+          *
+          * @param value a [[JsValue]].
+          * @return a [[ListNodeInfo]].
           */
-        def read(value: JsValue): ListNodeInfo = ???
+        def read(value: JsValue): ListNodeInfo = {
+
+            val fields = value.asJsObject.fields
+
+            if (fields.get("projectIri").isDefined) {
+                // root node
+
+                val id = fields.getOrElse("id", throw DeserializationException("The expected field 'id' is missing.")).convertTo[String]
+                val projectIri: Option[IRI] = fields.get("projectIri").map(_.convertTo[String])
+                val labels = fields.get("labels") match {
+                    case Some(JsArray(values)) => values.map(_.convertTo[StringV2])
+                    case None => Seq.empty[StringV2]
+                    case _ => throw DeserializationException("The expected field 'labels' is in the wrong format.")
+                }
+                val comments = fields.get("comments") match {
+                    case Some(JsArray(values)) => values.map(_.convertTo[StringV2])
+                    case None => Seq.empty[StringV2]
+                    case _ => throw DeserializationException("The expected field 'comments' is in the wrong format.")
+                }
+
+                ListRootNodeInfo(
+                    id = id,
+                    projectIri = projectIri,
+                    labels = labels,
+                    comments = comments
+                )
+
+
+            } else {
+                // child node
+
+                val id = fields.getOrElse("id", throw DeserializationException("The expected field 'id' is missing.")).convertTo[String]
+                val name = fields.get("name").map(_.convertTo[String])
+                val labels = fields.get("labels") match {
+                    case Some(JsArray(values)) => values.map(_.convertTo[StringV2])
+                    case None => Seq.empty[StringV2]
+                    case _ => throw DeserializationException("The expected field 'labels' is in the wrong format.")
+                }
+
+                val comments = fields.get("comments") match {
+                    case Some(JsArray(values)) => values.map(_.convertTo[StringV2])
+                    case None => Seq.empty[StringV2]
+                    case _ => throw DeserializationException("The expected field 'comments' is in the wrong format.")
+                }
+
+                val position = fields.get("position").map(_.convertTo[Int])
+
+                ListChildNodeInfo(
+                    id = id,
+                    name = name,
+                    labels = labels,
+                    comments = comments,
+                    position = position
+                )
+            }
+
+        }
     }
 
     implicit object ListNodeFormat extends JsonFormat[ListNode] {
@@ -391,17 +417,16 @@ trait ListAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
             // Do we have a Root of Child node
             node match {
                 case rootNode: ListRootNode => {
-                    val fields = Map (
+                    JsObject(
                         "id" -> rootNode.id.toJson,
                         "projectIri" -> rootNode.projectIri.toJson,
                         "labels" -> JsArray(rootNode.labels.map(_.toJson).toVector),
                         "comments" -> JsArray(rootNode.comments.map(_.toJson).toVector),
                         "children" -> JsArray(rootNode.children.map(write).toVector)
                     )
-                    JsObject(fields)
                 }
                 case childNode: ListChildNode => {
-                    val fields = Map (
+                    JsObject(
                         "id" -> childNode.id.toJson,
                         "name" -> childNode.name.toJson,
                         "labels" -> JsArray(childNode.labels.map(_.toJson).toVector),
@@ -409,21 +434,93 @@ trait ListAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
                         "children" -> JsArray(childNode.children.map(write).toVector),
                         "position" -> childNode.position.toJson
                     )
-                    JsObject(fields)
                 }
                 case _ => throw NotImplementedException("Only ListRootNodeInfo or ListChildNodeInfo types are allowed.") // "Only ListRootNodeInfo or ListChildNodeInfo types are allowed.")
             }
         }
 
         /**
-          * Not implemented.
+          * Converts a [[JsValue]] to a [[ListNode]].
+          *
+          * @param value a [[JsValue]].
+          * @return a [[ListNode]].
           */
-        def read(value: JsValue): ListNode = ???
+        def read(value: JsValue): ListNode = {
+
+            val fields = value.asJsObject.fields
+
+            if (fields.get("projectIri").isDefined) {
+                // root node
+
+                val id = fields.getOrElse("id", throw DeserializationException("The expected field 'id' is missing.")).convertTo[String]
+                val projectIri: Option[IRI] = fields.get("projectIri").map(_.convertTo[String])
+                val labels = fields.get("labels") match {
+                    case Some(JsArray(values)) => values.map(_.convertTo[StringV2])
+                    case None => Seq.empty[StringV2]
+                    case _ => throw DeserializationException("The expected field 'labels' is in the wrong format.")
+                }
+                val comments = fields.get("comments") match {
+                    case Some(JsArray(values)) => values.map(_.convertTo[StringV2])
+                    case None => Seq.empty[StringV2]
+                    case _ => throw DeserializationException("The expected field 'comments' is in the wrong format.")
+                }
+
+                val children: Seq[ListChildNode] = fields.get("children") match {
+                    case Some(JsArray(values)) => values.map(read).map(_.asInstanceOf[ListChildNode])
+                    case None => Seq.empty[ListChildNode]
+                    case _ => throw DeserializationException("The expected field 'children' is in the wrong format.")
+                }
+
+                ListRootNode(
+                    id = id,
+                    projectIri = projectIri,
+                    labels = labels,
+                    comments = comments,
+                    children = children
+                )
+
+
+            } else {
+                // child node
+
+                val id = fields.getOrElse("id", throw DeserializationException("The expected field 'id' is missing.")).convertTo[String]
+                val name = fields.get("name").map(_.convertTo[String])
+                val labels = fields.get("labels") match {
+                    case Some(JsArray(values)) => values.map(_.convertTo[StringV2])
+                    case None => Seq.empty[StringV2]
+                    case _ => throw DeserializationException("The expected field 'labels' is in the wrong format.")
+                }
+
+                val comments = fields.get("comments") match {
+                    case Some(JsArray(values)) => values.map(_.convertTo[StringV2])
+                    case None => Seq.empty[StringV2]
+                    case _ => throw DeserializationException("The expected field 'comments' is in the wrong format.")
+                }
+
+                val children: Seq[ListChildNode] = fields.get("children") match {
+                    case Some(JsArray(values)) => values.map(read).map(_.asInstanceOf[ListChildNode])
+                    case None => Seq.empty[ListChildNode]
+                    case _ => throw DeserializationException("The expected field 'children' is in the wrong format.")
+                }
+
+                val position = fields.get("position").map(_.convertTo[Int])
+
+                ListChildNode(
+                    id = id,
+                    name = name,
+                    labels = labels,
+                    comments = comments,
+                    children = children,
+                    position = position
+                )
+            }
+
+        }
     }
 
 
-    implicit val nodePathGetAdminResponseFormat: RootJsonFormat[NodePathGetAdminResponse] = jsonFormat1(NodePathGetAdminResponse)
-    implicit val listsGetAdminResponseFormat: RootJsonFormat[ListsGetAdminResponse] = jsonFormat1(ListsGetAdminResponse)
-    implicit val listGetAdminResponseFormat: RootJsonFormat[ListGetAdminResponse] = jsonFormat1(ListGetAdminResponse)
-    implicit val listNodeInfoGetAdminResponseFormat: RootJsonFormat[ListNodeInfoGetAdminResponse] = jsonFormat1(ListNodeInfoGetAdminResponse)
+    implicit val nodePathGetAdminResponseFormat: RootJsonFormat[NodePathGetAdminResponse] = jsonFormat(NodePathGetAdminResponse, "nodelist")
+    implicit val listsGetAdminResponseFormat: RootJsonFormat[ListsGetAdminResponse] = jsonFormat(ListsGetAdminResponse, "items")
+    implicit val listGetAdminResponseFormat: RootJsonFormat[ListGetAdminResponse] = jsonFormat(ListGetAdminResponse, "list")
+    implicit val listNodeInfoGetAdminResponseFormat: RootJsonFormat[ListNodeInfoGetAdminResponse] = jsonFormat(ListNodeInfoGetAdminResponse, "nodeinfo")
 }

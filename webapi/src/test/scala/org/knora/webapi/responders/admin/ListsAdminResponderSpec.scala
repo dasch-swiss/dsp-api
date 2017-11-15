@@ -74,12 +74,11 @@ class ListsAdminResponderSpec extends CoreSpec(ListsAdminResponderSpec.config) w
     private val userData = userProfile.userData
 
 
-    private val keywordRootNode = ListRootNode (
+    private val listNodeInfo: ListNodeInfo = ListRootNodeInfo (
         id = "http://data.knora.org/lists/73d0ec0302",
         projectIri = Some("http://rdfh.ch/projects/00FF"),
         labels = Seq(StringV2("Title", Some("en")), StringV2("Titel", Some("de")), StringV2("Titre", Some("fr"))),
-        comments = Seq(StringV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de"))),
-        children = Seq.empty[ListChildNode]
+        comments = Seq(StringV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
     )
 
     private val keywordChildNodes: Seq[ListChildNode] = Seq.empty[ListChildNode]
@@ -4246,7 +4245,7 @@ class ListsAdminResponderSpec extends CoreSpec(ListsAdminResponderSpec.config) w
                     value = "Titre"
                 )
             ),
-            projectIri = Some("http://data.knora.org/projects/images"),
+            projectIri = Some("http://rdfh.ch/projects/00FF"),
             id = "http://data.knora.org/lists/73d0ec0302"
         )
 
@@ -4339,7 +4338,7 @@ class ListsAdminResponderSpec extends CoreSpec(ListsAdminResponderSpec.config) w
 
                 // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
 
-                received.nodeinfo.sorted should be(keywordRootNode.sorted)
+                received.nodeinfo.sorted should be(listNodeInfo.sorted)
             }
 
             "return an extended list response" in {
