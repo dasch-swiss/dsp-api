@@ -1628,15 +1628,6 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     isAscending = true
                 )
 
-                // dependent resource variables as order by criteria
-                val orderByDependentResVars: Seq[OrderCriterion] = dependentResourceVariables.map {
-                    (resVar: QueryVariable) =>
-                        OrderCriterion(
-                            queryVariable = resVar,
-                            isAscending = true
-                        )
-                }.toSeq
-
                 // order by: user provided variables and main resource variable
                 // all variables present in the GROUP BY must be included in the order by statements to make the results predictable for paging
                 transformedOrderBy.copy(
