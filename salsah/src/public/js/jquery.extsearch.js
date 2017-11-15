@@ -747,8 +747,11 @@
 								break;
 							}
 							default: {
-								searchval.push("empty"); // must be!!!
+								searchval.push(""); // must be!!!
 							}
+						}
+						if (!searchval[0]) {
+							searchval[0] = "";
 						}
 					});
 
