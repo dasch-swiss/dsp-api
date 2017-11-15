@@ -18,21 +18,19 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v2
-
+package org.knora.webapi.responders.admin
 
 import akka.actor.Props
 import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
+import SharedAdminTestData._
 import org.knora.webapi.messages.admin.responder.listadminmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.messages.v2.responder.listmessages._
 import org.knora.webapi.responders._
-import org.knora.webapi.responders.admin.ListsAdminResponder
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.util.{MessageUtil, MutableTestIri}
+import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
 
@@ -40,7 +38,7 @@ import scala.concurrent.duration._
 /**
   * Static data for testing [[ListsAdminResponder]].
   */
-object ListsResponderV2Spec {
+object ListsAdminResponderSpec {
     val config: Config = ConfigFactory.parseString(
         """
          akka.loglevel = "DEBUG"
@@ -51,7 +49,7 @@ object ListsResponderV2Spec {
 /**
   * Tests [[ListsAdminResponder]].
   */
-class ListsResponderV2Spec extends CoreSpec(ListsResponderV2Spec.config) with ImplicitSender {
+class ListsAdminResponderSpec extends CoreSpec(ListsAdminResponderSpec.config) with ImplicitSender {
 
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[ListsAdminResponder]
@@ -65,7 +63,7 @@ class ListsResponderV2Spec extends CoreSpec(ListsResponderV2Spec.config) with Im
     implicit val timeout = 5.seconds
 
     val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
 
@@ -78,7 +76,7 @@ class ListsResponderV2Spec extends CoreSpec(ListsResponderV2Spec.config) with Im
 
     private val keywordRootNode = ListRootNode (
         id = "http://data.knora.org/lists/73d0ec0302",
-        projectIri = Some("http://data.knora.org/projects/images"),
+        projectIri = Some("http://rdfh.ch/projects/00FF"),
         labels = Seq(StringV2("Title", Some("en")), StringV2("Titel", Some("de")), StringV2("Titre", Some("fr"))),
         comments = Seq(StringV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de"))),
         children = Seq.empty[ListChildNode]
@@ -4316,15 +4314,15 @@ class ListsResponderV2Spec extends CoreSpec(ListsResponderV2Spec.config) with Im
             "return all lists" in {
                 actorUnderTest ! ListsGetAdminRequest(userProfile = userProfile)
 
-                val received: ReadListsSequenceV2 = expectMsgType[ReadListsSequenceV2](timeout)
+                val received: ListsGetAdminResponse = expectMsgType[ListsGetAdminResponse](timeout)
 
                 received.items.size should be(6)
             }
 
             "return all lists belonging to the images project" in {
-                actorUnderTest ! ListsGetAdminRequest(projectIri = Some(SharedAdminTestData.IMAGES_PROJECT_IRI), userProfile = userProfile)
+                actorUnderTest ! ListsGetAdminRequest(projectIri = Some(IMAGES_PROJECT_IRI), userProfile = userProfile)
 
-                val received: ReadListsSequenceV2 = expectMsgType[ReadListsSequenceV2](timeout)
+                val received: ListsGetAdminResponse = expectMsgType[ListsGetAdminResponse](timeout)
 
                 // log.debug("received: " + received)
 
@@ -4337,11 +4335,11 @@ class ListsResponderV2Spec extends CoreSpec(ListsResponderV2Spec.config) with Im
                     userProfile = userProfile
                 )
 
-                val received: ReadListsSequenceV2 = expectMsgType[ReadListsSequenceV2](timeout)
+                val received: ListNodeInfoGetAdminResponse = expectMsgType[ListNodeInfoGetAdminResponse](timeout)
 
                 // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
 
-                received.items.head.sorted should be(keywordRootNode.sorted)
+                received.nodeinfo.sorted should be(keywordRootNode.sorted)
             }
 
             "return an extended list response" in {
@@ -4350,11 +4348,11 @@ class ListsResponderV2Spec extends CoreSpec(ListsResponderV2Spec.config) with Im
                     userProfile = userProfile
                 )
 
-                val received: ReadListsSequenceV2 = expectMsgType[ReadListsSequenceV2](timeout)
+                val received: ListGetAdminResponse = expectMsgType[ListGetAdminResponse](timeout)
 
                 // log.debug("returned whole keyword list: {}", MessageUtil.toSource(received.items.head))
 
-                received.items.head.sorted should be(keywordList.sorted)
+                received.list.sorted should be(keywordList.sorted)
             }
         }
 

@@ -97,8 +97,8 @@
     <logger name="org.knora.webapi.routing.v1.AuthenticationV1R2RSpec" level="INFO"/>
 
     <!-- V2 -->
-    <logger name="org.knora.webapi.responders.v2.ListsResponderV2Spec" level="DEBUG"/>
-    <logger name="org.knora.webapi.e2e.v2.ListsV2E2ESpec" level="DEBUG"/>
+    <logger name="org.knora.webapi.responders.admin.ListsAdminResponderSpec" level="DEBUG"/>
+    <logger name="org.knora.webapi.e2e.admin.ListsAdminE2ESpec" level="DEBUG"/>
     
     <!-- Admin -->
     <logger name="org.knora.webapi.responders.admin.ListsAdminResponder" level="DEBUG"/>

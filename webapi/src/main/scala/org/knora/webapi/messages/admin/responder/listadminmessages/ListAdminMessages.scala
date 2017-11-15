@@ -20,11 +20,9 @@ package org.knora.webapi.messages.admin.responder.listadminmessages
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.{KnoraAdminRequest, KnoraAdminResponse}
-import org.knora.webapi.messages.v1.responder.listmessages.ListNodeV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.util.jsonld.{JsonLDObject, JsonLDString, JsonLDValue}
-import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, NullOptions, RootJsonFormat}
-import spray.json._
+import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, NullOptions, RootJsonFormat, _}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -132,7 +130,9 @@ case class NodePathGetAdminResponse(nodelist: Seq[ListNode]) extends KnoraAdminR
   * @param labels   the labels of the node in all available languages.
   * @param comments the comments attached to the node in all available languages.
   */
-sealed abstract class ListNodeInfo(id: IRI, labels: Seq[StringV2], comments: Seq[StringV2])
+sealed abstract class ListNodeInfo(id: IRI, labels: Seq[StringV2], comments: Seq[StringV2]) {
+    def sorted: ListNodeInfo
+}
 
 /**
   * Represents basic information about a list. This information is stored in the list's root node.
@@ -142,7 +142,21 @@ sealed abstract class ListNodeInfo(id: IRI, labels: Seq[StringV2], comments: Seq
   * @param labels     the labels of the list in all available languages.
   * @param comments   the comments attached to the list in all available languages.
   */
-case class ListRootNodeInfo(id: IRI, projectIri: Option[IRI], labels: Seq[StringV2], comments: Seq[StringV2]) extends ListNodeInfo(id, labels, comments)
+case class ListRootNodeInfo(id: IRI, projectIri: Option[IRI], labels: Seq[StringV2], comments: Seq[StringV2]) extends ListNodeInfo(id, labels, comments) {
+    /**
+      * Sorts the whole hierarchy.
+      *
+      * @return a sorted [[ListRootNode]].
+      */
+    override def sorted: ListRootNodeInfo = {
+        ListRootNodeInfo(
+            id = id,
+            projectIri = projectIri,
+            labels = labels.sortBy(_.value),
+            comments = comments.sortBy(_.value)
+        )
+    }
+}
 
 /**
   * Represents basic information about a list node. This information which is found in the list's child node.
@@ -153,7 +167,22 @@ case class ListRootNodeInfo(id: IRI, projectIri: Option[IRI], labels: Seq[String
   * @param comments the comments attached to the node in all available languages.
   * @param position the position of the node among its siblings (optional).
   */
-case class ListChildNodeInfo(id: IRI, name: Option[String], labels: Seq[StringV2], comments: Seq[StringV2], position: Option[Int]) extends ListNodeInfo(id, labels, comments)
+case class ListChildNodeInfo(id: IRI, name: Option[String], labels: Seq[StringV2], comments: Seq[StringV2], position: Option[Int]) extends ListNodeInfo(id, labels, comments) {
+    /**
+      * Sorts the whole hierarchy.
+      *
+      * @return a sorted [[ListChildNodeInfo]].
+      */
+    override def sorted: ListChildNodeInfo = {
+        ListChildNodeInfo(
+            id = id,
+            name = name,
+            labels = labels.sortBy(_.value),
+            comments = comments.sortBy(_.value),
+            position = position
+        )
+    }
+}
 
 /**
   * An abstract class extended by `ListRootNode` and `ListChildNode`.

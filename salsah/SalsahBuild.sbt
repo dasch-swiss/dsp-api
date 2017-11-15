@@ -3,6 +3,7 @@ import sbt.Keys.{licenses, mainClass, mappings, _}
 import spray.revolver.RevolverPlugin._
 import com.typesafe.sbt.SbtNativePackager.autoImport._
 import com.typesafe.sbt.packager.MappingsHelper.{contentOf, directory}
+import spray.revolver.RevolverPlugin.autoImport.Revolver
 
 lazy val salsah = (project in file(".")).
         configs(

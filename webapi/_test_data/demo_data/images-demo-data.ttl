@@ -2677,7 +2677,7 @@
 <http://data.knora.org/lists/0702a01e01> a knora-base:ListNode ;
 	knora-base:isRootNode true ;
 	rdfs:label "Zugangsart"@de ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/00FF> ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/3f12a0130a> , <http://data.knora.org/lists/09abf9a009> , <http://data.knora.org/lists/a4de4cda09> .
 
 <http://data.knora.org/lists/07d74794cf> a knora-base:ListNode ;
@@ -3661,7 +3661,7 @@
 	knora-base:isRootNode true ;
 	rdfs:comment "Art des Bildes oder Photographie"@de ;
 	rdfs:label "Bildart"@de ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/00FF> ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/230a209905> , <http://data.knora.org/lists/88d6cc5f05> , <http://data.knora.org/lists/be3d73d205> , <http://data.knora.org/lists/8fd86c7e06> , <http://data.knora.org/lists/5971c60b06> , <http://data.knora.org/lists/f4a4194506> , <http://data.knora.org/lists/2a0cc0b706> , <http://data.knora.org/lists/c53f13f106> , <http://data.knora.org/lists/6073662a07> , <http://data.knora.org/lists/fba6b96307> , <http://data.knora.org/lists/96da0c9d07> , <http://data.knora.org/lists/310e60d607> , <http://data.knora.org/lists/cc41b30f08> , <http://data.knora.org/lists/6775064908> , <http://data.knora.org/lists/02a9598208> , <http://data.knora.org/lists/9ddcacbb08> , <http://data.knora.org/lists/381000f508> , <http://data.knora.org/lists/d343532e09> , <http://data.knora.org/lists/9f85063e11> , <http://data.knora.org/lists/6e77a66709> , <http://data.knora.org/lists/3ab9597711> .
 
 <http://data.knora.org/lists/6d2c3bd6e2> a knora-base:ListNode ;
@@ -3737,7 +3737,7 @@
 	knora-base:isRootNode true ;
 	rdfs:comment "Hierarchisches Stichwortverzeichnis / Signatur der Bilder"@de ;
 	rdfs:label "Titel"@de , "Title"@en , "Titre"@fr ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/00FF> ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/a8f4cd99a6> , <http://data.knora.org/lists/738fc745a7> , <http://data.knora.org/lists/4ca9e7d3b5> , <http://data.knora.org/lists/691eee1cbe> , <http://data.knora.org/lists/f05d010ec5> , <http://data.knora.org/lists/8693f465c6> , <http://data.knora.org/lists/7d99d4c1c9> , <http://data.knora.org/lists/4834ce6dca> , <http://data.knora.org/lists/71a1543cce> , <http://data.knora.org/lists/8d9fa100ea> .
 
 <http://data.knora.org/lists/749fb41dcd> a knora-base:ListNode ;
@@ -4643,7 +4643,7 @@
 <http://data.knora.org/lists/d19af9ab> a knora-base:ListNode ;
 	knora-base:isRootNode true ;
 	rdfs:label "Jahreszeit"@de , "Season"@en ;
-	knora-base:attachedToProject <http://data.knora.org/projects/images> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/00FF> ;
 	knora-base:hasSubListNode <http://data.knora.org/lists/526f26ed04> , <http://data.knora.org/lists/eda2792605> .
 
 <http://data.knora.org/lists/d1fa87bbe3> a knora-base:ListNode ;
