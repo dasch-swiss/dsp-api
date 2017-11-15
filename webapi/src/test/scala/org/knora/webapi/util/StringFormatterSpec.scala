@@ -597,24 +597,6 @@ class StringFormatterSpec extends CoreSpec() {
             }
         }
 
-        "reject http://www.knora.org/ontology/0000 (invalid shortcode)" in {
-            assertThrows[BadRequestException] {
-                "http://0.0.0.0:3333/ontology/0000/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
-            }
-        }
-
-        "reject http://0.0.0.0:3333/ontology/0000/v2 (invalid shortcode)" in {
-            assertThrows[BadRequestException] {
-                "http://0.0.0.0:3333/ontology/0000/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
-            }
-        }
-
-        "reject http://0.0.0.0:3333/ontology/0000/simple/v2 (invalid shortcode)" in {
-            assertThrows[BadRequestException] {
-                "http://0.0.0.0:3333/ontology/0000/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
-            }
-        }
-
         "reject http://www.knora.org/ontology/incunabula/v2 (wrong hostname)" in {
             assertThrows[BadRequestException] {
                 "http://www.knora.org/ontology/incunabula/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
@@ -645,7 +627,9 @@ class StringFormatterSpec extends CoreSpec() {
             }
         }
 
-        "reject http://0.0.0.0:3333/ontology/0000/v2 (invalid ontology name)" in {
+        "reject http://0.0.0.0:3333/ontology/0000/v2 (invalid ontology name)" ignore {
+            // TODO: Re-enable when #667 is resolved.
+
             assertThrows[BadRequestException] {
                 "http://0.0.0.0:3333/ontology/0000/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
             }
@@ -667,6 +651,17 @@ class StringFormatterSpec extends CoreSpec() {
             assertThrows[BadRequestException] {
                 "http://0.0.0.0:3333/ontology/0000/simple/simple/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
             }
+        }
+
+        "enable pattern matching with SmartIri" in {
+            val input: SmartIri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri
+
+            val isResource = input match {
+                case SmartIri(OntologyConstants.KnoraBase.Resource) => true
+                case _ => false
+            }
+
+            assert(isResource)
         }
 
         /*

@@ -263,15 +263,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @return query variable representing the main resource or None.
           */
         protected def isMainResourceVariable(statementPattern: StatementPattern): Option[QueryVariable] = {
-            val IsMainResourceInternal = OntologyConstants.KnoraBase.IsMainResource.toSmartIri
-
             statementPattern.pred match {
-                case iriRef: IriRef if iriRef.iri == IsMainResourceInternal =>
+                case IriRef(SmartIri(OntologyConstants.KnoraBase.IsMainResource), _) =>
+
                     statementPattern.obj match {
-                        case xsdLiteral: XsdLiteral if xsdLiteral.value.toBoolean && xsdLiteral.datatype == OntologyConstants.Xsd.Boolean.toSmartIri =>
+                        case XsdLiteral(value, SmartIri(OntologyConstants.Xsd.Boolean)) if value.toBoolean =>
                             statementPattern.subj match {
                                 case queryVariable: QueryVariable => Some(queryVariable)
-                                case _ => throw SparqlSearchException(s"The subject of ${IsMainResourceInternal.toOntologySchema(ApiV2WithValueObjects)} must be a variable")
+                                case _ => throw SparqlSearchException(s"The subject of ${OntologyConstants.KnoraApiV2Simple.IsMainResource} must be a variable")
                             }
 
                         case _ => None
@@ -290,13 +289,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           */
         protected def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, inputEntity: Entity): Seq[QueryPattern] = {
 
-            val typeIriInternal = if (nonPropertyTypeInfo.typeIri.isKnoraApiV2DefinitionIri) {
-                nonPropertyTypeInfo.typeIri.toOntologySchema(InternalSchema)
-            } else {
-                nonPropertyTypeInfo.typeIri
-            }
-
-            if (typeIriInternal == OntologyConstants.KnoraBase.Resource.toSmartIri) {
+            if (nonPropertyTypeInfo.typeIri == OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri) {
 
                 // inputEntity is either source or target of a linking property
                 // create additional statements in order to query permissions and other information for a resource
@@ -334,22 +327,15 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
         protected def convertStatementForPropertyType(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern): Seq[QueryPattern] = {
 
-            // convert the type information into an internal Knora Iri if possible
-            val objectIri = if (propertyTypeInfo.objectTypeIri.isKnoraApiV2DefinitionIri) {
-                propertyTypeInfo.objectTypeIri.toOntologySchema(InternalSchema)
-            } else {
-                propertyTypeInfo.objectTypeIri
-            }
-
-            objectIri.toString match {
-                case OntologyConstants.KnoraBase.Resource => {
+            propertyTypeInfo.objectTypeIri.toString match {
+                case OntologyConstants.KnoraApiV2Simple.Resource => {
                     // linking property
 
                     // make sure that the object is either an Iri or a variable (cannot be a literal)
                     statementPattern.obj match {
-                        case iriRef: IriRef => ()
-                        case queryVar: QueryVariable => ()
-                        case other => throw SparqlSearchException(s"Object of a linking statement must be an Iri or a QueryVariable, but $other given.")
+                        case _: IriRef => ()
+                        case _: QueryVariable => ()
+                        case other => throw SparqlSearchException(s"Object of a linking statement must be an IRI or a variable, but $other given.")
                     }
 
                     // we are given a linking property
@@ -390,7 +376,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     statementPattern +: linkValueStatements
                 }
 
-                case literalType: IRI => {
+                case _ => {
                     // value property
 
                     // make sure that the object is a query variable (literals are not supported yet)
@@ -568,18 +554,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                         // make sure that the comparison operator is a `CompareExpressionOperator.EQUALS`
                                         if (filterCompare.operator != CompareExpressionOperator.EQUALS) throw SparqlSearchException(s"Comparison operator in a CompareExpression for a property type is expected to be ${CompareExpressionOperator.EQUALS}, but ${filterCompare.operator} given. For negations use 'FILTER NOT EXISTS' ")
 
-                                        val objectTypeIriInternal = if (propInfo.objectTypeIri.isKnoraApiV2DefinitionIri) {
-                                            propInfo.objectTypeIri.toOntologySchema(InternalSchema)
-                                        } else {
-                                            propInfo.objectTypeIri
-                                        }
-
                                         val userProvidedRestriction = CompareExpression(queryVar, filterCompare.operator, iriRef)
 
                                         // check if the objectTypeIri of propInfo is knora-base:Resource
                                         // if so, it is a linking property and its link value property must be restricted too
-                                        objectTypeIriInternal.toString match {
-                                            case OntologyConstants.KnoraBase.Resource =>
+                                        propInfo.objectTypeIri.toString match {
+                                            case OntologyConstants.KnoraApiV2Simple.Resource =>
 
                                                 // it is a linking property, restrict the link value property
 
@@ -872,7 +852,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     private def transformKnoraExplicitToGraphDBExplicit(statement: StatementPattern): Seq[StatementPattern] = {
         val transformedPattern = statement.copy(
             namedGraph = statement.namedGraph match {
-                case Some(iriRef: IriRef) if iriRef.iri == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph.toSmartIri => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph.toSmartIri))
+                case Some(IriRef(SmartIri(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph), _)) => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph.toSmartIri))
                 case Some(IriRef(_, _)) => throw AssertionException(s"Named graphs other than ${OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph} cannot occur in non-triplestore-specific generated search query SPARQL")
                 case None => None
             }
@@ -1730,22 +1710,15 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         val propTypeInfo: PropertyTypeInfo = typeInspection.typedEntities(typeableEntity) match {
                             case propType: PropertyTypeInfo => propType
 
-                            case nonPropType: NonPropertyTypeInfo =>
+                            case _: NonPropertyTypeInfo =>
                                 throw SparqlSearchException(s"PropertyTypeInfo was expected for predicate ${statementPattern.pred} in type annotations, but NonPropertyTypeInfo given.")
 
                         }
 
-                        // convert the type information into an internal Knora Iri if possible
-                        val objectIri: SmartIri = if (propTypeInfo.objectTypeIri.isKnoraApiV2EntityIri) {
-                            propTypeInfo.objectTypeIri.toOntologySchema(InternalSchema)
-                        } else {
-                            propTypeInfo.objectTypeIri
-                        }
-
-                        val valueObjectVariable: Set[QueryVariable] = objectIri.toString match {
+                        val valueObjectVariable: Set[QueryVariable] = propTypeInfo.objectTypeIri.toString match {
 
                             // linking prop: get value object var and information which values are requested for dependent resource
-                            case OntologyConstants.KnoraBase.Resource =>
+                            case OntologyConstants.KnoraApiV2Simple.Resource =>
 
                                 // link value object variable
                                 val valObjVar = createUniqueVariableNameFromEntityAndProperty(statementPattern.obj, OntologyConstants.KnoraBase.LinkValue)

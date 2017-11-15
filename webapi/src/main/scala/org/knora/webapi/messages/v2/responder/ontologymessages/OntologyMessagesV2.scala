@@ -469,7 +469,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
 
 case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends KnoraResponseV2 {
 
-    def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyMetadataV2 = {
+    private def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyMetadataV2 = {
         copy(
             ontologies = ontologies.map(_.toOntologySchema(targetSchema))
         )

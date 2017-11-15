@@ -233,34 +233,6 @@ object StringFormatter {
 }
 
 /**
-  * Provides automatic conversion of IRI strings to [[SmartIri]] objects.
-  */
-object IriConversions {
-
-    implicit class ConvertibleIri(val self: IRI) extends AnyVal {
-        /**
-          * Converts an IRI string to a [[SmartIri]].
-          */
-        def toSmartIri(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIri(self)
-
-        /**
-          * Converts an IRI string to a [[SmartIri]]. If the string cannot be converted, a function is called to report
-          * the error. Use this function to parse IRIs from client input.
-          *
-          * @param errorFun A function that throws an exception. It will be called if the string cannot be converted.
-          */
-        def toSmartIriWithErr(errorFun: () => Nothing)(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIriWithErr(self, errorFun)
-
-        /**
-          * Converts an IRI string to a [[SmartIri]], verifying that the resulting [[SmartIri]] is a Knora internal definition IRI,
-          * and throwing [[DataConversionException]] otherwise.
-          */
-        def toKnoraInternalSmartIri(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIri(self, requireInternal = true)
-    }
-
-}
-
-/**
   * Represents a parsed IRI with Knora-specific functionality. To construct a `SmartIri`,
   * `import org.knora.webapi.util.IriConversions.ConvertibleIri`, then call one of the methods that
   * it implicitly defines on `String`, e.g.:
@@ -402,6 +374,42 @@ sealed trait SmartIri extends Ordered[SmartIri] {
     override def hashCode: Int = toString.hashCode
 
     def compare(that: SmartIri): Int = toString.compare(that.toString)
+}
+
+/**
+  * Provides `apply` and `unapply` methods to for `SmartIri`.
+  */
+object SmartIri {
+    def apply(iriStr: IRI)(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIri(iriStr)
+    def unapply(iri: SmartIri): Option[String] = Some(iri.toString)
+}
+
+/**
+  * Provides automatic conversion of IRI strings to [[SmartIri]] objects.
+  */
+object IriConversions {
+
+    implicit class ConvertibleIri(val self: IRI) extends AnyVal {
+        /**
+          * Converts an IRI string to a [[SmartIri]].
+          */
+        def toSmartIri(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIri(self)
+
+        /**
+          * Converts an IRI string to a [[SmartIri]]. If the string cannot be converted, a function is called to report
+          * the error. Use this function to parse IRIs from client input.
+          *
+          * @param errorFun A function that throws an exception. It will be called if the string cannot be converted.
+          */
+        def toSmartIriWithErr(errorFun: () => Nothing)(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIriWithErr(self, errorFun)
+
+        /**
+          * Converts an IRI string to a [[SmartIri]], verifying that the resulting [[SmartIri]] is a Knora internal definition IRI,
+          * and throwing [[DataConversionException]] otherwise.
+          */
+        def toKnoraInternalSmartIri(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIri(self, requireInternal = true)
+    }
+
 }
 
 /**
@@ -789,7 +797,14 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                 case None => ()
             }
 
-            prefix.append(getOntologyName).toString
+            val ontologyName = getOntologyName
+
+            // TODO: remove this when unil.ch have converted their ontology names to NCNames (#667).
+            if (!ontologyName(0).isLetter) {
+                prefix.append("onto")
+            }
+
+            prefix.append(ontologyName).toString
         }
 
         override def toOntologySchema(targetSchema: OntologySchema): SmartIri = {
@@ -1405,10 +1420,13 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @return the same ontology name.
       */
     def validateProjectSpecificOntologyName(ontologyName: String, errorFun: () => Nothing): String = {
+        // TODO: Uncomment this when unil.ch have renamed their ontologies to use NCNames (#667).
+        /*
         ontologyName match {
             case NCNameRegex(_*) => ()
             case _ => errorFun()
         }
+        */
 
         val lowerCaseOntologyName = ontologyName.toLowerCase
 

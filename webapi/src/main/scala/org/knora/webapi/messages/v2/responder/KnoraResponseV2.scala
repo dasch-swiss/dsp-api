@@ -674,7 +674,7 @@ object ReadResourceUtil {
     def createJsonLDObjectFromReadResourceV2(resource: ReadResourceV2, targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDObject = {
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        implicit val stringFormatter = StringFormatter.getGeneralInstance
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val values: Map[IRI, JsonLDArray] = resource.values.map {
             case (propIri: IRI, readValues: Seq[ReadValueV2]) =>
