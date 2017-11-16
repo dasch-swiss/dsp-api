@@ -750,7 +750,7 @@
 								searchval.push(""); // must be!!!
 							}
 						}
-						if (!searchval[0]) {
+						if (searchval[0] === undefined) {
 							searchval[0] = "";
 						}
 					});
