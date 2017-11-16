@@ -33,6 +33,15 @@ import org.knora.webapi.util.{DateUtilV2, SmartIri, StringFormatter}
 import org.knora.webapi.util.IriConversions._
 
 /**
+  * A trait for content classes that can convert themselves between internal and internal schemas.
+  *
+  * @tparam C the type of the content class that extends this trait.
+  */
+trait KnoraContentV2[C <: KnoraContentV2[C]] {
+    def toOntologySchema(targetSchema: OntologySchema): C
+}
+
+/**
   * The value of a Knora property in the context of some particular input or output operation.
   * Any implementation of `IOValueV2` is an API operation-specific wrapper of a `ValueContentV2`.
   */
@@ -66,12 +75,12 @@ case class UpdateValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IO
 /**
   * The content of the value of a Knora property.
   */
-sealed trait ValueContentV2 {
+sealed trait ValueContentV2 { // TODO: have this extend KnoraContentV2[ValueContentV2].
 
     /**
       * The IRI of the internal Knora value type (defined in the `knora-base` ontology) corresponding to the type of this `ValueContentV2`.
       */
-    def internalValueTypeIri: IRI
+    def internalValueTypeIri: IRI // TODO: Use a SmartIri.
 
     /**
       * The string representation of this `ValueContentV2`.
@@ -84,7 +93,7 @@ sealed trait ValueContentV2 {
     def comment: Option[String]
 
     /**
-      * A representation of the `ValueContentV2` a [[JsonLDValue]].
+      * A representation of the `ValueContentV2` as a [[JsonLDValue]].
       *
       * @param targetSchema the API schema to be used.
       * @param settings     the configuration options.

@@ -30,6 +30,7 @@ import org.joda.time.format.DateTimeFormat
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.JavaUtil.Optional
 import spray.json.JsonParser
@@ -240,7 +241,7 @@ object StringFormatter {
   * - "http://knora.example.org/ontology/0000/example#Something".toSmartIri
   * - "http://knora.example.org/ontology/0000/example#Something".toSmartIriWithErr(() => throw BadRequestException("Invalid IRI"))
   */
-sealed trait SmartIri extends Ordered[SmartIri] {
+sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
 
     /*
 
@@ -343,7 +344,7 @@ sealed trait SmartIri extends Ordered[SmartIri] {
       *
       * @param targetSchema the target schema.
       */
-    def toOntologySchema(targetSchema: OntologySchema): SmartIri
+    override def toOntologySchema(targetSchema: OntologySchema): SmartIri
 
     /**
       * Constructs a prefix label that can be used to shorten this IRI's namespace in formats such as Turtle and JSON-LD.

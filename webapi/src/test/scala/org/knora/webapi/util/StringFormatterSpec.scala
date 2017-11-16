@@ -696,7 +696,7 @@ class StringFormatterSpec extends CoreSpec() {
             val parseEnd = System.currentTimeMillis
             val parseDuration = (parseEnd - parseStart).toDouble
             val parseDurationPerIri = parseDuration / totalIris.toDouble
-            println(s"Parse and store $totalIris IRIs, $parseDuration ms, time per IRI $parseDurationPerIri ms")
+            println(f"Parse and store $totalIris IRIs, $parseDuration ms, time per IRI $parseDurationPerIri%1.5f ms")
 
             val retrieveStart = System.currentTimeMillis
 
@@ -709,7 +709,7 @@ class StringFormatterSpec extends CoreSpec() {
             val retrieveDuration = (retrieveEnd - retrieveStart).toDouble
             val retrieveDurationPerIri = retrieveDuration / totalIris.toDouble
 
-            println(s"Retrieve time $retrieveDuration ms, time per IRI $retrieveDurationPerIri")
+            println(f"Retrieve time $retrieveDuration ms, time per IRI $retrieveDurationPerIri%1.5f ms")
         }
 
         "return the data named graph of a project without short code" in {

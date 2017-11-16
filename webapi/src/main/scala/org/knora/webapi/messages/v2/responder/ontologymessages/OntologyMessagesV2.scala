@@ -23,9 +23,7 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import java.util.UUID
 
-import org.knora.webapi
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
@@ -909,11 +907,11 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
                                  ontologyIri: SmartIri,
                                  predicates: Map[SmartIri, PredicateInfoV2] = Map.empty[SmartIri, PredicateInfoV2],
                                  subPropertyOf: Set[SmartIri] = Set.empty[SmartIri],
-                                 ontologySchema: OntologySchema) extends EntityInfoContentV2 {
+                                 ontologySchema: OntologySchema) extends EntityInfoContentV2 with KnoraContentV2[PropertyInfoContentV2] {
 
     import PropertyInfoContentV2._
 
-    def toOntologySchema(targetSchema: OntologySchema): PropertyInfoContentV2 = {
+    override def toOntologySchema(targetSchema: OntologySchema): PropertyInfoContentV2 = {
 
         // Are we converting from the internal schema to the API v2 simple schema?
         val predicatesWithAdjustedRdfType: Map[SmartIri, PredicateInfoV2] = if (ontologySchema == InternalSchema && targetSchema == ApiV2Simple) {
@@ -1273,8 +1271,8 @@ case class ClassInfoContentV2(classIri: SmartIri,
                               xsdStringRestrictionPattern: Option[String] = None,
                               standoffDataType: Option[StandoffDataTypeClasses.Value] = None,
                               subClassOf: Set[SmartIri] = Set.empty[SmartIri],
-                              ontologySchema: OntologySchema) extends EntityInfoContentV2 {
-    def toOntologySchema(targetSchema: OntologySchema): ClassInfoContentV2 = {
+                              ontologySchema: OntologySchema) extends EntityInfoContentV2 with KnoraContentV2[ClassInfoContentV2] {
+    override def toOntologySchema(targetSchema: OntologySchema): ClassInfoContentV2 = {
         copy(
             classIri = classIri.toOntologySchema(targetSchema),
             ontologyIri = ontologyIri.toOntologySchema(targetSchema),
@@ -1319,8 +1317,8 @@ case class SubClassInfoV2(id: SmartIri, label: String)
   * @param label       the label of the ontology.
   */
 case class OntologyMetadataV2(ontologyIri: SmartIri,
-                              label: String) {
-    def toOntologySchema(targetSchema: OntologySchema): OntologyMetadataV2 = {
+                              label: String) extends KnoraContentV2[OntologyMetadataV2] {
+    override def toOntologySchema(targetSchema: OntologySchema): OntologyMetadataV2 = {
         copy(
             ontologyIri = ontologyIri.toOntologySchema(targetSchema)
         )

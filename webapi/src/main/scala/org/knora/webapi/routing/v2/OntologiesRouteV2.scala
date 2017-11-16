@@ -99,7 +99,7 @@ object OntologiesRouteV2 extends Authenticator {
                     )
                 }
             }
-        } ~ path("v2" / "ontologies" / "namedgraphs") {
+        } ~ path("v2" / "ontologies" / "metadata") {
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
@@ -115,7 +115,23 @@ object OntologiesRouteV2 extends Authenticator {
                     )
                 }
             }
-        } ~ path("v2" / "ontologies" / "namedgraphs" / Segments) { (externalOntologyIris: List[IRI]) =>
+        } ~ path("v2" / "ontologies" / "metadata" / Segments) { (projectIris: List[IRI]) =>
+            get {
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+                    val validatedProjectIris = projectIris.map(iri => stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException("Invalid project IRI: $iri"))).toSet
+                    val requestMessage = OntologyMetadataGetRequestV2(projectIris = validatedProjectIris, userProfile = userProfile)
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+                }
+            }
+        } ~ path("v2" / "ontologies" / "allentities" / Segments) { (externalOntologyIris: List[IRI]) =>
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
