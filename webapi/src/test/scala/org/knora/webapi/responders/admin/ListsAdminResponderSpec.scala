@@ -23,9 +23,9 @@ package org.knora.webapi.responders.admin
 import akka.actor.Props
 import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.SharedAdminTestData._
 import org.knora.webapi._
-import SharedAdminTestData._
-import org.knora.webapi.messages.admin.responder.listadminmessages._
+import org.knora.webapi.messages.admin.responder.listsadminmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.responders._
@@ -74,17 +74,19 @@ class ListsAdminResponderSpec extends CoreSpec(ListsAdminResponderSpec.config) w
     private val userData = userProfile.userData
 
 
-    private val listNodeInfo: ListNodeInfo = SharedListsAdminTestData.biglistRoodNodeInfo
+    private val bigListInfo: ListInfo = SharedListsAdminTestData.bigListInfo
 
-    private val otherTreeListNodeInfo: ListNodeInfo = SharedListsAdminTestData.otherTreeListRootNodeInfo
+    private val summerNodeInfo: ListNodeInfo = SharedListsAdminTestData.summerNodeInfo
 
-    private val keywordChildNodes: Seq[ListChildNode] = Seq.empty[ListChildNode]
+    private val otherTreeListInfo: ListInfo = SharedListsAdminTestData.otherTreeListInfo
 
-    private val keywordList: ListNode = SharedListsAdminTestData.bigList
+    private val keywordChildNodes: Seq[ListNode] = Seq.empty[ListNode]
 
-    private val imageCategory = Seq.empty[ListChildNode]
+    private val bigListNodes: Seq[ListNode] = SharedListsAdminTestData.bigListNodes
 
-    private val season = SharedListsAdminTestData.season
+    private val imageCategory = Seq.empty[ListNode]
+
+    private val season = SharedListsAdminTestData.seasonListNodes
 
     private val nodePath = SharedListsAdminTestData.nodePath
 
@@ -128,22 +130,35 @@ class ListsAdminResponderSpec extends CoreSpec(ListsAdminResponderSpec.config) w
                 received.items.size should be(2)
             }
 
-            "return basic list node information (images list)" in {
-                actorUnderTest ! ListNodeInfoGetAdminRequest(
+            "return basic list information (images list)" in {
+                actorUnderTest ! ListInfoGetAdminRequest(
                     iri = "http://rdfh.ch/lists/00FF/73d0ec0302",
                     userProfile = userProfile
                 )
 
-                val received: ListNodeInfoGetAdminResponse = expectMsgType[ListNodeInfoGetAdminResponse](timeout)
+                val received: ListInfoGetAdminResponse = expectMsgType[ListInfoGetAdminResponse](timeout)
 
                 // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
 
-                received.nodeinfo.sorted should be(listNodeInfo.sorted)
+                received.listinfo.sorted should be(bigListInfo.sorted)
             }
 
-            "return basic list node information (anything list)" in {
-                actorUnderTest ! ListNodeInfoGetAdminRequest(
+            "return basic list information (anything list)" in {
+                actorUnderTest ! ListInfoGetAdminRequest(
                     iri = "http://data.knora.org/anything/otherTreeList",
+                    userProfile = userProfile
+                )
+
+                val received: ListInfoGetAdminResponse = expectMsgType[ListInfoGetAdminResponse](timeout)
+
+                // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
+
+                received.listinfo.sorted should be(otherTreeListInfo.sorted)
+            }
+
+            "return basic node information (images list - sommer)" in {
+                actorUnderTest ! ListNodeInfoGetAdminRequest(
+                    iri = "http://rdfh.ch/lists/00FF/526f26ed04",
                     userProfile = userProfile
                 )
 
@@ -151,7 +166,7 @@ class ListsAdminResponderSpec extends CoreSpec(ListsAdminResponderSpec.config) w
 
                 // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
 
-                received.nodeinfo.sorted should be(otherTreeListNodeInfo.sorted)
+                received.nodeinfo.sorted should be(summerNodeInfo.sorted)
             }
 
             "return a full list response" in {
@@ -164,7 +179,9 @@ class ListsAdminResponderSpec extends CoreSpec(ListsAdminResponderSpec.config) w
 
                 // log.debug("returned whole keyword list: {}", MessageUtil.toSource(received.items.head))
 
-                received.list.sorted should be(keywordList.sorted)
+                received.listinfo.sorted should be(bigListInfo.sorted)
+
+                received.children.map(_.sorted) should be(bigListNodes.map(_.sorted))
             }
         }
 

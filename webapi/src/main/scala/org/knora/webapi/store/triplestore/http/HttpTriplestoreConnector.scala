@@ -36,7 +36,7 @@ import org.eclipse.rdf4j.rio.RDFHandler
 import org.eclipse.rdf4j.rio.turtle._
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.listadminmessages.StringV2
+import org.knora.webapi.messages.admin.responder.listsadminmessages.StringV2
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
@@ -45,10 +45,10 @@ import org.knora.webapi.util.SparqlResultProtocol._
 import spray.json._
 
 import scala.collection.JavaConverters._
+import scala.compat.java8.OptionConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success, Try}
-import scala.compat.java8.OptionConverters._
 
 /**
   * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in

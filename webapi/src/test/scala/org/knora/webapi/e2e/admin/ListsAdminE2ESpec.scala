@@ -25,7 +25,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.admin.responder.listadminmessages._
+import org.knora.webapi.messages.admin.responder.listsadminmessages.{ListAdminJsonProtocol, ListInfo, ListNode, ListNodeInfo}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
@@ -91,7 +91,8 @@ class ListsAdminE2ESpec extends E2ESpec(ListsAdminE2ESpec.config) with SessionJs
     val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
 
 
-    val bigList: ListNode = SharedListsAdminTestData.bigList
+    val bigListInfo: ListInfo = SharedListsAdminTestData.bigListInfo
+    val bigListNodes: Seq[ListNode] = SharedListsAdminTestData.bigListNodes
 
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
@@ -145,18 +146,18 @@ class ListsAdminE2ESpec extends E2ESpec(ListsAdminE2ESpec.config) with SessionJs
                 lists.size should be (2)
             }
 
-            "return basic list node information" in {
-                val request = Get(baseApiUrl + s"/admin/lists/nodes/http%3A%2F%2Frdfh.ch%2Flists%2F00FF%2F73d0ec0302") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+            "return basic list information" in {
+                val request = Get(baseApiUrl + s"/admin/lists/infos/http%3A%2F%2Frdfh.ch%2Flists%2F00FF%2F73d0ec0302") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
 
                 response.status should be(StatusCodes.OK)
 
-                val receivedListNodeInfo: ListNodeInfo = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListNodeInfo]
+                val receivedListInfo: ListInfo = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListInfo]
 
-                val expectedListNodeInfo: ListNodeInfo = SharedListsAdminTestData.biglistRoodNodeInfo
+                val expectedListInfo: ListInfo = SharedListsAdminTestData.bigListInfo
 
-                receivedListNodeInfo.sorted should be (expectedListNodeInfo.sorted)
+                receivedListInfo.sorted should be (expectedListInfo.sorted)
             }
 
             "return a complete list" in {
@@ -166,9 +167,11 @@ class ListsAdminE2ESpec extends E2ESpec(ListsAdminE2ESpec.config) with SessionJs
 
                 response.status should be(StatusCodes.OK)
 
-                val receivedList: ListNode = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListNode]
+                val receivedListInfo: ListInfo = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListInfo]
+                receivedListInfo.sorted should be (bigListInfo.sorted)
 
-                receivedList.sorted should be (bigList.sorted)
+                val receivedListNodes: Seq[ListNode] = AkkaHttpUtils.httpResponseToJson(response).fields("children").convertTo[Seq[ListNode]]
+                receivedListNodes.map(_.sorted) should be (bigListNodes.map(_.sorted))
             }
         }
 

@@ -18,8 +18,7 @@ package org.knora.webapi.responders.admin
 
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.listadminmessages
-import org.knora.webapi.messages.admin.responder.listadminmessages._
+import org.knora.webapi.messages.admin.responder.listsadminmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.Responder
@@ -34,9 +33,10 @@ import scala.concurrent.Future
   */
 class ListsAdminResponder extends Responder {
 
-    def receive = {
+    def receive: PartialFunction[Any, Unit] = {
         case ListsGetAdminRequest(projectIri, userProfile) => future2Message(sender(), listsGetAdminRequest(projectIri, userProfile), log)
         case ListGetAdminRequest(listIri, userProfile) => future2Message(sender(), listGetAdminRequest(listIri, userProfile), log)
+        case ListInfoGetAdminRequest(listIri, userProfile) => future2Message(sender(), listInfoGetAdminRequest(listIri, userProfile), log)
         case ListNodeInfoGetAdminRequest(listIri, userProfile) => future2Message(sender(), listNodeInfoGetAdminRequest(listIri, userProfile), log)
         case NodePathGetAdminRequest(iri, userProfile) => future2Message(sender(), nodePathGetAdminRequest(iri, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
@@ -69,10 +69,10 @@ class ListsAdminResponder extends Responder {
             // Seq(subjectIri, (objectIri -> Seq(stringWithOptionalLand))
             statements = listsResponse.statements.toList
 
-            items: Seq[ListRootNodeInfo] = statements.map {
+            items: Seq[ListInfo] = statements.map {
                 case (listIri: IRI, propsMap: Map[IRI, Seq[StringV2]]) =>
 
-                    ListRootNodeInfo(
+                    ListInfo(
                         id = listIri,
                         projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
                         labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
@@ -110,28 +110,68 @@ class ListsAdminResponder extends Responder {
             // _ = log.debug(s"listExtendedGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
 
             // here we know that the list exists and it is fine if children is an empty list
-            children: Seq[ListChildNode] <- listGetChildren(rootNodeIri, userProfile)
+            children: Seq[ListNode] <- listGetChildren(rootNodeIri, userProfile)
 
             // _ = log.debug(s"listGetRequestV2 - children count: {}", children.size)
 
             // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
             statements = listInfoResponse.statements
-            node = statements.head match {
+            listinfo = statements.head match {
                 case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringV2]]) =>
-                    ListRootNode(
+                    ListInfo(
                         id = nodeIri,
                         projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
                         labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2]),
-                        children = children
+                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2])
                     )
             }
 
             // _ = log.debug(s"listGetRequestV2 - list: {}", MessageUtil.toSource(list))
 
-        } yield ListGetAdminResponse(list = node)
+        } yield ListGetAdminResponse(listinfo = listinfo,  children = children)
     }
 
+    /**
+      * Retrieves information about a list (root) node.
+      *
+      * @param listIri the Iri if the list (root node) to be queried.
+      * @param userProfile the profile of the user making the request.
+      * @return a [[ListInfoGetAdminResponse]].
+      */
+    def listInfoGetAdminRequest(listIri: IRI, userProfile: UserProfileV1): Future[ListInfoGetAdminResponse] = {
+        for {
+            sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
+                triplestore = settings.triplestoreType,
+                nodeIri = listIri
+            ).toString())
+
+            // _ = log.debug("listNodeInfoGetRequestV2 - sparqlQuery: {}", sparqlQuery)
+
+            listNodeResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
+
+            _ = if (listNodeResponse.statements.isEmpty) {
+                throw NotFoundException(s"List node not found: $listIri")
+            }
+
+            // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
+            statements = listNodeResponse.statements
+
+            // _ = log.debug(s"listNodeInfoGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
+
+            listinfo: ListInfo = statements.head match {
+                case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringV2]]) =>
+                    ListInfo (
+                        id = nodeIri,
+                        projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
+                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
+                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2])
+                    )
+            }
+
+            // _ = log.debug(s"listNodeInfoGetRequestV2 - node: {}", MessageUtil.toSource(node))
+
+        } yield ListInfoGetAdminResponse(listinfo = listinfo)
+    }
 
     /**
       * Retrieves information about a single (child) node.
@@ -160,31 +200,20 @@ class ListsAdminResponder extends Responder {
 
             // _ = log.debug(s"listNodeInfoGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
 
-            node: ListNodeInfo = statements.head match {
+            nodeinfo: ListNodeInfo = statements.head match {
                 case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringV2]]) =>
-
-                    if (propsMap.get(OntologyConstants.KnoraBase.HasRootNode).nonEmpty) {
-                        // we have a child node, as only the child node has this property attached
-                        ListChildNodeInfo (
-                            id = nodeIri,
-                            name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.value),
-                            labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
-                            comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2]),
-                            position = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.value.toInt)
-                        )
-                    } else {
-                        ListRootNodeInfo (
-                            id = nodeIri,
-                            projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
-                            labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
-                            comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2])
-                        )
-                    }
+                    ListNodeInfo (
+                        id = nodeIri,
+                        name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.value),
+                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
+                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2]),
+                        position = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.value.toInt)
+                    )
             }
 
             // _ = log.debug(s"listNodeInfoGetRequestV2 - node: {}", MessageUtil.toSource(node))
 
-        } yield ListNodeInfoGetAdminResponse(nodeinfo = node)
+        } yield ListNodeInfoGetAdminResponse(nodeinfo = nodeinfo)
     }
 
 
@@ -195,7 +224,7 @@ class ListsAdminResponder extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a sequence of [[ListNode]].
       */
-    private def listGetChildren(rootNodeIri: IRI, userProfile: UserProfileV1): Future[Seq[ListChildNode]] = {
+    private def listGetChildren(rootNodeIri: IRI, userProfile: UserProfileV1): Future[Seq[ListNode]] = {
 
         /**
           * Compares the `position`-values of two nodes
@@ -204,7 +233,7 @@ class ListsAdminResponder extends Responder {
           * @param list2 node in the same list
           * @return true if the `position` of list1 is lower than the one of list2
           */
-        def orderNodes(list1: ListChildNode, list2: ListChildNode): Boolean = {
+        def orderNodes(list1: ListNode, list2: ListNode): Boolean = {
             if (list1.position.nonEmpty && list2.position.nonEmpty) {
                 list1.position.get < list2.position.get
             } else {
@@ -220,7 +249,7 @@ class ListsAdminResponder extends Responder {
           *                         of SPARQL query results representing that node's children.
           * @return a [[ListNode]].
           */
-        def createListChildNode(nodeIri: IRI, groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]], level: Int): ListChildNode = {
+        def createListChildNode(nodeIri: IRI, groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]], level: Int): ListNode = {
 
             val childRows = groupedByNodeIri(nodeIri)
 
@@ -246,7 +275,7 @@ class ListsAdminResponder extends Responder {
 
             val firstRowMap = childRows.head.rowMap
 
-            listadminmessages.ListChildNode(
+            ListNode(
                 id = nodeIri,
                 name = firstRowMap.get("nodeName"),
                 labels = if (firstRowMap.get("label").nonEmpty) {
@@ -257,7 +286,7 @@ class ListsAdminResponder extends Responder {
                 comments = Seq.empty[StringV2],
                 children = if (firstRowMap.get("child").isEmpty) {
                     // If this node has no children, childRows will just contain one row with no value for "child".
-                    Seq.empty[ListChildNode]
+                    Seq.empty[ListNode]
                 } else {
                     // Recursively get the child nodes.
                     childRows.map(childRow => createListChildNode(childRow.rowMap("child"), groupedByNodeIri, level + 1)).sortWith(orderNodes)
@@ -283,9 +312,9 @@ class ListsAdminResponder extends Responder {
 
             rootNodeChildren = groupedByNodeIri.getOrElse(rootNodeIri, Seq.empty[VariableResultsRow])
 
-            children: Seq[ListChildNode] = if (rootNodeChildren.head.rowMap.get("child").isEmpty) {
+            children: Seq[ListNode] = if (rootNodeChildren.head.rowMap.get("child").isEmpty) {
                 // The root node has no children, so we return an empty list.
-                Seq.empty[ListChildNode]
+                Seq.empty[ListNode]
             } else {
                 // Process each child of the root node.
                 rootNodeChildren.map {
@@ -313,12 +342,12 @@ class ListsAdminResponder extends Responder {
           * @return the complete path to `node`.
           */
         @tailrec
-        def makePath(node: IRI, nodeMap: Map[IRI, Map[String, String]], parentMap: Map[IRI, IRI], path: Seq[ListChildNode]): Seq[ListChildNode] = {
+        def makePath(node: IRI, nodeMap: Map[IRI, Map[String, String]], parentMap: Map[IRI, IRI], path: Seq[ListNode]): Seq[ListNode] = {
             // Get the details of the node.
             val nodeData = nodeMap(node)
 
             // Construct a NodePathElementV2 containing those details.
-            val pathElement = listadminmessages.ListChildNode(
+            val pathElement = ListNode(
                 id = nodeData("node"),
                 name = nodeData.get("nodeName"),
                 labels = if (nodeData.contains("label")) {
@@ -327,7 +356,7 @@ class ListsAdminResponder extends Responder {
                     Seq.empty[StringV2]
                 },
                 comments = Seq.empty[StringV2],
-                children = Seq.empty[ListChildNode],
+                children = Seq.empty[ListNode],
                 position = None
             )
 

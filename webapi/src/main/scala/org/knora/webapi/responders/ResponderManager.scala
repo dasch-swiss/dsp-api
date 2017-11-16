@@ -24,7 +24,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import org.knora.webapi.ActorMaker
-import org.knora.webapi.messages.admin.responder.listadminmessages.ListsAdminResponderRequest
+import org.knora.webapi.messages.admin.responder.listsadminmessages.ListsAdminResponderRequest
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
 import org.knora.webapi.messages.v1.responder.groupmessages.GroupsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1

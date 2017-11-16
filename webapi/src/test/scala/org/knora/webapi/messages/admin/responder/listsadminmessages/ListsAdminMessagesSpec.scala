@@ -21,13 +21,14 @@
 package org.knora.webapi.messages.admin.responder.listadminmessages
 
 import cats.instances.string
+import org.knora.webapi.messages.admin.responder.listsadminmessages.{ListAdminJsonProtocol, ListInfo, ListNodeInfo, StringV2, ListNode}
 import org.scalatest.{Matchers, WordSpecLike}
 import spray.json._
 
 /**
   * This spec is used to test 'ListAdminMessages'.
   */
-class ListAdminMessagesSpec extends WordSpecLike with Matchers with ListAdminJsonProtocol {
+class ListsAdminMessagesSpec extends WordSpecLike with Matchers with ListAdminJsonProtocol {
 
     "Conversion from case class to JSON and back" should {
 
@@ -56,13 +57,32 @@ class ListAdminMessagesSpec extends WordSpecLike with Matchers with ListAdminJso
             converted should be(string)
         }
 
-        "work for a 'ListNodeInfo'" in {
+        "work for a 'ListInfo'" in {
 
-            val listNodeInfo: ListNodeInfo = ListRootNodeInfo (
+            val listInfo: ListInfo = ListInfo (
                 id = "http://data.knora.org/lists/73d0ec0302",
                 projectIri = Some("http://rdfh.ch/projects/00FF"),
                 labels = Seq(StringV2("Title", Some("en")), StringV2("Titel", Some("de")), StringV2("Titre", Some("fr"))),
                 comments = Seq(StringV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
+            )
+
+            val json = listInfo.toJson.compactPrint
+
+            // json should be ("")
+
+            val converted: ListInfo = json.parseJson.convertTo[ListInfo]
+
+            converted should be(listInfo)
+        }
+
+        "work for a 'ListNodeInfo'" in {
+
+            val listNodeInfo: ListNodeInfo = ListNodeInfo (
+                id = "http://rdfh.ch/lists/00FF/526f26ed04",
+                name = Some("sommer"),
+                labels = Seq(StringV2("Sommer")),
+                comments = Seq.empty[StringV2],
+                position = Some(0)
             )
 
             val json = listNodeInfo.toJson.compactPrint
@@ -76,28 +96,13 @@ class ListAdminMessagesSpec extends WordSpecLike with Matchers with ListAdminJso
 
         "work for a 'ListNode'" in {
 
-            val listNode: ListNode = ListRootNode(
-                children = Seq.empty[ListChildNode],
-                comments = Vector(StringV2(
-                    language = Some("de"),
-                    value = "Hierarchisches Stichwortverzeichnis / Signatur der Bilder"
-                )),
-                labels = Vector(
-                    StringV2(
-                        language = Some("en"),
-                        value = "Title"
-                    ),
-                    StringV2(
-                        language = Some("de"),
-                        value = "Titel"
-                    ),
-                    StringV2(
-                        language = Some("fr"),
-                        value = "Titre"
-                    )
-                ),
-                projectIri = Some("http://rdfh.ch/projects/00FF"),
-                id = "http://data.knora.org/lists/73d0ec0302"
+            val listNode: ListNode = ListNode(
+                id = "http://rdfh.ch/lists/00FF/526f26ed04",
+                name = Some("sommer"),
+                labels = Seq(StringV2("Sommer")),
+                comments = Seq.empty[StringV2],
+                children = Seq.empty[ListNode],
+                position = Some(0)
             )
 
             val json = listNode.toJson.compactPrint

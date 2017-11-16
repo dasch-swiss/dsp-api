@@ -25,7 +25,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import org.knora.webapi.messages.admin.responder.listadminmessages.{ListGetAdminRequest, ListNodeInfoGetAdminRequest, ListsGetAdminRequest}
+import org.knora.webapi.messages.admin.responder.listsadminmessages.{ListGetAdminRequest, ListInfoGetAdminRequest, ListNodeInfoGetAdminRequest, ListsGetAdminRequest}
 import org.knora.webapi.routing.{Authenticator, RouteUtilAdmin}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
@@ -93,9 +93,35 @@ object ListsAdminRoute extends Authenticator {
                 ???
             }
         } ~
+        path("admin" / "lists" / "infos" / Segment) {iri =>
+            get {
+                /* return information about a list (without children) */
+                requestContext =>
+                    val userProfile = getUserProfileV1(requestContext)
+                    val listIri = stringFormatter.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
+
+                    val requestMessage = ListInfoGetAdminRequest(listIri, userProfile)
+
+                    RouteUtilAdmin.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            } ~
+                    put {
+                        /* update list node */
+                        ???
+                    } ~
+                    delete {
+                        /* delete list node */
+                        ???
+                    }
+        } ~
         path("admin" / "lists" / "nodes" / Segment) {iri =>
             get {
-                /* return a single list node */
+                /* return information about a single node (without children) */
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
                     val listIri = stringFormatter.toIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
