@@ -49,9 +49,5 @@ WHERE {
         ?s knora-base:attachedToProject <@maybeProjectIri.get> .
     }
 
-    ?s rdfs:label ?o .
-
-
-
     ?s ?p ?o .
 }

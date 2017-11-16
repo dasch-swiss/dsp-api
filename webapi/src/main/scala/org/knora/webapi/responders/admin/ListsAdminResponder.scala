@@ -57,14 +57,14 @@ class ListsAdminResponder extends Responder {
         // log.debug("listsGetRequestV2")
 
         for {
-            sparqlQuery <- Future(queries.sparql.v2.txt.getLists(
+            sparqlQuery <- Future(queries.sparql.admin.txt.getLists(
                 triplestore = settings.triplestoreType,
                 maybeProjectIri = projectIri
             ).toString())
 
             listsResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
 
-            // _ = log.debug("listsGetRequestV2 - listsResponse: {}", listsResponse )
+            // _ = log.debug("listsGetAdminRequest - listsResponse: {}", listsResponse )
 
             // Seq(subjectIri, (objectIri -> Seq(stringWithOptionalLand))
             statements = listsResponse.statements.toList
@@ -80,6 +80,8 @@ class ListsAdminResponder extends Responder {
                     )
             }
 
+            // _ = log.debug("listsGetAdminRequest - items: {}", items)
+
         } yield ListsGetAdminResponse(items = items)
     }
 
@@ -94,7 +96,7 @@ class ListsAdminResponder extends Responder {
 
         for {
             // this query will give us only the information about the root node.
-            sparqlQuery <- Future(queries.sparql.v2.txt.getListNode(
+            sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
                 triplestore = settings.triplestoreType,
                 nodeIri = rootNodeIri
             ).toString())
@@ -140,7 +142,7 @@ class ListsAdminResponder extends Responder {
       */
     def listNodeInfoGetAdminRequest(nodeIri: IRI, userProfile: UserProfileV1): Future[ListNodeInfoGetAdminResponse] = {
         for {
-            sparqlQuery <- Future(queries.sparql.v2.txt.getListNode(
+            sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
                 triplestore = settings.triplestoreType,
                 nodeIri = nodeIri
             ).toString())
@@ -267,7 +269,7 @@ class ListsAdminResponder extends Responder {
         // TODO: Rewrite using a construct sparql query
         for {
             listQuery <- Future {
-                queries.sparql.v2.txt.getList(
+                queries.sparql.admin.txt.getList(
                     triplestore = settings.triplestoreType,
                     rootNodeIri = rootNodeIri,
                     preferredLanguage = userProfile.userData.lang,
