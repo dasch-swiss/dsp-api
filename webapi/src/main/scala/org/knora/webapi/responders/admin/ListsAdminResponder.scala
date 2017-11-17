@@ -126,9 +126,10 @@ class ListsAdminResponder extends Responder {
                     )
             }
 
+            list = FullList(listinfo = listinfo, children = children)
             // _ = log.debug(s"listGetRequestV2 - list: {}", MessageUtil.toSource(list))
 
-        } yield ListGetAdminResponse(listinfo = listinfo,  children = children)
+        } yield ListGetAdminResponse(list = list)
     }
 
     /**

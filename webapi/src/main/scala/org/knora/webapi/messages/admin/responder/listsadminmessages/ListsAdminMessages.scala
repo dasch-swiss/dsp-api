@@ -18,6 +18,7 @@ package org.knora.webapi.messages.admin.responder.listsadminmessages
 
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.apache.jena.sparql.pfunction.library.seq
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.{KnoraAdminRequest, KnoraAdminResponse}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
@@ -100,10 +101,9 @@ case class ListsGetAdminResponse(items: Seq[ListInfo]) extends KnoraAdminRespons
 /**
   * Provides completes information about the list. The basic information (rood node) and all the child nodes.
   *
-  * @param listinfo the list's basic information.
-  * @param children the list's child nodes.
+  * @param list the complete list.
   */
-case class ListGetAdminResponse(listinfo: ListInfo, children: Seq[ListNode]) extends KnoraAdminResponse with ListAdminJsonProtocol {
+case class ListGetAdminResponse(list: FullList) extends KnoraAdminResponse with ListAdminJsonProtocol {
 
     def toJsValue = listGetAdminResponseFormat.write(this)
 }
@@ -142,6 +142,23 @@ case class NodePathGetAdminResponse(nodelist: Seq[ListNode]) extends KnoraAdminR
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
+
+
+case class FullList(listinfo: ListInfo, children: Seq[ListNode]) {
+    /**
+      * Sorts the whole hierarchy.
+      *
+      * @return a sorted [[List]].
+      */
+    def sorted: FullList = {
+        FullList(
+            listinfo = listinfo,
+            children = children.sortBy(_.id)
+        )
+    }
+}
+
+
 
 /**
   * Represents basic information about a list, the information stored in the list's root node.
@@ -448,10 +465,48 @@ trait ListAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
         }
     }
 
+    implicit object ListFormat extends JsonFormat[FullList] {
+        /**
+          * Converts a [[FullList]] to a [[JsValue]].
+          *
+          * @param list a [[FullList]].
+          * @return a [[JsValue]].
+          */
+        def write(list: FullList): JsValue = {
+            JsObject(
+                "listinfo" -> list.listinfo.toJson,
+                "children" -> JsArray(list.children.map(_.toJson).toVector)
+            )
+        }
+
+        /**
+          * Converts a [[JsValue]] to a [[List]].
+          *
+          * @param value a [[JsValue]].
+          * @return a [[List]].
+          */
+        def read(value: JsValue): FullList = {
+
+            val fields = value.asJsObject.fields
+
+            val listinfo = fields.getOrElse("listinfo", throw DeserializationException("The expected field 'listinfo' is missing.")).convertTo[ListInfo]
+            val children = fields.get("children") match {
+                case Some(JsArray(values)) => values.map(_.convertTo[ListNode])
+                case None => Seq.empty[ListNode]
+                case _ => throw DeserializationException("The expected field 'children' is in the wrong format.")
+            }
+
+            FullList(
+                listinfo = listinfo,
+                children = children
+            )
+        }
+    }
+
 
     implicit val nodePathGetAdminResponseFormat: RootJsonFormat[NodePathGetAdminResponse] = jsonFormat(NodePathGetAdminResponse, "nodelist")
     implicit val listsGetAdminResponseFormat: RootJsonFormat[ListsGetAdminResponse] = jsonFormat(ListsGetAdminResponse, "items")
-    implicit val listGetAdminResponseFormat: RootJsonFormat[ListGetAdminResponse] = jsonFormat(ListGetAdminResponse, "listinfo", "children")
+    implicit val listGetAdminResponseFormat: RootJsonFormat[ListGetAdminResponse] = jsonFormat(ListGetAdminResponse, "list")
     implicit val listInfoGetAdminResponseFormat: RootJsonFormat[ListInfoGetAdminResponse] = jsonFormat(ListInfoGetAdminResponse, "listinfo")
     implicit val listNodeInfoGetAdminResponseFormat: RootJsonFormat[ListNodeInfoGetAdminResponse] = jsonFormat(ListNodeInfoGetAdminResponse, "nodeinfo")
 }

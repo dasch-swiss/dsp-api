@@ -21,7 +21,7 @@
 package org.knora.webapi.messages.admin.responder.listadminmessages
 
 import cats.instances.string
-import org.knora.webapi.messages.admin.responder.listsadminmessages.{ListAdminJsonProtocol, ListInfo, ListNodeInfo, StringV2, ListNode}
+import org.knora.webapi.messages.admin.responder.listsadminmessages._
 import org.scalatest.{Matchers, WordSpecLike}
 import spray.json._
 
@@ -113,5 +113,34 @@ class ListsAdminMessagesSpec extends WordSpecLike with Matchers with ListAdminJs
 
             converted should be(listNode)
         }
+
+        "work for a 'FullList'" in {
+
+            val listInfo: ListInfo = ListInfo (
+                id = "http://data.knora.org/lists/73d0ec0302",
+                projectIri = Some("http://rdfh.ch/projects/00FF"),
+                labels = Seq(StringV2("Title", Some("en")), StringV2("Titel", Some("de")), StringV2("Titre", Some("fr"))),
+                comments = Seq(StringV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
+            )
+
+            val listNode: ListNode = ListNode(
+                id = "http://rdfh.ch/lists/00FF/526f26ed04",
+                name = Some("sommer"),
+                labels = Seq(StringV2("Sommer")),
+                comments = Seq.empty[StringV2],
+                children = Seq.empty[ListNode],
+                position = Some(0)
+            )
+
+            val json = FullList(listInfo, Seq(listNode)).toJson.compactPrint
+
+            // json should be ("")
+
+            val converted: FullList = json.parseJson.convertTo[FullList]
+
+            converted.listinfo should be(listInfo)
+            converted.children.head should be(listNode)
+        }
+
     }
 }

@@ -179,9 +179,9 @@ class ListsAdminResponderSpec extends CoreSpec(ListsAdminResponderSpec.config) w
 
                 // log.debug("returned whole keyword list: {}", MessageUtil.toSource(received.items.head))
 
-                received.listinfo.sorted should be(bigListInfo.sorted)
+                received.list.listinfo.sorted should be(bigListInfo.sorted)
 
-                received.children.map(_.sorted) should be(bigListNodes.map(_.sorted))
+                received.list.children.map(_.sorted) should be(bigListNodes.map(_.sorted))
             }
         }
 

@@ -25,7 +25,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.admin.responder.listsadminmessages.{ListAdminJsonProtocol, ListInfo, ListNode, ListNodeInfo}
+import org.knora.webapi.messages.admin.responder.listsadminmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
@@ -167,11 +167,9 @@ class ListsAdminE2ESpec extends E2ESpec(ListsAdminE2ESpec.config) with SessionJs
 
                 response.status should be(StatusCodes.OK)
 
-                val receivedListInfo: ListInfo = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListInfo]
-                receivedListInfo.sorted should be (bigListInfo.sorted)
-
-                val receivedListNodes: Seq[ListNode] = AkkaHttpUtils.httpResponseToJson(response).fields("children").convertTo[Seq[ListNode]]
-                receivedListNodes.map(_.sorted) should be (bigListNodes.map(_.sorted))
+                val receivedList: FullList = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[FullList]
+                receivedList.listinfo.sorted should be (bigListInfo.sorted)
+                receivedList.children.map(_.sorted) should be (bigListNodes.map(_.sorted))
             }
         }
 
