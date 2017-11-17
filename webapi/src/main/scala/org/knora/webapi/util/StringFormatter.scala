@@ -441,6 +441,23 @@ class StringFormatter private(knoraApiHttpBaseUrl: String) {
     }
 
     /**
+      * Check that an optional string represents a valid IRI.
+      *
+      * @param maybeString the optional string to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
+      *                 IRI.
+      * @return the same optional string.
+      */
+    def toOptionalIri(maybeString: Option[String], errorFun: () => Nothing): Option[IRI] = {
+        maybeString match {
+            case Some(s) => {
+                Some(toIri(s, errorFun))
+            }
+            case None => None
+        }
+    }
+
+    /**
       * Checks that a string represents a valid resource identifier in a standoff link.
       *
       * @param s               the string to be checked.

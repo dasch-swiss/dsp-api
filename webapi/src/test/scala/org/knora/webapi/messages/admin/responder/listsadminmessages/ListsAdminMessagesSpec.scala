@@ -37,7 +37,7 @@ class ListsAdminMessagesSpec extends WordSpecLike with Matchers with ListAdminJs
             val string = StringV2("stringwithoutlang", None)
             val json = string.toJson.compactPrint
 
-            json should be ("\"stringwithoutlang\"")
+            json should be ("{\"value\":\"stringwithoutlang\"}")
 
             val converted: StringV2 = json.parseJson.convertTo[StringV2]
 

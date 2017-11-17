@@ -22,15 +22,17 @@ send "load ../_test_data/all_data/admin-data.ttl into http://www.knora.org/data/
 expect $prompt
 send "load ../_test_data/all_data/permissions-data.ttl into http://www.knora.org/data/permissions .\r"
 expect $prompt
+send "load ../_test_data/all_data/system-data.ttl into http://www.knora.org/data/FFFF/SystemProject .\r"
+expect $prompt
 send "load ../_test_data/ontologies/incunabula-onto.ttl into http://www.knora.org/ontology/incunabula .\r"
 expect $prompt
 send "load ../_test_data/all_data/incunabula-data.ttl into http://www.knora.org/data/incunabula .\r"
 expect $prompt
 send "load ../_test_data/ontologies/dokubib-onto.ttl into http://www.knora.org/ontology/dokubib .\r"
 expect $prompt
-send "load ../_test_data/ontologies/images-onto.ttl into http://www.knora.org/ontology/0101/images .\r"
+send "load ../_test_data/ontologies/images-onto.ttl into http://www.knora.org/ontology/00FF/images .\r"
 expect $prompt
-send "load ../_test_data/demo_data/images-demo-data.ttl into http://www.knora.org/data/0101/images .\r"
+send "load ../_test_data/demo_data/images-demo-data.ttl into http://www.knora.org/data/00FF/images .\r"
 expect $prompt
 send "load ../_test_data/ontologies/anything-onto.ttl into http://www.knora.org/ontology/anything .\r"
 expect $prompt

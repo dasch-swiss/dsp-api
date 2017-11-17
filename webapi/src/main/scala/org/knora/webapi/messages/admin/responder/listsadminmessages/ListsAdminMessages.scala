@@ -275,7 +275,11 @@ trait ListAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
                 )
             } else {
                 // no language tag
-                string.value.toJson
+                JsObject(
+                    Map(
+                        "value" -> string.value.toJson
+                    )
+                )
             }
         }
 
@@ -291,10 +295,14 @@ trait ListAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
                     value = value,
                     language = Some(language)
                 )
-                case _ => throw DeserializationException("JSON object with 'value' and 'language' fields expected.")
+                case Seq(JsString(value)) => StringV2(
+                    value = value,
+                    language = None
+                )
+                case _ => throw DeserializationException("JSON object with 'value', or 'value' and 'language' fields expected.")
             }
             case JsString(value) => StringV2(value, None)
-            case _ => throw DeserializationException("Either a JSON object with 'value' and 'language', or plain string expected. ")
+            case _ => throw DeserializationException("JSON object with 'value', or 'value' and 'language' expected. ")
         }
     }
 

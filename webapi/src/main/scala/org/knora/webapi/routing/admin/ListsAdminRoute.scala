@@ -25,6 +25,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
+import arq.iri
 import org.knora.webapi.messages.admin.responder.listsadminmessages.{ListGetAdminRequest, ListInfoGetAdminRequest, ListNodeInfoGetAdminRequest, ListsGetAdminRequest}
 import org.knora.webapi.routing.{Authenticator, RouteUtilAdmin}
 import org.knora.webapi.util.StringFormatter
@@ -47,9 +48,11 @@ object ListsAdminRoute extends Authenticator {
         path("admin" / "lists") {
             get {
                 /* return all lists */
-                parameters("projectIri".?) { projectIri: Option[IRI] =>
+                parameters("projectIri".?) { maybeProjectIri: Option[IRI] =>
                     requestContext =>
                         val userProfile = getUserProfileV1(requestContext)
+
+                        val projectIri = stringFormatter.toOptionalIri(maybeProjectIri, () => throw BadRequestException(s"Invalid param project IRI: $maybeProjectIri"))
 
                         val requestMessage = ListsGetAdminRequest(projectIri, userProfile)
 
