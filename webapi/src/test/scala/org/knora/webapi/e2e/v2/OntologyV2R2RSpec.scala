@@ -57,6 +57,10 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     private val allOntologyMetadata: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/allOntologyMetadata.json")))
     private val imagesOntologyMetadata: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/imagesOntologyMetadata.json")))
+    private val imagesOntologySimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/imagesOntologySimple.json")))
+    private val imagesOntologyWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/imagesOntologyWithValueObjects.json")))
+    private val bildSimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/bildSimple.json")))
+    private val bildWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/bildWithValueObjects.json")))
     private val knoraApiOntologySimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiOntologySimple.json")))
     private val knoraApiWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiWithValueObjects.json")))
     private val incunabulaOntologySimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaOntologySimple.json")))
@@ -68,10 +72,6 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val incunabulaSimplePubDate: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaSimplePubDate.json")))
     private val incunabulaWithValueObjectsPubDate: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaWithValueObjectsPubDate.json")))
     private val incunabulaPageAndBookWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaPageAndBookWithValueObjects.json")))
-    private val exampleOntologySimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/p0001-example-simple.json")))
-    private val exampleOntologyWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/p0001-example-withValueObjects.json")))
-    private val exampleThingSimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/p0001-example-ExampleThingSimple.json")))
-    private val exampleThingWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/p0001-example-ExampleThingWithValueObjects.json")))
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
@@ -224,34 +224,34 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "serve a project-specific ontology whose IRI contains a project ID, as JSON-LD, using the simple schema" in {
-            Get("/ontology/0001/example/simple/v2") ~> ontologiesPath ~> check {
+            Get("/ontology/00FF/images/simple/v2") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == exampleOntologySimple)
+                assert(responseJson == imagesOntologySimple)
             }
         }
 
         "serve a project-specific ontology whose IRI contains a project ID, as JSON-LD, using the value object schema" in {
-            Get("/ontology/0001/example/v2") ~> ontologiesPath ~> check {
+            Get("/ontology/00FF/images/v2") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == exampleOntologyWithValueObjects)
+                assert(responseJson == imagesOntologyWithValueObjects)
             }
         }
 
         "serve a class from project-specific ontology whose IRI contains a project ID, as JSON-LD, using the simple schema" in {
-            val exampleThingIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/example/simple/v2#ExampleThing", "UTF-8")
+            val bildIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/00FF/images/simple/v2#bild", "UTF-8")
 
-            Get(s"/v2/ontologies/classes/$exampleThingIri") ~> ontologiesPath ~> check {
+            Get(s"/v2/ontologies/classes/$bildIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == exampleThingSimple)
+                assert(responseJson == bildSimple)
             }
         }
 
         "serve a class from project-specific ontology whose IRI contains a project ID, as JSON-LD, using the value object schema" in {
-            val exampleThingIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/example/v2#ExampleThing", "UTF-8")
+            val bildIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/00FF/images/v2#bild", "UTF-8")
 
-            Get(s"/v2/ontologies/classes/$exampleThingIri") ~> ontologiesPath ~> check {
+            Get(s"/v2/ontologies/classes/$bildIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == exampleThingWithValueObjects)
+                assert(responseJson == bildWithValueObjects)
             }
         }
 

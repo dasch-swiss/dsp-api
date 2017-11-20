@@ -31,6 +31,11 @@ object KnoraApiV2Simple {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
+    val OntologyMetadata = OntologyMetadataV2(
+        ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri,
+        label = "The simplified knora-api ontology"
+    )
+
     val Resource: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.Resource,
         subClassOf = Set(OntologyConstants.SchemaOrg.Thing),

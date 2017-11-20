@@ -74,8 +74,21 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         case (k, v) => (k, v.toAny)
     }
 
-    def requireString[T](key: SmartIri, validationFun: (String, => Nothing) => T ): T = {
-        value.getOrElse(key.toString, throw BadRequestException(s"No $key provided")) match {
+    /**
+      * Gets a required string value of a property of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property is not found or if its value is not a string.
+      * Then parses the value with the specified validation function (see [[org.knora.webapi.util.StringFormatter]]
+      * for examples of such functions), throwing [[BadRequestException]] if the validation fails.
+      *
+      * @param key the key of the required value.
+      * @param validationFun a validation function that takes two arguments: the string to be validated, and a function
+      *                      that throws an exception if the string is invalid. The function's return value is the
+      *                      validated string, possibly converted to another type T.
+      * @tparam T the type of the validation function's return value.
+      * @return the return value of the validation function.
+      */
+    def requireString[T](key: String, validationFun: (String, => Nothing) => T ): T = {
+        value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
             case JsonLDString(str) => validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
             case other => throw BadRequestException(s"Invalid $key: $other")
         }
@@ -98,7 +111,10 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
   * @param context the context of the JSON-LD document.
   */
 case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject) {
-    def requireString[T](key: SmartIri, validationFun: (String, => Nothing) => T ): T = body.requireString(key, validationFun)
+    /**
+      * A convenience function that calls `body.requireString`.
+      */
+    def requireString[T](key: String, validationFun: (String, => Nothing) => T ): T = body.requireString(key, validationFun)
 }
 
 

@@ -30,6 +30,11 @@ import org.knora.webapi.util.IriConversions._
 object KnoraApiV2WithValueObjects {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
+    val OntologyMetadata = OntologyMetadataV2(
+        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
+        label = "The default knora-api ontology"
+    )
+
     val Resource: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Resource,
         subClassOf = Set(OntologyConstants.SchemaOrg.Thing),

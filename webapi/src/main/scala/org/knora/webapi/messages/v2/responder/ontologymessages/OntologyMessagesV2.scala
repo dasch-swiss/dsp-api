@@ -73,9 +73,9 @@ object CreateOntologyRequestV2 {
                    userProfile: UserProfileV1): CreateOntologyRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val ontologyName: String = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName.toSmartIri, stringFormatter.validateProjectSpecificOntologyName)
-        val label: String = jsonLDDocument.requireString(OntologyConstants.Rdfs.Label.toSmartIri, stringFormatter.toSparqlEncodedString)
-        val projectIri: SmartIri = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.ProjectIri.toSmartIri, stringFormatter.toSmartIriWithErr)
+        val ontologyName: String = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName, stringFormatter.validateProjectSpecificOntologyName)
+        val label: String = jsonLDDocument.requireString(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
+        val projectIri: SmartIri = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.ProjectIri, stringFormatter.toSmartIriWithErr)
 
         CreateOntologyRequestV2(
             ontologyName = ontologyName,
@@ -462,7 +462,13 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
 
 }
 
-case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends KnoraResponseV2 {
+/**
+  * Returns metadata about Knora ontologies.
+  *
+  * @param ontologies the metadata to be returned.
+  * @param includeKnoraApi if true, includes metadata about the `knora-api` ontology for the target schema.
+  */
+case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2], includeKnoraApi: Boolean = false) extends KnoraResponseV2 {
 
     private def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyMetadataV2 = {
         copy(
@@ -481,7 +487,17 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends K
             "rdfs" -> JsonLDString(OntologyConstants.Rdfs.RdfsPrefixExpansion)
         ))
 
-        val ontologiesJson: Vector[JsonLDObject] = ontologies.toVector.sortBy(_.ontologyIri).map(_.toJsonLD)
+        val maybeKnoraApiMetadata = if (includeKnoraApi) {
+            targetSchema match {
+                case ApiV2Simple => Some(KnoraApiV2Simple.OntologyMetadata)
+                case ApiV2WithValueObjects => Some(KnoraApiV2WithValueObjects.OntologyMetadata)
+            }
+        } else {
+            None
+        }
+
+        val ontologiesWithKnoraApi = ontologies ++ maybeKnoraApiMetadata
+        val ontologiesJson: Vector[JsonLDObject] = ontologiesWithKnoraApi.toVector.sortBy(_.ontologyIri).map(_.toJsonLD)
 
         val hasOntologiesProp = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasOntologies

@@ -52,8 +52,6 @@ class OntologyResponderV2 extends Responder {
       */
     private val OntologyCacheKey = "ontologyCacheData"
 
-    private case class OntologyMetadata(label: String)
-
     /**
       * A container for all the cached ontology data.
       *
@@ -70,7 +68,7 @@ class OntologyResponderV2 extends Responder {
       * @param standoffPropertyDefs                a map of property IRIs to property definitions.
       * @param standoffClassDefsWithDataType       a map of standoff class IRIs to class definitions, including only standoff datatype tags.
       */
-    private case class OntologyCacheData(ontologyMetadata: Map[SmartIri, OntologyMetadata],
+    private case class OntologyCacheData(ontologyMetadata: Map[SmartIri, OntologyMetadataV2],
                                          ontologyClasses: Map[SmartIri, Set[SmartIri]],
                                          ontologyProperties: Map[SmartIri, Set[SmartIri]],
                                          classDefs: Map[SmartIri, ReadClassInfoV2],
@@ -213,8 +211,26 @@ class OntologyResponderV2 extends Responder {
         }
 
         for {
+            // Get all ontology metdata.
+            ontologyMetdataSparql <- Future(queries.sparql.v2.txt.getAllOntologyInfo(triplestore = settings.triplestoreType).toString())
+            ontologyMetdataResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(ontologyMetdataSparql)).mapTo[SparqlConstructResponse]
+            ontologyMetadata: Map[SmartIri, OntologyMetadataV2] = ontologyMetdataResponse.statements.flatMap {
+                case (ontologyIri: IRI, ontologyStatements: Seq[(IRI, String)]) =>
+                    if (ontologyIri == OntologyConstants.KnoraBase.KnoraBaseOntologyIri) {
+                        None
+                    } else {
+                        val ontologySmartIri = ontologyIri.toSmartIri
+                        val ontologyLabel = ontologyStatements.toMap.getOrElse(OntologyConstants.Rdfs.Label, ontologySmartIri.getOntologyName)
+
+                        Some(ontologySmartIri -> OntologyMetadataV2(
+                            ontologyIri = ontologySmartIri,
+                            label = ontologyLabel
+                        ))
+                    }
+            }
+
             // Get all resource class definitions.
-            resourceDefsSparql <- Future(queries.sparql.v2.txt.getResourceClassDefinitions(triplestore = settings.triplestoreType).toString())
+            resourceDefsSparql =queries.sparql.v2.txt.getResourceClassDefinitions(triplestore = settings.triplestoreType).toString()
             resourceDefsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(resourceDefsSparql)).mapTo[SparqlSelectResponse]
             resourceDefsRows: Seq[VariableResultsRow] = resourceDefsResponse.results.bindings
 
@@ -720,7 +736,7 @@ class OntologyResponderV2 extends Responder {
             // Cache all the data.
 
             ontologyCacheData: OntologyCacheData = OntologyCacheData(
-                ontologyMetadata = Map.empty[SmartIri, OntologyMetadata],
+                ontologyMetadata = new ErrorHandlingMap[SmartIri, OntologyMetadataV2](ontologyMetadata, { key => s"Ontology not found: $key" }),
                 ontologyClasses = new ErrorHandlingMap[SmartIri, Set[SmartIri]](graphClassMap, { key => s"Ontology not found: $key" }),
                 ontologyProperties = new ErrorHandlingMap[SmartIri, Set[SmartIri]](graphPropMap, { key => s"Ontology not found: $key" }),
                 classDefs = new ErrorHandlingMap[SmartIri, ReadClassInfoV2](allClassDefs, { key => s"Class not found: $key" }),
@@ -903,28 +919,35 @@ class OntologyResponderV2 extends Responder {
         )
     }
 
+    /**
+      * Gets the metadata describing the ontologies that belong to selected projects, or to all projects.
+      *
+      * @param projectIris the IRIs of the projects selected, or an empty set if all projects are selected.
+      * @param userProfile   the profile of the user making the request.
+      * @return a [[ReadOntologyMetadataV2]].
+      */
     private def getOntologyMetadataV2(projectIris: Set[IRI], userProfile: UserProfileV1): Future[ReadOntologyMetadataV2] = {
         for {
+            cacheData <- getCacheData
             namedGraphInfos: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
+            filteredNamedGraphInfos = namedGraphInfos.filterNot(_.id == OntologyConstants.KnoraBase.KnoraBaseOntologyIri)
+            returnAllOntologies: Boolean = projectIris.isEmpty
 
-            namedGraphsToReturn = if (projectIris.isEmpty) {
-                namedGraphInfos
+            namedGraphsToReturn = if (returnAllOntologies) {
+                filteredNamedGraphInfos
             } else {
-                namedGraphInfos.filter(namedGraphInfo => projectIris.contains(namedGraphInfo.project_id))
+                filteredNamedGraphInfos.filter(namedGraphInfo => projectIris.contains(namedGraphInfo.project_id))
             }
 
             ontologyInfoV2s = namedGraphsToReturn.map {
                 namedGraphInfo =>
                     val ontologyIri = namedGraphInfo.id.toSmartIri
-
-                    OntologyMetadataV2(
-                        ontologyIri = ontologyIri,
-                        label = ontologyIri.getOntologyName
-                    )
+                    cacheData.ontologyMetadata.getOrElse(ontologyIri, throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri has no metadata"))
             }.toSet
 
             response = ReadOntologyMetadataV2(
-                ontologies = ontologyInfoV2s
+                ontologies = ontologyInfoV2s,
+                includeKnoraApi = returnAllOntologies
             )
         } yield response
     }
