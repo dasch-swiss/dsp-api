@@ -899,13 +899,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?pubdate a knora-api:Date .
                   |        FILTER(?pubdate > "JULIAN:1497")
                   |
-                  |    }
+                  |    } ORDER BY ?pubdate
                 """.stripMargin
 
             // TODO: find a better way to submit spaces as %20
             Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksPublishedAfterDate.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 18 (number of results from query above)
                 checkCountQuery(responseAs[String], 1)
