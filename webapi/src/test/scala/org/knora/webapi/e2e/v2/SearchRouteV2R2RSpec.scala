@@ -659,7 +659,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        FILTER(?pubdate = "JULIAN:1497-03-01")
                   |
-                  |    }
+                  |    } ORDER BY ?pubdate
                 """.stripMargin
 
             // TODO: find a better way to submit spaces as %20
@@ -667,7 +667,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountQuery(responseAs[String], 2)
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksPublishedOnDate.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
 
@@ -704,13 +706,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        FILTER(?pubdate != "JULIAN:1497-03-01")
                   |
-                  |    }
+                  |    } ORDER BY ?pubdate
                 """.stripMargin
 
             // TODO: find a better way to submit spaces as %20
             Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksNotPublishedOnDate.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
                 checkCountQuery(responseAs[String], 17)
@@ -749,7 +755,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |         FILTER(?pubdate < "JULIAN:1497-03-01" || ?pubdate > "JULIAN:1497-03-01")
                   |
-                  |    }
+                  |    } ORDER BY ?pubdate
                 """.stripMargin
 
             // TODO: find a better way to submit spaces as %20
@@ -757,6 +763,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksNotPublishedOnDate.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+                
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
                 checkCountQuery(responseAs[String], 17)
 
