@@ -760,7 +760,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                                                 TransformedFilterExpression(
                                                     filter,
-                                                    Seq(dateValEndStatement)
+                                                    Seq(dateValStartStatement, dateValEndStatement) // dateValStartStatement may be used as ORDER BY statement
                                                 )
 
                                             case CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO =>
@@ -790,7 +790,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                                                 TransformedFilterExpression(
                                                     filter,
-                                                    Seq(dateValEndStatement)
+                                                    Seq(dateValStartStatement, dateValEndStatement) // dateValStartStatement may be used as ORDER BY statement
                                                 )
 
 
