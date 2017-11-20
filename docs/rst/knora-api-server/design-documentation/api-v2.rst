@@ -69,7 +69,7 @@ JSON-LD Parsing and Formatting
 Each API response is represented by a class that extends ``KnoraResponseV2``, which
 has a method ``toJsonLDDocument`` that specifies the target schema. It is currently
 up to each route to determine what the appropriate response schema should be. Some routes
-will support only one respnse schema. Others will allow the client to choose, and there will
+will support only one response schema. Others will allow the client to choose, and there will
 be one or more standard ways for the client to specify the desired response schema.
 
 A route calls ``RouteUtilV2.runJsonRoute``, passing a request message and a response schema.
@@ -95,10 +95,10 @@ When a value is read, a ``ValueContentV2`` is wrapped in a ``ReadValueV2``, whic
 contains the value's IRI. When a value is created, it is wrapped in a ``CreateValueV2``, which has
 the resource IRI and the property IRI, but not the value IRI.
 
-A ``Read*`` wrapper can be wrapped in anotehr ``Read*`` wrapper; for example, a ``ReadResourceV2``
+A ``Read*`` wrapper can be wrapped in another ``Read*`` wrapper; for example, a ``ReadResourceV2``
 contains ``ReadValueV2`` objects.
 
-Each ``*Content*`` class should extend ``KnoraContentV2`` and thus have a ``toOntologySchema`` method 
+Each ``*Content*`` class should extend ``KnoraContentV2`` and thus have a ``toOntologySchema`` method
 or converting itself between internal and external schemas, in either direction.
 
 Each ``Read*`` wrapper class should have a method for converting itself to JSON-LD in a particular
