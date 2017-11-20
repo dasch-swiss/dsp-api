@@ -996,13 +996,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        FILTER(?pubdate > "JULIAN:1486" && ?pubdate < "JULIAN:1491")
                   |
-                  |    }
+                  |    } ORDER BY ?pubdate
                 """.stripMargin
 
             // TODO: find a better way to submit spaces as %20
             Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksPublishedBetweenDates.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 checkCountQuery(responseAs[String], 5)
 
