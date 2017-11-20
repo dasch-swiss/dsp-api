@@ -302,8 +302,8 @@ permissions from the **highest level** are applied. If a user is a member of mor
 In the case of users belonging to the **SystemAdmin** group, but which are not members of a project and thus no group
 belonging to the project, the *default object access permissions* from the **highest defined level** will apply.
 
-In the case of users belonging to the **SystemAdmin group**, but which are not members of a project and thus not a
-member of any group belonging to the project, the *default object access permissions* from the **ProjectAdmin**,
+In the case of users belonging to the **SystemAdmin group**, but which are not members of a project and thus not
+members of any group belonging to the project, the *default object access permissions* from the **ProjectAdmin**,
 **ProjectMember**, or **KnownUser** group will be applied in the order of precedence. If no permissions are defined on
 either of these groups, then the resulting permission will be ``CR knora-base:Creator``.
 
