@@ -29,7 +29,17 @@ import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, Kn
 import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
-import org.knora.webapi.util.{DateUtilV2, StringFormatter}
+import org.knora.webapi.util.{DateUtilV2, SmartIri, StringFormatter}
+import org.knora.webapi.util.IriConversions._
+
+/**
+  * A trait for content classes that can convert themselves between internal and internal schemas.
+  *
+  * @tparam C the type of the content class that extends this trait.
+  */
+trait KnoraContentV2[C <: KnoraContentV2[C]] {
+    def toOntologySchema(targetSchema: OntologySchema): C
+}
 
 /**
   * The value of a Knora property in the context of some particular input or output operation.
@@ -65,12 +75,12 @@ case class UpdateValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IO
 /**
   * The content of the value of a Knora property.
   */
-sealed trait ValueContentV2 {
+sealed trait ValueContentV2 { // TODO: have this extend KnoraContentV2[ValueContentV2].
 
     /**
       * The IRI of the internal Knora value type (defined in the `knora-base` ontology) corresponding to the type of this `ValueContentV2`.
       */
-    def internalValueTypeIri: IRI
+    def internalValueTypeIri: IRI // TODO: Use a SmartIri.
 
     /**
       * The string representation of this `ValueContentV2`.
@@ -83,7 +93,7 @@ sealed trait ValueContentV2 {
     def comment: Option[String]
 
     /**
-      * A representation of the `ValueContentV2` a [[JsonLDValue]].
+      * A representation of the `ValueContentV2` as a [[JsonLDValue]].
       *
       * @param targetSchema the API schema to be used.
       * @param settings     the configuration options.
@@ -673,7 +683,7 @@ object ReadResourceUtil {
     def createJsonLDObjectFromReadResourceV2(resource: ReadResourceV2, targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDObject = {
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        val stringFormatter = StringFormatter.getInstance
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val values: Map[IRI, JsonLDArray] = resource.values.map {
             case (propIri: IRI, readValues: Seq[ReadValueV2]) =>
@@ -687,17 +697,17 @@ object ReadResourceUtil {
                         JsonLDObject(
                             Map(
                                 "@id" -> JsonLDString(readValue.valueIri),
-                                "@type" -> JsonLDString(stringFormatter.internalEntityIriToApiV2WithValueObjectEntityIri(readValue.valueContent.internalValueTypeIri, () => throw InconsistentTriplestoreDataException(s"internal value type IRI ${readValue.valueContent.internalValueTypeIri} could not be converted to a knora-api v2 with value type IRI")))
+                                "@type" -> JsonLDString(readValue.valueContent.internalValueTypeIri.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString)
                             ) ++ valAsMap
                         )
                 }
 
-                (stringFormatter.internalEntityIriToApiV2WithValueObjectEntityIri(propIri, () => throw InconsistentTriplestoreDataException(s"internal property $propIri could not be converted to knora-api v2 with value object property IRI")), JsonLDArray(jsonLDValues))
+                (propIri.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString, JsonLDArray(jsonLDValues))
 
         }
 
         JsonLDObject(Map(
-            "@type" -> JsonLDString(stringFormatter.internalEntityIriToApiV2WithValueObjectEntityIri(resource.resourceClass, () => throw InconsistentTriplestoreDataException(s"internal resource class IRI ${resource.resourceClass} could not be converted to a knora-api v2 with value object resource class IRI"))),
+            "@type" -> JsonLDString(resource.resourceClass.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString),
             "http://schema.org/name" -> JsonLDString(resource.label),
             "@id" -> JsonLDString(resource.resourceIri)
         ) ++ values)
@@ -715,27 +725,29 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        val stringFormatter = StringFormatter.getInstance
+        implicit val stringFormatter = StringFormatter.getGeneralInstance
 
         // Make JSON-LD prefixes for the project-specific ontologies used in the response.
 
-        val internalProjectSpecificOntologiesUsed: Set[IRI] = resources.flatMap {
+        val knoraApiV2WithValueObjectsOntologySmartIri = OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri
+
+        val internalProjectSpecificOntologiesUsed: Set[SmartIri] = resources.flatMap {
             resource =>
                 val resourceClass = resource.resourceClass
                 val properties = resource.values.keySet
-                val resourceOntology = stringFormatter.getInternalOntologyIriFromInternalEntityIri(resourceClass, () => throw InconsistentTriplestoreDataException(s"Invalid internal resource class IRI: $resourceClass"))
+                val resourceOntology = resourceClass.toSmartIri.getOntologyFromEntity
 
                 val propertyOntologies = properties.map {
-                    property => stringFormatter.getInternalOntologyIriFromInternalEntityIri(property, () => throw InconsistentTriplestoreDataException(s"Invalid internal property IRI: $property"))
+                    property => property.toSmartIri.getOntologyFromEntity
                 }
 
                 propertyOntologies + resourceOntology
-        }.toSet - OntologyConstants.KnoraBase.KnoraBaseOntologyIri
+        }.toSet - knoraApiV2WithValueObjectsOntologySmartIri
 
-        val projectSpecificOntologyPrefixes: Map[IRI, JsonLDString] = internalProjectSpecificOntologiesUsed.map {
-            internalOntologyIri =>
-                val prefix = stringFormatter.getOntologyIDFromInternalOntologyIri(internalOntologyIri, () => throw InconsistentTriplestoreDataException(s"Invalid internal ontology IRI: $internalOntologyIri")).getPrefixLabel
-                val externalOntologyIri = stringFormatter.internalOntologyIriToApiV2WithValueObjectsOntologyIri(internalOntologyIri, () => throw InconsistentTriplestoreDataException(s"Invalid internal ontology IRI: $internalOntologyIri"))
+        val projectSpecificOntologyPrefixes: Map[String, JsonLDString] = internalProjectSpecificOntologiesUsed.map {
+            internalOntologySmartIri =>
+                val prefix = internalOntologySmartIri.getPrefixLabel
+                val externalOntologyIri = internalOntologySmartIri.toOntologySchema(ApiV2WithValueObjects).toString
                 (prefix, JsonLDString(externalOntologyIri + "#"))
         }.toMap
 

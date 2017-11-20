@@ -196,12 +196,12 @@
       "rdfs:label" : "Representation (Movie)",
       "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/simple/v2#Representation", {
         "@type" : "owl:Restriction",
-        "owl:minCardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#HasMovingImageFile"
-      }, {
-        "@type" : "owl:Restriction",
         "owl:cardinality" : 1,
         "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#creationDate"
+      }, {
+        "@type" : "owl:Restriction",
+        "owl:minCardinality" : 1,
+        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasMovingImageFile"
       }, {
         "@type" : "owl:Restriction",
         "owl:minCardinality" : 0,
@@ -296,12 +296,12 @@
       "rdfs:label" : "Representation",
       "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/simple/v2#Resource", {
         "@type" : "owl:Restriction",
-        "owl:minCardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#HasFile"
-      }, {
-        "@type" : "owl:Restriction",
         "owl:cardinality" : 1,
         "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#creationDate"
+      }, {
+        "@type" : "owl:Restriction",
+        "owl:minCardinality" : 1,
+        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasFile"
       }, {
         "@type" : "owl:Restriction",
         "owl:minCardinality" : 0,
@@ -320,9 +320,7 @@
       "@id" : "knora-api:Resource",
       "@type" : "owl:Class",
       "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
-      "rdfs:subClassOf" : [
-      "http://schema.org/Thing",
-      {
+      "rdfs:subClassOf" : [ "http://schema.org/Thing", {
         "@type" : "owl:Restriction",
         "owl:cardinality" : 1,
         "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#creationDate"
@@ -384,16 +382,16 @@
       "rdfs:label" : "Representation (Image)",
       "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/simple/v2#Representation", {
         "@type" : "owl:Restriction",
-        "owl:minCardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#HasStillImageFile"
-      }, {
-        "@type" : "owl:Restriction",
         "owl:cardinality" : 1,
         "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#creationDate"
       }, {
         "@type" : "owl:Restriction",
         "owl:minCardinality" : 0,
         "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"
+      }, {
+        "@type" : "owl:Restriction",
+        "owl:minCardinality" : 1,
+        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile"
       }, {
         "@type" : "owl:Restriction",
         "owl:maxCardinality" : 1,
@@ -445,36 +443,6 @@
     "http://api.knora.org/ontology/knora-api/simple/v2" : [ "http://api.knora.org/ontology/knora-api/simple/v2#AudioFile", "http://api.knora.org/ontology/knora-api/simple/v2#AudioRepresentation", "http://api.knora.org/ontology/knora-api/simple/v2#Color", "http://api.knora.org/ontology/knora-api/simple/v2#DDDFile", "http://api.knora.org/ontology/knora-api/simple/v2#DDDRepresentation", "http://api.knora.org/ontology/knora-api/simple/v2#Date", "http://api.knora.org/ontology/knora-api/simple/v2#DocumentFile", "http://api.knora.org/ontology/knora-api/simple/v2#DocumentRepresentation", "http://api.knora.org/ontology/knora-api/simple/v2#File", "http://api.knora.org/ontology/knora-api/simple/v2#ForbiddenResource", "http://api.knora.org/ontology/knora-api/simple/v2#Geom", "http://api.knora.org/ontology/knora-api/simple/v2#Geoname", "http://api.knora.org/ontology/knora-api/simple/v2#Interval", "http://api.knora.org/ontology/knora-api/simple/v2#LinkObj", "http://api.knora.org/ontology/knora-api/simple/v2#MovingImageFile", "http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation", "http://api.knora.org/ontology/knora-api/simple/v2#Region", "http://api.knora.org/ontology/knora-api/simple/v2#Representation", "http://api.knora.org/ontology/knora-api/simple/v2#Resource", "http://api.knora.org/ontology/knora-api/simple/v2#StillImageFile", "http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation", "http://api.knora.org/ontology/knora-api/simple/v2#TextFile", "http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation" ]
   },
   "knora-api:hasProperties" : {
-    "knora-api:HasFile" : {
-      "@id" : "knora-api:HasFile",
-      "@type" : "owl:DatatypeProperty",
-      "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#File",
-      "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Representation",
-      "rdfs:comment" : "Connects a Representation to a file",
-      "rdfs:label" : "has file",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#hasValue"
-    },
-    "knora-api:HasMovingImageFile" : {
-      "@id" : "knora-api:HasMovingImageFile",
-      "@type" : "owl:DatatypeProperty",
-      "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#MovingImageFile",
-      "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation",
-      "rdfs:comment" : "Connects a Representation to a moving image file",
-      "rdfs:label" : "has movie file",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#HasFile"
-    },
-    "knora-api:HasStillImageFile" : {
-      "@id" : "knora-api:HasStillImageFile",
-      "@type" : "owl:DatatypeProperty",
-      "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#StillImageFile",
-      "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation",
-      "rdfs:comment" : "Connects a Representation to an image file",
-      "rdfs:label" : "has image file",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#HasFile"
-    },
     "knora-api:creationDate" : {
       "@id" : "knora-api:creationDate",
       "@type" : "owl:DatatypeProperty",
@@ -494,13 +462,13 @@
     },
     "knora-api:hasAudioFile" : {
       "@id" : "knora-api:hasAudioFile",
-      "@type" : "owl:DatatypeProperty",
+      "@type" : "owl:ObjectProperty",
       "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
       "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#AudioFile",
       "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/simple/v2#AudioRepresentation",
       "rdfs:comment" : "Connects a Representation to an audio file",
       "rdfs:label" : "has audio file",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#HasFile"
+      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#hasFile"
     },
     "knora-api:hasColor" : {
       "@id" : "knora-api:hasColor",
@@ -524,23 +492,33 @@
     },
     "knora-api:hasDDDFile" : {
       "@id" : "knora-api:hasDDDFile",
-      "@type" : "owl:DatatypeProperty",
+      "@type" : "owl:ObjectProperty",
       "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
       "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#DDDFile",
       "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/simple/v2#DDDRepresentation",
       "rdfs:comment" : "Connects a Representation to a 3D file",
       "rdfs:label" : "has 3D file",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#HasFile"
+      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#hasFile"
     },
     "knora-api:hasDocumentFile" : {
       "@id" : "knora-api:hasDocumentFile",
-      "@type" : "owl:DatatypeProperty",
+      "@type" : "owl:ObjectProperty",
       "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
       "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#DocumentFile",
       "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/simple/v2#DocumentRepresentation",
       "rdfs:comment" : "Connects a Representation to a document",
       "rdfs:label" : "has document",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#HasFile"
+      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#hasFile"
+    },
+    "knora-api:hasFile" : {
+      "@id" : "knora-api:hasFile",
+      "@type" : "owl:ObjectProperty",
+      "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
+      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#File",
+      "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Representation",
+      "rdfs:comment" : "Connects a Representation to a file",
+      "rdfs:label" : "has file",
+      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#hasValue"
     },
     "knora-api:hasGeometry" : {
       "@id" : "knora-api:hasGeometry",
@@ -561,6 +539,16 @@
       "rdfs:comment" : "Represents a direct connection between two resources",
       "rdfs:label" : "has Link to"
     },
+    "knora-api:hasMovingImageFile" : {
+      "@id" : "knora-api:hasMovingImageFile",
+      "@type" : "owl:ObjectProperty",
+      "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
+      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#MovingImageFile",
+      "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation",
+      "rdfs:comment" : "Connects a Representation to a moving image file",
+      "rdfs:label" : "has movie file",
+      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#hasFile"
+    },
     "knora-api:hasStandoffLinkTo" : {
       "@id" : "knora-api:hasStandoffLinkTo",
       "@type" : "owl:ObjectProperty",
@@ -571,15 +559,25 @@
       "rdfs:label" : "has standoff link to",
       "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo"
     },
+    "knora-api:hasStillImageFile" : {
+      "@id" : "knora-api:hasStillImageFile",
+      "@type" : "owl:ObjectProperty",
+      "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
+      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#StillImageFile",
+      "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation",
+      "rdfs:comment" : "Connects a Representation to an image file",
+      "rdfs:label" : "has image file",
+      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#hasFile"
+    },
     "knora-api:hasTextFile" : {
       "@id" : "knora-api:hasTextFile",
-      "@type" : "owl:DatatypeProperty",
+      "@type" : "owl:ObjectProperty",
       "knora-api:belongsToOntology" : "http://api.knora.org/ontology/knora-api/simple/v2",
       "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#TextFile",
       "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation",
       "rdfs:comment" : "Connects a Representation to a text file",
       "rdfs:label" : "has text file",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#HasFile"
+      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#hasFile"
     },
     "knora-api:hasValue" : {
       "@id" : "knora-api:hasValue",

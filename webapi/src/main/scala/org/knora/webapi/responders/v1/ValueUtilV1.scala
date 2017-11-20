@@ -43,7 +43,7 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 class ValueUtilV1(private val settings: SettingsImpl) {
 
-    private val stringFormatter = StringFormatter.getInstance
+    private val stringFormatter = StringFormatter.getGeneralInstance
 
     /**
       * Given a [[ValueProps]] containing details of a `knora-base:Value` object, creates a [[ApiValueV1]].
