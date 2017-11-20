@@ -921,7 +921,7 @@ class OntologyResponderV2 extends Responder {
             projectsNamedGraph: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
 
             response = ReadNamedGraphsV2(
-                namedGraphs = projectsNamedGraph.map(_.id).toSet
+                namedGraphs = projectsNamedGraph.toSet
             )
         } yield response
     }

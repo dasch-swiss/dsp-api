@@ -99,6 +99,46 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.Boolean)
     )
 
+    val IsLinkProperty: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsLinkProperty,
+        propertyType = OntologyConstants.Owl.AnnotationProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "is link property"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates whether a property points to a resource"
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.Boolean)
+    )
+
+    val IsLinkValueProperty: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsLinkValueProperty,
+        propertyType = OntologyConstants.Owl.AnnotationProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "is link value property"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates whether a property points to a link value (reification)"
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.Boolean)
+    )
+
     val IsInherited: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsInherited,
         propertyType = OntologyConstants.Owl.AnnotationProperty,
@@ -117,6 +157,26 @@ object KnoraApiV2WithValueObjects {
             )
         ),
         subjectType = Some(OntologyConstants.Owl.Restriction),
+        objectType = Some(OntologyConstants.Xsd.Boolean)
+    )
+
+    val CanBeInstantiated: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.CanBeInstantiated,
+        propertyType = OntologyConstants.Owl.AnnotationProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "can be instantiated"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates whether a class is a Knora resource class that can be instantiated via the Knora API"
+                )
+            )
+        ),
         objectType = Some(OntologyConstants.Xsd.Boolean)
     )
 
@@ -160,26 +220,6 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.Uri)
     )
 
-    val CanBeInstantiated: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.CanBeInstantiated,
-        propertyType = OntologyConstants.Owl.AnnotationProperty,
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "can be instantiated"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Indicates whether a class is a Knora resource class that can be instantiated via the Knora API"
-                )
-            )
-        ),
-        objectType = Some(OntologyConstants.Xsd.Boolean)
-    )
-
     val HasPermissions: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -204,6 +244,7 @@ object KnoraApiV2WithValueObjects {
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo),
+        isLinkProp = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -230,6 +271,7 @@ object KnoraApiV2WithValueObjects {
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue),
+        isLinkValueProp = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -293,6 +335,84 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.DateTimeStamp)
     )
 
+    val IsPartOf: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsPartOf,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo),
+        isLinkProp = true,
+        isEditable = true,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "ist Teil von",
+                    LanguageCodes.EN -> "is part of",
+                    LanguageCodes.FR -> "fait partie de",
+                    LanguageCodes.IT -> "fa parte di"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates that this resource is part of another resource"
+                )
+            )
+        )
+    )
+
+    val IsPartOfValue: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsPartOfValue,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue),
+        isEditable = true,
+        isLinkValueProp = true,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "ist Teil von",
+                    LanguageCodes.EN -> "is part of",
+                    LanguageCodes.FR -> "fait partie de",
+                    LanguageCodes.IT -> "fa parte di"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates that this resource is part of another resource"
+                )
+            )
+        )
+    )
+
+    val ForbiddenResource: ReadClassInfoV2 = makeClass(
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.ForbiddenResource,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        canBeInstantiated = true,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraApiV2WithValueObjects.HasComment -> Cardinality.MustHaveSome
+        ),
+        inheritedCardinalities = Resource.allCardinalities
+    )
+
     val Region: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Region,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
@@ -317,6 +437,7 @@ object KnoraApiV2WithValueObjects {
         directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.HasColor -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.IsRegionOf -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.IsRegionOfValue -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.HasGeometry -> Cardinality.MustHaveSome,
             OntologyConstants.KnoraApiV2WithValueObjects.HasComment -> Cardinality.MustHaveSome
         ),
@@ -329,6 +450,7 @@ object KnoraApiV2WithValueObjects {
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Region),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo),
+        isLinkProp = true,
         isEditable = true,
         predicates = Seq(
             makePredicate(
@@ -347,6 +469,58 @@ object KnoraApiV2WithValueObjects {
                 )
             )
         )
+    )
+
+    val IsRegionOfValue: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsRegionOfValue,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Region),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue),
+        isEditable = true,
+        isLinkValueProp = true,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "ist Region von",
+                    LanguageCodes.EN -> "is region of",
+                    LanguageCodes.FR -> "est région de",
+                    LanguageCodes.IT -> "è regione di"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates which representation a region refers to"
+                )
+            )
+        )
+    )
+
+    val LinkObject: ReadClassInfoV2 = makeClass(
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkObj,
+        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Link Object"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents a generic link object."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraApiV2WithValueObjects.HasComment -> Cardinality.MayHaveMany,
+            OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue -> Cardinality.MustHaveOne
+        ),
+        inheritedCardinalities = Resource.allCardinalities
     )
 
     val Representation: ReadClassInfoV2 = makeClass(
@@ -599,6 +773,7 @@ object KnoraApiV2WithValueObjects {
     val HasLinkTo: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo,
         propertyType = OntologyConstants.Owl.ObjectProperty,
+        isLinkProp = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -618,6 +793,32 @@ object KnoraApiV2WithValueObjects {
         ),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource)
+    )
+
+    val HasLinkToValue: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue),
+        isLinkValueProp = true,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "hat Link zu",
+                    LanguageCodes.EN -> "has Link to",
+                    LanguageCodes.FR -> "a lien vers",
+                    LanguageCodes.IT -> "ha Link verso"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents a direct connection between two resources"
+                )
+            )
+        ),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue)
     )
 
     val SubjectType: ReadPropertyInfoV2 = makeProperty(
@@ -2186,7 +2387,9 @@ object KnoraApiV2WithValueObjects {
       */
     val Classes: Map[IRI, ReadClassInfoV2] = Set(
         Resource,
+        ForbiddenResource,
         Region,
+        LinkObject,
         Representation,
         StillImageRepresentation,
         MovingImageRepresentation,
@@ -2226,6 +2429,8 @@ object KnoraApiV2WithValueObjects {
     val Properties: Map[IRI, ReadPropertyInfoV2] = Set(
         Result,
         IsEditable,
+        IsLinkProperty,
+        IsLinkValueProperty,
         IsInherited,
         CanBeInstantiated,
         OntologyName,
@@ -2236,6 +2441,7 @@ object KnoraApiV2WithValueObjects {
         ValueCreationDate,
         HasValue,
         HasLinkTo,
+        HasLinkToValue,
         HasStandoffLinkTo,
         HasStandoffLinkToValue,
         CreationDate,
@@ -2243,7 +2449,10 @@ object KnoraApiV2WithValueObjects {
         SubjectType,
         ObjectType,
         ResourceIcon,
+        IsPartOf,
+        IsPartOfValue,
         IsRegionOf,
+        IsRegionOfValue,
         HasColor,
         HasGeometry,
         HasComment,
@@ -2321,6 +2530,7 @@ object KnoraApiV2WithValueObjects {
       * @param propertyType  the type of the property (owl:ObjectProperty, owl:DatatypeProperty, or rdf:Property).
       * @param subPropertyOf the set of direct superproperties of this property.
       * @param isEditable    true if this is a Knora resource property that can be edited via the Knora API.
+      * @param isLinkValueProp true if the property points to a link value (reification).
       * @param predicates    the property's predicates.
       * @param subjectType   the required type of the property's subject.
       * @param objectType    the required type of the property's object.
@@ -2330,6 +2540,8 @@ object KnoraApiV2WithValueObjects {
                              propertyType: IRI,
                              subPropertyOf: Set[IRI] = Set.empty[IRI],
                              isEditable: Boolean = false,
+                             isLinkProp: Boolean = false,
+                             isLinkValueProp: Boolean = false,
                              predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
                              subjectType: Option[IRI] = None,
                              objectType: Option[IRI] = None): ReadPropertyInfoV2 = {
@@ -2366,7 +2578,9 @@ object KnoraApiV2WithValueObjects {
                 }.toMap,
                 subPropertyOf = subPropertyOf
             ),
-            isEditable = isEditable
+            isEditable = isEditable,
+            isLinkProp = isLinkProp,
+            isLinkValueProp = isLinkValueProp
         )
     }
 

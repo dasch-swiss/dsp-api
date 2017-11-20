@@ -24,6 +24,7 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 import java.util.UUID
 
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
@@ -463,7 +464,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[IRI, Set[IRI]] = Map.empty[IR
 
 }
 
-case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
+case class ReadNamedGraphsV2(namedGraphs: Set[NamedGraphV1]) extends KnoraResponseV2 {
 
     private val stringFormatter = StringFormatter.getInstance
 
@@ -477,8 +478,20 @@ case class ReadNamedGraphsV2(namedGraphs: Set[IRI]) extends KnoraResponseV2 {
             OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(knoraApiOntologyPrefixExpansion)
         ))
 
-        val namedGraphIris: Seq[JsonLDString] = namedGraphs.toSeq.map {
-            namedGraphIri => JsonLDString(stringFormatter.toExternalOntologyIri(namedGraphIri, targetSchema))
+        val namedGraphIris: Seq[JsonLDObject] = namedGraphs.toSeq.map {
+            namedGraph =>
+                
+                val shortname = targetSchema match {
+                    case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasShortname
+                    case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasShortname
+                }
+
+                JsonLDObject(
+                    Map(
+                        "@id" -> JsonLDString(stringFormatter.toExternalOntologyIri(namedGraph.id, targetSchema)),
+                        shortname -> JsonLDString(namedGraph.shortname)
+                    )
+                )
         }
 
         val hasOntologiesProp = targetSchema match {
@@ -1087,11 +1100,23 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
             None
         }
 
+        val isLinkValuePropertyStatement: Option[(IRI, JsonLDBoolean)] = if (isLinkValueProp && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkValueProperty -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
+        val isLinkPropertyStatement = if (isLinkProp && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkProperty -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
         Map(
             "@id" -> JsonLDString(convertedPropertyIri),
             "@type" -> JsonLDString(convertedPropertyType),
             belongsToOntologyPred -> JsonLDString(convertedOntologyIri)
-        ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++ isEditableStatement
+        ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++ isEditableStatement ++ isLinkValuePropertyStatement ++ isLinkPropertyStatement
     }
 }
 
