@@ -485,7 +485,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?seqnum a xsd:integer .
                   |
-                  |    }
+                  |    } ORDER BY ?seqnum
                 """.stripMargin
 
             // TODO: find a better way to submit spaces as %20
@@ -493,7 +493,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountQuery(responseAs[String], 10)
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
 
