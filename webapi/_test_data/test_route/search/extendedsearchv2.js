@@ -16,12 +16,12 @@ queryArr.push(`
     
     CONSTRUCT {
         ?letter knora-api:isMainResource true .
-    
-        ?letter ?linkingProp1  <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> .
-
-        ?letter ?linkingProp2  <http://rdfh.ch/beol/_yblAQMwT2un_xN7UaVWrg> .
         
-        <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> beol:hasFamilyName ?name .
+        ?letter beol:creationDate ?date .
+    
+        ?letter ?linkingProp1  ?person1 .
+
+        ?letter ?linkingProp2  ?person2 .
         
 
     } WHERE {
@@ -29,30 +29,40 @@ queryArr.push(`
         ?letter a beol:letter .
         
         ?letter beol:creationDate ?date .
-        beol:creationDate knora-api:objectType knora-api:Date .
         
+        beol:creationDate knora-api:objectType knora-api:Date .
         ?date a knora-api:Date .
     
         # Scheuchzer, Johann Jacob 1672-1733
-        ?letter ?linkingProp1  <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> .
+        ?letter ?linkingProp1  ?person1 .
+        
         ?linkingProp1 knora-api:objectType knora-api:Resource .
         FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
         
-        <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> a knora-api:Resource .
-
-        <http://rdfh.ch/beol/ZkJcQg9yTmyMY_J6nnubxA> beol:hasFamilyName ?name .
+        ?person1 a beol:person .
+        ?person1 a knora-api:Resource .
         
-        beol:hasFamilyName knora-api:objectType xsd:string .
-        ?name a xsd:string .
-
+        ?person1 beol:hasIAFIdentifier ?gnd1 .
+        FILTER(?gnd1 = "(DE-588)118607308")
+    
+        ?gnd1 a xsd:string .
 
         # Hermann, Jacob 1678-1733
-        ?letter ?linkingProp2 <http://rdfh.ch/beol/_yblAQMwT2un_xN7UaVWrg> .
+        ?letter ?linkingProp2 ?person2 .
         ?linkingProp2 knora-api:objectType knora-api:Resource .
     
         FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
     
-        <http://rdfh.ch/beol/_yblAQMwT2un_xN7UaVWrg> a knora-api:Resource .
+        ?person2 a beol:person .
+        ?person2 a knora-api:Resource .
+        
+        ?person2 beol:hasIAFIdentifier ?gnd2 .
+        FILTER(?gnd2 = "(DE-588)119112450")
+        
+        ?gnd2 a xsd:string .
+    
+        beol:hasIAFIdentifier knora-api:objectType xsd:string .
+        
     } ORDER BY ?date
 `);
 
@@ -68,7 +78,7 @@ queryArr.push(`
       
           ?letter beol:title ?title .
       
-          ?letter beol:mentionsPerson <http://rdfh.ch/beol/BPW4_gnxQBC4iWm3F6ni8w> .
+          ?letter beol:mentionsPerson ?newton .
       
       } WHERE {
           ?letter a knora-api:Resource .
@@ -81,10 +91,18 @@ queryArr.push(`
           FILTER(?title = "1707-05-18_2_Hermann_Jacob-Scheuchzer_Johann_Jakob")
       
           # Newton,  Isaac 1643-1727
-          ?letter beol:mentionsPerson <http://rdfh.ch/beol/BPW4_gnxQBC4iWm3F6ni8w> .
+          ?letter beol:mentionsPerson ?newton .
           beol:mentionsPerson  knora-api:objectType knora-api:Resource .
       
-          <http://rdfh.ch/beol/BPW4_gnxQBC4iWm3F6ni8w> a knora-api:Resource .
+          ?newton a knora-api:Resource .
+          
+          ?newton beol:hasIAFIdentifier ?gnd .
+          FILTER(?gnd = "(DE-588)118587544")
+        
+          ?gnd a xsd:string .
+    
+          beol:hasIAFIdentifier knora-api:objectType xsd:string .
+          
       } ORDER BY ?title
 `);
 
@@ -98,9 +116,9 @@ queryArr.push(`
       
           ?letter a beol:letter .
       
-          ?letter beol:title ?title .
+          ?letter ?hasTitle ?title .
       
-          ?letter beol:mentionsPerson <http://rdfh.ch/beol/BPW4_gnxQBC4iWm3F6ni8w> .
+          ?letter beol:mentionsPerson ?newton .
       
       } WHERE {
           ?letter a knora-api:Resource .
@@ -115,10 +133,17 @@ queryArr.push(`
           FILTER(?title = "1707-05-18_2_Hermann_Jacob-Scheuchzer_Johann_Jakob")
       
           # Newton,  Isaac 1643-1727
-          ?letter beol:mentionsPerson <http://rdfh.ch/beol/BPW4_gnxQBC4iWm3F6ni8w> .
+          ?letter beol:mentionsPerson ?newton .
           beol:mentionsPerson  knora-api:objectType knora-api:Resource .
       
-          <http://rdfh.ch/beol/BPW4_gnxQBC4iWm3F6ni8w> a knora-api:Resource .
+          ?newton a knora-api:Resource .
+          
+          ?newton beol:hasIAFIdentifier ?gnd .
+          FILTER(?gnd = "(DE-588)118587544")
+        
+          ?gnd a xsd:string .
+    
+          beol:hasIAFIdentifier knora-api:objectType xsd:string .
       }
 `);
 
@@ -162,7 +187,7 @@ CONSTRUCT {
     ?author a knora-api:Resource .
 
     ?author beol:hasIAFIdentifier ?gnd .
-    FILTER(?gnd = "120379260")
+    FILTER(?gnd = "(DE-588)120379260")
     
     ?gnd a xsd:string .
     beol:hasIAFIdentifier knora-api:objectType xsd:string .
