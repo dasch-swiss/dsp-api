@@ -107,7 +107,7 @@ class ListsAdminResponderSpec extends CoreSpec(ListsAdminResponderSpec.config) w
 
                 val received: ListsGetAdminResponse = expectMsgType[ListsGetAdminResponse](timeout)
 
-                received.items.size should be(6)
+                received.items.size should be(7)
             }
 
             "return all lists belonging to the images project" in {

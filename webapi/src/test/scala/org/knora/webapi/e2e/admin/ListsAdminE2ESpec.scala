@@ -115,7 +115,7 @@ class ListsAdminE2ESpec extends E2ESpec(ListsAdminE2ESpec.config) with SessionJs
 
                 // log.debug("lists: {}", lists)
 
-                lists.size should be (6)
+                lists.size should be (7)
             }
 
             "return all lists belonging to the images project" in {

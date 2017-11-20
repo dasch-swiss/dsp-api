@@ -84,7 +84,7 @@
     <!-- Spec Logging -->
 
     <!-- V1 -->
-    <logger name="org.knora.webapi.responders.v1.ListsResponderV1Spec" level="DEBUG"/>
+    <logger name="org.knora.webapi.responders.v1.ListsResponderV1Spec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.v1.UsersV1E2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.v1.ProjectsV1E2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.v1.GroupsV1E2ESpec" level="INFO"/>
@@ -99,9 +99,9 @@
     <!-- V2 -->
 
     <!-- Admin -->
-    <logger name="org.knora.webapi.responders.admin.ListsAdminResponder" level="DEBUG"/>
-    <logger name="org.knora.webapi.responders.admin.ListsAdminResponderSpec" level="DEBUG"/>
-    <logger name="org.knora.webapi.e2e.admin.ListsAdminE2ESpec" level="DEBUG"/>
+    <logger name="org.knora.webapi.responders.admin.ListsAdminResponder" level="INFO"/>
+    <logger name="org.knora.webapi.responders.admin.ListsAdminResponderSpec" level="INFO"/>
+    <logger name="org.knora.webapi.e2e.admin.ListsAdminE2ESpec" level="INFO"/>
 
     <root level="INFO">
         <appender-ref ref="stdout"/>
