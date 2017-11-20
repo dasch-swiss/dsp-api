@@ -1,0 +1,28 @@
+{
+  "knora-api:hasOntologies": [{
+    "@id": "http://0.0.0.0:3333/ontology/00FF/images/v2",
+    "rdfs:label": "images"
+  }, {
+    "@id": "http://0.0.0.0:3333/ontology/anything/v2",
+    "rdfs:label": "anything"
+  }, {
+    "@id": "http://0.0.0.0:3333/ontology/beol/v2",
+    "rdfs:label": "beol"
+  }, {
+    "@id": "http://0.0.0.0:3333/ontology/biblio/v2",
+    "rdfs:label": "biblio"
+  }, {
+    "@id": "http://0.0.0.0:3333/ontology/dokubib/v2",
+    "rdfs:label": "dokubib"
+  }, {
+    "@id": "http://0.0.0.0:3333/ontology/incunabula/v2",
+    "rdfs:label": "incunabula"
+  }, {
+    "@id": "http://api.knora.org/ontology/knora-api/v2",
+    "rdfs:label": "knora-base"
+  }],
+  "@context": {
+    "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  }
+}

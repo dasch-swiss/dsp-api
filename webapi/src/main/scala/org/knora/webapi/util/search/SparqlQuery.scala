@@ -21,7 +21,8 @@
 package org.knora.webapi.util.search
 
 import org.knora.webapi._
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.{StringFormatter, SmartIri}
+import org.knora.webapi.util.IriConversions._
 
 /**
   * Represents something that can generate SPARQL source code.
@@ -94,28 +95,15 @@ case class Count(inputVariable: QueryVariable, distinct: Boolean = true, outputV
   *
   * @param iri the IRI.
   */
-case class IriRef(iri: IRI, propertyPathOperator: Option[Char] = None) extends Entity {
-    private val stringFormatter = StringFormatter.getInstance
-
-    val isInternalEntityIri: Boolean = stringFormatter.isInternalEntityIri(iri)
-    val isApiEntityIri: Boolean = stringFormatter.isExternalEntityIri(iri)
-    val isEntityIri: Boolean = isApiEntityIri || isInternalEntityIri
-
+case class IriRef(iri: SmartIri, propertyPathOperator: Option[Char] = None) extends Entity {
     /**
       * If this is a knora-api entity IRI, converts it to an internal entity IRI.
       *
       * @return the equivalent internal entity IRI.
       */
-    def toInternalEntityIri: IriRef = {
-        if (isInternalEntityIri) {
-            IriRef(stringFormatter.externalToInternalEntityIri(iri, () => throw BadRequestException(s"$iri is not a valid external knora-api entity Iri")))
-        } else {
-            throw AssertionException("$iri is not a knora-api entity IRI")
-        }
-    }
+    def toInternalEntityIri: IriRef = IriRef(iri.toOntologySchema(InternalSchema))
 
     def toSparql: String = {
-
         if (propertyPathOperator.nonEmpty) {
             s"<$iri>${propertyPathOperator.get}"
         } else {
@@ -130,7 +118,7 @@ case class IriRef(iri: IRI, propertyPathOperator: Option[Char] = None) extends E
   * @param value    the literal value.
   * @param datatype the value's XSD type IRI.
   */
-case class XsdLiteral(value: String, datatype: IRI) extends Entity {
+case class XsdLiteral(value: String, datatype: SmartIri) extends Entity {
     def toSparql: String = "\"" + value + "\"^^<" + datatype + ">"
 }
 
@@ -177,11 +165,13 @@ object StatementPattern {
       * @return the statement pattern.
       */
     def makeExplicit(subj: Entity, pred: Entity, obj: Entity): StatementPattern = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
         StatementPattern(
             subj = subj,
             pred = pred,
             obj = obj,
-            namedGraph = Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph))
+            namedGraph = Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph.toSmartIri))
         )
     }
 

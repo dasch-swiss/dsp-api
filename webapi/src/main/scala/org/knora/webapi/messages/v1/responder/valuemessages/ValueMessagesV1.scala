@@ -651,7 +651,7 @@ case class TextValueWithStandoffV1(utf8str: String,
                                    mapping: MappingXMLtoStandoff) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
 
     private val knoraIdUtil = new KnoraIdUtil
-    private val stringFormatter = StringFormatter.getInstance
+    private val stringFormatter = StringFormatter.getGeneralInstance
 
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
 

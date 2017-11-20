@@ -129,7 +129,7 @@ case class ProjectsGetV1(userProfile: Option[UserProfileV1]) extends ProjectsRes
 case class ProjectsNamedGraphGetV1(userProfile: UserProfileV1) extends ProjectsResponderRequestV1
 
 /**
-  * Get info about a single project identified through it's IRI. The response is in form of [[ProjectInfoResponseV1]].
+  * Get info about a single project identified through its IRI. The response is in form of [[ProjectInfoResponseV1]].
   *
   * @param iri           the IRI of the project.
   * @param userProfileV1 the profile of the user making the request (optional).
@@ -137,7 +137,7 @@ case class ProjectsNamedGraphGetV1(userProfile: UserProfileV1) extends ProjectsR
 case class ProjectInfoByIRIGetRequestV1(iri: IRI, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
-  * Get info about a single project identified through it's IRI. The response is in form of [[ProjectInfoV1]].
+  * Get info about a single project identified through its IRI. The response is in form of [[ProjectInfoV1]].
   *
   * @param iri           the IRI of the project.
   * @param userProfileV1 the profile of the user making the request (optional).
@@ -145,7 +145,7 @@ case class ProjectInfoByIRIGetRequestV1(iri: IRI, userProfileV1: Option[UserProf
 case class ProjectInfoByIRIGetV1(iri: IRI, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
-  * Find everything about a single project identified through it's shortname.
+  * Find everything about a single project identified through its shortname.
   *
   * @param shortname     of the project.
   * @param userProfileV1 the profile of the user making the request.
