@@ -699,7 +699,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                         }
 
                                         // validate Knora  date string
-                                        val dateStr: String = stringFormatter.validateDate(dateStringLiteral.value, () => throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"))
+                                        val dateStr: String = stringFormatter.validateDate(dateStringLiteral.value, throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"))
 
                                         val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
 

@@ -35,9 +35,11 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?ontologyPred ?ontologyObj
-WHERE {
+CONSTRUCT {
+    ?ontology ?ontologyPred ?ontologyObj .
+} WHERE {
     BIND(IRI("@ontologyIri") AS ?ontology)
 
-    ?ontology ?ontologyPred ?ontologyObj .
+    ?ontology rdf:type owl:Ontology ;
+        ?ontologyPred ?ontologyObj .
 }

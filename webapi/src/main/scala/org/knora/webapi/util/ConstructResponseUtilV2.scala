@@ -491,7 +491,7 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.StillImageFileValue =>
 
                 val isPreviewStr = valueObject.assertions.get(OntologyConstants.KnoraBase.IsPreview)
-                val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, () => throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
+                val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
 
                 StillImageFileValueContentV2(
                     internalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.InternalMimeType),

@@ -21,18 +21,12 @@
 @import org.knora.webapi.IRI
 
 @*
- * Creates a new, empty ontology. If the ontology already exists, this update does nothing.
+ * Gets the predicates and objects of an ontology IRI.
  *
  * @param triplestore the name of the triplestore being used.
- * @param ontologyNamedGraphIri the IRI of the named graph where the ontology should be stored.
- * @param ontologyIri the IRI of the ontology to be created.
- * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
+ * @param ontologyIri the IRI of the ontology.
  *@
-@(triplestore: String,
-  ontologyNamedGraphIri: IRI,
-  ontologyIri: IRI,
-  ontologyLabel: String,
-  currentTime: String)
+@(triplestore: String)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -40,22 +34,9 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-INSERT {
-    GRAPH ?ontologyNamedGraph {
-        ?ontology rdf:type owl:Ontology .
-        ?ontology rdfs:label """@ontologyLabel"""^^xsd:string ;
-            knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
-    }
-}
-@* Ensure that inference is not used in the WHERE clause of this update. *@
-@if(triplestore.startsWith("graphdb")) {
-    USING <http://www.ontotext.com/explicit>
-}
-WHERE {
-    BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
-    BIND(IRI("@ontologyIri") AS ?ontology)
-
-    FILTER NOT EXISTS {
-        ?ontology rdf:type ?existingOntologyType .
-    }
+CONSTRUCT {
+    ?ontology ?ontologyPred ?ontologyObj .
+} WHERE {
+    ?ontology rdf:type owl:Ontology ;
+        ?ontologyPred ?ontologyObj .
 }

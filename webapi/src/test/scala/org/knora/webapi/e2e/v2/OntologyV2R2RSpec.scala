@@ -261,7 +261,9 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |    "knora-api:ontologyName": "example",
                    |    "knora-api:projectIri": "$projectWithProjectID",
+                   |    "rdfs:label": "The example ontology",
                    |    "@context": {
+                   |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
                    |        "knora-api": "${OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion}"
                    |    }
                    |}

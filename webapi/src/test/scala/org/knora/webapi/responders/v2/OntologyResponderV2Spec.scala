@@ -45,6 +45,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "foo",
                 projectIri = projectWithProjectID,
+                label = "The foo ontology",
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )
@@ -57,6 +58,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "foo",
                 projectIri = projectWithProjectID,
+                label = "The foo ontology",
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )
@@ -73,6 +75,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "0000",
                 projectIri = projectWithProjectID,
+                label = "The 0000 ontology",
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )
@@ -89,6 +92,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "-foo",
                 projectIri = projectWithProjectID,
+                label = "The -foo ontology",
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )
@@ -103,6 +107,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "v3",
                 projectIri = projectWithProjectID,
+                label = "The v3 ontology",
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )
@@ -117,6 +122,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "ontology",
                 projectIri = projectWithProjectID,
+                label = "The ontology ontology",
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )
@@ -131,6 +137,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "knora",
                 projectIri = projectWithProjectID,
+                label = "The wrong knora ontology",
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )
@@ -145,6 +152,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "simple",
                 projectIri = projectWithProjectID,
+                label = "The simple ontology",
                 apiRequestID = UUID.randomUUID,
                 userProfile = userProfile
             )

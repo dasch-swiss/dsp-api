@@ -52,10 +52,12 @@ class OntologyResponderV2 extends Responder {
       */
     private val OntologyCacheKey = "ontologyCacheData"
 
+    private case class OntologyMetadata(label: String)
+
     /**
       * A container for all the cached ontology data.
       *
-      * @param ontologies                          the set of available ontologies.
+      * @param ontologyMetadata                    metadata about available ontologies.
       * @param ontologyClasses                     a map of ontology IRIs to sets of non-standoff class IRIs defined in each ontology.
       * @param ontologyProperties                  a map of property IRIs to sets of non-standoff property IRIs defined in each ontology.
       * @param classDefs                           a map of class IRIs to definitions.
@@ -68,18 +70,18 @@ class OntologyResponderV2 extends Responder {
       * @param standoffPropertyDefs                a map of property IRIs to property definitions.
       * @param standoffClassDefsWithDataType       a map of standoff class IRIs to class definitions, including only standoff datatype tags.
       */
-    case class OntologyCacheData(ontologies: Set[SmartIri],
-                                 ontologyClasses: Map[SmartIri, Set[SmartIri]],
-                                 ontologyProperties: Map[SmartIri, Set[SmartIri]],
-                                 classDefs: Map[SmartIri, ReadClassInfoV2],
-                                 resourceAndValueSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
-                                 resourceSuperClassOfRelations: Map[SmartIri, Set[SmartIri]],
-                                 propertyDefs: Map[SmartIri, ReadPropertyInfoV2],
-                                 ontologyStandoffClasses: Map[SmartIri, Set[SmartIri]],
-                                 ontologyStandoffProperties: Map[SmartIri, Set[SmartIri]],
-                                 standoffClassDefs: Map[SmartIri, ReadClassInfoV2],
-                                 standoffPropertyDefs: Map[SmartIri, ReadPropertyInfoV2],
-                                 standoffClassDefsWithDataType: Map[SmartIri, ReadClassInfoV2])
+    private case class OntologyCacheData(ontologyMetadata: Map[SmartIri, OntologyMetadata],
+                                         ontologyClasses: Map[SmartIri, Set[SmartIri]],
+                                         ontologyProperties: Map[SmartIri, Set[SmartIri]],
+                                         classDefs: Map[SmartIri, ReadClassInfoV2],
+                                         resourceAndValueSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
+                                         resourceSuperClassOfRelations: Map[SmartIri, Set[SmartIri]],
+                                         propertyDefs: Map[SmartIri, ReadPropertyInfoV2],
+                                         ontologyStandoffClasses: Map[SmartIri, Set[SmartIri]],
+                                         ontologyStandoffProperties: Map[SmartIri, Set[SmartIri]],
+                                         standoffClassDefs: Map[SmartIri, ReadClassInfoV2],
+                                         standoffPropertyDefs: Map[SmartIri, ReadPropertyInfoV2],
+                                         standoffClassDefsWithDataType: Map[SmartIri, ReadClassInfoV2])
 
     def receive = {
         case LoadOntologiesRequestV2(userProfile) => future2Message(sender(), loadOntologies(userProfile), log)
@@ -651,7 +653,7 @@ class OntologyResponderV2 extends Responder {
                             predicates = predicates,
                             directCardinalities = directCardinalities,
                             standoffDataType = standoffDataType.headOption match {
-                                case Some(dataType: SmartIri) => Some(StandoffDataTypeClasses.lookup(dataType.toString, () => throw InconsistentTriplestoreDataException(s"$dataType is not a valid standoff data type")))
+                                case Some(dataType: SmartIri) => Some(StandoffDataTypeClasses.lookup(dataType.toString, throw InconsistentTriplestoreDataException(s"$dataType is not a valid standoff data type")))
                                 case None => None
                             },
                             subClassOf = directStandoffSubClassOfRelations.getOrElse(standoffClassIri, Set.empty[SmartIri]),
@@ -718,7 +720,7 @@ class OntologyResponderV2 extends Responder {
             // Cache all the data.
 
             ontologyCacheData: OntologyCacheData = OntologyCacheData(
-                ontologies = graphClassMap.keySet ++ graphPropMap.keySet ++ standoffGraphClassMap.keySet ++ standoffGraphPropMap.keySet,
+                ontologyMetadata = Map.empty[SmartIri, OntologyMetadata],
                 ontologyClasses = new ErrorHandlingMap[SmartIri, Set[SmartIri]](graphClassMap, { key => s"Ontology not found: $key" }),
                 ontologyProperties = new ErrorHandlingMap[SmartIri, Set[SmartIri]](graphPropMap, { key => s"Ontology not found: $key" }),
                 classDefs = new ErrorHandlingMap[SmartIri, ReadClassInfoV2](allClassDefs, { key => s"Class not found: $key" }),
@@ -889,7 +891,7 @@ class OntologyResponderV2 extends Responder {
         for {
             cacheData <- getCacheData
 
-            _ = if (!cacheData.ontologies.contains(namedGraphIri)) {
+            _ = if (!(cacheData.ontologyClasses.contains(namedGraphIri) || cacheData.ontologyProperties.contains(namedGraphIri))) {
                 throw NotFoundException(s"Ontology not found: $namedGraphIri")
             }
         } yield OntologyEntitiesIriInfoV2(
@@ -939,18 +941,18 @@ class OntologyResponderV2 extends Responder {
             cacheData <- getCacheData
 
             entitiesForOntologiesMap: Map[SmartIri, OntologyEntitiesIriInfoV2] = ontologyIris.map {
-                namedGraphIri =>
+                ontologyIri =>
 
-                    if (!cacheData.ontologies.contains(namedGraphIri)) {
-                        throw NotFoundException(s"Ontology not found: $namedGraphIri")
+                    if (!(cacheData.ontologyClasses.contains(ontologyIri) || cacheData.ontologyProperties.contains(ontologyIri))) {
+                        throw NotFoundException(s"Ontology not found: $ontologyIri")
                     }
 
-                    namedGraphIri -> OntologyEntitiesIriInfoV2(
-                        ontologyIri = namedGraphIri,
-                        propertyIris = cacheData.ontologyProperties.getOrElse(namedGraphIri, Set.empty[SmartIri]),
-                        classIris = cacheData.ontologyClasses.getOrElse(namedGraphIri, Set.empty[SmartIri]),
-                        standoffClassIris = cacheData.ontologyStandoffClasses.getOrElse(namedGraphIri, Set.empty[SmartIri]),
-                        standoffPropertyIris = cacheData.ontologyStandoffProperties.getOrElse(namedGraphIri, Set.empty[SmartIri])
+                    ontologyIri -> OntologyEntitiesIriInfoV2(
+                        ontologyIri = ontologyIri,
+                        propertyIris = cacheData.ontologyProperties.getOrElse(ontologyIri, Set.empty[SmartIri]),
+                        classIris = cacheData.ontologyClasses.getOrElse(ontologyIri, Set.empty[SmartIri]),
+                        standoffClassIris = cacheData.ontologyStandoffClasses.getOrElse(ontologyIri, Set.empty[SmartIri]),
+                        standoffPropertyIris = cacheData.ontologyStandoffProperties.getOrElse(ontologyIri, Set.empty[SmartIri])
                     )
             }.toMap
 
@@ -1056,9 +1058,9 @@ class OntologyResponderV2 extends Responder {
                     ontologyIri = internalOntologyIriStr
                 ).toString
 
-                preUpdateCheckResponse <- (storeManager ? SparqlSelectRequest(checkOntologySparql)).mapTo[SparqlSelectResponse]
+                preUpdateCheckResponse <- (storeManager ? SparqlConstructRequest(checkOntologySparql)).mapTo[SparqlConstructResponse]
 
-                _ = if (preUpdateCheckResponse.results.bindings.nonEmpty) {
+                _ = if (preUpdateCheckResponse.statements.nonEmpty) {
                     throw BadRequestException(s"Ontology $internalOntologyIri cannot be created, because it already exists")
                 }
 
@@ -1068,22 +1070,25 @@ class OntologyResponderV2 extends Responder {
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIriStr,
                     ontologyIri = internalOntologyIriStr,
+                    ontologyLabel = createOntologyRequest.label,
                     currentTime = currentTime
                 ).toString
 
-                createOntologyResponse <- (storeManager ? SparqlUpdateRequest(createOntologySparql)).mapTo[SparqlUpdateResponse]
+                _ <- (storeManager ? SparqlUpdateRequest(createOntologySparql)).mapTo[SparqlUpdateResponse]
 
                 // Check that the update was successful.
 
-                postUpdateCheckResponse <- (storeManager ? SparqlSelectRequest(checkOntologySparql)).mapTo[SparqlSelectResponse]
+                postUpdateCheckResponse <- (storeManager ? SparqlConstructRequest(checkOntologySparql)).mapTo[SparqlConstructResponse]
 
-                lastModDate: Set[String] = postUpdateCheckResponse.results.bindings.map {
-                    row =>
-                        row.rowMap.get("ontologyPred") match {
-                            case Some(OntologyConstants.KnoraBase.LastModificationDate) => row.rowMap.get("ontologyObj")
-                            case _ => None
-                        }
-                }.toSet.flatten
+                // Get the metadata statements about the ontology.
+                ontologyStatements: Seq[(IRI, String)] = postUpdateCheckResponse.statements.getOrElse(internalOntologyIriStr, throw UpdateNotPerformedException())
+
+                // Get the ontology's last modification date from those statements.
+                lastModDate: Seq[String] = ontologyStatements.groupBy {
+                    case (pred, _) => pred
+                }.getOrElse(OntologyConstants.KnoraBase.LastModificationDate, throw UpdateNotPerformedException()).map {
+                    case (_, obj) => obj
+                }
 
                 _ = if (lastModDate.size > 1) {
                     throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has more than one knora-base:lastModificationDate")
@@ -1094,7 +1099,7 @@ class OntologyResponderV2 extends Responder {
                 }
 
                 // tell the projects responder that the ontology was created, so it can add it to the project's admin data.
-                newProjectInfo <- (responderManager ? ProjectOntologyAddV1(createOntologyRequest.projectIri.toString, internalOntologyIri.toString, createOntologyRequest.apiRequestID)).mapTo[ProjectInfoV1]
+                _ <- (responderManager ? ProjectOntologyAddV1(createOntologyRequest.projectIri.toString, internalOntologyIri.toString, createOntologyRequest.apiRequestID)).mapTo[ProjectInfoV1]
 
                 externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)
 
@@ -1121,7 +1126,7 @@ class OntologyResponderV2 extends Responder {
             }
 
             // Check that the ontology name is valid.
-            validOntologyName = stringFormatter.validateProjectSpecificOntologyName(createOntologyRequest.ontologyName, () => throw BadRequestException(s"Invalid project-specific ontology name: ${createOntologyRequest.ontologyName}"))
+            validOntologyName = stringFormatter.validateProjectSpecificOntologyName(createOntologyRequest.ontologyName, throw BadRequestException(s"Invalid project-specific ontology name: ${createOntologyRequest.ontologyName}"))
 
             // Make the internal ontology IRI.
             internalOntologyIri = stringFormatter.makeProjectSpecificInternalOntologyIri(validOntologyName, projectCode)

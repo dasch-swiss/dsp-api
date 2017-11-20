@@ -239,7 +239,7 @@ object StringFormatter {
   * it implicitly defines on `String`, e.g.:
   *
   * - "http://knora.example.org/ontology/0000/example#Something".toSmartIri
-  * - "http://knora.example.org/ontology/0000/example#Something".toSmartIriWithErr(() => throw BadRequestException("Invalid IRI"))
+  * - "http://knora.example.org/ontology/0000/example#Something".toSmartIriWithErr(throw BadRequestException("Invalid IRI"))
   */
 sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
 
@@ -405,7 +405,7 @@ object IriConversions {
           *
           * @param errorFun A function that throws an exception. It will be called if the string cannot be converted.
           */
-        def toSmartIriWithErr(errorFun: () => Nothing)(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIriWithErr(self, errorFun)
+        def toSmartIriWithErr(errorFun: => Nothing)(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIriWithErr(self, errorFun)
 
         /**
           * Converts an IRI string to a [[SmartIri]], verifying that the resulting [[SmartIri]] is a Knora internal definition IRI,
@@ -574,10 +574,10 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       *                      about the IRI being constructed.
       * @param errorFun      a function that throws an exception. It will be called if the IRI is invalid.
       */
-    private class SmartIriImpl(iriStr: IRI, parsedIriInfo: Option[SmartIriInfo], errorFun: () => Nothing) extends SmartIri {
-        def this(iriStr: IRI) = this(iriStr, None, () => throw DataConversionException(s"Couldn't parse IRI: $iriStr"))
+    private class SmartIriImpl(iriStr: IRI, parsedIriInfo: Option[SmartIriInfo], errorFun: => Nothing) extends SmartIri {
+        def this(iriStr: IRI) = this(iriStr, None, throw DataConversionException(s"Couldn't parse IRI: $iriStr"))
 
-        def this(iriStr: IRI, parsedIriInfo: Option[SmartIriInfo]) = this(iriStr, parsedIriInfo, () => throw DataConversionException(s"Couldn't parse IRI: $iriStr"))
+        def this(iriStr: IRI, parsedIriInfo: Option[SmartIriInfo]) = this(iriStr, parsedIriInfo, throw DataConversionException(s"Couldn't parse IRI: $iriStr"))
 
         private val iri: IRI = validateAndEscapeIri(iriStr, errorFun)
 
@@ -589,7 +589,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
           */
         private def parseApiV2VersionSegments(segments: Vector[String]): ApiV2Schema = {
             if (segments.length < 2) {
-                errorFun()
+                errorFun
             }
 
             val lastSegment = segments.last
@@ -600,7 +600,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             } else if (lastSegment == "v2") {
                 ApiV2WithValueObjects
             } else {
-                errorFun()
+                errorFun
             }
         }
 
@@ -638,7 +638,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
                     // The segments must contain at least a hostname.
                     if (segments.isEmpty) {
-                        errorFun()
+                        errorFun
                     }
 
                     // Determine the ontology schema by looking at the hostname and the version segment.
@@ -670,7 +670,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                     if (ontologySchema.nonEmpty) {
                         // A Knora definition IRI must start with "http://" and have "ontology" as its second segment.
                         if (!(iri.startsWith("http://") && segments.length >= 3 && segments(1) == "ontology")) {
-                            errorFun()
+                            errorFun
                         }
 
                         // Determine the length of the version segment, if any.
@@ -685,11 +685,11 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                         val projectCodeAndOntologyName: Vector[String] = segments.slice(2, segments.length - versionSegmentsLength)
 
                         if (projectCodeAndOntologyName.isEmpty || projectCodeAndOntologyName.length > 2) {
-                            errorFun()
+                            errorFun
                         }
 
                         if (projectCodeAndOntologyName.exists(segment => versionSegmentWords.contains(segment))) {
-                            errorFun()
+                            errorFun
                         }
 
                         // Extract the project code.
@@ -709,7 +709,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
                         if ((hasProjectSpecificHostname && hasBuiltInOntologyName) ||
                             (hostname == BuiltInKnoraApiHostname && !hasBuiltInOntologyName)) {
-                            errorFun()
+                            errorFun
                         }
 
                         SmartIriInfo(
@@ -1071,7 +1071,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @param iri      the IRI string to be parsed.
       * @param errorFun a function that throws an exception. It will be called if the IRI is invalid.
       */
-    def toSmartIriWithErr(iri: IRI, errorFun: () => Nothing): SmartIri = {
+    def toSmartIriWithErr(iri: IRI, errorFun: => Nothing): SmartIri = {
         // Is this a Knora definition IRI?
         if (CacheableIriStarts.exists(start => iri.startsWith(start))) {
             // Yes. Return it from the cache, or cache it if it's not already cached.
@@ -1090,11 +1090,11 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       *                 valid integer.
       * @return the integer value of the string.
       */
-    def validateInt(s: String, errorFun: () => Nothing): Int = {
+    def validateInt(s: String, errorFun: => Nothing): Int = {
         try {
             s.toInt
         } catch {
-            case _: Exception => errorFun() // value could not be converted to an Integer
+            case _: Exception => errorFun // value could not be converted to an Integer
         }
     }
 
@@ -1106,11 +1106,11 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       *                 valid decimal number.
       * @return the decimal value of the string.
       */
-    def validateBigDecimal(s: String, errorFun: () => Nothing): BigDecimal = {
+    def validateBigDecimal(s: String, errorFun: => Nothing): BigDecimal = {
         try {
             BigDecimal(s)
         } catch {
-            case _: Exception => errorFun() // value could not be converted to a decimal
+            case _: Exception => errorFun // value could not be converted to a decimal
         }
     }
 
@@ -1122,14 +1122,14 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       *                 a valid datetime.
       * @return the same string.
       */
-    def validateDateTime(s: String, errorFun: () => Nothing): String = {
+    def validateDateTime(s: String, errorFun: => Nothing): String = {
         // check if a string corresponds to the expected format `dateTimeFormat`
 
         try {
             val formatter = DateTimeFormat.forPattern(dateTimeFormat)
             DateTime.parse(s, formatter).toString(formatter)
         } catch {
-            case _: Exception => errorFun() // value could not be converted to a valid DateTime using the specified format
+            case _: Exception => errorFun // value could not be converted to a valid DateTime using the specified format
         }
     }
 
@@ -1151,13 +1151,13 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       *                 IRI.
       * @return the same string.
       */
-    def validateAndEscapeIri(s: String, errorFun: () => Nothing): IRI = {
+    def validateAndEscapeIri(s: String, errorFun: => Nothing): IRI = {
         val urlEncodedStr = encodeAllowEscapes(s)
 
         if (urlValidator.isValid(urlEncodedStr)) {
             urlEncodedStr
         } else {
-            errorFun()
+            errorFun
         }
     }
 
@@ -1180,14 +1180,14 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @param errorFun        a function that throws an exception. It will be called if the form of the string is invalid.
       * @return the same string.
       */
-    def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean, errorFun: () => Nothing): IRI = {
+    def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean, errorFun: => Nothing): IRI = {
         if (acceptClientIDs) {
             s match {
                 case StandoffLinkReferenceToClientIDForResourceRegex(_) => s
-                case _ => validateAndEscapeIri(s, () => errorFun())
+                case _ => validateAndEscapeIri(s, errorFun)
             }
         } else {
-            validateAndEscapeIri(s, () => errorFun())
+            validateAndEscapeIri(s, errorFun)
         }
     }
 
@@ -1228,27 +1228,26 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @param s        a string.
       * @param errorFun a function that throws an exception. It will be called if the string is empty or contains
       *                 a carriage return (`\r`).
-      * @param revert   if set to `true`, the escaping is reverted. This is useful when a string is read back from the triplestore.
       * @return the same string, escaped or unescaped as requested.
       */
-    def toSparqlEncodedString(s: String, errorFun: () => Nothing, revert: Boolean = false): String = {
-        if (s.isEmpty || s.contains("\r")) errorFun()
+    def toSparqlEncodedString(s: String, errorFun: => Nothing): String = {
+        if (s.isEmpty || s.contains("\r")) errorFun
 
         // http://www.morelab.deusto.es/code_injection/
 
-        if (!revert) {
-            StringUtils.replaceEach(
-                s,
-                SparqlEscapeInput,
-                SparqlEscapeOutput
-            )
-        } else {
-            StringUtils.replaceEach(
-                s,
-                SparqlEscapeOutput,
-                SparqlEscapeInput
-            )
-        }
+        StringUtils.replaceEach(
+            s,
+            SparqlEscapeInput,
+            SparqlEscapeOutput
+        )
+    }
+
+    def fromSparqlEncodedString(s: String, errorFun: => Nothing): String = {
+        StringUtils.replaceEach(
+            s,
+            SparqlEscapeOutput,
+            SparqlEscapeInput
+        )
     }
 
     /**
@@ -1259,14 +1258,14 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       *                 JSON.
       * @return the same string.
       */
-    def validateGeometryString(s: String, errorFun: () => Nothing): String = {
+    def validateGeometryString(s: String, errorFun: => Nothing): String = {
         // TODO: For now, we just make sure that the string is valid JSON. We should stop storing JSON in the triplestore, and represent geometry in RDF instead (issue 169).
 
         try {
             JsonParser(s)
             s
         } catch {
-            case _: Exception => errorFun()
+            case _: Exception => errorFun
         }
     }
 
@@ -1278,10 +1277,10 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       *                 hexadecimal color code.
       * @return the same string.
       */
-    def validateColor(s: String, errorFun: () => Nothing): String = {
+    def validateColor(s: String, errorFun: => Nothing): String = {
         ColorRegex.findFirstIn(s) match {
             case Some(dateStr) => dateStr
-            case None => errorFun() // not a valid color hex value string
+            case None => errorFun // not a valid color hex value string
         }
     }
 
@@ -1292,13 +1291,13 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @param errorFun a function that throws an exception. It will be called if the date's format is invalid.
       * @return the same string.
       */
-    def validateDate(s: String, errorFun: () => Nothing): String = {
+    def validateDate(s: String, errorFun: => Nothing): String = {
         // if the pattern doesn't match (=> None), the date string is formally invalid
         // Please note that this is a mere formal validation,
         // the actual validity check is done in `DateUtilV1.dateString2DateRange`
         KnoraDateRegex.findFirstIn(s) match {
             case Some(value) => value
-            case None => errorFun() // calling this function throws an error
+            case None => errorFun // calling this function throws an error
         }
     }
 
@@ -1310,11 +1309,11 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       *                 a boolean value.
       * @return the boolean value of the string.
       */
-    def validateBoolean(s: String, errorFun: () => Nothing): Boolean = {
+    def validateBoolean(s: String, errorFun: => Nothing): Boolean = {
         try {
             s.toBoolean
         } catch {
-            case _: Exception => errorFun() // value could not be converted to Boolean
+            case _: Exception => errorFun // value could not be converted to Boolean
         }
     }
 
@@ -1347,11 +1346,11 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       *                 as a boolean value.
       * @return a Boolean.
       */
-    def optionStringToBoolean(maybe: Option[String], errorFun: () => Nothing): Boolean = {
+    def optionStringToBoolean(maybe: Option[String], errorFun: => Nothing): Boolean = {
         try {
             maybe.exists(_.toBoolean)
         } catch {
-            case _: IllegalArgumentException => errorFun()
+            case _: IllegalArgumentException => errorFun
         }
     }
 
@@ -1362,10 +1361,10 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @param errorFun a function that throws an exception. It will be called if the string is invalid.
       * @return the same string.
       */
-    def validateNCName(ncName: String, errorFun: () => Nothing): String = {
+    def validateNCName(ncName: String, errorFun: => Nothing): String = {
         NCNameRegex.findFirstIn(ncName) match {
             case Some(value) => value
-            case None => errorFun()
+            case None => errorFun
         }
     }
 
@@ -1386,29 +1385,29 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @param errorFun     a function that throws an exception. It will be called if the name is invalid.
       * @return the same ontology name.
       */
-    def validateProjectSpecificOntologyName(ontologyName: String, errorFun: () => Nothing): String = {
+    def validateProjectSpecificOntologyName(ontologyName: String, errorFun: => Nothing): String = {
         // TODO: Uncomment this when unil.ch have renamed their ontologies to use NCNames (#667).
         /*
         ontologyName match {
             case NCNameRegex(_*) => ()
-            case _ => errorFun()
+            case _ => errorFun
         }
         */
 
         val lowerCaseOntologyName = ontologyName.toLowerCase
 
         lowerCaseOntologyName match {
-            case ApiVersionNumberRegex(_*) => errorFun()
+            case ApiVersionNumberRegex(_*) => errorFun
             case _ => ()
         }
 
         if (isBuiltInOntologyName(ontologyName)) {
-            errorFun()
+            errorFun
         }
 
         for (reservedIriWord <- reservedIriWords) {
             if (lowerCaseOntologyName.contains(reservedIriWord)) {
-                errorFun()
+                errorFun
             }
         }
 
@@ -1505,7 +1504,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       *                  valid for a Knora XML import namespace.
       * @return the corresponding project-specific internal ontology IRI.
       */
-    def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: () => Nothing): SmartIri = {
+    def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: => Nothing): SmartIri = {
         namespace match {
             case ProjectSpecificXmlImportNamespaceRegex(_, Optional(projectCode), ontologyName) if !isBuiltInOntologyName(ontologyName) =>
                 makeProjectSpecificInternalOntologyIri(
@@ -1513,7 +1512,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                     projectCode = projectCode
                 )
 
-            case _ => errorFun()
+            case _ => errorFun
         }
     }
 
@@ -1527,7 +1526,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       *                     valid for a Knora XML import namespace.
       * @return the corresponding project-specific internal ontology entity IRI.
       */
-    def xmlImportElementNameToInternalOntologyIriV1(namespace: String, elementLabel: String, errorFun: () => Nothing): IRI = {
+    def xmlImportElementNameToInternalOntologyIriV1(namespace: String, elementLabel: String, errorFun: => Nothing): IRI = {
         val ontologyIri = xmlImportNamespaceToInternalOntologyIriV1(namespace, errorFun)
         ontologyIri + "#" + elementLabel
     }
@@ -1556,11 +1555,11 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @param errorFun a function that throws an exception. It will be called if the path is invalid.
       * @return the same path.
       */
-    def validateMapPath(mapPath: String, errorFun: () => Nothing): String = {
+    def validateMapPath(mapPath: String, errorFun: => Nothing): String = {
         val splitPath: Array[String] = mapPath.split('/')
 
         for (name <- splitPath) {
-            validateNCName(name, () => errorFun())
+            validateNCName(name, errorFun)
         }
 
         mapPath
@@ -1644,10 +1643,10 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @param shortcode the project's shortcode.
       * @return the short ode in upper case.
       */
-    def validateProjectShortcode(shortcode: String, errorFun: () => Nothing): String = {
+    def validateProjectShortcode(shortcode: String, errorFun: => Nothing): String = {
         ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
             case Some(value) => value
-            case None => errorFun()
+            case None => errorFun
         }
     }
 }

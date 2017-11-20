@@ -22,7 +22,7 @@ package org.knora.webapi.util.jsonld
 
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
-import org.knora.webapi.util.JavaUtil
+import org.knora.webapi.util.{JavaUtil, SmartIri}
 import org.knora.webapi.{BadRequestException, IRI}
 
 /**
@@ -69,9 +69,16 @@ case class JsonLDBoolean(value: Boolean) extends JsonLDValue {
   *
   * @param value a map of keys to JSON-LD values.
   */
-case class JsonLDObject(value: Map[IRI, JsonLDValue]) extends JsonLDValue {
-    override def toAny: Map[IRI, Any] = value.map {
+case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
+    override def toAny: Map[String, Any] = value.map {
         case (k, v) => (k, v.toAny)
+    }
+
+    def requireString[T](key: SmartIri, validationFun: (String, => Nothing) => T ): T = {
+        value.getOrElse(key.toString, throw BadRequestException(s"No $key provided")) match {
+            case JsonLDString(str) => validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
+            case other => throw BadRequestException(s"Invalid $key: $other")
+        }
     }
 }
 
@@ -90,7 +97,9 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
   * @param body    the body of the JSON-LD document.
   * @param context the context of the JSON-LD document.
   */
-case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject)
+case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject) {
+    def requireString[T](key: SmartIri, validationFun: (String, => Nothing) => T ): T = body.requireString(key, validationFun)
+}
 
 
 /**

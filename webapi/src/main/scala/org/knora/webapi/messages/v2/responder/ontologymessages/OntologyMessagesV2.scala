@@ -60,6 +60,7 @@ case class LoadOntologiesRequestV2(userProfile: UserProfileV1) extends Ontologie
   */
 case class CreateOntologyRequestV2(ontologyName: String,
                                    projectIri: SmartIri,
+                                   label: String,
                                    apiRequestID: UUID,
                                    userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
@@ -67,23 +68,19 @@ case class CreateOntologyRequestV2(ontologyName: String,
   * Constructs instances of [[CreateOntologyRequestV2]] based on JSON-LD requests.
   */
 object CreateOntologyRequestV2 {
-    def fromJsonLD(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, userProfile: UserProfileV1): CreateOntologyRequestV2 = {
-        val stringFormatter = StringFormatter.getGeneralInstance
-        val docObjMap = jsonLDDocument.body.value
+    def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                   apiRequestID: UUID,
+                   userProfile: UserProfileV1): CreateOntologyRequestV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val ontologyName: String = docObjMap.getOrElse(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName, throw BadRequestException("No knora-api:ontologyName provided")) match {
-            case JsonLDString(value) => stringFormatter.validateProjectSpecificOntologyName(value, () => throw BadRequestException(s"Invalid knora-api:ontologyName: $value"))
-            case other => throw BadRequestException(s"Invalid knora-api:ontologyName: $other")
-        }
-
-        val projectIri: SmartIri = docObjMap.getOrElse(OntologyConstants.KnoraApiV2WithValueObjects.ProjectIri, throw BadRequestException("No knora-api:projectIri provided")) match {
-            case JsonLDString(value) => stringFormatter.toSmartIriWithErr(value, () => throw BadRequestException(s"Invalid knora-api:projectIri: $value"))
-            case other => throw BadRequestException(s"Invalid knora-api:projectIri: $other")
-        }
+        val ontologyName: String = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName.toSmartIri, stringFormatter.validateProjectSpecificOntologyName)
+        val label: String = jsonLDDocument.requireString(OntologyConstants.Rdfs.Label.toSmartIri, stringFormatter.toSparqlEncodedString)
+        val projectIri: SmartIri = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.ProjectIri.toSmartIri, stringFormatter.toSmartIriWithErr)
 
         CreateOntologyRequestV2(
             ontologyName = ontologyName,
             projectIri = projectIri,
+            label = label,
             apiRequestID = apiRequestID,
             userProfile = userProfile
         )
