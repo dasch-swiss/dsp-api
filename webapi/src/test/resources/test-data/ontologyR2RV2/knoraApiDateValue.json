@@ -1,4 +1,3 @@
-
 {
   "knora-api:hasClasses" : {
     "knora-api:DateValue" : {
@@ -35,6 +34,11 @@
         "@type" : "owl:Restriction",
         "owl:cardinality" : 1,
         "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear"
+      }, {
+        "@type" : "owl:Restriction",
+        "knora-api:isInherited" : true,
+        "owl:cardinality" : 1,
+        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
       }, {
         "@type" : "owl:Restriction",
         "knora-api:isInherited" : true,

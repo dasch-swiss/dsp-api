@@ -1,28 +1,28 @@
 package org.knora.webapi
 
 /**
-  * Indicates the schema that an ontology conforms to: internal (for use in the triplestore) or external
-  * (for use in the Knora API).
+  * Indicates the schema that a Knora ontology or ontology entity conforms to.
   */
 sealed trait OntologySchema
 
 /**
-  * Indicates that an ontology is for internal use in the triplestore.
+  * The schema of Knora ontologies and entities that are used in the triplestore.
   */
 case object InternalSchema extends OntologySchema
 
 /**
-  * Indicates that an ontology is for use in Knora API v2.
+  * The schema of Knora ontologies and entities that are used in API v2.
   */
 sealed trait ApiV2Schema extends OntologySchema
 
 /**
-  * Indicates that an ontology conforms to the simple Knora API v2 schema, which represents values as literals
+  * The simple schema for representing Knora ontologies and entities. This schema represents values as literals
   * when possible.
   */
 case object ApiV2Simple extends ApiV2Schema
 
 /**
-  * Indicates that an ontology conforms to the Knora API v2 schema that always represents values as objects.
+  * The default (or complex) schema for representing Knora ontologies and entities. This
+  * schema always represents values as objects.
   */
 case object ApiV2WithValueObjects extends ApiV2Schema

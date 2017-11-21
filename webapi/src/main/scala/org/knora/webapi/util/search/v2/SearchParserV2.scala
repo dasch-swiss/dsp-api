@@ -21,13 +21,13 @@
 package org.knora.webapi.util.search.v2
 
 import org.eclipse.rdf4j
-import org.eclipse.rdf4j.query.algebra
 import org.eclipse.rdf4j.query.parser.ParsedQuery
 import org.eclipse.rdf4j.query.parser.sparql._
-import org.eclipse.rdf4j.query.MalformedQueryException
-import org.knora.webapi.util.{StringFormatter, search}
-import org.knora.webapi.util.search._
+import org.eclipse.rdf4j.query.{MalformedQueryException, algebra}
 import org.knora.webapi._
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.search._
+import org.knora.webapi.util.{SmartIri, StringFormatter, search}
 
 import scala.collection.JavaConverters._
 
@@ -69,6 +69,7 @@ object SearchParserV2 {
       * An RDF4J [[algebra.QueryModelVisitor]] that converts a [[ParsedQuery]] into a [[ConstructQuery]].
       */
     class ConstructQueryModelVisitor extends algebra.QueryModelVisitor[SparqlSearchException] {
+        private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Represents a statement pattern in the CONSTRUCT clause. Each string could be a variable name or a parser-generated
         // constant. These constants can be replaced by their values only after valueConstants is populated.
@@ -88,8 +89,6 @@ object SearchParserV2 {
 
         // The OFFSET specified in the input query.
         private var offset: Long = 0
-
-        private val stringFormatter = StringFormatter.getInstance
 
         /**
           * After this visitor has visited the parse tree, this method returns a [[ConstructQuery]] representing
@@ -153,6 +152,25 @@ object SearchParserV2 {
             throw SparqlSearchException(s"SPARQL feature not supported in search query: $node")
         }
 
+        private def checkIriSchema(smartIri: SmartIri): Unit = {
+            if (smartIri.isKnoraOntologyIri) {
+                throw SparqlSearchException(s"Ontology IRI not allowed in search query: $smartIri")
+            }
+
+            if (smartIri.isKnoraEntityIri) {
+                smartIri.getOntologySchema match {
+                    case Some(ApiV2Simple) => ()
+                    case _ => throw SparqlSearchException(s"Ontology schema not allowed in search query: $smartIri")
+                }
+            }
+        }
+
+        private def makeIri(rdf4jIri: rdf4j.model.IRI): IriRef = {
+            val smartIri: SmartIri = rdf4jIri.stringValue.toSmartIriWithErr(() => throw SparqlSearchException(s"Invalid IRI: ${rdf4jIri.stringValue}"))
+            checkIriSchema(smartIri)
+            IriRef(smartIri)
+        }
+
         override def meet(node: algebra.Slice): Unit = {
             if (node.hasLimit) {
                 throw SparqlSearchException("LIMIT not supported in search query")
@@ -176,14 +194,13 @@ object SearchParserV2 {
         private def makeEntity(objVar: algebra.Var): Entity = {
             if (objVar.isAnonymous || objVar.isConstant) {
                 objVar.getValue match {
-                    case iri: rdf4j.model.IRI =>
-                        if (stringFormatter.isInternalEntityIri(iri.stringValue)) {
-                            throw SparqlSearchException(s"Internal ontology entity IRI not allowed in search query: $iri")
-                        }
+                    case iri: rdf4j.model.IRI => makeIri(iri)
 
-                        IriRef(iri.stringValue)
+                    case literal: rdf4j.model.Literal =>
+                        val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(() => throw SparqlSearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
+                        checkIriSchema(datatype)
+                        XsdLiteral(value = literal.stringValue, datatype = datatype)
 
-                    case literal: rdf4j.model.Literal => XsdLiteral(value = literal.stringValue, datatype = literal.getDatatype.stringValue)
                     case other => throw SparqlSearchException(s"Invalid object for triple patterns: $other")
                 }
             } else {
@@ -581,13 +598,12 @@ object SearchParserV2 {
 
                     case valueConstant: algebra.ValueConstant =>
                         valueConstant.getValue match {
-                            case literal: rdf4j.model.Literal => XsdLiteral(value = literal.stringValue, datatype = literal.getDatatype.stringValue)
-                            case iri: org.eclipse.rdf4j.model.IRI =>
-                                if (stringFormatter.isInternalEntityIri(iri.stringValue)) {
-                                    throw SparqlSearchException(s"Internal ontology entity IRI not allowed in search query: $iri")
-                                }
+                            case iri: rdf4j.model.IRI => makeIri(iri)
 
-                                IriRef(iri = iri.stringValue)
+                            case literal: rdf4j.model.Literal =>
+                                val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(() => throw SparqlSearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
+                                checkIriSchema(datatype)
+                                XsdLiteral(value = literal.stringValue, datatype = datatype)
                             case other => throw SparqlSearchException(s"Unsupported ValueConstant: $other with class ${other.getClass.getName}")
                         }
 

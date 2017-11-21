@@ -35,7 +35,8 @@ import org.knora.webapi.util._
 import org.knora.webapi.util.search.ApacheLuceneSupport.{CombineSearchTerms, MatchStringWhileTyping}
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.v2._
-import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, StringFormatter}
+import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, StringFormatter, SmartIri}
+import org.knora.webapi.util.IriConversions._
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -49,19 +50,19 @@ object SearchResponderV2Constants {
       * Constants for fulltext query.
       */
     object FullTextSearchConstants {
-        val resourceVar = QueryVariable("resource")
-        val resourcePropVar = QueryVariable("resourceProp")
-        val resourceObjectVar = QueryVariable("resourceObj")
-        val resourceValueObject = QueryVariable("resourceValueObject")
-        val resourceValueProp = QueryVariable("resourceValueProp")
-        val resourceValueObjectProp = QueryVariable("resourceValueObjectProp")
-        val resourceValueObjectObj = QueryVariable("resourceValueObjectObj")
+        val resourceVar: QueryVariable = QueryVariable("resource")
+        val resourcePropVar: QueryVariable = QueryVariable("resourceProp")
+        val resourceObjectVar: QueryVariable = QueryVariable("resourceObj")
+        val resourceValueObject: QueryVariable = QueryVariable("resourceValueObject")
+        val resourceValueProp: QueryVariable = QueryVariable("resourceValueProp")
+        val resourceValueObjectProp: QueryVariable = QueryVariable("resourceValueObjectProp")
+        val resourceValueObjectObj: QueryVariable = QueryVariable("resourceValueObjectObj")
 
-        val standoffNodeVar = QueryVariable("standoffNode")
-        val standoffPropVar = QueryVariable("standoffProp")
-        val standoffValueVar = QueryVariable("standoffValue")
+        val standoffNodeVar: QueryVariable = QueryVariable("standoffNode")
+        val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
+        val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
 
-        val valueObjectConcatVar = QueryVariable("valueObjectConcat")
+        val valueObjectConcatVar: QueryVariable = QueryVariable("valueObjectConcat")
     }
 
     /**
@@ -70,30 +71,28 @@ object SearchResponderV2Constants {
     object ExtendedSearchConstants {
 
         // variables representing the main resource and its properties
-        val mainResourceVar = QueryVariable("mainResourceVar")
+        val mainResourceVar: QueryVariable = QueryVariable("mainResourceVar")
 
         // variables representing main and dependent resources. direct assertions about them as well as their values
-        val mainAndDependentResourceVar = QueryVariable("mainAndDependentResource")
-        val mainAndDependentResourcePropVar = QueryVariable("mainAndDependentResourceProp")
-        val mainAndDependentResourceObjectVar = QueryVariable("mainAndDependentResourceObj")
-        val mainAndDependentResourceValueObject = QueryVariable("mainAndDependentResourceValueObject")
-        val mainAndDependentResourceValueProp = QueryVariable("mainAndDependentResourceValueProp")
-        val mainAndDependentResourceValueObjectProp = QueryVariable("mainAndDependentResourceValueObjectProp")
-        val mainAndDependentResourceValueObjectObj = QueryVariable("mainAndDependentResourceValueObjectObj")
+        val mainAndDependentResourceVar: QueryVariable = QueryVariable("mainAndDependentResource")
+        val mainAndDependentResourcePropVar: QueryVariable = QueryVariable("mainAndDependentResourceProp")
+        val mainAndDependentResourceObjectVar: QueryVariable = QueryVariable("mainAndDependentResourceObj")
+        val mainAndDependentResourceValueObject: QueryVariable = QueryVariable("mainAndDependentResourceValueObject")
+        val mainAndDependentResourceValueProp: QueryVariable = QueryVariable("mainAndDependentResourceValueProp")
+        val mainAndDependentResourceValueObjectProp: QueryVariable = QueryVariable("mainAndDependentResourceValueObjectProp")
+        val mainAndDependentResourceValueObjectObj: QueryVariable = QueryVariable("mainAndDependentResourceValueObjectObj")
 
-        val standoffNodeVar = QueryVariable("standoffNode")
-        val standoffPropVar = QueryVariable("standoffProp")
-        val standoffValueVar = QueryVariable("standoffValue")
+        val standoffNodeVar: QueryVariable = QueryVariable("standoffNode")
+        val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
+        val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
 
-        val forbiddenResourceIri = "http://data.knora.org/permissions/forbiddenResource"
+        val forbiddenResourceIri: IRI = s"http://${KnoraIdUtil.IriDomain}/permissions/forbiddenResource"
 
     }
 
 }
 
 class SearchResponderV2 extends ResponderWithStandoffV2 {
-
-    val knoraIdUtil = new KnoraIdUtil
 
     def receive = {
         case FullTextSearchCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, userProfile), log)
@@ -142,11 +141,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // convert external Iris to internal Iris if needed
 
             entity match {
-                case iriRef: IriRef => // if an Iri is an external knora-api entity (with value object or simple), convert it to an internal Iri
-                    if (stringFormatter.isExternalEntityIri(iriRef.iri)) {
-                        IriRef(stringFormatter.externalToInternalEntityIri(iriRef.iri, () => throw BadRequestException(s"${iriRef.iri} is not a valid external knora-api entity Iri")))
+                case iriRef: IriRef => // if an Iri is an external knora-api entity (assumed to be API v2 simple because otherwise the KnarQL parser would have rejected it), convert it to an internal Iri
+                    if (iriRef.iri.isKnoraApiV2EntityIri) {
+                        IriRef(iriRef.iri.toOntologySchema(InternalSchema))
                     } else {
-                        IriRef(stringFormatter.toIri(iriRef.iri, () => throw BadRequestException(s"$iriRef is not a valid IRI")))
+                        iriRef
                     }
 
                 case other => other
@@ -231,13 +230,13 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 case iriRef: IriRef =>
                     // type info keys are external api v2 simple Iris,
                     // so convert this internal Iri to an external api v2 simple if possible
-                    val externalIri = if (stringFormatter.isInternalEntityIri(iriRef.iri)) {
-                        stringFormatter.internalEntityIriToApiV2SimpleEntityIri(iriRef.iri, () => throw BadRequestException(s"${iriRef.iri} is not a valid internal knora-api entity Iri"))
+                    val externalIri = if (iriRef.iri.isKnoraInternalEntityIri) {
+                        IriRef(iriRef.iri.toOntologySchema(ApiV2Simple))
                     } else {
-                        iriRef.iri
+                        iriRef
                     }
 
-                    Some(TypeableIri(externalIri))
+                    Some(TypeableIri(externalIri.iri))
 
                 case _ => None
             }
@@ -263,12 +262,13 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           */
         protected def isMainResourceVariable(statementPattern: StatementPattern): Option[QueryVariable] = {
             statementPattern.pred match {
-                case IriRef(OntologyConstants.KnoraBase.IsMainResource, _) =>
+                case IriRef(SmartIri(OntologyConstants.KnoraBase.IsMainResource), _) =>
+
                     statementPattern.obj match {
-                        case XsdLiteral("true", OntologyConstants.Xsd.Boolean) =>
+                        case XsdLiteral(value, SmartIri(OntologyConstants.Xsd.Boolean)) if value.toBoolean =>
                             statementPattern.subj match {
                                 case queryVariable: QueryVariable => Some(queryVariable)
-                                case _ => throw SparqlSearchException(s"The subject of ${OntologyConstants.KnoraBase.IsMainResource} must be a variable") // TODO: use the knora-api predicate in the error message?
+                                case _ => throw SparqlSearchException(s"The subject of ${OntologyConstants.KnoraApiV2Simple.IsMainResource} must be a variable")
                             }
 
                         case _ => None
@@ -287,13 +287,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           */
         protected def createAdditionalStatementsForNonPropertyType(nonPropertyTypeInfo: NonPropertyTypeInfo, inputEntity: Entity): Seq[QueryPattern] = {
 
-            val typeIriInternal = if (stringFormatter.isExternalEntityIri(nonPropertyTypeInfo.typeIri)) {
-                stringFormatter.externalToInternalEntityIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid external knora-api entity Iri"))
-            } else {
-                nonPropertyTypeInfo.typeIri
-            }
-
-            if (typeIriInternal == OntologyConstants.KnoraBase.Resource) {
+            if (nonPropertyTypeInfo.typeIri == OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri) {
 
                 // inputEntity is either source or target of a linking property
                 // create additional statements in order to query permissions and other information for a resource
@@ -318,8 +312,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 }
 
                 Seq(
-                    StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
-                    StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean))
+                    StatementPattern.makeInferred(subj = inputEntity, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)),
+                    StatementPattern.makeExplicit(subj = inputEntity, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
                 )
             } else {
                 // inputEntity is target of a value property
@@ -331,22 +325,15 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
         protected def convertStatementForPropertyType(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern): Seq[QueryPattern] = {
 
-            // convert the type information into an internal Knora Iri if possible
-            val objectIri = if (stringFormatter.isExternalEntityIri(propertyTypeInfo.objectTypeIri)) {
-                stringFormatter.externalToInternalEntityIri(propertyTypeInfo.objectTypeIri, () => throw BadRequestException(s"${propertyTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
-            } else {
-                propertyTypeInfo.objectTypeIri
-            }
-
-            objectIri match {
-                case OntologyConstants.KnoraBase.Resource => {
+            propertyTypeInfo.objectTypeIri.toString match {
+                case OntologyConstants.KnoraApiV2Simple.Resource => {
                     // linking property
 
                     // make sure that the object is either an Iri or a variable (cannot be a literal)
                     statementPattern.obj match {
-                        case iriRef: IriRef => ()
-                        case queryVar: QueryVariable => ()
-                        case other => throw SparqlSearchException(s"Object of a linking statement must be an Iri or a QueryVariable, but $other given.")
+                        case _: IriRef => ()
+                        case _: QueryVariable => ()
+                        case other => throw SparqlSearchException(s"Object of a linking statement must be an IRI or a variable, but $other given.")
                     }
 
                     // we are given a linking property
@@ -367,7 +354,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         case propIri: IriRef =>
                             // convert the given linking property Iri to the corresponding link value property Iri
                             // only matches the linking property's link value
-                            IriRef(knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(propIri.iri))
+                            IriRef(propIri.iri.fromLinkPropToLinkValueProp)
                         case literal: XsdLiteral => throw SparqlSearchException(s"literal $literal cannot be used as a predicate")
                         case other => throw SparqlSearchException(s"$other cannot be used as a predicate")
                     }
@@ -377,17 +364,17 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // instead, linkValueProp restricts the link value objects to be returned
                     val linkValueStatements = Seq(
                         StatementPattern.makeInferred(subj = statementPattern.subj, pred = linkValueProp, obj = linkValueObjVar),
-                        StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.LinkValue)),
-                        StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
-                        StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Subject), obj = statementPattern.subj),
-                        StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Object), obj = statementPattern.obj)
+                        StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.LinkValue.toSmartIri)),
+                        StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)),
+                        StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Subject.toSmartIri), obj = statementPattern.subj),
+                        StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Object.toSmartIri), obj = statementPattern.obj)
                     )
 
                     // linking property: just include the original statement relating the subject to the target of the link
                     statementPattern +: linkValueStatements
                 }
 
-                case literalType: IRI => {
+                case _ => {
                     // value property
 
                     // make sure that the object is a query variable (literals are not supported yet)
@@ -397,7 +384,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     }
 
                     // check that value object is not marked as deleted
-                    val valueObjectIsNotDeleted = StatementPattern.makeExplicit(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean))
+                    val valueObjectIsNotDeleted = StatementPattern.makeExplicit(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
 
                     // the query variable stands for a value object
                     // if there is a filter statement, the literal of the value object has to be checked: e.g., valueHasInteger etc.
@@ -501,7 +488,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             OntologyConstants.Xsd.Decimal -> OntologyConstants.KnoraBase.ValueHasDecimal,
             OntologyConstants.Xsd.Boolean -> OntologyConstants.KnoraBase.ValueHasBoolean,
             OntologyConstants.Xsd.String -> OntologyConstants.KnoraBase.ValueHasString,
-            OntologyConstants.KnoraBase.Date -> OntologyConstants.KnoraBase.ValueHasStartJDN
+            OntologyConstants.KnoraApiV2Simple.Date -> OntologyConstants.KnoraBase.ValueHasStartJDN
         )
 
         /**
@@ -565,25 +552,19 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                         // make sure that the comparison operator is a `CompareExpressionOperator.EQUALS`
                                         if (filterCompare.operator != CompareExpressionOperator.EQUALS) throw SparqlSearchException(s"Comparison operator in a CompareExpression for a property type is expected to be ${CompareExpressionOperator.EQUALS}, but ${filterCompare.operator} given. For negations use 'FILTER NOT EXISTS' ")
 
-                                        val objectTypeIriInternal = if (stringFormatter.isExternalEntityIri(propInfo.objectTypeIri)) {
-                                            stringFormatter.externalToInternalEntityIri(propInfo.objectTypeIri, () => throw BadRequestException(s"${propInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
-                                        } else {
-                                            propInfo.objectTypeIri
-                                        }
-
                                         val userProvidedRestriction = CompareExpression(queryVar, filterCompare.operator, iriRef)
 
                                         // check if the objectTypeIri of propInfo is knora-base:Resource
                                         // if so, it is a linking property and its link value property must be restricted too
-                                        objectTypeIriInternal match {
-                                            case OntologyConstants.KnoraBase.Resource =>
+                                        propInfo.objectTypeIri.toString match {
+                                            case OntologyConstants.KnoraApiV2Simple.Resource =>
 
                                                 // it is a linking property, restrict the link value property
 
                                                 val restrictionForLinkValueProp = CompareExpression(
                                                     leftArg = createlinkValuePropertyVariableFromLinkingPropertyVariable(queryVar), // the same variable was created during statement processing in WHERE clause in `convertStatementForPropertyType`
                                                     operator = filterCompare.operator,
-                                                    rightArg = IriRef(knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(iriRef.iri))) // create link value property from linking property
+                                                    rightArg = IriRef(iriRef.iri.fromLinkPropToLinkValueProp)) // create link value property from linking property
 
                                                 TransformedFilterExpression(AndExpression(
                                                     leftArg = userProvidedRestriction,
@@ -601,24 +582,16 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                             case nonPropInfo: NonPropertyTypeInfo =>
 
-                                // the left arg queryVar is a variable representing a value
-                                // get the internal Iri of the value type, if possible (xsd types are not internal types).
-                                val typeIriInternal = if (stringFormatter.isExternalEntityIri(nonPropInfo.typeIri)) {
-                                    stringFormatter.externalToInternalEntityIri(nonPropInfo.typeIri, () => throw BadRequestException(s"${nonPropInfo.typeIri} is not a valid external knora-api entity Iri"))
-                                } else {
-                                    nonPropInfo.typeIri
-                                }
-
                                 // depending on the value type, transform the given Filter expression.
                                 // add an extra level by getting the value literal from the value object.
                                 // queryVar refers to the value object, for the value literal an extra variable has to be created, taking its type into account.
-                                typeIriInternal match {
+                                nonPropInfo.typeIri.toString match {
 
                                     case OntologyConstants.Xsd.Integer =>
 
                                         // make sure that the right argument is an integer literal
                                         val integerLiteral: XsdLiteral = filterCompare.rightArg match {
-                                            case intLiteral: XsdLiteral if intLiteral.datatype == OntologyConstants.Xsd.Integer => intLiteral
+                                            case intLiteral: XsdLiteral if intLiteral.datatype.toString == OntologyConstants.Xsd.Integer => intLiteral
 
                                             case other => throw SparqlSearchException(s"right argument in CompareExpression for integer property was expected to be an integer literal, but $other is given.")
                                         }
@@ -633,7 +606,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                             CompareExpression(intValHasInteger, filterCompare.operator, integerLiteral),
                                             Seq(
                                                 // connects the value object with the value literal
-                                                StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger), intValHasInteger)
+                                                StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger.toSmartIri), intValHasInteger)
                                             )
                                         )
 
@@ -641,7 +614,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                                         // make sure that the right argument is a decimal or integer literal
                                         val decimalLiteral: XsdLiteral = filterCompare.rightArg match {
-                                            case decimalLiteral: XsdLiteral if decimalLiteral.datatype == OntologyConstants.Xsd.Decimal || decimalLiteral.datatype == OntologyConstants.Xsd.Integer => decimalLiteral
+                                            case decimalLiteral: XsdLiteral if decimalLiteral.datatype == OntologyConstants.Xsd.Decimal.toSmartIri || decimalLiteral.datatype == OntologyConstants.Xsd.Integer.toSmartIri => decimalLiteral
 
                                             case other => throw SparqlSearchException(s"right argument in CompareExpression for decimal property was expected to be a decimal or an integer literal, but $other is given.")
                                         }
@@ -656,7 +629,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                             CompareExpression(decimalValHasDecimal, filterCompare.operator, decimalLiteral),
                                             Seq(
                                                 // connects the value object with the value literal
-                                                StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasDecimal), decimalValHasDecimal)
+                                                StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasDecimal.toSmartIri), decimalValHasDecimal)
                                             )
                                         )
 
@@ -664,7 +637,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                                         // make sure that the right argument is a boolean literal
                                         val booleanLiteral: XsdLiteral = filterCompare.rightArg match {
-                                            case booleanLiteral: XsdLiteral if booleanLiteral.datatype == OntologyConstants.Xsd.Boolean => booleanLiteral
+                                            case booleanLiteral: XsdLiteral if booleanLiteral.datatype.toString == OntologyConstants.Xsd.Boolean => booleanLiteral
 
                                             case other => throw SparqlSearchException(s"right argument in CompareExpression for boolean property was expected to be a boolean literal, but $other is given.")
                                         }
@@ -684,7 +657,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                             CompareExpression(booleanValHasBoolean, filterCompare.operator, booleanLiteral),
                                             Seq(
                                                 // connects the value object with the value literal
-                                                StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasBoolean), booleanValHasBoolean)
+                                                StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasBoolean.toSmartIri), booleanValHasBoolean)
                                             )
                                         )
 
@@ -692,7 +665,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                                         // make sure that the right argument is a string literal
                                         val stringLiteral: XsdLiteral = filterCompare.rightArg match {
-                                            case strLiteral: XsdLiteral if strLiteral.datatype == OntologyConstants.Xsd.String => strLiteral
+                                            case strLiteral: XsdLiteral if strLiteral.datatype.toString == OntologyConstants.Xsd.String => strLiteral
 
                                             case other => throw SparqlSearchException(s"right argument in CompareExpression for string property was expected to be a string literal, but $other is given.")
                                         }
@@ -712,21 +685,21 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                             CompareExpression(textValHasString, filterCompare.operator, stringLiteral),
                                             Seq(
                                                 // connects the value object with the value literal
-                                                StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString), textValHasString)
+                                                StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString)
                                             )
                                         )
 
-                                    case OntologyConstants.KnoraBase.Date =>
+                                    case OntologyConstants.KnoraApiV2Simple.Date =>
 
                                         // make sure that the right argument is a string literal (dates are represented as knora date strings in knora-api simple)
-                                        val dateStringLiteral: _root_.org.knora.webapi.util.search.XsdLiteral = filterCompare.rightArg match {
-                                            case dateStrLiteral: XsdLiteral if dateStrLiteral.datatype == OntologyConstants.Xsd.String => dateStrLiteral
+                                        val dateStringLiteral: XsdLiteral = filterCompare.rightArg match {
+                                            case dateStrLiteral: XsdLiteral if dateStrLiteral.datatype.toString == OntologyConstants.Xsd.String => dateStrLiteral
 
                                             case other => throw SparqlSearchException(s"right argument in CompareExpression for date property was expected to be a string literal representing a date, but $other is given.")
                                         }
 
                                         // validate Knora  date string
-                                        val dateStr: String = stringFormatter.toDate(dateStringLiteral.value, () => throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"))
+                                        val dateStr: String = stringFormatter.validateDate(dateStringLiteral.value, () => throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"))
 
                                         val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
 
@@ -740,10 +713,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                         val dateValueHasEndVar = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasEndJDN)
 
                                         // connects the value object with the periods start variable
-                                        val dateValStartStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN), obj = dateValueHasStartVar)
+                                        val dateValStartStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri), obj = dateValueHasStartVar)
 
                                         // connects the value object with the periods end variable
-                                        val dateValEndStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN), obj = dateValueHasEndVar)
+                                        val dateValEndStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN.toSmartIri), obj = dateValueHasEndVar)
 
                                         // process filter expression based on given comparison operator
                                         filterCompare.operator match {
@@ -751,9 +724,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                             case CompareExpressionOperator.EQUALS =>
 
                                                 // any overlap in considered as equality
-                                                val leftArgFilter = CompareExpression(XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer), CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, dateValueHasEndVar)
+                                                val leftArgFilter = CompareExpression(XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, dateValueHasEndVar)
 
-                                                val rightArgFilter = CompareExpression(XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer), CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, dateValueHasStartVar)
+                                                val rightArgFilter = CompareExpression(XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, dateValueHasStartVar)
 
                                                 val filter = AndExpression(leftArgFilter, rightArgFilter)
 
@@ -767,9 +740,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                             case CompareExpressionOperator.NOT_EQUALS =>
 
                                                 // no overlap in considered as inequality (negation of equality)
-                                                val leftArgFilter = CompareExpression(XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer), CompareExpressionOperator.GREATER_THAN, dateValueHasEndVar)
+                                                val leftArgFilter = CompareExpression(XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.GREATER_THAN, dateValueHasEndVar)
 
-                                                val rightArgFilter = CompareExpression(XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer), CompareExpressionOperator.LESS_THAN, dateValueHasStartVar)
+                                                val rightArgFilter = CompareExpression(XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.LESS_THAN, dateValueHasStartVar)
 
                                                 val filter = OrExpression(leftArgFilter, rightArgFilter)
 
@@ -783,17 +756,17 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                             case CompareExpressionOperator.LESS_THAN =>
 
                                                 // period ends before indicated period
-                                                val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.LESS_THAN, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer))
+                                                val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.LESS_THAN, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
                                                 TransformedFilterExpression(
                                                     filter,
-                                                    Seq(dateValEndStatement)
+                                                    Seq(dateValStartStatement, dateValEndStatement) // dateValStartStatement may be used as ORDER BY statement
                                                 )
 
                                             case CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO =>
 
                                                 // period ends before indicated period or equals it (any overlap)
-                                                val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer))
+                                                val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
                                                 TransformedFilterExpression(
                                                     filter,
@@ -803,7 +776,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                             case CompareExpressionOperator.GREATER_THAN =>
 
                                                 // period starts after end of indicated period
-                                                val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.GREATER_THAN, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer))
+                                                val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.GREATER_THAN, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
                                                 TransformedFilterExpression(
                                                     filter,
@@ -813,11 +786,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                             case CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO =>
 
                                                 // period starts after indicated period or equals it (any overlap)
-                                                val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer))
+                                                val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
                                                 TransformedFilterExpression(
                                                     filter,
-                                                    Seq(dateValEndStatement)
+                                                    Seq(dateValStartStatement, dateValEndStatement) // dateValStartStatement may be used as ORDER BY statement
                                                 )
 
 
@@ -877,7 +850,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     private def transformKnoraExplicitToGraphDBExplicit(statement: StatementPattern): Seq[StatementPattern] = {
         val transformedPattern = statement.copy(
             namedGraph = statement.namedGraph match {
-                case Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph, _)) => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph))
+                case Some(IriRef(SmartIri(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph), _)) => Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph.toSmartIri))
                 case Some(IriRef(_, _)) => throw AssertionException(s"Named graphs other than ${OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph} cannot occur in non-triplestore-specific generated search query SPARQL")
                 case None => None
             }
@@ -945,12 +918,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     private def escapeEntityForVariable(entity: Entity): String = {
         val entityStr = entity match {
             case QueryVariable(varName) => varName
-            case IriRef(iriLiteral, _) => iriLiteral
+            case IriRef(iriLiteral, _) => iriLiteral.toString
             case XsdLiteral(stringLiteral, _) => stringLiteral
             case _ => throw SparqlSearchException(s"A unique variable could not be made for $entity")
         }
 
-        entityStr.replaceAll("[:/.#-]", "").replaceAll("\\s", "") // TODO: check if this is complete and if it could lea to collision of variable names
+        entityStr.replaceAll("[:/.#-]", "").replaceAll("\\s", "") // TODO: check if this is complete and if it could lead to collision of variable names
     }
 
     /**
@@ -1053,7 +1026,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the amount of resources that have been found.
       */
-    private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         val searchTerms: CombineSearchTerms = CombineSearchTerms(searchValue)
 
@@ -1062,7 +1035,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 triplestore = settings.triplestoreType,
                 searchTerms = searchTerms,
                 limitToProject = limitToProject,
-                limitToResourceClass = limitToResourceClass,
+                limitToResourceClass = limitToResourceClass.map(_.toString),
                 separator = None, // no separator needed for count query
                 limit = 1,
                 offset = 0,
@@ -1096,7 +1069,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         import SearchResponderV2Constants.FullTextSearchConstants._
 
@@ -1113,16 +1086,16 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             // WHERE patterns for the resources: check that the resource are a knora-base:Resource and that it is not marked as deleted
             val wherePatternsForResources = Seq(
-                ValuesPattern(resourceVar, resourceIris.map(IriRef(_))), // a ValuePattern that binds the resource Iris to the resource variable
-                StatementPattern.makeInferred(subj = resourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
-                StatementPattern.makeExplicit(subj = resourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                ValuesPattern(resourceVar, resourceIris.map(iri => IriRef(iri.toSmartIri))), // a ValuePattern that binds the resource Iris to the resource variable
+                StatementPattern.makeInferred(subj = resourceVar, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)),
+                StatementPattern.makeExplicit(subj = resourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)),
                 StatementPattern.makeExplicit(subj = resourceVar, pred = resourcePropVar, obj = resourceObjectVar)
             )
 
             //  mark resources as the main resource and a knora-base:Resource in CONSTRUCT clause and return direct assertions about resources
             val constructPatternsForResources = Seq(
-                StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsMainResource), obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean)),
-                StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
+                StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsMainResource.toSmartIri), obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)),
+                StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)),
                 StatementPattern(subj = resourceVar, pred = resourcePropVar, obj = resourceObjectVar)
             )
 
@@ -1131,30 +1104,30 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 // WHERE patterns for statements about the resources' values
                 val wherePatternsForValueObjects = Seq(
-                    ValuesPattern(resourceValueObject, valueObjectIris.map(iri => IriRef(iri))),
-                    StatementPattern.makeInferred(subj = resourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = resourceValueObject),
+                    ValuesPattern(resourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri))),
+                    StatementPattern.makeInferred(subj = resourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri), obj = resourceValueObject),
                     StatementPattern.makeExplicit(subj = resourceVar, pred = resourceValueProp, obj = resourceValueObject),
-                    StatementPattern.makeExplicit(subj = resourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                    StatementPattern.makeExplicit(subj = resourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)),
                     StatementPattern.makeExplicit(subj = resourceValueObject, pred = resourceValueObjectProp, obj = resourceValueObjectObj)
                 )
 
                 // return assertions about value objects
                 val constructPatternsForValueObjects = Seq(
-                    StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = resourceValueObject),
+                    StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri), obj = resourceValueObject),
                     StatementPattern(subj = resourceVar, pred = resourceValueProp, obj = resourceValueObject),
                     StatementPattern(subj = resourceValueObject, pred = resourceValueObjectProp, obj = resourceValueObjectObj)
                 )
 
                 // WHERE patterns for standoff belonging to value objects (if any)
                 val wherePatternsForStandoff = Seq(
-                    ValuesPattern(resourceValueObject, valueObjectIris.map(iri => IriRef(iri))),
-                    StatementPattern.makeExplicit(subj = resourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff), obj = standoffNodeVar),
+                    ValuesPattern(resourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri))),
+                    StatementPattern.makeExplicit(subj = resourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
                     StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
                 )
 
                 // return standoff
                 val constructPatternsForStandoff = Seq(
-                    StatementPattern(subj = resourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff), obj = standoffNodeVar),
+                    StatementPattern(subj = resourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
                     StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
                 )
 
@@ -1197,7 +1170,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 triplestore = settings.triplestoreType,
                 searchTerms = searchTerms,
                 limitToProject = limitToProject,
-                limitToResourceClass = limitToResourceClass,
+                limitToResourceClass = limitToResourceClass.map(_.toString),
                 separator = Some(groupConcatSeparator),
                 limit = settings.v2ResultsPerPage,
                 offset = offset * settings.v2ResultsPerPage, // determine the actual offset
@@ -1213,8 +1186,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // a sequence of resource Iris that match the search criteria
             // attention: no permission checking has been done so far
             resourceIris: Seq[IRI] = prequeryResponse.results.bindings.map {
-                case resultRow: VariableResultsRow =>
-                    resultRow.rowMap(resourceVar.variableName)
+                resultRow: VariableResultsRow => resultRow.rowMap(resourceVar.variableName)
             }
 
             // make sure that the prequery returned some results
@@ -1224,14 +1196,13 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 val valueObjectIrisPerResource: Map[IRI, Set[IRI]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Set[IRI]]) {
                     (acc: Map[IRI, Set[IRI]], resultRow: VariableResultsRow) =>
 
-                        val mainResIri: String = resultRow.rowMap(resourceVar.variableName)
+                        val mainResIri: IRI = resultRow.rowMap(resourceVar.variableName)
 
                         resultRow.rowMap.get(valueObjectConcatVar.variableName) match {
 
                             case Some(valObjIris) =>
 
                                 acc + (mainResIri -> valObjIris.split(groupConcatSeparator).toSet)
-
 
                             case None => acc
                         }
@@ -1426,7 +1397,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             // Do type inspection and remove type annotations from the WHERE clause.
 
-            typeInspector <- FastFuture.successful(new ExplicitTypeInspectorV2(apiSchema))
+            typeInspector <- FastFuture.successful(new ExplicitTypeInspectorV2())
             whereClauseWithoutAnnotations: WhereClause = typeInspector.removeTypeAnnotations(inputQuery.whereClause)
             typeInspectionResult: TypeInspectionResult = typeInspector.inspectTypes(inputQuery.whereClause)
 
@@ -1487,11 +1458,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def extendedSearchV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
-
-        if (apiSchema != ApiV2Simple) {
-            throw SparqlSearchException("Only api v2 simple is supported in v2 extended search")
-        }
+    private def extendedSearchV2(inputQuery: ConstructQuery, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         /**
           * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -1609,20 +1576,15 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                 val typeInfo: SparqlEntityTypeInfo = typeInspectionResult.typedEntities.getOrElse(typeableEntity, throw SparqlSearchException(s"No type information found for ${criterion.queryVariable}"))
 
                                 // Get the corresponding knora-base:valueHas* property so we can generate an appropriate variable name.
-                                val propertyIri: IRI = typeInfo match {
+                                val propertyIri: SmartIri = typeInfo match {
                                     case nonPropertyTypeInfo: NonPropertyTypeInfo =>
-                                        val internalTypeIri = if (stringFormatter.isExternalEntityIri(nonPropertyTypeInfo.typeIri)) {
-                                            IriRef(stringFormatter.externalToInternalEntityIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid external knora-api entity Iri")))
-                                        } else {
-                                            IriRef(stringFormatter.toIri(nonPropertyTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropertyTypeInfo.typeIri} is not a valid IRI")))
-                                        }
-                                        literalTypesToValueTypeIris.getOrElse(internalTypeIri.iri, throw SparqlSearchException(s"Type ${internalTypeIri.iri} is not supported in ORDER BY"))
+                                        literalTypesToValueTypeIris.getOrElse(nonPropertyTypeInfo.typeIri.toString, throw SparqlSearchException(s"Type $nonPropertyTypeInfo.typeIri is not supported in ORDER BY")).toSmartIri
 
                                     case _: PropertyTypeInfo => throw SparqlSearchException(s"Variable ${criterion.queryVariable.variableName} represents a property, and therefore cannot be used in ORDER BY")
                                 }
 
                                 // Generate the variable name.
-                                val variableForLiteral: QueryVariable = createUniqueVariableNameFromEntityAndProperty(criterion.queryVariable, propertyIri)
+                                val variableForLiteral: QueryVariable = createUniqueVariableNameFromEntityAndProperty(criterion.queryVariable, propertyIri.toString)
 
                                 // Generate a statement to get the literal value.
                                 val statementPattern = StatementPattern.makeExplicit(subj = criterion.queryVariable, pred = IriRef(propertyIri), obj = variableForLiteral)
@@ -1639,15 +1601,6 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     queryVariable = mainResourceVariable.getOrElse(throw SparqlSearchException("No ${OntologyConstants.KnoraBase.IsMainResource} found in CONSTRUCT query.")),
                     isAscending = true
                 )
-
-                // dependent resource variables as order by criteria
-                val orderByDependentResVars: Seq[OrderCriterion] = dependentResourceVariables.map {
-                    (resVar: QueryVariable) =>
-                        OrderCriterion(
-                            queryVariable = resVar,
-                            isAscending = true
-                        )
-                }.toSeq
 
                 // order by: user provided variables and main resource variable
                 // all variables present in the GROUP BY must be included in the order by statements to make the results predictable for paging
@@ -1731,11 +1684,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     // create a key for the type annotations map
                     val typeableEntity: TypeableEntity = statementPattern.pred match {
-                        case iri: IriRef =>
-                            val externalIri = if (stringFormatter.isInternalEntityIri(iri.iri)) {
-                                stringFormatter.internalEntityIriToApiV2SimpleEntityIri(iri.iri, () => throw BadRequestException(s"${iri.iri} is not a valid internal knora-api entity Iri"))
+                        case iriRef: IriRef =>
+                            val externalIri = if (iriRef.iri.isKnoraInternalEntityIri) {
+                                iriRef.iri.toOntologySchema(ApiV2Simple)
                             } else {
-                                iri.iri
+                                iriRef.iri
                             }
 
                             TypeableIri(externalIri)
@@ -1751,22 +1704,15 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         val propTypeInfo: PropertyTypeInfo = typeInspection.typedEntities(typeableEntity) match {
                             case propType: PropertyTypeInfo => propType
 
-                            case nonPropType: NonPropertyTypeInfo =>
+                            case _: NonPropertyTypeInfo =>
                                 throw SparqlSearchException(s"PropertyTypeInfo was expected for predicate ${statementPattern.pred} in type annotations, but NonPropertyTypeInfo given.")
 
                         }
 
-                        // convert the type information into an internal Knora Iri if possible
-                        val objectIri = if (stringFormatter.isExternalEntityIri(propTypeInfo.objectTypeIri)) {
-                            stringFormatter.externalToInternalEntityIri(propTypeInfo.objectTypeIri, () => throw BadRequestException(s"${propTypeInfo.objectTypeIri} is not a valid external knora-api entity Iri"))
-                        } else {
-                            propTypeInfo.objectTypeIri
-                        }
-
-                        val valueObjectVariable: Set[QueryVariable] = objectIri match {
+                        val valueObjectVariable: Set[QueryVariable] = propTypeInfo.objectTypeIri.toString match {
 
                             // linking prop: get value object var and information which values are requested for dependent resource
-                            case OntologyConstants.KnoraBase.Resource =>
+                            case OntologyConstants.KnoraApiV2Simple.Resource =>
 
                                 // link value object variable
                                 val valObjVar = createUniqueVariableNameFromEntityAndProperty(statementPattern.obj, OntologyConstants.KnoraBase.LinkValue)
@@ -1774,10 +1720,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                 // return link value object variable and value objects requested for the dependent resource
                                 Set(QueryVariable(valObjVar.variableName + variableConcatSuffix))
 
-                            case nonLinkingProp =>
+                            case _ =>
                                 statementPattern.obj match {
                                     case queryVar: QueryVariable => Set(QueryVariable(queryVar.variableName + variableConcatSuffix))
-
                                     case other => throw SparqlSearchException(s"object of a statement involving a non linking property is expected to be a query variable, but $other given.")
                                 }
 
@@ -1808,13 +1753,13 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // WHERE patterns for the main resource variable: check that main resource is a knora-base:Resource and that it is not marked as deleted
             val wherePatternsForMainResource = Seq(
                 ValuesPattern(mainResourceVar, mainResourceIris), // a ValuePattern that binds the main resources' Iris to the main resource variable
-                StatementPattern.makeInferred(subj = mainResourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
-                StatementPattern.makeExplicit(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean))
+                StatementPattern.makeInferred(subj = mainResourceVar, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)),
+                StatementPattern.makeExplicit(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
             )
 
             // mark main resource variable in CONSTRUCT clause
             val constructPatternsForMainResource = Seq(
-                StatementPattern(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsMainResource), obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean))
+                StatementPattern(subj = mainResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsMainResource.toSmartIri), obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
             )
 
             // since a CONSTRUCT query returns a flat list of triples, we can handle main and dependent resources in the same way
@@ -1822,14 +1767,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // WHERE patterns for direct statements about the main resource and dependent resources
             val wherePatternsForMainAndDependentResources = Seq(
                 ValuesPattern(mainAndDependentResourceVar, mainResourceIris ++ dependentResourceIris), // a ValuePattern that binds the main and dependent resources' Iris to a variable
-                StatementPattern.makeInferred(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
-                StatementPattern.makeExplicit(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                StatementPattern.makeInferred(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)),
+                StatementPattern.makeExplicit(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)),
                 StatementPattern.makeExplicit(subj = mainAndDependentResourceVar, pred = mainAndDependentResourcePropVar, obj = mainAndDependentResourceObjectVar)
             )
 
             // mark main and dependent resources as a knora-base:Resource in CONSTRUCT clause and return direct assertions about all resources
             val constructPatternsForMainAndDependentResources = Seq(
-                StatementPattern(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.Rdf.Type), obj = IriRef(OntologyConstants.KnoraBase.Resource)),
+                StatementPattern(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)),
                 StatementPattern(subj = mainAndDependentResourceVar, pred = mainAndDependentResourcePropVar, obj = mainAndDependentResourceObjectVar)
             )
 
@@ -1838,30 +1783,30 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 // WHERE patterns for statements about the main and dependent resources' values
                 val wherePatternsForMainAndDependentResourcesValues = Seq(
-                    ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri))),
-                    StatementPattern.makeInferred(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainAndDependentResourceValueObject),
+                    ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri))),
+                    StatementPattern.makeInferred(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri), obj = mainAndDependentResourceValueObject),
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceVar, pred = mainAndDependentResourceValueProp, obj = mainAndDependentResourceValueObject),
-                    StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)),
+                    StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)),
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj)
                 )
 
                 // return assertions about the main and dependent resources' values in CONSTRUCT clause
                 val constructPatternsForMainAndDependentResourcesValues = Seq(
-                    StatementPattern(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue), obj = mainAndDependentResourceValueObject),
+                    StatementPattern(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri), obj = mainAndDependentResourceValueObject),
                     StatementPattern(subj = mainAndDependentResourceVar, pred = mainAndDependentResourceValueProp, obj = mainAndDependentResourceValueObject),
                     StatementPattern(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj)
                 )
 
                 // WHERE patterns for standoff belonging to value objects (if any)
                 val wherePatternsForStandoff = Seq(
-                    ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri))),
-                    StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff), obj = standoffNodeVar),
+                    ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri))),
+                    StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
                     StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
                 )
 
                 // return standoff assertions
                 val constructPatternsForStandoff = Seq(
-                    StatementPattern(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff), obj = standoffNodeVar),
+                    StatementPattern(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
                     StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
                 )
 
@@ -1899,7 +1844,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         for {
         // Do type inspection and remove type annotations from the WHERE clause.
 
-            typeInspector <- FastFuture.successful(new ExplicitTypeInspectorV2(apiSchema))
+            typeInspector <- FastFuture.successful(new ExplicitTypeInspectorV2())
             whereClauseWithoutAnnotations: WhereClause = typeInspector.removeTypeAnnotations(inputQuery.whereClause)
             typeInspectionResult: TypeInspectionResult = typeInspector.inspectTypes(inputQuery.whereClause)
 
@@ -1949,7 +1894,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // a sequence of resource Iris that match the search criteria
             // attention: no permission checking has been done so far
             mainResourceIris: Seq[IRI] = prequeryResponse.results.bindings.map {
-                case resultRow: VariableResultsRow =>
+                resultRow: VariableResultsRow =>
                     resultRow.rowMap(mainResourceVar.variableName)
             }
 
@@ -1967,7 +1912,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
 
                         val dependentResIris: Set[IRI] = dependentResourceVariablesConcat.flatMap {
-                            case dependentResVar: QueryVariable =>
+                            dependentResVar: QueryVariable =>
                                 // Iris are concatenated, split them
                                 resultRow.rowMap(dependentResVar.variableName).split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSeq
                         }
@@ -1977,13 +1922,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 // collect all variables representing resources
                 val allResourceVariablesFromTypeInspection: Set[QueryVariable] = typeInspectionResult.typedEntities.collect {
-                    case (queryVar: TypeableVariable, nonPropTypeInfo: NonPropertyTypeInfo) if stringFormatter.isKnoraEntityIri(nonPropTypeInfo.typeIri) &&
-                        stringFormatter.externalToInternalEntityIri(nonPropTypeInfo.typeIri, () => throw BadRequestException(s"${nonPropTypeInfo.typeIri} is not a valid external knora-api entity Iri")) == OntologyConstants.KnoraBase.Resource => QueryVariable(queryVar.variableName)
+                    case (queryVar: TypeableVariable, nonPropTypeInfo: NonPropertyTypeInfo) if nonPropTypeInfo.typeIri.toString == OntologyConstants.KnoraApiV2Simple.Resource => QueryVariable(queryVar.variableName)
                 }.toSet
 
                 // the user may have defined Iris of dependent resources in the input query (type annotations)
                 val dependentResourceIrisFromTypeInspection: Set[IRI] = typeInspectionResult.typedEntities.collect {
-                    case (iri: TypeableIri, nonPropTypeInfo: NonPropertyTypeInfo) => iri.iri
+                    case (iri: TypeableIri, _: NonPropertyTypeInfo) => iri.iri.toString
                 }.toSet
 
                 // the Iris of all dependent resources for all main resources
@@ -2015,8 +1959,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // create the main query
                 // it is a Union of two sets: the main resources and the dependent resources
                 val mainQuery = createMainQuery(
-                    mainResourceIris = mainResourceIris.map(iri => IriRef(iri)).toSet,
-                    dependentResourceIris = allDependentResourceIris.map(iri => IriRef(iri)),
+                    mainResourceIris = mainResourceIris.map(iri => IriRef(iri.toSmartIri)).toSet,
+                    dependentResourceIris = allDependentResourceIris.map(iri => IriRef(iri.toSmartIri)),
                     valueObjectIris = allValueObjectIris
                 )
 
@@ -2087,7 +2031,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     valueObjectVariablesForDependentResIris: Set[QueryVariable] = dependentResourceIrisFromTypeInspection.flatMap {
                         depResIri =>
-                            collectValueVariablesForResource(preprocessedQuery.constructClause, IriRef(iri = depResIri), typeInspectionResult, nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableAppendix)
+                            collectValueVariablesForResource(preprocessedQuery.constructClause, IriRef(iri = depResIri.toSmartIri), typeInspectionResult, nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableAppendix)
                     }
 
                     allValueObjectVariables: Set[QueryVariable] = valueObjectVariablesForAllResVars ++ valueObjectVariablesForDependentResIris
@@ -2212,7 +2156,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[IRI], userProfile: UserProfileV1) = {
+    private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserProfileV1) = {
 
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
@@ -2221,7 +2165,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 triplestore = settings.triplestoreType,
                 searchTerm = searchPhrase,
                 limitToProject = limitToProject,
-                limitToResourceClass = limitToResourceClass,
+                limitToResourceClass = limitToResourceClass.map(_.toString),
                 limit = 1,
                 offset = 0,
                 countQuery = true
@@ -2255,7 +2199,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def searchResourcesByLabelV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def searchResourcesByLabelV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
 
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
@@ -2264,7 +2208,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 triplestore = settings.triplestoreType,
                 searchTerm = searchPhrase,
                 limitToProject = limitToProject,
-                limitToResourceClass = limitToResourceClass,
+                limitToResourceClass = limitToResourceClass.map(_.toString),
                 limit = settings.v2ResultsPerPage,
                 offset = offset * settings.v2ResultsPerPage,
                 countQuery = false

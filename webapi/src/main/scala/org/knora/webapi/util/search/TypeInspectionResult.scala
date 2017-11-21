@@ -20,7 +20,7 @@
 
 package org.knora.webapi.util.search
 
-import org.knora.webapi._
+import org.knora.webapi.util.SmartIri
 
 /**
   * Represents the type information that was found concerning a SPARQL entity.
@@ -32,7 +32,7 @@ sealed trait SparqlEntityTypeInfo
   *
   * @param objectTypeIri an IRI representing the type of the objects of the property.
   */
-case class PropertyTypeInfo(objectTypeIri: IRI) extends SparqlEntityTypeInfo
+case class PropertyTypeInfo(objectTypeIri: SmartIri) extends SparqlEntityTypeInfo
 
 /**
   * Represents type information about a SPARQL entity that's not a property, meaning that it is either a variable
@@ -40,7 +40,7 @@ case class PropertyTypeInfo(objectTypeIri: IRI) extends SparqlEntityTypeInfo
   *
   * @param typeIri an IRI representing the entity's type.
   */
-case class NonPropertyTypeInfo(typeIri: IRI) extends SparqlEntityTypeInfo
+case class NonPropertyTypeInfo(typeIri: SmartIri) extends SparqlEntityTypeInfo
 
 /**
   * Represents a SPARQL entity that we can get type information about.
@@ -59,7 +59,7 @@ case class TypeableVariable(variableName: String) extends TypeableEntity
   *
   * @param iri the IRI.
   */
-case class TypeableIri(iri: IRI) extends TypeableEntity
+case class TypeableIri(iri: SmartIri) extends TypeableEntity
 
 /**
   * Represents the result of type inspection.

@@ -231,11 +231,8 @@ object OntologyConstants {
         val UriValue: IRI = KnoraBasePrefixExpansion + "UriValue"
         val DecimalValue: IRI = KnoraBasePrefixExpansion + "DecimalValue"
         val DateValue: IRI = KnoraBasePrefixExpansion + "DateValue"
-        val Date: IRI = KnoraBasePrefixExpansion + "Date" // TODO: find a better solution for v2 simple
         val ColorValue: IRI = KnoraBasePrefixExpansion + "ColorValue"
-        val Color: IRI = KnoraBasePrefixExpansion + "Color" // TODO: find a better solution for v2 simple
         val GeomValue: IRI = KnoraBasePrefixExpansion + "GeomValue"
-        val Geom: IRI = KnoraBasePrefixExpansion + "Geom" // TODO: find a better solution for v2 simple
         val ListValue: IRI = KnoraBasePrefixExpansion + "ListValue"
         val IntervalValue: IRI = KnoraBasePrefixExpansion + "IntervalValue"
         val LinkValue: IRI = KnoraBasePrefixExpansion + "LinkValue"
@@ -245,7 +242,6 @@ object OntologyConstants {
         val DDDFileValue: IRI = KnoraBasePrefixExpansion + "DDDFileValue"
         val DocumentFileValue: IRI = KnoraBasePrefixExpansion + "DocumentFileValue"
         val StillImageFileValue: IRI = KnoraBasePrefixExpansion + "StillImageFileValue"
-        val StillImageFile: IRI = KnoraBasePrefixExpansion + "StillImageFile" // TODO: find a better solution for v2 simple
         val MovingImageFileValue: IRI = KnoraBasePrefixExpansion + "MovingImageFileValue"
         val TextFileValue: IRI = KnoraBasePrefixExpansion + "TextFileValue"
 
@@ -690,6 +686,8 @@ object OntologyConstants {
 
         val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
 
+        val IsMainResource: IRI = KnoraApiV2PrefixExpansion + "isMainResource"
+
         val Region: IRI = KnoraApiV2PrefixExpansion + "Region"
         val Representation: IRI = KnoraApiV2PrefixExpansion + "Representation"
         val StillImageRepresentation: IRI = KnoraApiV2PrefixExpansion + "StillImageRepresentation"
@@ -734,10 +732,10 @@ object OntologyConstants {
         val HasColor: IRI = KnoraApiV2PrefixExpansion + "hasColor"
         val HasComment: IRI = KnoraApiV2PrefixExpansion + "hasComment"
 
-        val HasFile: IRI = KnoraApiV2PrefixExpansion + "HasFile"
+        val HasFile: IRI = KnoraApiV2PrefixExpansion + "hasFile"
 
-        val HasStillImageFile: IRI = KnoraApiV2PrefixExpansion + "HasStillImageFile"
-        val HasMovingImageFile: IRI = KnoraApiV2PrefixExpansion + "HasMovingImageFile"
+        val HasStillImageFile: IRI = KnoraApiV2PrefixExpansion + "hasStillImageFile"
+        val HasMovingImageFile: IRI = KnoraApiV2PrefixExpansion + "hasMovingImageFile"
         val HasAudioFile: IRI = KnoraApiV2PrefixExpansion + "hasAudioFile"
         val HasDDDFile: IRI = KnoraApiV2PrefixExpansion + "hasDDDFile"
         val HasTextFile: IRI = KnoraApiV2PrefixExpansion + "hasTextFile"
@@ -757,9 +755,9 @@ object OntologyConstants {
         val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
 
         /**
-          * Maps internal knora-base value types to the datatypes that represent them in the simplified API.
+          * A map of internal knora-base value types to the types that represent them in the simplified API.
           */
-        val LiteralValueTypes: Map[IRI, IRI] = Map(
+        val ValueClassesToSimplifiedTypes: Map[IRI, IRI] = Map(
             KnoraBase.TextValue -> Xsd.String,
             KnoraBase.IntValue -> Xsd.Integer,
             KnoraBase.BooleanValue -> Xsd.Boolean,
@@ -781,11 +779,33 @@ object OntologyConstants {
         )
 
         /**
-          * The datatypes that are used in the simplified API.
+          * A map of simplified API types to internal knora-base value types.
           */
-        val Datatypes: Set[IRI] = LiteralValueTypes.values.toSet + Xsd.DateTimeStamp
+        val SimplifiedTypesToValueClasses: Map[IRI, IRI] = ValueClassesToSimplifiedTypes.map(_.swap)
 
     }
+
+    /**
+      * A map of predicates in each possible source schema to the corresponding predicates in each possible target schema.
+      */
+    val CorrespondingPredicates: Map[(OntologySchema, OntologySchema), Map[IRI, IRI]] = Map(
+        (InternalSchema, ApiV2Simple) -> Map(
+            OntologyConstants.KnoraBase.SubjectClassConstraint -> OntologyConstants.KnoraApiV2Simple.SubjectType,
+            OntologyConstants.KnoraBase.ObjectClassConstraint -> OntologyConstants.KnoraApiV2Simple.ObjectType
+        ),
+        (InternalSchema, ApiV2WithValueObjects) -> Map(
+            OntologyConstants.KnoraBase.SubjectClassConstraint -> OntologyConstants.KnoraApiV2WithValueObjects.SubjectType,
+            OntologyConstants.KnoraBase.ObjectClassConstraint -> OntologyConstants.KnoraApiV2WithValueObjects.ObjectType
+        ),
+        (ApiV2Simple, InternalSchema) -> Map(
+            OntologyConstants.KnoraApiV2Simple.SubjectType -> OntologyConstants.KnoraBase.SubjectClassConstraint,
+            OntologyConstants.KnoraApiV2Simple.ObjectType -> OntologyConstants.KnoraBase.ObjectClassConstraint
+        ),
+        (ApiV2WithValueObjects, InternalSchema) -> Map(
+            OntologyConstants.KnoraApiV2WithValueObjects.SubjectType -> OntologyConstants.KnoraBase.SubjectClassConstraint,
+            OntologyConstants.KnoraApiV2WithValueObjects.ObjectType -> OntologyConstants.KnoraBase.ObjectClassConstraint
+        )
+    )
 
     object NamedGraphs {
         val DataNamedGraphStart: IRI = "http://www.knora.org/data"

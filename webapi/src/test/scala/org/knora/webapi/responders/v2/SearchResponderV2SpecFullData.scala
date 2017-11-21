@@ -1,19 +1,20 @@
 package org.knora.webapi.responders.v2
 
 import akka.actor.ActorSystem
-import org.apache.jena.sparql.function.library.uuid
 import org.knora.webapi.Settings
 import org.knora.webapi.messages.v1.responder.standoffmessages._
-import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.search._
 
-object SearchResponderV2SpecFullData {
+class SearchResponderV2SpecFullData {
 
-    implicit lazy val system = ActorSystem("webapi")
+    implicit lazy val system: ActorSystem = ActorSystem("webapi")
 
     val settings = Settings(system)
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     val fulltextSearchForNarr = ReadResourcesSequenceV2(
         resources = Vector(
@@ -1021,20 +1022,20 @@ object SearchResponderV2SpecFullData {
             StatementPattern(
                 namedGraph = None,
                 obj = IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#book"
+                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#book".toSmartIri
                 ),
                 pred = IriRef(
-                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri
                 ),
                 subj = QueryVariable(variableName = "book")
             ),
             StatementPattern(
                 namedGraph = None,
                 obj = IriRef(
-                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource"
+                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri
                 ),
                 pred = IriRef(
-                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri
                 ),
                 subj = QueryVariable(variableName = "book")
             ),
@@ -1042,35 +1043,35 @@ object SearchResponderV2SpecFullData {
                 namedGraph = None,
                 obj = QueryVariable(variableName = "title"),
                 pred = IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
+                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri
                 ),
                 subj = QueryVariable(variableName = "book")
             ),
             StatementPattern(
                 namedGraph = None,
                 obj = IriRef(
-                    iri = "http://www.w3.org/2001/XMLSchema#string"
+                    iri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
                 ),
                 pred = IriRef(
-                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#objectType"
+                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri
                 ),
                 subj = IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
+                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri
                 )
             ),
             StatementPattern(
                 namedGraph = None,
                 obj = IriRef(
-                    iri = "http://www.w3.org/2001/XMLSchema#string"
+                    iri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
                 ),
                 pred = IriRef(
-                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri
                 ),
                 subj = QueryVariable(variableName = "title")
             ),
             FilterPattern(expression = CompareExpression(
                 rightArg = XsdLiteral(
-                    datatype = "http://www.w3.org/2001/XMLSchema#string",
+                    datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
                     value = "Zeitgl\u00F6cklein des Lebens und Leidens Christi"
                 ),
                 operator = CompareExpressionOperator.EQUALS,
@@ -1080,11 +1081,11 @@ object SearchResponderV2SpecFullData {
             StatementPattern(
                 namedGraph = None,
                 obj = XsdLiteral(
-                    datatype = "http://www.w3.org/2001/XMLSchema#boolean",
+                    datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri,
                     value = "true"
                 ),
                 pred = IriRef(
-                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#isMainResource"
+                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri
                 ),
                 subj = QueryVariable(variableName = "book")
             ),
@@ -1092,7 +1093,7 @@ object SearchResponderV2SpecFullData {
                 namedGraph = None,
                 obj = QueryVariable(variableName = "title"),
                 pred = IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
+                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri
                 ),
                 subj = QueryVariable(variableName = "book")
             )
@@ -1138,20 +1139,20 @@ object SearchResponderV2SpecFullData {
             StatementPattern(
                 namedGraph = None,
                 obj = IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#book"
+                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#book".toSmartIri
                 ),
                 pred = IriRef(
-                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri
                 ),
                 subj = QueryVariable(variableName = "book")
             ),
             StatementPattern(
                 namedGraph = None,
                 obj = IriRef(
-                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource"
+                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri
                 ),
                 pred = IriRef(
-                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri
                 ),
                 subj = QueryVariable(variableName = "book")
             ),
@@ -1159,35 +1160,35 @@ object SearchResponderV2SpecFullData {
                 namedGraph = None,
                 obj = QueryVariable(variableName = "title"),
                 pred = IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
+                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri
                 ),
                 subj = QueryVariable(variableName = "book")
             ),
             StatementPattern(
                 namedGraph = None,
                 obj = IriRef(
-                    iri = "http://www.w3.org/2001/XMLSchema#string"
+                    iri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
                 ),
                 pred = IriRef(
-                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#objectType"
+                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri
                 ),
                 subj = IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
+                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri
                 )
             ),
             StatementPattern(
                 namedGraph = None,
                 obj = IriRef(
-                    iri = "http://www.w3.org/2001/XMLSchema#string"
+                    iri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
                 ),
                 pred = IriRef(
-                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri
                 ),
                 subj = QueryVariable(variableName = "title")
             ),
             FilterPattern(expression = CompareExpression(
                 rightArg = XsdLiteral(
-                    datatype = "http://www.w3.org/2001/XMLSchema#string",
+                    datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
                     value = "Zeitgl\u00F6cklein des Lebens und Leidens Christi"
                 ),
                 operator = CompareExpressionOperator.NOT_EQUALS,
@@ -1198,11 +1199,11 @@ object SearchResponderV2SpecFullData {
             StatementPattern(
                 namedGraph = None,
                 obj = XsdLiteral(
-                    datatype = "http://www.w3.org/2001/XMLSchema#boolean",
+                    datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri,
                     value = "true"
                 ),
                 pred = IriRef(
-                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#isMainResource"
+                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri
                 ),
                 subj = QueryVariable(variableName = "book")
             ),
@@ -1210,7 +1211,7 @@ object SearchResponderV2SpecFullData {
                 namedGraph = None,
                 obj = QueryVariable(variableName = "title"),
                 pred = IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
+                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri
                 ),
                 subj = QueryVariable(variableName = "book")
             )

@@ -189,7 +189,7 @@ class ProjectsResponderV1 extends Responder {
                     }
             }.toSeq
 
-            // _ = log.debug("projectsNamedGraphGetV1 - namedGraphs: {}", namedGraphs)
+            // _ = log.debug("projectsNamedGraphGetV1 - ontologies: {}", ontologies)
         } yield namedGraphs
     }
 
@@ -483,7 +483,7 @@ class ProjectsResponderV1 extends Responder {
 
             // check if the optionally supplied shortcode is valid and unique
             shortcodeExists <- if (createRequest.shortcode.isDefined) {
-                val shortcode = StringFormatter.getInstance.toProjectShortcode(
+                val shortcode = StringFormatter.getGeneralInstance.validateProjectShortcode(
                     createRequest.shortcode.get,
                     errorFun = () => throw BadRequestException(s"The supplied short code: '${createRequest.shortcode.get}' is not valid.")
                 )
