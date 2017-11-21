@@ -36,7 +36,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesReq
 import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.store._
-import org.knora.webapi.util.{FileUtil}
+import org.knora.webapi.util.FileUtil
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}

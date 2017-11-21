@@ -2,6 +2,7 @@ package org.knora.webapi.e2e.v2
 
 import java.io.File
 import java.net.URLEncoder
+import java.time.Instant
 
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
@@ -15,8 +16,8 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesReq
 import org.knora.webapi.responders._
 import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.store._
-import org.knora.webapi.util.jsonld.{JsonLDArray, JsonLDObject, JsonLDValue}
-import org.knora.webapi.util.{AkkaHttpUtils, FileUtil}
+import org.knora.webapi.util.jsonld.{JsonLDObject, JsonLDString}
+import org.knora.webapi.util.{AkkaHttpUtils, FileUtil, MutableTestIri}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -72,6 +73,9 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val incunabulaSimplePubDate: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaSimplePubDate.json")))
     private val incunabulaWithValueObjectsPubDate: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaWithValueObjectsPubDate.json")))
     private val incunabulaPageAndBookWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaPageAndBookWithValueObjects.json")))
+
+    private val fooIri = new MutableTestIri
+    private var fooLastModDate: Instant = Instant.now
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
@@ -255,13 +259,15 @@ class OntologyV2R2RSpec extends R2RSpec {
             }
         }
 
-        "create an empty ontology called 'example' with a project code" in {
+        "create an empty ontology called 'foo' with a project code" in {
+            val label = "The foo ontology"
+
             val params =
                 s"""
                    |{
-                   |    "knora-api:ontologyName": "example",
+                   |    "knora-api:ontologyName": "foo",
                    |    "knora-api:projectIri": "$projectWithProjectID",
-                   |    "rdfs:label": "The example ontology",
+                   |    "rdfs:label": "$label",
                    |    "@context": {
                    |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
                    |        "knora-api": "${OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion}"
@@ -273,9 +279,53 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
-                responseJsonDoc.body.value(OntologyConstants.KnoraApiV2WithValueObjects.HasOntologiesWithClasses) match {
-                    case ontologies: JsonLDObject =>
-                        assert(ontologies.value("http://0.0.0.0:3333/ontology/00FF/example/v2") == JsonLDArray(Seq.empty[JsonLDValue]))
+                responseJsonDoc.body.value(OntologyConstants.KnoraApiV2WithValueObjects.HasOntologies) match {
+                    case metadata: JsonLDObject =>
+                        val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
+                        assert(ontologyIri == "http://0.0.0.0:3333/ontology/00FF/foo/v2")
+                        fooIri.set(ontologyIri)
+
+                        assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))
+
+                        val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).asInstanceOf[JsonLDString].value)
+                        fooLastModDate = lastModDate
+
+                    case _ => throw AssertionException(s"Unexpected response: $responseJsonDoc")
+                }
+            }
+        }
+
+        "change the metadata of 'foo'" in {
+            val newLabel = "The modified foo ontology"
+
+            val params =
+                s"""
+                   |{
+                   |    "@id": "${fooIri.get}",
+                   |    "rdfs:label": "$newLabel",
+                   |    "knora-api:lastModificationDate": "$fooLastModDate",
+                   |    "@context": {
+                   |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
+                   |        "knora-api": "${OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion}"
+                   |    }
+                   |}
+                """.stripMargin
+
+            Put("/v2/ontologies/metadata", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(username, password)) ~> ontologiesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJsonDoc = responseToJsonLDDocument(response)
+
+                responseJsonDoc.body.value(OntologyConstants.KnoraApiV2WithValueObjects.HasOntologies) match {
+                    case metadata: JsonLDObject =>
+                        val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
+                        assert(ontologyIri == fooIri.get)
+
+                        assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(newLabel))
+
+                        val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).asInstanceOf[JsonLDString].value)
+                        assert(lastModDate.isAfter(fooLastModDate))
+                        fooLastModDate = lastModDate
+
                     case _ => throw AssertionException(s"Unexpected response: $responseJsonDoc")
                 }
             }

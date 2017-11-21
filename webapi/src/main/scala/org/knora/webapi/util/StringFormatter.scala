@@ -20,6 +20,7 @@
 
 package org.knora.webapi.util
 
+import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 
 import com.google.gwt.safehtml.shared.UriUtils._
@@ -1055,11 +1056,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             new SmartIriImpl(iri)
         }
 
-        if (requireInternal) {
-            smartIri.getOntologySchema match {
-                case Some(InternalSchema) => smartIri
-                case _ => throw DataConversionException(s"$smartIri is not an internal IRI")
-            }
+        if (requireInternal && !smartIri.getOntologySchema.contains(InternalSchema)) {
+            throw DataConversionException(s"$smartIri is not an internal IRI")
         } else {
             smartIri
         }
@@ -1242,12 +1240,34 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         )
     }
 
+    /**
+      * Unescapes a string that has been escaped for SPARQL.
+      *
+      * @param s        the string to be unescaped.
+      * @param errorFun a function that throws an exception. It will be called if the string cannot be processed.
+      * @return the unescaped string.
+      */
     def fromSparqlEncodedString(s: String, errorFun: => Nothing): String = {
         StringUtils.replaceEach(
             s,
             SparqlEscapeOutput,
             SparqlEscapeInput
         )
+    }
+
+    /**
+      * Parses an ISO-8601 instant and returns an instance of [[Instant]].
+      *
+      * @param s        the string to be parsed.
+      * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
+      * @return an [[Instant]].
+      */
+    def toInstant(s: String, errorFun: => Nothing): Instant = {
+        try {
+            Instant.parse(s)
+        } catch {
+            case _: Exception => errorFun
+        }
     }
 
     /**

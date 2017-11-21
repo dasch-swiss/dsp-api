@@ -1,5 +1,6 @@
 package org.knora.webapi.responders.v2
 
+import java.time.Instant
 import java.util.UUID
 
 import akka.actor.Props
@@ -7,11 +8,11 @@ import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.messages.v2.responder.ontologymessages.{CreateOntologyRequestV2, ReadEntityDefinitionsV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages.{ChangeOntologyMetadataRequestV2, CreateOntologyRequestV2, ReadOntologyMetadataV2}
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.{MutableTestIri, StringFormatter}
 
 import scala.concurrent.duration._
 
@@ -31,6 +32,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     // The default timeout for receiving reply messages from actors.
     private val timeout = 10.seconds
 
+    private val fooIri = new MutableTestIri
+    private var fooLastModDate: Instant = Instant.now
+
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
@@ -41,7 +45,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "The ontology responder v2" should {
         "create an empty ontology called 'foo' with a project code" in {
-
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "foo",
                 projectIri = projectWithProjectID,
@@ -50,8 +53,31 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 userProfile = userProfile
             )
 
-            val response = expectMsgType[ReadEntityDefinitionsV2](timeout)
-            response.ontologies should ===(Map("http://0.0.0.0:3333/ontology/00FF/foo/v2".toSmartIri -> Set.empty[IRI]))
+            val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+            val metadata = response.ontologies.head
+            assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/foo")
+            fooIri.set(metadata.ontologyIri.toString)
+            fooLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+        }
+
+        "change the metadata of 'foo'" in {
+            val newLabel = "The modified foo ontology"
+
+            actorUnderTest ! ChangeOntologyMetadataRequestV2(
+                ontologyIri = fooIri.get.toSmartIri,
+                label = newLabel,
+                lastModificationDate = fooLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = userProfile
+            )
+
+            val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+            val metadata = response.ontologies.head
+            assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/foo")
+            assert(metadata.label == newLabel)
+            val newFooLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+            assert(newFooLastModDate.isAfter(fooLastModDate))
+            fooLastModDate = newFooLastModDate
         }
 
         "not create 'foo' again" in {

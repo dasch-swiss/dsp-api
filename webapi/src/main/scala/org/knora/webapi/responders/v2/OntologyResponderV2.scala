@@ -27,7 +27,7 @@ import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1, ProjectOntologyAddV1, ProjectsNamedGraphGetV1}
+import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -95,6 +95,7 @@ class OntologyResponderV2 extends Responder {
         case PropertyEntitiesGetRequestV2(propertyIris, allLanguages, userProfile) => future2Message(sender(), getPropertyDefinitionsV2(propertyIris, allLanguages, userProfile), log)
         case OntologyMetadataGetRequestV2(projectIris, userProfile) => future2Message(sender(), getOntologyMetadataV2(projectIris, userProfile), log)
         case createOntologyRequest: CreateOntologyRequestV2 => future2Message(sender(), createOntology(createOntologyRequest), log)
+        case changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2 => future2Message(sender(), changeOntologyMetadata(changeOntologyMetadataRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -220,17 +221,20 @@ class OntologyResponderV2 extends Responder {
                         None
                     } else {
                         val ontologySmartIri = ontologyIri.toSmartIri
-                        val ontologyLabel = ontologyStatements.toMap.getOrElse(OntologyConstants.Rdfs.Label, ontologySmartIri.getOntologyName)
+                        val ontologyStatementMap = ontologyStatements.toMap
+                        val ontologyLabel = ontologyStatementMap.getOrElse(OntologyConstants.Rdfs.Label, ontologySmartIri.getOntologyName)
+                        val lastModificationDate = ontologyStatementMap.get(OntologyConstants.KnoraBase.LastModificationDate).map(instant => stringFormatter.toInstant(instant, throw InconsistentTriplestoreDataException(s"Invalid UTC instant: $instant")))
 
                         Some(ontologySmartIri -> OntologyMetadataV2(
                             ontologyIri = ontologySmartIri,
-                            label = ontologyLabel
+                            label = ontologyLabel,
+                            lastModificationDate = lastModificationDate
                         ))
                     }
             }
 
             // Get all resource class definitions.
-            resourceDefsSparql =queries.sparql.v2.txt.getResourceClassDefinitions(triplestore = settings.triplestoreType).toString()
+            resourceDefsSparql = queries.sparql.v2.txt.getResourceClassDefinitions(triplestore = settings.triplestoreType).toString()
             resourceDefsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(resourceDefsSparql)).mapTo[SparqlSelectResponse]
             resourceDefsRows: Seq[VariableResultsRow] = resourceDefsResponse.results.bindings
 
@@ -923,7 +927,7 @@ class OntologyResponderV2 extends Responder {
       * Gets the metadata describing the ontologies that belong to selected projects, or to all projects.
       *
       * @param projectIris the IRIs of the projects selected, or an empty set if all projects are selected.
-      * @param userProfile   the profile of the user making the request.
+      * @param userProfile the profile of the user making the request.
       * @return a [[ReadOntologyMetadataV2]].
       */
     private def getOntologyMetadataV2(projectIris: Set[IRI], userProfile: UserProfileV1): Future[ReadOntologyMetadataV2] = {
@@ -1063,71 +1067,119 @@ class OntologyResponderV2 extends Responder {
     }
 
     /**
+      * Reads an ontology's metadata.
+      *
+      * @param internalOntologyIri the ontology's internal IRI.
+      * @return an [[OntologyMetadataV2]], or [[None]] if the ontology is not found.
+      */
+    private def getOntologyMetadata(internalOntologyIri: SmartIri): Future[Option[OntologyMetadataV2]] = {
+        for {
+            getOntologyInfoSparql <- Future(queries.sparql.v2.txt.getOntologyInfo(
+                triplestore = settings.triplestoreType,
+                ontologyIri = internalOntologyIri.toString
+            ).toString())
+
+            getOntologyInfoResponse <- (storeManager ? SparqlConstructRequest(getOntologyInfoSparql)).mapTo[SparqlConstructResponse]
+
+            metadata: Option[OntologyMetadataV2] = if (getOntologyInfoResponse.statements.isEmpty) {
+                None
+            } else {
+                getOntologyInfoResponse.statements.get(internalOntologyIri.toString) match {
+                    case Some(statements: Seq[(IRI, String)]) =>
+                        val statementMap: Map[IRI, Seq[String]] = statements.groupBy {
+                            case (pred, _) => pred
+                        }.map {
+                            case (pred, predStatements) =>
+                                pred -> predStatements.map {
+                                    case (_, obj) => obj
+                                }
+                        }
+
+                        val labels: Seq[String] = statementMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[String])
+                        val lastModDates: Seq[String] = statementMap.getOrElse(OntologyConstants.KnoraBase.LastModificationDate, Seq.empty[String])
+
+                        val label: String = if (labels.size > 1) {
+                            throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has more than one rdfs:label")
+                        } else if (labels.isEmpty) {
+                            internalOntologyIri.getOntologyName
+                        } else {
+                            labels.head
+                        }
+
+                        val lastModificationDate: Option[Instant] = if (lastModDates.size > 1) {
+                            throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has more than one ${OntologyConstants.KnoraBase.LastModificationDate}")
+                        } else if (lastModDates.isEmpty) {
+                            None
+                        } else {
+                            val dateStr = lastModDates.head
+                            Some(stringFormatter.toInstant(dateStr, throw InconsistentTriplestoreDataException(s"Invalid ${OntologyConstants.KnoraBase.LastModificationDate}: $dateStr")))
+                        }
+
+                        Some(OntologyMetadataV2(
+                            ontologyIri = internalOntologyIri,
+                            label = label,
+                            lastModificationDate = lastModificationDate
+                        ))
+
+                    case None => None
+                }
+            }
+        } yield metadata
+    }
+
+    /**
       * Creates a new, empty ontology.
       *
       * @param createOntologyRequest the request message.
       * @return a [[SuccessResponseV2]].
       */
-    private def createOntology(createOntologyRequest: CreateOntologyRequestV2): Future[ReadEntityDefinitionsV2] = {
-        def makeTaskFuture(internalOntologyIri: SmartIri): Future[ReadEntityDefinitionsV2] = {
+    private def createOntology(createOntologyRequest: CreateOntologyRequestV2): Future[ReadOntologyMetadataV2] = {
+        def makeTaskFuture(internalOntologyIri: SmartIri): Future[ReadOntologyMetadataV2] = {
             for {
-                currentTime: String <- FastFuture.successful(Instant.now.toString)
-                internalOntologyIriStr = internalOntologyIri.toString
+                currentTime: Instant <- FastFuture.successful(Instant.now)
 
                 // Make sure the ontology doesn't already exist.
+                existingOntologyMetadata: Option[OntologyMetadataV2] <- getOntologyMetadata(internalOntologyIri)
 
-                checkOntologySparql = queries.sparql.v2.txt.getOntologyInfo(
-                    triplestore = settings.triplestoreType,
-                    ontologyIri = internalOntologyIriStr
-                ).toString
-
-                preUpdateCheckResponse <- (storeManager ? SparqlConstructRequest(checkOntologySparql)).mapTo[SparqlConstructResponse]
-
-                _ = if (preUpdateCheckResponse.statements.nonEmpty) {
-                    throw BadRequestException(s"Ontology $internalOntologyIri cannot be created, because it already exists")
+                _ = if (existingOntologyMetadata.nonEmpty) {
+                    throw BadRequestException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} cannot be created, because it already exists")
                 }
 
                 // Create the ontology.
 
                 createOntologySparql = queries.sparql.v2.txt.createOntology(
                     triplestore = settings.triplestoreType,
-                    ontologyNamedGraphIri = internalOntologyIriStr,
-                    ontologyIri = internalOntologyIriStr,
+                    ontologyNamedGraphIri = internalOntologyIri.toString,
+                    ontologyIri = internalOntologyIri.toString,
                     ontologyLabel = createOntologyRequest.label,
-                    currentTime = currentTime
+                    currentTime = currentTime.toString
                 ).toString
 
                 _ <- (storeManager ? SparqlUpdateRequest(createOntologySparql)).mapTo[SparqlUpdateResponse]
 
                 // Check that the update was successful.
 
-                postUpdateCheckResponse <- (storeManager ? SparqlConstructRequest(checkOntologySparql)).mapTo[SparqlConstructResponse]
+                maybeNewOntologyMetadata: Option[OntologyMetadataV2] <- getOntologyMetadata(internalOntologyIri)
 
-                // Get the metadata statements about the ontology.
-                ontologyStatements: Seq[(IRI, String)] = postUpdateCheckResponse.statements.getOrElse(internalOntologyIriStr, throw UpdateNotPerformedException())
+                _ = maybeNewOntologyMetadata match {
+                    case Some(newOntologyMetadata) =>
+                        if (!newOntologyMetadata.lastModificationDate.contains(currentTime)) {
+                            throw UpdateNotPerformedException()
 
-                // Get the ontology's last modification date from those statements.
-                lastModDate: Seq[String] = ontologyStatements.groupBy {
-                    case (pred, _) => pred
-                }.getOrElse(OntologyConstants.KnoraBase.LastModificationDate, throw UpdateNotPerformedException()).map {
-                    case (_, obj) => obj
-                }
+                        }
 
-                _ = if (lastModDate.size > 1) {
-                    throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has more than one knora-base:lastModificationDate")
-                }
-
-                _ = if (lastModDate.head != currentTime) {
-                    throw UpdateNotPerformedException()
+                    case None => throw UpdateNotPerformedException()
                 }
 
                 // tell the projects responder that the ontology was created, so it can add it to the project's admin data.
                 _ <- (responderManager ? ProjectOntologyAddV1(createOntologyRequest.projectIri.toString, internalOntologyIri.toString, createOntologyRequest.apiRequestID)).mapTo[ProjectInfoV1]
 
-                externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)
-
-            } yield ReadEntityDefinitionsV2(
-                ontologies = Map(externalOntologyIri -> Set.empty[SmartIri])
+            } yield ReadOntologyMetadataV2(
+                ontologies = Set(OntologyMetadataV2(
+                    ontologyIri = internalOntologyIri,
+                    label = createOntologyRequest.label,
+                    lastModificationDate = Some(currentTime)
+                ))
             )
         }
 
@@ -1145,7 +1197,7 @@ class OntologyResponderV2 extends Responder {
             maybeProjectInfo: Option[ProjectInfoV1] <- (responderManager ? ProjectInfoByIRIGetV1(projectIri.toString, None)).mapTo[Option[ProjectInfoV1]]
             projectCode: Option[String] = maybeProjectInfo match {
                 case Some(pi: ProjectInfoV1) => pi.shortcode
-                case None => throw NotFoundException(s"Project '$projectIri' cannot be found. Cannot add ontology to a nonexistent project.")
+                case None => throw NotFoundException(s"Project $projectIri not found. Cannot add an ontology to a nonexistent project.")
             }
 
             // Check that the ontology name is valid.
@@ -1156,10 +1208,113 @@ class OntologyResponderV2 extends Responder {
 
             // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
             taskResult <- IriLocker.runWithIriLock(
-                createOntologyRequest.apiRequestID,
-                createOntologyRequest.ontologyName,
-                () => makeTaskFuture(internalOntologyIri)
+                apiRequestID = createOntologyRequest.apiRequestID,
+                iri = internalOntologyIri.toString,
+                task = () => makeTaskFuture(internalOntologyIri)
             )
         } yield taskResult
     }
+
+    /**
+      * Changes ontology metadata.
+      *
+      * @param changeOntologyMetadataRequest the request to change the metadata.
+      * @return a [[ReadOntologyMetadataV2]] containing the new metadata.
+      */
+    def changeOntologyMetadata(changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2): Future[ReadOntologyMetadataV2] = {
+        def makeTaskFuture(internalOntologyIri: SmartIri): Future[ReadOntologyMetadataV2] = {
+            for {
+                currentTime: Instant <- FastFuture.successful(Instant.now)
+
+                // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
+
+                existingOntologyMetadata: Option[OntologyMetadataV2] <- getOntologyMetadata(internalOntologyIri)
+
+                _ = existingOntologyMetadata match {
+                    case Some(metadata) =>
+                        metadata.lastModificationDate match {
+                            case Some(lastModDate) =>
+                                if (lastModDate != changeOntologyMetadataRequest.lastModificationDate) {
+                                    throw BadRequestException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} has been modified by another user, please reload its metadata and try again.")
+                                }
+
+                            case None => throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has no ${OntologyConstants.KnoraBase.LastModificationDate}")
+                        }
+
+                    case None => throw NotFoundException(s"Ontology $internalOntologyIri (corresponding to ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)}) not found")
+                }
+
+                // Update the metadata.
+
+                updateSparql = queries.sparql.v2.txt.changeOntologyMetadata(
+                    triplestore = settings.triplestoreType,
+                    ontologyNamedGraphIri = internalOntologyIri.toString,
+                    ontologyIri = internalOntologyIri.toString,
+                    lastModificationDate = changeOntologyMetadataRequest.lastModificationDate.toString,
+                    newLabel = changeOntologyMetadataRequest.label,
+                    currentTime = currentTime.toString
+                ).toString()
+
+                _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
+
+                // Check that the update was successful.
+
+                maybeNewOntologyMetadata: Option[OntologyMetadataV2] <- getOntologyMetadata(internalOntologyIri)
+
+                newMetadata: OntologyMetadataV2 = maybeNewOntologyMetadata match {
+                    case Some(metadata) =>
+                        if (metadata != OntologyMetadataV2(
+                            ontologyIri = internalOntologyIri,
+                            label = changeOntologyMetadataRequest.label,
+                            lastModificationDate = Some(currentTime)
+                        )) {
+                            throw UpdateNotPerformedException()
+                        }
+
+                        metadata
+
+                    case None => throw NotFoundException(s"Ontology $internalOntologyIri (corresponding to ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)}) not found")
+                }
+
+            } yield ReadOntologyMetadataV2(ontologies = Set(newMetadata))
+        }
+
+        for {
+            userProfile <- FastFuture.successful(changeOntologyMetadataRequest.userProfile)
+
+            ontologyIri = changeOntologyMetadataRequest.ontologyIri
+
+            _ = if (!ontologyIri.isKnoraOntologyIri) {
+                throw BadRequestException(s"Invalid ontology IRI for request: ${ontologyIri.toOntologySchema(ApiV2WithValueObjects)}")
+            }
+
+            _ = if (!ontologyIri.getOntologySchema.contains(InternalSchema)) {
+                throw AssertionException(s"Ontology responder expected an internal ontology IRI: $ontologyIri")
+            }
+
+            _ = if (changeOntologyMetadataRequest.ontologyIri.isKnoraBuiltInDefinitionIri) {
+                throw BadRequestException(s"Ontology ${ontologyIri.toOntologySchema(ApiV2WithValueObjects)} cannot be modified via the Knora API")
+            }
+
+            // Get the project that the ontology belongs to.
+            projectInfo: ProjectInfoResponseV1 <- (responderManager ? ProjectInfoByOntologyGetRequestV1(
+                ontologyIri.toString,
+                Some(changeOntologyMetadataRequest.userProfile)
+            )).mapTo[ProjectInfoResponseV1]
+
+            // Check if the requesting user is allowed to change the ontology metadata.
+            _ = if (!userProfile.permissionData.isProjectAdmin(projectInfo.project_info.id.toString) && !userProfile.permissionData.isSystemAdmin) {
+                // not a project or system admin
+                throw ForbiddenException("Ontology metadata can only be changed by a project or system admin.")
+            }
+
+            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID = changeOntologyMetadataRequest.apiRequestID,
+                iri = ontologyIri.toString,
+                task = () => makeTaskFuture(internalOntologyIri = ontologyIri)
+            )
+        } yield taskResult
+    }
+
 }

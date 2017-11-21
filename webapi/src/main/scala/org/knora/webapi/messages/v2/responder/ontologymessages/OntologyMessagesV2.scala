@@ -21,6 +21,7 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
 
+import java.time.Instant
 import java.util.UUID
 
 import org.knora.webapi._
@@ -67,10 +68,10 @@ case class CreateOntologyRequestV2(ontologyName: String,
 /**
   * Constructs instances of [[CreateOntologyRequestV2]] based on JSON-LD requests.
   */
-object CreateOntologyRequestV2 {
-    def fromJsonLD(jsonLDDocument: JsonLDDocument,
-                   apiRequestID: UUID,
-                   userProfile: UserProfileV1): CreateOntologyRequestV2 = {
+object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntologyRequestV2] {
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            userProfile: UserProfileV1): CreateOntologyRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val ontologyName: String = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName, stringFormatter.validateProjectSpecificOntologyName)
@@ -88,7 +89,7 @@ object CreateOntologyRequestV2 {
 }
 
 /**
-  * Requests the addition of a property to an ontology. A successful response will be a [[ReadEntityDefinitionsV2]].
+  * Requests the addition of a property to an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
   *
   * @param propertyInfoContent information about the property to be created.
   * @param apiRequestID        the ID of the API request.
@@ -97,6 +98,51 @@ object CreateOntologyRequestV2 {
 case class CreatePropertyRequestV2(propertyInfoContent: PropertyInfoContentV2,
                                    apiRequestID: UUID,
                                    userProfile: UserProfileV1) extends OntologiesResponderRequestV2 {
+}
+
+/**
+  * Requests a change in the metadata of an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
+  *
+  * @param ontologyIri          the internal ontology IRI.
+  * @param label                the ontology's new label.
+  * @param lastModificationDate the ontology's last modification date, returned in a previous operation.
+  * @param apiRequestID         the ID of the API request.
+  * @param userProfile          the profile of the user making the request.
+  */
+case class ChangeOntologyMetadataRequestV2(ontologyIri: SmartIri,
+                                           label: String,
+                                           lastModificationDate: Instant,
+                                           apiRequestID: UUID,
+                                           userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+
+/**
+  * Constructs instances of [[ChangeOntologyMetadataRequestV2]] based on JSON-LD requests.
+  */
+object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeOntologyMetadataRequestV2] {
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            userProfile: UserProfileV1): ChangeOntologyMetadataRequestV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val externalOntologyIri: SmartIri = jsonLDDocument.requireString("@id", stringFormatter.toSmartIriWithErr)
+
+        if (!externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+            throw BadRequestException(s"Invalid ontology IRI for request: $externalOntologyIri")
+        }
+
+        val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+
+        val label: String = jsonLDDocument.requireString(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
+        val lastModificationDate: Instant = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
+
+        ChangeOntologyMetadataRequestV2(
+            ontologyIri = internalOntologyIri,
+            label = label,
+            lastModificationDate = lastModificationDate,
+            apiRequestID = apiRequestID,
+            userProfile = userProfile
+        )
+    }
 }
 
 /**
@@ -465,7 +511,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
 /**
   * Returns metadata about Knora ontologies.
   *
-  * @param ontologies the metadata to be returned.
+  * @param ontologies      the metadata to be returned.
   * @param includeKnoraApi if true, includes metadata about the `knora-api` ontology for the target schema.
   */
 case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2], includeKnoraApi: Boolean = false) extends KnoraResponseV2 {
@@ -497,7 +543,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2], includeKn
         }
 
         val ontologiesWithKnoraApi = ontologies ++ maybeKnoraApiMetadata
-        val ontologiesJson: Vector[JsonLDObject] = ontologiesWithKnoraApi.toVector.sortBy(_.ontologyIri).map(_.toJsonLD)
+        val ontologiesJson: Vector[JsonLDObject] = ontologiesWithKnoraApi.toVector.sortBy(_.ontologyIri).map(_.toJsonLD(targetSchema))
 
         val hasOntologiesProp = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasOntologies
@@ -1326,21 +1372,34 @@ case class SubClassInfoV2(id: SmartIri, label: String)
 /**
   * Returns metadata about an ontology.
   *
-  * @param ontologyIri the IRI of the ontology.
-  * @param label       the label of the ontology.
+  * @param ontologyIri          the IRI of the ontology.
+  * @param label                the label of the ontology.
+  * @param lastModificationDate the ontology's last modification date, if any.
   */
 case class OntologyMetadataV2(ontologyIri: SmartIri,
-                              label: String) extends KnoraContentV2[OntologyMetadataV2] {
+                              label: String,
+                              lastModificationDate: Option[Instant] = None) extends KnoraContentV2[OntologyMetadataV2] {
     override def toOntologySchema(targetSchema: OntologySchema): OntologyMetadataV2 = {
         copy(
             ontologyIri = ontologyIri.toOntologySchema(targetSchema)
         )
     }
 
-    def toJsonLD: JsonLDObject = {
+    def toJsonLD(targetSchema: ApiV2Schema): JsonLDObject = {
+        val maybeLastModDateStatement: Option[(IRI, JsonLDString)] = lastModificationDate.map {
+            lastModDate =>
+                val lastModDateProp = targetSchema match {
+                    case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.LastModificationDate
+                    case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate
+                }
+
+                lastModDateProp -> JsonLDString(lastModDate.toString)
+        }
+
+
         JsonLDObject(Map(
             "@id" -> JsonLDString(ontologyIri.toString),
             OntologyConstants.Rdfs.Label -> JsonLDString(label)
-        ))
+        ) ++ maybeLastModDateStatement)
     }
 }

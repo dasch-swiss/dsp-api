@@ -21,8 +21,8 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import org.knora.webapi._
-import org.knora.webapi.util.{StringFormatter, SmartIri}
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
   * Represents the `knora-api` ontology, version 2, in the [[ApiV2WithValueObjects]] schema.

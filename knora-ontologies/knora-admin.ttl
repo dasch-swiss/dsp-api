@@ -425,7 +425,7 @@
 
             :subjectClassConstraint :knoraProject ;
 
-            :objectDatatypeConstraint xsd:string .
+            :objectDatatypeConstraint xsd:anyURI .
 
 
 
@@ -686,7 +686,7 @@
     rdfs:comment "Represents a key-value pair in a Map"@en .
 
 
-    
+
 
 #################################################################
 #
