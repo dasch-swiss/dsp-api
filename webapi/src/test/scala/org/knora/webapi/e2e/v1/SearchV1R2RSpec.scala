@@ -62,7 +62,7 @@ class SearchV1R2RSpec extends R2RSpec {
     private val rdfDataObjects = List(
 
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
 
     )
@@ -200,6 +200,51 @@ class SearchV1R2RSpec extends R2RSpec {
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 1 (number of results from query above)
                 checkNumberOfHits(responseAs[String], 18)
+
+            }
+
+        }
+
+        "perform an extended search for an anything:Thing that has a Boolean value set to true" in {
+
+            val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fanything%23hasBoolean&compop=EQ&searchval=true"
+            val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Frdfh.ch%2Fprojects%2Fanything"
+
+            Get("/v1/search/?searchtype=extended" + props + filter) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfHits(responseAs[String], 1)
+
+            }
+
+        }
+
+        "perform an extended search for an anything:Thing that has a Boolean value that is not false" in {
+
+            val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fanything%23hasBoolean&compop=!EQ&searchval=false"
+            val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Frdfh.ch%2Fprojects%2Fanything"
+
+            Get("/v1/search/?searchtype=extended" + props + filter) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfHits(responseAs[String], 1)
+
+            }
+
+        }
+
+        "perform an extended search for an anything:Thing that has a Boolean value (EXISTS)" in {
+
+            val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fanything%23hasBoolean&compop=EXISTS&searchval="
+            val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Frdfh.ch%2Fprojects%2Fanything"
+
+            Get("/v1/search/?searchtype=extended" + props + filter) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfHits(responseAs[String], 1)
 
             }
 

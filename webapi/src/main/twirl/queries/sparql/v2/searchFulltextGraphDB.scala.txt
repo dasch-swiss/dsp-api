@@ -20,6 +20,8 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
+@import org.knora.webapi.SparqlSearchException
+@import org.knora.webapi.util.search.ApacheLuceneSupport.CombineSearchTerms
 
 @*
  * Performs a simple full-text search using GraphDB.
@@ -32,80 +34,56 @@
  * we need to get explicit (non-inferred) statements.
  *
  * @param searchTerms search terms.
+ * @param separator the separator to be used in aggregation functions.
+ * @param limitToProject limit search to the given project.
+ * @param limitToResourceClass limit search to given resource class.
+ * @param limit maximal amount of rows to be returned
+ * @param offset offset for paging (starts with 0)
+ * @param countQuery indicates whether it is a count query or the actual resources should be returned.
  *@
-@(searchTerms: String)
+@(searchTerms: CombineSearchTerms,
+  limitToProject: Option[IRI],
+  limitToResourceClass: Option[IRI],
+  separator: Option[Char],
+  limit: Int,
+  offset: Int,
+  countQuery: Boolean)
 
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-CONSTRUCT {
-	?matchingSubject ?matchingProperty ?literal .
-
-    # include this inferred information in the results, needed to identify value properties
-	?resource knora-base:hasValue ?valueObject .
-
-    ?valueObject knora-base:attachedToUser ?valueObjectCreator ;
-        knora-base:hasPermissions ?valueObjectPermissions ;
-        a ?valueObjectType ;
-        ?valueObjectProperty ?valueObjectValue .
-
-    # include this inferred information in the results, needed to identify resources
-    ?resource a knora-base:Resource ;
-        knora-base:isMainResource true ;
-        ?resourceProperty ?matchingSubject ;
-        rdfs:label ?label .
-
-    # indicates if the resource's label matched the search pattern
-    ?resource knora-base:labelMatched ?labelMatched .
-
-    ?resource a ?resourceType ;
-        knora-base:attachedToUser ?resourceCreator ;
-        knora-base:hasPermissions ?resourcePermissions ;
-        knora-base:attachedToProject ?referredResourceProject .
+@if(!countQuery) {
+SELECT DISTINCT ?resource (GROUP_CONCAT(?valueObject; separator="@separator.getOrElse(throw SparqlSearchException("Separator expected for non count query, but none given"))") AS ?valueObjectConcat)
+} else {
+    SELECT (count(distinct ?resource) as ?count)
 }
-
 WHERE {
-    {
 
-        # make a subquery to find triples matching the query string
-        # limit the number of results in order to prevent an error when writing the results back (may be too many)
-        SELECT DISTINCT ?matchingSubject ?matchingProperty ?literal WHERE {
+    {
+        SELECT DISTINCT ?matchingSubject WHERE {
 
             GRAPH <http://www.ontotext.com/explicit> {
                 ?matchingSubject ?matchingProperty ?literal .
             }
 
-            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms' .
+            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms.combineSearchTermsWithLogicalAnd' .
         }
-        @* TODO: support paging using OFFSET *@
-        ORDER BY ?matchingSubject
-        LIMIT 500
-    }
-
-    OPTIONAL {
-        ?matchingSubject a knora-base:Resource .
-        BIND(true AS ?labelMatched)
     }
 
     OPTIONAL {
         ?matchingSubject a knora-base:Value .
-        ?containingResource knora-base:hasValue ?matchingSubject .
-
 
         GRAPH <http://www.ontotext.com/explicit> {
-            ?containingResource ?resourceProperty ?matchingSubject .
+            ?matchingSubject knora-base:isDeleted false .
             ?matchingSubject a ?valueObjectType .
-            ?matchingSubject ?valueObjectProperty ?valueObjectValue .
         }
-
 
         FILTER(?valueObjectType != knora-base:LinkValue)
 
-        BIND(?matchingSubject AS ?valueObject)
+        ?containingResource knora-base:hasValue ?matchingSubject .
 
-        ?valueObject knora-base:isDeleted false ;
-            knora-base:attachedToUser ?valueObjectCreator ;
-            knora-base:hasPermissions ?valueObjectPermissions .
+        # this variable will only be bound if the search matched a value object
+        BIND(?matchingSubject AS ?valueObject)
 
     }
 
@@ -116,14 +94,18 @@ WHERE {
     ?resource a knora-base:Resource ;
         knora-base:isDeleted false .
 
-    GRAPH <http://www.ontotext.com/explicit> {
-        ?resource a ?resourceType .
+    @if(limitToResourceClass.nonEmpty) {
+        ?resource a <@limitToResourceClass.get> .
     }
 
-    ?resource rdfs:label ?label .
-
-    ?resource knora-base:attachedToUser ?resourceCreator ;
-            knora-base:hasPermissions ?resourcePermissions ;
-            knora-base:attachedToProject ?referredResourceProject .
+    @if(limitToProject.nonEmpty) {
+        ?resource knora-base:attachedToProject <@limitToProject.get>
+    }
 
 }
+@if(!countQuery) {
+GROUP BY ?resource
+ORDER BY ?resource
+OFFSET @offset
+}
+LIMIT @limit

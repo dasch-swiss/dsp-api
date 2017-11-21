@@ -48,7 +48,7 @@ class ResourceCreationSpec extends SalsahSpec {
         """
             [
                 {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/incunabula"},
-                {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/images"},
+                {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/00FF/images"},
                 {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/anything"},
                 {"path": "_test_data/all_data/biblio-data.ttl", "name": "http://www.knora.org/data/biblio"}
             ]
@@ -65,8 +65,8 @@ class ResourceCreationSpec extends SalsahSpec {
 
     private val testPassword = "test"
 
-    private val anythingProjectIri = "http://data.knora.org/projects/anything"
-    private val incunabulaProjectIri = "http://data.knora.org/projects/77275339"
+    private val anythingProjectIri = "http://rdfh.ch/projects/anything"
+    private val incunabulaProjectIri = "http://rdfh.ch/projects/77275339"
 
     // In order to run these tests, start `webapi` using the option `allowReloadOverHTTP`
 
@@ -97,21 +97,21 @@ class ResourceCreationSpec extends SalsahSpec {
 
             page.clickAddResourceButton()
 
-            val restypes = page.selectRestype("http://www.knora.org/ontology/images#person")
+            val restypes = page.selectRestype("http://www.knora.org/ontology/00FF/images#person")
 
             val label: WebElement = page.getFormFieldByName("__LABEL__")
 
             label.sendKeys("Robin Hood")
 
-            val firstname: WebElement = page.getFormFieldByName("http://www.knora.org/ontology/images#firstname")
+            val firstname: WebElement = page.getFormFieldByName("http://www.knora.org/ontology/00FF/images#firstname")
 
             firstname.sendKeys("Robin")
 
-            val familyname: WebElement = page.getFormFieldByName("http://www.knora.org/ontology/images#lastname")
+            val familyname: WebElement = page.getFormFieldByName("http://www.knora.org/ontology/00FF/images#lastname")
 
             familyname.sendKeys("Hood")
 
-            val address: WebElement = page.getFormFieldByName("http://www.knora.org/ontology/images#address")
+            val address: WebElement = page.getFormFieldByName("http://www.knora.org/ontology/00FF/images#address")
 
             address.sendKeys("Sherwood Forest")
 

@@ -20,12 +20,21 @@
 
 package org.knora.webapi.util
 
-import java.util.function.BiFunction
+import java.util.function.{Function, BiFunction}
 
 /**
-  * Utility functions for working with Java functions.
+  * Utility functions for working with Java libraries.
   */
 object JavaUtil {
+
+    /**
+      * Converts a 1-argument Scala function into a Java [[Function]].
+      *
+      * @param f the Scala function.
+      * @return a [[Function]] that calls the Scala function.
+      */
+    def function[A, B](f: A => B): Function[A, B] =
+        (a: A) => f(a)
 
     /**
       * Converts a 2-argument Scala function into a Java [[BiFunction]].
@@ -37,34 +46,47 @@ object JavaUtil {
         (a: A, b: B) => f(a, b)
 
     /**
-      * Deep conversion of a java collection into a scala collection.
+      * Recursively converts a Java collection into a Scala collection.
       *
-      * Usage: val y = deepScalaToJava(x).asInstanceOf[Map[String, Any]]
+      * Usage: val scalaObj = deepScalaToJava(javaObj).asInstanceOf[Map[String, Any]]
       *
-      * @param x
-      * @return
+      * @param javaObj the Java collection to be converted.
+      * @return an equivalent Scala collection.
       */
-    def deepJavatoScala(x: Any): Any = {
+    def deepJavatoScala(javaObj: Any): Any = {
         import collection.JavaConverters._
-        x match {
+        javaObj match {
             case x: java.util.HashMap[_, _] => x.asScala.toMap.mapValues(deepJavatoScala)
             case x: java.util.ArrayList[_] => x.asScala.toList.map(deepJavatoScala)
-            case _ => x
+            case _ => javaObj
         }
     }
 
-    def deepScalaToJava(x: Any): Any = {
+    /**
+      * Recursively converts a Scala collection into a Java collection.
+      *
+      * @param scalaCollection the Scala collection to be converted.
+      * @return an equivalent Java collection.
+      */
+    def deepScalaToJava(scalaCollection: Any): Any = {
         import collection.JavaConverters._
 
-        x match {
+        scalaCollection match {
             case x: List[_] => x.map(deepScalaToJava).asJava
             case x: Seq[_] => x.map(deepScalaToJava).asJava
+            case x: Array[_] => x.map(deepScalaToJava)
             case x: collection.mutable.Map[_, _] => x.mapValues(deepScalaToJava).asJava
             case x: collection.immutable.Map[_, _] => x.mapValues(deepScalaToJava).asJava
             case x: collection.Map[_, _] => x.mapValues(deepScalaToJava).asJava
-            case x: collection.mutable.Set[_] => x.map(deepScalaToJava).asJava
-            case x: Array[_] => x.map(deepScalaToJava)
-            case _ => x
+            case _ => scalaCollection
         }
+    }
+
+    /**
+      * Helps turn matches for optional regular expression groups, which can be null, into Scala Option objects. See
+      * [[https://stackoverflow.com/a/18794646]].
+      */
+    object Optional {
+        def unapply[T](a: T) = if (null == a) Some(None) else Some(Some(a))
     }
 }

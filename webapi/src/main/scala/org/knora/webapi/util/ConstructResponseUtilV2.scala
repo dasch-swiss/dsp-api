@@ -30,8 +30,6 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
 
-import scala.collection.immutable.ListMap
-
 
 object ConstructResponseUtilV2 {
 
@@ -43,11 +41,14 @@ object ConstructResponseUtilV2 {
     /**
       * Represents the RDF data about a value, possibly including standoff.
       *
-      * @param valueObjectIri the value object's IRI.
-      * @param assertions     the value objects assertions.
-      * @param standoff       standoff assertions, if any.
+      * @param valueObjectIri   the value object's IRI.
+      * @param valueObjectClass the type (class) of the value object.
+      * @param nestedResource   the nested resource in case of a link value (either the source or the target of a link value, depending on [[incomingLink]]).
+      * @param incomingLink     indicates if it is an incoming or outgoing link in case of a link value.
+      * @param assertions       the value objects assertions.
+      * @param standoff         standoff assertions, if any.
       */
-    case class ValueRdfData(valueObjectIri: IRI, valueObjectClass: IRI, targetResource: Option[ResourceWithValueRdfData] = None, assertions: Map[IRI, String], standoff: Map[IRI, Map[IRI, String]])
+    case class ValueRdfData(valueObjectIri: IRI, valueObjectClass: IRI, nestedResource: Option[ResourceWithValueRdfData] = None, incomingLink: Boolean = false, assertions: Map[IRI, String], standoff: Map[IRI, Map[IRI, String]])
 
     /**
       * Represents a resource and its values.
@@ -86,7 +87,6 @@ object ConstructResponseUtilV2 {
 
                 // check if the subject is a Knora resource
                 assertions.contains((OntologyConstants.Rdf.Type, OntologyConstants.KnoraBase.Resource))
-
         }
 
         // filter out the resources the user does not have permissions to see
@@ -246,7 +246,7 @@ object ConstructResponseUtilV2 {
         def nestResources(resourceIri: IRI, alreadyTraversed: Set[IRI] = Set.empty[IRI]): ResourceWithValueRdfData = {
             val resource = flatResourcesWithValues(resourceIri)
 
-            val transformedValuePropertyAssertions = resource.valuePropertyAssertions.map {
+            val transformedValuePropertyAssertions: Map[IRI, Seq[ValueRdfData]] = resource.valuePropertyAssertions.map {
                 case (propIri, values) =>
                     val transformedValues = values.map {
                         value =>
@@ -256,10 +256,10 @@ object ConstructResponseUtilV2 {
                                 if (alreadyTraversed(dependentResourceIri)) {
                                     value
                                 } else {
-                                    val dependentResource = nestResources(dependentResourceIri, alreadyTraversed + resourceIri)
+                                    val dependentResource: ResourceWithValueRdfData = nestResources(dependentResourceIri, alreadyTraversed + resourceIri)
 
                                     value.copy(
-                                        targetResource = Some(dependentResource)
+                                        nestedResource = Some(dependentResource)
                                     )
                                 }
                             } else {
@@ -270,9 +270,78 @@ object ConstructResponseUtilV2 {
                     propIri -> transformedValues
             }
 
-            resource.copy(
-                valuePropertyAssertions = transformedValuePropertyAssertions
-            )
+            // check if there is an incoming link from a resource that has not been processed yet
+            val incomingResourcesWithLinkValueProps: Map[IRI, ResourceWithValueRdfData] = flatResourcesWithValues.foldLeft(Map.empty[IRI, ResourceWithValueRdfData]) {
+                case (acc: Map[IRI, ResourceWithValueRdfData], (incomingResIri: IRI, values: ResourceWithValueRdfData)) =>
+
+                    val incomingLinkPropertyAssertions: Map[IRI, Seq[ValueRdfData]] = if (!alreadyTraversed(incomingResIri)) {
+
+                        values.valuePropertyAssertions.foldLeft(Map.empty[IRI, Seq[ValueRdfData]]) {
+                            case (acc: Map[IRI, Seq[ValueRdfData]], (valObjIri: IRI, values: Seq[ValueRdfData])) =>
+
+                                val incomingLinkValues: Seq[ValueRdfData] = values.foldLeft(Seq.empty[ValueRdfData]) {
+                                    (acc, value: ValueRdfData) =>
+
+                                        // check if it is a link value and points to this resource
+                                        if (value.valueObjectClass == OntologyConstants.KnoraBase.LinkValue && value.assertions(OntologyConstants.Rdf.Object) == resourceIri) {
+                                            // add incoming link value
+                                            acc :+ value
+                                        } else {
+                                            acc
+                                        }
+                                }
+
+                                if (incomingLinkValues.nonEmpty) {
+                                    acc + (valObjIri -> incomingLinkValues)
+                                } else {
+                                    acc
+                                }
+                        }
+
+                    } else {
+                        Map.empty[IRI, Seq[ValueRdfData]]
+                    }
+
+                    if (incomingLinkPropertyAssertions.nonEmpty) {
+                        acc + (incomingResIri -> values.copy(
+                            valuePropertyAssertions = incomingLinkPropertyAssertions
+                        ))
+                    } else {
+                        acc
+                    }
+            }
+
+
+            if (incomingResourcesWithLinkValueProps.nonEmpty) {
+                // incomingResourcesWithLinkValueProps contains resources that have incoming link values
+                // flatResourcesWithValues contains the complete information
+                val incomingValueProps: Map[IRI, Seq[ValueRdfData]] = incomingResourcesWithLinkValueProps.flatMap {
+                    case (incomingResIri: IRI, assertions: ResourceWithValueRdfData) =>
+                        assertions.valuePropertyAssertions
+                }
+
+                // create a virtual property representing an incoming link
+                val incomingProps: (IRI, Seq[ValueRdfData]) = OntologyConstants.KnoraBase.HasIncomingLinks -> incomingValueProps.values.toSeq.flatten.map {
+                    (linkValue: ValueRdfData) =>
+
+                        // get the source of the link value (it points to the resource that is currently processed)
+                        val source = Some(nestResources(linkValue.assertions(OntologyConstants.Rdf.Subject), alreadyTraversed + resourceIri))
+
+                        linkValue.copy(
+                            nestedResource = source,
+                            incomingLink = true
+                        )
+                }
+
+                resource.copy(
+                    valuePropertyAssertions = transformedValuePropertyAssertions + incomingProps
+                )
+            } else {
+                resource.copy(
+                    valuePropertyAssertions = transformedValuePropertyAssertions
+                )
+            }
+
         }
 
         val mainResourceIris: Set[IRI] = flatResourcesWithValues.filter {
@@ -317,6 +386,7 @@ object ConstructResponseUtilV2 {
       * @return a [[ValueContentV2]] representing a value.
       */
     def createValueContentV2FromValueRdfData(valueObject: ValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation]): ValueContentV2 = {
+        val stringFormatter = StringFormatter.getGeneralInstance
 
         // every knora-base:Value (any of its subclasses) has a string representation
         val valueObjectValueHasString: String = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasString)
@@ -384,24 +454,33 @@ object ConstructResponseUtilV2 {
                 IntervalValueContentV2(valueHasString = valueObjectValueHasString, valueHasIntervalStart = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalStart)), valueHasIntervalEnd = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalEnd)), comment = valueCommentOption)
 
             case OntologyConstants.KnoraBase.LinkValue =>
-                val referredResourceIri = valueObject.assertions(OntologyConstants.Rdf.Object)
+
+                val sourceResourceIri = valueObject.assertions(OntologyConstants.Rdf.Subject)
+                val targetResourceIri = valueObject.assertions(OntologyConstants.Rdf.Object)
 
                 val linkValue = LinkValueContentV2(
                     valueHasString = valueObjectValueHasString,
-                    subject = valueObject.assertions(OntologyConstants.Rdf.Subject),
+                    subject = sourceResourceIri,
                     predicate = valueObject.assertions(OntologyConstants.Rdf.Predicate),
-                    referredResourceIri = referredResourceIri,
+                    target = targetResourceIri,
                     comment = valueCommentOption,
-                    referredResource = None
+                    incomingLink = valueObject.incomingLink,
+                    nestedResource = None
                 )
 
-                valueObject.targetResource match {
+                valueObject.nestedResource match {
 
-                    case Some(referredResourceAssertions: ResourceWithValueRdfData) =>
+                    case Some(nestedResourceAssertions: ResourceWithValueRdfData) =>
+
+                        val nestedResourceIri = if (!valueObject.incomingLink) {
+                            targetResourceIri
+                        } else {
+                            sourceResourceIri
+                        }
 
                         // add information about the referred resource
                         linkValue.copy(
-                            referredResource = Some(constructReadResourceV2(referredResourceIri, referredResourceAssertions, mappings)) // construct a `ReadResourceV2`
+                            nestedResource = Some(constructReadResourceV2(nestedResourceIri, nestedResourceAssertions, mappings)) // construct a `ReadResourceV2`
                         )
 
                     case None => linkValue // do not include information about the referred resource
@@ -412,7 +491,7 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.StillImageFileValue =>
 
                 val isPreviewStr = valueObject.assertions.get(OntologyConstants.KnoraBase.IsPreview)
-                val isPreview = InputValidation.optionStringToBoolean(isPreviewStr, () => throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
+                val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, () => throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
 
                 StillImageFileValueContentV2(
                     internalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.InternalMimeType),
@@ -507,40 +586,32 @@ object ConstructResponseUtilV2 {
     /**
       * Creates a response to a fulltext or extended search.
       *
-      * @param searchResults the results returned by the triplestore.
+      * @param searchResults      the resources that matched the query and the client has permissions to see.
       * @param orderByResourceIri the order in which the resources should be returned.
       * @return a collection of [[ReadResourceV2]] representing the search results.
       */
-    def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData], orderByResourceIri: Seq[IRI] = Seq.empty[IRI]): Vector[ReadResourceV2] = {
+    def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData], orderByResourceIri: Seq[IRI], mappings: Map[IRI, MappingAndXSLTransformation] = Map.empty[IRI, MappingAndXSLTransformation], forbiddenResource: Option[ReadResourceV2]): Vector[ReadResourceV2] = {
 
-        // if orderByResourceIris is given, use it to sort search results
-        // attention: orderByResourceIris does not consider permissions
-        if (orderByResourceIri.nonEmpty) {
+        if (orderByResourceIri.toSet != searchResults.keySet && forbiddenResource.isEmpty) throw AssertionException(s"Not all resources are visible, but forbiddenResource is None")
 
-            // iterate over orderByResourceIris and construct the response in the correct order
-            orderByResourceIri.foldLeft(Vector.empty[ReadResourceV2]) {
-                (acc: Vector[ReadResourceV2], resourceIri: IRI) =>
+        // iterate over orderByResourceIris and construct the response in the correct order
+        orderByResourceIri.map {
+            (resourceIri: IRI) =>
 
-                    // the user may not have the permissions to see the resource
-                    // i.e. it may not be contained in searchResults
-                    searchResults.get(resourceIri) match {
-                        case Some(assertions: ResourceWithValueRdfData) =>
-                            // sufficient permissions
-                            // add the resource to the list of results
-                            acc :+ constructReadResourceV2(resourceIri, assertions, mappings = Map.empty[IRI, MappingAndXSLTransformation])
+                // the user may not have the permissions to see the resource
+                // i.e. it may not be contained in searchResults
+                searchResults.get(resourceIri) match {
+                    case Some(assertions: ResourceWithValueRdfData) =>
+                        // sufficient permissions
+                        // add the resource to the list of results
+                        constructReadResourceV2(resourceIri, assertions, mappings = mappings)
 
-                        case None => acc // insufficient permissions on resource, skip it
-                    }
-            }
-        } else {
-            // no order given
-            searchResults.map {
-                case (resourceIri: IRI, assertions: ResourceWithValueRdfData) =>
-                    constructReadResourceV2(resourceIri, assertions, mappings = Map.empty[IRI, MappingAndXSLTransformation])
-            }.toVector
+                    case None =>
+                        // include the forbidden resource instead of skipping (the amount of results should be constant -> limit)
+                        forbiddenResource.getOrElse(throw AssertionException(s"Not all resources are visible, but forbiddenResource is None"))
 
-        }
-
+                }
+        }.toVector
 
     }
 }

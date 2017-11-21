@@ -20,18 +20,29 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
+@import org.knora.webapi.util.search.ApacheLuceneSupport.MatchStringWhileTyping
 
 @*
  * Performs a search for resources by their label.
  *
- * @param searchTerms search terms to look for in the resources' label.
+ * @param searchTerm search terms.
+ * @param limitToProject limit search to the given project.
+ * @param limitToResourceClass limit search to given resource class.
+ * @param limit maximum amount of resources to be returned.
+ * @param offset offset to be used for paging.
+ * @param countQuery indicates whether it is a count query or the actual resources should be returned.
  *@
-@(searchTerms: String,
+@(searchTerm: MatchStringWhileTyping,
   limitToProject: Option[IRI],
-  limitToResourceClass: Option[IRI])
+  limitToResourceClass: Option[IRI],
+  limit: Int,
+  offset: Int,
+  countQuery: Boolean)
 
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+@if(!countQuery) {
 CONSTRUCT {
     ?resource rdfs:label ?label ;
         a knora-base:Resource ;
@@ -48,55 +59,52 @@ CONSTRUCT {
 
 } WHERE {
     {
-        SELECT DISTINCT ?resource ?label WHERE {
-            ?resource a knora-base:Resource ;
-                knora-base:isDeleted false .
-
-            @if(limitToResourceClass.nonEmpty) {
-                ?resource a <@limitToResourceClass.get> .
-            }
-
-            @if(limitToProject.nonEmpty) {
-                ?resource knora-base:attachedToProject <@limitToProject.get>
-            }
-
-            GRAPH <http://www.ontotext.com/explicit> {
-                    ?resource rdfs:label ?label .
-                }
-
-            ?label <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms' .
-
+        @{
+        queries.sparql.v2.txt.searchResourceByLabelSubQuerySelectGraphDB(
+            searchTerm = searchTerm,
+            limitToProject = limitToProject,
+            limitToResourceClass = limitToResourceClass,
+            limit = limit,
+            offset = offset,
+            countQuery = countQuery)
         }
-        @* TODO: support paging (OFFSET) *@
-        ORDER BY ?resource
-        LIMIT 500
     }
 
-    GRAPH <http://www.ontotext.com/explicit> {
-        ?resource a ?resourceType .
+    {
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?resource a ?resourceType .
+        }
+
+        ?resource knora-base:attachedToUser ?resourceCreator ;
+                knora-base:hasPermissions ?resourcePermissions ;
+                knora-base:attachedToProject ?referredResourceProject  .
     }
-
-    ?resource knora-base:attachedToUser ?resourceCreator ;
-            knora-base:hasPermissions ?resourcePermissions ;
-            knora-base:attachedToProject ?referredResourceProject  .
-
     # there might by resources that have neither values nor links
-    OPTIONAL {
+    UNION {
 
             ?resource knora-base:hasValue ?valueObject .
 
-            ?valueObject a knora-base:Value ;
-                knora-base:isDeleted false .
+            ?valueObject a knora-base:Value .
 
+            GRAPH <http://www.ontotext.com/explicit> {
+                ?resource ?resourceValueProperty ?valueObject .
 
-                GRAPH <http://www.ontotext.com/explicit> {
-                    ?resource ?resourceValueProperty ?valueObject .
+                ?valueObject knora-base:isDeleted false ;
+                    a ?valueObjectType ;
+                    ?valueObjectProperty ?valueObjectValue .
+            }
 
-                    ?valueObject a ?valueObjectType ;
-                        ?valueObjectProperty ?valueObjectValue .
-                }
+            FILTER(?valueObjectType != knora-base:LinkValue)
     }
-
-
-
+}
+} else {
+    @{
+            queries.sparql.v2.txt.searchResourceByLabelSubQuerySelectGraphDB(
+                searchTerm = searchTerm,
+                limitToProject = limitToProject,
+                limitToResourceClass = limitToResourceClass,
+                limit = limit,
+                offset = offset,
+                countQuery = countQuery)
+            }
 }

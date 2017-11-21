@@ -218,7 +218,7 @@ XML looks like this:
         </biblio:Journal>
         <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
             <knoraXmlImport:label>Strings in the 16th and 17th Centuries</knoraXmlImport:label>
-            <biblio:beol__comment knoraType="richtext_value" mapping_id="http://data.knora.org/projects/standoff/mappings/StandardMapping">
+            <biblio:beol__comment knoraType="richtext_value" mapping_id="http://rdfh.ch/standoff/mappings/StandardMapping">
                 <text xmlns="">The most <strong>interesting</strong> article in <a class="salsah-link" href="ref:math_intelligencer">Math Intelligencer</a>.</text>
             </biblio:beol__comment>
             <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
@@ -299,7 +299,7 @@ in the triplestore:
         xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
         <biblio:JournalArticle id="strings_in_the_18th_century">
             <knoraXmlImport:label>Strings in the 18th Century</knoraXmlImport:label>
-            <biblio:beol__comment knoraType="richtext_value" mapping_id="http://data.knora.org/projects/standoff/mappings/StandardMapping">
+            <biblio:beol__comment knoraType="richtext_value" mapping_id="http://rdfh.ch/standoff/mappings/StandardMapping">
                 <text xmlns="">The most <strong>boring</strong> article in <a class="salsah-link" href="http://rdfh.ch/biblio/QMDEHvBNQeOdw85Z2NSi9A">Math Intelligencer</a>.</text>
             </biblio:beol__comment>
             <biblio:endPage knoraType="richtext_value">76</biblio:endPage>

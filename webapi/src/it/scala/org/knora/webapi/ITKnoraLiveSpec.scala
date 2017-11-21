@@ -19,6 +19,7 @@ package org.knora.webapi
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.util.StringFormatter
 import org.scalatest.{BeforeAndAfterAll, Suite}
 
 import scala.languageFeature.postfixOps
@@ -32,6 +33,9 @@ object ITKnoraLiveSpec {
   * provides access to settings and logging.
   */
 class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with Suite with BeforeAndAfterAll {
+    /* needed by the core trait */
+    implicit lazy val settings: SettingsImpl = Settings(system)
+    StringFormatter.initForTest()
 
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraLiveSpec.defaultConfig)))
 
@@ -43,9 +47,6 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
 
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system
-
-    /* needed by the core trait */
-    implicit lazy val settings: SettingsImpl = Settings(system)
 
     /* needed by the core trait */
     implicit lazy val log: LoggingAdapter = akka.event.Logging(system, "ITSpec")

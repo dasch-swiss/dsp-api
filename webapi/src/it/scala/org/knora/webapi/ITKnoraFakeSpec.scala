@@ -19,6 +19,7 @@ package org.knora.webapi
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.util.StringFormatter
 import org.scalatest.{BeforeAndAfterAll, Suite}
 
 import scala.languageFeature.postfixOps
@@ -33,6 +34,10 @@ object ITKnoraFakeSpec {
   */
 class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeService with Suite with BeforeAndAfterAll {
 
+    /* needed by the core trait */
+    implicit lazy val settings: SettingsImpl = Settings(system)
+    StringFormatter.initForTest()
+
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraFakeSpec.defaultConfig)))
 
     def this(config: Config) = this(ActorSystem("IntegrationTests", config.withFallback(ITKnoraFakeSpec.defaultConfig)))
@@ -43,9 +48,6 @@ class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeService w
 
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system
-
-    /* needed by the core trait */
-    implicit lazy val settings: SettingsImpl = Settings(system)
 
     /* needed by the core trait */
     implicit lazy val log: LoggingAdapter = akka.event.Logging(system, "ITSpec")

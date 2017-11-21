@@ -78,7 +78,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
     val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images")
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
 
     "Load test data" in {
@@ -109,7 +109,7 @@ class SipiV1R2RSpec extends R2RSpec {
                 ))
             ),
             label = "test",
-            project_id = "http://data.knora.org/projects/77275339"
+            project_id = "http://rdfh.ch/projects/77275339"
         )
 
         val pathToFile = "_test_data/test_route/images/Chlaus.jpg"

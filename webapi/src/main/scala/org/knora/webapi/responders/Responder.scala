@@ -22,6 +22,7 @@ package org.knora.webapi.responders
 
 import akka.actor.{Actor, ActorLogging}
 import org.knora.webapi.Settings
+import org.knora.webapi.util.StringFormatter
 
 import scala.language.postfixOps
 
@@ -38,6 +39,11 @@ trait Responder extends Actor with ActorLogging {
       * The application settings.
       */
     protected val settings = Settings(context.system)
+
+    /**
+      * A string formatter.
+      */
+    protected implicit val stringFormatter = StringFormatter.getGeneralInstance
 
     /**
       * The application's default timeout for `ask` messages.

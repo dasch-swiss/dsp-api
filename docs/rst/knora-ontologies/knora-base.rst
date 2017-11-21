@@ -1278,7 +1278,7 @@ A ``MappingXMLAttribute`` has the following properties:
     The standoff property the XML attribute is mapped to.
 
 
-Knora includes a standard mapping used by the SALSAH GUI. It has the IRI ``http://data.knora.org/projects/standoff/mappings/StandardMapping`` and defines
+Knora includes a standard mapping used by the SALSAH GUI. It has the IRI ``http://rdfh.ch/standoff/mappings/StandardMapping`` and defines
 mappings for a few elements used to write texts with simple markup (see :ref:`XML-to-standoff-mapping`).
 
 Standoff in Digital Editions

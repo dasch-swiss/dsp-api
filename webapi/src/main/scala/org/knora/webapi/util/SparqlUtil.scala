@@ -25,6 +25,7 @@ object SparqlUtil {
 
     /**
       * Converts the value of any type to a SPARQL literal string.
+      *
       * @param value the value to be converted.
       * @return a string containing the SPARQL literal.
       */
@@ -42,6 +43,7 @@ object SparqlUtil {
 
     /**
       * Converts a string to a SPARQL literal string.
+      *
       * @param value the value to be converted.
       * @return a string containing the SPARQL literal.
       */
@@ -54,6 +56,7 @@ object SparqlUtil {
 
     /**
       * Converts a boolean to a SPARQL literal string.
+      *
       * @param value the value to be converted.
       * @return a string containing the SPARQL literal.
       */

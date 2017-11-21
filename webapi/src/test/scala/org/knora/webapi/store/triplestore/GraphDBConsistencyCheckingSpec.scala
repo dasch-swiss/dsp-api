@@ -368,8 +368,8 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/missingPartOf") AS ?resource0)
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#page") AS ?resourceClass0)
-          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?creatorIri)
-          |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
+          |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
+          |    BIND(IRI("http://rdfh.ch/projects/77275339") AS ?projectIri)
           |    BIND(str("Test-Page") AS ?label0)
           |    BIND(NOW() AS ?currentTime)
           |
@@ -745,8 +745,8 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/missingFileValue") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#page") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?creatorIri)
-          |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
+          |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
+          |    BIND(IRI("http://rdfh.ch/projects/77275339") AS ?projectIri)
           |    BIND(str("Test-Page") AS ?label)
           |    BIND(NOW() AS ?currentTime)
           |
@@ -1133,8 +1133,8 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/tooManyPublocs") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#book") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?creatorIri)
-          |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
+          |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
+          |    BIND(IRI("http://rdfh.ch/projects/77275339") AS ?projectIri)
           |    BIND(str("Test-Book") AS ?label)
           |    BIND(NOW() AS ?currentTime)
           |
@@ -1442,8 +1442,8 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/tooManyLastModificationDates") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#book") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?creatorIri)
-          |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
+          |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
+          |    BIND(IRI("http://rdfh.ch/projects/77275339") AS ?projectIri)
           |    BIND(str("Test-Book") AS ?label)
           |    BIND(NOW() AS ?currentTime)
           |
@@ -1647,8 +1647,8 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/wrongSubjectClass") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#book") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?creatorIri)
-          |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
+          |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
+          |    BIND(IRI("http://rdfh.ch/projects/77275339") AS ?projectIri)
           |    BIND(str("Test-Book") AS ?label)
           |    BIND(NOW() AS ?currentTime)
           |
@@ -1847,8 +1847,8 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/wrongObjectClass") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#book") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?creatorIri)
-          |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
+          |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
+          |    BIND(IRI("http://rdfh.ch/projects/77275339") AS ?projectIri)
           |    BIND(str("Test-Book") AS ?label)
           |    BIND(NOW() AS ?currentTime)
           |
@@ -2097,8 +2097,8 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/resourcePropWithNoCardinality") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#book") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?creatorIri)
-          |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
+          |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
+          |    BIND(IRI("http://rdfh.ch/projects/77275339") AS ?projectIri)
           |    BIND(str("Test-Book") AS ?label)
           |    BIND(NOW() AS ?currentTime)
           |
@@ -2322,8 +2322,8 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/incunabula") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/valuePropWithNoCardinality") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/incunabula#book") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/b83acc5f05") AS ?creatorIri)
-          |    BIND(IRI("http://data.knora.org/projects/77275339") AS ?projectIri)
+          |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
+          |    BIND(IRI("http://rdfh.ch/projects/77275339") AS ?projectIri)
           |    BIND(str("Test-Book") AS ?label)
           |    BIND(NOW() AS ?currentTime)
           |
@@ -2449,7 +2449,7 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:isDeleted false ;
           |            knora-base:valueCreationDate ?currentTime .
           |
-          |        ?newLinkValue0_0 knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+          |        ?newLinkValue0_0 knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
           |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
           |
           |
@@ -2470,8 +2470,8 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/anything") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/wrongTargetClass") AS ?resource0)
           |    BIND(IRI("http://www.knora.org/ontology/anything#Thing") AS ?resourceClass0)
-          |    BIND(IRI("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
-          |    BIND(IRI("http://data.knora.org/projects/anything") AS ?projectIri)
+          |    BIND(IRI("http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
+          |    BIND(IRI("http://rdfh.ch/projects/anything") AS ?projectIri)
           |    BIND(str("Test Thing") AS ?label0)
           |    BIND(NOW() AS ?currentTime)
           |
@@ -2540,8 +2540,8 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/anything") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/twoLabels") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/anything#Thing") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
-          |    BIND(IRI("http://data.knora.org/projects/anything") AS ?projectIri)
+          |    BIND(IRI("http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
+          |    BIND(IRI("http://rdfh.ch/projects/anything") AS ?projectIri)
           |    BIND(str("Test Thing") AS ?label)
           |    BIND(NOW() AS ?currentTime)
           |}
@@ -2583,7 +2583,7 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:isDeleted false ;
           |            knora-base:valueCreationDate ?currentTime .
           |
-          |        ?newLinkValue0 knora-base:attachedToUser <http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> .
+          |        ?newLinkValue0 knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> .
           |        ?resource ?linkValueProperty0 ?newLinkValue0 .
           |    }
           |}
@@ -2595,8 +2595,8 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://www.knora.org/data/anything") AS ?dataNamedGraph)
           |    BIND(IRI("http://data.knora.org/missingValuePermissions") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/anything#Thing") AS ?resourceClass)
-          |    BIND(IRI("http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
-          |    BIND(IRI("http://data.knora.org/projects/anything") AS ?projectIri)
+          |    BIND(IRI("http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
+          |    BIND(IRI("http://rdfh.ch/projects/anything") AS ?projectIri)
           |    BIND(str("Test Thing") AS ?label)
           |    BIND(NOW() AS ?currentTime)
           |

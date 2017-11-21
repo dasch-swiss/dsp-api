@@ -49,11 +49,11 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyEntityInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
-import org.knora.webapi.util.InputValidation.XmlImportNamespaceInfoV1
+import org.knora.webapi.util.StringFormatter.XmlImportNamespaceInfoV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagsV1
-import org.knora.webapi.util.{DateUtilV1, FileUtil, InputValidation}
+import org.knora.webapi.util.{DateUtilV1, FileUtil, StringFormatter}
 import org.knora.webapi.viewhandlers.ResourceHtmlView
 import org.slf4j.LoggerFactory
 import org.w3c.dom.ls.{LSInput, LSResourceResolver}
@@ -65,7 +65,8 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future, Promise}
 import scala.util.{Failure, Success, Try}
 import scala.xml._
-
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.SmartIri
 
 /**
   * Provides a spray-routing function for API routes that deal with resources.
@@ -81,6 +82,7 @@ object ResourcesRouteV1 extends Authenticator {
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
         implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
+        implicit val stringFormatter = StringFormatter.getGeneralInstance
 
         val log = Logger(LoggerFactory.getLogger(this.getClass))
 
@@ -88,7 +90,7 @@ object ResourcesRouteV1 extends Authenticator {
                                        resinfo: Boolean,
                                        requestType: String,
                                        userProfile: UserProfileV1): ResourcesResponderRequestV1 = {
-            val validResIri = InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: $resIri"))
+            val validResIri = stringFormatter.validateAndEscapeIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: $resIri"))
 
             requestType match {
                 case "info" => ResourceInfoGetRequestV1(iri = validResIri, userProfile = userProfile)
@@ -112,7 +114,7 @@ object ResourcesRouteV1 extends Authenticator {
                            userProfile: UserProfileV1): Map[IRI, Future[Seq[CreateValueV1WithComment]]] = {
             properties.map {
                 case (propIri: IRI, values: Seq[CreateResourceValueV1]) =>
-                    (InputValidation.toIri(propIri, () => throw BadRequestException(s"Invalid property IRI $propIri")), values.map {
+                    (stringFormatter.validateAndEscapeIri(propIri, () => throw BadRequestException(s"Invalid property IRI $propIri")), values.map {
                         case (givenValue: CreateResourceValueV1) =>
 
                             givenValue.getValueClassIri match {
@@ -124,12 +126,12 @@ object ResourcesRouteV1 extends Authenticator {
                                     // check if text has markup
                                     if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
                                         // simple text
-                                        Future(CreateValueV1WithComment(TextValueSimpleV1(InputValidation.toSparqlEncodedString(richtext.utf8str.get, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
+                                        Future(CreateValueV1WithComment(TextValueSimpleV1(stringFormatter.toSparqlEncodedString(richtext.utf8str.get, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
                                             givenValue.comment))
                                     } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
                                         // XML: text with markup
 
-                                        val mappingIri = InputValidation.toIri(richtext.mapping_id.get, () => throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid"))
+                                        val mappingIri = stringFormatter.validateAndEscapeIri(richtext.mapping_id.get, () => throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid"))
 
                                         for {
 
@@ -144,10 +146,10 @@ object ResourcesRouteV1 extends Authenticator {
                                             )
 
                                             // collect the resource references from the linking standoff nodes
-                                            resourceReferences: Set[IRI] = InputValidation.getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV1)
+                                            resourceReferences: Set[IRI] = stringFormatter.getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV1)
 
                                         } yield CreateValueV1WithComment(TextValueWithStandoffV1(
-                                            utf8str = InputValidation.toSparqlEncodedString(textWithStandoffTags.text, () => throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
+                                            utf8str = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, () => throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
                                             resource_reference = resourceReferences,
                                             standoff = textWithStandoffTags.standoffTagV1,
                                             mappingIri = textWithStandoffTags.mapping.mappingIri,
@@ -164,7 +166,7 @@ object ResourcesRouteV1 extends Authenticator {
                                     (givenValue.link_value, givenValue.link_to_client_id) match {
                                         case (Some(targetIri: IRI), None) =>
                                             // This is a link to an existing Knora IRI, so make sure the IRI is valid.
-                                            val validatedTargetIri = InputValidation.toIri(targetIri, () => throw BadRequestException(s"Invalid Knora resource IRI: $targetIri"))
+                                            val validatedTargetIri = stringFormatter.validateAndEscapeIri(targetIri, () => throw BadRequestException(s"Invalid Knora resource IRI: $targetIri"))
                                             Future(CreateValueV1WithComment(LinkUpdateV1(validatedTargetIri), givenValue.comment))
 
                                         case (None, Some(clientIDForTargetResource: String)) =>
@@ -184,7 +186,7 @@ object ResourcesRouteV1 extends Authenticator {
                                     Future(CreateValueV1WithComment(BooleanValueV1(givenValue.boolean_value.get), givenValue.comment))
 
                                 case OntologyConstants.KnoraBase.UriValue =>
-                                    val uriValue = InputValidation.toIri(givenValue.uri_value.get, () => throw BadRequestException(s"Invalid URI: ${givenValue.uri_value.get}"))
+                                    val uriValue = stringFormatter.validateAndEscapeIri(givenValue.uri_value.get, () => throw BadRequestException(s"Invalid URI: ${givenValue.uri_value.get}"))
                                     Future(CreateValueV1WithComment(UriValueV1(uriValue), givenValue.comment))
 
                                 case OntologyConstants.KnoraBase.DateValue =>
@@ -192,15 +194,15 @@ object ResourcesRouteV1 extends Authenticator {
                                     Future(CreateValueV1WithComment(dateVal, givenValue.comment))
 
                                 case OntologyConstants.KnoraBase.ColorValue =>
-                                    val colorValue = InputValidation.toColor(givenValue.color_value.get, () => throw BadRequestException(s"Invalid color value: ${givenValue.color_value.get}"))
+                                    val colorValue = stringFormatter.validateColor(givenValue.color_value.get, () => throw BadRequestException(s"Invalid color value: ${givenValue.color_value.get}"))
                                     Future(CreateValueV1WithComment(ColorValueV1(colorValue), givenValue.comment))
 
                                 case OntologyConstants.KnoraBase.GeomValue =>
-                                    val geometryValue = InputValidation.toGeometryString(givenValue.geom_value.get, () => throw BadRequestException(s"Invalid geometry value: ${givenValue.geom_value.get}"))
+                                    val geometryValue = stringFormatter.validateGeometryString(givenValue.geom_value.get, () => throw BadRequestException(s"Invalid geometry value: ${givenValue.geom_value.get}"))
                                     Future(CreateValueV1WithComment(GeomValueV1(geometryValue), givenValue.comment))
 
                                 case OntologyConstants.KnoraBase.ListValue =>
-                                    val listNodeIri = InputValidation.toIri(givenValue.hlist_value.get, () => throw BadRequestException(s"Invalid value IRI: ${givenValue.hlist_value.get}"))
+                                    val listNodeIri = stringFormatter.validateAndEscapeIri(givenValue.hlist_value.get, () => throw BadRequestException(s"Invalid value IRI: ${givenValue.hlist_value.get}"))
                                     Future(CreateValueV1WithComment(HierarchicalListValueV1(listNodeIri), givenValue.comment))
 
                                 case OntologyConstants.KnoraBase.IntervalValue =>
@@ -226,18 +228,18 @@ object ResourcesRouteV1 extends Authenticator {
 
 
         def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, multipartConversionRequest: Option[SipiResponderConversionPathRequestV1] = None, userProfile: UserProfileV1): Future[ResourceCreateRequestV1] = {
-            val projectIri = InputValidation.toIri(apiRequest.project_id, () => throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
-            val resourceTypeIri = InputValidation.toIri(apiRequest.restype_id, () => throw BadRequestException(s"Invalid resource IRI: ${apiRequest.restype_id}"))
-            val label = InputValidation.toSparqlEncodedString(apiRequest.label, () => throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
+            val projectIri = stringFormatter.validateAndEscapeIri(apiRequest.project_id, () => throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
+            val resourceTypeIri = stringFormatter.validateAndEscapeIri(apiRequest.restype_id, () => throw BadRequestException(s"Invalid resource IRI: ${apiRequest.restype_id}"))
+            val label = stringFormatter.toSparqlEncodedString(apiRequest.label, () => throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
 
             // for GUI-case:
             // file has already been stored by Sipi.
             // TODO: in the old SALSAH, the file params were sent as a property salsah:__location__ -> the GUI has to be adapated
             val paramConversionRequest: Option[SipiResponderConversionFileRequestV1] = apiRequest.file match {
                 case Some(createFile: CreateFileV1) => Some(SipiResponderConversionFileRequestV1(
-                    originalFilename = InputValidation.toSparqlEncodedString(createFile.originalFilename, () => throw BadRequestException(s"The original filename is invalid: '${createFile.originalFilename}'")),
-                    originalMimeType = InputValidation.toSparqlEncodedString(createFile.originalMimeType, () => throw BadRequestException(s"The original MIME type is invalid: '${createFile.originalMimeType}'")),
-                    filename = InputValidation.toSparqlEncodedString(createFile.filename, () => throw BadRequestException(s"Invalid filename: '${createFile.filename}'")),
+                    originalFilename = stringFormatter.toSparqlEncodedString(createFile.originalFilename, () => throw BadRequestException(s"The original filename is invalid: '${createFile.originalFilename}'")),
+                    originalMimeType = stringFormatter.toSparqlEncodedString(createFile.originalMimeType, () => throw BadRequestException(s"The original MIME type is invalid: '${createFile.originalMimeType}'")),
+                    filename = stringFormatter.toSparqlEncodedString(createFile.filename, () => throw BadRequestException(s"Invalid filename: '${createFile.filename}'")),
                     userProfile = userProfile
                 ))
                 case None => None
@@ -254,7 +256,7 @@ object ResourcesRouteV1 extends Authenticator {
             if (multipartConversionRequest.nonEmpty && paramConversionRequest.nonEmpty) throw BadRequestException("Binaries sent and file params set to route. This is illegal.")
 
             for {
-            // make the whole Map a Future
+                // make the whole Map a Future
                 valuesToBeCreated: Iterable[(IRI, Seq[CreateValueV1WithComment])] <- Future.traverse(valuesToBeCreatedWithFuture) {
                     case (propIri: IRI, valuesFuture: Future[Seq[CreateValueV1WithComment]]) =>
                         for {
@@ -300,8 +302,8 @@ object ResourcesRouteV1 extends Authenticator {
                 file = resourceRequest.file.map {
                     fileToRead =>
                         SipiResponderConversionPathRequestV1(
-                            originalFilename = InputValidation.toSparqlEncodedString(fileToRead.file.getName, () => throw BadRequestException(s"The filename is invalid: '${fileToRead.file.getName}'")),
-                            originalMimeType = InputValidation.toSparqlEncodedString(fileToRead.mimeType, () => throw BadRequestException(s"The MIME type is invalid: '${fileToRead.mimeType}'")),
+                            originalFilename = stringFormatter.toSparqlEncodedString(fileToRead.file.getName, () => throw BadRequestException(s"The filename is invalid: '${fileToRead.file.getName}'")),
+                            originalMimeType = stringFormatter.toSparqlEncodedString(fileToRead.mimeType, () => throw BadRequestException(s"The MIME type is invalid: '${fileToRead.mimeType}'")),
                             source = fileToRead.file,
                             userProfile = userProfile
                         )
@@ -332,8 +334,8 @@ object ResourcesRouteV1 extends Authenticator {
 
         def makeResourceDeleteMessage(resIri: IRI, deleteComment: Option[String], userProfile: UserProfileV1) = {
             ResourceDeleteRequestV1(
-                resourceIri = InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: $resIri")),
-                deleteComment = deleteComment.map(comment => InputValidation.toSparqlEncodedString(comment, () => throw BadRequestException(s"Invalid comment: '$comment'"))),
+                resourceIri = stringFormatter.validateAndEscapeIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: $resIri")),
+                deleteComment = deleteComment.map(comment => stringFormatter.toSparqlEncodedString(comment, () => throw BadRequestException(s"Invalid comment: '$comment'"))),
                 userProfile = userProfile,
                 apiRequestID = UUID.randomUUID
             )
@@ -367,7 +369,7 @@ object ResourcesRouteV1 extends Authenticator {
                 assert(intermediateResults.contains(OntologyConstants.KnoraBase.KnoraBaseOntologyIri))
 
                 for {
-                // Get a NamedGraphEntityInfoV1 listing the IRIs of the classes and properties defined in the initial ontology.
+                    // Get a NamedGraphEntityInfoV1 listing the IRIs of the classes and properties defined in the initial ontology.
                     initialNamedGraphInfo: NamedGraphEntityInfoV1 <- (responderManager ? NamedGraphEntityInfoRequestV1(initialOntologyIri, userProfile)).mapTo[NamedGraphEntityInfoV1]
 
                     // Get details about those classes and properties.
@@ -380,13 +382,10 @@ object ResourcesRouteV1 extends Authenticator {
                     // Look at the properties that have cardinalities in the resource classes in the initial ontology.
                     // Make a set of the ontologies containing the definitions of those properties, not including the initial ontology itself
                     // or any other ontologies we've already looked at.
-                    ontologyIrisFromCardinalities: Set[IRI] = entityInfoResponse.resourceEntityInfoMap.foldLeft(Set.empty[IRI]) {
+                    ontologyIrisFromCardinalities: Set[IRI] = entityInfoResponse.resourceClassInfoMap.foldLeft(Set.empty[IRI]) {
                         case (acc, (resourceClassIri, resourceClassInfo)) =>
                             val resourceCardinalityOntologies: Set[IRI] = resourceClassInfo.cardinalities.map {
-                                case (propertyIri, _) => InputValidation.getInternalOntologyIriFromInternalEntityIri(
-                                    internalEntityIri = propertyIri,
-                                    errorFun = () => throw InconsistentTriplestoreDataException(s"Class $resourceClassIri has a cardinality for an invalid property: $propertyIri")
-                                )
+                                case (propertyIri, _) => propertyIri.toSmartIri.getOntologyFromEntity.toString
                             }.toSet
 
                             acc ++ resourceCardinalityOntologies
@@ -394,16 +393,13 @@ object ResourcesRouteV1 extends Authenticator {
 
                     // Look at the object class constraints of the properties in the initial ontology. Make a set of the ontologies containing those classes,
                     // not including the initial ontology itself or any other ontologies we've already looked at.
-                    ontologyIrisFromObjectClassConstraints: Set[IRI] = entityInfoResponse.propertyEntityInfoMap.map {
+                    ontologyIrisFromObjectClassConstraints: Set[IRI] = entityInfoResponse.propertyInfoMap.map {
                         case (propertyIri, propertyInfo) =>
                             val propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
                                 throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
                             }
 
-                            InputValidation.getInternalOntologyIriFromInternalEntityIri(
-                                internalEntityIri = propertyObjectClassConstraint,
-                                errorFun = () => throw InconsistentTriplestoreDataException(s"Property $propertyIri has an invalid knora-base:objectClassConstraint: $propertyObjectClassConstraint")
-                            )
+                            propertyObjectClassConstraint.toSmartIri.getOntologyFromEntity.toString
                     }.toSet -- intermediateResults.keySet - initialOntologyIri
 
                     // Make a set of all the ontologies referenced by the initial ontology.
@@ -421,13 +417,13 @@ object ResourcesRouteV1 extends Authenticator {
 
                     namedGraphInfosFromReferencedOntologies: Set[Map[IRI, NamedGraphEntityInfoV1]] <- Future.sequence(futuresOfNamedGraphInfosForReferencedOntologies)
 
-                // Return the previous intermediate results, plus the information about the initial ontology
-                // and the other referenced ontologies.
+                    // Return the previous intermediate results, plus the information about the initial ontology
+                    // and the other referenced ontologies.
                 } yield namedGraphInfosFromReferencedOntologies.flatten.toMap ++ intermediateResults + (initialOntologyIri -> initialNamedGraphInfo)
             }
 
             for {
-            // Get a NamedGraphEntityInfoV1 for the knora-base ontology.
+                // Get a NamedGraphEntityInfoV1 for the knora-base ontology.
                 knoraBaseGraphEntityInfo <- (responderManager ? NamedGraphEntityInfoRequestV1(OntologyConstants.KnoraBase.KnoraBaseOntologyIri, userProfile)).mapTo[NamedGraphEntityInfoV1]
 
                 // Recursively get NamedGraphEntityInfoV1 instances for the main ontology to be used in the XML import,
@@ -458,10 +454,7 @@ object ResourcesRouteV1 extends Authenticator {
               * @return the prefix label that Knora uses to refer to the ontology.
               */
             def getNamespacePrefixLabel(internalEntityIri: IRI): String = {
-                val prefixLabel = InputValidation.getOntologyPrefixLabelFromInternalEntityIri(
-                    internalEntityIri = internalEntityIri,
-                    errorFun = () => throw InconsistentTriplestoreDataException(s"Invalid entity IRI: $internalEntityIri")
-                )
+                val prefixLabel = internalEntityIri.toSmartIri.getPrefixLabel
 
                 // If the schema generation template asks for the prefix label of something in knora-base, return
                 // the prefix label of the Knora XML import v1 namespace instead.
@@ -481,14 +474,11 @@ object ResourcesRouteV1 extends Authenticator {
               * @return the local name of the entity.
               */
             def getEntityName(internalEntityIri: IRI): String = {
-                InputValidation.getEntityNameFromInternalEntityIri(
-                    internalEntityIri = internalEntityIri,
-                    errorFun = () => throw InconsistentTriplestoreDataException(s"Invalid entity IRI: $internalEntityIri")
-                )
+                internalEntityIri.toSmartIri.getEntityName
             }
 
             for {
-            // Get a NamedGraphEntityInfoV1 for each ontology that we need to generate an XML schema for.
+                // Get a NamedGraphEntityInfoV1 for each ontology that we need to generate an XML schema for.
                 namedGraphInfos: Map[IRI, NamedGraphEntityInfoV1] <- getNamedGraphInfos(mainOntologyIri = internalOntologyIri, userProfile = userProfile)
 
                 // Get information about the resource classes and properties in each ontology.
@@ -511,17 +501,13 @@ object ResourcesRouteV1 extends Authenticator {
 
                 // Collect all the property definitions in a single Map. Since any schema could use any property, we will
                 // pass this Map to the schema generation template for every schema.
-                propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2] = entityInfoResponsesMap.values.flatMap(_.propertyEntityInfoMap).toMap
+                propertyInfoMap: Map[IRI, PropertyInfoV1] = entityInfoResponsesMap.values.flatMap(_.propertyInfoMap).toMap
 
                 // Make a map of internal ontology IRIs to XmlImportNamespaceInfoV1 objects describing the XML namespace
                 // of each schema to be generated. Don't generate a schema for knora-base, because the built-in Knora
                 // types are specified in the handwritten standard Knora XML import v1 schema.
                 schemasToGenerate: Map[IRI, XmlImportNamespaceInfoV1] = (namedGraphInfos.keySet - OntologyConstants.KnoraBase.KnoraBaseOntologyIri).map {
-                    ontologyIri =>
-                        ontologyIri -> InputValidation.internalOntologyIriToXmlNamespaceInfoV1(
-                            internalOntologyIri = ontologyIri,
-                            errorFun = () => throw BadRequestException(s"Invalid ontology IRI: $internalOntologyIri")
-                        )
+                    ontologyIri => ontologyIri -> stringFormatter.internalOntologyIriToXmlNamespaceInfoV1(ontologyIri.toSmartIri)
                 }.toMap
 
                 // Make an XmlImportNamespaceInfoV1 for the standard Knora XML import v1 schema's namespace.
@@ -555,12 +541,12 @@ object ResourcesRouteV1 extends Authenticator {
                             targetNamespaceInfo = namespaceInfo,
                             importedNamespaces = importedNamespaceInfos,
                             knoraXmlImportNamespacePrefixLabel = OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel,
-                            resourceEntityInfoMap = entityInfoResponsesMap(ontologyIri).resourceEntityInfoMap,
-                            propertyEntityInfoMap = propertyEntityInfoMap,
+                            resourceClassInfoMap = entityInfoResponsesMap(ontologyIri).resourceClassInfoMap,
+                            propertyInfoMap = propertyInfoMap,
                             getNamespacePrefixLabel = internalEntityIri => getNamespacePrefixLabel(internalEntityIri),
                             getEntityName = internalEntityIri => getEntityName(internalEntityIri)
                         ).toString().trim
-                        
+
                         // Parse the generated XML schema.
                         val parsedSchemaXml = try {
                             XML.loadString(unformattedSchemaXml)
@@ -597,7 +583,7 @@ object ResourcesRouteV1 extends Authenticator {
           */
         def generateSchemaZipFile(internalOntologyIri: IRI, userProfile: UserProfileV1): Future[Array[Byte]] = {
             for {
-            // Generate a bundle of XML schemas.
+                // Generate a bundle of XML schemas.
                 schemaBundle: XmlImportSchemaBundleV1 <- generateSchemasFromOntologies(
                     internalOntologyIri = internalOntologyIri,
                     userProfile = userProfile
@@ -625,13 +611,13 @@ object ResourcesRouteV1 extends Authenticator {
         def validateImportXml(xml: String, defaultNamespace: IRI, userProfile: UserProfileV1): Future[Unit] = {
             // Convert the default namespace of the submitted XML to an internal ontology IRI. This should be the
             // IRI of the main ontology used in the import.
-            val mainOntologyIri = InputValidation.xmlImportNamespaceToInternalOntologyIriV1(
+            val mainOntologyIri: SmartIri = stringFormatter.xmlImportNamespaceToInternalOntologyIriV1(
                 defaultNamespace, () => throw BadRequestException(s"Invalid XML import namespace: $defaultNamespace")
             )
 
             val validationFuture: Future[Unit] = for {
-            // Generate a bundle of XML schemas for validating the submitted XML.
-                schemaBundle: XmlImportSchemaBundleV1 <- generateSchemasFromOntologies(mainOntologyIri, userProfile)
+                // Generate a bundle of XML schemas for validating the submitted XML.
+                schemaBundle: XmlImportSchemaBundleV1 <- generateSchemasFromOntologies(mainOntologyIri.toString, userProfile)
 
                 // Make a javax.xml.validation.SchemaFactory for instantiating XML schemas.
                 schemaFactory: SchemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
@@ -675,7 +661,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                     val elementNamespace: String = resourceNode.getNamespace(resourceNode.prefix)
 
-                    val restype_id = InputValidation.xmlImportElementNameToInternalOntologyIriV1(
+                    val restype_id = stringFormatter.xmlImportElementNameToInternalOntologyIriV1(
                         namespace = elementNamespace,
                         elementLabel = resourceNode.label,
                         errorFun = () => throw BadRequestException(s"Invalid XML namespace: $elementNamespace")
@@ -726,7 +712,7 @@ object ResourcesRouteV1 extends Authenticator {
                     val propertiesWithValues: Seq[(IRI, CreateResourceValueV1)] = propertyElements.map {
                         propertyNode =>
                             // Is this a property from another ontology (in the form prefixLabel__localName)?
-                            val propertyIri = InputValidation.toPropertyIriFromOtherOntologyInXmlImport(propertyNode.label) match {
+                            val propertyIri = stringFormatter.toPropertyIriFromOtherOntologyInXmlImport(propertyNode.label) match {
                                 case Some(iri) =>
                                     // Yes. Use the corresponding entity IRI for it.
                                     iri
@@ -736,7 +722,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                                     val propertyNodeNamespace = propertyNode.getNamespace(propertyNode.prefix)
 
-                                    InputValidation.xmlImportElementNameToInternalOntologyIriV1(
+                                    stringFormatter.xmlImportElementNameToInternalOntologyIriV1(
                                         namespace = propertyNodeNamespace,
                                         elementLabel = propertyNode.label,
                                         errorFun = () => throw BadRequestException(s"Invalid XML namespace: $propertyNodeNamespace"))
@@ -792,7 +778,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                         maybeMappingID match {
                             case Some(mappingID) =>
-                                val mappingIri: Option[IRI] = Some(InputValidation.toIri(mappingID.toString, () => throw BadRequestException(s"Invalid mapping ID in element '${node.label}: '$mappingID")))
+                                val mappingIri: Option[IRI] = Some(stringFormatter.validateAndEscapeIri(mappingID.toString, () => throw BadRequestException(s"Invalid mapping ID in element '${node.label}: '$mappingID")))
                                 val childElements = node.child.filterNot(_.label == "#PCDATA")
 
                                 if (childElements.nonEmpty) {
@@ -819,7 +805,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                                 linkType match {
                                     case "ref" => CreateResourceValueV1(link_to_client_id = Some(target))
-                                    case "iri" => CreateResourceValueV1(link_value = Some(InputValidation.toIri(target, () => throw BadRequestException(s"Invalid IRI in element '${node.label}': '$target'"))))
+                                    case "iri" => CreateResourceValueV1(link_value = Some(stringFormatter.validateAndEscapeIri(target, () => throw BadRequestException(s"Invalid IRI in element '${node.label}': '$target'"))))
                                     case other => throw BadRequestException(s"Unrecognised value '$other' in attribute 'linkType' of element '${node.label}'")
                                 }
 
@@ -827,28 +813,28 @@ object ResourcesRouteV1 extends Authenticator {
                         }
 
                     case "int_value" =>
-                        CreateResourceValueV1(int_value = Some(InputValidation.toInt(elementValue, () => throw BadRequestException(s"Invalid integer value in element '${node.label}: '$elementValue'"))))
+                        CreateResourceValueV1(int_value = Some(stringFormatter.validateInt(elementValue, () => throw BadRequestException(s"Invalid integer value in element '${node.label}: '$elementValue'"))))
 
                     case "decimal_value" =>
-                        CreateResourceValueV1(decimal_value = Some(InputValidation.toBigDecimal(elementValue, () => throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$elementValue'"))))
+                        CreateResourceValueV1(decimal_value = Some(stringFormatter.validateBigDecimal(elementValue, () => throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$elementValue'"))))
 
                     case "boolean_value" =>
-                        CreateResourceValueV1(boolean_value = Some(InputValidation.toBoolean(elementValue, () => throw BadRequestException(s"Invalid boolean value in element '${node.label}: '$elementValue'"))))
+                        CreateResourceValueV1(boolean_value = Some(stringFormatter.validateBoolean(elementValue, () => throw BadRequestException(s"Invalid boolean value in element '${node.label}: '$elementValue'"))))
 
                     case "uri_value" =>
-                        CreateResourceValueV1(uri_value = Some(InputValidation.toIri(elementValue, () => throw BadRequestException(s"Invalid URI value in element '${node.label}: '$elementValue'"))))
+                        CreateResourceValueV1(uri_value = Some(stringFormatter.validateAndEscapeIri(elementValue, () => throw BadRequestException(s"Invalid URI value in element '${node.label}: '$elementValue'"))))
 
                     case "date_value" =>
-                        CreateResourceValueV1(date_value = Some(InputValidation.toDate(elementValue, () => throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'"))))
+                        CreateResourceValueV1(date_value = Some(stringFormatter.validateDate(elementValue, () => throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'"))))
 
                     case "color_value" =>
-                        CreateResourceValueV1(color_value = Some(InputValidation.toColor(elementValue, () => throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'"))))
+                        CreateResourceValueV1(color_value = Some(stringFormatter.validateColor(elementValue, () => throw BadRequestException(s"Invalid date value in element '${node.label}: '$elementValue'"))))
 
                     case "geom_value" =>
-                        CreateResourceValueV1(geom_value = Some(InputValidation.toGeometryString(elementValue, () => throw BadRequestException(s"Invalid geometry value in element '${node.label}: '$elementValue'"))))
+                        CreateResourceValueV1(geom_value = Some(stringFormatter.validateGeometryString(elementValue, () => throw BadRequestException(s"Invalid geometry value in element '${node.label}: '$elementValue'"))))
 
                     case "hlist_value" =>
-                        CreateResourceValueV1(hlist_value = Some(InputValidation.toIri(elementValue, () => throw BadRequestException(s"Invalid hlist value in element '${node.label}: '$elementValue'"))))
+                        CreateResourceValueV1(hlist_value = Some(stringFormatter.validateAndEscapeIri(elementValue, () => throw BadRequestException(s"Invalid hlist value in element '${node.label}: '$elementValue'"))))
 
                     case "interval_value" =>
                         Try(elementValue.split(",")) match {
@@ -857,7 +843,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                                 val tVals: Seq[BigDecimal] = timeVals.map {
                                     timeVal =>
-                                        InputValidation.toBigDecimal(timeVal, () => throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$timeVal'"))
+                                        stringFormatter.validateBigDecimal(timeVal, () => throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$timeVal'"))
                                 }
 
                                 CreateResourceValueV1(interval_value = Some(tVals))
@@ -891,18 +877,18 @@ object ResourcesRouteV1 extends Authenticator {
 
                     // input validation
 
-                    val searchString = InputValidation.toSparqlEncodedString(searchstr, () => throw BadRequestException(s"Invalid search string: '$searchstr'"))
+                    val searchString = stringFormatter.toSparqlEncodedString(searchstr, () => throw BadRequestException(s"Invalid search string: '$searchstr'"))
 
                     val resourceTypeIri: Option[IRI] = restype match {
                         case ("-1") => None
-                        case (restype: IRI) => Some(InputValidation.toIri(restype, () => throw BadRequestException(s"Invalid param restype: $restype")))
+                        case (restype: IRI) => Some(stringFormatter.validateAndEscapeIri(restype, () => throw BadRequestException(s"Invalid param restype: $restype")))
                     }
 
-                    val numberOfProps: Int = InputValidation.toInt(numprops, () => throw BadRequestException(s"Invalid param numprops: $numprops")) match {
+                    val numberOfProps: Int = stringFormatter.validateInt(numprops, () => throw BadRequestException(s"Invalid param numprops: $numprops")) match {
                         case (number: Int) => if (number < 1) 1 else number // numberOfProps must not be smaller than 1
                     }
 
-                    val limitOfResults = InputValidation.toInt(limit, () => throw BadRequestException(s"Invalid param limit: $limit"))
+                    val limitOfResults = stringFormatter.validateInt(limit, () => throw BadRequestException(s"Invalid param limit: $limit"))
 
                     val requestMessage = makeResourceSearchRequestMessage(
                         searchString = searchString,
@@ -965,7 +951,7 @@ object ResourcesRouteV1 extends Authenticator {
                             case b: BodyPart if b.name == FILE_PART => {
                                 log.debug(s"inside allPartsFuture - processing $FILE_PART")
                                 val filename = b.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
-                                val tmpFile = InputValidation.createTempFile(settings)
+                                val tmpFile = FileUtil.createTempFile(settings)
                                 val written = b.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
                                 written.map { written =>
                                     //println(s"written result: ${written.wasSuccessful}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")
@@ -1003,8 +989,8 @@ object ResourcesRouteV1 extends Authenticator {
 
 
                             sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
-                                originalFilename = InputValidation.toSparqlEncodedString(originalFilename, () => throw BadRequestException(s"Original filename is invalid: '$originalFilename'")),
-                                originalMimeType = InputValidation.toSparqlEncodedString(originalMimeType, () => throw BadRequestException(s"Original MIME type is invalid: '$originalMimeType'")),
+                                originalFilename = stringFormatter.toSparqlEncodedString(originalFilename, () => throw BadRequestException(s"Original filename is invalid: '$originalFilename'")),
+                                originalMimeType = stringFormatter.toSparqlEncodedString(originalMimeType, () => throw BadRequestException(s"Original MIME type is invalid: '$originalMimeType'")),
                                 source = sourcePath,
                                 userProfile = userProfile
                             )
@@ -1065,7 +1051,7 @@ object ResourcesRouteV1 extends Authenticator {
                     val userProfile = getUserProfileV1(requestContext)
                     val params = requestContext.request.uri.query().toMap
                     val requestType = params.getOrElse("reqtype", "")
-                    val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
+                    val resIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
 
                     val requestMessage = requestType match {
                         case "properties" => ResourceFullGetRequestV1(resIri, userProfile)
@@ -1085,7 +1071,7 @@ object ResourcesRouteV1 extends Authenticator {
             get {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
-                    val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
+                    val resIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
                     val requestMessage = makeGetPropertiesRequestMessage(resIri, userProfile)
 
                     RouteUtilV1.runJsonRoute(
@@ -1103,9 +1089,9 @@ object ResourcesRouteV1 extends Authenticator {
                     requestContext =>
                         val userProfile = getUserProfileV1(requestContext)
 
-                        val resIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
+                        val resIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
 
-                        val label = InputValidation.toSparqlEncodedString(apiRequest.label, () => throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
+                        val label = stringFormatter.toSparqlEncodedString(apiRequest.label, () => throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
 
                         val requestMessage = ChangeResourceLabelRequestV1(
                             resourceIri = resIri,
@@ -1128,7 +1114,7 @@ object ResourcesRouteV1 extends Authenticator {
                 parameters("depth".as[Int].?) { depth =>
                     requestContext =>
                         val userProfile = getUserProfileV1(requestContext)
-                        val resourceIri = InputValidation.toIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
+                        val resourceIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
                         val requestMessage = GraphDataGetRequestV1(resourceIri, depth.getOrElse(4), userProfile)
 
                         RouteUtilV1.runJsonRoute(
@@ -1187,7 +1173,7 @@ object ResourcesRouteV1 extends Authenticator {
                         val defaultNamespace = rootElement.getNamespace(null)
 
                         val multipleResourceCreateRequestFuture: Future[MultipleResourceCreateRequestV1] = for {
-                        // Validate the XML using XML schemas.
+                            // Validate the XML using XML schemas.
                             _ <- validateImportXml(
                                 xml = xml,
                                 defaultNamespace = defaultNamespace,
@@ -1215,9 +1201,13 @@ object ResourcesRouteV1 extends Authenticator {
         } ~ path("v1" / "resources" / "xmlimportschemas" / Segment) { internalOntologyIri =>
             get {
                 // Get the prefix label of the specified internal ontology.
-                val internalOntologyPrefixLabel: String = InputValidation.getOntologyPrefixLabelFromInternalOntologyIri(
-                    internalOntologyIri, () => throw BadRequestException(s"Invalid internal ontology IRI: $internalOntologyIri")
-                )
+                val internalOntologySmartIri: SmartIri = internalOntologyIri.toSmartIriWithErr(() => throw BadRequestException(s"Invalid internal project-specific ontology IRI: $internalOntologyIri"))
+
+                if (!internalOntologySmartIri.isKnoraOntologyIri || internalOntologySmartIri.isKnoraBuiltInDefinitionIri) {
+                    throw BadRequestException(s"Invalid internal project-specific ontology IRI: $internalOntologyIri")
+                }
+
+                val internalOntologyPrefixLabel: String = internalOntologySmartIri.getPrefixLabel
 
                 // Respond with a Content-Disposition header specifying the filename of the generated Zip file.
                 respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> (internalOntologyPrefixLabel + "-xml-schemas.zip")))) {

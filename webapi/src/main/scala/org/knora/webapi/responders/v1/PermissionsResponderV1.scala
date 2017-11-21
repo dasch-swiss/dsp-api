@@ -126,7 +126,7 @@ class PermissionsResponderV1 extends Responder {
                 Vector.empty[(IRI, IRI)]
             }
             //_ = log.debug("permissionsProfileGetV1 - projectAdmins: {}", MessageUtil.toSource(projectAdmins))
-            
+
             /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
             systemAdmin: Vector[(IRI, IRI)] = if (isInSystemAdminGroup) {
                 Vector((OntologyConstants.KnoraBase.SystemProject, OntologyConstants.KnoraBase.SystemAdmin))
@@ -156,7 +156,7 @@ class PermissionsResponderV1 extends Responder {
                 administrativePermissionsPerProject = administrativePermissionsPerProject,
                 anonymousUser = false
             )
-        //_ = log.debug(s"permissionsDataGetV1 - resulting permissionData: {}", result)
+            //_ = log.debug(s"permissionsDataGetV1 - resulting permissionData: {}", result)
 
         } yield result
     }
@@ -169,7 +169,6 @@ class PermissionsResponderV1 extends Responder {
       * @return a the user's resulting set of administrative permissions for each project.
       */
     def userAdministrativePermissionsGetV1(groupsPerProject: Map[IRI, Seq[IRI]]): Future[Map[IRI, Set[PermissionV1]]] = {
-
 
 
         /* Get all permissions per project, applying permission precedence rule */
@@ -263,17 +262,18 @@ class PermissionsResponderV1 extends Responder {
     }
 
 
-    /*************************************************************************/
+    /** ***********************************************************************/
     /* ADMINISTRATIVE PERMISSIONS                                            */
-    /*************************************************************************/
+    /** ***********************************************************************/
 
     /**
       * Convenience method returning a set with combined administrative permission. Used in userAdministrativePermissionsGetV1.
+      *
       * @param projectIri the IRI of the project.
-      * @param groups the list of groups for which administrative permissions are retrieved and combined.
+      * @param groups     the list of groups for which administrative permissions are retrieved and combined.
       * @return a set of [[PermissionV1]].
       */
-    private def administrativePermissionForGroupsGetV1(projectIri: IRI, groups: Seq[IRI] ): Future[Set[PermissionV1]] = {
+    private def administrativePermissionForGroupsGetV1(projectIri: IRI, groups: Seq[IRI]): Future[Set[PermissionV1]] = {
 
         /* Get administrative permissions for each group and combine them */
         val gpf: Seq[Future[Seq[PermissionV1]]] = for {
@@ -407,7 +407,7 @@ class PermissionsResponderV1 extends Responder {
       */
     private def administrativePermissionForProjectGroupGetV1(projectIri: IRI, groupIri: IRI): Future[Option[AdministrativePermissionV1]] = {
         for {
-        // check if necessary field are not empty.
+            // check if necessary field are not empty.
             _ <- Future(if (projectIri.isEmpty) throw BadRequestException("Project cannot be empty"))
             _ = if (groupIri.isEmpty) throw BadRequestException("Group cannot be empty")
 
@@ -442,7 +442,7 @@ class PermissionsResponderV1 extends Responder {
             } else {
                 None
             }
-        //_ = log.debug(s"administrativePermissionForProjectGroupGetV1 - projectIri: $projectIRI, groupIri: $groupIRI, administrativePermission: $permission")
+            //_ = log.debug(s"administrativePermissionForProjectGroupGetV1 - projectIri: $projectIRI, groupIri: $groupIRI, administrativePermission: $permission")
         } yield permission
     }
 
@@ -692,8 +692,8 @@ class PermissionsResponderV1 extends Responder {
             _ <- Future(if (projectIri.isEmpty) throw BadRequestException("Project cannot be empty"))
 
             /* check supplied parameters */
-            _ = if(groupIri.isDefined && resourceClassIri.isDefined) throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together")
-            _ = if(groupIri.isDefined && propertyIri.isDefined) throw BadRequestException("Not allowed to supply groupIri and propertyIri together")
+            _ = if (groupIri.isDefined && resourceClassIri.isDefined) throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together")
+            _ = if (groupIri.isDefined && propertyIri.isDefined) throw BadRequestException("Not allowed to supply groupIri and propertyIri together")
 
             sparqlQueryString = queries.sparql.v1.txt.getDefaultObjectAccessPermission(
                 triplestore = settings.triplestoreType,
@@ -771,8 +771,9 @@ class PermissionsResponderV1 extends Responder {
 
     /**
       * Convenience method returning a set with combined max default object access permissions.
+      *
       * @param projectIri the IRI of the project.
-      * @param groups the list of groups for which default object access permissions are retrieved and combined.
+      * @param groups     the list of groups for which default object access permissions are retrieved and combined.
       * @return a set of [[PermissionV1]].
       */
     def defaultObjectAccessPermissionsForGroupsGetV1(projectIri: IRI, groups: Seq[IRI]): Future[Set[PermissionV1]] = {
@@ -812,7 +813,8 @@ class PermissionsResponderV1 extends Responder {
 
     /**
       * Convenience method returning a set with default object access permissions defined on a resource class.
-      * @param projectIri the IRI of the project.
+      *
+      * @param projectIri       the IRI of the project.
       * @param resourceClassIri the resource's class IRI
       * @return a set of [[PermissionV1]].
       */
@@ -828,9 +830,10 @@ class PermissionsResponderV1 extends Responder {
 
     /**
       * Convenience method returning a set with default object access permissions defined on a resource class / property combination.
-      * @param projectIri the IRI of the project.
+      *
+      * @param projectIri       the IRI of the project.
       * @param resourceClassIri the resource's class IRI
-      * @param propertyIri the property's IRI.
+      * @param propertyIri      the property's IRI.
       * @return a set of [[PermissionV1]].
       */
     def defaultObjectAccessPermissionsForResourceClassPropertyGetV1(projectIri: IRI, resourceClassIri: IRI, propertyIri: IRI): Future[Set[PermissionV1]] = {
@@ -845,7 +848,8 @@ class PermissionsResponderV1 extends Responder {
 
     /**
       * Convenience method returning a set with default object access permissions defined on a property.
-      * @param projectIri the IRI of the project.
+      *
+      * @param projectIri  the IRI of the project.
       * @param propertyIri the property's IRI.
       * @return a set of [[PermissionV1]].
       */
@@ -874,10 +878,10 @@ class PermissionsResponderV1 extends Responder {
 
         //log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - projectIRI: $projectIRI, resourceClassIRI: $resourceClassIRI, propertyIRI: $propertyIRI, permissionData:$permissionData")
         for {
-        // check if necessary field are defined.
+            // check if necessary field are defined.
             _ <- Future(if (projectIri.isEmpty) throw BadRequestException("Project cannot be empty"))
             _ = if (entityType == PROPERTY_ENTITY_TYPE && propertyIri.isEmpty) {
-                    throw BadRequestException("PropertyTypeIri needs to be supplied")
+                throw BadRequestException("PropertyTypeIri needs to be supplied")
             }
             _ = if (permissionData.anonymousUser) throw BadRequestException("Anonymous Users are not allowed.")
 
@@ -923,7 +927,7 @@ class PermissionsResponderV1 extends Responder {
                     Future(Set.empty[PermissionV1])
                 }
             }
-            _= if (defaultPermissionsOnProjectResourceClassProperty.nonEmpty) {
+            _ = if (defaultPermissionsOnProjectResourceClassProperty.nonEmpty) {
                 permissionsListBuffer += (("ProjectResourceClassProperty", defaultPermissionsOnProjectResourceClassProperty))
                 log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectResourceClassProperty: {}", defaultPermissionsOnProjectResourceClassProperty)
             }
@@ -937,7 +941,7 @@ class PermissionsResponderV1 extends Responder {
                     Future(Set.empty[PermissionV1])
                 }
             }
-            _= if (defaultPermissionsOnSystemResourceClassProperty.nonEmpty) {
+            _ = if (defaultPermissionsOnSystemResourceClassProperty.nonEmpty) {
                 permissionsListBuffer += (("SystemResourceClassProperty", defaultPermissionsOnSystemResourceClassProperty))
                 log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClassProperty: {}", defaultPermissionsOnSystemResourceClassProperty)
             }
@@ -983,7 +987,7 @@ class PermissionsResponderV1 extends Responder {
                     Future(Set.empty[PermissionV1])
                 }
             }
-            _= if (defaultPermissionsOnProjectProperty.nonEmpty) {
+            _ = if (defaultPermissionsOnProjectProperty.nonEmpty) {
                 permissionsListBuffer += (("ProjectProperty", defaultPermissionsOnProjectProperty))
                 log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectProperty: {}", defaultPermissionsOnProjectProperty)
             }
@@ -997,7 +1001,7 @@ class PermissionsResponderV1 extends Responder {
                     Future(Set.empty[PermissionV1])
                 }
             }
-            _= if (defaultPermissionsOnSystemProperty.nonEmpty) {
+            _ = if (defaultPermissionsOnSystemProperty.nonEmpty) {
                 permissionsListBuffer += (("SystemProperty", defaultPermissionsOnSystemProperty))
                 log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemProperty: {}", defaultPermissionsOnSystemProperty)
             }

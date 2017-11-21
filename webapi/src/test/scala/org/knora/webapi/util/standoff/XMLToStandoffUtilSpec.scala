@@ -23,7 +23,7 @@ package org.knora.webapi.util.standoff
 import java.util.UUID
 
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.util.{FormatConstants, KnoraIdUtil}
+import org.knora.webapi.util.{StringFormatter, KnoraIdUtil}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
@@ -495,7 +495,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                 log = logger)
 
             // make sure that there are as many information separator two as there are paragraphs (there are three paragraphs)
-            assert(FormatConstants.INFORMATION_SEPARATOR_TWO.toString.r.findAllIn(textWithStandoff.text).length == 3)
+            assert(StringFormatter.INFORMATION_SEPARATOR_TWO.toString.r.findAllIn(textWithStandoff.text).length == 3)
 
 
         }
