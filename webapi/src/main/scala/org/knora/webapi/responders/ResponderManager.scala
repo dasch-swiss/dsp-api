@@ -24,6 +24,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import org.knora.webapi.ActorMaker
+import org.knora.webapi.messages.admin.responder.ontologiesadminmessages.OntologiesAdminResponderRequest
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
 import org.knora.webapi.messages.v1.responder.groupmessages.GroupsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
@@ -259,6 +260,26 @@ class ResponderManager extends Actor with ActorLogging {
     protected val persistentMapRouterV2: ActorRef = makeDefaultPersistentMapRouterV2
 
 
+    //
+    // Admin responders
+    //
+
+
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[OntologiesAdminResponder]].
+      */
+    protected final def makeDefaultListsAdminRouter: ActorRef = makeActor(FromConfig.props(Props[OntologiesAdminResponder]), ONTOLOGIES_ADMIN_ROUTER_ACTOR_NAME)
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the lists responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default lists responder.
+      */
+    protected val ontologiesAdminRouter: ActorRef = makeDefaultListsAdminRouter
+
+
+
+
+
     def receive = LoggingReceive {
         // Knora API V1 messages
         case resourcesResponderRequestV1: ResourcesResponderRequestV1 => resourcesRouterV1.forward(resourcesResponderRequestV1)
@@ -280,6 +301,9 @@ class ResponderManager extends Actor with ActorLogging {
         case searchResponderRequestV2: SearchResponderRequestV2 => searchRouterV2.forward(searchResponderRequestV2)
         case resourcesResponderRequestV2: ResourcesResponderRequestV2 => resourcesRouterV2.forward(resourcesResponderRequestV2)
         case persistentMapResponderRequestV2: PersistentMapResponderRequestV2 => persistentMapRouterV2.forward(persistentMapResponderRequestV2)
+
+        // Knora Admin message
+        case ontologiesAdminResponderRequest: OntologiesAdminResponderRequest => ontologiesAdminRouter forward ontologiesAdminResponderRequest
 
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
