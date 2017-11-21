@@ -47,8 +47,8 @@ class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) 
     private val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin-data.ttl", name = "http://www.knora.org/data/admin"),
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
-        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_ontology.ttl", name = "http://www.knora.org/ontology/drawings-gods"),
-        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data.ttl", name = "http://www.knora.org/data/drawings-gods")
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_ontology.ttl", name = "http://www.knora.org/ontology/0105/drawings-gods"),
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data.ttl", name = "http://www.knora.org/data/0105/drawings-gods")
     )
 
     // creates tmp directory if not found
@@ -79,18 +79,18 @@ class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) 
             val params =
                 s"""
                    |{
-                   |    "restype_id":"http://www.knora.org/ontology/drawings-gods#Verso",
+                   |    "restype_id":"http://www.knora.org/ontology/0105/drawings-gods#Verso",
                    |    "properties":{
-                   |        "http://www.knora.org/ontology/drawings-gods#hasVersoTranslatorEn":[{"hlist_value":"http://data.knora.org/lists/drawings-gods-2016-list-TranslatorList-PYB"}],
-                   |        "http://www.knora.org/ontology/drawings-gods#hasCommentOriginalLanguage":[{"hlist_value":"http://data.knora.org/lists/drawings-gods-2016-list-LanguageList-Buriat"}],
-                   |        "http://www.knora.org/ontology/drawings-gods#hasDescriptionOriginalLanguage":[{"hlist_value":"http://data.knora.org/lists/drawings-gods-2016-list-LanguageList-Buriat"}],
-                   |        "http://www.knora.org/ontology/drawings-gods#hasDescriptionAuthor":[{"hlist_value":"http://data.knora.org/lists/drawings-gods-2016-list-DescriptionAuthorList-child"}],
-                   |        "http://www.knora.org/ontology/drawings-gods#hasInstructionRestitutionOriginalLanguage":[{"hlist_value":"http://data.knora.org/lists/drawings-gods-2016-list-LanguageList-Buriat"}],
-                   |        "http://www.knora.org/ontology/drawings-gods#hasVersoTranslatorFr":[{"hlist_value":"http://data.knora.org/lists/drawings-gods-2016-list-TranslatorList-PYB"}],
-                   |        "http://www.knora.org/ontology/drawings-gods#hasCommentAuthor":[{"hlist_value":"http://data.knora.org/lists/drawings-gods-2016-list-CommentAuthorList-child"}],
-                   |        "http://www.knora.org/ontology/drawings-gods#hasCodeVerso":[{"richtext_value":{"utf8str":"dayyad"}}]
+                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasVersoTranslatorEn":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-TranslatorList-PYB"}],
+                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasCommentOriginalLanguage":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-LanguageList-Buriat"}],
+                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasDescriptionOriginalLanguage":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-LanguageList-Buriat"}],
+                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasDescriptionAuthor":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-DescriptionAuthorList-child"}],
+                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasInstructionRestitutionOriginalLanguage":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-LanguageList-Buriat"}],
+                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasVersoTranslatorFr":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-TranslatorList-PYB"}],
+                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasCommentAuthor":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-CommentAuthorList-child"}],
+                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasCodeVerso":[{"richtext_value":{"utf8str":"dayyad"}}]
                    |    },
-                   |    "project_id":"http://data.knora.org/projects/drawings-gods",
+                   |    "project_id":"http://rdfh.ch/projects/0105",
                    |    "label":"dayyad"
                    |}
              """.stripMargin
