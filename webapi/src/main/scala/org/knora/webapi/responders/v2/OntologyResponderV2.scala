@@ -30,7 +30,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, ontologymessages}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.OwlCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
@@ -93,7 +93,7 @@ class OntologyResponderV2 extends Responder {
         case OntologyEntitiesGetRequestV2(namedGraphIris, responseSchema, allLanguages, userProfile) => future2Message(sender(), getOntologyEntitiesV2(namedGraphIris, responseSchema, allLanguages, userProfile), log)
         case ClassesGetRequestV2(resourceClassIris, responseSchema, allLanguages, userProfile) => future2Message(sender(), getClassDefinitionsV2(resourceClassIris, responseSchema, allLanguages, userProfile), log)
         case PropertyEntitiesGetRequestV2(propertyIris, allLanguages, userProfile) => future2Message(sender(), getPropertyDefinitionsV2(propertyIris, allLanguages, userProfile), log)
-        case OntologyMetadataGetRequestV2(projectIris, userProfile) => future2Message(sender(), getOntologyMetadataV2(projectIris, userProfile), log)
+        case OntologyMetadataGetRequestV2(projectIris, userProfile) => future2Message(sender(), getOntologyMetadataForProjectsV2(projectIris, userProfile), log)
         case createOntologyRequest: CreateOntologyRequestV2 => future2Message(sender(), createOntology(createOntologyRequest), log)
         case changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2 => future2Message(sender(), changeOntologyMetadata(changeOntologyMetadataRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
@@ -669,7 +669,7 @@ class OntologyResponderV2 extends Responder {
                         entityInfoContent = ClassInfoContentV2(
                             rdfType = OntologyConstants.Owl.Class.toSmartIri,
                             classIri = standoffClassIri,
-                            ontologyIri = standoffClassIri,
+                            ontologyIri = standoffClassIri.getOntologyFromEntity,
                             predicates = predicates,
                             directCardinalities = directCardinalities,
                             standoffDataType = standoffDataType.headOption match {
@@ -753,9 +753,13 @@ class OntologyResponderV2 extends Responder {
                 standoffPropertyDefs = new ErrorHandlingMap[SmartIri, ReadPropertyInfoV2](standoffPropertyEntityInfos, { key => s"Standoff property def not found $key" }),
                 standoffClassDefsWithDataType = new ErrorHandlingMap[SmartIri, ReadClassInfoV2](standoffClassEntityInfosWithDataType, { key => s"Standoff class def with datatype not found $key" }))
 
-            _ = CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = ontologyCacheData)
+            _ = storeCacheData(ontologyCacheData)
 
         } yield SuccessResponseV2("Ontologies loaded.")
+    }
+
+    private def storeCacheData(cacheData: OntologyCacheData): Unit = {
+        CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = cacheData)
     }
 
     /**
@@ -930,7 +934,7 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[ReadOntologyMetadataV2]].
       */
-    private def getOntologyMetadataV2(projectIris: Set[IRI], userProfile: UserProfileV1): Future[ReadOntologyMetadataV2] = {
+    private def getOntologyMetadataForProjectsV2(projectIris: Set[IRI], userProfile: UserProfileV1): Future[ReadOntologyMetadataV2] = {
         for {
             cacheData <- getCacheData
             namedGraphInfos: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
@@ -961,60 +965,47 @@ class OntologyResponderV2 extends Responder {
       *
       * @param ontologyIris the Iris of the ontologies to be queried.
       * @param userProfile  the profile of the user making the request.
-      * @return a [[ReadEntityDefinitionsV2]].
+      * @return a [[ReadOntologiesV2]].
       */
-    private def getOntologyEntitiesV2(ontologyIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
+    private def getOntologyEntitiesV2(ontologyIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadOntologiesV2] = {
         for {
             cacheData <- getCacheData
 
-            entitiesForOntologiesMap: Map[SmartIri, OntologyEntitiesIriInfoV2] = ontologyIris.map {
+            // Are we returning data in the user's preferred language, or in all available languages?
+            userLang = if (!allLanguages) {
+                // Just the user's preferred language.
+                Some(userProfile.userData.lang)
+            } else {
+                // All available languages.
+                None
+            }
+
+            ontologies = ontologyIris.map {
                 ontologyIri =>
 
                     if (!(cacheData.ontologyClasses.contains(ontologyIri) || cacheData.ontologyProperties.contains(ontologyIri))) {
                         throw NotFoundException(s"Ontology not found: $ontologyIri")
                     }
 
-                    ontologyIri -> OntologyEntitiesIriInfoV2(
-                        ontologyIri = ontologyIri,
-                        propertyIris = cacheData.ontologyProperties.getOrElse(ontologyIri, Set.empty[SmartIri]),
-                        classIris = cacheData.ontologyClasses.getOrElse(ontologyIri, Set.empty[SmartIri]),
-                        standoffClassIris = cacheData.ontologyStandoffClasses.getOrElse(ontologyIri, Set.empty[SmartIri]),
-                        standoffPropertyIris = cacheData.ontologyStandoffProperties.getOrElse(ontologyIri, Set.empty[SmartIri])
+                    ReadOntologyV2(
+                        ontologyMetadata = getCachedOntologyMetadata(ontologyIri, cacheData),
+                        classes = cacheData.ontologyClasses.getOrElse(ontologyIri, Set.empty[SmartIri]).map {
+                            classIri => classIri -> cacheData.classDefs(classIri)
+                        }.toMap,
+                        properties = cacheData.ontologyProperties.getOrElse(ontologyIri, Set.empty[SmartIri]).map {
+                            propertyIri => propertyIri -> cacheData.propertyDefs(propertyIri)
+                        }.toMap,
+                        standoffClasses = cacheData.ontologyStandoffClasses.getOrElse(ontologyIri, Set.empty[SmartIri]).map {
+                            standoffClassIri => standoffClassIri -> cacheData.standoffClassDefs(standoffClassIri)
+                        }.toMap,
+                        standoffProperties = cacheData.ontologyStandoffProperties.getOrElse(ontologyIri, Set.empty[SmartIri]).map {
+                            standoffPropertyIri => standoffPropertyIri -> cacheData.standoffPropertyDefs(standoffPropertyIri)
+                        }.toMap,
+                        userLang = userLang
                     )
-            }.toMap
+            }.toVector.sortBy(_.ontologyMetadata.ontologyIri)
 
-            // Get non-standoff classes and properties.
-
-            classIris: Set[SmartIri] = entitiesForOntologiesMap.values.flatMap(_.classIris).toSet
-            propertyIris: Set[SmartIri] = entitiesForOntologiesMap.values.flatMap(_.propertyIris).toSet
-
-            readEntityDefsForClasses: ReadEntityDefinitionsV2 <- getClassDefinitionsV2(
-                classIris,
-                responseSchema,
-                allLanguages,
-                userProfile = userProfile
-            )
-
-            readEntityDefsForProperties: ReadEntityDefinitionsV2 <- getPropertyDefinitionsV2(propertyIris, allLanguages, userProfile = userProfile)
-
-            // Get standoff classes and properties.
-
-            standoffClassIris: Set[SmartIri] = entitiesForOntologiesMap.values.flatMap(_.standoffClassIris).toSet
-            standoffPropertyIris: Set[SmartIri] = entitiesForOntologiesMap.values.flatMap(_.standoffPropertyIris).toSet
-
-            standoffEntities <- getStandoffEntityInfoResponseV2(standoffClassIris = standoffClassIris, standoffPropertyIris = standoffPropertyIris, userProfile = userProfile)
-
-            ontologiesWithClasses: Map[SmartIri, Set[SmartIri]] = entitiesForOntologiesMap.map {
-                case (namedGraphIri, namedGraphInfo) => (namedGraphIri, namedGraphInfo.classIris)
-            }
-        } yield ReadEntityDefinitionsV2(
-            ontologies = ontologiesWithClasses,
-            classes = readEntityDefsForClasses.classes,
-            properties = readEntityDefsForProperties.properties,
-            standoffClasses = standoffEntities.standoffClassInfoMap,
-            standoffProperties = standoffEntities.standoffPropertyInfoMap,
-            userLang = readEntityDefsForClasses.userLang
-        )
+        } yield ReadOntologiesV2(ontologies = ontologies)
     }
 
     /**
@@ -1022,10 +1013,12 @@ class OntologyResponderV2 extends Responder {
       *
       * @param classIris   the Iris of the resource classes to query for.
       * @param userProfile the profile of the user making the request.
-      * @return a [[ReadEntityDefinitionsV2]].
+      * @return a [[ReadOntologiesV2]].
       */
-    private def getClassDefinitionsV2(classIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadEntityDefinitionsV2] = {
+    private def getClassDefinitionsV2(classIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadOntologiesV2] = {
         for {
+            cacheData <- getCacheData
+
             // request information about the given resource class Iris
             classInfoResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(classIris = classIris, userProfile = userProfile)
 
@@ -1038,7 +1031,18 @@ class OntologyResponderV2 extends Responder {
                 None
             }
 
-        } yield ReadEntityDefinitionsV2(classes = classInfoResponse.classInfoMap, userLang = userLang)
+            classesInOntologies = classInfoResponse.classInfoMap.values.groupBy(_.entityInfoContent.ontologyIri).map {
+                case (ontologyIri, classInfos) =>
+                    ReadOntologyV2(
+                        ontologyMetadata = getCachedOntologyMetadata(ontologyIri, cacheData),
+                        classes = classInfos.map {
+                            classInfo => classInfo.entityInfoContent.classIri -> classInfo
+                        }.toMap,
+                        userLang = userLang
+                    )
+            }.toSeq
+
+        } yield ReadOntologiesV2(ontologies = classesInOntologies)
     }
 
     /**
@@ -1046,11 +1050,12 @@ class OntologyResponderV2 extends Responder {
       *
       * @param propertyIris the Iris of the properties to query for.
       * @param userProfile  the profile of the user making the request.
-      * @return a [[ReadEntityDefinitionsV2]].
+      * @return a [[ReadOntologiesV2]].
       */
     private def getPropertyDefinitionsV2(propertyIris: Set[SmartIri], allLanguages: Boolean, userProfile: UserProfileV1) = {
 
         for {
+            cacheData <- getCacheData
 
             propertiesResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, userProfile = userProfile)
 
@@ -1063,7 +1068,26 @@ class OntologyResponderV2 extends Responder {
                 None
             }
 
-        } yield ReadEntityDefinitionsV2(properties = propertiesResponse.propertyInfoMap, userLang = userLang)
+            propertiesInOntologies = propertiesResponse.propertyInfoMap.values.groupBy(_.entityInfoContent.ontologyIri).map {
+                case (ontologyIri, propertyInfos) =>
+                    ReadOntologyV2(
+                        ontologyMetadata = getCachedOntologyMetadata(ontologyIri, cacheData),
+                        properties = propertyInfos.map {
+                            propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
+                        }.toMap,
+                        userLang = userLang
+                    )
+            }.toSeq
+
+        } yield ReadOntologiesV2(ontologies = propertiesInOntologies)
+    }
+
+    private def getCachedOntologyMetadata(ontologyIri: SmartIri, cacheData: OntologyCacheData): OntologyMetadataV2 = {
+        ontologyIri.toString match {
+            case OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri => KnoraApiV2Simple.OntologyMetadata
+            case OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri => KnoraApiV2WithValueObjects.OntologyMetadata
+            case _ => cacheData.ontologyMetadata.getOrElse(ontologyIri, throw InconsistentTriplestoreDataException(s"No metadata found for ontology $ontologyIri"))
+        }
     }
 
     /**
@@ -1072,12 +1096,14 @@ class OntologyResponderV2 extends Responder {
       * @param internalOntologyIri the ontology's internal IRI.
       * @return an [[OntologyMetadataV2]], or [[None]] if the ontology is not found.
       */
-    private def getOntologyMetadata(internalOntologyIri: SmartIri): Future[Option[OntologyMetadataV2]] = {
+    private def loadOntologyMetadata(internalOntologyIri: SmartIri): Future[Option[OntologyMetadataV2]] = {
         for {
-            getOntologyInfoSparql <- Future(queries.sparql.v2.txt.getOntologyInfo(
+            cacheData <- getCacheData
+
+            getOntologyInfoSparql = queries.sparql.v2.txt.getOntologyInfo(
                 triplestore = settings.triplestoreType,
                 ontologyIri = internalOntologyIri.toString
-            ).toString())
+            ).toString()
 
             getOntologyInfoResponse <- (storeManager ? SparqlConstructRequest(getOntologyInfoSparql)).mapTo[SparqlConstructResponse]
 
@@ -1115,11 +1141,15 @@ class OntologyResponderV2 extends Responder {
                             Some(stringFormatter.toInstant(dateStr, throw InconsistentTriplestoreDataException(s"Invalid ${OntologyConstants.KnoraBase.LastModificationDate}: $dateStr")))
                         }
 
-                        Some(OntologyMetadataV2(
+                        val metadata = OntologyMetadataV2(
                             ontologyIri = internalOntologyIri,
                             label = label,
                             lastModificationDate = lastModificationDate
-                        ))
+                        )
+
+                        storeCacheData(cacheData.copy())
+
+                        Some(metadata)
 
                     case None => None
                 }
@@ -1139,7 +1169,7 @@ class OntologyResponderV2 extends Responder {
                 currentTime: Instant <- FastFuture.successful(Instant.now)
 
                 // Make sure the ontology doesn't already exist.
-                existingOntologyMetadata: Option[OntologyMetadataV2] <- getOntologyMetadata(internalOntologyIri)
+                existingOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(internalOntologyIri)
 
                 _ = if (existingOntologyMetadata.nonEmpty) {
                     throw BadRequestException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} cannot be created, because it already exists")
@@ -1159,7 +1189,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the update was successful.
 
-                maybeNewOntologyMetadata: Option[OntologyMetadataV2] <- getOntologyMetadata(internalOntologyIri)
+                maybeNewOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(internalOntologyIri)
 
                 _ = maybeNewOntologyMetadata match {
                     case Some(newOntologyMetadata) =>
@@ -1228,7 +1258,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
 
-                existingOntologyMetadata: Option[OntologyMetadataV2] <- getOntologyMetadata(internalOntologyIri)
+                existingOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(internalOntologyIri)
 
                 _ = existingOntologyMetadata match {
                     case Some(metadata) =>
@@ -1259,7 +1289,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the update was successful.
 
-                maybeNewOntologyMetadata: Option[OntologyMetadataV2] <- getOntologyMetadata(internalOntologyIri)
+                maybeNewOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(internalOntologyIri)
 
                 newMetadata: OntologyMetadataV2 = maybeNewOntologyMetadata match {
                     case Some(metadata) =>

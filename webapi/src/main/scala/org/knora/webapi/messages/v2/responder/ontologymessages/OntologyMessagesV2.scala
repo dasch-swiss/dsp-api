@@ -52,7 +52,7 @@ sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 {
 case class LoadOntologiesRequestV2(userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
-  * Requests the creation of an empty ontology. A successful response will be a [[ReadEntityDefinitionsV2]].
+  * Requests the creation of an empty ontology. A successful response will be a [[ReadOntologiesV2]].
   *
   * @param ontologyName the name of the ontology to be created.
   * @param projectIri   the IRI of the project that the ontology will belong to.
@@ -96,10 +96,37 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
   * @param userProfile         the profile of the user making the request.
   */
 case class CreatePropertyRequestV2(propertyInfoContent: PropertyInfoContentV2,
+                                   lastModificationDate: Instant,
                                    apiRequestID: UUID,
-                                   userProfile: UserProfileV1) extends OntologiesResponderRequestV2 {
-}
+                                   userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
+
+/**
+  * Constructs instances of [[CreatePropertyRequestV2]] based on JSON-LD requests.
+  */
+/*
+object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreatePropertyRequestV2] {
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            userProfile: UserProfileV1): CreatePropertyRequestV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val hasProperties: Map[String, JsonLDValue] = jsonLDDocument.body.value.getOrElse(
+            OntologyConstants.KnoraApiV2WithValueObjects.HasProperties,
+            throw BadRequestException(s"Request does not contain ${OntologyConstants.KnoraApiV2WithValueObjects.HasProperties}")
+        ) match {
+            case JsonLDObject(value) => value
+            case _ => throw BadRequestException(s"${OntologyConstants.KnoraApiV2WithValueObjects.HasProperties} must contain a JSON object")
+        }
+
+        if (hasProperties.isEmpty || hasProperties.size > 1) {
+            throw BadRequestException(s"${OntologyConstants.KnoraApiV2WithValueObjects.HasProperties} must contain one property definition")
+        }
+
+
+    }
+}
+*/
 /**
   * Requests a change in the metadata of an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
   *
@@ -274,7 +301,7 @@ case class OntologyMetadataGetRequestV2(projectIris: Set[IRI] = Set.empty[IRI], 
 case class OntologyEntitiesGetRequestV2(ontologyGraphIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
-  * Requests the entity definitions for the given class IRIs. A successful response will be a [[ReadEntityDefinitionsV2]].
+  * Requests the entity definitions for the given class IRIs. A successful response will be a [[ReadOntologiesV2]].
   *
   * @param resourceClassIris the IRIs of the classes to be queried.
   * @param responseSchema    the API schema that will be used for the response.
@@ -284,7 +311,7 @@ case class OntologyEntitiesGetRequestV2(ontologyGraphIris: Set[SmartIri], respon
 case class ClassesGetRequestV2(resourceClassIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
-  * Requests the entity definitions for the given property Iris. A successful response will be a [[ReadEntityDefinitionsV2]].
+  * Requests the entity definitions for the given property Iris. A successful response will be a [[ReadOntologiesV2]].
   *
   * @param propertyIris the IRIs of the properties to be queried.
   * @param allLanguages true if information in all available languages should be returned.
@@ -294,9 +321,9 @@ case class PropertyEntitiesGetRequestV2(propertyIris: Set[SmartIri], allLanguage
 
 
 /**
-  * Returns information about ontology entities.
+  * Represents the contents of an ontology to be returned in an API response.
   *
-  * @param ontologies         named graphs and their classes.
+  * @param ontologyMetadata   metadata about the ontology.
   * @param classes            information about non-standoff classes.
   * @param properties         information about non-standoff properties.
   * @param standoffClasses    information about standoff classes.
@@ -304,16 +331,15 @@ case class PropertyEntitiesGetRequestV2(propertyIris: Set[SmartIri], allLanguage
   * @param userLang           the preferred language in which the information should be returned, or [[None]] if information
   *                           should be returned in all available languages.
   */
-case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Map.empty[SmartIri, Set[SmartIri]],
-                                   classes: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2],
-                                   properties: Map[SmartIri, ReadPropertyInfoV2] = Map.empty[SmartIri, ReadPropertyInfoV2],
-                                   standoffClasses: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2],
-                                   standoffProperties: Map[SmartIri, ReadPropertyInfoV2] = Map.empty[SmartIri, ReadPropertyInfoV2],
-                                   userLang: Option[String] = None) extends KnoraResponseV2 {
-
+case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
+                          classes: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2],
+                          properties: Map[SmartIri, ReadPropertyInfoV2] = Map.empty[SmartIri, ReadPropertyInfoV2],
+                          standoffClasses: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2],
+                          standoffProperties: Map[SmartIri, ReadPropertyInfoV2] = Map.empty[SmartIri, ReadPropertyInfoV2],
+                          userLang: Option[String] = None) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    def toOntologySchema(targetSchema: ApiV2Schema): ReadEntityDefinitionsV2 = {
+    def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyV2 = {
         // If we're converting to the API v2 simple schema, filter out link value properties.
         val filteredProperties = targetSchema match {
             case ApiV2Simple =>
@@ -329,9 +355,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
         }
 
         copy(
-            ontologies = ontologies.map {
-                case (ontologyIri, classIris) => ontologyIri.toOntologySchema(targetSchema) -> classIris.map(_.toOntologySchema(targetSchema))
-            },
+            ontologyMetadata = ontologyMetadata.toOntologySchema(targetSchema),
             classes = classes.map {
                 case (classIri, readClassInfo) => classIri.toOntologySchema(targetSchema) -> readClassInfo.toOntologySchema(targetSchema)
             },
@@ -345,11 +369,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
         )
     }
 
-    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
-        toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
-    }
-
-    private def generateJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+    def toJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDObject = {
         def classesToJsonLD(classDefs: Map[SmartIri, ReadClassInfoV2]): Map[IRI, JsonLDObject] = {
             classDefs.map {
                 case (classIri: SmartIri, resourceEntity: ReadClassInfoV2) =>
@@ -380,9 +400,74 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
             }
         }
 
-        // Get the ontologies of all entities mentioned in class definitions.
+        // classes
 
-        val allClasses = classes ++ standoffClasses
+        val jsonClasses: Map[IRI, JsonLDObject] = classesToJsonLD(classes)
+
+        // properties
+
+        val jsonProperties: Map[IRI, JsonLDObject] = propertiesToJsonLD(properties)
+
+        // standoff classes and properties
+
+        val hasStandoffClassesProp = targetSchema match {
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasStandoffClasses
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffClasses
+        }
+
+        val hasStandoffPropertiesProp = targetSchema match {
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasStandoffProperties
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffProperties
+        }
+
+        val jsonStandoffClasses: Map[IRI, JsonLDObject] = classesToJsonLD(standoffClasses)
+        val jsonStandoffProperties: Map[IRI, JsonLDObject] = propertiesToJsonLD(standoffProperties)
+
+        val jsonStandoffEntities: Map[IRI, JsonLDObject] = Map(
+            hasStandoffClassesProp -> JsonLDObject(jsonStandoffClasses),
+            hasStandoffPropertiesProp -> JsonLDObject(jsonStandoffProperties)
+        )
+
+        val hasClassesProp = targetSchema match {
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasClasses
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasClasses
+        }
+
+        val hasPropertiesProp = targetSchema match {
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasProperties
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasProperties
+        }
+
+        JsonLDObject(
+            ontologyMetadata.toJsonLD(targetSchema) ++
+                Map(hasClassesProp -> JsonLDObject(jsonClasses),
+                    hasPropertiesProp -> JsonLDObject(jsonProperties)) ++
+                jsonStandoffEntities
+        )
+    }
+}
+
+/**
+  * Represents the contents of one or more ontologies to be returned in an API response.
+  *
+  * @param ontologies the contents of the ontologies.
+  */
+case class ReadOntologiesV2(ontologies: Seq[ReadOntologyV2]) extends KnoraResponseV2 {
+    private implicit def stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+        toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
+    }
+
+    private def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologiesV2 = {
+        copy(ontologies.map(_.toOntologySchema(targetSchema)))
+    }
+
+    private def generateJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+        // To make prefix labels, we need the ontologies of all entities mentioned in all the ontologies
+        // to be returned. First, get the ontologies of all entities mentioned in class definitions.
+
+        val allClasses = ontologies.flatMap(ontology => ontology.classes ++ ontology.standoffClasses).toMap
 
         val ontologiesFromClasses: Set[SmartIri] = allClasses.values.flatMap {
             classInfo =>
@@ -400,7 +485,7 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
 
         // Get the ontologies of all entities mentioned in property definitions.
 
-        val allProperties = properties ++ standoffProperties
+        val allProperties = ontologies.flatMap(ontology => ontology.properties ++ ontology.standoffProperties).toMap
 
         val ontologiesFromProperties: Set[SmartIri] = allProperties.values.flatMap {
             property =>
@@ -443,69 +528,19 @@ case class ReadEntityDefinitionsV2(ontologies: Map[SmartIri, Set[SmartIri]] = Ma
             "xsd" -> JsonLDString("http://www.w3.org/2001/XMLSchema#")
         ) ++ ontologyPrefixes)
 
-        // ontologies with their classes
+        val ontologiesJson: Seq[JsonLDObject] = ontologies.map(_.toJsonLD(targetSchema, settings))
 
-        val jsonOntologies: Map[IRI, JsonLDArray] = ontologies.map {
-            case (namedGraphIri: SmartIri, classIris: Set[SmartIri]) =>
-                val classIrisInOntology = classIris.toArray.sorted.map {
-                    classIri => JsonLDString(classIri.toString)
-                }
-
-                namedGraphIri.toString -> JsonLDArray(classIrisInOntology)
-        }
-
-        // classes
-
-        val jsonClasses: Map[IRI, JsonLDObject] = classesToJsonLD(classes)
-
-        // properties
-
-        val jsonProperties: Map[IRI, JsonLDObject] = propertiesToJsonLD(properties)
-
-        // standoff classes and properties
-
-        val hasStandoffClassesProp = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasStandoffClasses
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffClasses
-        }
-
-        val hasStandoffPropertiesProp = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasStandoffProperties
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffProperties
-        }
-
-        val jsonStandoffClasses: Map[IRI, JsonLDObject] = classesToJsonLD(standoffClasses)
-        val jsonStandoffProperties: Map[IRI, JsonLDObject] = propertiesToJsonLD(standoffProperties)
-
-        val jsonStandoffEntities: Map[IRI, JsonLDObject] = Map(
-            hasStandoffClassesProp -> JsonLDObject(jsonStandoffClasses),
-            hasStandoffPropertiesProp -> JsonLDObject(jsonStandoffProperties)
-        )
-
-        val hasOntologiesWithClassesProp = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasOntologiesWithClasses
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasOntologiesWithClasses
-        }
-
-        val hasClassesProp = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasClasses
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasClasses
-        }
-
-        val hasPropertiesProp = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasProperties
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasProperties
+        val hasOntologiesProp = targetSchema match {
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasOntologies
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasOntologies
         }
 
         val body = JsonLDObject(Map(
-            hasOntologiesWithClassesProp -> JsonLDObject(jsonOntologies),
-            hasClassesProp -> JsonLDObject(jsonClasses),
-            hasPropertiesProp -> JsonLDObject(jsonProperties)
-        ) ++ jsonStandoffEntities)
+            hasOntologiesProp -> JsonLDArray(ontologiesJson)
+        ))
 
         JsonLDDocument(body = body, context = context)
     }
-
 }
 
 /**
@@ -543,7 +578,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2], includeKn
         }
 
         val ontologiesWithKnoraApi = ontologies ++ maybeKnoraApiMetadata
-        val ontologiesJson: Vector[JsonLDObject] = ontologiesWithKnoraApi.toVector.sortBy(_.ontologyIri).map(_.toJsonLD(targetSchema))
+        val ontologiesJson: Vector[JsonLDObject] = ontologiesWithKnoraApi.toVector.sortBy(_.ontologyIri).map(ontology => JsonLDObject(ontology.toJsonLD(targetSchema)))
 
         val hasOntologiesProp = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasOntologies
@@ -1107,11 +1142,6 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
         // Get the property's rdf:type.
         val propertyType: SmartIri = entityInfoContent.getPredicateIriObject(OntologyConstants.Rdf.Type.toSmartIri).getOrElse(throw InconsistentTriplestoreDataException(s"Property ${entityInfoContent.propertyIri} has no rdf:type"))
 
-        val belongsToOntologyPred: IRI = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.BelongsToOntology
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.BelongsToOntology
-        }
-
         val jsonSubPropertyOf: Seq[JsonLDString] = entityInfoContent.subPropertyOf.filter(_ != OntologyConstants.KnoraBase.ObjectCannotBeMarkedAsDeleted).toSeq.map {
             superProperty => JsonLDString(superProperty.toString)
         }
@@ -1142,8 +1172,7 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
 
         Map(
             "@id" -> JsonLDString(entityInfoContent.propertyIri.toString),
-            "@type" -> JsonLDString(propertyType.toString),
-            belongsToOntologyPred -> JsonLDString(entityInfoContent.ontologyIri.toString)
+            "@type" -> JsonLDString(propertyType.toString)
         ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++ isEditableStatement ++ isLinkValuePropertyStatement ++ isLinkPropertyStatement
     }
 }
@@ -1255,11 +1284,6 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
                 ) ++ isInherited)
         }
 
-        val belongsToOntologyPred = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.BelongsToOntology
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.BelongsToOntology
-        }
-
         val resourceIconPred = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.ResourceIcon
             case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.ResourceIcon
@@ -1298,7 +1322,6 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
 
         Map(
             "@id" -> JsonLDString(entityInfoContent.classIri.toString),
-            belongsToOntologyPred -> JsonLDString(entityInfoContent.ontologyIri.toString),
             "@type" -> JsonLDString(entityInfoContent.rdfType.toString)
         ) ++ jsonSubClassOfStatement ++ resourceIconStatement ++ canBeInstantiatedStatement
     }
@@ -1385,7 +1408,7 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
         )
     }
 
-    def toJsonLD(targetSchema: ApiV2Schema): JsonLDObject = {
+    def toJsonLD(targetSchema: ApiV2Schema): Map[String, JsonLDValue] = {
         val maybeLastModDateStatement: Option[(IRI, JsonLDString)] = lastModificationDate.map {
             lastModDate =>
                 val lastModDateProp = targetSchema match {
@@ -1397,9 +1420,9 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
         }
 
 
-        JsonLDObject(Map(
-            "@id" -> JsonLDString(ontologyIri.toString),
+        Map("@id" -> JsonLDString(ontologyIri.toString),
+            "@type" -> JsonLDString(OntologyConstants.Owl.Ontology),
             OntologyConstants.Rdfs.Label -> JsonLDString(label)
-        ) ++ maybeLastModDateStatement)
+        ) ++ maybeLastModDateStatement
     }
 }

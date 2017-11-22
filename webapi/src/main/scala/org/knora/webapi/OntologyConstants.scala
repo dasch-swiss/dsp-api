@@ -48,6 +48,7 @@ object OntologyConstants {
     object Owl {
         val OwlPrefixExpansion: IRI = "http://www.w3.org/2002/07/owl#"
 
+        val Ontology: IRI = OwlPrefixExpansion + "Ontology"
         val Restriction: IRI = OwlPrefixExpansion + "Restriction"
         val OnProperty: IRI = OwlPrefixExpansion + "onProperty"
         val Cardinality: IRI = OwlPrefixExpansion + "cardinality"
@@ -530,10 +531,6 @@ object OntologyConstants {
         val HasOntologies: IRI = KnoraApiV2PrefixExpansion + "hasOntologies"
 
         val HasShortname: IRI = KnoraApiV2PrefixExpansion + "hasShortname"
-
-        val HasOntologiesWithClasses: IRI = KnoraApiV2PrefixExpansion + "hasOntologiesWithClasses"
-
-        val BelongsToOntology: IRI = KnoraApiV2PrefixExpansion + "belongsToOntology"
 
         val IsEditable: IRI = KnoraApiV2PrefixExpansion + "isEditable"
         val IsLinkProperty: IRI = KnoraApiV2PrefixExpansion + "isLinkProperty"

@@ -37,7 +37,7 @@ import org.knora.webapi.util.IriConversions._
   *
   * @tparam C the type of the content class that extends this trait.
   */
-trait KnoraContentV2[C <: KnoraContentV2[C]] {
+trait KnoraContentV2[C <: KnoraContentV2[C]] { this: C =>
     def toOntologySchema(targetSchema: OntologySchema): C
 }
 
