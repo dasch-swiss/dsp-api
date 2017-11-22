@@ -16,12 +16,14 @@
 
 package org.knora.webapi.responders.v1
 
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages.{AdministrativePermissionForProjectGroupGetResponseV1, AdministrativePermissionV1, DefaultObjectAccessPermissionGetResponseV1, DefaultObjectAccessPermissionV1, PermissionType, _}
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilV1}
@@ -702,10 +704,10 @@ class PermissionsResponderV1 extends Responder {
                 maybeResourceClassIri = resourceClassIri,
                 maybePropertyIri = propertyIri
             ).toString()
-            _ = log.debug(s"defaultObjectAccessPermissionGetV1 - query: $sparqlQueryString")
+            // _ = log.debug(s"defaultObjectAccessPermissionGetV1 - query: $sparqlQueryString")
 
             permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            //_ = log.debug(s"defaultObjectAccessPermissionGetV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
+            // _ = log.debug(s"defaultObjectAccessPermissionGetV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
 
             permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
 
@@ -728,7 +730,7 @@ class PermissionsResponderV1 extends Responder {
             } else {
                 None
             }
-            //_ = log.debug(s"defaultObjectAccessPermissionGetV1 - p: $projectIRI, g: $groupIRI, r: $resourceClassIRI, p: $propertyIRI, permission: $permission")
+            _ = log.debug(s"defaultObjectAccessPermissionGetV1 - p: $projectIri, g: $groupIri, r: $resourceClassIri, p: $propertyIri, permission: $permission")
         } yield permission
     }
 
@@ -900,6 +902,8 @@ class PermissionsResponderV1 extends Responder {
                 OntologyConstants.KnoraBase.KnownUser :: userGroups.toList
             }
 
+            // _ = log.debug("defaultObjectAccessPermissionsStringForEntityGetV1 - extendedUserGroups: {}", extendedUserGroups)
+
             /* List buffer holding default object access permissions tagged with the precedence level:
                0. ProjectAdmin > 1. ProjectEntity > 2. SystemEntity > 3. CustomGroups > 4. ProjectMember > 5. KnownUser
                Permissions are added following the precedence level from the highest to the lowest. As soon as one set
@@ -912,7 +916,7 @@ class PermissionsResponderV1 extends Responder {
             _ = if (defaultPermissionsOnProjectAdminGroup.nonEmpty) {
                 if (extendedUserGroups.contains(OntologyConstants.KnoraBase.ProjectAdmin) || extendedUserGroups.contains(OntologyConstants.KnoraBase.SystemAdmin)) {
                     permissionsListBuffer += (("ProjectAdmin", defaultPermissionsOnProjectAdminGroup))
-                    log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectAdminGroup: $defaultPermissionsOnProjectAdminGroup")
+                    // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectAdminGroup: $defaultPermissionsOnProjectAdminGroup")
                 }
             }
 
@@ -929,7 +933,7 @@ class PermissionsResponderV1 extends Responder {
             }
             _ = if (defaultPermissionsOnProjectResourceClassProperty.nonEmpty) {
                 permissionsListBuffer += (("ProjectResourceClassProperty", defaultPermissionsOnProjectResourceClassProperty))
-                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectResourceClassProperty: {}", defaultPermissionsOnProjectResourceClassProperty)
+                // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectResourceClassProperty: {}", defaultPermissionsOnProjectResourceClassProperty)
             }
 
             /* system resource class / property combination */
@@ -943,7 +947,7 @@ class PermissionsResponderV1 extends Responder {
             }
             _ = if (defaultPermissionsOnSystemResourceClassProperty.nonEmpty) {
                 permissionsListBuffer += (("SystemResourceClassProperty", defaultPermissionsOnSystemResourceClassProperty))
-                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClassProperty: {}", defaultPermissionsOnSystemResourceClassProperty)
+                // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClassProperty: {}", defaultPermissionsOnSystemResourceClassProperty)
             }
 
             ///////////////////////
@@ -959,7 +963,7 @@ class PermissionsResponderV1 extends Responder {
             }
             _ = if (defaultPermissionsOnProjectResourceClass.nonEmpty) {
                 permissionsListBuffer += (("ProjectResourceClass", defaultPermissionsOnProjectResourceClass))
-                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectResourceClass: {}", defaultPermissionsOnProjectResourceClass)
+                // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectResourceClass: {}", defaultPermissionsOnProjectResourceClass)
             }
 
             /* Get the default object access permissions defined on the resource class inside the SystemProject */
@@ -973,7 +977,7 @@ class PermissionsResponderV1 extends Responder {
             }
             _ = if (defaultPermissionsOnSystemResourceClass.nonEmpty) {
                 permissionsListBuffer += (("SystemResourceClass", defaultPermissionsOnSystemResourceClass))
-                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClass: {}", defaultPermissionsOnSystemResourceClass)
+                // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClass: {}", defaultPermissionsOnSystemResourceClass)
             }
 
             ///////////////////////
@@ -989,7 +993,7 @@ class PermissionsResponderV1 extends Responder {
             }
             _ = if (defaultPermissionsOnProjectProperty.nonEmpty) {
                 permissionsListBuffer += (("ProjectProperty", defaultPermissionsOnProjectProperty))
-                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectProperty: {}", defaultPermissionsOnProjectProperty)
+                // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectProperty: {}", defaultPermissionsOnProjectProperty)
             }
 
             /* system property */
@@ -1003,7 +1007,7 @@ class PermissionsResponderV1 extends Responder {
             }
             _ = if (defaultPermissionsOnSystemProperty.nonEmpty) {
                 permissionsListBuffer += (("SystemProperty", defaultPermissionsOnSystemProperty))
-                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemProperty: {}", defaultPermissionsOnSystemProperty)
+                // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemProperty: {}", defaultPermissionsOnSystemProperty)
             }
 
             ///////////////////////
@@ -1025,7 +1029,7 @@ class PermissionsResponderV1 extends Responder {
             }
             _ = if (defaultPermissionsOnCustomGroups.nonEmpty) {
                 permissionsListBuffer += (("CustomGroups", defaultPermissionsOnCustomGroups))
-                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnCustomGroups: $defaultPermissionsOnCustomGroups")
+                // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnCustomGroups: $defaultPermissionsOnCustomGroups")
             }
 
             ///////////////////////
@@ -1043,7 +1047,7 @@ class PermissionsResponderV1 extends Responder {
                 if (extendedUserGroups.contains(OntologyConstants.KnoraBase.ProjectMember) || extendedUserGroups.contains(OntologyConstants.KnoraBase.SystemAdmin)) {
                     permissionsListBuffer += (("ProjectMember", defaultPermissionsOnProjectMemberGroup))
                 }
-                log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectMemberGroup: $defaultPermissionsOnProjectMemberGroup")
+                // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectMemberGroup: $defaultPermissionsOnProjectMemberGroup")
             }
 
             ///////////////////////
@@ -1060,16 +1064,27 @@ class PermissionsResponderV1 extends Responder {
             _ = if (defaultPermissionsOnKnownUserGroup.nonEmpty) {
                 if (extendedUserGroups.contains(OntologyConstants.KnoraBase.KnownUser)) {
                     permissionsListBuffer += (("KnownUser", defaultPermissionsOnKnownUserGroup))
-                    log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnKnownUserGroup: $defaultPermissionsOnKnownUserGroup")
+                    // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnKnownUserGroup: $defaultPermissionsOnKnownUserGroup")
                 }
             }
 
+            ///////////////////////
+            // FALLBACK PERMISSION IF NONE COULD BE FOUND
+            ///////////////////////
+            /* Set 'CR knora-base:Creator' as the fallback permission */
+            _ = if (permissionsListBuffer.isEmpty) {
+                    val defaultFallbackPermission = Set(PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator))
+                    permissionsListBuffer += (("Fallback", defaultFallbackPermission))
+                    // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultFallbackPermission: $defaultFallbackPermission")
+                } else {
+                    FastFuture.successful(Set.empty[PermissionV1])
+                }
+            
             /* Create permissions string */
             result = permissionsListBuffer.length match {
                 case 1 => {
                     PermissionUtilV1.formatPermissions(permissionsListBuffer.head._2, PermissionType.OAP)
                 }
-                case 0 => throw BadRequestException("The resulting request would lead to an empty permissions string, which is not allowed. Are all the necessary default object access permissions defined?")
                 case _ => throw AssertionException("The permissions list buffer holding default object permissions should never be larger then 1.")
             }
             _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - project: {}, precedence: {}, defaultObjectAccessPermissions: {}", projectIri, permissionsListBuffer.head._1, result)
