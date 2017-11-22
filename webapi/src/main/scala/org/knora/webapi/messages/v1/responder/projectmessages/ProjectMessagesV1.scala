@@ -35,6 +35,7 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
   * Represents an API request payload that asks the Knora API server to create a new project.
   *
   * @param shortname   the shortname of the project to be created (unique).
+  * @param shortcode   the shortcode of the project to be creates (unique, optional)
   * @param longname    the longname of the project to be created.
   * @param description the description of the project to be created.
   * @param keywords    the keywords of the project to be created.
@@ -43,6 +44,7 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
   * @param selfjoin    the status of self-join of the project to be created.
   */
 case class CreateProjectApiRequestV1(shortname: String,
+                                     shortcode: Option[String],
                                      longname: Option[String],
                                      description: Option[String],
                                      keywords: Option[String],
@@ -61,8 +63,6 @@ case class CreateProjectApiRequestV1(shortname: String,
   * @param keywords      the new project's keywords.
   * @param logo          the new project's logo.
   * @param institution   the new project's institution.
-  * @param ontologygraph the new project's ontology graph.
-  * @param datagraph     the new project's data graph.
   * @param status        the new project's status.
   * @param selfjoin      the new project's self-join status.
   */
@@ -72,8 +72,6 @@ case class ChangeProjectApiRequestV1(shortname: Option[String] = None,
                                      keywords: Option[String] = None,
                                      logo: Option[String] = None,
                                      institution: Option[IRI] = None,
-                                     ontologygraph: Option[String] = None,
-                                     datagraph: Option[String] = None,
                                      status: Option[Boolean] = None,
                                      selfjoin: Option[Boolean] = None) extends ProjectV1JsonProtocol {
 
@@ -84,21 +82,12 @@ case class ChangeProjectApiRequestV1(shortname: Option[String] = None,
         keywords,
         logo,
         institution,
-        ontologygraph,
-        datagraph,
         status,
         selfjoin
     ).flatten.size
 
     // something needs to be sent, i.e. everything 'None' is not allowed
     if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
-
-    // change ontology and/or datagraph case
-    if (ontologygraph.isDefined || datagraph.isDefined) {
-        if (ontologygraph.isDefined && datagraph.isEmpty && parametersCount > 1) BadRequestException("To many parameters sent for ontology graph change.")
-        if (datagraph.isDefined && ontologygraph.isEmpty && parametersCount > 1) BadRequestException("To many parameters sent for data graph change.")
-        if (ontologygraph.isDefined && datagraph.isDefined && parametersCount > 2) BadRequestException("To many parameters sent for ontology and data graph change.")
-    }
 
     // change basic project information case
     if (parametersCount > 8) throw BadRequestException("To many parameters sent for changing basic project information.")
@@ -140,7 +129,7 @@ case class ProjectsGetV1(userProfile: Option[UserProfileV1]) extends ProjectsRes
 case class ProjectsNamedGraphGetV1(userProfile: UserProfileV1) extends ProjectsResponderRequestV1
 
 /**
-  * Get info about a single project identified through it's IRI. The response is in form of [[ProjectInfoResponseV1]].
+  * Get info about a single project identified through its IRI. The response is in form of [[ProjectInfoResponseV1]].
   *
   * @param iri           the IRI of the project.
   * @param userProfileV1 the profile of the user making the request (optional).
@@ -148,7 +137,7 @@ case class ProjectsNamedGraphGetV1(userProfile: UserProfileV1) extends ProjectsR
 case class ProjectInfoByIRIGetRequestV1(iri: IRI, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
-  * Get info about a single project identified through it's IRI. The response is in form of [[ProjectInfoV1]].
+  * Get info about a single project identified through its IRI. The response is in form of [[ProjectInfoV1]].
   *
   * @param iri           the IRI of the project.
   * @param userProfileV1 the profile of the user making the request (optional).
@@ -156,7 +145,7 @@ case class ProjectInfoByIRIGetRequestV1(iri: IRI, userProfileV1: Option[UserProf
 case class ProjectInfoByIRIGetV1(iri: IRI, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
-  * Find everything about a single project identified through it's shortname.
+  * Find everything about a single project identified through its shortname.
   *
   * @param shortname     of the project.
   * @param userProfileV1 the profile of the user making the request.
@@ -218,6 +207,33 @@ case class ProjectChangeRequestV1(projectIri: IRI,
                                   changeProjectRequest: ChangeProjectApiRequestV1,
                                   userProfileV1: UserProfileV1,
                                   apiRequestID: UUID) extends ProjectsResponderRequestV1
+
+/**
+  * Requests adding an ontology to the project. This is an internal message, which should
+  * only be sent by the ontology responder who is responsible for actually creating the
+  * ontology.
+  *
+  * @param projectIri the IRI of the project to be updated.
+  * @param ontologyIri the IRI of the ontology to be added.
+  * @param apiRequestID the ID of the API request.
+  */
+case class ProjectOntologyAddV1(projectIri: IRI,
+                                ontologyIri: IRI,
+                                apiRequestID: UUID) extends ProjectsResponderRequestV1
+
+
+/**
+  * Requests removing an ontology from the project. This is an internal message, which should
+  * only be sent by the ontology responder who is responsible for actually removing the
+  * ontology.
+  *
+  * @param projectIri the IRI of the project to be updated.
+  * @param ontologyIri the IRI of the ontology to be removed.
+  * @param apiRequestID the ID of the API request.
+  */
+case class ProjectOntologyRemoveV1(projectIri: IRI,
+                                   ontologyIri: IRI,
+                                   apiRequestID: UUID) extends ProjectsResponderRequestV1
 
 // Responses
 /**
@@ -284,20 +300,19 @@ case class ProjectOperationResponseV1(project_info: ProjectInfoV1) extends Knora
   * @param keywords           The project's keywords.
   * @param logo               The project's logo.
   * @param institution        The project's institution.
-  * @param ontologyNamedGraph The project's ontology named graph.
-  * @param dataNamedGraph     The project's data named graph.
+  * @param ontologies         The project's ontologies.
   * @param status             The project's status.
   * @param selfjoin           The project's self-join status.
   */
 case class ProjectInfoV1(id: IRI,
                          shortname: String,
+                         shortcode: Option[String],
                          longname: Option[String],
                          description: Option[String],
                          keywords: Option[String],
                          logo: Option[String],
                          institution: Option[IRI],
-                         ontologyNamedGraph: IRI,
-                         dataNamedGraph: IRI,
+                         ontologies: Seq[IRI],
                          status: Boolean,
                          selfjoin: Boolean)
 
@@ -311,8 +326,7 @@ case class ProjectInfoV1(id: IRI,
   * @param keywords           The project's keywords.
   * @param logo               The project's logo.
   * @param institution        The project's institution.
-  * @param ontologyNamedGraph The project's ontology named graph.
-  * @param dataNamedGraph     The project's data named graph.
+  * @param ontologies         The project's ontologies.
   * @param status             The project's status.
   * @param selfjoin           The project's self-join status.
   */
@@ -322,8 +336,7 @@ case class ProjectUpdatePayloadV1(shortname: Option[String] = None,
                                   keywords: Option[String] = None,
                                   logo: Option[String] = None,
                                   institution: Option[IRI] = None,
-                                  ontologyNamedGraph: Option[IRI] = None,
-                                  dataNamedGraph: Option[IRI] = None,
+                                  ontologies: Option[Seq[IRI]] = None,
                                   status: Option[Boolean] = None,
                                   selfjoin: Option[Boolean] = None)
 
@@ -346,8 +359,8 @@ trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
     implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat11(ProjectInfoV1)
     implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectsResponseV1, "projects")))
     implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectInfoResponseV1, "project_info")))
-    implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat(CreateProjectApiRequestV1, "shortname", "longname", "description", "keywords", "logo", "status", "selfjoin")))
-    implicit val changeProjectApiRequestV1Format: RootJsonFormat[ChangeProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat(ChangeProjectApiRequestV1, "shortname", "longname", "description", "keywords", "logo", "institution", "ontologygraph", "datagraph", "status", "selfjoin")))
+    implicit val createProjectApiRequestV1Format: RootJsonFormat[CreateProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat(CreateProjectApiRequestV1, "shortname", "shortcode", "longname", "description", "keywords", "logo", "status", "selfjoin")))
+    implicit val changeProjectApiRequestV1Format: RootJsonFormat[ChangeProjectApiRequestV1] = rootFormat(lazyFormat(jsonFormat(ChangeProjectApiRequestV1, "shortname", "longname", "description", "keywords", "logo", "institution", "status", "selfjoin")))
     implicit val projectOperationResponseV1Format: RootJsonFormat[ProjectOperationResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectOperationResponseV1, "project_info")))
 
 }

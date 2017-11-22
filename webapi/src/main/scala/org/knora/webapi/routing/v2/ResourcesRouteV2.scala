@@ -26,7 +26,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcePreviewRequestV2, ResourcesGetRequestV2}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
-import org.knora.webapi.util.InputValidation
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
 import scala.language.postfixOps
@@ -42,17 +42,18 @@ object ResourcesRouteV2 extends Authenticator {
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
+        val stringFormatter = StringFormatter.getGeneralInstance
 
         path("v2" / "resources" / Segments) { (resIris: Seq[String]) =>
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    if (resIris.size > settings.v2ExtendedSearchResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ExtendedSearchResultsPerPage}")
+                    if (resIris.size > settings.v2ResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ResultsPerPage}")
 
                     val resourceIris: Seq[IRI] = resIris.map {
                         resIri: String =>
-                            InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
+                            stringFormatter.validateAndEscapeIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
                     }
 
                     val requestMessage = ResourcesGetRequestV2(resourceIris = resourceIris, userProfile = userProfile)
@@ -66,17 +67,17 @@ object ResourcesRouteV2 extends Authenticator {
                     )
                 }
             }
-        } ~ path("v2" / "resourcespreview" / Segments ) { (resIris: Seq[String]) =>
+        } ~ path("v2" / "resourcespreview" / Segments) { (resIris: Seq[String]) =>
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    if (resIris.size > settings.v2ExtendedSearchResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ExtendedSearchResultsPerPage}")
+                    if (resIris.size > settings.v2ResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ResultsPerPage}")
 
                     val resourceIris: Seq[IRI] = resIris.map {
-                            resIri: String =>
-                                InputValidation.toIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
-                        }
+                        resIri: String =>
+                            stringFormatter.validateAndEscapeIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
+                    }
 
                     val requestMessage = ResourcePreviewRequestV2(resourceIris = resourceIris, userProfile = userProfile)
 

@@ -42,7 +42,7 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
     val knoraIdUtil = new KnoraIdUtil
 
     // Global lock IRI used for group creation and updating
-    val GROUPS_GLOBAL_LOCK_IRI = "http://data.knora.org/users"
+    val GROUPS_GLOBAL_LOCK_IRI = "http://rdfh.ch/groups"
 
     val UNKNOWN_USER = "UnknownUser"
     val KNOWN_USER = "KnownUser"
@@ -294,7 +294,7 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
             } else {
                 Seq.empty[IRI]
             }
-        //_ = log.debug(s"groupMembersByIRIGetRequestV1 - groupMemberIris: $groupMemberIris")
+            //_ = log.debug(s"groupMembersByIRIGetRequestV1 - groupMemberIris: $groupMemberIris")
 
         } yield GroupMembersResponseV1(members = groupMemberIris)
     }
@@ -324,7 +324,7 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
             } else {
                 Seq.empty[IRI]
             }
-        //_ = log.debug(s"groupMembersByNameRequestV1 - groupMemberIris: $groupMemberIris")
+            //_ = log.debug(s"groupMembersByNameRequestV1 - groupMemberIris: $groupMemberIris")
 
         } yield GroupMembersResponseV1(members = groupMemberIris)
     }
@@ -358,8 +358,15 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
                 throw DuplicateValueException(s"Group with the name: '${createRequest.name}' already exists")
             }
 
+            maybeProjectInfo: Option[ProjectInfoV1] <- (responderManager ? ProjectInfoByIRIGetV1(createRequest.project, None)).mapTo[Option[ProjectInfoV1]]
+
+            projectInfo: ProjectInfoV1 = maybeProjectInfo match {
+                case Some(pi) => pi
+                case None => throw NotFoundException(s"Cannot create group inside project: '${createRequest.project}. The project was not found.")
+            }
+
             /* generate a new random group IRI */
-            groupIRI = knoraIdUtil.makeRandomGroupIri
+            groupIRI = knoraIdUtil.makeRandomGroupIri(projectInfo.shortcode)
 
             /* create the group */
             createNewGroupSparqlString = queries.sparql.v1.txt.createNewGroup(
@@ -401,7 +408,7 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
         } yield groupOperationResponseV1
 
         for {
-        // run user creation with an global IRI lock
+            // run user creation with an global IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 GROUPS_GLOBAL_LOCK_IRI,
@@ -455,7 +462,7 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
         } yield result
 
         for {
-        // run the change status task with an IRI lock
+            // run the change status task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 groupIri,

@@ -195,9 +195,9 @@ case class DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri:
   * A message that requests default object access permissions for a resource class / property combination inside a specific project. A successful response will be a
   * [[DefaultObjectAccessPermissionsStringResponseV1]].
   *
-  * @param projectIri  the project for which the default object permissions need to be retrieved.
+  * @param projectIri       the project for which the default object permissions need to be retrieved.
   * @param resourceClassIri the resource class which can also cary default object access permissions.
-  * @param propertyIri the property type which can also cary default object access permissions.
+  * @param propertyIri      the property type which can also cary default object access permissions.
   */
 case class DefaultObjectAccessPermissionsStringForPropertyGetV1(projectIri: IRI, resourceClassIri: IRI, propertyIri: IRI, permissionData: PermissionDataV1) extends PermissionsResponderRequestV1
 
@@ -358,9 +358,9 @@ case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean,
   * Represents a user's permission data. The permission data object is user centric and holds permission information
   * used during permission checking administrative operations and resource creation.
   *
-  * @param groupsPerProject                         the groups the user belongs to for each project.
-  * @param administrativePermissionsPerProject      the user's administrative permissions for each project.
-  * @param anonymousUser                            the type of user.
+  * @param groupsPerProject                    the groups the user belongs to for each project.
+  * @param administrativePermissionsPerProject the user's administrative permissions for each project.
+  * @param anonymousUser                       the type of user.
   */
 case class PermissionDataV1(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI, Seq[IRI]],
                             administrativePermissionsPerProject: Map[IRI, Set[PermissionV1]] = Map.empty[IRI, Set[PermissionV1]],

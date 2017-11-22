@@ -20,6 +20,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
+@import org.knora.webapi.util.search.ApacheLuceneSupport.CombineSearchTerms
 
 @*
  * Performs a simple full-text search.
@@ -29,17 +30,41 @@
  *
  * @param triplestore the name of the triplestore being used.
  * @param searchTerms search terms.
+ * @param limitToProject limit search to the given project.
+ * @param limitToResourceClass limit search to given resource class.
+ * @param separator the separator to be used in aggregation functions.
+ * @param limit maximal amount of rows to be returned
+ * @param offset offset for paging (starts with 0)
+ * @param countQuery indicates whether it is a count query or the actual resources should be returned.
  *@
 @(triplestore: String,
-  searchTerms: String)
+  searchTerms: CombineSearchTerms,
+  limitToProject: Option[IRI],
+  limitToResourceClass: Option[IRI],
+  separator: Option[Char],
+  limit: Int,
+  offset: Int,
+  countQuery: Boolean)
 
 @if(triplestore.startsWith("graphdb")) {
     @{
-        queries.sparql.v2.txt.searchFulltextGraphDB(searchTerms = searchTerms)
+        queries.sparql.v2.txt.searchFulltextGraphDB(searchTerms = searchTerms,
+                                                    limitToProject = limitToProject,
+                                                    limitToResourceClass = limitToResourceClass,
+                                                    separator = separator,
+                                                    limit = limit,
+                                                    offset = offset,
+                                                    countQuery = countQuery)
     }
 } else {
     @{
         queries.sparql.v2.txt.searchFulltextStandard(triplestore = triplestore,
-                                                     searchTerms = searchTerms)
+                                                     searchTerms = searchTerms,
+                                                     limitToProject = limitToProject,
+                                                     limitToResourceClass = limitToResourceClass,
+                                                     separator = separator,
+                                                     limit = limit,
+                                                     offset = offset,
+                                                     countQuery = countQuery)
     }
 }

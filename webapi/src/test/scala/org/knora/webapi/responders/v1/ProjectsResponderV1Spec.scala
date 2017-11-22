@@ -26,9 +26,10 @@ import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.SharedAdminTestData._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse, NamedGraphV1}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
@@ -117,8 +118,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
             "return 'NotFoundException' when the project IRI is unknown" in {
 
-                actorUnderTest ! ProjectInfoByIRIGetRequestV1("http://data.knora.org/projects/notexisting", Some(rootUserProfileV1))
-                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found")))
+                actorUnderTest ! ProjectInfoByIRIGetRequestV1("http://rdfh.ch/projects/notexisting", Some(rootUserProfileV1))
+                expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found")))
 
             }
 
@@ -133,10 +134,11 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
             val newProjectIri = new MutableTestIri
 
-            "CREATE the project and return the project info if the supplied shortname is unique" in {
+            "CREATE a project and return the project info if the supplied shortname is unique" in {
                 actorUnderTest ! ProjectCreateRequestV1(
                     CreateProjectApiRequestV1(
                         shortname = "newproject",
+                        shortcode = None,
                         longname = Some("project longname"),
                         description = Some("project description"),
                         keywords = Some("keywords"),
@@ -148,20 +150,48 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                     UUID.randomUUID()
                 )
                 val received: ProjectOperationResponseV1 = expectMsgType[ProjectOperationResponseV1](timeout)
-                assert(received.project_info.shortname.equals("newproject"))
-                assert(received.project_info.longname.contains("project longname"))
-                assert(received.project_info.description.contains("project description"))
-                assert(received.project_info.ontologyNamedGraph.equals("http://www.knora.org/ontology/newproject"))
-                assert(received.project_info.dataNamedGraph.equals("http://www.knora.org/data/newproject"))
+
+                received.project_info.shortname should be("newproject")
+                received.project_info.longname should contain("project longname")
+                received.project_info.description should contain("project description")
+                received.project_info.ontologies.isEmpty should be (true)
 
                 newProjectIri.set(received.project_info.id)
                 //println(s"newProjectIri: ${newProjectIri.get}")
             }
 
-            "return a 'DuplicateValueException' if the supplied project shortname during creation is not unique" in {
+            "CREATE a project and return the project info if the supplied shortname and shortcode is unique" in {
+                actorUnderTest ! ProjectCreateRequestV1(
+                    CreateProjectApiRequestV1(
+                        shortname = "newproject2",
+                        shortcode = Some("1111"),
+                        longname = Some("project longname"),
+                        description = Some("project description"),
+                        keywords = Some("keywords"),
+                        logo = Some("/fu/bar/baz.jpg"),
+                        status = true,
+                        selfjoin = false
+                    ),
+                    SharedAdminTestData.rootUser,
+                    UUID.randomUUID()
+                )
+                val received: ProjectOperationResponseV1 = expectMsgType[ProjectOperationResponseV1](timeout)
+
+                received.project_info.shortname should be("newproject2")
+                received.project_info.shortcode should be(Some("1111"))
+                received.project_info.longname should contain("project longname")
+                received.project_info.description should contain("project description")
+                received.project_info.ontologies.isEmpty should be (true)
+
+                newProjectIri.set(received.project_info.id)
+                //println(s"newProjectIri: ${newProjectIri.get}")
+            }
+
+            "return a 'DuplicateValueException' during creation if the supplied project shortname is not unique" in {
                 actorUnderTest ! ProjectCreateRequestV1(
                     CreateProjectApiRequestV1(
                         shortname = "newproject",
+                        shortcode = None,
                         longname = Some("project longname"),
                         description = Some("project description"),
                         keywords = Some("keywords"),
@@ -175,11 +205,30 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 expectMsg(Failure(DuplicateValueException(s"Project with the shortname: 'newproject' already exists")))
             }
 
+            "return a 'DuplicateValueException' during creation if the supplied project shortname is unique but the shortcode is not" in {
+                actorUnderTest ! ProjectCreateRequestV1(
+                    CreateProjectApiRequestV1(
+                        shortname = "newproject3",
+                        shortcode = Some("1111"),
+                        longname = Some("project longname"),
+                        description = Some("project description"),
+                        keywords = Some("keywords"),
+                        logo = Some("/fu/bar/baz.jpg"),
+                        status = true,
+                        selfjoin = false
+                    ),
+                    SharedAdminTestData.rootUser,
+                    UUID.randomUUID()
+                )
+                expectMsg(Failure(DuplicateValueException(s"Project with the shortcode: '1111' already exists")))
+            }
+
             "return 'BadRequestException' if project 'shortname' during creation is missing" in {
 
                 actorUnderTest ! ProjectCreateRequestV1(
                     CreateProjectApiRequestV1(
                         shortname = "",
+                        shortcode = None,
                         longname = Some("project longname"),
                         description = Some("project description"),
                         keywords = Some("keywords"),
@@ -202,7 +251,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                         description = Some("updated project description"),
                         keywords = Some("updated keywords"),
                         logo = Some("/fu/bar/baz-updated.jpg"),
-                        institution = Some("http://data.knora.org/institutions/dhlab-basel"),
+                        institution = Some("http://rdfh.ch/institutions/dhlab-basel"),
                         status = Some(false),
                         selfjoin = Some(true)
                     ),
@@ -214,26 +263,47 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 received.project_info.description should be (Some("updated project description"))
                 received.project_info.keywords should be (Some("updated keywords"))
                 received.project_info.logo should be (Some("/fu/bar/baz-updated.jpg"))
-                received.project_info.institution should be (Some("http://data.knora.org/institutions/dhlab-basel"))
-                received.project_info.ontologyNamedGraph should be ("http://www.knora.org/ontology/newproject")
-                received.project_info.dataNamedGraph should be ("http://www.knora.org/data/newproject")
+                received.project_info.institution should be (Some("http://rdfh.ch/institutions/dhlab-basel"))
+                received.project_info.ontologies.isEmpty should be (true)
                 received.project_info.status should be (false)
                 received.project_info.selfjoin should be (true)
             }
 
+            "ADD an ontology to the project" in {
+                actorUnderTest ! ProjectOntologyAddV1(
+                    projectIri = newProjectIri.get,
+                    ontologyIri = "http://www.knora.org/ontology/blabla1",
+                    apiRequestID = UUID.randomUUID()
+                )
+
+                val received: ProjectInfoV1 = expectMsgType[ProjectInfoV1](timeout)
+                received.ontologies should be (Seq("http://www.knora.org/ontology/blabla1"))
+            }
+
+            "REMOVE an ontology from the project" in {
+                actorUnderTest ! ProjectOntologyRemoveV1(
+                    projectIri = newProjectIri.get,
+                    ontologyIri = "http://www.knora.org/ontology/blabla1",
+                    apiRequestID = UUID.randomUUID()
+                )
+
+                val received: ProjectInfoV1 = expectMsgType[ProjectInfoV1](timeout)
+                received.ontologies.isEmpty should be (true)
+            }
+
             "return 'NotFound' if a not existing project IRI is submitted during update" in {
                 actorUnderTest ! ProjectChangeRequestV1(
-                    projectIri = "http://data.knora.org/projects/notexisting",
+                    projectIri = "http://rdfh.ch/projects/notexisting",
                     changeProjectRequest = ChangeProjectApiRequestV1(longname = Some("new long name")),
                     SharedAdminTestData.rootUser,
                     UUID.randomUUID()
                 )
-                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found. Aborting update request.")))
+                expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found. Aborting update request.")))
             }
 
             "return 'BadRequest' if nothing would be changed during the update" in {
 
-                an [BadRequestException] should be thrownBy ChangeProjectApiRequestV1(None, None, None, None, None, None, None, None, None, None)
+                an [BadRequestException] should be thrownBy ChangeProjectApiRequestV1(None, None, None, None, None, None, None, None)
 
                 /*
                 actorUnderTest ! ProjectChangeRequestV1(
@@ -244,6 +314,30 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 )
                 expectMsg(Failure(BadRequestException("No data would be changed. Aborting update request.")))
                 */
+            }
+        }
+
+        "used to query named graphs" should {
+            "return all named graphs" in {
+                actorUnderTest ! ProjectsNamedGraphGetV1(SharedAdminTestData.rootUser)
+
+                val received: Seq[NamedGraphV1] = expectMsgType[Seq[NamedGraphV1]]
+                received.size should be (7)
+            }
+
+            "return all named graphs after adding a new ontology" in {
+                actorUnderTest ! ProjectOntologyAddV1(
+                    projectIri = IMAGES_PROJECT_IRI,
+                    ontologyIri = "http://wwww.knora.org/ontology/00FF/blabla1",
+                    apiRequestID = UUID.randomUUID()
+                )
+                val received01: ProjectInfoV1 = expectMsgType[ProjectInfoV1](timeout)
+                received01.ontologies.size should be (2)
+
+                actorUnderTest ! ProjectsNamedGraphGetV1(SharedAdminTestData.rootUser)
+
+                val received02: Seq[NamedGraphV1] = expectMsgType[Seq[NamedGraphV1]]
+                received02.size should be (8)
             }
         }
 
@@ -274,8 +368,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             }
 
             "return 'NotFound' when the project IRI is unknown (project membership)" in {
-                actorUnderTest ! ProjectMembersByIRIGetRequestV1("http://data.knora.org/projects/notexisting", SharedAdminTestData.rootUser)
-                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found.")))
+                actorUnderTest ! ProjectMembersByIRIGetRequestV1("http://rdfh.ch/projects/notexisting", SharedAdminTestData.rootUser)
+                expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
             }
 
             "return 'NotFound' when the project shortname is unknown (project membership)" in {
@@ -304,8 +398,8 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
             }
 
             "return 'NotFound' when the project IRI is unknown (project admin membership)" in {
-                actorUnderTest ! ProjectAdminMembersByIRIGetRequestV1("http://data.knora.org/projects/notexisting", SharedAdminTestData.rootUser)
-                expectMsg(Failure(NotFoundException(s"Project 'http://data.knora.org/projects/notexisting' not found.")))
+                actorUnderTest ! ProjectAdminMembersByIRIGetRequestV1("http://rdfh.ch/projects/notexisting", SharedAdminTestData.rootUser)
+                expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
             }
 
             "return 'NotFound' when the project shortname is unknown (project admin membership)" in {

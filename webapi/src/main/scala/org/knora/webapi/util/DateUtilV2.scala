@@ -34,9 +34,9 @@ object DateUtilV2 {
     /**
       * Represents a date as year, month, day including the given precision.
       *
-      * @param year the date's year.
-      * @param month the date's month.
-      * @param day the date's day.
+      * @param year      the date's year.
+      * @param month     the date's month.
+      * @param day       the date's day.
       * @param precision the given date's precision.
       */
     case class DateYearMonthDay(year: Int, month: Int, day: Int, precision: KnoraPrecisionV1.Value) {
@@ -110,8 +110,8 @@ object DateUtilV2 {
       * Converts a JDN to a [[DateYearMonthDay]] using the given calendar.
       *
       * @param julianDayNumber the Julian Day Number.
-      * @param precision the precision for the given JDN.
-      * @param calendar the calendar to which the JDN should be converted.
+      * @param precision       the precision for the given JDN.
+      * @param calendar        the calendar to which the JDN should be converted.
       * @return a [[DateYearMonthDay]].
       */
     def convertJDNToDate(julianDayNumber: Int, precision: KnoraPrecisionV1.Value, calendar: KnoraCalendarV1.Value): DateYearMonthDay = {

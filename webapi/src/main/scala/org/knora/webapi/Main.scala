@@ -25,7 +25,7 @@ package org.knora.webapi
   * an actor system, which is used by methods defined in the [[KnoraService]] trait, which itself provides
   * three methods: ''checkActorSystem'', ''startService'', and ''stopService''.
   */
-object Main extends App with LiveCore with KnoraService  {
+object Main extends App with LiveCore with KnoraService {
     //Kamon.start()
 
     /* Check and wait until all actors are running */
