@@ -37,7 +37,7 @@ import scala.concurrent.ExecutionContextExecutor
 /**
   * Provides a spray-routing function for API routes that deal with lists.
   */
-object OntologiesAdminRoute extends Authenticator {
+object OntologiesAdminRoute extends Authenticator with OntologiesAdminJsonProtocol {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system

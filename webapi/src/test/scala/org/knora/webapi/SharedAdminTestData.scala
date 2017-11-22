@@ -173,7 +173,7 @@ object SharedAdminTestData {
     def systemProjectInfo = ProjectInfoV1(
         id = SYSTEM_PROJECT_IRI,
         shortname = "SystemProject",
-        shortcode = None,
+        shortcode = Some("FFFF"),
         longname = Some("Knora System Project"),
         description = Some("Knora System Project"),
         keywords = None,

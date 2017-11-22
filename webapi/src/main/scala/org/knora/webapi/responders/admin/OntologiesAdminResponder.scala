@@ -21,7 +21,9 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.listsadminmessages.{FullList, ListInfo, ListNode}
 import org.knora.webapi.messages.admin.responder.ontologiesadminmessages._
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlExtendedConstructRequest, SparqlExtendedConstructResponse, StringV2}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
@@ -97,35 +99,35 @@ class OntologiesAdminResponder extends Responder {
             // this query will give us only the information about the root node.
             sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
                 triplestore = settings.triplestoreType,
-                nodeIri = rootNodeIri
+                nodeIri = ontologyIri
             ).toString())
 
             listInfoResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
 
-            // check to see if list could be found
-            _ = if (listInfoResponse.statements.isEmpty) {
-                throw NotFoundException(s"List not found: $rootNodeIri")
-            }
-            // _ = log.debug(s"listExtendedGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
-
-            // here we know that the list exists and it is fine if children is an empty list
-            children: Seq[ListNode] <- listGetChildren(rootNodeIri, userProfile)
-
-            // _ = log.debug(s"listGetRequestV2 - children count: {}", children.size)
-
-            // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
-            statements = listInfoResponse.statements
-            listinfo = statements.head match {
-                case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringV2]]) =>
-                    ListInfo(
-                        id = nodeIri,
-                        projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
-                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2])
-                    )
-            }
-
-            list = FullList(listinfo = listinfo, children = children)
+//            // check to see if list could be found
+//            _ = if (listInfoResponse.statements.isEmpty) {
+//                throw NotFoundException(s"List not found: $ontologyIri")
+//            }
+//            // _ = log.debug(s"listExtendedGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
+//
+//            // here we know that the list exists and it is fine if children is an empty list
+//            children: Seq[ListNode] <- listGetChildren(ontologyIri, userProfile)
+//
+//            // _ = log.debug(s"listGetRequestV2 - children count: {}", children.size)
+//
+//            // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
+//            statements = listInfoResponse.statements
+//            listinfo = statements.head match {
+//                case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringV2]]) =>
+//                    ListInfo(
+//                        id = nodeIri,
+//                        projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
+//                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
+//                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2])
+//                    )
+//            }
+//
+//            list = FullList(listinfo = listinfo, children = children)
             // _ = log.debug(s"listGetRequestV2 - list: {}", MessageUtil.toSource(list))
 
             data = OntologyAdminData("", "", "", "")
