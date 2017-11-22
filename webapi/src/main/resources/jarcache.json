@@ -1,7 +1,0 @@
-[
-  {
-    "Content-Location": "http://www.knora.org/ontology/knora-base",
-    "X-Classpath": "contexts/knora-base.jsonld",
-    "Content-Type": "application/ld+json"
-  }
-]

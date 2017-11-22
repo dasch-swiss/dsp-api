@@ -18,9 +18,9 @@ package org.knora.webapi.messages.admin.responder.listsadminmessages
 
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.apache.jena.sparql.pfunction.library.seq
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.{KnoraAdminRequest, KnoraAdminResponse}
+import org.knora.webapi.messages.store.triplestoremessages.{StringV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, NullOptions, RootJsonFormat, _}
 
@@ -239,14 +239,6 @@ case class ListNode(id: IRI, name: Option[String], labels: Seq[StringV2], commen
     }
 }
 
-/**
-  * Represents a string with an optional language tag.
-  *
-  * @param value    the string value.
-  * @param language the optional language tag.
-  */
-case class StringV2(value: String, language: Option[String] = None)
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
@@ -254,58 +246,7 @@ case class StringV2(value: String, language: Option[String] = None)
 /**
   * A spray-json protocol for generating Knora API V2 JSON providing data about lists.
   */
-trait ListAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
-
-    implicit object StringV2Format extends JsonFormat[StringV2] {
-        /**
-          * Converts a [[StringV2]] to a [[JsValue]].
-          *
-          * @param string a [[StringV2]].
-          * @return a [[JsValue]].
-          */
-        def write(string: StringV2): JsValue = {
-
-            if (string.language.isDefined) {
-                // have language tag
-                JsObject(
-                    Map(
-                        "value" -> string.value.toJson,
-                        "language" -> string.language.toJson
-                    )
-                )
-            } else {
-                // no language tag
-                JsObject(
-                    Map(
-                        "value" -> string.value.toJson
-                    )
-                )
-            }
-        }
-
-        /**
-          * Converts a [[JsValue]] to a [[StringV2]].
-          *
-          * @param json a [[JsValue]].
-          * @return a [[StringV2]].
-          */
-        def read(json: JsValue): StringV2 = json match {
-            case stringWithLang: JsObject => stringWithLang.getFields("value", "language") match {
-                case Seq(JsString(value), JsString(language)) => StringV2(
-                    value = value,
-                    language = Some(language)
-                )
-                case Seq(JsString(value)) => StringV2(
-                    value = value,
-                    language = None
-                )
-                case _ => throw DeserializationException("JSON object with 'value', or 'value' and 'language' fields expected.")
-            }
-            case JsString(value) => StringV2(value, None)
-            case _ => throw DeserializationException("JSON object with 'value', or 'value' and 'language' expected. ")
-        }
-    }
-
+trait ListAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with TriplestoreJsonProtocol with NullOptions {
 
     implicit object ListInfoFormat extends JsonFormat[ListInfo] {
         /**

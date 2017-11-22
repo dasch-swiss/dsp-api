@@ -33,7 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 /**
-  * Convenience methods for Knora routes.
+  * Convenience methods for Knora Admin routes.
   */
 object RouteUtilAdmin {
 
@@ -45,7 +45,6 @@ object RouteUtilAdmin {
       * @param settings         the application's settings.
       * @param responderManager a reference to the responder manager.
       * @param log              a logging adapter.
-      * @param responseSchema   the API schema that should be used in the response.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
       * @return a [[Future]] containing a [[RouteResult]].
@@ -54,8 +53,7 @@ object RouteUtilAdmin {
                      requestContext: RequestContext,
                      settings: SettingsImpl,
                      responderManager: ActorSelection,
-                     log: LoggingAdapter,
-                     responseSchema: ApiV2Schema = ApiV2WithValueObjects)
+                     log: LoggingAdapter)
                     (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         // Optionally log the request message. TODO: move this to the testing framework.
         if (settings.dumpMessages) {
