@@ -22,7 +22,6 @@ package org.knora.webapi.messages.v2.routing.authenticationmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.BadRequestException
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

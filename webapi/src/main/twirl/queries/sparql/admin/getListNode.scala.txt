@@ -1,4 +1,4 @@
-/*
+@*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
  * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
  *
@@ -16,17 +16,33 @@
  *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
- */
+ *@
 
-package org.knora
+@import org.knora.webapi.IRI
 
-/**
-  * Contains definitions shared by the whole application.
-  */
-package object webapi {
-    type IRI = String
+@**
+ * Given the node IRI of a list node, returns all information about that node.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param nodeIri the IRI of node.
+ *@
+@(triplestore: String,
+  nodeIri: IRI)
 
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-    def deserializationError(msg: String, cause: Throwable = null, fieldNames: List[String] = Nil) = throw new InvalidJsonLDException(msg, cause)
+CONSTRUCT { ?s ?p ?o }
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
+WHERE {
+    BIND(IRI("@nodeIri") as ?s)
 
+    ?s rdf:type knora-base:ListNode .
+
+    ?s ?p ?o .
 }

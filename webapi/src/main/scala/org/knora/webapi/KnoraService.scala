@@ -33,12 +33,13 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import org.knora.webapi.http.CORSSupport.CORS
+import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders._
+import org.knora.webapi.routing.admin.ListsAdminRoute
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
 import org.knora.webapi.store._
@@ -46,8 +47,8 @@ import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.{CacheUtil, StringFormatter}
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{Await, ExecutionContextExecutor}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContextExecutor}
 
 /**
   * Knora Core abstraction.
@@ -137,6 +138,7 @@ trait KnoraService {
             OntologiesRouteV2.knoraApiPath(system, settings, log) ~
             SearchRouteV2.knoraApiPath(system, settings, log) ~
             ResourcesRouteV2.knoraApiPath(system, settings, log) ~
+            ListsAdminRoute.knoraApiPath(system, settings, log) ~
             AuthenticationRouteV2.knoraApiPath(system, settings, log),
         settings,
         log

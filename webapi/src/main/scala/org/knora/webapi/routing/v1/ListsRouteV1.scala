@@ -24,7 +24,7 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.messages.v1.responder.listmessages.{HListGetRequestV1, NodePathGetRequestV1, SelectionGetRequestV1}
+import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, SettingsImpl}

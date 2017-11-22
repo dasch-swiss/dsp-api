@@ -82,9 +82,10 @@ trait KnoraException extends Serializable {
   * An abstract base class for exceptions indicating that something about a request made it impossible to fulfil (e.g.
   * it was malformed or referred to nonexistent data).
   *
-  * @param message a description of the error.
+  * @param msg a description of the error.
+  * @param cause the cause of the error.
   */
-abstract class RequestRejectedException(message: String) extends Exception(message) with KnoraException
+abstract class RequestRejectedException(msg: String, cause: Throwable = null) extends Exception(msg, cause) with KnoraException
 
 object RequestRejectedException {
     // So we can match instances of RequestRejectedException, even though it's an abstract class
@@ -154,6 +155,13 @@ case class StandoffConversionException(message: String) extends RequestRejectedE
   * @param message a description of the error.
   */
 case class SparqlSearchException(message: String) extends RequestRejectedException(message)
+
+/**
+  * An exception indication that the JSON-LD submitted to the API v2 was invalid.
+  * @param msg a description of the error.
+  * @param cause the cause for the error
+  */
+case class InvalidJsonLDException(msg: String, cause: Throwable = null) extends RequestRejectedException(msg, cause)
 
 
 /**
