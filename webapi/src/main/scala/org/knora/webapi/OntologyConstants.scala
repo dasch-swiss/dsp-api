@@ -87,9 +87,11 @@ object OntologyConstants {
         val DateTimeStamp: IRI = XsdPrefixExpansion + "dateTimeStamp"
     }
 
+    /**
+      * http://schema.org
+      */
     object SchemaOrg {
         val SchemaOrgPrefixExpansion: IRI = "http://schema.org/"
-
         val Name: IRI = SchemaOrgPrefixExpansion + "name"
         val Thing: IRI = SchemaOrgPrefixExpansion + "Thing"
     }
@@ -269,13 +271,18 @@ object OntologyConstants {
         )
 
         val ListNode: IRI = KnoraBasePrefixExpansion + "ListNode"
+        val ListNodeName: IRI = KnoraBasePrefixExpansion + "listNodeName"
+        val IsRootNode: IRI = KnoraBasePrefixExpansion + "isRootNode"
+        val HasRootNode: IRI = KnoraBasePrefixExpansion + "hasRootNode"
+        val HasSubListNode: IRI = KnoraBasePrefixExpansion + "hasSubListNode"
+        val ListNodePosition: IRI = KnoraBasePrefixExpansion + "listNodePosition"
 
         val IsDeleted: IRI = KnoraBasePrefixExpansion + "isDeleted"
 
         /* Resource creator */
         val AttachedToUser: IRI = KnoraBasePrefixExpansion + "attachedToUser"
 
-        /* Resource's project */
+        /* Resource's and list's project */
         val AttachedToProject: IRI = KnoraBasePrefixExpansion + "attachedToProject"
 
         /* User */

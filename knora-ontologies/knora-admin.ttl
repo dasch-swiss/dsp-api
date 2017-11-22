@@ -741,6 +741,7 @@
 :SystemProject rdf:type :knoraProject ;
             rdfs:comment "A built-in project representing the Knora System."@en ;
             :projectShortname "SystemProject" ;
+            :projectShortcode "FFFF" ;
             :projectLongname "Knora System Project" ;
             :projectDescription "Knora System Project" ;
             :projectOntology <http://www.knora.org/ontology/knora-base> ;

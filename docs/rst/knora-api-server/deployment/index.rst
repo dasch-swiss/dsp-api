@@ -16,13 +16,12 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-******************************
-Deploying the Knora API Server
-******************************
+***************
+Getting started
+***************
 
 .. toctree::
    :maxdepth: 2
 
    webapi-getting-started
    webapi-https
-   webapi-production
