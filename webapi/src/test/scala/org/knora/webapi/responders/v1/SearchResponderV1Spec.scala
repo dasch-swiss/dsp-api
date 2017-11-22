@@ -738,7 +738,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Fdata.knora.org%2Flists%2F71a1543cce&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
-                searchValue = Vector("http://data.knora.org/lists/71a1543cce"), // list node SPORT
+                searchValue = Vector("http://rdfh.ch/lists/00FF/71a1543cce"), // list node SPORT
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector(IMAGES_TITEL_PROPERTY),
                 filterByRestype = Some(IMAGES_BILD_RESOURCE_CLASS),
@@ -756,7 +756,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Fdata.knora.org%2Flists%2F38c73482e3&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
-                searchValue = Vector("http://data.knora.org/lists/38c73482e3"), // list node SPAZIEREN
+                searchValue = Vector("http://rdfh.ch/lists/00FF/38c73482e3"), // list node SPAZIEREN
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector(IMAGES_TITEL_PROPERTY),
                 filterByRestype = Some(IMAGES_BILD_RESOURCE_CLASS),
@@ -774,7 +774,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Fdata.knora.org%2Flists%2F3bc59463e2&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
-                searchValue = Vector("http://data.knora.org/lists/3bc59463e2"), // list node ALPINISMUS
+                searchValue = Vector("http://rdfh.ch/lists/00FF/3bc59463e2"), // list node ALPINISMUS
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector(IMAGES_TITEL_PROPERTY),
                 filterByRestype = Some(IMAGES_BILD_RESOURCE_CLASS),

@@ -43,7 +43,7 @@ package object responders {
     val USERS_ROUTER_V1_ACTOR_NAME = "usersRouterV1"
     val USERS_ROUTER_V1_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + USERS_ROUTER_V1_ACTOR_NAME
 
-    val LISTS_ROUTER_V1_ACTOR_NAME = "hierarchicalListsRouterV1"
+    val LISTS_ROUTER_V1_ACTOR_NAME = "listsRouterV1"
     val LISTS_ROUTER_V1_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + LISTS_ROUTER_V1_ACTOR_NAME
 
     val SEARCH_ROUTER_V1_ACTOR_NAME = "searchRouterV1"
@@ -82,4 +82,11 @@ package object responders {
 
     val PERSISTENT_MAP_ROUTER_V2_ACTOR_NAME = "persistentMapRouterV2"
     val PERSISTENT_MAP_ROUTER_V2_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + PERSISTENT_MAP_ROUTER_V2_ACTOR_NAME
+
+    // ------------------------------------------------------------------------------------------
+    // ------------------------------------- Admin Routers --------------------------------------
+    // ------------------------------------------------------------------------------------------
+
+    val LISTS_ADMIN_ROUTER_ACTOR_NAME = "listsAdminRouter"
+    val LISTS_ADMIN_ROUTER_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + LISTS_ADMIN_ROUTER_ACTOR_NAME
 }

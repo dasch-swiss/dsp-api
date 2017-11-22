@@ -465,18 +465,18 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
     // EE being the era: one of BC or AD
     private val KnoraDateRegex: Regex = ("""^(GREGORIAN|JULIAN)""" +
-        CalendarSeparator + // calendar name
-        """(?:[1-9][0-9]{0,3})(""" + // year
-        PrecisionSeparator +
-        """(?!00)[0-9]{1,2}(""" + // month
-        PrecisionSeparator +
-        """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?(""" + // day
-        CalendarSeparator + // separator if a period is given
-        """(?:[1-9][0-9]{0,3})(""" + // year 2
-        PrecisionSeparator +
-        """(?!00)[0-9]{1,2}(""" + // month 2
-        PrecisionSeparator +
-        """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?)?$""").r // day 2
+            CalendarSeparator + // calendar name
+            """(?:[1-9][0-9]{0,3})(""" + // year
+            PrecisionSeparator +
+            """(?!00)[0-9]{1,2}(""" + // month
+            PrecisionSeparator +
+            """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?(""" + // day
+            CalendarSeparator + // separator if a period is given
+            """(?:[1-9][0-9]{0,3})(""" + // year 2
+            PrecisionSeparator +
+            """(?!00)[0-9]{1,2}(""" + // month 2
+            PrecisionSeparator +
+            """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?)?$""").r // day 2
 
     // The expected format of a datetime.
     private val dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss"
@@ -522,10 +522,10 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
     // A regex for the URL path of an API v2 ontology (built-in or project-specific).
     private val ApiV2OntologyUrlPathRegex: Regex = (
-        "^" + "/ontology/((" +
-            ProjectIDPattern + ")/)?(" + NCNamePattern + ")(" +
-            OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")$"
-        ).r
+            "^" + "/ontology/((" +
+                    ProjectIDPattern + ")/)?(" + NCNamePattern + ")(" +
+                    OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")$"
+            ).r
 
     // The start of the IRI of a project-specific API v2 ontology that is served by this API server.
     private val MaybeProjectSpecificApiV2OntologyStart: Option[String] = knoraApiHostAndPort match {
@@ -535,22 +535,22 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
     // A regex for a project-specific XML import namespace.
     private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
-        "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart + "((" +
-            ProjectIDPattern + ")/)?(" + NCNamePattern + ")" +
-            OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
-        ).r
+            "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart + "((" +
+                    ProjectIDPattern + ")/)?(" + NCNamePattern + ")" +
+                    OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
+            ).r
 
     // In XML import data, a property from another ontology is referred to as prefixLabel__localName. This regex parses
     // that pattern.
     private val PropertyFromOtherOntologyInXmlImportRegex: Regex = (
-        "^(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
-        ).r
+            "^(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
+            ).r
 
     // In XML import data, a standoff link tag that refers to a resource described in the import must have the
     // form defined by this regex.
     private val StandoffLinkReferenceToClientIDForResourceRegex: Regex = (
-        "^ref:(" + NCNamePattern + ")$"
-        ).r
+            "^ref:(" + NCNamePattern + ")$"
+            ).r
 
     private val ApiVersionNumberRegex: Regex = "^v[0-9]+.*$".r
 
@@ -614,8 +614,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             case None =>
                 // Parse the IRI from scratch.
                 if (isKnoraDataIriStr(iri) ||
-                    iri.startsWith(OntologyConstants.NamedGraphs.DataNamedGraphStart) ||
-                    iri == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph) {
+                        iri.startsWith(OntologyConstants.NamedGraphs.DataNamedGraphStart) ||
+                        iri == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph) {
                     // This is a Knora data or named graph IRI. Nothing else to do.
                     SmartIriInfo(
                         iriType = KnoraDataIri,
@@ -708,7 +708,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                         }
 
                         if ((hasProjectSpecificHostname && hasBuiltInOntologyName) ||
-                            (hostname == BuiltInKnoraApiHostname && !hasBuiltInOntologyName)) {
+                                (hostname == BuiltInKnoraApiHostname && !hasBuiltInOntologyName)) {
                             errorFun()
                         }
 
@@ -1158,6 +1158,23 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             urlEncodedStr
         } else {
             errorFun()
+        }
+    }
+
+    /**
+      * Check that an optional string represents a valid IRI.
+      *
+      * @param maybeString the optional string to be checked.
+      * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
+      *                    IRI.
+      * @return the same optional string.
+      */
+    def toOptionalIri(maybeString: Option[String], errorFun: () => Nothing): Option[IRI] = {
+        maybeString match {
+            case Some(s) => {
+                Some(validateAndEscapeIri(s, errorFun))
+            }
+            case None => None
         }
     }
 
