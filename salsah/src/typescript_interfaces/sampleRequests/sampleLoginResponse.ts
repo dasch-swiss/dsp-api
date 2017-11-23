@@ -46,7 +46,7 @@ let login: sessionResponseFormats.loginResponse = {
                 "selfjoin":false,
                 "keywords":"images, collection",
                 "longname":"Image Collection Demo",
-                "ontologyNamedGraph":"http://www.knora.org/ontology/images"
+                "ontologies":["http://www.knora.org/ontology/images"]
             },
             "http://data.knora.org/projects/77275339":{
                 "shortname":"incunabula",
@@ -59,7 +59,7 @@ let login: sessionResponseFormats.loginResponse = {
                 "selfjoin":false,
                 "keywords":"Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images",
                 "longname":"Bilderfolgen Basler Frühdrucke",
-                "ontologyNamedGraph":"http://www.knora.org/ontology/incunabula"
+                "ontologies": [ "http://www.knora.org/ontology/incunabula" ]
             },
             "http://data.knora.org/projects/anything":{
                 "shortname":"anything",
@@ -72,7 +72,7 @@ let login: sessionResponseFormats.loginResponse = {
                 "selfjoin":false,
                 "keywords":null,
                 "longname":"Anything Project",
-                "ontologyNamedGraph":"http://www.knora.org/ontology/anything"
+                "ontologies":["http://www.knora.org/ontology/anything"]
             }
         },
         "sessionId":null,
