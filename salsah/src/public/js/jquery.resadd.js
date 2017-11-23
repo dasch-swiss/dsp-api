@@ -1202,7 +1202,7 @@
 						if (SALSAH.userprofile && SALSAH.userprofile.active_project) {
 							for (var p in SALSAH.userprofile.projects_info) {
 								if (SALSAH.userprofile.projects_info[p].id == SALSAH.userprofile.active_project) {
-									vocabulary_default = SALSAH.userprofile.projects_info[p].ontologyNamedGraph;
+									vocabulary_default = SALSAH.userprofile.projects_info[p].ontologies[0];
 									break;
 								}
 							}
