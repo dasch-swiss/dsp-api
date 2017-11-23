@@ -203,7 +203,7 @@
 				salsah_username: $('#user_id').val(),
 				salsah_password: $('#password').val()
 			};
-			$('#password').val('')
+			$('#password').val('');
             SALSAH.ApiPost('session', {username: credentials.salsah_username, password: credentials.salsah_password}, function(data) {
 
 				if (data.status == ApiErrors.OK) {
