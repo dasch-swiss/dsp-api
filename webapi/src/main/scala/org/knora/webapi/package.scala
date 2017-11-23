@@ -25,4 +25,8 @@ package org.knora
   */
 package object webapi {
     type IRI = String
+
+
+    def deserializationError(msg: String, cause: Throwable = null, fieldNames: List[String] = Nil) = throw new InvalidJsonLDException(msg, cause)
+
 }

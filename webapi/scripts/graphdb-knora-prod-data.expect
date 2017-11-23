@@ -22,6 +22,8 @@ send "load ../_test_data/all_data/admin-data.ttl into http://www.knora.org/data/
 expect $prompt
 send "load ../_test_data/all_data/permissions-data.ttl into http://www.knora.org/data/permissions .\r"
 expect $prompt
+send "load ../_test_data/all_data/system-data.ttl into http://www.knora.org/data/FFFF/SystemProject .\r"
+expect $prompt
 send "load ../_test_data/ontologies/incunabula-onto.ttl into http://www.knora.org/ontology/incunabula .\r"
 expect $prompt
 send "load ../_test_data/all_data/incunabula-data.ttl into http://www.knora.org/data/incunabula .\r"

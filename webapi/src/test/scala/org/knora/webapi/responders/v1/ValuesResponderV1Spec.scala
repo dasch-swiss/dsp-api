@@ -1602,7 +1602,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "change the season of a image:bild from summer to winter" in {
 
-            val winter = "http://data.knora.org/lists/eda2792605"
+            val winter = "http://rdfh.ch/lists/00FF/eda2792605"
 
             actorUnderTest ! ChangeValueRequestV1(
                 value = HierarchicalListValueV1(winter),
@@ -1620,7 +1620,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "create a season of a image:bild" in {
 
-            val summer = "http://data.knora.org/lists/526f26ed04"
+            val summer = "http://rdfh.ch/lists/00FF/526f26ed04"
 
             actorUnderTest ! CreateValueRequestV1(
                 value = HierarchicalListValueV1(summer),

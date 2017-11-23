@@ -23,7 +23,7 @@ package org.knora.webapi.messages.store.triplestoremessages
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.util.ErrorHandlingMap
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, TriplestoreResponseException}
-import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
+import spray.json.{DefaultJsonProtocol, DeserializationException, JsObject, JsString, JsValue, JsonFormat, NullOptions, RootJsonFormat, _}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -115,6 +115,21 @@ case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
   * @param statements a map of subject IRIs to statements about each subject.
   */
 case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
+
+/**
+  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
+  * [[SparqlExtendedConstructResponse]].
+  *
+  * @param sparql       the SPARQL string.
+  */
+case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreRequest
+
+/**
+  * A response to a [[SparqlExtendedConstructRequest]].
+  *
+  * @param statements a map of subject IRIs to statements about each subject.
+  */
+case class SparqlExtendedConstructResponse(statements: Map[IRI, Map[IRI, Seq[StringV2]]])
 
 /**
   * Represents a SPARQL Update operation to be performed.
@@ -215,6 +230,15 @@ case class InitializedResponse(initFinished: Boolean)
   */
 case class RdfDataObject(path: String, name: String)
 
+
+/**
+  * Represents a string with an optional language tag.
+  *
+  * @param value    the string value.
+  * @param language the optional language tag.
+  */
+case class StringV2(value: String, language: Option[String] = None)
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
@@ -222,6 +246,56 @@ case class RdfDataObject(path: String, name: String)
   * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.
   */
 trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+
+    implicit object StringV2Format extends JsonFormat[StringV2] {
+        /**
+          * Converts a [[StringV2]] to a [[JsValue]].
+          *
+          * @param string a [[StringV2]].
+          * @return a [[JsValue]].
+          */
+        def write(string: StringV2): JsValue = {
+
+            if (string.language.isDefined) {
+                // have language tag
+                JsObject(
+                    Map(
+                        "value" -> string.value.toJson,
+                        "language" -> string.language.toJson
+                    )
+                )
+            } else {
+                // no language tag
+                JsObject(
+                    Map(
+                        "value" -> string.value.toJson
+                    )
+                )
+            }
+        }
+
+        /**
+          * Converts a [[JsValue]] to a [[StringV2]].
+          *
+          * @param json a [[JsValue]].
+          * @return a [[StringV2]].
+          */
+        def read(json: JsValue): StringV2 = json match {
+            case stringWithLang: JsObject => stringWithLang.getFields("value", "language") match {
+                case Seq(JsString(value), JsString(language)) => StringV2(
+                    value = value,
+                    language = Some(language)
+                )
+                case Seq(JsString(value)) => StringV2(
+                    value = value,
+                    language = None
+                )
+                case _ => throw DeserializationException("JSON object with 'value', or 'value' and 'language' fields expected.")
+            }
+            case JsString(value) => StringV2(value, None)
+            case _ => throw DeserializationException("JSON object with 'value', or 'value' and 'language' expected. ")
+        }
+    }
 
     implicit val rdfDataObjectFormat: RootJsonFormat[RdfDataObject] = jsonFormat2(RdfDataObject)
     implicit val resetTriplestoreContentFormat: RootJsonFormat[ResetTriplestoreContent] = jsonFormat1(ResetTriplestoreContent)
