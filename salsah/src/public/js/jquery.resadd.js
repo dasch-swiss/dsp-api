@@ -1141,6 +1141,9 @@
 							var labelStr = tmplabelFirstElem.richtext_value.utf8str;
 							propvals['__LABEL__'] = undefined;
 
+                            // fake a click to show up the model dialog
+							$('#hiddenaddrespending').click();
+
 							SALSAH.ApiPost('resources', {
 								restype_id: rtinfo.name,
 								properties: propvals,
@@ -1149,6 +1152,10 @@
 								label: labelStr
 
 							}, function(data) {
+
+							    // release the modal when we are called back from the async method
+                                $('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
+
 								if (data.status == ApiErrors.OK) {
 									if (typeof localdata.settings.on_submit_cb === "function") {
 										localdata.settings.on_submit_cb(data);
@@ -1160,6 +1167,9 @@
 										alert('XXXX' + data.errormsg);
 									}
 								}
+							}).fail(function() {
+                                // release the modal when the async method failed
+                                $('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
 							});
 							return false;
 						}));
