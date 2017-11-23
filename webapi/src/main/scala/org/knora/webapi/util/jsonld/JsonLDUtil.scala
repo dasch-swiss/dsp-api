@@ -90,7 +90,63 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     def requireString[T](key: String, validationFun: (String, => Nothing) => T ): T = {
         value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
             case JsonLDString(str) => validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
-            case other => throw BadRequestException(s"Invalid $key: $other")
+            case other => throw BadRequestException(s"Invalid $key: $other (string expected)")
+        }
+    }
+
+    /**
+      * Gets the required object value of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property is not found or if its value is not an object.
+      *
+      * @param key the key of the required value.
+      * @return the required value.
+      */
+    def requireObject(key: String): JsonLDObject = {
+        value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
+            case obj: JsonLDObject => obj
+            case other => throw BadRequestException(s"Invalid $key: $other (object expected)")
+        }
+    }
+
+    /**
+      * Gets the required array value of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property is not found or if its value is not an array.
+      *
+      * @param key the key of the required value.
+      * @return the required value.
+      */
+    def requireArray(key: String): JsonLDArray = {
+        value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
+            case obj: JsonLDArray => obj
+            case other => throw BadRequestException(s"Invalid $key: $other (array expected)")
+        }
+    }
+
+    /**
+      * Gets the required integer value of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property is not found or if its value is not an integer.
+      *
+      * @param key the key of the required value.
+      * @return the required value.
+      */
+    def requireInt(key: String): JsonLDInt = {
+        value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
+            case obj: JsonLDInt => obj
+            case other => throw BadRequestException(s"Invalid $key: $other (integer expected)")
+        }
+    }
+
+    /**
+      * Gets the required boolean value of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property is not found or if its value is not a boolean.
+      *
+      * @param key the key of the required value.
+      * @return the required value.
+      */
+    def requireBoolean(key: String): JsonLDBoolean = {
+        value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
+            case obj: JsonLDBoolean => obj
+            case other => throw BadRequestException(s"Invalid $key: $other (boolean expected)")
         }
     }
 }
@@ -115,6 +171,26 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject) {
       * A convenience function that calls `body.requireString`.
       */
     def requireString[T](key: String, validationFun: (String, => Nothing) => T ): T = body.requireString(key, validationFun)
+
+    /**
+      * A convenience function that calls `body.requireObject`.
+      */
+    def requireObject(key: String): JsonLDObject = body.requireObject(key)
+
+    /**
+      * A convenience function that calls `body.requireArray`.
+      */
+    def requireArray(key: String): JsonLDArray = body.requireArray(key)
+
+    /**
+      * A convenience function that calls `body.requireInt`.
+      */
+    def requireInt(key: String): JsonLDInt = body.requireInt(key)
+
+    /**
+      * A convenience function that calls `body.requireBoolean`.
+      */
+    def requireBoolean(key: String): JsonLDBoolean = body.requireBoolean(key)
 }
 
 

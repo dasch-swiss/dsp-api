@@ -111,22 +111,42 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
                             userProfile: UserProfileV1): CreatePropertyRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val hasProperties: Map[String, JsonLDValue] = jsonLDDocument.body.value.getOrElse(
-            OntologyConstants.KnoraApiV2WithValueObjects.HasProperties,
-            throw BadRequestException(s"Request does not contain ${OntologyConstants.KnoraApiV2WithValueObjects.HasProperties}")
-        ) match {
-            case JsonLDObject(value) => value
-            case _ => throw BadRequestException(s"${OntologyConstants.KnoraApiV2WithValueObjects.HasProperties} must contain a JSON object")
+        val hasOntologies: JsonLDObject = jsonLDDocument.requireObject(OntologyConstants.KnoraApiV2WithValueObjects.HasOntologies)
+        val externalOntologyIri: SmartIri = hasOntologies.requireString("@id", stringFormatter.toSmartIriWithErr)
+
+        if (!(externalOntologyIri.isKnoraOntologyIri && externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
+            throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIri")
         }
+
+        val hasProperties: Map[String, JsonLDValue] = hasOntologies.requireObject(OntologyConstants.KnoraApiV2WithValueObjects.HasProperties).value
 
         if (hasProperties.isEmpty || hasProperties.size > 1) {
             throw BadRequestException(s"${OntologyConstants.KnoraApiV2WithValueObjects.HasProperties} must contain one property definition")
         }
 
+        val propertyDef: JsonLDObject = hasProperties.values.head match {
+            case obj: JsonLDObject => obj
+            case _ => throw BadRequestException(s"The definition of property ${hasProperties.keys.head} is invalid")
+        }
+
+        val propertyIri: SmartIri = propertyDef.requireString("@id", stringFormatter.toSmartIriWithErr)
+
+        if (!(propertyIri.isKnoraApiV2EntityIri &&
+            propertyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            propertyIri.getOntologyFromEntity == externalOntologyIri)) {
+            throw BadRequestException(s"Invalid property IRI: $propertyIri")
+        }
+
+        val propertyType: SmartIri = propertyDef.requireString("@type", stringFormatter.toSmartIriWithErr)
+
+        if (propertyType != OntologyConstants.Owl.ObjectProperty.toSmartIri) {
+            throw BadRequestException(s"Property $propertyIri must be an owl:ObjectProperty")
+        }
 
     }
 }
 */
+
 /**
   * Requests a change in the metadata of an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
   *
