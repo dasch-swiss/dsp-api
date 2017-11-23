@@ -1227,7 +1227,7 @@
 									if (data.vocabularies[i].active) {
 										vocsel.append(tmpele = $('<option>', {
 											value: data.vocabularies[i].id
-										}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].shortname + ']'));
+										}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].id.substr(data.vocabularies[i].id.lastIndexOf('/') + 1) + ']'));
 										if (data.vocabularies[i].id == vocabulary_default) {
 											tmpele.prop({
 												selected: 'selected'

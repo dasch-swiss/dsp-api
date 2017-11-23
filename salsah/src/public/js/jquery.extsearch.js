@@ -500,7 +500,7 @@
 								for (var i in data.vocabularies)
 								{
 									if (data.vocabularies[i].active) {
-										vocsel.append(tmpele = $('<option>', {value: data.vocabularies[i].id}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].shortname + ']'));
+										vocsel.append(tmpele = $('<option>', {value: data.vocabularies[i].id}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].id.substr(data.vocabularies[i].id.lastIndexOf('/') + 1) + ']'));
 										if (data.vocabularies[i].id == vocabulary_default) {
 											tmpele.prop({selected: 'selected'});
 											localdata.settings.vocabulary_selected = data.vocabularies[i].id;
@@ -520,7 +520,7 @@
 							if (data.status == ApiErrors.OK)
 							{
 								for (var i in data.vocabularies) {
-									vocsel.append($('<option>', {value: data.vocabularies[i].id}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].shortname + ']'));
+									vocsel.append($('<option>', {value: data.vocabularies[i].id}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].id.substr(data.vocabularies[i].id.lastIndexOf('/') + 1) + ']'));
 									if (data.vocabularies[i].active) tmpele.prop({selected: 'selected'});
 								}
 							}
