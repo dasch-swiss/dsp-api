@@ -25,7 +25,11 @@ import java.util.UUID
 import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import arq.iri
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.ontologiesadminmessages.OntologyInfoADM
+import org.knora.webapi.messages.admin.responder.projectsadminmessages._
+import org.knora.webapi.messages.admin.responder.usersadminmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
 import org.knora.webapi.messages.v1.responder.projectmessages._
@@ -53,12 +57,11 @@ class ProjectsAdminResponder extends Responder {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case ProjectsGetRequestV1(userProfile) => future2Message(sender(), projectsGetRequestV1(userProfile), log)
-        case ProjectsGetV1(userProfile) => future2Message(sender(), projectsGetV1(userProfile), log)
-        case ProjectsNamedGraphGetV1(userProfile) => future2Message(sender(), projectsNamedGraphGetV1(userProfile), log)
-        case ProjectInfoByIRIGetRequestV1(iri, userProfile) => future2Message(sender(), projectInfoByIRIGetRequestV1(iri, userProfile), log)
-        case ProjectInfoByIRIGetV1(iri, userProfile) => future2Message(sender(), projectInfoByIRIGetV1(iri, userProfile), log)
-        case ProjectInfoByShortnameGetRequestV1(shortname, userProfile) => future2Message(sender(), projectInfoByShortnameGetRequestV1(shortname, userProfile), log)
+        case ProjectsGetRequestADM(userProfile) => future2Message(sender(), projectsGetRequestADM(userProfile), log)
+        case ProjectsGetADM(userProfile) => future2Message(sender(), projectsGetADM(userProfile), log)
+        case ProjectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, user) => future2Message(sender(), projectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, user), log)
+        case ProjectGetADM(iri, userProfile) => future2Message(sender(), projectGetADM(iri, userProfile), log)
+        case ProjectsOntologiesGetADM(maybeProjectIri) => future2Message(sender(), projectsOntologiesGetADM(maybeProjectIri), log)
         case ProjectMembersByIRIGetRequestV1(iri, userProfileV1) => future2Message(sender(), projectMembersByIRIGetRequestV1(iri, userProfileV1), log)
         case ProjectMembersByShortnameGetRequestV1(shortname, userProfileV1) => future2Message(sender(), projectMembersByShortnameGetRequestV1(shortname, userProfileV1), log)
         case ProjectAdminMembersByIRIGetRequestV1(iri, userProfileV1) => future2Message(sender(), projectAdminMembersByIRIGetRequestV1(iri, userProfileV1), log)
@@ -77,15 +80,15 @@ class ProjectsAdminResponder extends Responder {
       * @return all the projects as a [[ProjectsResponseV1]].
       * @throws NotFoundException if no projects are found.
       */
-    private def projectsGetRequestV1(userProfile: Option[UserProfileV1]): Future[ProjectsResponseV1] = {
+    private def projectsGetRequestADM(userProfile: Option[UserADM]): Future[ProjectsResponseADM] = {
 
         //log.debug("projectsGetRequestV1")
 
         for {
-            projects <- projectsGetV1(userProfile)
+            projects <- projectsGetADM(userProfile)
 
             result = if (projects.nonEmpty) {
-                ProjectsResponseV1(
+                ProjectsResponseADM(
                     projects = projects
                 )
             } else {
@@ -98,10 +101,10 @@ class ProjectsAdminResponder extends Responder {
     /**
       * Gets all the projects and returns them as a sequence containing [[ProjectInfoV1]].
       *
-      * @param userProfile the profile of the user that is making the request.
-      * @return all the projects as a sequence containing [[ProjectInfoV1]].
+      * @param user the user making the request.
+      * @return all the projects as a sequence containing [[ProjectADM]].
       */
-    private def projectsGetV1(userProfile: Option[UserProfileV1]): Future[Seq[ProjectInfoV1]] = {
+    private def projectsGetADM(user: Option[UserADM]): Future[Seq[ProjectADM]] = {
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getProjects(
@@ -124,7 +127,7 @@ class ProjectsAdminResponder extends Responder {
             projects = projectsWithProperties.map {
                 case (projectIri: String, propsMap: Map[String, Seq[String]]) =>
 
-                    ProjectInfoV1(
+                    ProjectADM(
                         id = projectIri,
                         shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head,
                         shortcode = propsMap.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head),
@@ -142,74 +145,27 @@ class ProjectsAdminResponder extends Responder {
         } yield projects
     }
 
-    /**
-      * Gets all the named graphs from all projects and returns them as a sequence of [[NamedGraphV1]]
-      *
-      * @param userProfile
-      * @return a sequence of [[NamedGraphV1]]
-      * @throws InconsistentTriplestoreDataException whenever a expected/required peace of data is not found.
-      */
-    private def projectsNamedGraphGetV1(userProfile: UserProfileV1): Future[Seq[NamedGraphV1]] = {
 
-        for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjects(
-                triplestore = settings.triplestoreType
-            ).toString())
-            //_ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
-
-            projectsResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            //_ = log.debug(s"getProjectsResponseV1 - result: $projectsResponse")
-
-            projectsResponseRows: Seq[VariableResultsRow] = projectsResponse.results.bindings
-
-            projectsWithProperties: Map[IRI, Map[IRI, Seq[String]]] = projectsResponseRows.groupBy(_.rowMap("s")).map {
-                case (projIri: String, rows: Seq[VariableResultsRow]) => (projIri, rows.groupBy(_.rowMap("p")).map {
-                    case (predicate: IRI, literals: Seq[VariableResultsRow]) => predicate -> literals.map(_.rowMap("o"))
-                })
-            }
-            //_ = log.debug(s"getProjectsResponseV1 - projectsWithProperties: $projectsWithProperties")
-
-            namedGraphs: Seq[NamedGraphV1] = projectsWithProperties.flatMap {
-                case (projectIri: String, propsMap: Map[String, Seq[String]]) =>
-
-                    val maybeOntologies = propsMap.get(OntologyConstants.KnoraBase.ProjectOntology)
-                    maybeOntologies match {
-                        case Some(ontologies) => ontologies.map( ontologyIri =>
-                            NamedGraphV1(
-                                id = ontologyIri,
-                                shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")).head,
-                                longname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectLongname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no longname defined.")).head,
-                                description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")).head,
-                                project_id = projectIri,
-                                uri = ontologyIri,
-                                active = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.toBoolean
-                            )
-                        )
-                        case None => Seq.empty[NamedGraphV1]
-                    }
-            }.toSeq
-
-            // _ = log.debug("projectsNamedGraphGetV1 - ontologies: {}", ontologies)
-        } yield namedGraphs
-    }
 
     /**
       * Gets the project with the given project IRI and returns the information as a [[ProjectInfoResponseV1]].
       *
-      * @param projectIri  the IRI of the project requested.
-      * @param userProfile the profile of user that is making the request.
+      * @param maybeIri           the IRI of the project.
+      * @param maybeShortname the project's short name.
+      * @param maybeShortcode the project's shortcode.
+      * @param user the profile of the user making the request.
       * @return information about the project as a [[ProjectInfoResponseV1]].
       * @throws NotFoundException when no project for the given IRI can be found
       */
-    private def projectInfoByIRIGetRequestV1(projectIri: IRI, userProfile: Option[UserProfileV1] = None): Future[ProjectInfoResponseV1] = {
+    private def projectGetRequestADM(maybeIri: Option[IRI], maybeShortname: Option[String], maybeShortcode: Option[String], user: Option[UserADM]): Future[ProjectADM] = {
 
-        //log.debug("projectInfoByIRIGetRequestV1 - projectIRI: {}", projectIRI)
+        //log.debug("projectGetRequestADM - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
 
         for {
-            maybeProjectInfo: Option[ProjectInfoV1] <- projectInfoByIRIGetV1(projectIri, userProfile)
+            maybeProjectInfo: Option[ProjectInfoV1] <- projectGetADM(maybeIri, maybeShortname, maybeShortcode, user)
             projectInfo = maybeProjectInfo match {
                 case Some(pi) => pi
-                case None => throw NotFoundException(s"Project '$projectIri' not found")
+                case None => throw NotFoundException(s"Project '${Seq(maybeIri, maybeShortname, maybeShortcode).flatten.head}' not found")
             }
         } yield ProjectInfoResponseV1(
             project_info = projectInfo
@@ -219,11 +175,13 @@ class ProjectsAdminResponder extends Responder {
     /**
       * Gets the project with the given project IRI and returns the information as a [[ProjectInfoV1]].
       *
-      * @param projectIri  the IRI of the project requested.
-      * @param userProfile the profile of user that is making the request.
+      * @param maybeIri           the IRI of the project.
+      * @param maybeShortname the project's short name.
+      * @param maybeShortcode the project's shortcode.
+      * @param user the profile of the user making the request (optional).
       * @return information about the project as a [[ProjectInfoV1]].
       */
-    private def projectInfoByIRIGetV1(projectIri: IRI, userProfile: Option[UserProfileV1] = None): Future[Option[ProjectInfoV1]] = {
+    private def projectGetADM(maybeIri: Option[IRI], maybeShortname: Option[String], maybeShortcode: Option[String], user: Option[UserADM]): Future[Option[ProjectInfoV1]] = {
 
         //log.debug("projectInfoByIRIGetV1 - projectIRI: {}", projectIri)
 
@@ -323,6 +281,57 @@ class ProjectsAdminResponder extends Responder {
         } yield response
     }
 
+    /**
+      * Gets all the ontologies from all projects and returns them as a sequence of [[OntologyInfoADM]]. If a project IRI
+      * is supplied. Then only the ontologies for this project are returend.
+      *
+      * @param maybeProjectIri the IRI of the project for which we want to filter. If none is supplied, then all are returned.
+      * @return a sequence of [[NamedGraphV1]]
+      * @throws InconsistentTriplestoreDataException whenever a expected/required peace of data is not found.
+      */
+    private def projectsOntologiesGetADM(maybeProjectIri: IRI): Future[Seq[OntologyInfoADM]] = {
+
+        for {
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjects(
+                triplestore = settings.triplestoreType
+            ).toString())
+            //_ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
+
+            projectsResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            //_ = log.debug(s"getProjectsResponseV1 - result: $projectsResponse")
+
+            projectsResponseRows: Seq[VariableResultsRow] = projectsResponse.results.bindings
+
+            projectsWithProperties: Map[IRI, Map[IRI, Seq[String]]] = projectsResponseRows.groupBy(_.rowMap("s")).map {
+                case (projIri: String, rows: Seq[VariableResultsRow]) => (projIri, rows.groupBy(_.rowMap("p")).map {
+                    case (predicate: IRI, literals: Seq[VariableResultsRow]) => predicate -> literals.map(_.rowMap("o"))
+                })
+            }
+            //_ = log.debug(s"getProjectsResponseV1 - projectsWithProperties: $projectsWithProperties")
+
+            namedGraphs: Seq[NamedGraphV1] = projectsWithProperties.flatMap {
+                case (projectIri: String, propsMap: Map[String, Seq[String]]) =>
+
+                    val maybeOntologies = propsMap.get(OntologyConstants.KnoraBase.ProjectOntology)
+                    maybeOntologies match {
+                        case Some(ontologies) => ontologies.map( ontologyIri =>
+                            NamedGraphV1(
+                                id = ontologyIri,
+                                shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")).head,
+                                longname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectLongname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no longname defined.")).head,
+                                description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")).head,
+                                project_id = projectIri,
+                                uri = ontologyIri,
+                                active = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.toBoolean
+                            )
+                        )
+                        case None => Seq.empty[NamedGraphV1]
+                    }
+            }.toSeq
+
+            // _ = log.debug("projectsNamedGraphGetV1 - ontologies: {}", ontologies)
+        } yield namedGraphs
+    }
 
     /**
       * Gets the members of a project with the given shortname.

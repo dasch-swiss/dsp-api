@@ -24,7 +24,9 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.admin.responder.projectsadminmessages.{ProjectADM, ProjectsAdminJsonProtocol}
 import org.knora.webapi.messages.admin.responder.{KnoraAdminRequest, KnoraAdminResponse}
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import spray.json.{DefaultJsonProtocol, RootJsonFormat, _}
 
@@ -51,8 +53,8 @@ sealed trait OntologiesAdminResponderRequest extends KnoraAdminRequest
   * @param projectIri  the IRI of the project.
   * @param userProfile the profile of the user making the request.
   */
-case class OntologiesGetAdminRequest(projectIri: Option[IRI] = None,
-                                     userProfile: UserProfileV1) extends OntologiesAdminResponderRequest
+case class OntologiesGetRequestADM(projectIri: Option[IRI] = None,
+                                   userProfile: UserProfileV1) extends OntologiesAdminResponderRequest
 
 
 /**
@@ -61,8 +63,8 @@ case class OntologiesGetAdminRequest(projectIri: Option[IRI] = None,
   * @param iri the ontology IRI
   * @param userProfile the profile of the user making the request.
   */
-case class OntologyGetAdminRequest(iri: IRI,
-                                   userProfile: UserProfileV1) extends OntologiesAdminResponderRequest
+case class OntologyGetRequestADM(iri: IRI,
+                                 userProfile: UserProfileV1) extends OntologiesAdminResponderRequest
 
 
 /**
@@ -73,10 +75,10 @@ case class OntologyGetAdminRequest(iri: IRI,
   * @param apiRequestID the ID of the API request.
   * @param userProfile  the profile of the user making the request.
   */
-case class OntologyCreateAdminRequest(ontologyName: String,
-                                      projectIri: IRI,
-                                      apiRequestID: UUID,
-                                      userProfile: UserProfileV1) extends OntologiesAdminResponderRequest
+case class OntologyCreateRequestADM(ontologyName: String,
+                                    projectIri: IRI,
+                                    apiRequestID: UUID,
+                                    userProfile: UserProfileV1) extends OntologiesAdminResponderRequest
 
 
 /**
@@ -87,10 +89,10 @@ case class OntologyCreateAdminRequest(ontologyName: String,
   * @param apiRequestID the ID of the API request.
   * @param userProfile the profile of the user making the request.
   */
-case class OntologyUpdateAdminRequest(iri: IRI,
-                                      data: String,
-                                      apiRequestID: UUID,
-                                      userProfile: UserProfileV1) extends OntologiesAdminResponderRequest
+case class OntologyUpdateRequestADM(iri: IRI,
+                                    data: String,
+                                    apiRequestID: UUID,
+                                    userProfile: UserProfileV1) extends OntologiesAdminResponderRequest
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -98,7 +100,7 @@ case class OntologyUpdateAdminRequest(iri: IRI,
 
 
 /**
-  * Represents an response to [[OntologiesGetAdminRequest]] consisting of a sequence of ontology IRIs.
+  * Represents an response to [[OntologiesGetRequestADM]] consisting of a sequence of ontology IRIs.
   *
   * @param ontologies a sequence of IRIs.
   */
@@ -107,21 +109,21 @@ case class OntologiesGetAdminResponse(ontologies: Seq[IRI]) extends KnoraAdminRe
 }
 
 /**
-  * Represents an response to [[OntologyGetAdminRequest]] containing a [[OntologyAdminData]].
+  * Represents an response to [[OntologyGetRequestADM]] containing a [[OntologyDataADM]].
   *
-  * @param ontology a [[OntologyAdminData]].
+  * @param ontology a [[OntologyDataADM]].
   */
-case class OntologyGetAdminResponse(ontology: OntologyAdminData) extends KnoraAdminResponse with OntologiesAdminJsonProtocol {
+case class OntologyGetAdminResponse(ontology: OntologyDataADM) extends KnoraAdminResponse with OntologiesAdminJsonProtocol {
     def toJsValue = ontologGetAdminResponseFormat.write(this)
 }
 
 
 /**
-  * Represents the response to [[OntologyCreateAdminRequest]] containing a [[OntologyAdminData]] of the newly created ontology.
+  * Represents the response to [[OntologyCreateRequestADM]] containing a [[OntologyDataADM]] of the newly created ontology.
   *
-  * @param ontology a [[OntologyAdminData]] of the newly created ontology.
+  * @param ontology a [[OntologyDataADM]] of the newly created ontology.
   */
-case class OntologyCreateAdminResponse(ontology: OntologyAdminData) extends KnoraAdminResponse with OntologiesAdminJsonProtocol {
+case class OntologyCreateAdminResponse(ontology: OntologyDataADM) extends KnoraAdminResponse with OntologiesAdminJsonProtocol {
     def toJsValue = ontologyCreateAdminResponseFormat.write(this)
 }
 
@@ -134,11 +136,19 @@ case class OntologyCreateAdminResponse(ontology: OntologyAdminData) extends Knor
   *
   * @param ontologyIri the IRI of the ontology.
   * @param ontologyName the name of the ontology. This is basically the last part of the IRI.
-  * @param projectIri the IRI of the project to which this ontology belongs.
+  * @param project the [[ProjectInfoV1]] of the project to which this ontology belongs.
   * @param data the contents of the the ontology as an JSON-LD string.
   */
-case class OntologyAdminData(ontologyIri: IRI, ontologyName: String, projectIri: IRI, data: String)
+case class OntologyDataADM(ontologyIri: IRI, ontologyName: String, project: ProjectADM, data: String)
 
+/**
+  * Represents basic information of an ontology.
+  *
+  * @param ontologyIri the IRI of the ontology.
+  * @param ontologyName the name of the ontology.
+  * @param project the [[ProjectInfoV1]] of the project to which this ontology belongs.
+  */
+case class OntologyInfoADM(ontologyIri: IRI, ontologyName: String, project: ProjectADM)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -147,9 +157,10 @@ case class OntologyAdminData(ontologyIri: IRI, ontologyName: String, projectIri:
 /**
   * A spray-json protocol for generating Knora API Admin JSON.
   */
-trait OntologiesAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+trait OntologiesAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsAdminJsonProtocol {
 
-    implicit val ontologyAdminDataFormat: JsonFormat[OntologyAdminData] = jsonFormat4(OntologyAdminData)
+    implicit val ontologyDataADMFormat: JsonFormat[OntologyDataADM] = jsonFormat4(OntologyDataADM)
+    implicit val ontologyInfoADMFormat: JsonFormat[OntologyInfoADM] = jsonFormat3(OntologyInfoADM)
     implicit val createOntologyAdminPayloadFormat: RootJsonFormat[CreateOntologyAdminPayload] = jsonFormat2(CreateOntologyAdminPayload)
     implicit val ontologiesGetAdminResponseFormat: RootJsonFormat[OntologiesGetAdminResponse] = jsonFormat(OntologiesGetAdminResponse, "ontologies")
     implicit val ontologGetAdminResponseFormat: RootJsonFormat[OntologyGetAdminResponse] = jsonFormat(OntologyGetAdminResponse, "ontology")

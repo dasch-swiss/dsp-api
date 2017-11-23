@@ -36,9 +36,9 @@ import scala.concurrent.Future
 class OntologiesAdminResponder extends Responder {
 
     def receive: PartialFunction[Any, Unit] = {
-        case OntologiesGetAdminRequest(projectIri, userProfile) => future2Message(sender(), ontologiesGetAdminRequest(projectIri, userProfile), log)
-        case OntologyGetAdminRequest(listIri, userProfile) => future2Message(sender(), ontologyGetAdminRequest(listIri, userProfile), log)
-        case OntologyCreateAdminRequest(ontologyName, projectIri, apiRequestID, userProfile) => future2Message(sender(), ontologyCreateAdminRequest(ontologyName, projectIri, apiRequestID, userProfile), log)
+        case OntologiesGetRequestADM(projectIri, userProfile) => future2Message(sender(), ontologiesGetAdminRequest(projectIri, userProfile), log)
+        case OntologyGetRequestADM(listIri, userProfile) => future2Message(sender(), ontologyGetAdminRequest(listIri, userProfile), log)
+        case OntologyCreateRequestADM(ontologyName, projectIri, apiRequestID, userProfile) => future2Message(sender(), ontologyCreateAdminRequest(ontologyName, projectIri, apiRequestID, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 

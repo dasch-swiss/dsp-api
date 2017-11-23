@@ -58,7 +58,7 @@ object OntologiesAdminRoute extends Authenticator with OntologiesAdminJsonProtoc
                             case None => None
                         }
 
-                        val requestMessage = OntologiesGetAdminRequest(projectIri, userProfile)
+                        val requestMessage = OntologiesGetRequestADM(projectIri, userProfile)
 
                         RouteUtilAdmin.runJsonRoute(
                             requestMessage,
@@ -75,7 +75,7 @@ object OntologiesAdminRoute extends Authenticator with OntologiesAdminJsonProtoc
                     requestContext =>
                         val userProfile = getUserProfileV1(requestContext)
 
-                        val requestMessage = OntologyCreateAdminRequest(
+                        val requestMessage = OntologyCreateRequestADM(
                             ontologyName = apiRequest.ontologyName,
                             projectIri = apiRequest.projectIri,
                             apiRequestID = UUID.randomUUID(),
@@ -99,7 +99,7 @@ object OntologiesAdminRoute extends Authenticator with OntologiesAdminJsonProtoc
                     val userProfile = getUserProfileV1(requestContext)
                     val ontologyIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param ontology IRI: $iri"))
 
-                    val requestMessage = OntologyGetAdminRequest(ontologyIri, userProfile)
+                    val requestMessage = OntologyGetRequestADM(ontologyIri, userProfile)
 
                     RouteUtilAdmin.runJsonRoute(
                         requestMessage,
@@ -116,7 +116,7 @@ object OntologiesAdminRoute extends Authenticator with OntologiesAdminJsonProtoc
                         val userProfile = getUserProfileV1(requestContext)
                         val ontologyIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param ontology IRI: $iri"))
 
-                        val requestMessage = OntologyUpdateAdminRequest(
+                        val requestMessage = OntologyUpdateRequestADM(
                             iri = ontologyIri,
                             data = updatePayload,
                             apiRequestID = UUID.randomUUID(),
