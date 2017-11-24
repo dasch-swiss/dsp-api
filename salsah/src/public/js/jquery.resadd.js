@@ -1141,7 +1141,7 @@
 							var labelStr = tmplabelFirstElem.richtext_value.utf8str;
 							propvals['__LABEL__'] = undefined;
 
-                            // fake a click to show up the model dialog
+							// fake a click to show up the model dialog
 							$('#hiddenaddrespending').click();
 
 							SALSAH.ApiPost('resources', {
@@ -1153,8 +1153,8 @@
 
 							}, function(data) {
 
-							    // release the modal when we are called back from the async method
-                                $('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
+								// release the modal when we are called back from the async method
+								$('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
 
 								if (data.status == ApiErrors.OK) {
 									if (typeof localdata.settings.on_submit_cb === "function") {
@@ -1168,8 +1168,8 @@
 									}
 								}
 							}).fail(function() {
-                                // release the modal when the async method failed
-                                $('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
+								// release the modal when the async method failed
+								$('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
 							});
 							return false;
 						}));
