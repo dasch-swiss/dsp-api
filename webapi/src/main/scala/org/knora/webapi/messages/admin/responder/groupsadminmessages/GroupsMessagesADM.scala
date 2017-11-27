@@ -24,11 +24,11 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.admin.responder.KnoraAdminRequest
-import org.knora.webapi.{BadRequestException, IRI}
+import org.knora.webapi.messages.admin.responder.projectsadminmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.usersadminmessages.UserADM
 import org.knora.webapi.messages.v1.responder._
-import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoV1, GroupV1JsonProtocol, GroupsResponderRequestV1}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.v1.GroupsResponderV1
+import org.knora.webapi.{BadRequestException, IRI}
 import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,13 +43,13 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
   * @param status      the status of the group to be created (active = true, inactive = false).
   * @param selfjoin    the status of self-join of the group to be created.
   */
-case class CreateGroupApiRequestV1(name: String,
-                                   description: Option[String],
-                                   project: IRI,
-                                   status: Boolean,
-                                   selfjoin: Boolean) extends GroupV1JsonProtocol {
+case class CreateGroupApiRequestADM(name: String,
+                                    description: Option[String],
+                                    project: IRI,
+                                    status: Boolean,
+                                    selfjoin: Boolean) extends GroupsAdminJsonProtocol {
 
-    def toJsValue = createGroupApiRequestV1Format.write(this)
+    def toJsValue = createGroupApiRequestADMFormat.write(this)
 }
 
 /**
@@ -60,10 +60,10 @@ case class CreateGroupApiRequestV1(name: String,
   * @param status      the new group's status.
   * @param selfjoin    the new group's self-join status.
   */
-case class ChangeGroupApiRequestV1(name: Option[String] = None,
-                                   description: Option[String] = None,
-                                   status: Option[Boolean] = None,
-                                   selfjoin: Option[Boolean] = None) extends GroupV1JsonProtocol {
+case class ChangeGroupApiRequestADM(name: Option[String] = None,
+                                    description: Option[String] = None,
+                                    status: Option[Boolean] = None,
+                                    selfjoin: Option[Boolean] = None) extends GroupsAdminJsonProtocol {
 
     val parametersCount = List(
         name,
@@ -76,7 +76,7 @@ case class ChangeGroupApiRequestV1(name: Option[String] = None,
     if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
 
 
-    def toJsValue = changeGroupApiRequestV1Format.write(this)
+    def toJsValue = changeGroupApiRequestADMFormat.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,77 +91,76 @@ sealed trait GroupsAdminResponderRequest extends KnoraAdminRequest
 /**
   * Get all information about all groups.
   *
-  * @param userProfile the profile of the user making the request.
+  * @param user the user making the request.
   */
-case class GroupsGetRequestV1(userProfile: Option[UserProfileV1]) extends GroupsAdminResponderRequest
+case class GroupsGetRequestADM(user: Option[UserADM]) extends GroupsAdminResponderRequest
 
 /**
-  * Get everything about a single group identified through it's IRI.
+  * Get everything about a single group identified through it's IRI or shortname. Because it is only required to have unique
+  * names inside a project, it is required to supply the name of the project in conjunction with the shortname.
   *
-  * @param groupIri      IRI of the group.
-  * @param userProfileV1 the profile of the user making the request.
+  * @param maybeGroupIri   IRI of the group.
+  * @param maybeGroupName  the name of the group.
+  * @param maybeProjectIri the IRI of the project the group belongs to.
+  * @param user            the user making the request.
   */
-case class GroupInfoByIRIGetRequest(groupIri: IRI, userProfileV1: Option[UserProfileV1]) extends GroupsAdminResponderRequest
+case class GroupGetRequestADM(maybeGroupIri: Option[IRI], maybeGroupName: Option[String], maybeProjectIri: Option[IRI], user: Option[UserADM]) extends GroupsAdminResponderRequest {
+
+    // need either group IRI, or group name and project IRI
+    if (maybeGroupIri.isEmpty || (maybeGroupName.isEmpty || maybeProjectIri.isEmpty)) {
+        throw BadRequestException("Need to provide either group IRI, or group name and project IRI.")
+    }
+
+}
 
 /**
-  * Find everything about a single group identified through it's shortname. Because it is only required to have unique
-  * names inside a project, it is required to supply the name of the project.
+  * Returns all members of the group identified by iri or by group name / project IRI.
   *
-  * @param projectIri    the IRI of the project the group is part of.
-  * @param groupName     the name of the group.
-  * @param userProfileV1 the profile of the user making the request.
+  * @param maybeGroupIri   IRI of the group.
+  * @param maybeGroupName  the name of the group.
+  * @param maybeProjectIri the IRI of the project the group belongs to.
   */
-case class GroupInfoByNameGetRequest(projectIri: IRI, groupName: String, userProfileV1: Option[UserProfileV1]) extends GroupsAdminResponderRequest
+case class GroupMembersByIRIGetRequestV1(maybeGroupIri: Option[IRI], maybeGroupName: Option[String], maybeProjectIri: Option[IRI], user: Option[UserADM]) extends GroupsAdminResponderRequest {
 
-/**
-  * Returns all members of the group identified by iri.
-  *
-  * @param groupIri      the IRI of th group.
-  * @param userProfileV1 the profile of the user making the request.
-  */
-case class GroupMembersByIRIGetRequestV1(groupIri: IRI, userProfileV1: UserProfileV1) extends GroupsAdminResponderRequest
+    // need either group IRI, or group name and project IRI
+    if (maybeGroupIri.isEmpty || (maybeGroupName.isEmpty || maybeProjectIri.isEmpty)) {
+        throw BadRequestException("Need to provide either group IRI, or group name and project IRI.")
+    }
 
-/**
-  * Returns all members of the group identified by group name / project IRI.
-  *
-  * @param projectIri    the IRI of the project the group is part of.
-  * @param groupName     the name of the group.
-  * @param userProfileV1 the profile of the user making the request.
-  */
-case class GroupMembersByNameGetRequestV1(projectIri: IRI, groupName: String, userProfileV1: UserProfileV1) extends GroupsAdminResponderRequest
+}
 
 /**
   * Requests the creation of a new group.
   *
-  * @param createRequest the [[CreateGroupApiRequestV1]] information for creating the new group.
-  * @param userProfile   the user profile of the user creating the new group.
+  * @param createRequest the [[CreateGroupApiRequestADM]] information for creating the new group.
+  * @param user   the user profile of the user creating the new group.
   * @param apiRequestID  the ID of the API request.
   */
-case class GroupCreateRequestV1(createRequest: CreateGroupApiRequestV1,
-                                userProfile: UserProfileV1,
-                                apiRequestID: UUID) extends GroupsAdminResponderRequest
+case class GroupCreateRequestADM(createRequest: CreateGroupApiRequestADM,
+                                 user: UserADM,
+                                 apiRequestID: UUID) extends GroupsAdminResponderRequest
 
 /**
   * Request updating of an existing group.
   *
   * @param groupIri           the IRI of the group to be updated.
   * @param changeGroupRequest the data which needs to be update.
-  * @param userProfile        the user profile of the user requesting the update.
+  * @param user               the user profile of the user requesting the update.
   * @param apiRequestID       the ID of the API request.
   */
-case class GroupChangeRequestV1(groupIri: IRI,
-                                changeGroupRequest: ChangeGroupApiRequestV1,
-                                userProfile: UserProfileV1,
-                                apiRequestID: UUID) extends GroupsAdminResponderRequest
+case class GroupChangeRequestADM(groupIri: IRI,
+                                 changeGroupRequest: ChangeGroupApiRequestADM,
+                                 user: UserADM,
+                                 apiRequestID: UUID) extends GroupsAdminResponderRequest
 
 /**
   * Request updating the group's permissions.
   *
-  * @param userProfile  the user profile of the user requesting the update.
+  * @param user         the user requesting the update.
   * @param apiRequestID the ID of the API request.
   */
-case class GroupPermissionUpdateRequest(userProfile: UserProfileV1,
-                                        apiRequestID: UUID) extends GroupsAdminResponderRequest
+case class GroupPermissionUpdateRequestADM(user: UserADM,
+                                           apiRequestID: UUID) extends GroupsAdminResponderRequest
 
 
 // Responses
@@ -170,17 +169,17 @@ case class GroupPermissionUpdateRequest(userProfile: UserProfileV1,
   *
   * @param groups information about all existing groups.
   */
-case class GroupsResponseV1(groups: Seq[GroupInfoV1]) extends KnoraResponseV1 with GroupsAdminJsonProtocol {
-    def toJsValue = groupsResponseV1Format.write(this)
+case class GroupsResponseADM(groups: Seq[GroupADM]) extends KnoraResponseV1 with GroupsAdminJsonProtocol {
+    def toJsValue = groupsResponseADMFormat.write(this)
 }
 
 /**
   * Represents the Knora API v1 JSON response to a request for information about a single group.
   *
-  * @param group_info all information about the group.
+  * @param group all information about the group.
   */
-case class GroupInfoResponseV1(group_info: GroupInfoV1) extends KnoraResponseV1 with GroupsAdminJsonProtocol {
-    def toJsValue = groupInfoResponseV1Format.write(this)
+case class GroupInfoResponseADM(group: GroupADM) extends KnoraResponseV1 with GroupsAdminJsonProtocol {
+    def toJsValue = groupInfoResponseADMFormat.write(this)
 }
 
 /**
@@ -188,17 +187,17 @@ case class GroupInfoResponseV1(group_info: GroupInfoV1) extends KnoraResponseV1 
   *
   * @param members the group's members.
   */
-case class GroupMembersResponseV1(members: Seq[IRI]) extends KnoraResponseV1 with GroupsAdminJsonProtocol {
-    def toJsValue = groupMembersResponseV1Format.write(this)
+case class GroupMembersResponseADM(members: Seq[UserADM]) extends KnoraResponseV1 with GroupsAdminJsonProtocol {
+    def toJsValue = groupMembersResponseADMFormat.write(this)
 }
 
 /**
   * Represents an answer to a group creating/modifying operation.
   *
-  * @param group_info the new group info of the created/modified group.
+  * @param group the new group information of the created/modified group.
   */
-case class GroupOperationResponseV1(group_info: GroupInfoV1) extends KnoraResponseV1 with GroupsAdminJsonProtocol {
-    def toJsValue = groupOperationResponseV1Format.write(this)
+case class GroupOperationResponseADM(group: GroupADM) extends KnoraResponseV1 with GroupsAdminJsonProtocol {
+    def toJsValue = groupOperationResponseADMFormat.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -218,7 +217,7 @@ case class GroupOperationResponseV1(group_info: GroupInfoV1) extends KnoraRespon
 case class GroupADM(id: IRI,
                     name: String,
                     description: Option[String] = None,
-                    project: IRI,
+                    project: ProjectADM,
                     status: Boolean,
                     selfjoin: Boolean)
 
@@ -228,30 +227,28 @@ case class GroupADM(id: IRI,
   *
   * @param name        the name of the group.
   * @param description the description of the group.
-  * @param project     the project this group belongs to.
   * @param status      the group's status.
   * @param selfjoin    the group's self-join status.
   */
-case class GroupUpdatePayloadV1(name: Option[String] = None,
-                                description: Option[String] = None,
-                                project: Option[IRI] = None,
-                                status: Option[Boolean] = None,
-                                selfjoin: Option[Boolean] = None)
+case class GroupUpdatePayloadADM(name: Option[String] = None,
+                                 description: Option[String] = None,
+                                 status: Option[Boolean] = None,
+                                 selfjoin: Option[Boolean] = None)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// JSON formating
+// JSON formatting
 
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about groups.
   */
-trait GroupsAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+trait GroupsAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
 
-    implicit val groupInfoV1Format: JsonFormat[GroupInfoV1] = jsonFormat6(GroupInfoV1)
-    implicit val groupsResponseV1Format: RootJsonFormat[GroupsResponseV1] = jsonFormat(GroupsResponseV1, "groups")
-    implicit val groupInfoResponseV1Format: RootJsonFormat[GroupInfoResponseV1] = jsonFormat(GroupInfoResponseV1, "group_info")
-    implicit val groupMembersResponseV1Format: RootJsonFormat[GroupMembersResponseV1] = jsonFormat(GroupMembersResponseV1, "members")
-    implicit val createGroupApiRequestV1Format: RootJsonFormat[CreateGroupApiRequestV1] = jsonFormat(CreateGroupApiRequestV1, "name", "description", "project", "status", "selfjoin")
-    implicit val changeGroupApiRequestV1Format: RootJsonFormat[ChangeGroupApiRequestV1] = jsonFormat(ChangeGroupApiRequestV1, "name", "description", "status", "selfjoin")
-    implicit val groupOperationResponseV1Format: RootJsonFormat[GroupOperationResponseV1] = jsonFormat(GroupOperationResponseV1, "group_info")
+    implicit val groupADMFormat: JsonFormat[GroupADM] = jsonFormat6(GroupADM)
+    implicit val groupsResponseADMFormat: RootJsonFormat[GroupsResponseADM] = jsonFormat(GroupsResponseADM, "groups")
+    implicit val groupInfoResponseADMFormat: RootJsonFormat[GroupInfoResponseADM] = jsonFormat(GroupInfoResponseADM, "group")
+    implicit val groupMembersResponseADMFormat: RootJsonFormat[GroupMembersResponseADM] = jsonFormat(GroupMembersResponseADM, "members")
+    implicit val createGroupApiRequestADMFormat: RootJsonFormat[CreateGroupApiRequestADM] = jsonFormat(CreateGroupApiRequestADM, "name", "description", "project", "status", "selfjoin")
+    implicit val changeGroupApiRequestADMFormat: RootJsonFormat[ChangeGroupApiRequestADM] = jsonFormat(ChangeGroupApiRequestADM, "name", "description", "status", "selfjoin")
+    implicit val groupOperationResponseADMFormat: RootJsonFormat[GroupOperationResponseADM] = jsonFormat(GroupOperationResponseADM, "group")
 }

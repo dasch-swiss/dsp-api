@@ -246,7 +246,7 @@ case class ListNode(id: IRI, name: Option[String], labels: Seq[StringV2], commen
 /**
   * A spray-json protocol for generating Knora API V2 JSON providing data about lists.
   */
-trait ListAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with TriplestoreJsonProtocol with NullOptions {
+trait ListAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with TriplestoreJsonProtocol {
 
     implicit object ListInfoFormat extends JsonFormat[ListInfo] {
         /**
