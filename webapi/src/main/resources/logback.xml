@@ -55,7 +55,7 @@
     <logger name="org.knora.webapi.responders.v1.ResourcesResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.ValuesResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.StoreResponderV1" level="INFO"/>
-    <logger name="org.knora.webapi.responders.admin.ListsAdminResponder" level="INFO"/>
+    <logger name="org.knora.webapi.responders.admin.ListsResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
 
     <!-- for logging during tests, please see/use logback-test.xml under test/resources -->

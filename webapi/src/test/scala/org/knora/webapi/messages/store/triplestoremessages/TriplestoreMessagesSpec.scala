@@ -20,7 +20,7 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import org.knora.webapi.messages.admin.responder.listsadminmessages._
+import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.scalatest.{Matchers, WordSpecLike}
 import spray.json._
 

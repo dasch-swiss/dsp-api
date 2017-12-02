@@ -14,12 +14,12 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.admin.responder.listsadminmessages
+package org.knora.webapi.messages.admin.responder.listsmessages
 
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.{KnoraAdminRequest, KnoraAdminResponse}
+import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{StringV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, NullOptions, RootJsonFormat, _}
@@ -34,56 +34,56 @@ import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, 
 /**
   * An abstract trait for messages that can be sent to `HierarchicalListsResponderV2`.
   */
-sealed trait ListsAdminResponderRequest extends KnoraAdminRequest
+sealed trait ListsResponderRequestADM extends KnoraRequestADM
 
 
 /**
-  * Requests a list of all lists or the lists inside a project. A successful response will be a [[ListsGetAdminResponse]]
+  * Requests a list of all lists or the lists inside a project. A successful response will be a [[ListsGetResponseADM]]
   *
   * @param projectIri  the IRI of the project.
   * @param userProfile the profile of the user making the request.
   */
-case class ListsGetAdminRequest(projectIri: Option[IRI] = None,
-                                userProfile: UserProfileV1) extends ListsAdminResponderRequest
+case class ListsGetRequestADM(projectIri: Option[IRI] = None,
+                              userProfile: UserProfileV1) extends ListsResponderRequestADM
 
 /**
-  * Requests a list. A successful response will be a [[ListGetAdminResponse]]
+  * Requests a list. A successful response will be a [[ListGetResponseADM]]
   *
   * @param iri         the IRI of the list.
   * @param userProfile the profile of the user making the request.
   */
-case class ListGetAdminRequest(iri: IRI,
-                               userProfile: UserProfileV1) extends ListsAdminResponderRequest
+case class ListGetRequestADM(iri: IRI,
+                             userProfile: UserProfileV1) extends ListsResponderRequestADM
 
 
 /**
-  * Request basic information about a list. A successful response will be a [[ListInfoGetAdminResponse]]
+  * Request basic information about a list. A successful response will be a [[ListInfoGetResponseADM]]
   *
   * @param iri         the IRI of the list node.
   * @param userProfile the profile of the user making the request.
   */
-case class ListInfoGetAdminRequest(iri: IRI,
-                                   userProfile: UserProfileV1) extends ListsAdminResponderRequest
+case class ListInfoGetRequestADM(iri: IRI,
+                                 userProfile: UserProfileV1) extends ListsResponderRequestADM
 
 /**
-  * Request basic information about a list node. A successful response will be a [[ListNodeInfoGetAdminResponse]]
+  * Request basic information about a list node. A successful response will be a [[ListNodeInfoGetResponseADM]]
   *
   * @param iri         the IRI of the list node.
   * @param userProfile the profile of the user making the request.
   */
-case class ListNodeInfoGetAdminRequest(iri: IRI,
-                                       userProfile: UserProfileV1) extends ListsAdminResponderRequest
+case class ListNodeInfoGetRequestADM(iri: IRI,
+                                     userProfile: UserProfileV1) extends ListsResponderRequestADM
 
 
 /**
   * Requests the path from the root node of a list to a particular node. A successful response will be
-  * a [[NodePathGetAdminResponse]].
+  * a [[NodePathGetResponseADM]].
   *
   * @param iri         the IRI of the node.
   * @param userProfile the profile of the user making the request.
   */
-case class NodePathGetAdminRequest(iri: IRI,
-                                   userProfile: UserProfileV1) extends ListsAdminResponderRequest
+case class NodePathGetRequestADM(iri: IRI,
+                                 userProfile: UserProfileV1) extends ListsResponderRequestADM
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +94,7 @@ case class NodePathGetAdminRequest(iri: IRI,
   *
   * @param items a [[ListInfo]] sequence.
   */
-case class ListsGetAdminResponse(items: Seq[ListInfo]) extends KnoraAdminResponse with ListAdminJsonProtocol {
+case class ListsGetResponseADM(items: Seq[ListInfo]) extends KnoraResponseADM with ListAdminJsonProtocol {
     def toJsValue = listsGetAdminResponseFormat.write(this)
 }
 
@@ -103,7 +103,7 @@ case class ListsGetAdminResponse(items: Seq[ListInfo]) extends KnoraAdminRespons
   *
   * @param list the complete list.
   */
-case class ListGetAdminResponse(list: FullList) extends KnoraAdminResponse with ListAdminJsonProtocol {
+case class ListGetResponseADM(list: FullList) extends KnoraResponseADM with ListAdminJsonProtocol {
 
     def toJsValue = listGetAdminResponseFormat.write(this)
 }
@@ -114,7 +114,7 @@ case class ListGetAdminResponse(list: FullList) extends KnoraAdminResponse with 
   *
   * @param listinfo the basic information about a list.
   */
-case class ListInfoGetAdminResponse(listinfo: ListInfo) extends KnoraAdminResponse with ListAdminJsonProtocol {
+case class ListInfoGetResponseADM(listinfo: ListInfo) extends KnoraResponseADM with ListAdminJsonProtocol {
 
     def toJsValue: JsValue = listInfoGetAdminResponseFormat.write(this)
 }
@@ -125,17 +125,17 @@ case class ListInfoGetAdminResponse(listinfo: ListInfo) extends KnoraAdminRespon
   *
   * @param nodeinfo the basic information about a list node.
   */
-case class ListNodeInfoGetAdminResponse(nodeinfo: ListNodeInfo) extends KnoraAdminResponse with ListAdminJsonProtocol {
+case class ListNodeInfoGetResponseADM(nodeinfo: ListNodeInfo) extends KnoraResponseADM with ListAdminJsonProtocol {
 
     def toJsValue: JsValue = listNodeInfoGetAdminResponseFormat.write(this)
 }
 
 /**
-  * Responds to a [[NodePathGetAdminRequest]] by providing the path to a particular hierarchical list node.
+  * Responds to a [[NodePathGetRequestADM]] by providing the path to a particular hierarchical list node.
   *
   * @param nodelist a list of the nodes composing the path from the list's root node up to and including the specified node.
   */
-case class NodePathGetAdminResponse(nodelist: Seq[ListNode]) extends KnoraAdminResponse with ListAdminJsonProtocol {
+case class NodePathGetResponseADM(nodelist: Seq[ListNode]) extends KnoraResponseADM with ListAdminJsonProtocol {
 
     def toJsValue = nodePathGetAdminResponseFormat.write(this)
 }
@@ -453,9 +453,9 @@ trait ListAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
     }
 
 
-    implicit val nodePathGetAdminResponseFormat: RootJsonFormat[NodePathGetAdminResponse] = jsonFormat(NodePathGetAdminResponse, "nodelist")
-    implicit val listsGetAdminResponseFormat: RootJsonFormat[ListsGetAdminResponse] = jsonFormat(ListsGetAdminResponse, "items")
-    implicit val listGetAdminResponseFormat: RootJsonFormat[ListGetAdminResponse] = jsonFormat(ListGetAdminResponse, "list")
-    implicit val listInfoGetAdminResponseFormat: RootJsonFormat[ListInfoGetAdminResponse] = jsonFormat(ListInfoGetAdminResponse, "listinfo")
-    implicit val listNodeInfoGetAdminResponseFormat: RootJsonFormat[ListNodeInfoGetAdminResponse] = jsonFormat(ListNodeInfoGetAdminResponse, "nodeinfo")
+    implicit val nodePathGetAdminResponseFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "nodelist")
+    implicit val listsGetAdminResponseFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "items")
+    implicit val listGetAdminResponseFormat: RootJsonFormat[ListGetResponseADM] = jsonFormat(ListGetResponseADM, "list")
+    implicit val listInfoGetAdminResponseFormat: RootJsonFormat[ListInfoGetResponseADM] = jsonFormat(ListInfoGetResponseADM, "listinfo")
+    implicit val listNodeInfoGetAdminResponseFormat: RootJsonFormat[ListNodeInfoGetResponseADM] = jsonFormat(ListNodeInfoGetResponseADM, "nodeinfo")
 }

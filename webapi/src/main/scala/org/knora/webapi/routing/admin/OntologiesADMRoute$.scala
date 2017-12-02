@@ -27,7 +27,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import org.knora.webapi.messages.admin.responder.ontologiesadminmessages._
+import org.knora.webapi.messages.admin.responder.ontologiesmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilAdmin}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
@@ -37,7 +37,7 @@ import scala.concurrent.ExecutionContextExecutor
 /**
   * Provides a spray-routing function for API routes that deal with lists.
   */
-object OntologiesAdminRoute extends Authenticator with OntologiesAdminJsonProtocol {
+object OntologiesADMRoute$ extends Authenticator with OntologiesADMJsonProtocol {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
@@ -58,7 +58,7 @@ object OntologiesAdminRoute extends Authenticator with OntologiesAdminJsonProtoc
                             case None => None
                         }
 
-                        val requestMessage = OntologiesGetRequestADM(projectIri, userProfile)
+                        val requestMessage = OntologiesGetRequestADMADM(projectIri, userProfile)
 
                         RouteUtilAdmin.runJsonRoute(
                             requestMessage,
@@ -71,11 +71,11 @@ object OntologiesAdminRoute extends Authenticator with OntologiesAdminJsonProtoc
             } ~
             post {
                 /* create an ontology */
-                entity(as[CreateOntologyAdminPayload]) { apiRequest =>
+                entity(as[CreateOntologyPayloadADM]) { apiRequest =>
                     requestContext =>
                         val userProfile = getUserProfileV1(requestContext)
 
-                        val requestMessage = OntologyCreateRequestADM(
+                        val requestMessage = OntologyCreateRequestADMADM(
                             ontologyName = apiRequest.ontologyName,
                             projectIri = apiRequest.projectIri,
                             apiRequestID = UUID.randomUUID(),
@@ -99,7 +99,7 @@ object OntologiesAdminRoute extends Authenticator with OntologiesAdminJsonProtoc
                     val userProfile = getUserProfileV1(requestContext)
                     val ontologyIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param ontology IRI: $iri"))
 
-                    val requestMessage = OntologyGetRequestADM(ontologyIri, userProfile)
+                    val requestMessage = OntologyGetRequestADMADM(ontologyIri, userProfile)
 
                     RouteUtilAdmin.runJsonRoute(
                         requestMessage,
@@ -116,7 +116,7 @@ object OntologiesAdminRoute extends Authenticator with OntologiesAdminJsonProtoc
                         val userProfile = getUserProfileV1(requestContext)
                         val ontologyIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param ontology IRI: $iri"))
 
-                        val requestMessage = OntologyUpdateRequestADM(
+                        val requestMessage = OntologyUpdateRequestADMADM(
                             iri = ontologyIri,
                             data = updatePayload,
                             apiRequestID = UUID.randomUUID(),

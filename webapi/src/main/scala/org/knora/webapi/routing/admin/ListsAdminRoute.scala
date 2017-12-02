@@ -25,7 +25,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import org.knora.webapi.messages.admin.responder.listsadminmessages.{ListGetAdminRequest, ListInfoGetAdminRequest, ListNodeInfoGetAdminRequest, ListsGetAdminRequest}
+import org.knora.webapi.messages.admin.responder.listsmessages.{ListGetRequestADM, ListInfoGetRequestADM, ListNodeInfoGetRequestADM, ListsGetRequestADM}
 import org.knora.webapi.routing.{Authenticator, RouteUtilAdmin}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
@@ -53,7 +53,7 @@ object ListsAdminRoute extends Authenticator {
 
                         val projectIri = stringFormatter.toOptionalIri(maybeProjectIri, () => throw BadRequestException(s"Invalid param project IRI: $maybeProjectIri"))
 
-                        val requestMessage = ListsGetAdminRequest(projectIri, userProfile)
+                        val requestMessage = ListsGetRequestADM(projectIri, userProfile)
 
                         RouteUtilAdmin.runJsonRoute(
                             requestMessage,
@@ -76,7 +76,7 @@ object ListsAdminRoute extends Authenticator {
                     val userProfile = getUserProfileV1(requestContext)
                     val listIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = ListGetAdminRequest(listIri, userProfile)
+                    val requestMessage = ListGetRequestADM(listIri, userProfile)
 
                     RouteUtilAdmin.runJsonRoute(
                         requestMessage,
@@ -102,7 +102,7 @@ object ListsAdminRoute extends Authenticator {
                     val userProfile = getUserProfileV1(requestContext)
                     val listIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = ListInfoGetAdminRequest(listIri, userProfile)
+                    val requestMessage = ListInfoGetRequestADM(listIri, userProfile)
 
                     RouteUtilAdmin.runJsonRoute(
                         requestMessage,
@@ -128,7 +128,7 @@ object ListsAdminRoute extends Authenticator {
                     val userProfile = getUserProfileV1(requestContext)
                     val listIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = ListNodeInfoGetAdminRequest(listIri, userProfile)
+                    val requestMessage = ListNodeInfoGetRequestADM(listIri, userProfile)
 
                     RouteUtilAdmin.runJsonRoute(
                         requestMessage,

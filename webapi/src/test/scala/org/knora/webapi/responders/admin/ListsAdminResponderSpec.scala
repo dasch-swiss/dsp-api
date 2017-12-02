@@ -25,7 +25,7 @@ import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.SharedAdminTestData._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.listsadminmessages._
+import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.responders._
@@ -36,7 +36,7 @@ import scala.concurrent.duration._
 
 
 /**
-  * Static data for testing [[ListsAdminResponder]].
+  * Static data for testing [[ListsResponderADM]].
   */
 object ListsAdminResponderSpec {
     val config: Config = ConfigFactory.parseString(
@@ -47,12 +47,12 @@ object ListsAdminResponderSpec {
 }
 
 /**
-  * Tests [[ListsAdminResponder]].
+  * Tests [[ListsResponderADM]].
   */
 class ListsAdminResponderSpec extends CoreSpec(ListsAdminResponderSpec.config) with ImplicitSender {
 
     // Construct the actors needed for this test.
-    private val actorUnderTest = TestActorRef[ListsAdminResponder]
+    private val actorUnderTest = TestActorRef[ListsResponderADM]
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
@@ -103,17 +103,17 @@ class ListsAdminResponderSpec extends CoreSpec(ListsAdminResponderSpec.config) w
         "used to query information about lists" should {
 
             "return all lists" in {
-                actorUnderTest ! ListsGetAdminRequest(userProfile = userProfile)
+                actorUnderTest ! ListsGetRequestADM(userProfile = userProfile)
 
-                val received: ListsGetAdminResponse = expectMsgType[ListsGetAdminResponse](timeout)
+                val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
 
                 received.items.size should be(7)
             }
 
             "return all lists belonging to the images project" in {
-                actorUnderTest ! ListsGetAdminRequest(projectIri = Some(IMAGES_PROJECT_IRI), userProfile = userProfile)
+                actorUnderTest ! ListsGetRequestADM(projectIri = Some(IMAGES_PROJECT_IRI), userProfile = userProfile)
 
-                val received: ListsGetAdminResponse = expectMsgType[ListsGetAdminResponse](timeout)
+                val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
 
                 // log.debug("received: " + received)
 
@@ -121,9 +121,9 @@ class ListsAdminResponderSpec extends CoreSpec(ListsAdminResponderSpec.config) w
             }
 
             "return all lists belonging to the anything project" in {
-                actorUnderTest ! ListsGetAdminRequest(projectIri = Some(ANYTHING_PROJECT_IRI), userProfile = userProfile)
+                actorUnderTest ! ListsGetRequestADM(projectIri = Some(ANYTHING_PROJECT_IRI), userProfile = userProfile)
 
-                val received: ListsGetAdminResponse = expectMsgType[ListsGetAdminResponse](timeout)
+                val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
 
                 // log.debug("received: " + received)
 
@@ -131,12 +131,12 @@ class ListsAdminResponderSpec extends CoreSpec(ListsAdminResponderSpec.config) w
             }
 
             "return basic list information (images list)" in {
-                actorUnderTest ! ListInfoGetAdminRequest(
+                actorUnderTest ! ListInfoGetRequestADM(
                     iri = "http://rdfh.ch/lists/00FF/73d0ec0302",
                     userProfile = userProfile
                 )
 
-                val received: ListInfoGetAdminResponse = expectMsgType[ListInfoGetAdminResponse](timeout)
+                val received: ListInfoGetResponseADM = expectMsgType[ListInfoGetResponseADM](timeout)
 
                 // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
 
@@ -144,12 +144,12 @@ class ListsAdminResponderSpec extends CoreSpec(ListsAdminResponderSpec.config) w
             }
 
             "return basic list information (anything list)" in {
-                actorUnderTest ! ListInfoGetAdminRequest(
+                actorUnderTest ! ListInfoGetRequestADM(
                     iri = "http://data.knora.org/anything/otherTreeList",
                     userProfile = userProfile
                 )
 
-                val received: ListInfoGetAdminResponse = expectMsgType[ListInfoGetAdminResponse](timeout)
+                val received: ListInfoGetResponseADM = expectMsgType[ListInfoGetResponseADM](timeout)
 
                 // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
 
@@ -157,12 +157,12 @@ class ListsAdminResponderSpec extends CoreSpec(ListsAdminResponderSpec.config) w
             }
 
             "return basic node information (images list - sommer)" in {
-                actorUnderTest ! ListNodeInfoGetAdminRequest(
+                actorUnderTest ! ListNodeInfoGetRequestADM(
                     iri = "http://rdfh.ch/lists/00FF/526f26ed04",
                     userProfile = userProfile
                 )
 
-                val received: ListNodeInfoGetAdminResponse = expectMsgType[ListNodeInfoGetAdminResponse](timeout)
+                val received: ListNodeInfoGetResponseADM = expectMsgType[ListNodeInfoGetResponseADM](timeout)
 
                 // log.debug("returned basic keyword list information: {}", MessageUtil.toSource(received.items.head))
 
@@ -170,12 +170,12 @@ class ListsAdminResponderSpec extends CoreSpec(ListsAdminResponderSpec.config) w
             }
 
             "return a full list response" in {
-                actorUnderTest ! ListGetAdminRequest(
+                actorUnderTest ! ListGetRequestADM(
                     iri = "http://rdfh.ch/lists/00FF/73d0ec0302",
                     userProfile = userProfile
                 )
 
-                val received: ListGetAdminResponse = expectMsgType[ListGetAdminResponse](timeout)
+                val received: ListGetResponseADM = expectMsgType[ListGetResponseADM](timeout)
 
                 // log.debug("returned whole keyword list: {}", MessageUtil.toSource(received.items.head))
 

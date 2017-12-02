@@ -18,7 +18,7 @@ package org.knora.webapi.responders.admin
 
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.listsadminmessages._
+import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.Responder
@@ -31,28 +31,28 @@ import scala.concurrent.Future
 /**
   * A responder that returns information about hierarchical lists.
   */
-class ListsAdminResponder extends Responder {
+class ListsResponderADM extends Responder {
 
     def receive: PartialFunction[Any, Unit] = {
-        case ListsGetAdminRequest(projectIri, userProfile) => future2Message(sender(), listsGetAdminRequest(projectIri, userProfile), log)
-        case ListGetAdminRequest(listIri, userProfile) => future2Message(sender(), listGetAdminRequest(listIri, userProfile), log)
-        case ListInfoGetAdminRequest(listIri, userProfile) => future2Message(sender(), listInfoGetAdminRequest(listIri, userProfile), log)
-        case ListNodeInfoGetAdminRequest(listIri, userProfile) => future2Message(sender(), listNodeInfoGetAdminRequest(listIri, userProfile), log)
-        case NodePathGetAdminRequest(iri, userProfile) => future2Message(sender(), nodePathGetAdminRequest(iri, userProfile), log)
+        case ListsGetRequestADM(projectIri, userProfile) => future2Message(sender(), listsGetAdminRequest(projectIri, userProfile), log)
+        case ListGetRequestADM(listIri, userProfile) => future2Message(sender(), listGetAdminRequest(listIri, userProfile), log)
+        case ListInfoGetRequestADM(listIri, userProfile) => future2Message(sender(), listInfoGetAdminRequest(listIri, userProfile), log)
+        case ListNodeInfoGetRequestADM(listIri, userProfile) => future2Message(sender(), listNodeInfoGetAdminRequest(listIri, userProfile), log)
+        case NodePathGetRequestADM(iri, userProfile) => future2Message(sender(), nodePathGetAdminRequest(iri, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
 
     /**
-      * Gets all lists and returns them as a [[ListsGetAdminResponse]]. For performance reasons
+      * Gets all lists and returns them as a [[ListsGetResponseADM]]. For performance reasons
       * (as lists can be very large), we only return the head of the list, i.e. the root node without
       * any children.
       *
       * @param projectIri  the IRI of the project the list belongs to.
       * @param userProfile the profile of the user making the request.
-      * @return a [[ListsGetAdminResponse]].
+      * @return a [[ListsGetResponseADM]].
       */
-    def listsGetAdminRequest(projectIri: Option[IRI], userProfile: UserProfileV1): Future[ListsGetAdminResponse] = {
+    def listsGetAdminRequest(projectIri: Option[IRI], userProfile: UserProfileV1): Future[ListsGetResponseADM] = {
 
         // log.debug("listsGetRequestV2")
 
@@ -82,17 +82,17 @@ class ListsAdminResponder extends Responder {
 
             // _ = log.debug("listsGetAdminRequest - items: {}", items)
 
-        } yield ListsGetAdminResponse(items = items)
+        } yield ListsGetResponseADM(items = items)
     }
 
     /**
-      * Retrieves a complete list (root and all children) from the triplestore and returns it as a [[ListGetAdminResponse]].
+      * Retrieves a complete list (root and all children) from the triplestore and returns it as a [[ListGetResponseADM]].
       *
       * @param rootNodeIri the Iri if the root node of the list to be queried.
       * @param userProfile the profile of the user making the request.
-      * @return a [[ListGetAdminResponse]].
+      * @return a [[ListGetResponseADM]].
       */
-    def listGetAdminRequest(rootNodeIri: IRI, userProfile: UserProfileV1): Future[ListGetAdminResponse] = {
+    def listGetAdminRequest(rootNodeIri: IRI, userProfile: UserProfileV1): Future[ListGetResponseADM] = {
 
         for {
             // this query will give us only the information about the root node.
@@ -129,7 +129,7 @@ class ListsAdminResponder extends Responder {
             list = FullList(listinfo = listinfo, children = children)
             // _ = log.debug(s"listGetRequestV2 - list: {}", MessageUtil.toSource(list))
 
-        } yield ListGetAdminResponse(list = list)
+        } yield ListGetResponseADM(list = list)
     }
 
     /**
@@ -137,9 +137,9 @@ class ListsAdminResponder extends Responder {
       *
       * @param listIri the Iri if the list (root node) to be queried.
       * @param userProfile the profile of the user making the request.
-      * @return a [[ListInfoGetAdminResponse]].
+      * @return a [[ListInfoGetResponseADM]].
       */
-    def listInfoGetAdminRequest(listIri: IRI, userProfile: UserProfileV1): Future[ListInfoGetAdminResponse] = {
+    def listInfoGetAdminRequest(listIri: IRI, userProfile: UserProfileV1): Future[ListInfoGetResponseADM] = {
         for {
             sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
                 triplestore = settings.triplestoreType,
@@ -171,7 +171,7 @@ class ListsAdminResponder extends Responder {
 
             // _ = log.debug(s"listNodeInfoGetRequestV2 - node: {}", MessageUtil.toSource(node))
 
-        } yield ListInfoGetAdminResponse(listinfo = listinfo)
+        } yield ListInfoGetResponseADM(listinfo = listinfo)
     }
 
     /**
@@ -179,9 +179,9 @@ class ListsAdminResponder extends Responder {
       *
       * @param nodeIri the Iri if the child node to be queried.
       * @param userProfile the profile of the user making the request.
-      * @return a [[ListNodeInfoGetAdminResponse]].
+      * @return a [[ListNodeInfoGetResponseADM]].
       */
-    def listNodeInfoGetAdminRequest(nodeIri: IRI, userProfile: UserProfileV1): Future[ListNodeInfoGetAdminResponse] = {
+    def listNodeInfoGetAdminRequest(nodeIri: IRI, userProfile: UserProfileV1): Future[ListNodeInfoGetResponseADM] = {
         for {
             sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
                 triplestore = settings.triplestoreType,
@@ -214,7 +214,7 @@ class ListsAdminResponder extends Responder {
 
             // _ = log.debug(s"listNodeInfoGetRequestV2 - node: {}", MessageUtil.toSource(node))
 
-        } yield ListNodeInfoGetAdminResponse(nodeinfo = nodeinfo)
+        } yield ListNodeInfoGetResponseADM(nodeinfo = nodeinfo)
     }
 
 
@@ -332,7 +332,7 @@ class ListsAdminResponder extends Responder {
       * @param queryNodeIri the IRI of the node whose path is to be queried.
       * @param userProfile  the profile of the user making the request.
       */
-    private def nodePathGetAdminRequest(queryNodeIri: IRI, userProfile: UserProfileV1): Future[NodePathGetAdminResponse] = {
+    private def nodePathGetAdminRequest(queryNodeIri: IRI, userProfile: UserProfileV1): Future[NodePathGetResponseADM] = {
         /**
           * Recursively constructs the path to a node.
           *
@@ -415,6 +415,6 @@ class ListsAdminResponder extends Responder {
                         case None => acc
                     }
             }
-        } yield NodePathGetAdminResponse(nodelist = makePath(queryNodeIri, nodeMap, parentMap, Nil))
+        } yield NodePathGetResponseADM(nodelist = makePath(queryNodeIri, nodeMap, parentMap, Nil))
     }
 }

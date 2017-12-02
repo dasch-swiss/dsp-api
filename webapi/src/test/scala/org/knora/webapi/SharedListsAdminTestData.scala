@@ -20,7 +20,7 @@
 
 package org.knora.webapi
 
-import org.knora.webapi.messages.admin.responder.listsadminmessages.{ListInfo, ListNode, ListNodeInfo}
+import org.knora.webapi.messages.admin.responder.listsmessages.{ListInfo, ListNode, ListNodeInfo}
 import org.knora.webapi.messages.store.triplestoremessages.StringV2
 
 object SharedListsAdminTestData {

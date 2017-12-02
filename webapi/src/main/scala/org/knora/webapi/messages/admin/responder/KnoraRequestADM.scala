@@ -16,9 +16,7 @@
 
 package org.knora.webapi.messages.admin.responder
 
-import org.knora.webapi.Jsonable
-
 /**
-  * A trait for Knora Admin response messages. Any response message can be converted into JSON.
+  * A tagging trait for messages that can be sent to Knora Admin responders.
   */
-trait KnoraAdminResponse extends Jsonable
+trait KnoraRequestADM

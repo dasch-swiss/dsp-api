@@ -27,7 +27,7 @@ import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.{KnoraAdminRequest, KnoraAdminResponse}
+import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -40,7 +40,7 @@ object RouteUtilAdmin {
     /**
       * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
       *
-      * @param requestMessage   a future containing a [[KnoraAdminRequest]] message that should be sent to the responder manager.
+      * @param requestMessage   a future containing a [[KnoraRequestADM]] message that should be sent to the responder manager.
       * @param requestContext   the akka-http [[RequestContext]].
       * @param settings         the application's settings.
       * @param responderManager a reference to the responder manager.
@@ -49,7 +49,7 @@ object RouteUtilAdmin {
       * @param executionContext an execution context for futures.
       * @return a [[Future]] containing a [[RouteResult]].
       */
-    def runJsonRoute(requestMessage: KnoraAdminRequest,
+    def runJsonRoute(requestMessage: KnoraRequestADM,
                      requestContext: RequestContext,
                      settings: SettingsImpl,
                      responderManager: ActorSelection,
@@ -63,7 +63,7 @@ object RouteUtilAdmin {
         val httpResponse: Future[HttpResponse] = for {
             // Make sure the responder sent a reply of type KnoraResponseV2.
             knoraResponse <- (responderManager ? requestMessage).map {
-                case replyMessage: KnoraAdminResponse => replyMessage
+                case replyMessage: KnoraResponseADM => replyMessage
 
                 case other =>
                     // The responder returned an unexpected message type (not an exception). This isn't the client's

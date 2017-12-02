@@ -99,7 +99,7 @@
     <!-- V2 -->
 
     <!-- Admin -->
-    <logger name="org.knora.webapi.responders.admin.ListsAdminResponder" level="INFO"/>
+    <logger name="org.knora.webapi.responders.admin.ListsResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.ListsAdminResponderSpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.ListsAdminE2ESpec" level="INFO"/>
 

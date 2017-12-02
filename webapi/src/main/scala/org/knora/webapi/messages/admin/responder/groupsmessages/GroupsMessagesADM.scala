@@ -18,14 +18,14 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.admin.responder.groupsadminmessages
+package org.knora.webapi.messages.admin.responder.groupsmessages
 
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.messages.admin.responder.KnoraAdminRequest
-import org.knora.webapi.messages.admin.responder.projectsadminmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.usersadminmessages.UserADM
+import org.knora.webapi.messages.admin.responder.KnoraRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder._
 import org.knora.webapi.responders.v1.GroupsResponderV1
 import org.knora.webapi.{BadRequestException, IRI}
@@ -85,7 +85,7 @@ case class ChangeGroupApiRequestADM(name: Option[String] = None,
 /**
   * An abstract trait representing a request message that can be sent to [[GroupsResponderV1]].
   */
-sealed trait GroupsAdminResponderRequest extends KnoraAdminRequest
+sealed trait GroupsResponderRequestADM extends KnoraRequestADM
 
 // Requests
 /**
@@ -93,7 +93,7 @@ sealed trait GroupsAdminResponderRequest extends KnoraAdminRequest
   *
   * @param user the user making the request.
   */
-case class GroupsGetRequestADM(user: Option[UserADM]) extends GroupsAdminResponderRequest
+case class GroupsGetRequestADMADM(user: Option[UserADM]) extends GroupsResponderRequestADM
 
 /**
   * Get everything about a single group identified through it's IRI or shortname. Because it is only required to have unique
@@ -104,7 +104,7 @@ case class GroupsGetRequestADM(user: Option[UserADM]) extends GroupsAdminRespond
   * @param maybeProjectIri the IRI of the project the group belongs to.
   * @param user            the user making the request.
   */
-case class GroupGetRequestADM(maybeGroupIri: Option[IRI], maybeGroupName: Option[String], maybeProjectIri: Option[IRI], user: Option[UserADM]) extends GroupsAdminResponderRequest {
+case class GroupGetRequestADMADM(maybeGroupIri: Option[IRI], maybeGroupName: Option[String], maybeProjectIri: Option[IRI], user: Option[UserADM]) extends GroupsResponderRequestADM {
 
     // need either group IRI, or group name and project IRI
     if (maybeGroupIri.isEmpty || (maybeGroupName.isEmpty || maybeProjectIri.isEmpty)) {
@@ -120,7 +120,7 @@ case class GroupGetRequestADM(maybeGroupIri: Option[IRI], maybeGroupName: Option
   * @param maybeGroupName  the name of the group.
   * @param maybeProjectIri the IRI of the project the group belongs to.
   */
-case class GroupMembersByIRIGetRequestV1(maybeGroupIri: Option[IRI], maybeGroupName: Option[String], maybeProjectIri: Option[IRI], user: Option[UserADM]) extends GroupsAdminResponderRequest {
+case class GroupMembersByIRIGetRequestADMV1(maybeGroupIri: Option[IRI], maybeGroupName: Option[String], maybeProjectIri: Option[IRI], user: Option[UserADM]) extends GroupsResponderRequestADM {
 
     // need either group IRI, or group name and project IRI
     if (maybeGroupIri.isEmpty || (maybeGroupName.isEmpty || maybeProjectIri.isEmpty)) {
@@ -136,9 +136,9 @@ case class GroupMembersByIRIGetRequestV1(maybeGroupIri: Option[IRI], maybeGroupN
   * @param user   the user profile of the user creating the new group.
   * @param apiRequestID  the ID of the API request.
   */
-case class GroupCreateRequestADM(createRequest: CreateGroupApiRequestADM,
-                                 user: UserADM,
-                                 apiRequestID: UUID) extends GroupsAdminResponderRequest
+case class GroupCreateRequestADMADM(createRequest: CreateGroupApiRequestADM,
+                                    user: UserADM,
+                                    apiRequestID: UUID) extends GroupsResponderRequestADM
 
 /**
   * Request updating of an existing group.
@@ -148,10 +148,10 @@ case class GroupCreateRequestADM(createRequest: CreateGroupApiRequestADM,
   * @param user               the user profile of the user requesting the update.
   * @param apiRequestID       the ID of the API request.
   */
-case class GroupChangeRequestADM(groupIri: IRI,
-                                 changeGroupRequest: ChangeGroupApiRequestADM,
-                                 user: UserADM,
-                                 apiRequestID: UUID) extends GroupsAdminResponderRequest
+case class GroupChangeRequestADMADM(groupIri: IRI,
+                                    changeGroupRequest: ChangeGroupApiRequestADM,
+                                    user: UserADM,
+                                    apiRequestID: UUID) extends GroupsResponderRequestADM
 
 /**
   * Request updating the group's permissions.
@@ -159,8 +159,8 @@ case class GroupChangeRequestADM(groupIri: IRI,
   * @param user         the user requesting the update.
   * @param apiRequestID the ID of the API request.
   */
-case class GroupPermissionUpdateRequestADM(user: UserADM,
-                                           apiRequestID: UUID) extends GroupsAdminResponderRequest
+case class GroupPermissionUpdateRequestADMADM(user: UserADM,
+                                              apiRequestID: UUID) extends GroupsResponderRequestADM
 
 
 // Responses

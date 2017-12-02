@@ -24,8 +24,8 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import org.knora.webapi.ActorMaker
-import org.knora.webapi.messages.admin.responder.listsadminmessages.ListsAdminResponderRequest
-import org.knora.webapi.messages.admin.responder.ontologiesadminmessages.OntologiesAdminResponderRequest
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
+import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologiesResponderRequestADM
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
 import org.knora.webapi.messages.v1.responder.groupmessages.GroupsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
@@ -43,7 +43,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesRespond
 import org.knora.webapi.messages.v2.responder.persistentmapmessages.PersistentMapResponderRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponderRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
-import org.knora.webapi.responders.admin.{ListsAdminResponder, OntologiesAdminResponder}
+import org.knora.webapi.responders.admin.{ListsResponderADM, OntologiesResponderADM}
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
 import org.knora.webapi.util.ActorUtil.handleUnexpectedMessage
@@ -267,9 +267,9 @@ class ResponderManager extends Actor with ActorLogging {
     //
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[ListsAdminResponder]].
+      * Constructs the default Akka routing actor that routes messages to [[ListsResponderADM]].
       */
-    protected final def makeDefaultListsAdminRouter: ActorRef = makeActor(FromConfig.props(Props[ListsAdminResponder]), LISTS_ADMIN_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultListsAdminRouter: ActorRef = makeActor(FromConfig.props(Props[ListsResponderADM]), LISTS_ADMIN_ROUTER_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the lists responder. Subclasses can override this
@@ -278,9 +278,9 @@ class ResponderManager extends Actor with ActorLogging {
     protected val listsAdminRouter: ActorRef = makeDefaultListsAdminRouter
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[OntologiesAdminResponder]].
+      * Constructs the default Akka routing actor that routes messages to [[OntologiesResponderADM]].
       */
-    protected final def makeDefaultOntologiesAdminRouter: ActorRef = makeActor(FromConfig.props(Props[OntologiesAdminResponder]), ONTOLOGIES_ADMIN_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultOntologiesAdminRouter: ActorRef = makeActor(FromConfig.props(Props[OntologiesResponderADM]), ONTOLOGIES_ADMIN_ROUTER_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the lists responder. Subclasses can override this
@@ -312,8 +312,8 @@ class ResponderManager extends Actor with ActorLogging {
         case persistentMapResponderRequestV2: PersistentMapResponderRequestV2 => persistentMapRouterV2.forward(persistentMapResponderRequestV2)
 
         // Knora Admin message
-        case listsAdminResponderRequest: ListsAdminResponderRequest => listsAdminRouter forward listsAdminResponderRequest
-        case ontologiesAdminResponderRequest: OntologiesAdminResponderRequest => ontologiesAdminRouter forward ontologiesAdminResponderRequest
+        case listsAdminResponderRequest: ListsResponderRequestADM => listsAdminRouter forward listsAdminResponderRequest
+        case ontologiesAdminResponderRequest: OntologiesResponderRequestADM => ontologiesAdminRouter forward ontologiesAdminResponderRequest
 
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }

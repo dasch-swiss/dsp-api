@@ -18,12 +18,12 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.admin.responder.projectsadminmessages
+package org.knora.webapi.messages.admin.responder.projectsmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.messages.admin.responder.usersadminmessages.UserADM
-import org.knora.webapi.messages.admin.responder.{KnoraAdminRequest, KnoraAdminResponse}
-import org.knora.webapi.responders.admin.ProjectsAdminResponder
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
+import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.{BadRequestException, IRI}
 import spray.json.{DefaultJsonProtocol, JsonFormat, RootJsonFormat}
 
@@ -35,18 +35,18 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, RootJsonFormat}
 // Messages
 
 /**
-  * An abstract trait representing a request message that can be sent to [[ProjectsAdminResponder]].
+  * An abstract trait representing a request message that can be sent to [[ProjectsResponderADM]].
   */
-sealed trait ProjectsAdminResponderRequest extends KnoraAdminRequest
+sealed trait ProjectsResponderRequestADM extends KnoraRequestADM
 
 // Requests
 /**
-  * Get all information about all projects in form of [[ProjectsResponseADM]]. The ProjectsGetRequestV1 returns either
+  * Get all information about all projects in form of [[ProjectsResponseADMADM]]. The ProjectsGetRequestV1 returns either
   * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
   *
   * @param user the profile of the user making the request.
   */
-case class ProjectsGetRequestADM(user: Option[UserADM]) extends ProjectsAdminResponderRequest
+case class ProjectsGetRequestADMADM(user: Option[UserADM]) extends ProjectsResponderRequestADM
 
 /**
   * Get all information about all projects in form of a sequence of [[ProjectADM]]. Returns an empty sequence if
@@ -54,21 +54,21 @@ case class ProjectsGetRequestADM(user: Option[UserADM]) extends ProjectsAdminRes
   *
   * @param user the profile of the user making the request.
   */
-case class ProjectsGetADM(user: Option[UserADM]) extends ProjectsAdminResponderRequest
+case class ProjectsGetADM(user: Option[UserADM]) extends ProjectsResponderRequestADM
 
 /**
   * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
-  * of [[ProjectResponseADM]]. External use.
+  * of [[ProjectResponseADMADM]]. External use.
   *
   * @param maybeIri           the IRI of the project.
   * @param maybeShortname the project's short name.
   * @param maybeShortcode the project's shortcode.
   * @param user the profile of the user making the request (optional).
   */
-case class ProjectGetRequestADM(maybeIri: Option[IRI] = None,
-                                maybeShortname: Option[String] = None,
-                                maybeShortcode: Option[String] = None,
-                                user: Option[UserADM]) extends ProjectsAdminResponderRequest {
+case class ProjectGetRequestADMADM(maybeIri: Option[IRI] = None,
+                                   maybeShortname: Option[String] = None,
+                                   maybeShortcode: Option[String] = None,
+                                   user: Option[UserADM]) extends ProjectsResponderRequestADM {
     val parametersCount = List(
         maybeIri,
         maybeShortname,
@@ -91,7 +91,7 @@ case class ProjectGetRequestADM(maybeIri: Option[IRI] = None,
 case class ProjectGetADM(maybeIri: Option[IRI],
                          maybeShortname: Option[String],
                          maybeShortcode: String,
-                         user: Option[UserADM]) extends ProjectsAdminResponderRequest {
+                         user: Option[UserADM]) extends ProjectsResponderRequestADM {
 
     val parametersCount = List(
         maybeIri,
@@ -104,7 +104,7 @@ case class ProjectGetADM(maybeIri: Option[IRI],
 }
 
 /**
-  * Get all the existing ontologies from all projects as a sequence of [[org.knora.webapi.messages.admin.responder.ontologiesadminmessages.OntologyInfoADM]].
+  * Get all the existing ontologies from all projects as a sequence of [[org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoADM]].
   *
   * @param maybeProjectIri the profile of the user making the request.
   */
@@ -116,7 +116,7 @@ case class ProjectsOntologiesGetADM(maybeProjectIri: IRI) extends ProjectsAdminJ
   *
   * @param projects information about all existing projects.
   */
-case class ProjectsResponseADM(projects: Seq[ProjectADM]) extends KnoraAdminResponse with ProjectsAdminJsonProtocol {
+case class ProjectsResponseADMADM(projects: Seq[ProjectADM]) extends KnoraResponseADM with ProjectsAdminJsonProtocol {
     def toJsValue = projectsResponseADMFormat.write(this)
 }
 
@@ -125,7 +125,7 @@ case class ProjectsResponseADM(projects: Seq[ProjectADM]) extends KnoraAdminResp
   *
   * @param project all information about the project.
   */
-case class ProjectResponseADM(project: ProjectADM) extends KnoraAdminResponse with ProjectsAdminJsonProtocol {
+case class ProjectResponseADMADM(project: ProjectADM) extends KnoraResponseADM with ProjectsAdminJsonProtocol {
     def toJsValue = projectInfoResponseADMFormat.write(this)
 }
 
@@ -169,6 +169,6 @@ case class ProjectADM(id: IRI,
 trait ProjectsAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
 
     implicit val projectADMFormat: JsonFormat[ProjectADM] = jsonFormat11(ProjectADM)
-    implicit val projectsResponseADMFormat: RootJsonFormat[ProjectsResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectsResponseADM, "projects")))
-    implicit val projectInfoResponseADMFormat: RootJsonFormat[ProjectResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectResponseADM, "project")))
+    implicit val projectsResponseADMFormat: RootJsonFormat[ProjectsResponseADMADM] = rootFormat(lazyFormat(jsonFormat(ProjectsResponseADMADM, "projects")))
+    implicit val projectInfoResponseADMFormat: RootJsonFormat[ProjectResponseADMADM] = rootFormat(lazyFormat(jsonFormat(ProjectResponseADMADM, "project")))
 }

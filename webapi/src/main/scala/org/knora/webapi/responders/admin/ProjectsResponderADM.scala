@@ -27,9 +27,9 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import arq.iri
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.ontologiesadminmessages.OntologyInfoADM
-import org.knora.webapi.messages.admin.responder.projectsadminmessages._
-import org.knora.webapi.messages.admin.responder.usersadminmessages.UserADM
+import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoADM
+import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
 import org.knora.webapi.messages.v1.responder.projectmessages._
@@ -43,7 +43,7 @@ import scala.concurrent.Future
 /**
   * Returns information about Knora projects.
   */
-class ProjectsAdminResponder extends Responder {
+class ProjectsResponderADM extends Responder {
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil
@@ -57,9 +57,9 @@ class ProjectsAdminResponder extends Responder {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case ProjectsGetRequestADM(userProfile) => future2Message(sender(), projectsGetRequestADM(userProfile), log)
+        case ProjectsGetRequestADMADM(userProfile) => future2Message(sender(), projectsGetRequestADM(userProfile), log)
         case ProjectsGetADM(userProfile) => future2Message(sender(), projectsGetADM(userProfile), log)
-        case ProjectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, user) => future2Message(sender(), projectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, user), log)
+        case ProjectGetRequestADMADM(maybeIri, maybeShortname, maybeShortcode, user) => future2Message(sender(), projectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, user), log)
         case ProjectGetADM(iri, userProfile) => future2Message(sender(), projectGetADM(iri, userProfile), log)
         case ProjectsOntologiesGetADM(maybeProjectIri) => future2Message(sender(), projectsOntologiesGetADM(maybeProjectIri), log)
         case ProjectMembersByIRIGetRequestV1(iri, userProfileV1) => future2Message(sender(), projectMembersByIRIGetRequestV1(iri, userProfileV1), log)
@@ -80,7 +80,7 @@ class ProjectsAdminResponder extends Responder {
       * @return all the projects as a [[ProjectsResponseV1]].
       * @throws NotFoundException if no projects are found.
       */
-    private def projectsGetRequestADM(userProfile: Option[UserADM]): Future[ProjectsResponseADM] = {
+    private def projectsGetRequestADM(userProfile: Option[UserADM]): Future[ProjectsResponseADMADM] = {
 
         //log.debug("projectsGetRequestV1")
 
@@ -88,7 +88,7 @@ class ProjectsAdminResponder extends Responder {
             projects <- projectsGetADM(userProfile)
 
             result = if (projects.nonEmpty) {
-                ProjectsResponseADM(
+                ProjectsResponseADMADM(
                     projects = projects
                 )
             } else {

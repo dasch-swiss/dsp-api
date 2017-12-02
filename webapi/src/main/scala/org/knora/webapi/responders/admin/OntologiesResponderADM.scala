@@ -21,8 +21,8 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.listsadminmessages.{FullList, ListInfo, ListNode}
-import org.knora.webapi.messages.admin.responder.ontologiesadminmessages._
+import org.knora.webapi.messages.admin.responder.listsmessages.{FullList, ListInfo, ListNode}
+import org.knora.webapi.messages.admin.responder.ontologiesmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlExtendedConstructRequest, SparqlExtendedConstructResponse, StringV2}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.Responder
@@ -33,25 +33,25 @@ import scala.concurrent.Future
 /**
   * A responder that returns information about hierarchical lists.
   */
-class OntologiesAdminResponder extends Responder {
+class OntologiesResponderADM extends Responder {
 
     def receive: PartialFunction[Any, Unit] = {
-        case OntologiesGetRequestADM(projectIri, userProfile) => future2Message(sender(), ontologiesGetAdminRequest(projectIri, userProfile), log)
-        case OntologyGetRequestADM(listIri, userProfile) => future2Message(sender(), ontologyGetAdminRequest(listIri, userProfile), log)
-        case OntologyCreateRequestADM(ontologyName, projectIri, apiRequestID, userProfile) => future2Message(sender(), ontologyCreateAdminRequest(ontologyName, projectIri, apiRequestID, userProfile), log)
+        case OntologiesGetRequestADM(projectIri, userProfile) => future2Message(sender(), ontologiesGetRequestADM(projectIri, userProfile), log)
+        case OntologyGetRequestADM(ontologyIri, userProfile) => future2Message(sender(), ontologyGetRequestADM(ontologyIri, userProfile), log)
+        case OntologyCreateRequestADM(ontologyName, projectIri, apiRequestID, userProfile) => future2Message(sender(), ontologyCreateRequestADM(ontologyName, projectIri, apiRequestID, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
 
     /**
-      * Gets all ontologies and returns them as a [[OntologiesGetAdminResponse]]. For performance reasons
+      * Gets all ontologies and returns them as a [[OntologiesGetResponseADM]]. For performance reasons
       * (as lists can be very large), we only return the IRI of the ontology.
       *
       * @param projectIri  the IRI of the project the ontology belongs to.
       * @param userProfile the profile of the user making the request.
-      * @return a [[OntologiesGetAdminResponse]].
+      * @return a [[OntologiesGetResponseADM]].
       */
-    def ontologiesGetAdminRequest(projectIri: Option[IRI], userProfile: UserProfileV1): Future[OntologiesGetAdminResponse] = {
+    def ontologiesGetRequestADM(projectIri: Option[IRI], userProfile: UserProfileV1): Future[OntologiesGetResponseADM] = {
 
         // log.debug("listsGetRequestV2")
 
@@ -83,17 +83,17 @@ class OntologiesAdminResponder extends Responder {
 
             ontologies = Seq.empty[IRI]
 
-        } yield OntologiesGetAdminResponse(ontologies = ontologies)
+        } yield OntologiesGetResponseADM(ontologies = ontologies)
     }
 
     /**
-      * Retrieves a complete ontology from the triplestore and returns it as a [[OntologyGetAdminResponse]].
+      * Retrieves a complete ontology from the triplestore and returns it as a [[OntologyGetResponseADM]].
       *
       * @param ontologyIri the Iri of the ontology to be queried.
       * @param userProfile the profile of the user making the request.
-      * @return a [[OntologyGetAdminResponse]].
+      * @return a [[OntologyGetResponseADM]].
       */
-    def ontologyGetAdminRequest(ontologyIri: IRI, userProfile: UserProfileV1): Future[OntologyGetAdminResponse] = {
+    def ontologyGetRequestADM(ontologyIri: IRI, userProfile: UserProfileV1): Future[OntologyGetResponseADM] = {
 
         for {
             // this query will give us only the information about the root node.
@@ -130,26 +130,26 @@ class OntologiesAdminResponder extends Responder {
 //            list = FullList(listinfo = listinfo, children = children)
             // _ = log.debug(s"listGetRequestV2 - list: {}", MessageUtil.toSource(list))
 
-            data = OntologyAdminData("", "", "", "")
+            data = OntologyDataADM("", "", "", "")
 
-        } yield OntologyGetAdminResponse(ontology = data)
+        } yield OntologyGetResponseADM(ontology = data)
     }
 
     /**
-      * Creates a new empty ontology and returns is s a [[OntologyCreateAdminResponse]].
+      * Creates a new empty ontology and returns is s a [[OntologyCreateResponseADM]].
       *
       * @param ontologyName the name of the new ontology.
       * @param projectIri the project IRI the ontology belongs to.
       * @param apiRequestID the api request id.
       * @param userProfile the profile of the user making the request.
-      * @return a [[OntologyCreateAdminResponse]]
+      * @return a [[OntologyCreateResponseADM]]
       */
-    def ontologyCreateAdminRequest(ontologyName: String, projectIri: IRI, apiRequestID: UUID, userProfile: UserProfileV1): Future[OntologyCreateAdminResponse] = {
+    def ontologyCreateRequestADM(ontologyName: String, projectIri: IRI, apiRequestID: UUID, userProfile: UserProfileV1): Future[OntologyCreateResponseADM] = {
         for {
 
-            data <- FastFuture.successful(OntologyAdminData("", "", "", ""))
+            data <- FastFuture.successful(OntologyDataADM("", "", "", ""))
 
-        } yield OntologyCreateAdminResponse(ontology = data)
+        } yield OntologyCreateResponseADM(ontology = data)
 
     }
 }

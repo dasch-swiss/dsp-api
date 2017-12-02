@@ -18,16 +18,16 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.admin.responder.usersadminmessages
+package org.knora.webapi.messages.admin.responder.usersmessages
 
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.KnoraAdminResponse
-import org.knora.webapi.messages.admin.responder.groupsadminmessages.{GroupADM, GroupsAdminJsonProtocol}
-import org.knora.webapi.messages.admin.responder.projectsadminmessages.{ProjectADM, ProjectInfoADM, ProjectsAdminJsonProtocol}
-import org.knora.webapi.messages.admin.responder.usersadminmessages.UserTemplateTypeADM.UserTemplateTypeADM
+import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
+import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsAdminJsonProtocol}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectInfoADM, ProjectsAdminJsonProtocol}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserTemplateTypeADM.UserTemplateTypeADM
 import org.knora.webapi.messages.v1.responder.groupmessages.GroupV1JsonProtocol
 import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataV1, PermissionV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
@@ -60,7 +60,7 @@ case class CreateUserApiRequestADM(email: String,
                                   lang: String,
                                   systemAdmin: Boolean) {
 
-    def toJsValue: JsValue = UserV1JsonProtocol.createUserApiRequestV1Format.write(this)
+    def toJsValue: JsValue = UsersADMJsonProtocol.createUserApiRequestADMFormat.write(this)
 }
 
 /**
@@ -125,7 +125,7 @@ case class ChangeUserApiRequestADM(email: Option[String] = None,
     // change basic user information case
     if (parametersCount > 4) throw BadRequestException("To many parameters sent for basic user information change.")
 
-    def toJsValue: JsValue = UsersAdminJsonProtocol.changeUserApiRequestV1Format.write(this)
+    def toJsValue: JsValue = UsersADMJsonProtocol.changeUserApiRequestADMFormat.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -134,7 +134,7 @@ case class ChangeUserApiRequestADM(email: Option[String] = None,
 /**
   * An abstract trait representing message that can be sent to `UsersResponderV1`.
   */
-sealed trait UsersAdminResponderRequest extends KnoraRequestV1
+sealed trait UsersResponderRequestADM extends KnoraRequestADM
 
 /**
   * Get all information about all users in form of [[UsersGetResponseV1]]. The UsersGetRequestV1 returns either
@@ -142,7 +142,7 @@ sealed trait UsersAdminResponderRequest extends KnoraRequestV1
   *
   * @param userProfileV1 the profile of the user that is making the request.
   */
-case class UsersGetRequestV1(userProfileV1: UserProfileV1) extends UsersResponderRequestV1
+case class UsersGetRequestV1(userProfileV1: UserProfileV1) extends UsersResponderRequestADM
 
 
 /**
@@ -159,7 +159,7 @@ case class UsersGetADM() extends UsersResponderRequestV1
   * @param userIri the IRI of the user to be queried.
   * @param short   denotes if all information should be returned. If short == true, then token and password are not returned.
   */
-case class UserByIriGetADM(userIri: IRI, short: Boolean = true) extends UsersResponderRequestV1
+case class UserByIriGetADM(userIri: IRI, short: Boolean = true) extends UsersResponderRequestADM
 
 
 /**
@@ -170,88 +170,80 @@ case class UserByIriGetADM(userIri: IRI, short: Boolean = true) extends UsersRes
   */
 case class UserByIRIGetRequestADM(userIri: IRI,
                                         userProfileType: UserProfileType,
-                                        userProfile: UserProfileV1) extends UsersResponderRequestV1
+                                        userProfile: UserProfileV1) extends UsersResponderRequestADM
 
 
 /**
-  * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
+  * A message that requests a user's profile either by IRI or email. A successful response will be a [[UserADM]].
   *
   * @param userIri         the IRI of the user to be queried.
+  * @param email the email of the user to be queried.
   * @param userProfileType the extent of the information returned.
   */
-case class UserProfileByIRIGetV1(userIri: IRI,
-                                 userProfileType: UserProfileType) extends UsersResponderRequestV1
+case class UserProfileGetADM(userIri: Option[IRI],
+                             email: Option [String],
+                             userProfileType: UserProfileType) extends UsersResponderRequestADM
 
 /**
-  * A message that requests a user's profile. A successful response will be a [[UserProfileResponseV1]].
+  * A message that requests a user's profile either by IRI or email. A successful response will be a [[UserResponseADM]].
   *
-  * @param email           the email of the user to be queried.
-  * @param userProfileType the extent of the information returned.
-  * @param userProfile     the requesting user's profile.
-  */
-case class UserProfileByEmailGetRequestV1(email: String,
-                                          userProfileType: UserProfileType,
-                                          userProfile: UserProfileV1) extends UsersResponderRequestV1
-
-
-/**
-  * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
-  *
-  * @param email           the email of the user to be queried.
+  * @param userIri         the IRI of the user to be queried.
+  * @param email the email of the user to be queried.
   * @param userProfileType the extent of the information returned.
   */
-case class UserProfileByEmailGetV1(email: String,
-                                   userProfileType: UserProfileType) extends UsersResponderRequestV1
+case class UserProfileGetRequestADM(userIri: Option[IRI],
+                                    email: Option [String],
+                                    userProfileType: UserProfileType) extends UsersResponderRequestADM
 
 /**
   * Requests the creation of a new user.
   *
-  * @param createRequest the [[CreateUserApiRequestV1]] information used for creating the new user.
-  * @param userProfile   the user profile of the user creating the new user.
+  * @param createRequest the [[CreateUserApiRequestADM]] information used for creating the new user.
+  * @param user   the user creating the new user.
   * @param apiRequestID  the ID of the API request.
   */
-case class UserCreateRequestV1(createRequest: CreateUserApiRequestV1,
-                               userProfile: UserProfileV1,
-                               apiRequestID: UUID) extends UsersResponderRequestV1
+case class UserCreateRequestADM(createRequest: CreateUserApiRequestADM,
+                                user: UserADM,
+                                apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
   * Request updating of an existing user.
   *
   * @param userIri           the IRI of the user to be updated.
   * @param changeUserRequest the data which needs to be update.
-  * @param userProfile       the user profile of the user requesting the update.
+  * @param user       the user requesting the update.
   * @param apiRequestID      the ID of the API request.
   */
-case class UserChangeBasicUserDataRequestV1(userIri: IRI,
-                                            changeUserRequest: ChangeUserApiRequestV1,
-                                            userProfile: UserProfileV1,
-                                            apiRequestID: UUID) extends UsersResponderRequestV1
+case class UserChangeBasicUserDataRequestADM(userIri: IRI,
+                                             changeUserRequest: ChangeUserApiRequestADM,
+                                             user: UserADM,
+                                             apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
   * Request updating the users password.
   *
   * @param userIri           the IRI of the user to be updated.
   * @param changeUserRequest the [[ChangeUserApiRequestV1]] object containing the old and new password.
-  * @param userProfile       the user profile of the user requesting the update.
+  * @param user       the user requesting the update.
   * @param apiRequestID      the ID of the API request.
   */
-case class UserChangePasswordRequestV1(userIri: IRI,
-                                       changeUserRequest: ChangeUserApiRequestV1,
-                                       userProfile: UserProfileV1,
-                                       apiRequestID: UUID) extends UsersResponderRequestV1
+case class UserChangePasswordRequestADM(userIri: IRI,
+                                        changeUserRequest: ChangeUserApiRequestADM,
+                                        user: UserADM,
+                                        apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
   * Request updating the users status ('knora-base:isActiveUser' property)
   *
   * @param userIri           the IRI of the user to be updated.
   * @param changeUserRequest the [[ChangeUserApiRequestV1]] containing the new status (true / false).
-  * @param userProfile       the user profile of the user requesting the update.
+  * @param user       the user profile of the user requesting the update.
   * @param apiRequestID      the ID of the API request.
   */
-case class UserChangeStatusRequestV1(userIri: IRI,
-                                     changeUserRequest: ChangeUserApiRequestV1,
-                                     userProfile: UserProfileV1,
-                                     apiRequestID: UUID) extends UsersResponderRequestV1
+case class UserChangeStatusRequestADM(userIri: IRI,
+                                      changeUserRequest: ChangeUserApiRequestADM,
+                                      user: UserADM,
+                                      apiRequestID: UUID) extends UsersResponderRequestADM
 
 
 /**
@@ -260,98 +252,98 @@ case class UserChangeStatusRequestV1(userIri: IRI,
   * @param userIri           the IRI of the user to be updated.
   * @param changeUserRequest the [[ChangeUserApiRequestV1]] containing
   *                          the new system admin membership status (true / false).
-  * @param userProfile       the user profile of the user requesting the update.
+  * @param user       the user requesting the update.
   * @param apiRequestID      the ID of the API request.
   */
-case class UserChangeSystemAdminMembershipStatusRequestV1(userIri: IRI,
-                                                          changeUserRequest: ChangeUserApiRequestV1,
-                                                          userProfile: UserProfileV1,
-                                                          apiRequestID: UUID) extends UsersResponderRequestV1
+case class UserChangeSystemAdminMembershipStatusRequestADM(userIri: IRI,
+                                                           changeUserRequest: ChangeUserApiRequestADM,
+                                                           user: UserADM,
+                                                           apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
   * Requests user's project memberships.
   *
   * @param userIri       the IRI of the user.
-  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param user the user requesting the update.
   * @param apiRequestID  the ID of the API request.
   */
-case class UserProjectMembershipsGetRequestV1(userIri: IRI,
-                                              userProfileV1: UserProfileV1,
-                                              apiRequestID: UUID) extends UsersResponderRequestV1
+case class UserProjectMembershipsGetRequestADM(userIri: IRI,
+                                               user: UserADM,
+                                               apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
   * Requests adding the user to a project.
   *
   * @param userIri       the IRI of the user to be updated.
   * @param projectIri    the IRI of the project.
-  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param user the user requesting the update.
   * @param apiRequestID  the ID of the API request.
   */
-case class UserProjectMembershipAddRequestV1(userIri: IRI,
-                                             projectIri: IRI,
-                                             userProfileV1: UserProfileV1,
-                                             apiRequestID: UUID) extends UsersResponderRequestV1
+case class UserProjectMembershipAddRequestADM(userIri: IRI,
+                                              projectIri: IRI,
+                                              user: UserADM,
+                                              apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
   * Requests removing the user from a project.
   *
   * @param userIri       the IRI of the user to be updated.
   * @param projectIri    the IRI of the project.
-  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param user the user profile of the user requesting the update.
   * @param apiRequestID  the ID of the API request.
   */
-case class UserProjectMembershipRemoveRequestV1(userIri: IRI,
-                                                projectIri: IRI,
-                                                userProfileV1: UserProfileV1,
-                                                apiRequestID: UUID) extends UsersResponderRequestV1
+case class UserProjectMembershipRemoveRequestADM(userIri: IRI,
+                                                 projectIri: IRI,
+                                                 user: UserADM,
+                                                 apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
   * Requests user's project admin memberships.
   *
   * @param userIri       the IRI of the user.
-  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param user the user requesting the update.
   * @param apiRequestID  the ID of the API request.
   */
-case class UserProjectAdminMembershipsGetRequestV1(userIri: IRI,
-                                                   userProfileV1: UserProfileV1,
-                                                   apiRequestID: UUID) extends UsersResponderRequestV1
+case class UserProjectAdminMembershipsGetRequestADM(userIri: IRI,
+                                                    user: UserADM,
+                                                    apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
   * Requests adding the user to a project as project admin.
   *
   * @param userIri       the IRI of the user to be updated.
   * @param projectIri    the IRI of the project.
-  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param user the user requesting the update.
   * @param apiRequestID  the ID of the API request.
   */
-case class UserProjectAdminMembershipAddRequestV1(userIri: IRI,
-                                                  projectIri: IRI,
-                                                  userProfileV1: UserProfileV1,
-                                                  apiRequestID: UUID) extends UsersResponderRequestV1
+case class UserProjectAdminMembershipAddRequestADM(userIri: IRI,
+                                                   projectIri: IRI,
+                                                   user: UserADM,
+                                                   apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
   * Requests removing the user from a project as project admin.
   *
   * @param userIri       the IRI of the user to be updated.
   * @param projectIri    the IRI of the project.
-  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param user the user requesting the update.
   * @param apiRequestID  the ID of the API request.
   */
-case class UserProjectAdminMembershipRemoveRequestV1(userIri: IRI,
-                                                     projectIri: IRI,
-                                                     userProfileV1: UserProfileV1,
-                                                     apiRequestID: UUID) extends UsersResponderRequestV1
+case class UserProjectAdminMembershipRemoveRequestADM(userIri: IRI,
+                                                      projectIri: IRI,
+                                                      user: UserADM,
+                                                      apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
   * Requests user's group memberships.
   *
   * @param userIri       the IRI of the user.
-  * @param userProfileV1 the user profile of the user requesting the update.
+  * @param user the user profile of the user requesting the update.
   * @param apiRequestID  the ID of the API request.
   */
-case class UserGroupMembershipsGetRequestV1(userIri: IRI,
-                                            userProfileV1: UserProfileV1,
-                                            apiRequestID: UUID) extends UsersResponderRequestV1
+case class UserGroupMembershipsGetRequestADM(userIri: IRI,
+                                             user: UserProfileV1,
+                                             apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
   * Requests adding the user to a group.
@@ -364,7 +356,7 @@ case class UserGroupMembershipsGetRequestV1(userIri: IRI,
 case class UserGroupMembershipAddRequestV1(userIri: IRI,
                                            groupIri: IRI,
                                            userProfileV1: UserProfileV1,
-                                           apiRequestID: UUID) extends UsersResponderRequestV1
+                                           apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
   * Requests removing the user from a group.
@@ -377,7 +369,7 @@ case class UserGroupMembershipAddRequestV1(userIri: IRI,
 case class UserGroupMembershipRemoveRequestV1(userIri: IRI,
                                               groupIri: IRI,
                                               userProfileV1: UserProfileV1,
-                                              apiRequestID: UUID) extends UsersResponderRequestV1
+                                              apiRequestID: UUID) extends UsersResponderRequestADM
 
 
 // Responses
@@ -387,8 +379,8 @@ case class UserGroupMembershipRemoveRequestV1(userIri: IRI,
   *
   * @param users a sequence of user profiles of the requested type.
   */
-case class UsersGetResponseADM(users: Seq[UserADM]) extends KnoraAdminResponse {
-    def toJsValue = UserV1JsonProtocol.usersGetResponseV1Format.write(this)
+case class UsersGetResponseADM(users: Seq[UserADM]) extends KnoraResponseADM {
+    def toJsValue = UsersADMJsonProtocol.usersGetResponseADMFormat.write(this)
 }
 
 /**
@@ -396,8 +388,8 @@ case class UsersGetResponseADM(users: Seq[UserADM]) extends KnoraAdminResponse {
   *
   * @param userProfile the user's profile of the requested type.
   */
-case class UserResponseADM(userProfile: UserProfileV1) extends KnoraAdminResponse {
-    def toJsValue: JsValue = UserV1JsonProtocol.userProfileResponseV1Format.write(this)
+case class UserResponseADM(userProfile: UserProfileV1) extends KnoraResponseADM {
+    def toJsValue: JsValue = UsersADMJsonProtocol.userProfileResponseADMFormat.write(this)
 }
 
 /**
@@ -405,8 +397,8 @@ case class UserResponseADM(userProfile: UserProfileV1) extends KnoraAdminRespons
   *
   * @param projects a sequence of projects the user is member of.
   */
-case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraAdminResponse {
-    def toJsValue: JsValue = UserV1JsonProtocol.userProjectMembershipsGetResponseV1Format.write(this)
+case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM {
+    def toJsValue: JsValue = UsersADMJsonProtocol.userProjectMembershipsGetResponseADMFormat.write(this)
 }
 
 /**
@@ -414,8 +406,8 @@ case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) exten
   *
   * @param projects a sequence of projects the user is member of the project admin group.
   */
-case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraAdminResponse {
-    def toJsValue: JsValue = UserV1JsonProtocol.userProjectAdminMembershipsGetResponseV1Format.write(this)
+case class UserProjectMembershipsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM {
+    def toJsValue: JsValue = UsersADMJsonProtocol.userProjectAdminMembershipsGetResponseADMFormat.write(this)
 }
 
 /**
@@ -423,8 +415,8 @@ case class UserProjectAdminMembershipsGetResponseADM(projects: Seq[ProjectADM]) 
   *
   * @param groups a sequence of groups the user is member of.
   */
-case class UserGroupMembershipsGetResponseADM(groups: Seq[GroupADM]) extends KnoraAdminResponse {
-    def toJsValue: JsValue = UserV1JsonProtocol.userGroupMembershipsGetResponseV1Format.write(this)
+case class UserGroupMembershipsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM {
+    def toJsValue: JsValue = UsersADMJsonProtocol.userGroupMembershipsGetResponseADMFormat.write(this)
 }
 
 /**
@@ -433,7 +425,7 @@ case class UserGroupMembershipsGetResponseADM(groups: Seq[GroupADM]) extends Kno
   * @param user the new user profile of the created/modified user.
   */
 case class UserOperationResponseADM(user: UserADM) extends KnoraResponseV1 {
-    def toJsValue: JsValue = UserV1JsonProtocol.userOperationResponseV1Format.write(this)
+    def toJsValue: JsValue = UsersADMJsonProtocol.userOperationResponseADMFormat.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -594,7 +586,7 @@ case class UserADM(id: IRI,
         status
     }
 
-    def toJsValue: JsValue = UsersAdminJsonProtocol.userADMFormat.write(this)
+    def toJsValue: JsValue = UsersADMJsonProtocol.userADMFormat.write(this)
 
 }
 
@@ -725,15 +717,15 @@ case class UserUpdatePayloadV1(email: Option[String] = None,
 /**
   * A spray-json protocol for formatting objects as JSON.
   */
-object UsersAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsAdminJsonProtocol with GroupsAdminJsonProtocol with PermissionV1JsonProtocol {
+object UsersADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsAdminJsonProtocol with GroupsAdminJsonProtocol with PermissionV1JsonProtocol {
 
     implicit val userADMFormat: JsonFormat[UserADM] = jsonFormat13(UserADM)
-    implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestADM] = jsonFormat7(CreateUserApiRequestADM)
-    implicit val changeUserApiRequestV1Format: RootJsonFormat[ChangeUserApiRequestV1] = jsonFormat(ChangeUserApiRequestV1, "email", "givenName", "familyName", "lang", "oldPassword", "newPassword", "status", "systemAdmin")
-    implicit val usersGetResponseV1Format: RootJsonFormat[UsersGetResponseADM] = jsonFormat1(UsersGetResponseADM)
-    implicit val userProfileResponseV1Format: RootJsonFormat[UserProfileResponseV1] = jsonFormat1(UserProfileResponseV1)
-    implicit val userProjectMembershipsGetResponseV1Format: RootJsonFormat[UserProjectMembershipsGetResponseV1] = jsonFormat1(UserProjectMembershipsGetResponseV1)
-    implicit val userProjectAdminMembershipsGetResponseV1Format: RootJsonFormat[UserProjectAdminMembershipsGetResponseV1] = jsonFormat1(UserProjectAdminMembershipsGetResponseV1)
-    implicit val userGroupMembershipsGetResponseV1Format: RootJsonFormat[UserGroupMembershipsGetResponseV1] = jsonFormat1(UserGroupMembershipsGetResponseV1)
-    implicit val userOperationResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat1(UserOperationResponseV1)
+    implicit val createUserApiRequestADMFormat: RootJsonFormat[CreateUserApiRequestADM] = jsonFormat7(CreateUserApiRequestADM)
+    implicit val changeUserApiRequestADMFormat: RootJsonFormat[ChangeUserApiRequestADM] = jsonFormat(ChangeUserApiRequestADM, "email", "givenName", "familyName", "lang", "oldPassword", "newPassword", "status", "systemAdmin")
+    implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] = jsonFormat1(UsersGetResponseADM)
+    implicit val userProfileResponseADMFormat: RootJsonFormat[UserProfileResponseV1] = jsonFormat1(UserProfileResponseV1)
+    implicit val userProjectMembershipsGetResponseADMFormat: RootJsonFormat[UserProjectMembershipsGetResponseV1] = jsonFormat1(UserProjectMembershipsGetResponseV1)
+    implicit val userProjectAdminMembershipsGetResponseADMFormat: RootJsonFormat[UserProjectAdminMembershipsGetResponseADM] = jsonFormat1(UserProjectAdminMembershipsGetResponseADM)
+    implicit val userGroupMembershipsGetResponseADMFormat: RootJsonFormat[UserGroupMembershipsGetResponseADM] = jsonFormat1(UserGroupMembershipsGetResponseADM)
+    implicit val userOperationResponseADMFormat: RootJsonFormat[UserOperationResponseADM] = jsonFormat1(UserOperationResponseADM)
 }
