@@ -21,7 +21,7 @@
 package org.knora.webapi
 
 import org.knora.webapi.messages.admin.responder.listsmessages.{ListInfo, ListNode, ListNodeInfo}
-import org.knora.webapi.messages.store.triplestoremessages.StringV2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 object SharedListsAdminTestData {
 
@@ -29,22 +29,22 @@ object SharedListsAdminTestData {
     val otherTreeListInfo: ListInfo = ListInfo (
         id = "http://data.knora.org/anything/otherTreeList",
         projectIri = Some("http://rdfh.ch/projects/anything"),
-        labels = Seq(StringV2("Tree list root", Some("en"))),
-        comments = Seq.empty[StringV2]
+        labels = Seq(StringLiteralV2("Tree list root", Some("en"))),
+        comments = Seq.empty[StringLiteralV2]
     )
 
     val bigListInfo: ListInfo = ListInfo(
         id = "http://rdfh.ch/lists/00FF/73d0ec0302",
         projectIri = Some("http://rdfh.ch/projects/00FF"),
-        labels = Seq(StringV2("Title", Some("en")), StringV2("Titel", Some("de")), StringV2("Titre", Some("fr"))),
-        comments = Seq(StringV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
+        labels = Seq(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr"))),
+        comments = Seq(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
     )
 
     val summerNodeInfo: ListNodeInfo = ListNodeInfo (
         id = "http://rdfh.ch/lists/00FF/526f26ed04",
         name = Some("sommer"),
-        labels = Seq(StringV2("Sommer")),
-        comments = Seq.empty[StringV2],
+        labels = Seq(StringLiteralV2("Sommer")),
+        comments = Seq.empty[StringLiteralV2],
         position = Some(0)
     )
 
@@ -52,16 +52,16 @@ object SharedListsAdminTestData {
         ListNode(
             id = "http://rdfh.ch/lists/00FF/526f26ed04",
             name = Some("sommer"),
-            labels = Seq(StringV2("Sommer")),
-            comments = Seq.empty[StringV2],
+            labels = Seq(StringLiteralV2("Sommer")),
+            comments = Seq.empty[StringLiteralV2],
             children = Seq.empty[ListNode],
             position = Some(0)
         ),
         ListNode(
             id = "http://rdfh.ch/lists/00FF/eda2792605",
             name = Some("winter"),
-            labels = Seq(StringV2("Winter")),
-            comments = Seq.empty[StringV2],
+            labels = Seq(StringLiteralV2("Winter")),
+            comments = Seq.empty[StringLiteralV2],
             children = Seq.empty[ListNode],
             position = Some(1)
         )
@@ -71,8 +71,8 @@ object SharedListsAdminTestData {
         ListNode(
             id = "http://rdfh.ch/lists/00FF/691eee1cbe",
             name = Some("4KUN"),
-            labels = Seq(StringV2("KUNST")),
-            comments = Seq.empty[StringV2],
+            labels = Seq(StringLiteralV2("KUNST")),
+            comments = Seq.empty[StringLiteralV2],
             children = Seq.empty[ListNode],
             position = None
 
@@ -80,16 +80,16 @@ object SharedListsAdminTestData {
         ListNode(
             id = "http://rdfh.ch/lists/00FF/2ebd2706c1",
             name = Some("7"),
-            labels = Seq(StringV2("FILM UND FOTO")),
-            comments = Seq.empty[StringV2],
+            labels = Seq(StringLiteralV2("FILM UND FOTO")),
+            comments = Seq.empty[StringLiteralV2],
             children = Seq.empty[ListNode],
             position = None
         ),
         ListNode(
             id = "http://rdfh.ch/lists/00FF/c7f07a3fc1",
             name = Some("1"),
-            labels = Seq(StringV2("Heidi Film")),
-            comments = Seq.empty[StringV2],
+            labels = Seq(StringLiteralV2("Heidi Film")),
+            comments = Seq.empty[StringLiteralV2],
             children = Seq.empty[ListNode],
             position = None
         )
@@ -103,7 +103,7 @@ object SharedListsAdminTestData {
                         position = Some(0),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "BIBLIOTHEKEN ST. MORITZ"
                         )),
@@ -114,7 +114,7 @@ object SharedListsAdminTestData {
                         position = Some(1),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "SAMMELB\u00C4NDE, FOTOALBEN"
                         )),
@@ -123,7 +123,7 @@ object SharedListsAdminTestData {
                     )
                 ),
                 comments = Nil,
-                labels = Vector(StringV2(
+                labels = Vector(StringLiteralV2(
                     language = None,
                     value = "ALLGEMEINES"
                 )),
@@ -139,7 +139,7 @@ object SharedListsAdminTestData {
                             position = Some(0),
                             children = Nil,
                             comments = Nil,
-                            labels = Vector(StringV2(
+                            labels = Vector(StringLiteralV2(
                                 language = None,
                                 value = "Personen"
                             )),
@@ -147,7 +147,7 @@ object SharedListsAdminTestData {
                             id = "http://rdfh.ch/lists/00FF/a5f66db8a7"
                         )),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "SCHWEIZ"
                         )),
@@ -160,7 +160,7 @@ object SharedListsAdminTestData {
                             position = Some(0),
                             children = Nil,
                             comments = Nil,
-                            labels = Vector(StringV2(
+                            labels = Vector(StringLiteralV2(
                                 language = None,
                                 value = "Personen"
                             )),
@@ -168,7 +168,7 @@ object SharedListsAdminTestData {
                             id = "http://rdfh.ch/lists/00FF/d75d142ba8"
                         )),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "GRAUB\u00DCNDEN"
                         )),
@@ -182,7 +182,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Flugaufnahmen"
                                 )),
@@ -193,7 +193,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Landschaft Sommer ohne Ortschaften"
                                 )),
@@ -204,7 +204,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Landschaft Sommer mit Ortschaften"
                                 )),
@@ -215,7 +215,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Landschaft Winter ohne Ortschaften"
                                 )),
@@ -226,7 +226,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Landschaft Winter mit Ortschaften"
                                 )),
@@ -237,7 +237,7 @@ object SharedListsAdminTestData {
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Landschaft Seen"
                                 )),
@@ -248,7 +248,7 @@ object SharedListsAdminTestData {
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Landschaft Berge"
                                 )),
@@ -262,7 +262,7 @@ object SharedListsAdminTestData {
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Maloja"
                                         )),
@@ -273,7 +273,7 @@ object SharedListsAdminTestData {
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Sils"
                                         )),
@@ -284,7 +284,7 @@ object SharedListsAdminTestData {
                                         position = Some(2),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Silvaplana"
                                         )),
@@ -295,7 +295,7 @@ object SharedListsAdminTestData {
                                         position = Some(3),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Surlej"
                                         )),
@@ -306,7 +306,7 @@ object SharedListsAdminTestData {
                                         position = Some(4),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Champf\u00E8r"
                                         )),
@@ -317,7 +317,7 @@ object SharedListsAdminTestData {
                                         position = Some(5),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Pontresina"
                                         )),
@@ -328,7 +328,7 @@ object SharedListsAdminTestData {
                                         position = Some(6),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Celerina"
                                         )),
@@ -339,7 +339,7 @@ object SharedListsAdminTestData {
                                         position = Some(7),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Samedan"
                                         )),
@@ -350,7 +350,7 @@ object SharedListsAdminTestData {
                                         position = Some(8),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Bever"
                                         )),
@@ -361,7 +361,7 @@ object SharedListsAdminTestData {
                                         position = Some(9),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "La Punt"
                                         )),
@@ -372,7 +372,7 @@ object SharedListsAdminTestData {
                                         position = Some(10),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Chamues-ch"
                                         )),
@@ -383,7 +383,7 @@ object SharedListsAdminTestData {
                                         position = Some(11),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Madulain"
                                         )),
@@ -394,7 +394,7 @@ object SharedListsAdminTestData {
                                         position = Some(12),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Zuoz"
                                         )),
@@ -405,7 +405,7 @@ object SharedListsAdminTestData {
                                         position = Some(13),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "S-chanf"
                                         )),
@@ -416,7 +416,7 @@ object SharedListsAdminTestData {
                                         position = Some(14),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Cinous-chel"
                                         )),
@@ -427,7 +427,7 @@ object SharedListsAdminTestData {
                                         position = Some(15),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Fex"
                                         )),
@@ -438,7 +438,7 @@ object SharedListsAdminTestData {
                                         position = Some(16),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Unterengadin"
                                         )),
@@ -449,7 +449,7 @@ object SharedListsAdminTestData {
                                         position = Some(17),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen"
                                         )),
@@ -458,7 +458,7 @@ object SharedListsAdminTestData {
                                     )
                                 ),
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Ortschaften Sommer"
                                 )),
@@ -472,7 +472,7 @@ object SharedListsAdminTestData {
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Maloja"
                                         )),
@@ -483,7 +483,7 @@ object SharedListsAdminTestData {
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Sils"
                                         )),
@@ -494,7 +494,7 @@ object SharedListsAdminTestData {
                                         position = Some(2),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Silvaplana"
                                         )),
@@ -505,7 +505,7 @@ object SharedListsAdminTestData {
                                         position = Some(3),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Surlej"
                                         )),
@@ -516,7 +516,7 @@ object SharedListsAdminTestData {
                                         position = Some(4),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Champf\u00E8r"
                                         )),
@@ -527,7 +527,7 @@ object SharedListsAdminTestData {
                                         position = Some(5),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Pontresina"
                                         )),
@@ -538,7 +538,7 @@ object SharedListsAdminTestData {
                                         position = Some(6),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Celerina"
                                         )),
@@ -549,7 +549,7 @@ object SharedListsAdminTestData {
                                         position = Some(7),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Samedan"
                                         )),
@@ -560,7 +560,7 @@ object SharedListsAdminTestData {
                                         position = Some(8),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Bever"
                                         )),
@@ -571,7 +571,7 @@ object SharedListsAdminTestData {
                                         position = Some(9),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "La Punt"
                                         )),
@@ -582,7 +582,7 @@ object SharedListsAdminTestData {
                                         position = Some(10),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Chamues-ch"
                                         )),
@@ -593,7 +593,7 @@ object SharedListsAdminTestData {
                                         position = Some(11),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Madulain"
                                         )),
@@ -604,7 +604,7 @@ object SharedListsAdminTestData {
                                         position = Some(12),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Zuoz"
                                         )),
@@ -615,7 +615,7 @@ object SharedListsAdminTestData {
                                         position = Some(13),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "S-chanf"
                                         )),
@@ -626,7 +626,7 @@ object SharedListsAdminTestData {
                                         position = Some(14),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Cinous-chel"
                                         )),
@@ -637,7 +637,7 @@ object SharedListsAdminTestData {
                                         position = Some(15),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Fex"
                                         )),
@@ -648,7 +648,7 @@ object SharedListsAdminTestData {
                                         position = Some(16),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Unterengadin"
                                         )),
@@ -659,7 +659,7 @@ object SharedListsAdminTestData {
                                         position = Some(17),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen"
                                         )),
@@ -668,7 +668,7 @@ object SharedListsAdminTestData {
                                     )
                                 ),
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Ortschaften Winter"
                                 )),
@@ -677,7 +677,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "ENGADIN"
                         )),
@@ -691,7 +691,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "St. Moritz Dorf und Bad Winter"
                                 )),
@@ -702,7 +702,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "St. Moritz Dorf Sommer"
                                 )),
@@ -713,7 +713,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "St. Moritz Bad Sommer"
                                 )),
@@ -724,7 +724,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "St. Moritz Denkm\u00E4ler"
                                 )),
@@ -735,7 +735,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "St. Moritz Landschaft Sommer"
                                 )),
@@ -746,7 +746,7 @@ object SharedListsAdminTestData {
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "St. Moritz Landschaft Winter"
                                 )),
@@ -757,7 +757,7 @@ object SharedListsAdminTestData {
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "St. Moritz Schulh\u00E4user"
                                 )),
@@ -766,7 +766,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "ST. MORITZ"
                         )),
@@ -780,7 +780,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Ortschaften"
                                 )),
@@ -791,7 +791,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Landschaften"
                                 )),
@@ -802,7 +802,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Personen"
                                 )),
@@ -811,7 +811,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "SUEDTAELER"
                         )),
@@ -825,7 +825,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Landkarten"
                                 )),
@@ -836,7 +836,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Panoramen"
                                 )),
@@ -845,7 +845,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "LANDKARTEN UND PANORAMEN"
                         )),
@@ -854,7 +854,7 @@ object SharedListsAdminTestData {
                     )
                 ),
                 comments = Nil,
-                labels = Vector(StringV2(
+                labels = Vector(StringLiteralV2(
                     language = None,
                     value = "GEOGRAPHIE"
                 )),
@@ -868,7 +868,7 @@ object SharedListsAdminTestData {
                         position = Some(0),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "SCHWEIZ"
                         )),
@@ -879,7 +879,7 @@ object SharedListsAdminTestData {
                         position = Some(1),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "GRAUB\u00DCNDEN"
                         )),
@@ -890,7 +890,7 @@ object SharedListsAdminTestData {
                         position = Some(2),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "ENGADIN"
                         )),
@@ -901,7 +901,7 @@ object SharedListsAdminTestData {
                         position = Some(3),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "ST. MORITZ"
                         )),
@@ -918,7 +918,7 @@ object SharedListsAdminTestData {
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen A"
                                         )),
@@ -929,7 +929,7 @@ object SharedListsAdminTestData {
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen B"
                                         )),
@@ -940,7 +940,7 @@ object SharedListsAdminTestData {
                                         position = Some(2),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen C"
                                         )),
@@ -951,7 +951,7 @@ object SharedListsAdminTestData {
                                         position = Some(3),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen D"
                                         )),
@@ -962,7 +962,7 @@ object SharedListsAdminTestData {
                                         position = Some(4),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen E"
                                         )),
@@ -973,7 +973,7 @@ object SharedListsAdminTestData {
                                         position = Some(5),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen F"
                                         )),
@@ -984,7 +984,7 @@ object SharedListsAdminTestData {
                                         position = Some(6),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen G"
                                         )),
@@ -995,7 +995,7 @@ object SharedListsAdminTestData {
                                         position = Some(7),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen H"
                                         )),
@@ -1006,7 +1006,7 @@ object SharedListsAdminTestData {
                                         position = Some(8),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen I"
                                         )),
@@ -1017,7 +1017,7 @@ object SharedListsAdminTestData {
                                         position = Some(9),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen J"
                                         )),
@@ -1028,7 +1028,7 @@ object SharedListsAdminTestData {
                                         position = Some(10),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen K"
                                         )),
@@ -1039,7 +1039,7 @@ object SharedListsAdminTestData {
                                         position = Some(11),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen L"
                                         )),
@@ -1050,7 +1050,7 @@ object SharedListsAdminTestData {
                                         position = Some(12),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen M"
                                         )),
@@ -1061,7 +1061,7 @@ object SharedListsAdminTestData {
                                         position = Some(13),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen N"
                                         )),
@@ -1072,7 +1072,7 @@ object SharedListsAdminTestData {
                                         position = Some(14),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen O"
                                         )),
@@ -1083,7 +1083,7 @@ object SharedListsAdminTestData {
                                         position = Some(15),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen P"
                                         )),
@@ -1094,7 +1094,7 @@ object SharedListsAdminTestData {
                                         position = Some(16),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen Q"
                                         )),
@@ -1105,7 +1105,7 @@ object SharedListsAdminTestData {
                                         position = Some(17),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen R"
                                         )),
@@ -1116,7 +1116,7 @@ object SharedListsAdminTestData {
                                         position = Some(18),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen S"
                                         )),
@@ -1127,7 +1127,7 @@ object SharedListsAdminTestData {
                                         position = Some(19),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen T"
                                         )),
@@ -1138,7 +1138,7 @@ object SharedListsAdminTestData {
                                         position = Some(20),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen U"
                                         )),
@@ -1149,7 +1149,7 @@ object SharedListsAdminTestData {
                                         position = Some(21),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen V"
                                         )),
@@ -1160,7 +1160,7 @@ object SharedListsAdminTestData {
                                         position = Some(22),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen W"
                                         )),
@@ -1171,7 +1171,7 @@ object SharedListsAdminTestData {
                                         position = Some(23),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen X"
                                         )),
@@ -1182,7 +1182,7 @@ object SharedListsAdminTestData {
                                         position = Some(24),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen Y"
                                         )),
@@ -1193,7 +1193,7 @@ object SharedListsAdminTestData {
                                         position = Some(25),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen Z"
                                         )),
@@ -1202,7 +1202,7 @@ object SharedListsAdminTestData {
                                     )
                                 ),
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Personen A-Z"
                                 )),
@@ -1213,7 +1213,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Personen unbekannt"
                                 )),
@@ -1224,7 +1224,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Gruppen Einheimische"
                                 )),
@@ -1235,7 +1235,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Kinder Winter"
                                 )),
@@ -1246,7 +1246,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Kinder Sommer"
                                 )),
@@ -1257,7 +1257,7 @@ object SharedListsAdminTestData {
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Sonnenbadende"
                                 )),
@@ -1268,7 +1268,7 @@ object SharedListsAdminTestData {
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Zuschauer"
                                 )),
@@ -1277,7 +1277,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "BIOGRAPHIEN"
                         )),
@@ -1288,7 +1288,7 @@ object SharedListsAdminTestData {
                         position = Some(5),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "WAPPEN UND FAHNEN"
                         )),
@@ -1299,7 +1299,7 @@ object SharedListsAdminTestData {
                         position = Some(6),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "KRIEGE UND MILIT\u00C4R"
                         )),
@@ -1308,7 +1308,7 @@ object SharedListsAdminTestData {
                     )
                 ),
                 comments = Nil,
-                labels = Vector(StringV2(
+                labels = Vector(StringLiteralV2(
                     language = None,
                     value = "GESCHICHTE"
                 )),
@@ -1325,7 +1325,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Ausstellungen"
                                 )),
@@ -1336,7 +1336,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Gem\u00E4lde"
                                 )),
@@ -1347,7 +1347,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Karrikaturen und Kritik"
                                 )),
@@ -1358,7 +1358,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Segantini und Museum"
                                 )),
@@ -1369,7 +1369,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Sgrafitti"
                                 )),
@@ -1378,7 +1378,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "MALEREI"
                         )),
@@ -1392,7 +1392,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Kurorchester"
                                 )),
@@ -1403,7 +1403,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Musik"
                                 )),
@@ -1414,7 +1414,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Zirkus"
                                 )),
@@ -1425,7 +1425,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Theater"
                                 )),
@@ -1436,7 +1436,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Tanz"
                                 )),
@@ -1445,7 +1445,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "MUSIK, THEATER UND RADIO"
                         )),
@@ -1459,7 +1459,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Heidi Film"
                                 )),
@@ -1470,7 +1470,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Foto"
                                 )),
@@ -1481,7 +1481,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Film"
                                 )),
@@ -1490,7 +1490,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "FILM UND FOTO"
                         )),
@@ -1504,7 +1504,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Modelle"
                                 )),
@@ -1515,7 +1515,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Schneeskulpturen"
                                 )),
@@ -1526,7 +1526,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Plastiken"
                                 )),
@@ -1537,7 +1537,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Stiche"
                                 )),
@@ -1548,7 +1548,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Bildhauerei"
                                 )),
@@ -1559,7 +1559,7 @@ object SharedListsAdminTestData {
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Kunstgewerbe"
                                 )),
@@ -1568,7 +1568,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "BILDHAUEREI UND KUNSTGEWERBE"
                         )),
@@ -1582,7 +1582,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Grafiken"
                                 )),
@@ -1593,7 +1593,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Holzschnitte"
                                 )),
@@ -1604,7 +1604,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Plakate"
                                 )),
@@ -1613,7 +1613,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "ST. MORITZ GRAFIKEN UND PLAKATE"
                         )),
@@ -1627,7 +1627,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Architektur / Inneneinrichtungen"
                                 )),
@@ -1638,7 +1638,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Pl\u00E4ne"
                                 )),
@@ -1647,7 +1647,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "ARCHITEKTUR"
                         )),
@@ -1656,7 +1656,7 @@ object SharedListsAdminTestData {
                     )
                 ),
                 comments = Nil,
-                labels = Vector(StringV2(
+                labels = Vector(StringLiteralV2(
                     language = None,
                     value = "KUNST"
                 )),
@@ -1670,7 +1670,7 @@ object SharedListsAdminTestData {
                         position = Some(0),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "MEDIZIN UND NATURHEILKUNDE"
                         )),
@@ -1684,7 +1684,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Heilbad aussen"
                                 )),
@@ -1695,7 +1695,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Heilbad innen"
                                 )),
@@ -1704,7 +1704,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "HEILBAD UND QUELLEN"
                         )),
@@ -1715,7 +1715,7 @@ object SharedListsAdminTestData {
                         position = Some(2),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "SPITAL UND KLINIKEN / KINDERHEIME"
                         )),
@@ -1724,7 +1724,7 @@ object SharedListsAdminTestData {
                     )
                 ),
                 comments = Nil,
-                labels = Vector(StringV2(
+                labels = Vector(StringLiteralV2(
                     language = None,
                     value = "MEDIZIN"
                 )),
@@ -1741,7 +1741,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Fischen"
                                 )),
@@ -1752,7 +1752,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Jagen"
                                 )),
@@ -1763,7 +1763,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Tiere"
                                 )),
@@ -1772,7 +1772,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "FAUNA"
                         )),
@@ -1786,7 +1786,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Blumen"
                                 )),
@@ -1797,7 +1797,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "B\u00E4ume"
                                 )),
@@ -1806,7 +1806,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "FLORA"
                         )),
@@ -1817,7 +1817,7 @@ object SharedListsAdminTestData {
                         position = Some(2),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "GEOLOGIE UND MINERALOGIE"
                         )),
@@ -1831,7 +1831,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Gew\u00E4sser und \u00DCberschwemmungen"
                                 )),
@@ -1842,7 +1842,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Gletscher"
                                 )),
@@ -1853,7 +1853,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Lawinen"
                                 )),
@@ -1864,7 +1864,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Schnee, Raureif, Eisblumen"
                                 )),
@@ -1873,7 +1873,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "KLIMATOLOGIE UND METEOROLOGIE"
                         )),
@@ -1884,7 +1884,7 @@ object SharedListsAdminTestData {
                         position = Some(4),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "UMWELT"
                         )),
@@ -1893,7 +1893,7 @@ object SharedListsAdminTestData {
                     )
                 ),
                 comments = Nil,
-                labels = Vector(StringV2(
+                labels = Vector(StringLiteralV2(
                     language = None,
                     value = "NATURKUNDE"
                 )),
@@ -1908,7 +1908,7 @@ object SharedListsAdminTestData {
                         position = Some(0),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "St. Moritz Kirchen"
                         )),
@@ -1916,7 +1916,7 @@ object SharedListsAdminTestData {
                         id = "http://rdfh.ch/lists/00FF/af007b34ca"
                     )),
                     comments = Nil,
-                    labels = Vector(StringV2(
+                    labels = Vector(StringLiteralV2(
                         language = None,
                         value = "RELIGION UND KIRCHEN"
                     )),
@@ -1924,7 +1924,7 @@ object SharedListsAdminTestData {
                     id = "http://rdfh.ch/lists/00FF/16cd27fbc9"
                 )),
                 comments = Nil,
-                labels = Vector(StringV2(
+                labels = Vector(StringLiteralV2(
                     language = None,
                     value = "RELIGION"
                 )),
@@ -1938,7 +1938,7 @@ object SharedListsAdminTestData {
                         position = Some(0),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "VERFASSUNGEN UND GESETZE"
                         )),
@@ -1952,7 +1952,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Wasserwirtschaft"
                                 )),
@@ -1963,7 +1963,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Feuer und Feuerwehr"
                                 )),
@@ -1974,7 +1974,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Polizei und Beh\u00F6rde"
                                 )),
@@ -1985,7 +1985,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Abfallbewirtschaftung"
                                 )),
@@ -1994,7 +1994,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "GEMEINDEWESEN"
                         )),
@@ -2005,7 +2005,7 @@ object SharedListsAdminTestData {
                         position = Some(2),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "SCHULWESEN"
                         )),
@@ -2019,7 +2019,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "B\u00E4lle und Verkleidungen"
                                 )),
@@ -2030,7 +2030,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Chalandamarz"
                                 )),
@@ -2041,7 +2041,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Engadiner Museum"
                                 )),
@@ -2052,7 +2052,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Feste und Umz\u00FCge"
                                 )),
@@ -2063,7 +2063,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Schlitteda"
                                 )),
@@ -2074,7 +2074,7 @@ object SharedListsAdminTestData {
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Trachten"
                                 )),
@@ -2083,7 +2083,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "VOLKSKUNDE"
                         )),
@@ -2094,7 +2094,7 @@ object SharedListsAdminTestData {
                         position = Some(4),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "PARTEIEN UND GRUPPIERUNGEN"
                         )),
@@ -2105,7 +2105,7 @@ object SharedListsAdminTestData {
                         position = Some(5),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "SCHWESTERNST\u00C4TDE"
                         )),
@@ -2114,7 +2114,7 @@ object SharedListsAdminTestData {
                     )
                 ),
                 comments = Nil,
-                labels = Vector(StringV2(
+                labels = Vector(StringLiteralV2(
                     language = None,
                     value = "SOZIALES"
                 )),
@@ -2131,7 +2131,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Bridge"
                                 )),
@@ -2142,7 +2142,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Boxen"
                                 )),
@@ -2153,7 +2153,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Camping"
                                 )),
@@ -2164,7 +2164,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Fechten"
                                 )),
@@ -2175,7 +2175,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Fitness"
                                 )),
@@ -2186,7 +2186,7 @@ object SharedListsAdminTestData {
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "H\u00F6hentraining"
                                 )),
@@ -2197,7 +2197,7 @@ object SharedListsAdminTestData {
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Krafttraining"
                                 )),
@@ -2208,7 +2208,7 @@ object SharedListsAdminTestData {
                                 position = Some(7),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Leichtathletik"
                                 )),
@@ -2219,7 +2219,7 @@ object SharedListsAdminTestData {
                                 position = Some(8),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Pokale, Preise, Medallien"
                                 )),
@@ -2230,7 +2230,7 @@ object SharedListsAdminTestData {
                                 position = Some(9),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Schiessen"
                                 )),
@@ -2241,7 +2241,7 @@ object SharedListsAdminTestData {
                                 position = Some(10),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Turnen"
                                 )),
@@ -2252,7 +2252,7 @@ object SharedListsAdminTestData {
                                 position = Some(11),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Zeitmessung"
                                 )),
@@ -2263,7 +2263,7 @@ object SharedListsAdminTestData {
                                 position = Some(12),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Hornussen"
                                 )),
@@ -2274,7 +2274,7 @@ object SharedListsAdminTestData {
                                 position = Some(13),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Schwingen"
                                 )),
@@ -2283,7 +2283,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "SPORT"
                         )),
@@ -2297,7 +2297,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Cricket"
                                 )),
@@ -2308,7 +2308,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Schlitteln"
                                 )),
@@ -2319,7 +2319,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Schneeschuhlaufen"
                                 )),
@@ -2330,7 +2330,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Tailing"
                                 )),
@@ -2341,7 +2341,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Wind-, Schlittenhundrennen"
                                 )),
@@ -2350,7 +2350,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "WINTERSPORT"
                         )),
@@ -2364,7 +2364,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Verschiedenes"
                                 )),
@@ -2375,7 +2375,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Skiakrobatik"
                                 )),
@@ -2386,7 +2386,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Ski Corvatsch"
                                 )),
@@ -2397,7 +2397,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Skifahren"
                                 )),
@@ -2408,7 +2408,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Ski Kilometer-Lanc\u00E9"
                                 )),
@@ -2419,7 +2419,7 @@ object SharedListsAdminTestData {
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Ski SOS"
                                 )),
@@ -2430,7 +2430,7 @@ object SharedListsAdminTestData {
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Skitouren"
                                 )),
@@ -2439,7 +2439,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "SKI"
                         )),
@@ -2450,7 +2450,7 @@ object SharedListsAdminTestData {
                         position = Some(3),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "SKISCHULE"
                         )),
@@ -2464,7 +2464,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Skirennen"
                                 )),
@@ -2475,7 +2475,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Ski Rennpisten"
                                 )),
@@ -2486,7 +2486,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Personen"
                                 )),
@@ -2497,7 +2497,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Guardia Grischa"
                                 )),
@@ -2508,7 +2508,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Ski Vorweltmeisterschaft 1973"
                                 )),
@@ -2519,7 +2519,7 @@ object SharedListsAdminTestData {
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Ski Weltmeisterschaft 1974"
                                 )),
@@ -2530,7 +2530,7 @@ object SharedListsAdminTestData {
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Ski Weltmeisterschaft 2003"
                                 )),
@@ -2541,7 +2541,7 @@ object SharedListsAdminTestData {
                                 position = Some(7),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Skispringen"
                                 )),
@@ -2550,7 +2550,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "SKIRENNEN UND SKISPRINGEN"
                         )),
@@ -2564,7 +2564,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Skilanglauf"
                                 )),
@@ -2575,7 +2575,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Engadin Skimarathon"
                                 )),
@@ -2584,7 +2584,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "SKILANGLAUF UND ENGADIN SKIMARATHON"
                         )),
@@ -2595,7 +2595,7 @@ object SharedListsAdminTestData {
                         position = Some(6),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "SNOWBOARD UND SNOWBOARDSCHULE"
                         )),
@@ -2609,7 +2609,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Olympiade 1928"
                                 )),
@@ -2620,7 +2620,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Olympiade 1948"
                                 )),
@@ -2629,7 +2629,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "OLYMPIADEN"
                         )),
@@ -2643,7 +2643,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Eishockey und Bandy"
                                 )),
@@ -2657,7 +2657,7 @@ object SharedListsAdminTestData {
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Gefrorene Seen"
                                         )),
@@ -2668,7 +2668,7 @@ object SharedListsAdminTestData {
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Gymkhana"
                                         )),
@@ -2679,7 +2679,7 @@ object SharedListsAdminTestData {
                                         position = Some(2),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Eisrevue"
                                         )),
@@ -2690,7 +2690,7 @@ object SharedListsAdminTestData {
                                         position = Some(3),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Paarlauf"
                                         )),
@@ -2701,7 +2701,7 @@ object SharedListsAdminTestData {
                                         position = Some(4),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Schnellauf"
                                         )),
@@ -2712,7 +2712,7 @@ object SharedListsAdminTestData {
                                         position = Some(5),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Kellner auf Eis"
                                         )),
@@ -2723,7 +2723,7 @@ object SharedListsAdminTestData {
                                         position = Some(6),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen"
                                         )),
@@ -2732,7 +2732,7 @@ object SharedListsAdminTestData {
                                     )
                                 ),
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Eislaufen"
                                 )),
@@ -2743,7 +2743,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Eissegeln, -Surfen"
                                 )),
@@ -2754,7 +2754,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Eisstadion"
                                 )),
@@ -2767,7 +2767,7 @@ object SharedListsAdminTestData {
                                     position = Some(0),
                                     children = Nil,
                                     comments = Nil,
-                                    labels = Vector(StringV2(
+                                    labels = Vector(StringLiteralV2(
                                         language = None,
                                         value = "Personen"
                                     )),
@@ -2775,7 +2775,7 @@ object SharedListsAdminTestData {
                                     id = "http://rdfh.ch/lists/00FF/4db9d4abdb"
                                 )),
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Curling"
                                 )),
@@ -2786,7 +2786,7 @@ object SharedListsAdminTestData {
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Eisstockschiessen"
                                 )),
@@ -2797,7 +2797,7 @@ object SharedListsAdminTestData {
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Kunsteisbahn Ludains"
                                 )),
@@ -2806,7 +2806,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "EISSPORT"
                         )),
@@ -2823,7 +2823,7 @@ object SharedListsAdminTestData {
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen"
                                         )),
@@ -2834,7 +2834,7 @@ object SharedListsAdminTestData {
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "St\u00FCrze"
                                         )),
@@ -2845,7 +2845,7 @@ object SharedListsAdminTestData {
                                         position = Some(2),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Bau"
                                         )),
@@ -2854,7 +2854,7 @@ object SharedListsAdminTestData {
                                     )
                                 ),
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Bob Run"
                                 )),
@@ -2868,7 +2868,7 @@ object SharedListsAdminTestData {
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen"
                                         )),
@@ -2879,7 +2879,7 @@ object SharedListsAdminTestData {
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Bau"
                                         )),
@@ -2888,7 +2888,7 @@ object SharedListsAdminTestData {
                                     )
                                 ),
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Cresta Run"
                                 )),
@@ -2899,7 +2899,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Rodeln"
                                 )),
@@ -2908,7 +2908,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "CRESTA RUN UND BOB"
                         )),
@@ -2922,7 +2922,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Concours Hippique"
                                 )),
@@ -2933,7 +2933,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Pferderennen"
                                 )),
@@ -2944,7 +2944,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Polo"
                                 )),
@@ -2955,7 +2955,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Reiten"
                                 )),
@@ -2966,7 +2966,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Reithalle"
                                 )),
@@ -2977,7 +2977,7 @@ object SharedListsAdminTestData {
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Skikj\u00F6ring"
                                 )),
@@ -2988,7 +2988,7 @@ object SharedListsAdminTestData {
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Fahrturnier"
                                 )),
@@ -2999,7 +2999,7 @@ object SharedListsAdminTestData {
                                 position = Some(7),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Zuschauer"
                                 )),
@@ -3008,7 +3008,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "PFERDESPORT"
                         )),
@@ -3022,7 +3022,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Billiard"
                                 )),
@@ -3033,7 +3033,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Fussball"
                                 )),
@@ -3044,7 +3044,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Kegeln"
                                 )),
@@ -3058,7 +3058,7 @@ object SharedListsAdminTestData {
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Minigolf"
                                         )),
@@ -3069,7 +3069,7 @@ object SharedListsAdminTestData {
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Sommergolf"
                                         )),
@@ -3080,7 +3080,7 @@ object SharedListsAdminTestData {
                                         position = Some(2),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Wintergolf"
                                         )),
@@ -3089,7 +3089,7 @@ object SharedListsAdminTestData {
                                     )
                                 ),
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Golf"
                                 )),
@@ -3100,7 +3100,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Tennis"
                                 )),
@@ -3111,7 +3111,7 @@ object SharedListsAdminTestData {
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Volleyball"
                                 )),
@@ -3120,7 +3120,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "BALLSPORT"
                         )),
@@ -3134,7 +3134,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Alpinismus"
                                 )),
@@ -3145,7 +3145,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Bergh\u00FCtten und Restaurants"
                                 )),
@@ -3156,7 +3156,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Trecking mit Tieren"
                                 )),
@@ -3167,7 +3167,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Wandern"
                                 )),
@@ -3178,7 +3178,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Spazieren"
                                 )),
@@ -3187,7 +3187,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "ALPINISMUS"
                         )),
@@ -3201,7 +3201,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Ballon"
                                 )),
@@ -3212,7 +3212,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Delta"
                                 )),
@@ -3223,7 +3223,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Flugzeuge"
                                 )),
@@ -3234,7 +3234,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Helikopter"
                                 )),
@@ -3245,7 +3245,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Segelflieger"
                                 )),
@@ -3254,7 +3254,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "FLIEGEN"
                         )),
@@ -3271,7 +3271,7 @@ object SharedListsAdminTestData {
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Malojarennen"
                                         )),
@@ -3282,7 +3282,7 @@ object SharedListsAdminTestData {
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Berninarennen"
                                         )),
@@ -3293,7 +3293,7 @@ object SharedListsAdminTestData {
                                         position = Some(2),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Shellstrasse"
                                         )),
@@ -3304,7 +3304,7 @@ object SharedListsAdminTestData {
                                         position = Some(3),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Personen"
                                         )),
@@ -3315,7 +3315,7 @@ object SharedListsAdminTestData {
                                         position = Some(4),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Verschiedenes"
                                         )),
@@ -3324,7 +3324,7 @@ object SharedListsAdminTestData {
                                     )
                                 ),
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Autorennen"
                                 )),
@@ -3335,7 +3335,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Geschicklichkeitsfahren"
                                 )),
@@ -3346,7 +3346,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Sch\u00F6nheitskonkurrenz"
                                 )),
@@ -3357,7 +3357,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Inline Skating"
                                 )),
@@ -3368,7 +3368,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Montainbiking"
                                 )),
@@ -3379,7 +3379,7 @@ object SharedListsAdminTestData {
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Radfahren"
                                 )),
@@ -3390,7 +3390,7 @@ object SharedListsAdminTestData {
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Motorradfahren"
                                 )),
@@ -3399,7 +3399,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "RADSPORT"
                         )),
@@ -3413,7 +3413,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Schwimmen Hallenb\u00E4der"
                                 )),
@@ -3424,7 +3424,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Schwimmen Seen"
                                 )),
@@ -3435,7 +3435,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Rudern"
                                 )),
@@ -3446,7 +3446,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Segeln"
                                 )),
@@ -3457,7 +3457,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Windsurfen"
                                 )),
@@ -3468,7 +3468,7 @@ object SharedListsAdminTestData {
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Tauchen"
                                 )),
@@ -3479,7 +3479,7 @@ object SharedListsAdminTestData {
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Rafting"
                                 )),
@@ -3490,7 +3490,7 @@ object SharedListsAdminTestData {
                                 position = Some(7),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Kitesurfen"
                                 )),
@@ -3499,7 +3499,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "WASSERSPORT"
                         )),
@@ -3508,7 +3508,7 @@ object SharedListsAdminTestData {
                     )
                 ),
                 comments = Nil,
-                labels = Vector(StringV2(
+                labels = Vector(StringLiteralV2(
                     language = None,
                     value = "SPORT"
                 )),
@@ -3525,7 +3525,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Autos, Busse und Postautos"
                                 )),
@@ -3536,7 +3536,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Boote"
                                 )),
@@ -3547,7 +3547,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Flugplatz Samedan"
                                 )),
@@ -3558,7 +3558,7 @@ object SharedListsAdminTestData {
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Kommunikation"
                                 )),
@@ -3569,7 +3569,7 @@ object SharedListsAdminTestData {
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Kutschen und Pferdetransporte"
                                 )),
@@ -3580,7 +3580,7 @@ object SharedListsAdminTestData {
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Luftseilbahnen und Stationen"
                                 )),
@@ -3591,7 +3591,7 @@ object SharedListsAdminTestData {
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Schneer\u00E4umungs- und Pistenfahrzeuge"
                                 )),
@@ -3602,7 +3602,7 @@ object SharedListsAdminTestData {
                                 position = Some(7),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Schneekanonen"
                                 )),
@@ -3613,7 +3613,7 @@ object SharedListsAdminTestData {
                                 position = Some(8),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Skilifte"
                                 )),
@@ -3624,7 +3624,7 @@ object SharedListsAdminTestData {
                                 position = Some(9),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Standseilbahnen und Stationen"
                                 )),
@@ -3635,7 +3635,7 @@ object SharedListsAdminTestData {
                                 position = Some(10),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Strassen und P\u00E4sse"
                                 )),
@@ -3646,7 +3646,7 @@ object SharedListsAdminTestData {
                                 position = Some(11),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Tram"
                                 )),
@@ -3657,7 +3657,7 @@ object SharedListsAdminTestData {
                                 position = Some(12),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Wegweiser"
                                 )),
@@ -3666,7 +3666,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "VERKEHR"
                         )),
@@ -3679,7 +3679,7 @@ object SharedListsAdminTestData {
                             position = Some(0),
                             children = Nil,
                             comments = Nil,
-                            labels = Vector(StringV2(
+                            labels = Vector(StringLiteralV2(
                                 language = None,
                                 value = "Eisenbahnen und Bahnh\u00F6fe"
                             )),
@@ -3687,7 +3687,7 @@ object SharedListsAdminTestData {
                             id = "http://rdfh.ch/lists/00FF/1dd9d495ed"
                         )),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "EISENBAHNEN"
                         )),
@@ -3701,7 +3701,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Casino"
                                 )),
@@ -3712,7 +3712,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "G\u00E4ste"
                                 )),
@@ -3723,7 +3723,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Mode"
                                 )),
@@ -3732,7 +3732,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "FREMDENVERKEHR"
                         )),
@@ -3749,7 +3749,7 @@ object SharedListsAdminTestData {
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel A"
                                         )),
@@ -3760,7 +3760,7 @@ object SharedListsAdminTestData {
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel B"
                                         )),
@@ -3771,7 +3771,7 @@ object SharedListsAdminTestData {
                                         position = Some(2),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel C"
                                         )),
@@ -3782,7 +3782,7 @@ object SharedListsAdminTestData {
                                         position = Some(3),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel D"
                                         )),
@@ -3793,7 +3793,7 @@ object SharedListsAdminTestData {
                                         position = Some(4),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel E"
                                         )),
@@ -3804,7 +3804,7 @@ object SharedListsAdminTestData {
                                         position = Some(5),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel F"
                                         )),
@@ -3815,7 +3815,7 @@ object SharedListsAdminTestData {
                                         position = Some(6),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel G"
                                         )),
@@ -3826,7 +3826,7 @@ object SharedListsAdminTestData {
                                         position = Some(7),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel H"
                                         )),
@@ -3837,7 +3837,7 @@ object SharedListsAdminTestData {
                                         position = Some(8),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel I"
                                         )),
@@ -3848,7 +3848,7 @@ object SharedListsAdminTestData {
                                         position = Some(9),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel J"
                                         )),
@@ -3859,7 +3859,7 @@ object SharedListsAdminTestData {
                                         position = Some(10),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel K"
                                         )),
@@ -3870,7 +3870,7 @@ object SharedListsAdminTestData {
                                         position = Some(11),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel L"
                                         )),
@@ -3881,7 +3881,7 @@ object SharedListsAdminTestData {
                                         position = Some(12),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel M"
                                         )),
@@ -3892,7 +3892,7 @@ object SharedListsAdminTestData {
                                         position = Some(13),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel N"
                                         )),
@@ -3903,7 +3903,7 @@ object SharedListsAdminTestData {
                                         position = Some(14),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel O"
                                         )),
@@ -3914,7 +3914,7 @@ object SharedListsAdminTestData {
                                         position = Some(15),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel P"
                                         )),
@@ -3925,7 +3925,7 @@ object SharedListsAdminTestData {
                                         position = Some(16),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel Q"
                                         )),
@@ -3936,7 +3936,7 @@ object SharedListsAdminTestData {
                                         position = Some(17),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel R"
                                         )),
@@ -3947,7 +3947,7 @@ object SharedListsAdminTestData {
                                         position = Some(18),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel S"
                                         )),
@@ -3958,7 +3958,7 @@ object SharedListsAdminTestData {
                                         position = Some(19),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel T"
                                         )),
@@ -3969,7 +3969,7 @@ object SharedListsAdminTestData {
                                         position = Some(20),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel U"
                                         )),
@@ -3980,7 +3980,7 @@ object SharedListsAdminTestData {
                                         position = Some(21),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel V"
                                         )),
@@ -3991,7 +3991,7 @@ object SharedListsAdminTestData {
                                         position = Some(22),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel W"
                                         )),
@@ -4002,7 +4002,7 @@ object SharedListsAdminTestData {
                                         position = Some(23),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel X"
                                         )),
@@ -4013,7 +4013,7 @@ object SharedListsAdminTestData {
                                         position = Some(24),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel Y"
                                         )),
@@ -4024,7 +4024,7 @@ object SharedListsAdminTestData {
                                         position = Some(25),
                                         children = Nil,
                                         comments = Nil,
-                                        labels = Vector(StringV2(
+                                        labels = Vector(StringLiteralV2(
                                             language = None,
                                             value = "Hotel Z"
                                         )),
@@ -4033,7 +4033,7 @@ object SharedListsAdminTestData {
                                     )
                                 ),
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Hotels und Restaurants A-Z"
                                 )),
@@ -4044,7 +4044,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Essen"
                                 )),
@@ -4055,7 +4055,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Men\u00FCkarten"
                                 )),
@@ -4064,7 +4064,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "HOTELLERIE"
                         )),
@@ -4078,7 +4078,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Personal und B\u00FCro"
                                 )),
@@ -4089,7 +4089,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Anl\u00E4sse und Reisen"
                                 )),
@@ -4100,7 +4100,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Markenzeichen St. Moritz"
                                 )),
@@ -4109,7 +4109,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "KURVEREIN"
                         )),
@@ -4123,7 +4123,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Arbeitswelt"
                                 )),
@@ -4134,7 +4134,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Reklame"
                                 )),
@@ -4145,7 +4145,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Bauwesen"
                                 )),
@@ -4154,7 +4154,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "GEWERBE"
                         )),
@@ -4168,7 +4168,7 @@ object SharedListsAdminTestData {
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Elektrizit\u00E4t"
                                 )),
@@ -4179,7 +4179,7 @@ object SharedListsAdminTestData {
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Wasserkraft"
                                 )),
@@ -4190,7 +4190,7 @@ object SharedListsAdminTestData {
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
-                                labels = Vector(StringV2(
+                                labels = Vector(StringLiteralV2(
                                     language = None,
                                     value = "Solarenergie"
                                 )),
@@ -4199,7 +4199,7 @@ object SharedListsAdminTestData {
                             )
                         ),
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "ENERGIEWIRTSCHAFT"
                         )),
@@ -4210,7 +4210,7 @@ object SharedListsAdminTestData {
                         position = Some(7),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "AGRARWIRTSCHAFT"
                         )),
@@ -4221,7 +4221,7 @@ object SharedListsAdminTestData {
                         position = Some(8),
                         children = Nil,
                         comments = Nil,
-                        labels = Vector(StringV2(
+                        labels = Vector(StringLiteralV2(
                             language = None,
                             value = "WALDWIRTSCHAFT"
                         )),
@@ -4230,7 +4230,7 @@ object SharedListsAdminTestData {
                     )
                 ),
                 comments = Nil,
-                labels = Vector(StringV2(
+                labels = Vector(StringLiteralV2(
                     language = None,
                     value = "WIRTSCHAFT"
                 )),

@@ -29,6 +29,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
+import arq.iri
 import org.apache.commons.lang3.StringUtils
 import org.eclipse.rdf4j.model.Statement
 import org.eclipse.rdf4j.model.impl.SimpleLiteral
@@ -36,11 +37,12 @@ import org.eclipse.rdf4j.rio.RDFHandler
 import org.eclipse.rdf4j.rio.turtle._
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{StringV2, _}
+import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, _}
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.FakeTriplestore
+import org.knora.webapi.util.{FakeTriplestore, StringFormatter}
 import org.knora.webapi.util.SparqlResultProtocol._
+import org.openrdf.model.vocabulary.{RDF, XMLSchema}
 import spray.json._
 
 import scala.collection.JavaConverters._
@@ -54,6 +56,9 @@ import scala.util.{Failure, Success, Try}
   * `application.conf`.
   */
 class HttpTriplestoreConnector extends Actor with ActorLogging {
+
+    val stringFormatter = StringFormatter.getGeneralInstance
+
     // MIME type constants.
     private val mimeTypeApplicationSparqlResultsJson = MediaType.applicationWithFixedCharset("sparql-results+json", HttpCharsets.`UTF-8`) // JSON is always UTF-8
     private val mimeTypeTextTurtle = MediaType.text("turtle") // Turtle is always UTF-8
@@ -249,7 +254,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             /**
               * A collection of all the statements in the input file, grouped and sorted by subject IRI.
               */
-            private var statements = Map.empty[IRI, Map[IRI, Seq[StringV2]]]
+            private var statements = Map.empty[IRI, Map[IRI, Seq[StringLiteralV2]]]
 
             override def handleComment(comment: IRI): Unit = {}
 
@@ -261,15 +266,23 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             override def handleStatement(st: Statement): Unit = {
                 val subjectIri = st.getSubject.stringValue
                 val predicateIri = st.getPredicate.stringValue
-                val objectIri = st.getObject.stringValue
-                val objectLang: Option[String] = st.getObject match {
-                    case lit: SimpleLiteral => lit.getLanguage.asScala // needs the 'scala.compat.java8.OptionConverters._' import
-                    case _ => None
-                }
-                val currentStatementsForSubject: Map[IRI, Seq[StringV2]] = statements.getOrElse(subjectIri, Map.empty[IRI, Seq[StringV2]])
-                val currentStatementsForPredicate: Seq[StringV2] = currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[StringV2])
 
-                val updatedPredicateStatements = currentStatementsForPredicate :+ StringV2(objectIri, objectLang)
+                val lit: SimpleLiteral = st.getObject.asInstanceOf[SimpleLiteral]
+                val objectLiteral: LiteralV2 = lit.getDatatype match {
+                    case RDF.LANGSTRING => StringLiteralV2(value = lit.stringValue, language = lit.getLanguage.asScala)
+                    case XMLSchema.BOOLEAN => BooleanLiteralV2(value = lit.booleanValue)
+                    case XMLSchema.STRING => if (stringFormatter.isIri(lit.stringValue)) {
+                        IriLiteralV2(iri = lit.stringValue)
+                    } else {
+                        StringLiteralV2(value = lit.stringValue)
+                    }
+                    case unknown => throw NotImplementedException(s"The literal type '$unknown' is not implemented.")
+                }
+
+                val currentStatementsForSubject: Map[IRI, Seq[LiteralV2]] = statements.getOrElse(subjectIri, Map.empty[IRI, Seq[LiteralV2]])
+                val currentStatementsForPredicate: Seq[LiteralV2] = currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[LiteralV2])
+
+                val updatedPredicateStatements = currentStatementsForPredicate :+ objectLiteral
                 val updatedSubjectStatements = currentStatementsForSubject + (predicateIri -> updatedPredicateStatements)
 
                 statements += (subjectIri -> updatedSubjectStatements)

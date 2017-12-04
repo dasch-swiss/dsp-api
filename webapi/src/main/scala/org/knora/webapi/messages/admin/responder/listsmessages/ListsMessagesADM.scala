@@ -20,9 +20,9 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
-import org.knora.webapi.messages.store.triplestoremessages.{StringV2, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, NullOptions, RootJsonFormat, _}
+import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, RootJsonFormat, _}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -94,7 +94,7 @@ case class NodePathGetRequestADM(iri: IRI,
   *
   * @param items a [[ListInfo]] sequence.
   */
-case class ListsGetResponseADM(items: Seq[ListInfo]) extends KnoraResponseADM with ListAdminJsonProtocol {
+case class ListsGetResponseADM(items: Seq[ListInfo]) extends KnoraResponseADM with ListADMJsonProtocol {
     def toJsValue = listsGetAdminResponseFormat.write(this)
 }
 
@@ -103,7 +103,7 @@ case class ListsGetResponseADM(items: Seq[ListInfo]) extends KnoraResponseADM wi
   *
   * @param list the complete list.
   */
-case class ListGetResponseADM(list: FullList) extends KnoraResponseADM with ListAdminJsonProtocol {
+case class ListGetResponseADM(list: FullList) extends KnoraResponseADM with ListADMJsonProtocol {
 
     def toJsValue = listGetAdminResponseFormat.write(this)
 }
@@ -114,7 +114,7 @@ case class ListGetResponseADM(list: FullList) extends KnoraResponseADM with List
   *
   * @param listinfo the basic information about a list.
   */
-case class ListInfoGetResponseADM(listinfo: ListInfo) extends KnoraResponseADM with ListAdminJsonProtocol {
+case class ListInfoGetResponseADM(listinfo: ListInfo) extends KnoraResponseADM with ListADMJsonProtocol {
 
     def toJsValue: JsValue = listInfoGetAdminResponseFormat.write(this)
 }
@@ -125,7 +125,7 @@ case class ListInfoGetResponseADM(listinfo: ListInfo) extends KnoraResponseADM w
   *
   * @param nodeinfo the basic information about a list node.
   */
-case class ListNodeInfoGetResponseADM(nodeinfo: ListNodeInfo) extends KnoraResponseADM with ListAdminJsonProtocol {
+case class ListNodeInfoGetResponseADM(nodeinfo: ListNodeInfo) extends KnoraResponseADM with ListADMJsonProtocol {
 
     def toJsValue: JsValue = listNodeInfoGetAdminResponseFormat.write(this)
 }
@@ -135,7 +135,7 @@ case class ListNodeInfoGetResponseADM(nodeinfo: ListNodeInfo) extends KnoraRespo
   *
   * @param nodelist a list of the nodes composing the path from the list's root node up to and including the specified node.
   */
-case class NodePathGetResponseADM(nodelist: Seq[ListNode]) extends KnoraResponseADM with ListAdminJsonProtocol {
+case class NodePathGetResponseADM(nodelist: Seq[ListNode]) extends KnoraResponseADM with ListADMJsonProtocol {
 
     def toJsValue = nodePathGetAdminResponseFormat.write(this)
 }
@@ -168,7 +168,7 @@ case class FullList(listinfo: ListInfo, children: Seq[ListNode]) {
   * @param labels     the labels of the list in all available languages.
   * @param comments   the comments attached to the list in all available languages.
   */
-case class ListInfo(id: IRI, projectIri: Option[IRI], labels: Seq[StringV2], comments: Seq[StringV2]) {
+case class ListInfo(id: IRI, projectIri: Option[IRI], labels: Seq[StringLiteralV2], comments: Seq[StringLiteralV2]) {
     /**
       * Sorts the whole hierarchy.
       *
@@ -193,7 +193,7 @@ case class ListInfo(id: IRI, projectIri: Option[IRI], labels: Seq[StringV2], com
   * @param comments the comments attached to the node in all available languages.
   * @param position the position of the node among its siblings (optional).
   */
-case class ListNodeInfo(id: IRI, name: Option[String], labels: Seq[StringV2], comments: Seq[StringV2], position: Option[Int]) {
+case class ListNodeInfo(id: IRI, name: Option[String], labels: Seq[StringLiteralV2], comments: Seq[StringLiteralV2], position: Option[Int]) {
     /**
       * Sorts the whole hierarchy.
       *
@@ -220,7 +220,7 @@ case class ListNodeInfo(id: IRI, name: Option[String], labels: Seq[StringV2], co
   * @param children the list node's child nodes.
   * @param position the position of the node among its siblings (optional).
   */
-case class ListNode(id: IRI, name: Option[String], labels: Seq[StringV2], comments: Seq[StringV2], children: Seq[ListNode], position: Option[Int]) {
+case class ListNode(id: IRI, name: Option[String], labels: Seq[StringLiteralV2], comments: Seq[StringLiteralV2], children: Seq[ListNode], position: Option[Int]) {
 
     /**
       * Sorts the whole hierarchy.
@@ -246,7 +246,7 @@ case class ListNode(id: IRI, name: Option[String], labels: Seq[StringV2], commen
 /**
   * A spray-json protocol for generating Knora API V2 JSON providing data about lists.
   */
-trait ListAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with TriplestoreJsonProtocol {
+trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with TriplestoreJsonProtocol {
 
     implicit object ListInfoFormat extends JsonFormat[ListInfo] {
         /**
@@ -277,13 +277,13 @@ trait ListAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
             val id = fields.getOrElse("id", throw DeserializationException("The expected field 'id' is missing.")).convertTo[String]
             val projectIri: Option[IRI] = fields.get("projectIri").map(_.convertTo[String])
             val labels = fields.get("labels") match {
-                case Some(JsArray(values)) => values.map(_.convertTo[StringV2])
-                case None => Seq.empty[StringV2]
+                case Some(JsArray(values)) => values.map(_.convertTo[StringLiteralV2])
+                case None => Seq.empty[StringLiteralV2]
                 case _ => throw DeserializationException("The expected field 'labels' is in the wrong format.")
             }
             val comments = fields.get("comments") match {
-                case Some(JsArray(values)) => values.map(_.convertTo[StringV2])
-                case None => Seq.empty[StringV2]
+                case Some(JsArray(values)) => values.map(_.convertTo[StringLiteralV2])
+                case None => Seq.empty[StringLiteralV2]
                 case _ => throw DeserializationException("The expected field 'comments' is in the wrong format.")
             }
 
@@ -328,14 +328,14 @@ trait ListAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
             val id = fields.getOrElse("id", throw DeserializationException("The expected field 'id' is missing.")).convertTo[String]
             val name = fields.get("name").map(_.convertTo[String])
             val labels = fields.get("labels") match {
-                case Some(JsArray(values)) => values.map(_.convertTo[StringV2])
-                case None => Seq.empty[StringV2]
+                case Some(JsArray(values)) => values.map(_.convertTo[StringLiteralV2])
+                case None => Seq.empty[StringLiteralV2]
                 case _ => throw DeserializationException("The expected field 'labels' is in the wrong format.")
             }
 
             val comments = fields.get("comments") match {
-                case Some(JsArray(values)) => values.map(_.convertTo[StringV2])
-                case None => Seq.empty[StringV2]
+                case Some(JsArray(values)) => values.map(_.convertTo[StringLiteralV2])
+                case None => Seq.empty[StringLiteralV2]
                 case _ => throw DeserializationException("The expected field 'comments' is in the wrong format.")
             }
 
@@ -383,14 +383,14 @@ trait ListAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
             val id = fields.getOrElse("id", throw DeserializationException("The expected field 'id' is missing.")).convertTo[String]
             val name = fields.get("name").map(_.convertTo[String])
             val labels = fields.get("labels") match {
-                case Some(JsArray(values)) => values.map(_.convertTo[StringV2])
-                case None => Seq.empty[StringV2]
+                case Some(JsArray(values)) => values.map(_.convertTo[StringLiteralV2])
+                case None => Seq.empty[StringLiteralV2]
                 case _ => throw DeserializationException("The expected field 'labels' is in the wrong format.")
             }
 
             val comments = fields.get("comments") match {
-                case Some(JsArray(values)) => values.map(_.convertTo[StringV2])
-                case None => Seq.empty[StringV2]
+                case Some(JsArray(values)) => values.map(_.convertTo[StringLiteralV2])
+                case None => Seq.empty[StringLiteralV2]
                 case _ => throw DeserializationException("The expected field 'comments' is in the wrong format.")
             }
 

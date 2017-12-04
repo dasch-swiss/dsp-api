@@ -21,14 +21,14 @@
 package org.knora.webapi.messages.admin.responder.listadminmessages
 
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.store.triplestoremessages.StringV2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.scalatest.{Matchers, WordSpecLike}
 import spray.json._
 
 /**
   * This spec is used to test 'ListAdminMessages'.
   */
-class ListsAdminMessagesSpec extends WordSpecLike with Matchers with ListAdminJsonProtocol {
+class ListsAdminMessagesSpec extends WordSpecLike with Matchers with ListADMJsonProtocol {
 
     "Conversion from case class to JSON and back" should {
 
@@ -37,8 +37,8 @@ class ListsAdminMessagesSpec extends WordSpecLike with Matchers with ListAdminJs
             val listInfo: ListInfo = ListInfo (
                 id = "http://data.knora.org/lists/73d0ec0302",
                 projectIri = Some("http://rdfh.ch/projects/00FF"),
-                labels = Seq(StringV2("Title", Some("en")), StringV2("Titel", Some("de")), StringV2("Titre", Some("fr"))),
-                comments = Seq(StringV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
+                labels = Seq(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr"))),
+                comments = Seq(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
             )
 
             val json = listInfo.toJson.compactPrint
@@ -55,8 +55,8 @@ class ListsAdminMessagesSpec extends WordSpecLike with Matchers with ListAdminJs
             val listNodeInfo: ListNodeInfo = ListNodeInfo (
                 id = "http://rdfh.ch/lists/00FF/526f26ed04",
                 name = Some("sommer"),
-                labels = Seq(StringV2("Sommer")),
-                comments = Seq.empty[StringV2],
+                labels = Seq(StringLiteralV2("Sommer")),
+                comments = Seq.empty[StringLiteralV2],
                 position = Some(0)
             )
 
@@ -74,8 +74,8 @@ class ListsAdminMessagesSpec extends WordSpecLike with Matchers with ListAdminJs
             val listNode: ListNode = ListNode(
                 id = "http://rdfh.ch/lists/00FF/526f26ed04",
                 name = Some("sommer"),
-                labels = Seq(StringV2("Sommer")),
-                comments = Seq.empty[StringV2],
+                labels = Seq(StringLiteralV2("Sommer")),
+                comments = Seq.empty[StringLiteralV2],
                 children = Seq.empty[ListNode],
                 position = Some(0)
             )
@@ -94,15 +94,15 @@ class ListsAdminMessagesSpec extends WordSpecLike with Matchers with ListAdminJs
             val listInfo: ListInfo = ListInfo (
                 id = "http://data.knora.org/lists/73d0ec0302",
                 projectIri = Some("http://rdfh.ch/projects/00FF"),
-                labels = Seq(StringV2("Title", Some("en")), StringV2("Titel", Some("de")), StringV2("Titre", Some("fr"))),
-                comments = Seq(StringV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
+                labels = Seq(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr"))),
+                comments = Seq(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
             )
 
             val listNode: ListNode = ListNode(
                 id = "http://rdfh.ch/lists/00FF/526f26ed04",
                 name = Some("sommer"),
-                labels = Seq(StringV2("Sommer")),
-                comments = Seq.empty[StringV2],
+                labels = Seq(StringLiteralV2("Sommer")),
+                comments = Seq.empty[StringLiteralV2],
                 children = Seq.empty[ListNode],
                 position = Some(0)
             )

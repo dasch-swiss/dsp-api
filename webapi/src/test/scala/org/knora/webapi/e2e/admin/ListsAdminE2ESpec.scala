@@ -46,7 +46,7 @@ object ListsAdminE2ESpec {
 /**
   * End-to-End (E2E) test specification for testing users endpoint.
   */
-class ListsAdminE2ESpec extends E2ESpec(ListsAdminE2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListAdminJsonProtocol {
+class ListsAdminE2ESpec extends E2ESpec(ListsAdminE2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListADMJsonProtocol {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 

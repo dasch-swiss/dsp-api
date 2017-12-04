@@ -24,11 +24,11 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsAdminJsonProtocol}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.util.SmartIri
 import spray.json.{DefaultJsonProtocol, RootJsonFormat, _}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,10 +52,10 @@ sealed trait OntologiesResponderRequestADM extends KnoraRequestADM
   * Requests a list of all ontologies or the ontologies inside a project. A successful response will be a [[OntologiesGetResponseADM]]
   *
   * @param projectIri  the IRI of the project.
-  * @param userProfile the profile of the user making the request.
+  * @param user the user making the request.
   */
 case class OntologiesGetRequestADM(projectIri: Option[IRI] = None,
-                                   userProfile: UserProfileV1) extends OntologiesResponderRequestADM
+                                   user: UserADM) extends OntologiesResponderRequestADM
 
 
 /**
@@ -140,7 +140,7 @@ case class OntologyCreateResponseADM(ontology: OntologyDataADM) extends KnoraRes
   * @param project the [[ProjectInfoV1]] of the project to which this ontology belongs.
   * @param data the contents of the the ontology as an JSON-LD string.
   */
-case class OntologyDataADM(ontologyIri: IRI, ontologyName: String, project: ProjectADM, data: String)
+case class OntologyDataADM(ontologyIri: SmartIri, ontologyName: String, project: ProjectADM, data: String)
 
 /**
   * Represents basic information of an ontology.
@@ -149,7 +149,7 @@ case class OntologyDataADM(ontologyIri: IRI, ontologyName: String, project: Proj
   * @param ontologyName the name of the ontology.
   * @param project the [[ProjectInfoV1]] of the project to which this ontology belongs.
   */
-case class OntologyInfoADM(ontologyIri: IRI, ontologyName: String, project: ProjectADM)
+case class OntologyInfoADM(ontologyIri: SmartIri, ontologyName: String, project: ProjectADM)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +158,7 @@ case class OntologyInfoADM(ontologyIri: IRI, ontologyName: String, project: Proj
 /**
   * A spray-json protocol for generating Knora API Admin JSON.
   */
-trait OntologiesADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsAdminJsonProtocol {
+trait OntologiesADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsADMJsonProtocol {
 
     implicit val ontologyDataADMFormat: JsonFormat[OntologyDataADM] = jsonFormat4(OntologyDataADM)
     implicit val ontologyInfoADMFormat: JsonFormat[OntologyInfoADM] = jsonFormat3(OntologyInfoADM)

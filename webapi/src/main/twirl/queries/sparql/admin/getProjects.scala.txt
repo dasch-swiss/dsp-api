@@ -21,18 +21,19 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets basic information about all lists. If the IRI of a project is supplied,
- * then only lists belonging to this project are returned.
+ * Gets all information about a single project, given either the project's IRI, shortname, or shortcode.
  *
  * @param triplestore the name of the triplestore being used.
- * @param maybeProjectIri the IRI of the project the list belongs to.
+ * @param maybeIri the project's IRI.
+ * @param maybeShortname the project's shortname.
+ * @param maybeShortcode the project's shortcode.
  *@
 @(triplestore: String,
-  maybeProjectIri: Option[IRI])
+  maybeIri: Option[IRI],
+  maybeShortname: Option[String],
+  maybeShortcode: Option[String])
 
-prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 CONSTRUCT { ?s ?p ?o . }
@@ -41,13 +42,19 @@ CONSTRUCT { ?s ?p ?o . }
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    ?s rdf:type knora-base:ListNode .
 
-    ?s knora-base:isRootNode "true"^^xsd:boolean .
-
-    @if(maybeProjectIri.nonEmpty) {
-        ?s knora-base:attachedToProject <@maybeProjectIri.get> .
+    @if(maybeIri.nonEmpty) {
+        BIND(IRI("@maybeIri") as ?s)
     }
 
+    @if(maybeShortname.nonEmpty) {
+        ?s knora-base:projectShortname "@maybeShortname.get"^^xsd:string .
+    }
+
+    @if(maybeShortcode.nonEmpty) {
+        ?s knora-base:projectShortcode "@maybeShortcode.get"^^xsd:string .
+    }
+
+    ?s rdf:type knora-base:knoraProject .
     ?s ?p ?o .
 }

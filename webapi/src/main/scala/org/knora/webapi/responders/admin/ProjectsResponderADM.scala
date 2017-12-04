@@ -26,6 +26,7 @@ import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import arq.iri
+import org.apache.jena.sparql.function.library.pi
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoADM
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -36,7 +37,7 @@ import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{KnoraIdUtil, StringFormatter}
+import org.knora.webapi.util.{KnoraIdUtil, SmartIri, StringFormatter}
 
 import scala.concurrent.Future
 
@@ -57,38 +58,39 @@ class ProjectsResponderADM extends Responder {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case ProjectsGetRequestADMADM(userProfile) => future2Message(sender(), projectsGetRequestADM(userProfile), log)
+        case ProjectsGetRequestADM(userProfile) => future2Message(sender(), projectsGetRequestADM(userProfile), log)
         case ProjectsGetADM(userProfile) => future2Message(sender(), projectsGetADM(userProfile), log)
-        case ProjectGetRequestADMADM(maybeIri, maybeShortname, maybeShortcode, user) => future2Message(sender(), projectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, user), log)
-        case ProjectGetADM(iri, userProfile) => future2Message(sender(), projectGetADM(iri, userProfile), log)
-        case ProjectsOntologiesGetADM(maybeProjectIri) => future2Message(sender(), projectsOntologiesGetADM(maybeProjectIri), log)
+        case ProjectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, maybeUser) => future2Message(sender(), projectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, maybeUser), log)
+        case ProjectGetADM(maybeIri, maybeShortname, maybeShortcode, maybeUser) => future2Message(sender(), projectGetADM(maybeIri, maybeShortname, maybeShortcode, maybeUser), log)
+
         case ProjectMembersByIRIGetRequestV1(iri, userProfileV1) => future2Message(sender(), projectMembersByIRIGetRequestV1(iri, userProfileV1), log)
         case ProjectMembersByShortnameGetRequestV1(shortname, userProfileV1) => future2Message(sender(), projectMembersByShortnameGetRequestV1(shortname, userProfileV1), log)
         case ProjectAdminMembersByIRIGetRequestV1(iri, userProfileV1) => future2Message(sender(), projectAdminMembersByIRIGetRequestV1(iri, userProfileV1), log)
         case ProjectAdminMembersByShortnameGetRequestV1(shortname, userProfileV1) => future2Message(sender(), projectAdminMembersByShortnameGetRequestV1(shortname, userProfileV1), log)
         case ProjectCreateRequestV1(createRequest, userProfileV1, apiRequestID) => future2Message(sender(), projectCreateRequestV1(createRequest, userProfileV1, apiRequestID), log)
         case ProjectChangeRequestV1(projectIri, changeProjectRequest, userProfileV1, apiRequestID) => future2Message(sender(), changeBasicInformationRequestV1(projectIri, changeProjectRequest, userProfileV1, apiRequestID), log)
-        case ProjectOntologyAddV1(projectIri, ontologyIri, apiRequestID) => future2Message(sender(), projectOntologyAddV1(projectIri, ontologyIri, apiRequestID), log)
-        case ProjectOntologyRemoveV1(projectIri, ontologyIri, apiRequestID) => future2Message(sender(), projectOntologyRemoveV1(projectIri, ontologyIri, apiRequestID), log)
+        case ProjectsOntologiesGetADM(maybeProjectIri) => future2Message(sender(), projectsOntologiesGetADM(maybeProjectIri), log)
+        case ProjectOntologyAddV1(projectIri, ontologyIri, apiRequestID) => future2Message(sender(), projectOntologyAddADM(projectIri, ontologyIri, apiRequestID), log)
+        case ProjectOntologyRemoveV1(projectIri, ontologyIri, apiRequestID) => future2Message(sender(), projectOntologyRemoveADM(projectIri, ontologyIri, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     /**
       * Gets all the projects and returns them as a [[ProjectsResponseV1]].
       *
-      * @param userProfile the profile of the user that is making the request.
+      * @param user the user that is making the request.
       * @return all the projects as a [[ProjectsResponseV1]].
       * @throws NotFoundException if no projects are found.
       */
-    private def projectsGetRequestADM(userProfile: Option[UserADM]): Future[ProjectsResponseADMADM] = {
+    private def projectsGetRequestADM(user: Option[UserADM]): Future[ProjectsResponseADM] = {
 
         //log.debug("projectsGetRequestV1")
 
         for {
-            projects <- projectsGetADM(userProfile)
+            projects <- projectsGetADM(user)
 
             result = if (projects.nonEmpty) {
-                ProjectsResponseADMADM(
+                ProjectsResponseADM(
                     projects = projects
                 )
             } else {
@@ -107,48 +109,43 @@ class ProjectsResponderADM extends Responder {
     private def projectsGetADM(user: Option[UserADM]): Future[Seq[ProjectADM]] = {
 
         for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjects(
-                triplestore = settings.triplestoreType
+            sparqlQueryString <- Future(queries.sparql.admin.txt.getProjects(
+                triplestore = settings.triplestoreType,
+                maybeIri = None,
+                maybeShortname = None,
+                maybeShortcode = None
             ).toString())
             //_ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
 
-            projectsResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            //_ = log.debug(s"getProjectsResponseV1 - result: $projectsResponse")
+            projectsResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
+            //_ = log.debug(s"projectsGetADM - projectsResponse: $projectsResponse")
 
-            projectsResponseRows: Seq[VariableResultsRow] = projectsResponse.results.bindings
+            statements = projectsResponse.statements.toList
+            // _ = log.debug(s"projectsGetADM - statements: $statements")
 
-            projectsWithProperties: Map[IRI, Map[IRI, Seq[String]]] = projectsResponseRows.groupBy(_.rowMap("s")).map {
-                case (projIri: String, rows: Seq[VariableResultsRow]) => (projIri, rows.groupBy(_.rowMap("p")).map {
-                    case (predicate: IRI, literals: Seq[VariableResultsRow]) => predicate -> literals.map(_.rowMap("o"))
-                })
-            }
-            //_ = log.debug(s"getProjectsResponseV1 - projectsWithProperties: $projectsWithProperties")
-
-            projects = projectsWithProperties.map {
-                case (projectIri: String, propsMap: Map[String, Seq[String]]) =>
+            projects: Seq[ProjectADM] = statements.map {
+                case (projectIri: IRI, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
                     ProjectADM(
                         id = projectIri,
-                        shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head,
-                        shortcode = propsMap.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head),
-                        longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head),
-                        description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head),
-                        keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords).map(_.head),
-                        logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head),
-                        institution = propsMap.get(OntologyConstants.KnoraBase.BelongsToProject).map(_.head),
-                        ontologies = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, Seq.empty[IRI]),
-                        status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.toBoolean,
-                        selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).head.toBoolean
+                        shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head.asInstanceOf[StringLiteralV2].value,
+                        shortcode = propsMap.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head.asInstanceOf[StringLiteralV2].value),
+                        longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head.asInstanceOf[StringLiteralV2].value),
+                        description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head.asInstanceOf[StringLiteralV2].value),
+                        keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords).map(_.head.asInstanceOf[StringLiteralV2].value),
+                        logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head.asInstanceOf[StringLiteralV2].value),
+                        institution = propsMap.get(OntologyConstants.KnoraBase.BelongsToProject).map(_.head.asInstanceOf[StringLiteralV2].value),
+                        ontologies = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, Seq.empty[IRI]).map(_.asInstanceOf[IriLiteralV2].value),
+                        status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.asInstanceOf[BooleanLiteralV2].value,
+                        selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).head.asInstanceOf[BooleanLiteralV2].value
                     )
-            }.toSeq
+            }
 
         } yield projects
     }
 
-
-
     /**
-      * Gets the project with the given project IRI and returns the information as a [[ProjectInfoResponseV1]].
+      * Gets the project with the given project IRI and returns the information as a [[ProjectResponseADM]].
       *
       * @param maybeIri           the IRI of the project.
       * @param maybeShortname the project's short name.
@@ -157,43 +154,45 @@ class ProjectsResponderADM extends Responder {
       * @return information about the project as a [[ProjectInfoResponseV1]].
       * @throws NotFoundException when no project for the given IRI can be found
       */
-    private def projectGetRequestADM(maybeIri: Option[IRI], maybeShortname: Option[String], maybeShortcode: Option[String], user: Option[UserADM]): Future[ProjectADM] = {
+    private def projectGetRequestADM(maybeIri: Option[IRI], maybeShortname: Option[String], maybeShortcode: Option[String], user: Option[UserADM]): Future[ProjectResponseADM] = {
 
         //log.debug("projectGetRequestADM - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
 
         for {
-            maybeProjectInfo: Option[ProjectInfoV1] <- projectGetADM(maybeIri, maybeShortname, maybeShortcode, user)
-            projectInfo = maybeProjectInfo match {
-                case Some(pi) => pi
+            maybeProject: Option[ProjectADM] <- projectGetADM(maybeIri, maybeShortname, maybeShortcode, user)
+            project = maybeProject match {
+                case Some(project) => project
                 case None => throw NotFoundException(s"Project '${Seq(maybeIri, maybeShortname, maybeShortcode).flatten.head}' not found")
             }
-        } yield ProjectInfoResponseV1(
-            project_info = projectInfo
+        } yield ProjectResponseADM(
+            project = project
         )
     }
 
     /**
-      * Gets the project with the given project IRI and returns the information as a [[ProjectInfoV1]].
+      * Gets the project with the given project IRI, shortname, or shortcode and returns the information as a [[ProjectADM]].
       *
       * @param maybeIri           the IRI of the project.
       * @param maybeShortname the project's short name.
       * @param maybeShortcode the project's shortcode.
-      * @param user the profile of the user making the request (optional).
+      * @param maybeUser the profile of the user making the request (optional).
       * @return information about the project as a [[ProjectInfoV1]].
       */
-    private def projectGetADM(maybeIri: Option[IRI], maybeShortname: Option[String], maybeShortcode: Option[String], user: Option[UserADM]): Future[Option[ProjectInfoV1]] = {
+    private def projectGetADM(maybeIri: Option[IRI], maybeShortname: Option[String], maybeShortcode: Option[String], maybeUser: Option[UserADM]): Future[Option[ProjectADM]] = {
 
         //log.debug("projectInfoByIRIGetV1 - projectIRI: {}", projectIri)
 
         for {
-            sparqlQuery <- Future(queries.sparql.v1.txt.getProjectByIri(
+            sparqlQuery <- Future(queries.sparql.admin.txt.getProjects(
                 triplestore = settings.triplestoreType,
-                projectIri = projectIri
+                maybeIri = maybeIri,
+                maybeShortname = maybeShortname,
+                maybeShortcode = maybeShortcode
             ).toString())
-            projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            projectResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
 
-            projectInfo = if (projectResponse.results.bindings.nonEmpty) {
-                Some(createProjectInfoV1(projectResponse = projectResponse.results.bindings, projectIri = projectIri, userProfile))
+            projectInfo = if (projectResponse.statements.nonEmpty) {
+                Some(createProjectADM(statements = projectResponse.statements.head, maybeUser))
             } else {
                 None
             }
@@ -204,73 +203,36 @@ class ProjectsResponderADM extends Responder {
     }
 
     /**
-      * Gets the project with the given shortname and returns the information as a [[ProjectInfoResponseV1]].
+      * Gets the members of a project with the given IRI, shortname, oder shortcode.
       *
-      * @param shortName   the shortname of the project requested.
-      * @param userProfile the profile of user that is making the request.
-      * @return information about the project as a [[ProjectInfoResponseV1]].
-      * @throws NotFoundException in the case that no project for the given shortname can be found.
-      */
-    private def projectInfoByShortnameGetRequestV1(shortName: String, userProfile: Option[UserProfileV1]): Future[ProjectInfoResponseV1] = {
-
-        //log.debug("projectInfoByShortnameGetRequestV1 - shortName: {}", shortName)
-
-        for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectByShortname(
-                triplestore = settings.triplestoreType,
-                shortname = shortName
-            ).toString())
-            //_ = log.debug(s"getProjectInfoByShortnameGetRequest - query: $sparqlQueryString")
-
-            projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            //_ = log.debug(s"getProjectInfoByShortnameGetRequest - result: $projectResponse")
-
-
-            // get project IRI from results rows
-            projectIri: IRI = if (projectResponse.results.bindings.nonEmpty) {
-                projectResponse.results.bindings.head.rowMap("s")
-            } else {
-                throw NotFoundException(s"Project '$shortName' not found")
-            }
-
-            projectInfo = createProjectInfoV1(projectResponse = projectResponse.results.bindings, projectIri = projectIri, userProfile)
-
-        } yield ProjectInfoResponseV1(
-            project_info = projectInfo
-        )
-    }
-
-    /**
-      * Gets the members of a project with the given IRI.
-      *
-      * @param projectIri    the IRI of the project.
-      * @param userProfileV1 the profile of the user that is making the request.
+      * @param maybeIri           the IRI of the project.
+      * @param maybeShortname the project's short name.
+      * @param maybeShortcode the project's shortcode.
+      * @param maybeUser the profile of the user making the request (optional).
       * @return the members of a project as a [[ProjectMembersGetResponseV1]]
       * @throws NotFoundException in the case that the project's IRI is not found.
       */
-    private def projectMembersByIRIGetRequestV1(projectIri: IRI, userProfileV1: UserProfileV1): Future[ProjectMembersGetResponseV1] = {
+    private def projectMembersGetRequestADM(maybeIri: Option[IRI], maybeShortname: Option[String], maybeShortcode: Option[String], maybeUser: Option[UserADM]): Future[ProjectMembersGetResponseADM] = {
 
         //log.debug("projectMembersByIRIGetRequestV1 - projectIRI: {}", projectIri)
 
         for {
-            projectExists: Boolean <- projectByIriExists(projectIri)
-
-            _ = if (!projectExists) {
-                throw NotFoundException(s"Project '$projectIri' not found.")
-            }
-
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectMembersByIri(
+            sparqlQueryString <- Future(queries.sparql.admin.txt.getProjectMembers(
                 triplestore = settings.triplestoreType,
-                projectIri = projectIri
+                maybeIri = maybeIri,
+                maybeShortname = maybeShortname,
+                maybeShortcode = maybeShortcode
             ).toString())
             //_ = log.debug(s"projectMembersByIRIGetRequestV1 - query: $sparqlQueryString")
 
-            projectMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            projectMembersResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
             //_ = log.debug(s"projectMembersByIRIGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
 
+            statements = projectMembersResponse.statements.toList
+
             // get project member IRI from results rows
-            projectMemberIris: Seq[IRI] = if (projectMembersResponse.results.bindings.nonEmpty) {
-                projectMembersResponse.results.bindings.map(_.rowMap("s"))
+            projectMemberIris: Seq[IRI] = if (statements.nonEmpty) {
+                statements.map(_._1)
             } else {
                 Seq.empty[IRI]
             }
@@ -282,125 +244,29 @@ class ProjectsResponderADM extends Responder {
     }
 
     /**
-      * Gets all the ontologies from all projects and returns them as a sequence of [[OntologyInfoADM]]. If a project IRI
-      * is supplied. Then only the ontologies for this project are returend.
+      * Gets the admin members of a project with the given IRI, shortname, or shortcode.
       *
-      * @param maybeProjectIri the IRI of the project for which we want to filter. If none is supplied, then all are returned.
-      * @return a sequence of [[NamedGraphV1]]
-      * @throws InconsistentTriplestoreDataException whenever a expected/required peace of data is not found.
-      */
-    private def projectsOntologiesGetADM(maybeProjectIri: IRI): Future[Seq[OntologyInfoADM]] = {
-
-        for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjects(
-                triplestore = settings.triplestoreType
-            ).toString())
-            //_ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
-
-            projectsResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            //_ = log.debug(s"getProjectsResponseV1 - result: $projectsResponse")
-
-            projectsResponseRows: Seq[VariableResultsRow] = projectsResponse.results.bindings
-
-            projectsWithProperties: Map[IRI, Map[IRI, Seq[String]]] = projectsResponseRows.groupBy(_.rowMap("s")).map {
-                case (projIri: String, rows: Seq[VariableResultsRow]) => (projIri, rows.groupBy(_.rowMap("p")).map {
-                    case (predicate: IRI, literals: Seq[VariableResultsRow]) => predicate -> literals.map(_.rowMap("o"))
-                })
-            }
-            //_ = log.debug(s"getProjectsResponseV1 - projectsWithProperties: $projectsWithProperties")
-
-            namedGraphs: Seq[NamedGraphV1] = projectsWithProperties.flatMap {
-                case (projectIri: String, propsMap: Map[String, Seq[String]]) =>
-
-                    val maybeOntologies = propsMap.get(OntologyConstants.KnoraBase.ProjectOntology)
-                    maybeOntologies match {
-                        case Some(ontologies) => ontologies.map( ontologyIri =>
-                            NamedGraphV1(
-                                id = ontologyIri,
-                                shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")).head,
-                                longname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectLongname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no longname defined.")).head,
-                                description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")).head,
-                                project_id = projectIri,
-                                uri = ontologyIri,
-                                active = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.toBoolean
-                            )
-                        )
-                        case None => Seq.empty[NamedGraphV1]
-                    }
-            }.toSeq
-
-            // _ = log.debug("projectsNamedGraphGetV1 - ontologies: {}", ontologies)
-        } yield namedGraphs
-    }
-
-    /**
-      * Gets the members of a project with the given shortname.
-      *
-      * @param shortname     the IRI of the project.
-      * @param userProfileV1 the profile of the user that is making the request.
-      * @return the members of a project as a [[ProjectMembersGetResponseV1]]
-      * @throws NotFoundException in the case that the project with the given shortname can not be found.
-      */
-    private def projectMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserProfileV1): Future[ProjectMembersGetResponseV1] = {
-
-        //log.debug("projectMembersByShortnameGetRequestV1 - shortname: {}", shortname)
-
-        for {
-            projectExists: Boolean <- projectByShortnameExists(shortname)
-
-            _ = if (!projectExists) {
-                throw NotFoundException(s"Project '$shortname' not found.")
-            }
-
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectMembersByShortname(
-                triplestore = settings.triplestoreType,
-                shortname = shortname
-            ).toString())
-            //_ = log.debug(s"projectMembersByShortnameGetRequestV1 - query: $sparqlQueryString")
-
-            projectMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            //_ = log.debug(s"projectMembersByShortnameGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
-
-
-            // get project member IRI from results rows
-            projectMemberIris: Seq[IRI] = if (projectMembersResponse.results.bindings.nonEmpty) {
-                projectMembersResponse.results.bindings.map(_.rowMap("s"))
-            } else {
-                Seq.empty[IRI]
-            }
-            //_ = log.debug(s"projectMembersByShortnameGetRequestV1 - projectMemberIris: $projectMemberIris")
-
-            response <- createProjectMembersGetResponse(projectMemberIris, userProfileV1)
-
-        } yield response
-    }
-
-    /**
-      * Gets the admin members of a project with the given IRI.
-      *
-      * @param projectIri    the IRI of the project.
-      * @param userProfileV1 the profile of the user that is making the request.
-      * @return the members of a project as a [[ProjectMembersGetResponseV1]]
+      * @param maybeIri           the IRI of the project.
+      * @param maybeShortname the project's short name.
+      * @param maybeShortcode the project's shortcode.
+      * @param maybeUser the profile of the user making the request (optional).
+      * @return the members of a project as a [[ProjectMembersGetResponseADM]]
       * @throws NotFoundException in the case that the project's IRI is not found.
       */
-    private def projectAdminMembersByIRIGetRequestV1(projectIri: IRI, userProfileV1: UserProfileV1): Future[ProjectAdminMembersGetResponseV1] = {
+    private def projectAdminMembersGetRequestADM(maybeIri: Option[IRI], maybeShortname: Option[String], maybeShortcode: Option[String], maybeUser: Option[UserADM]): Future[ProjectAdminMembersGetResponseADM] = {
 
         //log.debug("projectAdminMembersByIRIGetRequestV1 - projectIRI: {}", projectIri)
 
         for {
-            projectExists: Boolean <- projectByIriExists(projectIri)
-
-            _ = if (!projectExists) {
-                throw NotFoundException(s"Project '$projectIri' not found.")
-            }
-
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectAdminMembersByIri(
+            sparqlQueryString <- Future(queries.sparql.admin.txt.getProjectAdminMembers(
                 triplestore = settings.triplestoreType,
-                projectIri = projectIri
+                maybeIri = maybeIri,
+                maybeShortname = maybeShortname,
+                maybeShortcode = maybeShortcode
             ).toString())
             //_ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - query: $sparqlQueryString")
 
-            projectMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            projectMembersResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
             //_ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
 
             // get project member IRI from results rows
@@ -425,7 +291,7 @@ class ProjectsResponderADM extends Responder {
       * @return the members of a project as a [[ProjectMembersGetResponseV1]]
       * @throws NotFoundException in the case that the project with the given shortname can not be found.
       */
-    private def projectAdminMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserProfileV1): Future[ProjectAdminMembersGetResponseV1] = {
+    private def projectAdminMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserProfileV1): Future[ProjectAdminMembersGetResponseADM] = {
 
         //log.debug("projectAdminMembersByShortnameGetRequestV1 - shortname: {}", shortname)
 
@@ -463,23 +329,23 @@ class ProjectsResponderADM extends Responder {
       * Creates a project.
       *
       * @param createRequest the new project's information.
-      * @param userProfile the profile of the user that is making the request.
-      * @param apiRequestID the unique api request ID.
+      * @param user          the user that is making the request.
+      * @param apiRequestID  the unique api request ID.
       * @return a [[ProjectOperationResponseV1]].
       * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
       * @throws DuplicateValueException in the case when either the shortname or shortcode are not unique.
       * @throws BadRequestException in the case when the shortcode is invalid.
       */
-    private def projectCreateRequestV1(createRequest: CreateProjectApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
+    private def projectCreateRequestV1(createRequest: CreateProjectApiRequestV1, user: UserADM, apiRequestID: UUID): Future[ProjectOperationResponseADM] = {
 
         //log.debug("projectCreateRequestV1 - createRequest: {}", createRequest)
 
-        def projectCreateTask(createRequest: CreateProjectApiRequestV1, userProfile: UserProfileV1): Future[ProjectOperationResponseV1] = for {
+        def projectCreateTask(createRequest: CreateProjectApiRequestV1, user: UserADM): Future[ProjectOperationResponseADM] = for {
             // check if required properties are not empty
             _ <- Future(if (createRequest.shortname.isEmpty) throw BadRequestException("'Shortname' cannot be empty"))
 
             // check if the requesting user is allowed to create project
-            _ = if (!userProfile.permissionData.isSystemAdmin) {
+            _ = if (!user.permissions.isSystemAdmin) {
                 // not a system admin
                 throw ForbiddenException("A new project can only be created by a system admin.")
             }
@@ -542,19 +408,16 @@ class ProjectsResponderADM extends Responder {
             }
 
             // create the project info
-            newProjectInfo = createProjectInfoV1(projectResponse, newProjectIRI, Some(userProfile))
+            newProject = createProjectADM(projectResponse, newProjectIRI, Some(user))
 
-            // create the project operation response
-            projectOperationResponseV1 = ProjectOperationResponseV1(newProjectInfo)
-
-        } yield projectOperationResponseV1
+        } yield ProjectOperationResponseADM(project = newProject)
 
         for {
             // run user creation with an global IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 PROJECTS_GLOBAL_LOCK_IRI,
-                () => projectCreateTask(createRequest, userProfile)
+                () => projectCreateTask(createRequest, user)
             )
         } yield taskResult
     }
@@ -569,14 +432,14 @@ class ProjectsResponderADM extends Responder {
       * @return a [[ProjectOperationResponseV1]].
       * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
       */
-    private def changeBasicInformationRequestV1(projectIri: IRI, changeProjectRequest: ChangeProjectApiRequestV1, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
+    private def changeBasicInformationRequestV1(projectIri: IRI, changeProjectRequest: ChangeProjectApiRequestV1, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseADM] = {
 
         //log.debug(s"changeBasicInformationRequestV1: changeProjectRequest: {}", changeProjectRequest)
 
         /**
           * The actual change project task run with an IRI lock.
           */
-        def changeProjectTask(projectIri: IRI, changeProjectRequest: ChangeProjectApiRequestV1, userProfileV1: UserProfileV1): Future[ProjectOperationResponseV1] = for {
+        def changeProjectTask(projectIri: IRI, changeProjectRequest: ChangeProjectApiRequestV1, userProfileV1: UserProfileV1): Future[ProjectOperationResponseADM] = for {
 
             _ <- Future(
                 // check if necessary information is present
@@ -600,7 +463,7 @@ class ProjectsResponderADM extends Responder {
                 selfjoin = changeProjectRequest.selfjoin
             )
 
-            result <- updateProjectV1(projectIri, projectUpdatePayload)
+            result <- updateProjectADM(projectIri, projectUpdatePayload)
 
         } yield result
 
@@ -616,6 +479,54 @@ class ProjectsResponderADM extends Responder {
     }
 
     /**
+      * Gets all the ontologies from all projects and returns them as a sequence of [[OntologyInfoADM]]. If a project IRI
+      * is supplied. Then only the ontologies for this project are returend.
+      *
+      * @param maybeProjectIri the IRI of the project for which we want to filter. If none is supplied, then all are returned.
+      * @return a sequence of [[NamedGraphV1]]
+      * @throws InconsistentTriplestoreDataException whenever a expected/required peace of data is not found.
+      */
+    private def projectsOntologiesGetADM(maybeProjectIri: IRI): Future[Seq[OntologyInfoADM]] = {
+
+        for {
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjects(
+                triplestore = settings.triplestoreType
+            ).toString())
+            //_ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
+
+            projectsResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            //_ = log.debug(s"getProjectsResponseV1 - result: $projectsResponse")
+
+            projectsResponseRows: Seq[VariableResultsRow] = projectsResponse.results.bindings
+
+            projectsWithProperties: Map[IRI, Map[IRI, Seq[String]]] = projectsResponseRows.groupBy(_.rowMap("s")).map {
+                case (projIri: String, rows: Seq[VariableResultsRow]) => (projIri, rows.groupBy(_.rowMap("p")).map {
+                    case (predicate: IRI, literals: Seq[VariableResultsRow]) => predicate -> literals.map(_.rowMap("o"))
+                })
+            }
+            //_ = log.debug(s"getProjectsResponseV1 - projectsWithProperties: $projectsWithProperties")
+
+            ontologieInfos: Seq[OntologyInfoADM] = projectsWithProperties.flatMap {
+                case (projectIri: String, propsMap: Map[String, Seq[String]]) =>
+
+                    val maybeOntologies = propsMap.get(OntologyConstants.KnoraBase.ProjectOntology)
+                    maybeOntologies match {
+                        case Some(ontologies) => ontologies.map( ontologyIri =>
+                            OntologyInfoADM(
+                                iri = SmartIri(ontologyIri),
+                                name = SmartIri(ontologyIri).getOntologyName,
+                                project = projectGetADM()
+                            )
+                        )
+                        case None => Seq.empty[NamedGraphV1]
+                    }
+            }.toSeq
+
+            // _ = log.debug("projectsNamedGraphGetV1 - ontologies: {}", ontologies)
+        } yield ontologieInfos
+    }
+
+    /**
       * Add a ontology to the project.
       *
       * @param projectIri the IRI of the project.
@@ -624,33 +535,33 @@ class ProjectsResponderADM extends Responder {
       * @return a [[ProjectInfoV1]]
       * @throws NotFoundException in the case that the project's IRI is not found.
       */
-    private def projectOntologyAddV1(projectIri: IRI, ontologyIri: IRI, apiRequestID: UUID): Future[ProjectInfoV1] = {
+    private def projectOntologyAddADM(projectIri: IRI, ontologyIri: IRI, apiRequestID: UUID): Future[ProjectADM] = {
 
         // log.debug("projectOntologyAddV1 - projectIri: {}, ontologyIri: {}", projectIri, ontologyIri)
 
         /**
           * The actual ontology add task run with an IRI lock.
           */
-        def ontologyAddTask(projectIri: IRI, ontologyIri: IRI): Future[ProjectInfoV1] = for {
+        def ontologyAddTask(projectIri: IRI, ontologyIri: IRI): Future[ProjectADM] = for {
 
             _ <- Future(
                 // check if necessary information is present
                 if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
             )
 
-            maybeProjectInfo <- projectInfoByIRIGetV1(projectIri, None)
+            maybeProject <- projectGetADM(Some(projectIri), None, None, None)
 
             // _ = log.debug("projectOntologyAddV1 - ontologyAddTask - maybeProjectInfo: {}", maybeProjectInfo)
 
-            ontologies: Seq[IRI] = maybeProjectInfo match {
-                case Some(pi) => pi.ontologies :+ ontologyIri
+            ontologies: Seq[IRI] = maybeProject match {
+                case Some(project) => project.ontologies :+ ontologyIri
                 case None => throw NotFoundException(s"Project '$projectIri' not found. Aborting update request.")
             }
 
-            projectUpdatePayload = ProjectUpdatePayloadV1(ontologies = Some(ontologies))
+            projectUpdatePayload = ProjectUpdatePayloadADM(ontologies = Some(ontologies))
 
-            result <- updateProjectV1(projectIri, projectUpdatePayload)
-        } yield result.project_info
+            result <- updateProjectADM(projectIri, projectUpdatePayload)
+        } yield result.project
 
         for {
             // run the change status task with an IRI lock
@@ -671,21 +582,21 @@ class ProjectsResponderADM extends Responder {
       * @return a [[ProjectInfoV1]]
       * @throws NotFoundException in the case that the project's IRI is not found.
       */
-    private def projectOntologyRemoveV1(projectIri: IRI, ontologyIri: IRI, apiRequestID: UUID): Future[ProjectInfoV1] = {
+    private def projectOntologyRemoveADM(projectIri: IRI, ontologyIri: IRI, apiRequestID: UUID): Future[ProjectADM] = {
 
         // log.debug("projectOntologyRemoveV1 - projectIri: {}, ontologyIri: {}", projectIri, ontologyIri)
 
         /**
           * The actual ontology remove task run with an IRI lock.
           */
-        def ontologyRemoveTask(projectIri: IRI, ontologyIri: IRI): Future[ProjectInfoV1] = for {
+        def ontologyRemoveTask(projectIri: IRI, ontologyIri: IRI): Future[ProjectADM] = for {
 
             _ <- Future(
                 // check if necessary information is present
                 if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
             )
 
-            maybeProjectInfo <- projectInfoByIRIGetV1(projectIri, None)
+            maybeProjectInfo <- projectGetADM(Some(projectIri), None, None, None)
 
             // _ = log.debug("projectOntologyRemoveV1 - ontologyRemoveTask - maybeProjectInfo: {}", maybeProjectInfo)
 
@@ -694,10 +605,10 @@ class ProjectsResponderADM extends Responder {
                 case None => throw NotFoundException(s"Project '$projectIri' not found. Aborting update request.")
             }
 
-            projectUpdatePayload = ProjectUpdatePayloadV1(ontologies = Some(ontologies))
+            projectUpdatePayload = ProjectUpdatePayloadADM(ontologies = Some(ontologies))
 
-            result <- updateProjectV1(projectIri, projectUpdatePayload)
-        } yield result.project_info
+            result <- updateProjectADM(projectIri, projectUpdatePayload)
+        } yield result.project
 
         for {
             // run the change status task with an IRI lock
@@ -720,7 +631,7 @@ class ProjectsResponderADM extends Responder {
       * @return a [[ProjectOperationResponseV1]].
       * @throws NotFoundException in the case that the project's IRI is not found.
       */
-    private def updateProjectV1(projectIri: IRI, projectUpdatePayload: ProjectUpdatePayloadV1): Future[ProjectOperationResponseV1] = {
+    private def updateProjectADM(projectIri: IRI, projectUpdatePayload: ProjectUpdatePayloadADM): Future[ProjectOperationResponseADM] = {
 
         log.debug("updateProjectV1 - projectIri: {}, projectUpdatePayload: {}", projectIri, projectUpdatePayload)
 
@@ -764,8 +675,8 @@ class ProjectsResponderADM extends Responder {
             updateProjectResponse <- (storeManager ? SparqlUpdateRequest(updateProjectSparqlString)).mapTo[SparqlUpdateResponse]
 
             /* Verify that the project was updated. */
-            maybeUpdatedProject <- projectInfoByIRIGetV1(projectIri, None)
-            updatedProject: ProjectInfoV1 = maybeUpdatedProject.getOrElse(throw UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
+            maybeUpdatedProject <- projectGetADM(Some(projectIri), None, None, None)
+            updatedProject: ProjectADM = maybeUpdatedProject.getOrElse(throw UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
 
             //_ = log.debug("updateProjectV1 - projectUpdatePayload: {} /  updatedProject: {}", projectUpdatePayload, updatedProject)
 
@@ -806,7 +717,7 @@ class ProjectsResponderADM extends Responder {
             }
 
             // create the project operation response
-            projectOperationResponseV1 = ProjectOperationResponseV1(project_info = updatedProject)
+            projectOperationResponseV1 = ProjectOperationResponseADM(project = updatedProject)
         } yield projectOperationResponseV1
 
     }
@@ -819,55 +730,41 @@ class ProjectsResponderADM extends Responder {
     /**
       * Helper method that turns SPARQL result rows into a [[ProjectInfoV1]].
       *
-      * @param projectResponse results from the SPARQL query representing information about the project.
-      * @param projectIri      the IRI of the project the querid information belong to.
-      * @param userProfile     the profile of user that is making the request.
+      * @param statements results from the SPARQL query representing information about the project.
+      * @param maybeUser     the profile of user that is making the request.
       * @return a [[ProjectInfoV1]] representing information about project.
       */
-    private def createProjectInfoV1(projectResponse: Seq[VariableResultsRow], projectIri: IRI, userProfile: Option[UserProfileV1]): ProjectInfoV1 = {
+    private def createProjectADM(statements: (IRI, Map[IRI, Seq[LiteralV2]]), maybeUser: Option[UserADM]): ProjectADM = {
 
         //log.debug("createProjectInfoV1 - projectResponse: {}", projectResponse)
 
-        if (projectResponse.nonEmpty) {
+        val projectIri: IRI = statements._1
+        val propsMap: Map[IRI, Seq[LiteralV2]] = statements._2
 
-            val projectProperties: Map[String, Seq[String]] = projectResponse.groupBy(_.rowMap("p")).map {
-                case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
-            }
-
-            // log.debug(s"createProjectInfoV1 - projectProperties: $projectProperties")
-
-            /* create and return the project info */
-            ProjectInfoV1(
-                id = projectIri,
-                shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head,
-                shortcode = projectProperties.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head),
-                longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head),
-                description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head),
-                keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeywords).map(_.head),
-                logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head),
-                institution = projectProperties.get(OntologyConstants.KnoraBase.BelongsToInstitution).map(_.head),
-                ontologies = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, Seq.empty[IRI]),
-                status = projectProperties.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.toBoolean,
-                selfjoin = projectProperties.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).head.toBoolean
-            )
-
-        } else {
-            // no information was found for the given project IRI
-            throw NotFoundException(s"For the given project IRI $projectIri no information was found")
-        }
-
+        ProjectADM(
+            id = projectIri,
+            shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head.asInstanceOf[StringLiteralV2].value,
+            shortcode = propsMap.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head.asInstanceOf[StringLiteralV2].value),
+            longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head.asInstanceOf[StringLiteralV2].value),
+            description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head.asInstanceOf[StringLiteralV2].value),
+            keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords).map(_.head.asInstanceOf[StringLiteralV2].value),
+            logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head.asInstanceOf[StringLiteralV2].value),
+            institution = propsMap.get(OntologyConstants.KnoraBase.BelongsToProject).map(_.head.asInstanceOf[StringLiteralV2].value),
+            ontologies = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, Seq.empty[IRI]).map(_.asInstanceOf[IriLiteralV2].value),
+            status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.asInstanceOf[BooleanLiteralV2].value,
+            selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).head.asInstanceOf[BooleanLiteralV2].value
+        )
     }
 
     /**
       * Helper method that turns a sequence of user IRIs into a [[ProjectMembersGetResponseV1]]
       *
       * @param memberIris  the user IRIs
-      * @param userProfile the profile of the user that is making the request
       * @return a [[ProjectMembersGetResponseV1]]
       */
-    private def createProjectMembersGetResponse(memberIris: Seq[IRI], userProfile: UserProfileV1): Future[ProjectMembersGetResponseV1] = {
+    private def createProjectMembersGetResponseADM(memberIris: Seq[IRI]): Future[ProjectMembersGetResponseADM] = {
 
-        def getUserData(userIri: IRI): Future[UserDataV1] = {
+        def getUserADM(userIri: IRI): Future[UserDataV1] = {
             for {
                 userProfile <- (responderManager ? UserDataByIriGetV1(userIri, true)).mapTo[Option[UserDataV1]]
 
@@ -878,15 +775,15 @@ class ProjectsResponderADM extends Responder {
             } yield result
         }
 
-        val userDatasFuture: Future[Seq[Future[UserDataV1]]] = for {
+        val userDatasFuture: Future[Seq[Future[UserADM]]] = for {
             memberIris: Seq[IRI] <- Future(memberIris)
-            userDatas: Seq[Future[UserDataV1]] = memberIris.map(userIri => getUserData(userIri))
+            userDatas: Seq[Future[UserADM]] = memberIris.map(userIri => getUserData(userIri))
         } yield userDatas
 
         for {
             userDatas <- userDatasFuture
-            result: Seq[UserDataV1] <- Future.sequence(userDatas)
-        } yield ProjectMembersGetResponseV1(result, userProfile.ofType(UserProfileTypeV1.SHORT).userData)
+            result: Seq[UserADM] <- Future.sequence(userDatas)
+        } yield ProjectMembersGetResponseADM(result)
 
     }
 

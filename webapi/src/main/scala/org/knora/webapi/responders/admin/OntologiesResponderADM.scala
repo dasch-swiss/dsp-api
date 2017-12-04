@@ -21,9 +21,10 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.listsmessages.{FullList, ListInfo, ListNode}
+import org.knora.webapi.messages.admin.responder.listsmessages.ListInfo
 import org.knora.webapi.messages.admin.responder.ontologiesmessages._
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlExtendedConstructRequest, SparqlExtendedConstructResponse, StringV2}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlExtendedConstructRequest, SparqlExtendedConstructResponse, StringLiteralV2}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
@@ -36,9 +37,9 @@ import scala.concurrent.Future
 class OntologiesResponderADM extends Responder {
 
     def receive: PartialFunction[Any, Unit] = {
-        case OntologiesGetRequestADM(projectIri, userProfile) => future2Message(sender(), ontologiesGetRequestADM(projectIri, userProfile), log)
-        case OntologyGetRequestADM(ontologyIri, userProfile) => future2Message(sender(), ontologyGetRequestADM(ontologyIri, userProfile), log)
-        case OntologyCreateRequestADM(ontologyName, projectIri, apiRequestID, userProfile) => future2Message(sender(), ontologyCreateRequestADM(ontologyName, projectIri, apiRequestID, userProfile), log)
+        case OntologiesGetRequestADM(projectIri, user) => future2Message(sender(), ontologiesGetRequestADM(projectIri, user), log)
+        case OntologyGetRequestADM(ontologyIri, user) => future2Message(sender(), ontologyGetRequestADM(ontologyIri, user), log)
+        case OntologyCreateRequestADM(ontologyName, projectIri, apiRequestID, user) => future2Message(sender(), ontologyCreateRequestADM(ontologyName, projectIri, apiRequestID, user), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -48,10 +49,10 @@ class OntologiesResponderADM extends Responder {
       * (as lists can be very large), we only return the IRI of the ontology.
       *
       * @param projectIri  the IRI of the project the ontology belongs to.
-      * @param userProfile the profile of the user making the request.
+      * @param user the user making the request.
       * @return a [[OntologiesGetResponseADM]].
       */
-    def ontologiesGetRequestADM(projectIri: Option[IRI], userProfile: UserProfileV1): Future[OntologiesGetResponseADM] = {
+    def ontologiesGetRequestADM(projectIri: Option[IRI], user: UserADM): Future[OntologiesGetResponseADM] = {
 
         // log.debug("listsGetRequestV2")
 
@@ -69,19 +70,19 @@ class OntologiesResponderADM extends Responder {
             statements = listsResponse.statements.toList
 
             items: Seq[ListInfo] = statements.map {
-                case (listIri: IRI, propsMap: Map[IRI, Seq[StringV2]]) =>
+                case (listIri: IRI, propsMap: Map[IRI, Seq[StringLiteralV2]]) =>
 
                     ListInfo(
                         id = listIri,
                         projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
-                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2])
+                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]),
+                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2])
                     )
             }
 
             // _ = log.debug("listsGetAdminRequest - items: {}", items)
 
-            ontologies = Seq.empty[IRI]
+            ontologies = Seq.empty[OntologyInfoADM]
 
         } yield OntologiesGetResponseADM(ontologies = ontologies)
     }
@@ -90,10 +91,10 @@ class OntologiesResponderADM extends Responder {
       * Retrieves a complete ontology from the triplestore and returns it as a [[OntologyGetResponseADM]].
       *
       * @param ontologyIri the Iri of the ontology to be queried.
-      * @param userProfile the profile of the user making the request.
+      * @param user the user making the request.
       * @return a [[OntologyGetResponseADM]].
       */
-    def ontologyGetRequestADM(ontologyIri: IRI, userProfile: UserProfileV1): Future[OntologyGetResponseADM] = {
+    def ontologyGetRequestADM(ontologyIri: IRI, user: UserADM): Future[OntologyGetResponseADM] = {
 
         for {
             // this query will give us only the information about the root node.
@@ -130,7 +131,7 @@ class OntologiesResponderADM extends Responder {
 //            list = FullList(listinfo = listinfo, children = children)
             // _ = log.debug(s"listGetRequestV2 - list: {}", MessageUtil.toSource(list))
 
-            data = OntologyDataADM("", "", "", "")
+            data = OntologyDataADM("", "", ???, "")
 
         } yield OntologyGetResponseADM(ontology = data)
     }
@@ -141,13 +142,13 @@ class OntologiesResponderADM extends Responder {
       * @param ontologyName the name of the new ontology.
       * @param projectIri the project IRI the ontology belongs to.
       * @param apiRequestID the api request id.
-      * @param userProfile the profile of the user making the request.
+      * @param user the user making the request.
       * @return a [[OntologyCreateResponseADM]]
       */
-    def ontologyCreateRequestADM(ontologyName: String, projectIri: IRI, apiRequestID: UUID, userProfile: UserProfileV1): Future[OntologyCreateResponseADM] = {
+    def ontologyCreateRequestADM(ontologyName: String, projectIri: IRI, apiRequestID: UUID, user: UserADM): Future[OntologyCreateResponseADM] = {
         for {
 
-            data <- FastFuture.successful(OntologyDataADM("", "", "", ""))
+            data <- FastFuture.successful(OntologyDataADM("", "", ???, ""))
 
         } yield OntologyCreateResponseADM(ontology = data)
 

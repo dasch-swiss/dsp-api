@@ -27,18 +27,18 @@ import spray.json._
 /**
   * This spec is used to test 'ListAdminMessages'.
   */
-class TriplestoreMessagesSpec extends WordSpecLike with Matchers with ListAdminJsonProtocol {
+class TriplestoreMessagesSpec extends WordSpecLike with Matchers with ListADMJsonProtocol {
 
     "Conversion from case class to JSON and back" should {
 
         "work for a 'StringV2' without language tag" in {
 
-            val string = StringV2("stringwithoutlang", None)
+            val string = StringLiteralV2("stringwithoutlang", None)
             val json = string.toJson.compactPrint
 
             json should be("{\"value\":\"stringwithoutlang\"}")
 
-            val converted: StringV2 = json.parseJson.convertTo[StringV2]
+            val converted: StringLiteralV2 = json.parseJson.convertTo[StringLiteralV2]
 
             converted should be(string)
         }
@@ -46,12 +46,12 @@ class TriplestoreMessagesSpec extends WordSpecLike with Matchers with ListAdminJ
 
         "work for a 'StringV2' with language tag" in {
 
-            val string = StringV2("stringwithlang", Some("de"))
+            val string = StringLiteralV2("stringwithlang", Some("de"))
             val json = string.toJson.compactPrint
 
             json should be("{\"value\":\"stringwithlang\",\"language\":\"de\"}")
 
-            val converted = json.parseJson.convertTo[StringV2]
+            val converted = json.parseJson.convertTo[StringLiteralV2]
 
             converted should be(string)
         }

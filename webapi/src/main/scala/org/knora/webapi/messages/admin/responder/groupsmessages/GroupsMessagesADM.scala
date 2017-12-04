@@ -24,12 +24,12 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder._
 import org.knora.webapi.responders.v1.GroupsResponderV1
 import org.knora.webapi.{BadRequestException, IRI}
-import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
+import spray.json.{DefaultJsonProtocol, JsonFormat, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -47,7 +47,7 @@ case class CreateGroupApiRequestADM(name: String,
                                     description: Option[String],
                                     project: IRI,
                                     status: Boolean,
-                                    selfjoin: Boolean) extends GroupsAdminJsonProtocol {
+                                    selfjoin: Boolean) extends GroupsADMJsonProtocol {
 
     def toJsValue = createGroupApiRequestADMFormat.write(this)
 }
@@ -63,7 +63,7 @@ case class CreateGroupApiRequestADM(name: String,
 case class ChangeGroupApiRequestADM(name: Option[String] = None,
                                     description: Option[String] = None,
                                     status: Option[Boolean] = None,
-                                    selfjoin: Option[Boolean] = None) extends GroupsAdminJsonProtocol {
+                                    selfjoin: Option[Boolean] = None) extends GroupsADMJsonProtocol {
 
     val parametersCount = List(
         name,
@@ -169,7 +169,7 @@ case class GroupPermissionUpdateRequestADMADM(user: UserADM,
   *
   * @param groups information about all existing groups.
   */
-case class GroupsResponseADM(groups: Seq[GroupADM]) extends KnoraResponseV1 with GroupsAdminJsonProtocol {
+case class GroupsResponseADM(groups: Seq[GroupADM]) extends KnoraResponseV1 with GroupsADMJsonProtocol {
     def toJsValue = groupsResponseADMFormat.write(this)
 }
 
@@ -178,7 +178,7 @@ case class GroupsResponseADM(groups: Seq[GroupADM]) extends KnoraResponseV1 with
   *
   * @param group all information about the group.
   */
-case class GroupInfoResponseADM(group: GroupADM) extends KnoraResponseV1 with GroupsAdminJsonProtocol {
+case class GroupInfoResponseADM(group: GroupADM) extends KnoraResponseV1 with GroupsADMJsonProtocol {
     def toJsValue = groupInfoResponseADMFormat.write(this)
 }
 
@@ -187,7 +187,7 @@ case class GroupInfoResponseADM(group: GroupADM) extends KnoraResponseV1 with Gr
   *
   * @param members the group's members.
   */
-case class GroupMembersResponseADM(members: Seq[UserADM]) extends KnoraResponseV1 with GroupsAdminJsonProtocol {
+case class GroupMembersResponseADM(members: Seq[UserADM]) extends KnoraResponseV1 with GroupsADMJsonProtocol {
     def toJsValue = groupMembersResponseADMFormat.write(this)
 }
 
@@ -196,7 +196,7 @@ case class GroupMembersResponseADM(members: Seq[UserADM]) extends KnoraResponseV
   *
   * @param group the new group information of the created/modified group.
   */
-case class GroupOperationResponseADM(group: GroupADM) extends KnoraResponseV1 with GroupsAdminJsonProtocol {
+case class GroupOperationResponseADM(group: GroupADM) extends KnoraResponseV1 with GroupsADMJsonProtocol {
     def toJsValue = groupOperationResponseADMFormat.write(this)
 }
 
@@ -242,7 +242,9 @@ case class GroupUpdatePayloadADM(name: Option[String] = None,
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about groups.
   */
-trait GroupsAdminJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+trait GroupsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsADMJsonProtocol {
+
+    import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 
     implicit val groupADMFormat: JsonFormat[GroupADM] = jsonFormat6(GroupADM)
     implicit val groupsResponseADMFormat: RootJsonFormat[GroupsResponseADM] = jsonFormat(GroupsResponseADM, "groups")

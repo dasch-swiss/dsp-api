@@ -70,13 +70,13 @@ class ListsResponderADM extends Responder {
             statements = listsResponse.statements.toList
 
             items: Seq[ListInfo] = statements.map {
-                case (listIri: IRI, propsMap: Map[IRI, Seq[StringV2]]) =>
+                case (listIri: IRI, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
                     ListInfo(
                         id = listIri,
-                        projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
-                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2])
+                        projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.asInstanceOf[IriLiteralV2].iri),
+                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
+                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
                     )
             }
 
@@ -117,12 +117,12 @@ class ListsResponderADM extends Responder {
             // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
             statements = listInfoResponse.statements
             listinfo = statements.head match {
-                case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringV2]]) =>
+                case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringLiteralV2]]) =>
                     ListInfo(
                         id = nodeIri,
                         projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
-                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2])
+                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]),
+                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2])
                     )
             }
 
@@ -160,12 +160,12 @@ class ListsResponderADM extends Responder {
             // _ = log.debug(s"listNodeInfoGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
 
             listinfo: ListInfo = statements.head match {
-                case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringV2]]) =>
+                case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringLiteralV2]]) =>
                     ListInfo (
                         id = nodeIri,
                         projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
-                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2])
+                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]),
+                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2])
                     )
             }
 
@@ -202,12 +202,12 @@ class ListsResponderADM extends Responder {
             // _ = log.debug(s"listNodeInfoGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
 
             nodeinfo: ListNodeInfo = statements.head match {
-                case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringV2]]) =>
+                case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringLiteralV2]]) =>
                     ListNodeInfo (
                         id = nodeIri,
                         name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.value),
-                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringV2]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringV2]),
+                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]),
+                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]),
                         position = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.value.toInt)
                     )
             }
@@ -280,11 +280,11 @@ class ListsResponderADM extends Responder {
                 id = nodeIri,
                 name = firstRowMap.get("nodeName"),
                 labels = if (firstRowMap.get("label").nonEmpty) {
-                    Seq(StringV2(firstRowMap.get("label").get))
+                    Seq(StringLiteralV2(firstRowMap.get("label").get))
                 } else {
-                    Seq.empty[StringV2]
+                    Seq.empty[StringLiteralV2]
                 },
-                comments = Seq.empty[StringV2],
+                comments = Seq.empty[StringLiteralV2],
                 children = if (firstRowMap.get("child").isEmpty) {
                     // If this node has no children, childRows will just contain one row with no value for "child".
                     Seq.empty[ListNode]
@@ -352,11 +352,11 @@ class ListsResponderADM extends Responder {
                 id = nodeData("node"),
                 name = nodeData.get("nodeName"),
                 labels = if (nodeData.contains("label")) {
-                    Seq(StringV2(nodeData("label")))
+                    Seq(StringLiteralV2(nodeData("label")))
                 } else {
-                    Seq.empty[StringV2]
+                    Seq.empty[StringLiteralV2]
                 },
-                comments = Seq.empty[StringV2],
+                comments = Seq.empty[StringLiteralV2],
                 children = Seq.empty[ListNode],
                 position = None
             )
