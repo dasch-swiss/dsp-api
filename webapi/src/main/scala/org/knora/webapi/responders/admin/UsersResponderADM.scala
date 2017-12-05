@@ -27,7 +27,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UsersGetADM, UsersGetResponseADM}
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserUpdatePayloadV1 => _, _}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages._
@@ -60,10 +60,10 @@ class UsersResponderADM extends Responder {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case UsersGetADM(maybeUser) => future2Message(sender(), usersGetADM(maybeUser), log)
-        case UsersGetRequestV1(userProfileV1) => future2Message(sender(), usersGetRequestADM(userProfileV1), log)
+        case UsersGetADM(requestingUser) => future2Message(sender(), usersGetADM(requestingUser), log)
+        case UsersGetRequestADM(requestingUser) => future2Message(sender(), usersGetRequestADM(requestingUser), log)
         case UserDataByIriGetV1(userIri, short) => future2Message(sender(), userDataByIriGetV1(userIri, short), log)
-        case UserGetADM(maybeUserIri: Option[IRI], maybeEmail: Option[String], userProfileType: UserProfileType) => future2Message(sender(), userGetADM(maybeUserIri, maybeEmail, ), log)
+        case UserGetADM(maybeUserIri, maybeEmail, user) => future2Message(sender(), userGetADM(maybeUserIri, maybeEmail, ), log)
         case UserProfileByIRIGetRequestV1(userIri, profileType, userProfile) => future2Message(sender(), userProfileByIRIGetRequestV1(userIri, profileType, userProfile), log)
         case UserProfileByEmailGetV1(email, profileType) => future2Message(sender(), userProfileByEmailGetV1(email, profileType), log)
         case UserProfileByEmailGetRequestV1(email, profileType, userProfile) => future2Message(sender(), userProfileByEmailGetRequestV1(email, profileType, userProfile), log)

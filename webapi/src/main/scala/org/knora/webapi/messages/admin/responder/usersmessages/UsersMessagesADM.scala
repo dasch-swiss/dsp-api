@@ -26,7 +26,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.{UserInformationTypeADM, UserTemplateTypeADM}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.{UserInformationTypeADM}
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataV1, PermissionV1JsonProtocol}
@@ -146,20 +146,22 @@ case class UsersGetRequestADM(user: UserADM) extends UsersResponderRequestADM
   * Get all information about all users in form of a sequence of [[UserADM]]. Returns an empty sequence if
   * no users are found. Administration permission checking is skipped.
   *
-  * @param maybeUser the user that is making the request.
+  * @param requestingUser the user that is making the request.
   */
-case class UsersGetADM(maybeUser: Option[UserADM]) extends UsersResponderRequestADM
+case class UsersGetADM(requestingUser: Option[UserADM]) extends UsersResponderRequestADM
 
 /**
   * A message that requests a user's profile either by IRI or email. A successful response will be a [[UserADM]].
   *
-  * @param maybeUserIri    the IRI of the user to be queried.
-  * @param maybeEmail      the email of the user to be queried.
-  * @param userProfileType the extent of the information returned.
+  * @param maybeUserIri           the IRI of the user to be queried.
+  * @param maybeEmail             the email of the user to be queried.
+  * @param userInformationTypeADM the extent of the information returned.
+  * @param requestingUser         the user initiating the request.
   */
 case class UserGetADM(maybeUserIri: Option[IRI],
                       maybeEmail: Option[String],
-                      userProfileType: UserProfileType) extends UsersResponderRequestADM {
+                      userInformationTypeADM: UserInformationTypeADM,
+                      requestingUser: Option[UserADM]) extends UsersResponderRequestADM {
 
     // need either user IRI or email
     if (maybeUserIri.isEmpty && maybeEmail.isEmpty) {
@@ -170,13 +172,15 @@ case class UserGetADM(maybeUserIri: Option[IRI],
 /**
   * A message that requests a user's profile either by IRI or email. A successful response will be a [[UserResponseADM]].
   *
-  * @param maybeUserIri    the IRI of the user to be queried.
-  * @param maybeEmail      the email of the user to be queried.
-  * @param userProfileType the extent of the information returned.
+  * @param maybeUserIri           the IRI of the user to be queried.
+  * @param maybeEmail             the email of the user to be queried.
+  * @param userInformationTypeADM the extent of the information returned.
+  * @param requestingUser         the user initiating the request.
   */
 case class UserGetRequestADM(maybeUserIri: Option[IRI],
                              maybeEmail: Option[String],
-                             userProfileType: UserProfileType) extends UsersResponderRequestADM {
+                             userInformationTypeADM: UserInformationTypeADM,
+                             requestingUser: UserADM) extends UsersResponderRequestADM {
 
     // need either user IRI or email
     if (maybeUserIri.isEmpty && maybeEmail.isEmpty) {
@@ -187,12 +191,12 @@ case class UserGetRequestADM(maybeUserIri: Option[IRI],
 /**
   * Requests the creation of a new user.
   *
-  * @param createRequest the [[CreateUserApiRequestADM]] information used for creating the new user.
-  * @param user          the user creating the new user.
-  * @param apiRequestID  the ID of the API request.
+  * @param createRequest  the [[CreateUserApiRequestADM]] information used for creating the new user.
+  * @param requestingUser the user creating the new user.
+  * @param apiRequestID   the ID of the API request.
   */
 case class UserCreateRequestADM(createRequest: CreateUserApiRequestADM,
-                                user: UserADM,
+                                requestingUser: UserADM,
                                 apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
@@ -200,12 +204,12 @@ case class UserCreateRequestADM(createRequest: CreateUserApiRequestADM,
   *
   * @param userIri           the IRI of the user to be updated.
   * @param changeUserRequest the data which needs to be update.
-  * @param user              the user requesting the update.
+  * @param requestingUser    the user initiating the request.
   * @param apiRequestID      the ID of the API request.
   */
 case class UserChangeBasicUserDataRequestADM(userIri: IRI,
                                              changeUserRequest: ChangeUserApiRequestADM,
-                                             user: UserADM,
+                                             requestingUser: UserADM,
                                              apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
@@ -213,12 +217,12 @@ case class UserChangeBasicUserDataRequestADM(userIri: IRI,
   *
   * @param userIri           the IRI of the user to be updated.
   * @param changeUserRequest the [[ChangeUserApiRequestV1]] object containing the old and new password.
-  * @param user              the user requesting the update.
+  * @param requestingUser    the user initiating the request.
   * @param apiRequestID      the ID of the API request.
   */
 case class UserChangePasswordRequestADM(userIri: IRI,
                                         changeUserRequest: ChangeUserApiRequestADM,
-                                        user: UserADM,
+                                        requestingUser: UserADM,
                                         apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
@@ -226,12 +230,12 @@ case class UserChangePasswordRequestADM(userIri: IRI,
   *
   * @param userIri           the IRI of the user to be updated.
   * @param changeUserRequest the [[ChangeUserApiRequestV1]] containing the new status (true / false).
-  * @param user              the user profile of the user requesting the update.
+  * @param requestingUser    the user initiating the request.
   * @param apiRequestID      the ID of the API request.
   */
 case class UserChangeStatusRequestADM(userIri: IRI,
                                       changeUserRequest: ChangeUserApiRequestADM,
-                                      user: UserADM,
+                                      requestingUser: UserADM,
                                       apiRequestID: UUID) extends UsersResponderRequestADM
 
 
@@ -241,19 +245,19 @@ case class UserChangeStatusRequestADM(userIri: IRI,
   * @param userIri           the IRI of the user to be updated.
   * @param changeUserRequest the [[ChangeUserApiRequestV1]] containing
   *                          the new system admin membership status (true / false).
-  * @param user              the user requesting the update.
+  * @param requestingUser    the user initiating the request.
   * @param apiRequestID      the ID of the API request.
   */
 case class UserChangeSystemAdminMembershipStatusRequestADM(userIri: IRI,
                                                            changeUserRequest: ChangeUserApiRequestADM,
-                                                           user: UserADM,
+                                                           requestingUser: UserADM,
                                                            apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
   * Requests user's project memberships.
   *
   * @param userIri      the IRI of the user.
-  * @param user         the user requesting the update.
+  * @param user         the user initiating the request.
   * @param apiRequestID the ID of the API request.
   */
 case class UserProjectMembershipsGetRequestADM(userIri: IRI,
@@ -265,7 +269,7 @@ case class UserProjectMembershipsGetRequestADM(userIri: IRI,
   *
   * @param userIri      the IRI of the user to be updated.
   * @param projectIri   the IRI of the project.
-  * @param user         the user requesting the update.
+  * @param user         the user initiating the request.
   * @param apiRequestID the ID of the API request.
   */
 case class UserProjectMembershipAddRequestADM(userIri: IRI,
@@ -278,7 +282,7 @@ case class UserProjectMembershipAddRequestADM(userIri: IRI,
   *
   * @param userIri      the IRI of the user to be updated.
   * @param projectIri   the IRI of the project.
-  * @param user         the user profile of the user requesting the update.
+  * @param user         the user initiating the request.
   * @param apiRequestID the ID of the API request.
   */
 case class UserProjectMembershipRemoveRequestADM(userIri: IRI,
@@ -290,7 +294,7 @@ case class UserProjectMembershipRemoveRequestADM(userIri: IRI,
   * Requests user's project admin memberships.
   *
   * @param userIri      the IRI of the user.
-  * @param user         the user requesting the update.
+  * @param user         the user initiating the request.
   * @param apiRequestID the ID of the API request.
   */
 case class UserProjectAdminMembershipsGetRequestADM(userIri: IRI,
@@ -302,7 +306,7 @@ case class UserProjectAdminMembershipsGetRequestADM(userIri: IRI,
   *
   * @param userIri      the IRI of the user to be updated.
   * @param projectIri   the IRI of the project.
-  * @param user         the user requesting the update.
+  * @param user         the user initiating the request.
   * @param apiRequestID the ID of the API request.
   */
 case class UserProjectAdminMembershipAddRequestADM(userIri: IRI,
@@ -315,7 +319,7 @@ case class UserProjectAdminMembershipAddRequestADM(userIri: IRI,
   *
   * @param userIri      the IRI of the user to be updated.
   * @param projectIri   the IRI of the project.
-  * @param user         the user requesting the update.
+  * @param user         the user initiating the request.
   * @param apiRequestID the ID of the API request.
   */
 case class UserProjectAdminMembershipRemoveRequestADM(userIri: IRI,
