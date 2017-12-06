@@ -130,7 +130,7 @@
 			position: 'fixed',
 			left: p.left + daysel.width(),
 			top: p.top,
-            'z-index': 2 /* :( i don't like black magic numbers or const */
+			'z-index': 2 /* :( i don't like black magic numbers or const */
 		};
 
 
