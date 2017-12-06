@@ -129,7 +129,8 @@
 		var tmpcss = {
 			position: 'fixed',
 			left: p.left + daysel.width(),
-			top: p.top
+			top: p.top,
+            'z-index': 2 /* :( i don't like black magic numbers or const */
 		};
 
 
