@@ -5,6 +5,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequest
 import org.scalatest.{Matchers, WordSpecLike}
 import SharedOntologyTestData._
 import SharedAdminTestData._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 
 /**
   * This spec is used to test subclasses of the [[UsersResponderRequestV1]] class.

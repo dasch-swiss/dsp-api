@@ -26,10 +26,11 @@ import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserUpdatePayloadV1 => _, _}
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1}
+import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequestV1, GroupInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.permissionmessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
@@ -55,15 +56,14 @@ class UsersResponderADM extends Responder {
     val USER_ADM_CACHE_NAME = "userADMCache"
 
     /**
-      * Receives a message extending [[org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1]], and returns a message of type [[UserProfileV1]]
+      * Receives a message extending [[org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1]], and returns a message of type [[UserADM]]
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case UsersGetADM(requestingUser) => future2Message(sender(), usersGetADM(requestingUser), log)
-        case UsersGetRequestADM(requestingUser) => future2Message(sender(), usersGetRequestADM(requestingUser), log)
-        case UserDataByIriGetV1(userIri, short) => future2Message(sender(), userDataByIriGetV1(userIri, short), log)
-        case UserGetADM(maybeUserIri, maybeEmail, user) => future2Message(sender(), userGetADM(maybeUserIri, maybeEmail, ), log)
+        case UsersGetADM(userInformationTypeADM, requestingUser) => future2Message(sender(), usersGetADM(userInformationTypeADM, requestingUser), log)
+        case UsersGetRequestADM(userInformationTypeADM, requestingUser) => future2Message(sender(), usersGetRequestADM(userInformationTypeADM, requestingUser), log)
+        case UserGetADM(maybeUserIri, maybeEmail, userInformationTypeADM, requestingUser) => future2Message(sender(), userGetADM(maybeUserIri, maybeEmail, userInformationTypeADM, requestingUser), log)
         case UserProfileByIRIGetRequestV1(userIri, profileType, userProfile) => future2Message(sender(), userProfileByIRIGetRequestV1(userIri, profileType, userProfile), log)
         case UserProfileByEmailGetV1(email, profileType) => future2Message(sender(), userProfileByEmailGetV1(email, profileType), log)
         case UserProfileByEmailGetRequestV1(email, profileType, userProfile) => future2Message(sender(), userProfileByEmailGetRequestV1(email, profileType, userProfile), log)
@@ -88,9 +88,11 @@ class UsersResponderADM extends Responder {
     /**
       * Gets all the users and returns them as a sequence of [[UserDataV1]].
       *
+      * @param userInformationType the extent of the information returned.
+      * @param requestingUser the user initiating the request.
       * @return all the users as a sequence of [[UserDataV1]].
       */
-    private def usersGetADM(maybeUser: Option[UserADM]): Future[Seq[UserADM]] = {
+    private def usersGetADM(userInformationType: UserInformationTypeADM, requestingUser: Option[UserADM]): Future[Seq[UserADM]] = {
 
         //log.debug("usersGetV1")
 
@@ -125,12 +127,13 @@ class UsersResponderADM extends Responder {
     /**
       * Gets all the users and returns them as a [[UsersGetResponseV1]].
       *
-      * @param maybeUser the type of the requested profile (restricted of full).
+      * @param userInformationType the extent of the information returned.
+      * @param requestingUser the user initiating the request.
       * @return all the users as a [[UsersGetResponseV1]].
       */
-    private def usersGetRequestADM(maybeUser: Option[UserADM]): Future[UsersGetResponseADM] = {
+    private def usersGetRequestADM(userInformationType: UserInformationTypeADM, requestingUser: Option[UserADM]): Future[UsersGetResponseADM] = {
         for {
-            maybeUsersListToReturn <- usersGetADM(maybeUser)
+            maybeUsersListToReturn <- usersGetADM(userInformationType, requestingUser)
             result = maybeUsersListToReturn match {
                 case users: Seq[UserADM] if users.nonEmpty => UsersGetResponseADM(users = users)
                 case _ => throw NotFoundException(s"No users found")
@@ -139,60 +142,53 @@ class UsersResponderADM extends Responder {
     }
 
     /**
-      * Gets basic information about a Knora user, and returns it in a [[UserDataV1]].
+      * ~ CACHED ~
+      * Gets information about a Knora user, and returns it as a [[UserADM]]. If possible, tries to retrieve it
+      * from the cache. If not, it retrieves it from the triplestore and writes it to the cache. Writes to the cache
+      * are always `UserInformationTypeADM.FULL`.
       *
-      * @param userIri the IRI of the user.
-      * @return a [[UserDataV1]] describing the user.
+      * @param maybeUserIri     the IRI of the user.
+      * @param maybeUserEmail the email of the user.
+      * @param userInformationType the type of the requested profile (restricted of full).
+      * @param requestingUser the user initiating the request.
+      * @return a [[UserADM]] describing the user.
       */
-    private def userDataByIriGetV1(userIri: IRI, short: Boolean): Future[Option[UserDataV1]] = {
-        //log.debug("userDataByIriGetV1 - userIri: {}", userIri)
-
-        for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
-                triplestore = settings.triplestoreType,
-                userIri = userIri
-            ).toString())
-
-            // _ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
-
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-
-            maybeUserDataV1 <- userDataQueryResponse2UserData(userDataQueryResponse, short)
-
-            // _ = log.debug("userDataByIriGetV1 - maybeUserDataV1: {}", maybeUserDataV1)
-
-        } yield maybeUserDataV1
-
-    }
-
-    /**
-      * Gets information about a Knora user, and returns it in a [[UserProfileV1]]. If possible, tries to retrieve the
-      * user profile from cache. If not, it retrieves it from the triplestore and writes it to the cache.
-      *
-      * @param userIri     the IRI of the user.
-      * @param profileType the type of the requested profile (restricted of full).
-      * @return a [[UserProfileV1]] describing the user.
-      */
-    private def userGetADM(maybeUserIri: Option[IRI], maybeEmail: Option[String], userInformationTypeADM: UserInformationTypeADM): Future[Option[UserADM]] = {
+    private def userGetADM(maybeUserIri: Option[IRI], maybeUserEmail: Option[String], userInformationType: UserInformationTypeADM, requestingUser: Option[UserADM]): Future[Option[UserADM]] = {
         // log.debug(s"userProfileByIRIGetV1: userIri = $userIRI', clean = '$profileType'")
 
-        CacheUtil.get[UserProfileV1](USER_PROFILE_CACHE_NAME, userIri) match {
-            case Some(userProfile) =>
+        val userFromCache = if (maybeUserIri.nonEmpty) {
+            CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, maybeUserIri.get)
+        } else if (maybeUserEmail.nonEmpty) {
+            CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, maybeUserEmail.get)
+        } else {
+            throw BadRequestException("Need to provide the user IRI and/or email.")
+        }
+
+        userFromCache match {
+            case Some(user) =>
                 // found a user profile in the cache
-                log.debug(s"userProfileByIRIGetV1 - cache hit: $userProfile")
-                FastFuture.successful(Some(userProfile.ofType(profileType)))
+                log.debug(s"userGetADM - cache hit: $user")
+                FastFuture.successful(Some(user.ofType(userInformationType)))
             case None => {
                 for {
-                    sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
+                    sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
                         triplestore = settings.triplestoreType,
-                        userIri = userIri
+                        maybeIri = maybeUserIri,
+                        maybeEmail = maybeUserEmail
                     ).toString())
 
                     // _ = log.debug(s"userProfileByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
-                    userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+                    userQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
 
-                    maybeUserProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse)
+                    maybeUserProfileV1 <- statements2UserADM(userQueryResponse)
+
+                    maybeUserProfileV1 <- if (userQueryResponse.statements.nonEmpty) {
+                        Some(statements2UserADM(statements = userQueryResponse.statements.head, requestingUser))
+                    } else {
+                        FastFuture.successful(None)
+                    }
+
 
                     _ = if (maybeUserProfileV1.nonEmpty) {
                         writeUserProfileV1ToCache(maybeUserProfileV1.get)
@@ -214,7 +210,7 @@ class UsersResponderADM extends Responder {
       * @param userProfile the requesting user's profile.
       * @return a [[UserProfileResponseV1]]
       */
-    private def userProfileByIRIGetRequestV1(userIRI: IRI, profileType: UserProfileType, userProfile: UserProfileV1): Future[UserProfileResponseV1] = {
+    private def userProfileByIRIGetRequestV1(userIRI: IRI, profileType: UserProfileType, userProfile: UserADM): Future[UserProfileResponseV1] = {
         for {
             maybeUserProfileToReturn <- userProfileByIRIGetV1(userIRI, profileType)
             result = maybeUserProfileToReturn match {
@@ -225,17 +221,17 @@ class UsersResponderADM extends Responder {
     }
 
     /**
-      * Gets information about a Knora user, and returns it in a [[UserProfileV1]]. If possible, tries to retrieve the user profile
+      * Gets information about a Knora user, and returns it in a [[UserADM]]. If possible, tries to retrieve the user profile
       * from cache. If not, it retrieves it from the triplestore and writes it to the cache.
       *
       * @param email       the email of the user.
       * @param profileType the type of the requested profile (restricted or full).
-      * @return a [[UserProfileV1]] describing the user.
+      * @return a [[UserADM]] describing the user.
       */
-    private def userProfileByEmailGetV1(email: String, profileType: UserProfileType): Future[Option[UserProfileV1]] = {
+    private def userProfileByEmailGetV1(email: String, profileType: UserProfileType): Future[Option[UserADM]] = {
         // log.debug(s"userProfileByEmailGetV1: username = '{}', type = '{}'", email, profileType)
 
-        CacheUtil.get[UserProfileV1](USER_PROFILE_CACHE_NAME, email) match {
+        CacheUtil.get[UserADM](USER_PROFILE_CACHE_NAME, email) match {
             case Some(userProfile) =>
                 // found a user profile in the cache
                 log.debug(s"userProfileByIRIGetV1 - cache hit: $userProfile")
@@ -277,11 +273,11 @@ class UsersResponderADM extends Responder {
       * @return a [[UserProfileResponseV1]]
       * @throws NotFoundException if the user with the supplied email is not found.
       */
-    private def userProfileByEmailGetRequestV1(email: String, profileType: UserProfileType, userProfile: UserProfileV1): Future[UserProfileResponseV1] = {
+    private def userProfileByEmailGetRequestV1(email: String, profileType: UserProfileType, userProfile: UserADM): Future[UserProfileResponseV1] = {
         for {
             maybeUserProfileToReturn <- userProfileByEmailGetV1(email, profileType)
             result = maybeUserProfileToReturn match {
-                case Some(up: UserProfileV1) => UserProfileResponseV1(up)
+                case Some(up: UserADM) => UserProfileResponseV1(up)
                 case None => throw NotFoundException(s"User '$email' not found")
             }
         } yield result
@@ -296,12 +292,12 @@ class UsersResponderADM extends Responder {
       *                     - http://blog.ircmaxell.com/2012/12/seven-ways-to-screw-up-bcrypt.html
       *
       * @param createRequest a [[CreateUserApiRequestV1]] object containing information about the new user to be created.
-      * @param userProfile   a [[UserProfileV1]] object containing information about the requesting user.
+      * @param userProfile   a [[UserADM]] object containing information about the requesting user.
       * @return a future containing the [[UserOperationResponseV1]].
       */
-    private def createNewUserV1(createRequest: CreateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    private def createNewUserV1(createRequest: CreateUserApiRequestV1, userProfile: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
-        def createNewUserTask(createRequest: CreateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID) = for {
+        def createNewUserTask(createRequest: CreateUserApiRequestV1, userProfile: UserADM, apiRequestID: UUID) = for {
             // check if required information is supplied
             _ <- Future(if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty"))
             _ = if (createRequest.password.isEmpty) throw BadRequestException("Password cannot be empty")
@@ -387,14 +383,14 @@ class UsersResponderADM extends Responder {
       * @throws BadRequestException if the necessary parameters are not supplied.
       * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
       */
-    private def changeBasicUserDataV1(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    private def changeBasicUserDataV1(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         //log.debug(s"changeBasicUserDataV1: changeUserRequest: {}", changeUserRequest)
 
         /**
           * The actual change basic user data task run with an IRI lock.
           */
-        def changeBasicUserDataTask(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+        def changeBasicUserDataTask(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
             // check if the requesting user is allowed to perform updates
             _ <- Future(
@@ -445,14 +441,14 @@ class UsersResponderADM extends Responder {
       * @throws ForbiddenException  if the supplied old password doesn't match with the user's current password.
       * @throws NotFoundException   if the user is not found.
       */
-    private def changePasswordV1(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    private def changePasswordV1(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         //log.debug(s"changePasswordV1: changePasswordRequest: {}", changeUserRequest)
 
         /**
           * The actual change password task run with an IRI lock.
           */
-        def changePasswordTask(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+        def changePasswordTask(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
             // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
@@ -504,14 +500,14 @@ class UsersResponderADM extends Responder {
       * @throws BadRequestException if necessary parameters are not supplied.
       * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
       */
-    private def changeUserStatusV1(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    private def changeUserStatusV1(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         //log.debug(s"changeUserStatusV1: changeUserRequest: {}", changeUserRequest)
 
         /**
           * The actual change user status task run with an IRI lock.
           */
-        def changeUserStatusTask(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+        def changeUserStatusTask(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
             _ <- Future(
                 // check if necessary information is present
@@ -554,14 +550,14 @@ class UsersResponderADM extends Responder {
       * @throws BadRequestException if necessary parameters are not supplied.
       * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
       */
-    private def changeUserSystemAdminMembershipStatusV1(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    private def changeUserSystemAdminMembershipStatusV1(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         //log.debug(s"changeUserSystemAdminMembershipStatusV1: changeUserRequest: {}", changeUserRequest)
 
         /**
           * The actual change user status task run with an IRI lock.
           */
-        def changeUserSystemAdminMembershipStatusTask(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+        def changeUserSystemAdminMembershipStatusTask(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
             // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
@@ -601,7 +597,7 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID  the unique api request ID.
       * @return a [[UserProjectMembershipsGetResponseV1]].
       */
-    def userProjectMembershipsGetRequestV1(userIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserProjectMembershipsGetResponseV1] = {
+    def userProjectMembershipsGetRequestV1(userIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserProjectMembershipsGetResponseV1] = {
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
                 triplestore = settings.triplestoreType,
@@ -635,14 +631,14 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID  the unique api request ID.
       * @return
       */
-    def userProjectMembershipAddRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    def userProjectMembershipAddRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         // log.debug(s"userProjectMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
         /**
           * The actual task run with an IRI lock.
           */
-        def userProjectMembershipAddRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+        def userProjectMembershipAddRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
             // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
@@ -707,14 +703,14 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID  the unique api request ID.
       * @return
       */
-    def userProjectMembershipRemoveRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    def userProjectMembershipRemoveRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         // log.debug(s"userProjectMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
         /**
           * The actual task run with an IRI lock.
           */
-        def userProjectMembershipRemoveRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+        def userProjectMembershipRemoveRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
             // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
@@ -778,7 +774,7 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID  the unique api request ID.
       * @return a [[UserProjectMembershipsGetResponseV1]].
       */
-    def userProjectAdminMembershipsGetRequestV1(userIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserProjectAdminMembershipsGetResponseV1] = {
+    def userProjectAdminMembershipsGetRequestV1(userIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserProjectAdminMembershipsGetResponseV1] = {
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
                 triplestore = settings.triplestoreType,
@@ -812,14 +808,14 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID  the unique api request ID.
       * @return
       */
-    def userProjectAdminMembershipAddRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    def userProjectAdminMembershipAddRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         // log.debug(s"userProjectAdminMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
         /**
           * The actual task run with an IRI lock.
           */
-        def userProjectAdminMembershipAddRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+        def userProjectAdminMembershipAddRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
             // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
@@ -884,14 +880,14 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID  the unique api request ID.
       * @return
       */
-    def userProjectAdminMembershipRemoveRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    def userProjectAdminMembershipRemoveRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         // log.debug(s"userProjectAdminMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
         /**
           * The actual task run with an IRI lock.
           */
-        def userProjectAdminMembershipRemoveRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+        def userProjectAdminMembershipRemoveRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
             // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
@@ -946,7 +942,7 @@ class UsersResponderADM extends Responder {
         } yield taskResult
     }
 
-    def userGroupMembershipsGetRequestV1(userIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserGroupMembershipsGetResponseV1] = {
+    def userGroupMembershipsGetRequestV1(userIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserGroupMembershipsGetResponseV1] = {
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
@@ -973,14 +969,14 @@ class UsersResponderADM extends Responder {
 
     }
 
-    def userGroupMembershipAddRequestV1(userIri: IRI, groupIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    def userGroupMembershipAddRequestV1(userIri: IRI, groupIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         // log.debug(s"userGroupMembershipAddRequestV1: userIri: {}, groupIri: {}", userIri, groupIri)
 
         /**
           * The actual task run with an IRI lock.
           */
-        def userGroupMembershipAddRequestTask(userIri: IRI, groupIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+        def userGroupMembershipAddRequestTask(userIri: IRI, groupIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
             // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
@@ -995,7 +991,7 @@ class UsersResponderADM extends Responder {
             _ = if (!groupExists) throw NotFoundException(s"The group $groupIri does not exist.")
 
             // get group's info. we need the project IRI.
-            groupInfo <- (responderManager ? GroupInfoByIRIGetRequest(groupIri, None)).mapTo[GroupInfoResponseV1]
+            groupInfo <- (responderManager ? GroupInfoByIRIGetRequestV1(groupIri, None)).mapTo[GroupInfoResponseV1]
             projectIri = groupInfo.group_info.project
 
             // check if the requesting user is allowed to perform updates
@@ -1040,14 +1036,14 @@ class UsersResponderADM extends Responder {
 
     }
 
-    def userGroupMembershipRemoveRequestV1(userIri: IRI, groupIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    def userGroupMembershipRemoveRequestV1(userIri: IRI, groupIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         // log.debug(s"userGroupMembershipRemoveRequestV1: userIri: {}, groupIri: {}", userIri, groupIri)
 
         /**
           * The actual task run with an IRI lock.
           */
-        def userGroupMembershipRemoveRequestTask(userIri: IRI, groupIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+        def userGroupMembershipRemoveRequestTask(userIri: IRI, groupIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
             // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
@@ -1062,7 +1058,7 @@ class UsersResponderADM extends Responder {
             _ = if (!projectExists) throw NotFoundException(s"The group $groupIri does not exist.")
 
             // get group's info. we need the project IRI.
-            groupInfo <- (responderManager ? GroupInfoByIRIGetRequest(groupIri, None)).mapTo[GroupInfoResponseV1]
+            groupInfo <- (responderManager ? GroupInfoByIRIGetRequestV1(groupIri, None)).mapTo[GroupInfoResponseV1]
             projectIri = groupInfo.group_info.project
 
             // check if the requesting user is allowed to perform updates
@@ -1118,7 +1114,7 @@ class UsersResponderADM extends Responder {
       * @throws BadRequestException         if necessary parameters are not supplied.
       * @throws UpdateNotPerformedException if the update was not performed.
       */
-    private def updateUserV1(userIri: IRI, userUpdatePayload: UserUpdatePayloadV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    private def updateUserV1(userIri: IRI, userUpdatePayload: UserUpdatePayloadV1, userProfile: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         // log.debug("updateUserV1 - userUpdatePayload: {}", userUpdatePayload)
 
@@ -1240,16 +1236,19 @@ class UsersResponderADM extends Responder {
     }
 
     /**
-      * Helper method used to create a [[UserProfileV1]] from the [[SparqlSelectResponse]] containing user data.
+      * Helper method used to create a [[UserADM]] from the [[SparqlExtendedConstructResponse]] containing user data.
       *
-      * @param userDataQueryResponse a [[SparqlSelectResponse]] containing user data.
-      * @return a [[UserProfileV1]] containing the user's data.
+      * @param statements result from the SPARQL query containing user data.
+      * @return a [[UserADM]] containing the user's data.
       */
-    private def userDataQueryResponse2UserProfile(userDataQueryResponse: SparqlSelectResponse): Future[Option[UserProfileV1]] = {
+    private def statements2UserADM(statements: (IRI, Map[IRI, Seq[LiteralV2]]), requestingUser: Option[UserADM]): Future[Option[UserADM]] = {
+        // log.debug("statements2UserADM - statements: {}", statements)
 
-        // log.debug("userDataQueryResponse2UserProfile - userDataQueryResponse: {}", MessageUtil.toSource(userDataQueryResponse))
+        val userIri: IRI = statements._1
+        val propsMap: Map[IRI, Seq[LiteralV2]] = statements._2
 
-        if (userDataQueryResponse.results.bindings.nonEmpty) {
+
+        if (userQueryResponse.statements.toList.nonEmpty) {
             val returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
 
             val groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
@@ -1295,7 +1294,7 @@ class UsersResponderADM extends Responder {
 
             for {
                 /* get the user's permission profile from the permissions responder */
-                permissionData <- (responderManager ? PermissionDataGetV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionDataV1]
+                permissionData <- (responderManager ? PermissionDataGetADM(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionsDataADM]
 
                 maybeProjectInfoFutures: Seq[Future[Option[ProjectInfoV1]]] = projectIris.map {
                     projectIri => (responderManager ? ProjectInfoByIRIGetV1(iri = projectIri, userProfileV1 = None)).mapTo[Option[ProjectInfoV1]]
@@ -1306,7 +1305,14 @@ class UsersResponderADM extends Responder {
                 projectInfoMap: Map[IRI, ProjectInfoV1] = projectInfos.map(projectInfo => projectInfo.id -> projectInfo).toMap
 
                 /* construct the user profile from the different parts */
-                up = UserProfileV1(
+                user = UserADM(id = userIri,
+                    email: Option[String] = None,
+                    password: Option[String] = None,
+                    token: Option[String] = None,
+                    firstname: Option[String] = None,
+                    lastname: Option[String] = None,
+                    status: Boolean,
+                    lang: String,
                     userData = userDataV1,
                     groups = groupIris,
                     projects_info = projectInfoMap,
@@ -1315,7 +1321,7 @@ class UsersResponderADM extends Responder {
                 )
                 // _ = log.debug(s"Retrieved UserProfileV1: ${up.toString}")
 
-                result: Option[UserProfileV1] = Some(up)
+                result: Option[UserADM] = Some(user)
             } yield result
 
         } else {

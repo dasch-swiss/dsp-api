@@ -25,8 +25,7 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ChangeProjectApiRequestV1, CreateProjectApiRequestV1, ProjectsResponderRequestV1}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.projectmessages.{CreateProjectApiRequestV1, ProjectInfoV1}
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.{BadRequestException, IRI}
 import spray.json.{DefaultJsonProtocol, JsonFormat, RootJsonFormat}
@@ -353,7 +352,26 @@ case class ProjectADM(id: IRI,
                       institution: Option[IRI],
                       ontologies: Seq[IRI],
                       status: Boolean,
-                      selfjoin: Boolean)
+                      selfjoin: Boolean) {
+
+    // ToDo: Refactor by using implicit conversions (when I manage to understand them)
+    def asProjectInfoV1: ProjectInfoV1 = {
+
+        ProjectInfoV1(
+            id = id,
+            shortname = shortname,
+            shortcode = shortcode,
+            longname = longname,
+            description = description,
+            keywords = keywords,
+            logo = logo,
+            institution = institution,
+            ontologies = ontologies,
+            status = status,
+            selfjoin = selfjoin
+        )
+    }
+}
 
 /**
   * Payload used for updating of an existing project.

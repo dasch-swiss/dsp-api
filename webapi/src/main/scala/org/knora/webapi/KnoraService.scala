@@ -33,13 +33,13 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import org.knora.webapi.http.CORSSupport.CORS
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserADM}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders._
-import org.knora.webapi.routing.admin.ListsAdminRoute
+import org.knora.webapi.routing.admin.{ListsRouteADM, PermissionsRouteADM}
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
 import org.knora.webapi.store._
@@ -110,10 +110,10 @@ trait KnoraService {
     /**
       * A user representing the Knora API server, used for initialisation on startup.
       */
-    private val systemUser = UserProfileV1(
+    private val systemUser = UserADM(
         userData = UserDataV1(lang = "en"),
         isSystemUser = true,
-        permissionData = PermissionDataV1(anonymousUser = false)
+        permissionData = PermissionsDataADM(anonymousUser = false)
     )
 
     /**
@@ -134,11 +134,11 @@ trait KnoraService {
             UsersRouteV1.knoraApiPath(system, settings, log) ~
             ProjectsRouteV1.knoraApiPath(system, settings, log) ~
             GroupsRouteV1.knoraApiPath(system, settings, log) ~
-            PermissionsRouteV1.knoraApiPath(system, settings, log) ~
+            PermissionsRouteADM.knoraApiPath(system, settings, log) ~
             OntologiesRouteV2.knoraApiPath(system, settings, log) ~
             SearchRouteV2.knoraApiPath(system, settings, log) ~
             ResourcesRouteV2.knoraApiPath(system, settings, log) ~
-            ListsAdminRoute.knoraApiPath(system, settings, log) ~
+            ListsRouteADM.knoraApiPath(system, settings, log) ~
             AuthenticationRouteV2.knoraApiPath(system, settings, log),
         settings,
         log

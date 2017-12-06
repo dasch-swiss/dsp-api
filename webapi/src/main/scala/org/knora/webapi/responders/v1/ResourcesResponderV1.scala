@@ -27,15 +27,16 @@ import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringForResourceClassGetV1, DefaultObjectAccessPermissionsStringResponseV1, ResourceCreateOperation}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringResponseV1, ResourceCreateOperation}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{MultipleResourceCreateResponseV1, _}
 import org.knora.webapi.messages.v1.responder.sipimessages._
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.usermessages.UserADM
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, ReadClassInfoV2, PredicateInfoV2, ReadPropertyInfoV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, PredicateInfoV2, ReadClassInfoV2, ReadPropertyInfoV2}
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
@@ -1264,8 +1265,8 @@ class ResourcesResponderV1 extends Responder {
                 resourceClassIri =>
                     for {
                         defaultObjectAccessPermissions <- {
-                            responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
-                        }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+                            responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
+                        }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                     } yield (resourceClassIri, defaultObjectAccessPermissions.permissionLiteral)
             }
 
@@ -1278,12 +1279,12 @@ class ResourcesResponderV1 extends Responder {
                         propertyIri =>
                             for {
                                 defaultObjectAccessPermissions <- {
-                                    responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                                    responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
                                         projectIri = projectIri,
                                         resourceClassIri = resourceClassIri,
                                         propertyIri = propertyIri,
                                         userProfile.permissionData)
-                                }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+                                }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                             } yield (propertyIri, defaultObjectAccessPermissions.permissionLiteral)
                     }
 
@@ -1712,9 +1713,9 @@ class ResourcesResponderV1 extends Responder {
 
             // Get the default object access permissions of the resource class and its properties.
 
-            defaultResourceClassAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseV1 <- {
-                responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
-            }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+            defaultResourceClassAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseADM <- {
+                responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
+            }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
 
             defaultResourceClassAccessPermissions = defaultResourceClassAccessPermissionsResponse.permissionLiteral
 
@@ -1722,12 +1723,12 @@ class ResourcesResponderV1 extends Responder {
                 propertyIri =>
                     for {
                         defaultObjectAccessPermissions <- {
-                            responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                            responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
                                 projectIri = projectIri,
                                 resourceClassIri = resourceClassIri,
                                 propertyIri = propertyIri,
                                 userProfile.permissionData)
-                        }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+                        }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                     } yield (propertyIri, defaultObjectAccessPermissions.permissionLiteral)
             }
 

@@ -14,7 +14,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.routing.v1
+package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
@@ -28,7 +28,7 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
-object GroupsRouteV1 extends Authenticator with GroupV1JsonProtocol {
+object GroupsRouteADM extends Authenticator with GroupV1JsonProtocol {
 
     private val schemes = Array("http", "https")
     private val urlValidator = new UrlValidator(schemes)
@@ -41,7 +41,7 @@ object GroupsRouteV1 extends Authenticator with GroupV1JsonProtocol {
         val responderManager = system.actorSelection("/user/responderManager")
         val stringFormatter = StringFormatter.getGeneralInstance
 
-        path("v1" / "groups") {
+        path("admin" / "groups") {
             get {
                 /* return all groups */
                 requestContext =>

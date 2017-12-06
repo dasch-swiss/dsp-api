@@ -25,13 +25,14 @@ import java.time.Instant
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1}
-import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringResponseV1}
+import org.knora.webapi.messages.v1.responder.permissionmessages.DefaultObjectAccessPermissionsStringResponseV1
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserADM}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
@@ -193,13 +194,13 @@ class ValuesResponderV1 extends Responder {
             resourceClassIri: IRI = resourceFullResponse.resinfo.getOrElse(throw InconsistentTriplestoreDataException(s"Did not find resource info for resource ${createValueRequest.resourceIri}")).restype_id
 
             defaultObjectAccessPermissions <- {
-                responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
                     projectIri = projectIri,
                     resourceClassIri = resourceClassIri,
                     propertyIri = createValueRequest.propertyIri,
                     createValueRequest.userProfile.permissionData
                 )
-            }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+            }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
             _ = log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
             // Get project info
@@ -870,12 +871,12 @@ class ValuesResponderV1 extends Responder {
 
                 _ = log.debug(s"changeValueV1 - DefaultObjectAccessPermissionsStringForPropertyGetV1 - projectIri ${findResourceWithValueResult.projectIri}, propertyIri: ${findResourceWithValueResult.propertyIri}, permissionData: ${changeValueRequest.userProfile.permissionData} ")
                 defaultObjectAccessPermissions <- {
-                    responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                    responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
                         projectIri = findResourceWithValueResult.projectIri,
                         resourceClassIri = resourceClassIri,
                         propertyIri = findResourceWithValueResult.propertyIri,
                         permissionData = changeValueRequest.userProfile.permissionData)
-                }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+                }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                 _ = log.debug(s"changeValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
                 // Get project info

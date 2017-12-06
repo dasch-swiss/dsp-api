@@ -47,7 +47,7 @@ object ResourcesRouteV2 extends Authenticator {
         path("v2" / "resources" / Segments) { (resIris: Seq[String]) =>
             get {
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
 
                     if (resIris.size > settings.v2ResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ResultsPerPage}")
 
@@ -70,7 +70,7 @@ object ResourcesRouteV2 extends Authenticator {
         } ~ path("v2" / "resourcespreview" / Segments) { (resIris: Seq[String]) =>
             get {
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
 
                     if (resIris.size > settings.v2ResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ResultsPerPage}")
 

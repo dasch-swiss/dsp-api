@@ -21,9 +21,10 @@
 package org.knora.webapi.util
 
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionType.PermissionType
-import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionType, PermissionV1}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.PermissionType
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionType, PermissionADM}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionType
 import org.knora.webapi.responders.v1.GroupedProps.{ValueLiterals, ValueProps}
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 import org.slf4j.LoggerFactory
@@ -357,7 +358,7 @@ object PermissionUtilV1 {
       *         [[OntologyConstants.KnoraBase.ObjectAccessPermissionAbbreviations]], and the values are sets of
       *         user group IRIs.
       */
-    def parsePermissionsWithType(maybePermissionListStr: Option[String], permissionType: PermissionType): Set[PermissionV1] = {
+    def parsePermissionsWithType(maybePermissionListStr: Option[String], permissionType: PermissionType): Set[PermissionADM] = {
         maybePermissionListStr match {
             case Some(permissionListStr) => {
                 val cleanedPermissionListStr = permissionListStr replaceAll("[<>]", "")
@@ -392,7 +393,7 @@ object PermissionUtilV1 {
                         }
                 }
             }.toSet
-            case None => Set.empty[PermissionV1]
+            case None => Set.empty[PermissionADM]
         }
     }
 
@@ -403,64 +404,64 @@ object PermissionUtilV1 {
       * @param iris the optional set of additional information (e.g., group IRIs, resource class IRIs).
       * @return a sequence of permission objects.
       */
-    def buildPermissionObject(name: String, iris: Set[IRI]): Set[PermissionV1] = {
+    def buildPermissionObject(name: String, iris: Set[IRI]): Set[PermissionADM] = {
         name match {
-            case OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission => Set(PermissionV1.ProjectResourceCreateAllPermission)
+            case OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission => Set(PermissionADM.ProjectResourceCreateAllPermission)
 
             case OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission =>
                 if (iris.nonEmpty) {
                     log.debug(s"buildPermissionObject - ProjectResourceCreateRestrictedPermission - iris: $iris")
-                    iris.map(iri => PermissionV1.projectResourceCreateRestrictedPermission(iri))
+                    iris.map(iri => PermissionADM.projectResourceCreateRestrictedPermission(iri))
                 } else {
                     throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
                 }
 
-            case OntologyConstants.KnoraBase.ProjectAdminAllPermission => Set(PermissionV1.ProjectAdminAllPermission)
+            case OntologyConstants.KnoraBase.ProjectAdminAllPermission => Set(PermissionADM.ProjectAdminAllPermission)
 
-            case OntologyConstants.KnoraBase.ProjectAdminGroupAllPermission => Set(PermissionV1.ProjectAdminGroupAllPermission)
+            case OntologyConstants.KnoraBase.ProjectAdminGroupAllPermission => Set(PermissionADM.ProjectAdminGroupAllPermission)
 
             case OntologyConstants.KnoraBase.ProjectAdminGroupRestrictedPermission =>
                 if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.projectAdminGroupRestrictedPermission(iri))
+                    iris.map(iri => PermissionADM.projectAdminGroupRestrictedPermission(iri))
                 } else {
                     throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
                 }
 
-            case OntologyConstants.KnoraBase.ProjectAdminRightsAllPermission => Set(PermissionV1.ProjectAdminRightsAllPermission)
+            case OntologyConstants.KnoraBase.ProjectAdminRightsAllPermission => Set(PermissionADM.ProjectAdminRightsAllPermission)
 
-            case OntologyConstants.KnoraBase.ProjectAdminOntologyAllPermission => Set(PermissionV1.ProjectAdminOntologyAllPermission)
+            case OntologyConstants.KnoraBase.ProjectAdminOntologyAllPermission => Set(PermissionADM.ProjectAdminOntologyAllPermission)
 
             case OntologyConstants.KnoraBase.ChangeRightsPermission =>
                 if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.changeRightsPermission(iri))
+                    iris.map(iri => PermissionADM.changeRightsPermission(iri))
                 } else {
                     throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
                 }
 
             case OntologyConstants.KnoraBase.DeletePermission =>
                 if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.deletePermission(iri))
+                    iris.map(iri => PermissionADM.deletePermission(iri))
                 } else {
                     throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
                 }
 
             case OntologyConstants.KnoraBase.ModifyPermission =>
                 if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.modifyPermission(iri))
+                    iris.map(iri => PermissionADM.modifyPermission(iri))
                 } else {
                     throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
                 }
 
             case OntologyConstants.KnoraBase.ViewPermission =>
                 if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.viewPermission(iri))
+                    iris.map(iri => PermissionADM.viewPermission(iri))
                 } else {
                     throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
                 }
 
             case OntologyConstants.KnoraBase.RestrictedViewPermission =>
                 if (iris.nonEmpty) {
-                    iris.map(iri => PermissionV1.restrictedViewPermission(iri))
+                    iris.map(iri => PermissionADM.restrictedViewPermission(iri))
                 } else {
                     throw InconsistentTriplestoreDataException(s"Missing additional permission information.")
                 }
@@ -474,7 +475,7 @@ object PermissionUtilV1 {
       * @param permissions the sequence of permissions with possible duplicates.
       * @return a set containing only unique permission.
       */
-    def removeDuplicatePermissions(permissions: Seq[PermissionV1]): Set[PermissionV1] = {
+    def removeDuplicatePermissions(permissions: Seq[PermissionADM]): Set[PermissionADM] = {
 
         val result = permissions.groupBy(perm => perm.name + perm.additionalInformation).map { case (k, v) => v.head }.toSet
         //log.debug(s"removeDuplicatePermissions - result: $result")
@@ -489,7 +490,7 @@ object PermissionUtilV1 {
       * @param permissionType the type of permissions.
       * @return a set of permissions without possible lesser permissions.
       */
-    def removeLesserPermissions(permissions: Set[PermissionV1], permissionType: PermissionType): Set[PermissionV1] = {
+    def removeLesserPermissions(permissions: Set[PermissionADM], permissionType: PermissionType): Set[PermissionADM] = {
         permissionType match {
             case PermissionType.OAP =>
                 if (permissions.nonEmpty) {
@@ -499,7 +500,7 @@ object PermissionUtilV1 {
                         perms.toArray.sortWith(_.v1Code.get > _.v1Code.get).head
                     }.toSet
                 } else {
-                    Set.empty[PermissionV1]
+                    Set.empty[PermissionADM]
                 }
 
             case PermissionType.AP => ???
@@ -514,7 +515,7 @@ object PermissionUtilV1 {
       * @param permissionType a [[PermissionType]] indicating the type of permissions to be formatted.
       * @return
       */
-    def formatPermissions(permissions: Set[PermissionV1], permissionType: PermissionType): String = {
+    def formatPermissions(permissions: Set[PermissionADM], permissionType: PermissionType): String = {
         permissionType match {
             case PermissionType.OAP =>
                 if (permissions.nonEmpty) {

@@ -24,8 +24,9 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionsDataADM, PermissionsADMJsonProtocol}
 import org.knora.webapi.messages.v1.responder.groupmessages.GroupV1JsonProtocol
-import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionDataV1, PermissionV1JsonProtocol}
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionV1JsonProtocol
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
@@ -496,7 +497,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     userData = newUserData,
                     groups = Vector.empty[IRI], // removed groups
                     projects_info = Map.empty[IRI, ProjectInfoV1], // removed projects
-                    permissionData = PermissionDataV1(anonymousUser = false),
+                    permissionData = PermissionsDataADM(anonymousUser = false),
                     sessionId = None // removed sessionId
                 )
             }
@@ -722,7 +723,7 @@ case class UserUpdatePayloadV1(email: Option[String] = None,
 /**
   * A spray-json protocol for formatting objects as JSON.
   */
-object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectV1JsonProtocol with GroupV1JsonProtocol with PermissionV1JsonProtocol {
+object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectV1JsonProtocol with GroupV1JsonProtocol with PermissionsADMJsonProtocol {
 
     implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat8(UserDataV1))
     implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)

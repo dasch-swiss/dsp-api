@@ -60,7 +60,7 @@ object StandoffRouteV1 extends Authenticator {
                     requestContext =>
 
 
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
 
                         type Name = String
 

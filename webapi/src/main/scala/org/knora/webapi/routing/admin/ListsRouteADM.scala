@@ -35,7 +35,7 @@ import scala.concurrent.ExecutionContextExecutor
 /**
   * Provides a spray-routing function for API routes that deal with lists.
   */
-object ListsAdminRoute extends Authenticator {
+object ListsRouteADM extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
@@ -49,7 +49,7 @@ object ListsAdminRoute extends Authenticator {
                 /* return all lists */
                 parameters("projectIri".?) { maybeProjectIri: Option[IRI] =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
 
                         val projectIri = stringFormatter.toOptionalIri(maybeProjectIri, () => throw BadRequestException(s"Invalid param project IRI: $maybeProjectIri"))
 
@@ -73,7 +73,7 @@ object ListsAdminRoute extends Authenticator {
             get {
                 /* return a list (a graph with all list nodes) */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
                     val listIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                     val requestMessage = ListGetRequestADM(listIri, userProfile)
@@ -99,7 +99,7 @@ object ListsAdminRoute extends Authenticator {
             get {
                 /* return information about a list (without children) */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
                     val listIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                     val requestMessage = ListInfoGetRequestADM(listIri, userProfile)
@@ -125,7 +125,7 @@ object ListsAdminRoute extends Authenticator {
             get {
                 /* return information about a single node (without children) */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
                     val listIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                     val requestMessage = ListNodeInfoGetRequestADM(listIri, userProfile)

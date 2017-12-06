@@ -35,6 +35,7 @@ import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManag
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.SharedAdminTestData._
+import org.knora.webapi.responders.admin.GroupsResponderADM
 
 import scala.concurrent.duration._
 
@@ -62,7 +63,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
     private val rootUserProfileV1 = SharedAdminTestData.rootUser
 
-    private val actorUnderTest = TestActorRef[GroupsResponderV1]
+    private val actorUnderTest = TestActorRef[GroupsResponderADM]
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
@@ -80,22 +81,22 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
         "asked about a group identified by 'iri' " should {
             "return group info if the group is known " in {
-                actorUnderTest ! GroupInfoByIRIGetRequest(imagesReviewerGroupInfo.id, Some(rootUserProfileV1))
+                actorUnderTest ! GroupInfoByIRIGetRequestV1(imagesReviewerGroupInfo.id, Some(rootUserProfileV1))
                 expectMsg(GroupInfoResponseV1(imagesReviewerGroupInfo))
             }
             "return 'NotFoundException' when the group is unknown " in {
-                actorUnderTest ! GroupInfoByIRIGetRequest("http://data.knora.org/groups/notexisting", Some(rootUserProfileV1))
+                actorUnderTest ! GroupInfoByIRIGetRequestV1("http://data.knora.org/groups/notexisting", Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"For the given group iri 'http://data.knora.org/groups/notexisting' no information was found")))
             }
         }
 
         "asked about a group identified by 'name' " should {
             "return group info if the group is known " in {
-                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectAdminGroupInfo.project, imagesProjectAdminGroupInfo.name, Some(rootUserProfileV1))
+                actorUnderTest ! GroupInfoByNameGetRequestV1(imagesProjectAdminGroupInfo.project, imagesProjectAdminGroupInfo.name, Some(rootUserProfileV1))
                 expectMsg(GroupInfoResponseV1(imagesProjectAdminGroupInfo))
             }
             "return 'NotFoundException' when the group is unknown " in {
-                actorUnderTest ! GroupInfoByNameGetRequest(imagesProjectMemberGroupInfo.project, "groupwrong", Some(rootUserProfileV1))
+                actorUnderTest ! GroupInfoByNameGetRequestV1(imagesProjectMemberGroupInfo.project, "groupwrong", Some(rootUserProfileV1))
                 expectMsg(Failure(NotFoundException(s"For the given group name 'groupwrong' no information was found")))
             }
         }

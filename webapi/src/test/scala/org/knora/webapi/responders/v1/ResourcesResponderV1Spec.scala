@@ -27,8 +27,9 @@ import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.SharedOntologyTestData._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{ObjectAccessPermissionADM, ObjectAccessPermissionsForResourceGetADM, PermissionADM}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.messages.v1.responder.permissionmessages.{ObjectAccessPermissionV1, ObjectAccessPermissionsForResourceGetV1, PermissionV1}
+import org.knora.webapi.messages.v1.responder.permissionmessages.{ObjectAccessPermissionV1, PermissionV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
@@ -830,16 +831,16 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     private def checkPermissionsOnResource(resourceIri: IRI): Unit = {
 
         val expected = Set(
-            PermissionV1.changeRightsPermission("http://www.knora.org/ontology/knora-base#Creator"),
-            PermissionV1.modifyPermission("http://www.knora.org/ontology/knora-base#ProjectMember"),
-            PermissionV1.viewPermission("http://www.knora.org/ontology/knora-base#KnownUser"),
-            PermissionV1.restrictedViewPermission("http://www.knora.org/ontology/knora-base#UnknownUser")
+            PermissionADM.changeRightsPermission("http://www.knora.org/ontology/knora-base#Creator"),
+            PermissionADM.modifyPermission("http://www.knora.org/ontology/knora-base#ProjectMember"),
+            PermissionADM.viewPermission("http://www.knora.org/ontology/knora-base#KnownUser"),
+            PermissionADM.restrictedViewPermission("http://www.knora.org/ontology/knora-base#UnknownUser")
         )
 
-        responderManager ! ObjectAccessPermissionsForResourceGetV1(resourceIri = newBookResourceIri.get)
+        responderManager ! ObjectAccessPermissionsForResourceGetADM(resourceIri = newBookResourceIri.get)
         expectMsgPF(timeout) {
             case Some(permission) => {
-                val perms = permission.asInstanceOf[ObjectAccessPermissionV1].hasPermissions
+                val perms = permission.asInstanceOf[ObjectAccessPermissionADM].hasPermissions
                 perms should contain allElementsOf expected
                 perms.size should equal(expected.size)
             }

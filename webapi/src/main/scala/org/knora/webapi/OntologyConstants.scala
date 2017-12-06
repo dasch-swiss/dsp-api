@@ -423,6 +423,11 @@ object OntologyConstants {
           */
         val SystemUser: IRI = KnoraBasePrefixExpansion + "SystemUser"
 
+        /**
+          * Every user not logged-in is per default an anonymous user.
+          */
+        val AnonymousUser: IRI = KnoraBasePrefixExpansion + "AnonymousUser"
+
         val CreationDate: IRI = KnoraBasePrefixExpansion + "creationDate"
         val ValueCreationDate: IRI = KnoraBasePrefixExpansion + "valueCreationDate"
 

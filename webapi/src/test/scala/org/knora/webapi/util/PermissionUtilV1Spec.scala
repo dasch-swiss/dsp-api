@@ -42,7 +42,8 @@ package org.knora.webapi.util
 
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionType, PermissionV1}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionType, PermissionADM}
+import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionType
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.{CoreSpec, IRI, OntologyConstants, SharedAdminTestData}
 
@@ -155,11 +156,11 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             val hasPermissionsString = "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser,http://rdfh.ch/groups/customgroup|RV knora-base:UnknownUser"
 
             val permissionsSet = Set(
-                PermissionV1.modifyPermission(OntologyConstants.KnoraBase.Creator),
-                PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
-                PermissionV1.viewPermission("http://rdfh.ch/groups/customgroup"),
-                PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
+                PermissionADM.modifyPermission(OntologyConstants.KnoraBase.Creator),
+                PermissionADM.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                PermissionADM.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                PermissionADM.viewPermission("http://rdfh.ch/groups/customgroup"),
+                PermissionADM.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
             )
 
             PermissionUtilV1.parsePermissionsWithType(Some(hasPermissionsString), PermissionType.OAP) should contain allElementsOf permissionsSet
@@ -169,10 +170,10 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             val hasPermissionsString = "ProjectResourceCreateAllPermission|ProjectAdminAllPermission|ProjectResourceCreateRestrictedPermission <http://www.knora.org/ontology/00FF/images#bild>,<http://www.knora.org/ontology/00FF/images#bildformat>"
 
             val permissionsSet = Set(
-                PermissionV1.ProjectResourceCreateAllPermission,
-                PermissionV1.ProjectAdminAllPermission,
-                PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/00FF/images#bild"),
-                PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/00FF/images#bildformat")
+                PermissionADM.ProjectResourceCreateAllPermission,
+                PermissionADM.ProjectAdminAllPermission,
+                PermissionADM.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/00FF/images#bild"),
+                PermissionADM.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/00FF/images#bildformat")
             )
 
             PermissionUtilV1.parsePermissionsWithType(Some(hasPermissionsString), PermissionType.AP) should contain allElementsOf permissionsSet
@@ -184,9 +185,9 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
                 iris = Set("1", "2", "3")
             ) should equal(
                 Set(
-                    PermissionV1.projectResourceCreateRestrictedPermission("1"),
-                    PermissionV1.projectResourceCreateRestrictedPermission("2"),
-                    PermissionV1.projectResourceCreateRestrictedPermission("3")
+                    PermissionADM.projectResourceCreateRestrictedPermission("1"),
+                    PermissionADM.projectResourceCreateRestrictedPermission("2"),
+                    PermissionADM.projectResourceCreateRestrictedPermission("3")
                 )
             )
         }
@@ -194,19 +195,19 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
         "remove duplicate permissions" in {
 
             val duplicatedPermissions = Seq(
-                PermissionV1.restrictedViewPermission("1"),
-                PermissionV1.restrictedViewPermission("1"),
-                PermissionV1.restrictedViewPermission("2"),
-                PermissionV1.changeRightsPermission("2"),
-                PermissionV1.changeRightsPermission("3"),
-                PermissionV1.changeRightsPermission("3")
+                PermissionADM.restrictedViewPermission("1"),
+                PermissionADM.restrictedViewPermission("1"),
+                PermissionADM.restrictedViewPermission("2"),
+                PermissionADM.changeRightsPermission("2"),
+                PermissionADM.changeRightsPermission("3"),
+                PermissionADM.changeRightsPermission("3")
             )
 
             val deduplicatedPermissions = Set(
-                PermissionV1.restrictedViewPermission("1"),
-                PermissionV1.restrictedViewPermission("2"),
-                PermissionV1.changeRightsPermission("2"),
-                PermissionV1.changeRightsPermission("3")
+                PermissionADM.restrictedViewPermission("1"),
+                PermissionADM.restrictedViewPermission("2"),
+                PermissionADM.changeRightsPermission("2"),
+                PermissionADM.changeRightsPermission("3")
             )
 
             val result = PermissionUtilV1.removeDuplicatePermissions(duplicatedPermissions)
@@ -217,16 +218,16 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
         "remove lesser permissions" in {
             val withLesserPermissions = Set(
-                PermissionV1.restrictedViewPermission("1"),
-                PermissionV1.viewPermission("1"),
-                PermissionV1.modifyPermission("2"),
-                PermissionV1.changeRightsPermission("1"),
-                PermissionV1.deletePermission("2")
+                PermissionADM.restrictedViewPermission("1"),
+                PermissionADM.viewPermission("1"),
+                PermissionADM.modifyPermission("2"),
+                PermissionADM.changeRightsPermission("1"),
+                PermissionADM.deletePermission("2")
             )
 
             val withoutLesserPermissions = Set(
-                PermissionV1.changeRightsPermission("1"),
-                PermissionV1.deletePermission("2")
+                PermissionADM.changeRightsPermission("1"),
+                PermissionADM.deletePermission("2")
             )
 
             val result = PermissionUtilV1.removeLesserPermissions(withLesserPermissions, PermissionType.OAP)
@@ -236,11 +237,11 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
         "create permissions string" in {
             val permissions = Set(
-                PermissionV1.changeRightsPermission("1"),
-                PermissionV1.deletePermission("2"),
-                PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser)
+                PermissionADM.changeRightsPermission("1"),
+                PermissionADM.deletePermission("2"),
+                PermissionADM.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                PermissionADM.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                PermissionADM.viewPermission(OntologyConstants.KnoraBase.KnownUser)
             )
 
             val permissionsString = "CR knora-base:Creator,1|D 2|M knora-base:ProjectMember|V knora-base:KnownUser"

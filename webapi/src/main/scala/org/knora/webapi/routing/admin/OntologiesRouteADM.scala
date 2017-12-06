@@ -37,7 +37,7 @@ import scala.concurrent.ExecutionContextExecutor
 /**
   * Provides a spray-routing function for API routes that deal with lists.
   */
-object OntologiesADMRoute$ extends Authenticator with OntologiesADMJsonProtocol {
+object OntologiesRouteADM extends Authenticator with OntologiesADMJsonProtocol {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
@@ -51,7 +51,7 @@ object OntologiesADMRoute$ extends Authenticator with OntologiesADMJsonProtocol 
                 /* return all ontologies */
                 parameters("projectIri".?) { maybeProjectIri: Option[IRI] =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
 
                         val projectIri: Option[IRI] = maybeProjectIri match {
                             case Some(potentialProjectIri) => Some(stringFormatter.validateAndEscapeIri(potentialProjectIri, () => throw BadRequestException(s"Invalid param project IRI: $potentialProjectIri")))
@@ -73,7 +73,7 @@ object OntologiesADMRoute$ extends Authenticator with OntologiesADMJsonProtocol 
                 /* create an ontology */
                 entity(as[CreateOntologyPayloadADM]) { apiRequest =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
 
                         val requestMessage = OntologyCreateRequestADMADM(
                             ontologyName = apiRequest.ontologyName,
@@ -96,7 +96,7 @@ object OntologiesADMRoute$ extends Authenticator with OntologiesADMJsonProtocol 
             get {
                 /* get an existing ontology dump as JSON-LD */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
                     val ontologyIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param ontology IRI: $iri"))
 
                     val requestMessage = OntologyGetRequestADMADM(ontologyIri, userProfile)
@@ -113,7 +113,7 @@ object OntologiesADMRoute$ extends Authenticator with OntologiesADMJsonProtocol 
                 /* update (overwrite) an existing ontology */
                 entity(as[String]) { updatePayload =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
                         val ontologyIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param ontology IRI: $iri"))
 
                         val requestMessage = OntologyUpdateRequestADMADM(

@@ -18,8 +18,8 @@ package org.knora.webapi.responders.v1
 
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.storemessages.{ResetTriplestoreContentRequestV1, ResetTriplestoreContentResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
@@ -40,7 +40,7 @@ class StoreResponderV1 extends Responder {
     private val systemUser = UserProfileV1(
         userData = UserDataV1(lang = "en"),
         isSystemUser = true,
-        permissionData = PermissionDataV1(anonymousUser = false)
+        permissionData = PermissionsDataADM(anonymousUser = false)
     )
 
     def receive = {

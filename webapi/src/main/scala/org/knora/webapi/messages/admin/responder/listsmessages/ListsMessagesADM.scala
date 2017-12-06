@@ -21,7 +21,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.usermessages.UserADM
 import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, RootJsonFormat, _}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,7 +44,7 @@ sealed trait ListsResponderRequestADM extends KnoraRequestADM
   * @param userProfile the profile of the user making the request.
   */
 case class ListsGetRequestADM(projectIri: Option[IRI] = None,
-                              userProfile: UserProfileV1) extends ListsResponderRequestADM
+                              userProfile: UserADM) extends ListsResponderRequestADM
 
 /**
   * Requests a list. A successful response will be a [[ListGetResponseADM]]
@@ -53,7 +53,7 @@ case class ListsGetRequestADM(projectIri: Option[IRI] = None,
   * @param userProfile the profile of the user making the request.
   */
 case class ListGetRequestADM(iri: IRI,
-                             userProfile: UserProfileV1) extends ListsResponderRequestADM
+                             userProfile: UserADM) extends ListsResponderRequestADM
 
 
 /**
@@ -63,7 +63,7 @@ case class ListGetRequestADM(iri: IRI,
   * @param userProfile the profile of the user making the request.
   */
 case class ListInfoGetRequestADM(iri: IRI,
-                                 userProfile: UserProfileV1) extends ListsResponderRequestADM
+                                 userProfile: UserADM) extends ListsResponderRequestADM
 
 /**
   * Request basic information about a list node. A successful response will be a [[ListNodeInfoGetResponseADM]]
@@ -72,7 +72,7 @@ case class ListInfoGetRequestADM(iri: IRI,
   * @param userProfile the profile of the user making the request.
   */
 case class ListNodeInfoGetRequestADM(iri: IRI,
-                                     userProfile: UserProfileV1) extends ListsResponderRequestADM
+                                     userProfile: UserADM) extends ListsResponderRequestADM
 
 
 /**
@@ -83,7 +83,7 @@ case class ListNodeInfoGetRequestADM(iri: IRI,
   * @param userProfile the profile of the user making the request.
   */
 case class NodePathGetRequestADM(iri: IRI,
-                                 userProfile: UserProfileV1) extends ListsResponderRequestADM
+                                 userProfile: UserADM) extends ListsResponderRequestADM
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

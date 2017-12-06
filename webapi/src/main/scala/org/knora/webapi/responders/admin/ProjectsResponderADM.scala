@@ -26,7 +26,6 @@ import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import arq.iri
-import org.apache.jena.sparql.function.library.pi
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoADM
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -192,7 +191,7 @@ class ProjectsResponderADM extends Responder {
             projectResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
 
             projectInfo = if (projectResponse.statements.nonEmpty) {
-                Some(createProjectADM(statements = projectResponse.statements.head, maybeUser))
+                Some(statements2ProjectADM(statements = projectResponse.statements.head, maybeUser))
             } else {
                 None
             }
@@ -291,7 +290,7 @@ class ProjectsResponderADM extends Responder {
       * @return the members of a project as a [[ProjectMembersGetResponseV1]]
       * @throws NotFoundException in the case that the project with the given shortname can not be found.
       */
-    private def projectAdminMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserProfileV1): Future[ProjectAdminMembersGetResponseADM] = {
+    private def projectAdminMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserADM): Future[ProjectAdminMembersGetResponseADM] = {
 
         //log.debug("projectAdminMembersByShortnameGetRequestV1 - shortname: {}", shortname)
 
@@ -408,7 +407,7 @@ class ProjectsResponderADM extends Responder {
             }
 
             // create the project info
-            newProject = createProjectADM(projectResponse, newProjectIRI, Some(user))
+            newProject = statements2ProjectADM(projectResponse, newProjectIRI, Some(user))
 
         } yield ProjectOperationResponseADM(project = newProject)
 
@@ -432,14 +431,14 @@ class ProjectsResponderADM extends Responder {
       * @return a [[ProjectOperationResponseV1]].
       * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
       */
-    private def changeBasicInformationRequestV1(projectIri: IRI, changeProjectRequest: ChangeProjectApiRequestV1, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseADM] = {
+    private def changeBasicInformationRequestV1(projectIri: IRI, changeProjectRequest: ChangeProjectApiRequestV1, userProfileV1: UserADM, apiRequestID: UUID): Future[ProjectOperationResponseADM] = {
 
         //log.debug(s"changeBasicInformationRequestV1: changeProjectRequest: {}", changeProjectRequest)
 
         /**
           * The actual change project task run with an IRI lock.
           */
-        def changeProjectTask(projectIri: IRI, changeProjectRequest: ChangeProjectApiRequestV1, userProfileV1: UserProfileV1): Future[ProjectOperationResponseADM] = for {
+        def changeProjectTask(projectIri: IRI, changeProjectRequest: ChangeProjectApiRequestV1, userProfileV1: UserADM): Future[ProjectOperationResponseADM] = for {
 
             _ <- Future(
                 // check if necessary information is present
@@ -734,9 +733,9 @@ class ProjectsResponderADM extends Responder {
       * @param maybeUser     the profile of user that is making the request.
       * @return a [[ProjectInfoV1]] representing information about project.
       */
-    private def createProjectADM(statements: (IRI, Map[IRI, Seq[LiteralV2]]), maybeUser: Option[UserADM]): ProjectADM = {
+    private def statements2ProjectADM(statements: (IRI, Map[IRI, Seq[LiteralV2]]), maybeUser: Option[UserADM]): ProjectADM = {
 
-        //log.debug("createProjectInfoV1 - projectResponse: {}", projectResponse)
+        // log.debug("statements2ProjectADM - statements: {}", statements)
 
         val projectIri: IRI = statements._1
         val propsMap: Map[IRI, Seq[LiteralV2]] = statements._2
@@ -794,7 +793,7 @@ class ProjectsResponderADM extends Responder {
       * @param userProfile the profile of the user that is making the request
       * @return a [[ProjectAdminMembersGetResponseV1]]
       */
-    private def createProjectAdminMembersGetResponse(memberIris: Seq[IRI], userProfile: UserProfileV1): Future[ProjectAdminMembersGetResponseV1] = {
+    private def createProjectAdminMembersGetResponse(memberIris: Seq[IRI], userProfile: UserADM): Future[ProjectAdminMembersGetResponseV1] = {
 
         def getUserData(userIri: IRI): Future[UserDataV1] = {
             for {
