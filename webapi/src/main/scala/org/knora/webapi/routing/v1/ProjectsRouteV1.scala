@@ -50,7 +50,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
             get {
                 /* returns all projects */
                 requestContext =>
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val requestMessage = ProjectsGetRequestV1(Some(userProfile))
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
@@ -64,7 +64,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                     /* create a new project */
                     entity(as[CreateProjectApiRequestV1]) { apiRequest =>
                         requestContext =>
-                            val userProfile = getUserADM(requestContext)
+                            val userProfile = getUserProfileV1(requestContext)
                             val requestMessage = ProjectCreateRequestV1(
                                 createRequest = apiRequest,
                                 userProfileV1 = userProfile,
@@ -86,7 +86,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                 parameters("identifier" ? "iri") { identifier: String =>
                     requestContext =>
 
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
 
                         val requestMessage = if (identifier != "iri") { // identify project by shortname.
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
@@ -109,7 +109,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                     /* update a project identified by iri */
                     entity(as[ChangeProjectApiRequestV1]) { apiRequest =>
                         requestContext =>
-                            val userProfile = getUserADM(requestContext)
+                            val userProfile = getUserProfileV1(requestContext)
                             val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
 
                             /* the api request is already checked at time of creation. see case class. */
@@ -133,7 +133,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                 delete {
                     /* update project status to false */
                     requestContext =>
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
                         val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
 
                         val requestMessage = ProjectChangeRequestV1(
@@ -157,7 +157,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                 parameters("identifier" ? "iri") { identifier: String =>
                     requestContext =>
 
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
 
                         val requestMessage = if (identifier != "iri") {
                             // identify project by shortname.
@@ -183,7 +183,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                 parameters("identifier" ? "iri") { identifier: String =>
                     requestContext =>
 
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
 
                         val requestMessage = if (identifier != "iri") {
                             // identify project by shortname.

@@ -355,7 +355,7 @@ object ValuesRouteV1 extends Authenticator {
         path("v1" / "values" / "history" / Segments) { iris =>
             get {
                 requestContext => {
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val requestMessage = makeVersionHistoryRequestMessage(iris = iris, userProfile = userProfile)
 
 
@@ -372,7 +372,7 @@ object ValuesRouteV1 extends Authenticator {
             post {
                 entity(as[CreateValueApiRequestV1]) { apiRequest =>
                     requestContext =>
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
                         val requestMessageFuture = makeCreateValueRequestMessage(apiRequest = apiRequest, userProfile = userProfile)
 
                         RouteUtilV1.runJsonRouteWithFuture(
@@ -387,7 +387,7 @@ object ValuesRouteV1 extends Authenticator {
         } ~ path("v1" / "values" / Segment) { valueIriStr =>
             get {
                 requestContext => {
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val requestMessage = makeGetValueRequest(valueIriStr = valueIriStr, userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
@@ -401,7 +401,7 @@ object ValuesRouteV1 extends Authenticator {
             } ~ put {
                 entity(as[ChangeValueApiRequestV1]) { apiRequest =>
                     requestContext =>
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
 
                         // In API v1, you cannot change a value and its comment in a single request. So we know that here,
                         // we are getting a request to change either the value or the comment, but not both.
@@ -420,7 +420,7 @@ object ValuesRouteV1 extends Authenticator {
                 }
             } ~ delete {
                 requestContext => {
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val params = requestContext.request.uri.query().toMap
                     val deleteComment = params.get("deleteComment")
                     val requestMessage = makeDeleteValueRequest(valueIriStr = valueIriStr, deleteComment = deleteComment, userProfile = userProfile)
@@ -437,7 +437,7 @@ object ValuesRouteV1 extends Authenticator {
         } ~ path("v1" / "valuecomments" / Segment) { valueIriStr =>
             delete {
                 requestContext => {
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val requestMessage = makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = None, userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
@@ -453,7 +453,7 @@ object ValuesRouteV1 extends Authenticator {
             // Link value request requires 3 URL path segments: subject IRI, predicate IRI, and object IRI
             get {
                 requestContext => {
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val requestMessage = makeLinkValueGetRequestMessage(iris = iris, userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
@@ -469,7 +469,7 @@ object ValuesRouteV1 extends Authenticator {
             put {
                 entity(as[ChangeFileValueApiRequestV1]) { apiRequest =>
                     requestContext =>
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
                         val requestMessage = makeChangeFileValueRequest(resIriStr = resIriStr, apiRequest = Some(apiRequest), multipartConversionRequest = None, userProfile = userProfile)
 
                         RouteUtilV1.runJsonRoute(
@@ -486,7 +486,7 @@ object ValuesRouteV1 extends Authenticator {
 
                         loggingAdapter.debug("/v1/filevalue - PUT - Multipart.FormData - Route")
 
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
 
                         val FILE_PART = "file"
 

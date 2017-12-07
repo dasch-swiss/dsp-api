@@ -44,7 +44,7 @@ object ListsRouteV1 extends Authenticator {
         path("v1" / "hlists" / Segment) { iri =>
             get {
                 requestContext =>
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val listIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                     val requestMessage = requestContext.request.uri.query().get("reqtype") match {
@@ -65,7 +65,7 @@ object ListsRouteV1 extends Authenticator {
             path("v1" / "selections" / Segment) { iri =>
                 get {
                     requestContext =>
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
                         val selIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                         val requestMessage = requestContext.request.uri.query().get("reqtype") match {

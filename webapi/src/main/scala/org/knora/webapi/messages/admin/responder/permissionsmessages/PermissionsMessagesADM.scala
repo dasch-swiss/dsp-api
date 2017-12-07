@@ -361,11 +361,9 @@ case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean,
   *
   * @param groupsPerProject                    the groups the user belongs to for each project.
   * @param administrativePermissionsPerProject the user's administrative permissions for each project.
-  * @param anonymousUser                       the type of user.
   */
 case class PermissionsDataADM(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI, Seq[IRI]],
-                              administrativePermissionsPerProject: Map[IRI, Set[PermissionADM]] = Map.empty[IRI, Set[PermissionADM]],
-                              anonymousUser: Boolean
+                              administrativePermissionsPerProject: Map[IRI, Set[PermissionADM]] = Map.empty[IRI, Set[PermissionADM]]
                            ) {
 
     /**
@@ -379,15 +377,13 @@ case class PermissionsDataADM(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[I
             case PermissionDataType.RESTRICTED =>
                 PermissionsDataADM(
                     groupsPerProject = groupsPerProject,
-                    administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionADM]], // remove administrative permission information
-                    anonymousUser = anonymousUser
+                    administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionADM]] // remove administrative permission information
                 )
 
             case PermissionDataType.FULL =>
                 PermissionsDataADM(
                     groupsPerProject = groupsPerProject,
-                    administrativePermissionsPerProject = administrativePermissionsPerProject,
-                    anonymousUser = anonymousUser
+                    administrativePermissionsPerProject = administrativePermissionsPerProject
                 )
 
             case _ => throw BadRequestException(s"The requested userProfileType: $permissionProfileType is invalid.")
@@ -773,7 +769,7 @@ trait PermissionsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtoc
     implicit val administrativePermissionADMFormat: JsonFormat[AdministrativePermissionADM] = jsonFormat(AdministrativePermissionADM, "iri", "forProject", "forGroup", "hasPermissions")
     implicit val objectAccessPermissionADMFormat: JsonFormat[ObjectAccessPermissionADM] = jsonFormat(ObjectAccessPermissionADM, "forResource", "forValue", "hasPermissions")
     implicit val defaultObjectAccessPermissionADMFormat: JsonFormat[DefaultObjectAccessPermissionADM] = jsonFormat6(DefaultObjectAccessPermissionADM)
-    implicit val permissionsDataADMFormat: JsonFormat[PermissionsDataADM] = jsonFormat3(PermissionsDataADM)
+    implicit val permissionsDataADMFormat: JsonFormat[PermissionsDataADM] = jsonFormat2(PermissionsDataADM)
     //implicit val templatePermissionsCreateResponseV1Format: RootJsonFormat[TemplatePermissionsCreateResponseV1] = jsonFormat4(TemplatePermissionsCreateResponseV1)
     //implicit val administrativePermissionOperationResponseV1Format: RootJsonFormat[AdministrativePermissionOperationResponseV1] = jsonFormat4(AdministrativePermissionOperationResponseV1)
     //implicit val defaultObjectAccessPermissionOperationResponseV1Format: RootJsonFormat[DefaultObjectAccessPermissionOperationResponseV1] = jsonFormat4(DefaultObjectAccessPermissionOperationResponseV1)

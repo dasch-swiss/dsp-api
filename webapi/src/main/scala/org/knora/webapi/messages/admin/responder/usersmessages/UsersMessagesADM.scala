@@ -456,7 +456,7 @@ case class UserADM(id: IRI,
                    groups: Seq[GroupADM] = Vector.empty[GroupADM],
                    projects: Seq[ProjectADM] = Seq.empty[ProjectADM],
                    sessionId: Option[String] = None,
-                   permissions: PermissionsDataADM = PermissionsDataADM(anonymousUser = true)) {
+                   permissions: PermissionsDataADM = PermissionsDataADM()) {
 
     /**
       * Check password using either SHA-1 or SCrypt.
@@ -580,10 +580,10 @@ case class UserADM(id: IRI,
 
 
     // ToDo: Refactor by using implicit conversions (when I manage to understand them)
-    def asUserProfileV1: UserADM = {
+    def asUserProfileV1: UserProfileV1 = {
 
         if (this.isAnonymousUser) {
-            UserADM()
+            UserProfileV1()
         } else {
 
             val v1Groups: Seq[IRI] = groups.map(_.id)
@@ -591,7 +591,7 @@ case class UserADM(id: IRI,
             val projectInfos = projects.map(_.asProjectInfoV1)
             val v1Projects: Map[IRI, ProjectInfoV1] = projectInfos.map(_.id).zip(projects).toMap[IRI, ProjectInfoV1]
 
-            UserADM(
+            UserProfileV1(
                 userData = asUserDataV1,
                 groups = v1Groups,
                 projects_info = v1Projects,

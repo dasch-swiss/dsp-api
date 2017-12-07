@@ -43,7 +43,8 @@ import scala.concurrent.{Await, ExecutionContext}
 import scala.util.Success
 import java.util.Base64
 
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserGetADM, UserInformationTypeADM}
+import org.knora.webapi.messages.admin.responder.usersmessages
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserInformationTypeADM}
 
 /**
   * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
@@ -253,7 +254,39 @@ trait Authenticator {
       *
       * @param requestContext a [[RequestContext]] containing the http request
       * @param system         the current [[ActorSystem]]
-      * @return a [[UserADM]]
+      * @return a [[UserProfileV1]]
+      */
+    def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV1 = {
+
+        val settings = Settings(system)
+
+        val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
+
+        if (settings.skipAuthentication) {
+            // return anonymous if skipAuthentication
+            log.debug("getUserProfileV1 - Authentication skipping active, returning default UserProfileV1 with 'anonymousUser' inside 'permissionData' set to true!")
+            UserProfileV1()
+        } else if (credentials.isEmpty) {
+            log.debug("getUserProfileV1 - No credentials found, returning default UserProfileV1 with 'anonymousUser' inside 'permissionData' set to true!")
+            UserProfileV1()
+        } else {
+            val userProfile: UserProfileV1 = getUserADMThroughCredentialsV2(credentials).asUserProfileV1
+            log.debug("getUserProfileV1 - I got a UserProfileV1: {}", userProfile.toString)
+
+            /* we return the userProfileV1 without sensitive information */
+            userProfile.ofType(UserProfileTypeV1.RESTRICTED)
+        }
+    }
+
+    /**
+      * Returns a User that match the credentials found in the [[RequestContext]].
+      * The credentials can be email/password as parameters or auth headers, or session token in a cookie header. If no
+      * credentials are found, then a default UserProfile is returned. If the credentials are not correct, then the
+      * corresponding error is returned.
+      *
+      * @param requestContext a [[RequestContext]] containing the http request
+      * @param system         the current [[ActorSystem]]
+      * @return a [[UserProfileV1]]
       */
     def getUserADM(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): UserADM = {
 
@@ -263,10 +296,10 @@ trait Authenticator {
 
         if (settings.skipAuthentication) {
             // return anonymous if skipAuthentication
-            log.debug("getUserProfileV1 - Authentication skipping active, returning default UserProfileV1 with 'anonymousUser' inside 'permissionData' set to true!")
+            log.debug("getUserADM - Authentication skipping active, returning 'anonymousUser'.")
             UserADM()
         } else if (credentials.isEmpty) {
-            log.debug("getUserProfileV1 - No credentials found, returning default UserProfileV1 with 'anonymousUser' inside 'permissionData' set to true!")
+            log.debug("getUserADM - No credentials found, returning 'anonymousUser'.")
             UserADM()
         } else {
             val user: UserADM = getUserADMThroughCredentialsV2(credentials)

@@ -45,7 +45,7 @@ object GroupsRouteADM extends Authenticator with GroupV1JsonProtocol {
             get {
                 /* return all groups */
                 requestContext =>
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
 
                     val requestMessage = GroupsGetRequestV1(Some(userProfile))
 
@@ -61,7 +61,7 @@ object GroupsRouteADM extends Authenticator with GroupV1JsonProtocol {
                     /* create a new group */
                     entity(as[CreateGroupApiRequestV1]) { apiRequest =>
                         requestContext =>
-                            val userProfile = getUserADM(requestContext)
+                            val userProfile = getUserProfileV1(requestContext)
 
                             val requestMessage = GroupCreateRequestV1(
                                 createRequest = apiRequest,
@@ -83,7 +83,7 @@ object GroupsRouteADM extends Authenticator with GroupV1JsonProtocol {
                 /* returns a single group identified either through iri or groupname */
                 parameters("identifier" ? "iri", 'projectIri.as[IRI].?) { (identifier: String, maybeProjectIri: Option[IRI]) =>
                     requestContext =>
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
 
                         val requestMessage = if (identifier != "iri") { // identify group by groupname/projectIri
                             maybeProjectIri match {
@@ -113,7 +113,7 @@ object GroupsRouteADM extends Authenticator with GroupV1JsonProtocol {
                     /* update a group identified by iri */
                     entity(as[ChangeGroupApiRequestV1]) { apiRequest =>
                         requestContext =>
-                            val userProfile = getUserADM(requestContext)
+                            val userProfile = getUserProfileV1(requestContext)
                             val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid group IRI $value"))
 
                             /* the api request is already checked at time of creation. see case class. */
@@ -137,7 +137,7 @@ object GroupsRouteADM extends Authenticator with GroupV1JsonProtocol {
                 delete {
                     /* update group status to false */
                     requestContext =>
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
                         val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid group IRI $value"))
 
                         val requestMessage = GroupChangeRequestV1(
@@ -162,7 +162,7 @@ object GroupsRouteADM extends Authenticator with GroupV1JsonProtocol {
                     parameters("identifier" ? "iri", "projectIri".as[IRI].?) { (identifier: String, maybeProjectIri: Option[IRI]) =>
                         requestContext =>
 
-                            val userProfile = getUserADM(requestContext)
+                            val userProfile = getUserProfileV1(requestContext)
 
                             val requestMessage = if (identifier != "iri") { // identify group by groupname/projectIri
                                 maybeProjectIri match {

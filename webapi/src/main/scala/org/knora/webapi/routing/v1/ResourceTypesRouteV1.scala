@@ -46,7 +46,7 @@ object ResourceTypesRouteV1 extends Authenticator {
         path("v1" / "resourcetypes" / Segment) { iri =>
             get {
                 requestContext =>
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
 
                     // TODO: Check that this is the IRI of a resource type and not just any IRI
                     val resourceTypeIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid resource class IRI: $iri"))
@@ -64,7 +64,7 @@ object ResourceTypesRouteV1 extends Authenticator {
         } ~ path("v1" / "resourcetypes") {
             get {
                 requestContext =>
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val params = requestContext.request.uri.query().toMap
 
                     val vocabularyId = params.getOrElse("vocabulary", throw BadRequestException("Required param vocabulary is missing"))
@@ -88,7 +88,7 @@ object ResourceTypesRouteV1 extends Authenticator {
         } ~ path("v1" / "propertylists") {
             get {
                 requestContext =>
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val params = requestContext.request.uri.query().toMap
 
                     val vocabularyId: Option[String] = params.get("vocabulary")
@@ -125,7 +125,7 @@ object ResourceTypesRouteV1 extends Authenticator {
         } ~ path("v1" / "vocabularies") {
             get {
                 requestContext =>
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val requestMessage = NamedGraphsGetRequestV1(userProfile)
 
                     RouteUtilV1.runJsonRoute(
@@ -140,7 +140,7 @@ object ResourceTypesRouteV1 extends Authenticator {
         } ~ path("v1" / "vocabularies" / "reload") {
             get {
                 requestContext =>
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val requestMessage = LoadOntologiesRequest(userProfile)
 
                     RouteUtilV1.runJsonRoute(
@@ -155,7 +155,7 @@ object ResourceTypesRouteV1 extends Authenticator {
             iri =>
                 get {
                     requestContext =>
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
 
                         // TODO: Check that this is the IRI of a resource type and not just any IRI
                         val resourceClassIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid resource class IRI: $iri"))

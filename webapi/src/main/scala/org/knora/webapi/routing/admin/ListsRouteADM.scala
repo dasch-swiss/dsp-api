@@ -49,7 +49,7 @@ object ListsRouteADM extends Authenticator {
                 /* return all lists */
                 parameters("projectIri".?) { maybeProjectIri: Option[IRI] =>
                     requestContext =>
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
 
                         val projectIri = stringFormatter.toOptionalIri(maybeProjectIri, () => throw BadRequestException(s"Invalid param project IRI: $maybeProjectIri"))
 
@@ -73,7 +73,7 @@ object ListsRouteADM extends Authenticator {
             get {
                 /* return a list (a graph with all list nodes) */
                 requestContext =>
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val listIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                     val requestMessage = ListGetRequestADM(listIri, userProfile)
@@ -99,7 +99,7 @@ object ListsRouteADM extends Authenticator {
             get {
                 /* return information about a list (without children) */
                 requestContext =>
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val listIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                     val requestMessage = ListInfoGetRequestADM(listIri, userProfile)
@@ -125,7 +125,7 @@ object ListsRouteADM extends Authenticator {
             get {
                 /* return information about a single node (without children) */
                 requestContext =>
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val listIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                     val requestMessage = ListNodeInfoGetRequestADM(listIri, userProfile)

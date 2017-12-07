@@ -41,7 +41,7 @@ object PermissionsRouteADM extends Authenticator {
         path("v1" / "permissions" / Segment / Segment) { (projectIri, groupIri) =>
             get {
                 requestContext =>
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val params = requestContext.request.uri.query().toMap
                     val permissionType = params.getOrElse("permissionType", PermissionType.AP)
                     val requestMessage = permissionType match {

@@ -865,7 +865,7 @@ object ResourcesRouteV1 extends Authenticator {
             get {
                 // search for resources matching the given search string (searchstr) and return their Iris.
                 requestContext =>
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val params = requestContext.request.uri.query().toMap
                     val searchstr = params.getOrElse("searchstr", throw BadRequestException(s"required param searchstr is missing"))
 
@@ -911,7 +911,7 @@ object ResourcesRouteV1 extends Authenticator {
                 // For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.
                 entity(as[CreateResourceApiRequestV1]) { apiRequest =>
                     requestContext =>
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
                         val requestMessageFuture = makeCreateResourceRequestMessage(apiRequest = apiRequest, userProfile = userProfile)
 
                         RouteUtilV1.runJsonRouteWithFuture(
@@ -931,7 +931,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                         log.debug("/v1/resources - POST - Multipart.FormData - Route")
 
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
 
                         type Name = String
 
@@ -1017,7 +1017,7 @@ object ResourcesRouteV1 extends Authenticator {
             get {
                 parameters("reqtype".?, "resinfo".as[Boolean].?) { (reqtypeParam, resinfoParam) =>
                     requestContext =>
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
                         val requestType = reqtypeParam.getOrElse("")
                         val resinfo = resinfoParam.getOrElse(false)
                         val requestMessage = makeResourceRequestMessage(resIri = resIri, resinfo = resinfo, requestType = requestType, userProfile = userProfile)
@@ -1033,7 +1033,7 @@ object ResourcesRouteV1 extends Authenticator {
             } ~ delete {
                 parameters("deleteComment".?) { deleteCommentParam =>
                     requestContext =>
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
                         val requestMessage = makeResourceDeleteMessage(resIri = resIri, deleteComment = deleteCommentParam, userProfile = userProfile)
 
                         RouteUtilV1.runJsonRoute(
@@ -1048,7 +1048,7 @@ object ResourcesRouteV1 extends Authenticator {
         } ~ path("v1" / "resources.html" / Segment) { iri =>
             get {
                 requestContext =>
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val params = requestContext.request.uri.query().toMap
                     val requestType = params.getOrElse("reqtype", "")
                     val resIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
@@ -1070,7 +1070,7 @@ object ResourcesRouteV1 extends Authenticator {
         } ~ path("v1" / "properties" / Segment) { iri =>
             get {
                 requestContext =>
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val resIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
                     val requestMessage = makeGetPropertiesRequestMessage(resIri, userProfile)
 
@@ -1087,7 +1087,7 @@ object ResourcesRouteV1 extends Authenticator {
             put {
                 entity(as[ChangeResourceLabelApiRequestV1]) { apiRequest =>
                     requestContext =>
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
 
                         val resIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
 
@@ -1113,7 +1113,7 @@ object ResourcesRouteV1 extends Authenticator {
             get {
                 parameters("depth".as[Int].?) { depth =>
                     requestContext =>
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
                         val resourceIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param resource IRI: $iri"))
                         val requestMessage = GraphDataGetRequestV1(resourceIri, depth.getOrElse(4), userProfile)
 
@@ -1150,7 +1150,7 @@ object ResourcesRouteV1 extends Authenticator {
             post {
                 entity(as[String]) { xml =>
                     requestContext =>
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
 
                         if (userProfile.isAnonymousUser) {
                             throw BadRequestException("You are not logged in, and only a system administrator or project administrator can perform a bulk import")
@@ -1212,7 +1212,7 @@ object ResourcesRouteV1 extends Authenticator {
                 // Respond with a Content-Disposition header specifying the filename of the generated Zip file.
                 respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> (internalOntologyPrefixLabel + "-xml-schemas.zip")))) {
                     requestContext =>
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
 
                         val httpResponseFuture: Future[HttpResponse] = for {
                             schemaZipFileBytes: Array[Byte] <- generateSchemaZipFile(

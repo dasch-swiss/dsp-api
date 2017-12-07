@@ -58,7 +58,7 @@ object OntologiesRouteV2 extends Authenticator {
                     // project-specific API ontology, prefix it with settings.knoraApiHttpBaseUrl to get the ontology
                     // IRI.
 
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val urlPath = requestContext.request.uri.path.toString
 
                     val requestedOntologyStr: IRI = if (stringFormatter.isBuiltInApiV2OntologyUrlPath(urlPath)) {
@@ -102,7 +102,7 @@ object OntologiesRouteV2 extends Authenticator {
         } ~ path("v2" / "ontologies" / "metadata") {
             get {
                 requestContext => {
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
 
                     val requestMessage = OntologyMetadataGetRequestV2(userProfile = userProfile)
 
@@ -118,7 +118,7 @@ object OntologiesRouteV2 extends Authenticator {
         } ~ path("v2" / "ontologies" / "metadata" / Segments) { (projectIris: List[IRI]) =>
             get {
                 requestContext => {
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
                     val validatedProjectIris = projectIris.map(iri => stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException("Invalid project IRI: $iri"))).toSet
                     val requestMessage = OntologyMetadataGetRequestV2(projectIris = validatedProjectIris, userProfile = userProfile)
 
@@ -134,7 +134,7 @@ object OntologiesRouteV2 extends Authenticator {
         } ~ path("v2" / "ontologies" / "allentities" / Segments) { (externalOntologyIris: List[IRI]) =>
             get {
                 requestContext => {
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
 
                     val ontologiesAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalOntologyIris.map {
                         (namedGraphStr: IRI) =>
@@ -183,7 +183,7 @@ object OntologiesRouteV2 extends Authenticator {
         } ~ path("v2" / "ontologies" / "classes" / Segments) { (externalResourceClassIris: List[IRI]) =>
             get {
                 requestContext => {
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
 
                     val classesAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalResourceClassIris.map {
                         (classIriStr: IRI) =>
@@ -233,7 +233,7 @@ object OntologiesRouteV2 extends Authenticator {
         } ~ path("v2" / "ontologies" / "properties" / Segments) { (externalPropertyIris: List[IRI]) =>
             get {
                 requestContext => {
-                    val userProfile = getUserADM(requestContext)
+                    val userProfile = getUserProfileV1(requestContext)
 
                     val propsAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalPropertyIris.map {
                         (propIriStr: IRI) =>
@@ -282,7 +282,7 @@ object OntologiesRouteV2 extends Authenticator {
             post {
                 entity(as[String]) { jsonRequest =>
                     requestContext => {
-                        val userProfile = getUserADM(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
                         val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
                         val requestMessage: CreateOntologyRequestV2 = CreateOntologyRequestV2.fromJsonLD(
