@@ -21,7 +21,7 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets all information about a all user.
+ * Gets all information about a single or all user.
  *
  * @param triplestore the name of the triplestore being used.
  * @param maybeIri the users's IRI.

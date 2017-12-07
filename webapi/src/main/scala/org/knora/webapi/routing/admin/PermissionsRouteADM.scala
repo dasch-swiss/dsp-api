@@ -24,7 +24,7 @@ import akka.http.scaladsl.server.Route
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionForProjectGroupGetRequestADM, PermissionType}
-import org.knora.webapi.routing.{Authenticator, RouteUtilAdmin}
+import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 
 object PermissionsRouteADM extends Authenticator {
 
@@ -48,7 +48,7 @@ object PermissionsRouteADM extends Authenticator {
                         case _ => AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, userProfile)
                     }
 
-                    RouteUtilAdmin.runJsonRoute(
+                    RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,

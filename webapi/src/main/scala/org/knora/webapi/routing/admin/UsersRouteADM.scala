@@ -24,8 +24,8 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.routing.{Authenticator, RouteUtilADM, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
 
 /**
@@ -34,8 +34,6 @@ import org.knora.webapi.util.StringFormatter
 object UsersRouteADM extends Authenticator {
 
     /* bring json protocol into scope */
-
-    import UserV1JsonProtocol._
 
     private val schemes = Array("http", "https")
     private val urlValidator = new UrlValidator(schemes)
@@ -53,10 +51,10 @@ object UsersRouteADM extends Authenticator {
             get {
                 /* return all users */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-                    val requestMessage = UsersGetRequestV1(userProfile)
+                    val requestingUser = getUserADM(requestContext)
+                    val requestMessage = UsersGetRequestADM(requestingUser = requestingUser)
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -66,17 +64,17 @@ object UsersRouteADM extends Authenticator {
             } ~
             post {
                 /* create a new user */
-                entity(as[CreateUserApiRequestV1]) { apiRequest =>
+                entity(as[CreateUserApiRequestADM]) { apiRequest =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val requestingUser = getUserADM(requestContext)
 
-                        val requestMessage = UserCreateRequestV1(
+                        val requestMessage = UserCreateRequestADM(
                             createRequest = apiRequest,
-                            userProfile,
+                            requestingUser = requestingUser,
                             apiRequestID = UUID.randomUUID()
                         )
 
-                        RouteUtilV1.runJsonRoute(
+                        RouteUtilADM.runJsonRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -91,16 +89,16 @@ object UsersRouteADM extends Authenticator {
                 /* return a single user identified by iri or email */
                 parameters("identifier" ? "iri") { (identifier: String) =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val requestingUser = getUserADM(requestContext)
 
                         /* check if email or iri was supplied */
                         val requestMessage = if (identifier == "email") {
-                            UserProfileByEmailGetRequestV1(value, UserProfileTypeV1.RESTRICTED, userProfile)
+                            UserGetRequestADM(maybeUserIri = None, maybeEmail = Some(value), UserInformationTypeADM.RESTRICTED, requestingUser)
                         } else {
                             val userIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
-                            UserProfileByIRIGetRequestV1(userIri, UserProfileTypeV1.RESTRICTED, userProfile)
+                            UserGetRequestADM(maybeUserIri = Some(userIri), maybeEmail = None, UserInformationTypeADM.RESTRICTED, requestingUser)
                         }
-                        RouteUtilV1.runJsonRoute(
+                        RouteUtilADM.runJsonRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -111,49 +109,49 @@ object UsersRouteADM extends Authenticator {
             } ~
             put {
                 /* update a user identified by iri */
-                entity(as[ChangeUserApiRequestV1]) { apiRequest =>
+                entity(as[ChangeUserApiRequestADM]) { apiRequest =>
                     requestContext =>
 
                         val userIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
-                        val userProfile = getUserProfileV1(requestContext)
+                        val requestingUser = getUserADM(requestContext)
 
                         /* the api request is already checked at time of creation. see case class. */
 
                         val requestMessage = if (apiRequest.oldPassword.isDefined && apiRequest.newPassword.isDefined) {
                             /* update existing user's password */
-                            UserChangePasswordRequestV1(
+                            UserChangePasswordRequestADM(
                                 userIri = userIri,
                                 changeUserRequest = apiRequest,
-                                userProfile,
+                                requestingUser,
                                 apiRequestID = UUID.randomUUID()
                             )
                         } else if (apiRequest.status.isDefined) {
                             /* update existing user's status */
-                            UserChangeStatusRequestV1(
+                            UserChangeStatusRequestADM(
                                 userIri,
                                 changeUserRequest = apiRequest,
-                                userProfile,
+                                requestingUser,
                                 apiRequestID = UUID.randomUUID()
                             )
                         } else if (apiRequest.systemAdmin.isDefined) {
                             /* update existing user's system admin membership status */
-                            UserChangeSystemAdminMembershipStatusRequestV1(
+                            UserChangeSystemAdminMembershipStatusRequestADM(
                                 userIri,
                                 changeUserRequest = apiRequest,
-                                userProfile,
+                                requestingUser,
                                 apiRequestID = UUID.randomUUID()
                             )
                         } else {
                             /* update existing user's basic information */
-                            UserChangeBasicUserDataRequestV1(
+                            UserChangeBasicUserDataRequestADM(
                                 userIri,
                                 changeUserRequest = apiRequest,
-                                userProfile,
+                                requestingUser,
                                 apiRequestID = UUID.randomUUID()
                             )
                         }
 
-                        RouteUtilV1.runJsonRoute(
+                        RouteUtilADM.runJsonRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -166,17 +164,17 @@ object UsersRouteADM extends Authenticator {
                 /* delete a user identified by iri */
                 requestContext => {
                     val userIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     /* update existing user's status to false */
-                    val requestMessage = UserChangeStatusRequestV1(
+                    val requestMessage = UserChangeStatusRequestADM(
                         userIri,
-                        changeUserRequest = ChangeUserApiRequestV1(status = Some(false)),
-                        userProfile,
+                        changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
+                        requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -190,17 +188,17 @@ object UsersRouteADM extends Authenticator {
             get {
                 /* get user's project memberships */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
 
-                    val requestMessage = UserProjectMembershipsGetRequestV1(
+                    val requestMessage = UserProjectMembershipsGetRequestADM(
                         userIri = checkedUserIri,
-                        userProfileV1 = userProfile,
+                        requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -213,19 +211,19 @@ object UsersRouteADM extends Authenticator {
             post {
                 /* add user to project */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
                     val checkedProjectIri = stringFormatter.validateAndEscapeIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
 
-                    val requestMessage = UserProjectMembershipAddRequestV1(
+                    val requestMessage = UserProjectMembershipAddRequestADM(
                         userIri = checkedUserIri,
                         projectIri = checkedProjectIri,
-                        userProfileV1 = userProfile,
+                        requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -236,19 +234,19 @@ object UsersRouteADM extends Authenticator {
             delete {
                 /* remove user from project (and all groups belonging to this project) */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
                     val checkedProjectIri = stringFormatter.validateAndEscapeIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
 
-                    val requestMessage = UserProjectMembershipRemoveRequestV1(
+                    val requestMessage = UserProjectMembershipRemoveRequestADM(
                         userIri = checkedUserIri,
                         projectIri = checkedProjectIri,
-                        userProfileV1 = userProfile,
+                        requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -261,17 +259,17 @@ object UsersRouteADM extends Authenticator {
             get {
                 /* get user's project admin memberships */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
 
-                    val requestMessage = UserProjectAdminMembershipsGetRequestV1(
+                    val requestMessage = UserProjectAdminMembershipsGetRequestADM(
                         userIri = checkedUserIri,
-                        userProfileV1 = userProfile,
+                        requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -284,19 +282,19 @@ object UsersRouteADM extends Authenticator {
             post {
                 /* add user to project admin */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
                     val checkedProjectIri = stringFormatter.validateAndEscapeIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
 
-                    val requestMessage = UserProjectAdminMembershipAddRequestV1(
+                    val requestMessage = UserProjectAdminMembershipAddRequestADM(
                         userIri = checkedUserIri,
                         projectIri = checkedProjectIri,
-                        userProfileV1 = userProfile,
+                        requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -307,19 +305,19 @@ object UsersRouteADM extends Authenticator {
             delete {
                 /* remove user from project admin */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
                     val checkedProjectIri = stringFormatter.validateAndEscapeIri(projectIri, () => throw BadRequestException(s"Invalid project IRI $projectIri"))
 
-                    val requestMessage = UserProjectAdminMembershipRemoveRequestV1(
+                    val requestMessage = UserProjectAdminMembershipRemoveRequestADM(
                         userIri = checkedUserIri,
                         projectIri = checkedProjectIri,
-                        userProfileV1 = userProfile,
+                        requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -332,17 +330,17 @@ object UsersRouteADM extends Authenticator {
             get {
                 /* get user's group memberships */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
 
-                    val requestMessage = UserGroupMembershipsGetRequestV1(
+                    val requestMessage = UserGroupMembershipsGetRequestADM(
                         userIri = checkedUserIri,
-                        userProfileV1 = userProfile,
+                        requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -355,19 +353,19 @@ object UsersRouteADM extends Authenticator {
             post {
                 /* add user to group */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
                     val checkedGroupIri = stringFormatter.validateAndEscapeIri(groupIri, () => throw BadRequestException(s"Invalid group IRI $groupIri"))
 
-                    val requestMessage = UserGroupMembershipAddRequestV1(
+                    val requestMessage = UserGroupMembershipAddRequestADM(
                         userIri = checkedUserIri,
                         groupIri = checkedGroupIri,
-                        userProfileV1 = userProfile,
+                        requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -378,19 +376,19 @@ object UsersRouteADM extends Authenticator {
             delete {
                 /* remove user from group */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
                     val checkedGroupIri = stringFormatter.validateAndEscapeIri(groupIri, () => throw BadRequestException(s"Invalid group IRI $groupIri"))
 
-                    val requestMessage = UserGroupMembershipRemoveRequestV1(
+                    val requestMessage = UserGroupMembershipRemoveRequestADM(
                         userIri = checkedUserIri,
                         groupIri = checkedGroupIri,
-                        userProfileV1 = userProfile,
+                        requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,

@@ -1,26 +1,32 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
  * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
  * This file is part of Knora.
+ *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * Knora is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
+ *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.e2e.v1
+package org.knora.webapi.e2e.admin
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi.e2e.v1.ProjectsV1E2ESpec
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
@@ -33,7 +39,7 @@ import spray.json._
 import scala.concurrent.duration._
 
 
-object ProjectsV1E2ESpec {
+object ProjectsADME2ESpec {
     val config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -44,7 +50,7 @@ object ProjectsV1E2ESpec {
 /**
   * End-to-End (E2E) test specification for testing groups endpoint.
   */
-class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJsonProtocol with ProjectV1JsonProtocol with TriplestoreJsonProtocol {
+class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with SessionJsonProtocol with ProjectsADMJsonProtocol with TriplestoreJsonProtocol {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
@@ -97,6 +103,133 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
             }
+        }
+
+        "used to modify project information" should {
+
+            val newProjectIri = new MutableTestIri
+
+            "CREATE a new project and return the project info if the supplied shortname is unique" in {
+
+                val params =
+                    s"""
+                       |{
+                       |    "shortname": "newproject",
+                       |    "longname": "project longname",
+                       |    "description": "project description",
+                       |    "keywords": "keywords",
+                       |    "logo": "/fu/bar/baz.jpg",
+                       |    "status": true,
+                       |    "selfjoin": false
+                       |}
+                """.stripMargin
+
+
+                val request = Post(baseApiUrl + s"/v1/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                response.status should be (StatusCodes.OK)
+
+                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("project_info").asJsObject.fields
+                jsonResult("shortname").convertTo[String] should be ("newproject")
+                jsonResult("longname").convertTo[String] should be ("project longname")
+                jsonResult("description").convertTo[String] should be ("project description")
+                jsonResult("keywords").convertTo[String] should be ("keywords")
+                jsonResult("logo").convertTo[String] should be ("/fu/bar/baz.jpg")
+                jsonResult("status").convertTo[Boolean] should be (true)
+                jsonResult("selfjoin").convertTo[Boolean] should be (false)
+
+                val iri = jsonResult("id").convertTo[String]
+                newProjectIri.set(iri)
+                // log.debug("newProjectIri: {}", newProjectIri.get)
+
+            }
+
+            "return a 'BadRequest' if the supplied project shortname during creation is not unique" in {
+                val params =
+                    s"""
+                       |{
+                       |    "shortname": "newproject",
+                       |    "longname": "project longname",
+                       |    "description": "project description",
+                       |    "keywords": "keywords",
+                       |    "logo": "/fu/bar/baz.jpg",
+                       |    "status": true,
+                       |    "selfjoin": false
+                       |}
+                """.stripMargin
+
+
+                val request = Post(baseApiUrl + s"/v1/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                response.status should be (StatusCodes.BadRequest)
+            }
+
+            "return 'BadRequest' if 'shortname' during creation is missing" in {
+                val params =
+                    s"""
+                       |{
+                       |    "longname": "project longname",
+                       |    "description": "project description",
+                       |    "keywords": "keywords",
+                       |    "logo": "/fu/bar/baz.jpg",
+                       |    "status": true,
+                       |    "selfjoin": false
+                       |}
+                """.stripMargin
+
+
+                val request = Post(baseApiUrl + s"/v1/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                response.status should be (StatusCodes.BadRequest)
+            }
+
+            "UPDATE a project" in {
+
+                val params =
+                    s"""
+                       |{
+                       |    "shortname": "newproject",
+                       |    "longname": "updated project longname",
+                       |    "description": "updated project description",
+                       |    "keywords": "updated keywords",
+                       |    "logo": "/fu/bar/baz-updated.jpg",
+                       |    "institution": "http://rdfh.ch/institutions/dhlab-basel",
+                       |    "status": true,
+                       |    "selfjoin": true
+                       |}
+                """.stripMargin
+
+                val projectIriEncoded = java.net.URLEncoder.encode(newProjectIri.get, "utf-8")
+                val request = Put(baseApiUrl + s"/v1/projects/" + projectIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                response.status should be (StatusCodes.OK)
+
+                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("project_info").asJsObject.fields
+                jsonResult("shortname").convertTo[String] should be ("newproject")
+                jsonResult("longname").convertTo[String] should be ("updated project longname")
+                jsonResult("description").convertTo[String] should be ("updated project description")
+                jsonResult("keywords").convertTo[String] should be ("updated keywords")
+                jsonResult("logo").convertTo[String] should be ("/fu/bar/baz-updated.jpg")
+                jsonResult("status").convertTo[Boolean] should be (true)
+                jsonResult("selfjoin").convertTo[Boolean] should be (true)
+            }
+
+            "DELETE a project" in {
+
+                val projectIriEncoded = java.net.URLEncoder.encode(newProjectIri.get, "utf-8")
+                val request = Delete(baseApiUrl + s"/v1/projects/" + projectIriEncoded) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                response.status should be (StatusCodes.OK)
+
+                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("project_info").asJsObject.fields
+                jsonResult("status").convertTo[Boolean] should be (false)
+            }
+
         }
 
         "used to query members" should {

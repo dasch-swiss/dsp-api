@@ -35,7 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Convenience methods for Knora Admin routes.
   */
-object RouteUtilAdmin {
+object RouteUtilADM {
 
     /**
       * Sends a message to a responder and completes the HTTP request by returning the response as JSON.

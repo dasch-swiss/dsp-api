@@ -30,7 +30,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, P
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionV1JsonProtocol
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages._
 import spray.json._
@@ -135,6 +134,16 @@ case class ChangeUserApiRequestADM(email: Option[String] = None,
 sealed trait UsersResponderRequestADM extends KnoraRequestADM
 
 /**
+  * Get all information about all users in form of a sequence of [[UserADM]]. Returns an empty sequence if
+  * no users are found. Administration permission checking is skipped.
+  *
+  * @param userInformationTypeADM the extent of the information returned.
+  * @param requestingUser         the user that is making the request.
+  */
+case class UsersGetADM(userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
+                       requestingUser: UserADM) extends UsersResponderRequestADM
+
+/**
   * Get all information about all users in form of [[UsersGetResponseV1]]. The UsersGetRequestV1 returns either
   * something or a NotFound exception if there are no users found. Administration permission checking is performed.
   *
@@ -143,17 +152,6 @@ sealed trait UsersResponderRequestADM extends KnoraRequestADM
   */
 case class UsersGetRequestADM(userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
                               requestingUser: UserADM) extends UsersResponderRequestADM
-
-
-/**
-  * Get all information about all users in form of a sequence of [[UserADM]]. Returns an empty sequence if
-  * no users are found. Administration permission checking is skipped.
-  *
-  * @param userInformationTypeADM the extent of the information returned.
-  * @param requestingUser         the user that is making the request.
-  */
-case class UsersGetADM(userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
-                       requestingUser: Option[UserADM]) extends UsersResponderRequestADM
 
 /**
   * A message that requests a user's profile either by IRI or email. A successful response will be a [[UserADM]].
@@ -166,7 +164,7 @@ case class UsersGetADM(userInformationTypeADM: UserInformationTypeADM = UserInfo
 case class UserGetADM(maybeUserIri: Option[IRI],
                       maybeEmail: Option[String],
                       userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
-                      requestingUser: Option[UserADM]) extends UsersResponderRequestADM {
+                      requestingUser: UserADM) extends UsersResponderRequestADM {
 
     // need either user IRI or email
     if (maybeUserIri.isEmpty && maybeEmail.isEmpty) {

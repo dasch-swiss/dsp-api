@@ -156,141 +156,6 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
         }
 
-        "used to modify user information" should {
-
-            val donaldIri = new MutableTestIri
-
-            "create the user and return it's profile if the supplied email is unique " in {
-
-                val params =
-                    s"""
-                   |{
-                   |    "email": "donald.duck@example.org",
-                   |    "givenName": "Donald",
-                   |    "familyName": "Duck",
-                   |    "password": "test",
-                   |    "status": true,
-                   |    "lang": "en",
-                   |    "systemAdmin": false
-                   |}
-                """.stripMargin
-
-                val request = Post(baseApiUrl + s"/v1/users", HttpEntity(ContentTypes.`application/json`, params))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
-                response.status should be(StatusCodes.OK)
-
-                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("userData").asJsObject.fields
-                jsonResult("email").convertTo[String] should be("donald.duck@example.org")
-                jsonResult("firstname").convertTo[String] should be("Donald")
-                jsonResult("lastname").convertTo[String] should be("Duck")
-                jsonResult("status").convertTo[Boolean] should be (true)
-                jsonResult("lang").convertTo[String] should be("en")
-
-
-                val iri = jsonResult("user_id").convertTo[String]
-                donaldIri.set(iri)
-                // log.debug(s"iri: ${donaldIri.get}")
-            }
-
-            "update the user's basic information" in {
-
-                val params =
-                    s"""
-                    {
-                        "email": "donald.big.duck@example.org",
-                        "givenName": "Big Donald",
-                        "familyName": "Duckmann",
-                        "lang": "de"
-                    }
-                    """.stripMargin
-
-                val userIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
-                val request = Put(baseApiUrl + s"/v1/users/" + userIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
-                response.status should be(StatusCodes.OK)
-
-                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("userData").asJsObject.fields
-                jsonResult("email").convertTo[String] should be("donald.big.duck@example.org")
-                jsonResult("firstname").convertTo[String] should be("Big Donald")
-                jsonResult("lastname").convertTo[String] should be("Duckmann")
-                jsonResult("lang").convertTo[String] should be("de")
-            }
-
-            "update the user's password" in {
-
-                val params01 =
-                    s"""
-                    {
-                        "oldPassword": "test",
-                        "newPassword": "test1234"
-                    }
-                    """.stripMargin
-
-
-                val request1 = Put(baseApiUrl + s"/v1/users/" + rootCreds.urlEncodedIri, HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, "test")) // old password
-                val response1: HttpResponse = singleAwaitingRequest(request1)
-                response1.status should be(StatusCodes.OK)
-
-                val params02 =
-                    s"""
-                    {
-                        "oldPassword": "test1234",
-                        "newPassword": "test"
-                    }
-                    """.stripMargin
-
-
-                val request2 = Put(baseApiUrl + s"/v1/users/" + rootCreds.urlEncodedIri, HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, "test1234")) // new password
-                val response2: HttpResponse = singleAwaitingRequest(request2)
-                response2.status should be(StatusCodes.OK)
-            }
-
-            "delete the user by making him inactive" in {
-
-                val donaldIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
-
-                val params =
-                    s"""
-                    {
-                        "status": false
-                    }
-                    """.stripMargin
-
-
-                val request = Put(baseApiUrl + s"/v1/users/" + donaldIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
-                response.status should be(StatusCodes.OK)
-
-                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("userData").asJsObject.fields
-                jsonResult("status").convertTo[Boolean] should be(false)
-            }
-
-            "update the user's system admin membership status" in {
-                val donaldIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
-
-                val params =
-                    s"""
-                    {
-                        "systemAdmin": true
-                    }
-                    """.stripMargin
-
-
-                val request = Put(baseApiUrl + s"/v1/users/" + donaldIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
-                response.status should be(StatusCodes.OK)
-
-                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("permissionData").asJsObject.fields("groupsPerProject").asJsObject.fields
-                jsonResult("http://www.knora.org/ontology/knora-base#SystemProject").convertTo[List[String]].head should equal("http://www.knora.org/ontology/knora-base#SystemAdmin")
-                // log.debug(jsonResult)
-
-            }
-        }
-
         "used to query project memberships" should {
 
             "return all projects the user is a member of" in {
@@ -304,37 +169,6 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
                 // testing getUserProjectMemberships method, which should return the same result
                 projects should contain allElementsOf getUserProjectMemberships(multiUserIri, rootCreds)
-            }
-        }
-
-        "used to modify project membership" should {
-
-
-            "add user to project" in {
-                val membershipsBeforeUpdate = getUserProjectMemberships(normalUserCreds.userIri, rootCreds)
-                membershipsBeforeUpdate should equal(Seq())
-
-                val request = Post(baseApiUrl + "/v1/users/projects/" + normalUserCreds.urlEncodedIri + "/" + imagesProjectIriEnc) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
-                assert(response.status === StatusCodes.OK)
-
-                val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
-                membershipsAfterUpdate should equal(Seq(SharedAdminTestData.IMAGES_PROJECT_IRI))
-            }
-
-            "remove user from project" in {
-
-                val membershipsBeforeUpdate = getUserProjectMemberships(normalUserCreds.userIri, rootCreds)
-                membershipsBeforeUpdate should equal(Seq(SharedAdminTestData.IMAGES_PROJECT_IRI))
-
-                val request = Delete(baseApiUrl + "/v1/users/projects/" + normalUserCreds.urlEncodedIri + "/" + imagesProjectIriEnc) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
-                assert(response.status === StatusCodes.OK)
-
-                val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
-                membershipsAfterUpdate should equal(Seq())
             }
         }
 
@@ -354,42 +188,6 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
             }
         }
 
-
-        "used to modify project admin group membership" should {
-
-            "add user to project admin group" in {
-                val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
-                //log.debug(s"membershipsBeforeUpdate: $membershipsBeforeUpdate")
-                membershipsBeforeUpdate should equal(Seq())
-
-                val request = Post(baseApiUrl + "/v1/users/projects-admin/" + normalUserCreds.urlEncodedIri + "/" + imagesProjectIriEnc) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                //log.debug(s"response: ${response.toString}")
-                assert(response.status === StatusCodes.OK)
-
-                val membershipsAfterUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
-                //log.debug(s"membershipsAfterUpdate: $membershipsAfterUpdate")
-                membershipsAfterUpdate should equal(Seq(SharedAdminTestData.IMAGES_PROJECT_IRI))
-            }
-
-            "remove user from project admin group" in {
-
-                val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
-                log.debug(s"membershipsBeforeUpdate: $membershipsBeforeUpdate")
-                membershipsBeforeUpdate should equal(Seq(SharedAdminTestData.IMAGES_PROJECT_IRI))
-
-                val request = Delete(baseApiUrl + "/v1/users/projects-admin/" + normalUserCreds.urlEncodedIri + "/" + imagesProjectIriEnc) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                //og.debug(s"response: ${response.toString}")
-                assert(response.status === StatusCodes.OK)
-
-                val membershipsAfterUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
-                log.debug(s"membershipsAfterUpdate: $membershipsAfterUpdate")
-                membershipsAfterUpdate should equal(Seq())
-            }
-
-        }
-
         "used to query group memberships" should {
 
             "return all groups the user is a member of" in {
@@ -403,37 +201,6 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
                 // testing getUserGroupMemberships method, which should return the same result
                 groups should contain allElementsOf getUserGroupMemberships(multiUserIri, rootCreds)
-            }
-        }
-
-        "used to modify group membership" should {
-
-            "add user to group" in {
-
-                val membershipsBeforeUpdate = getUserGroupMemberships(normalUserCreds.userIri, rootCreds)
-                membershipsBeforeUpdate should equal(Seq())
-
-                val request = Post(baseApiUrl + "/v1/users/groups/" + normalUserCreds.urlEncodedIri + "/" + imagesReviewerGroupIriEnc) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
-                assert(response.status === StatusCodes.OK)
-
-                val membershipsAfterUpdate = getUserGroupMemberships(normalUserIri, rootCreds)
-                membershipsAfterUpdate should equal(Seq(imagesReviewerGroupIri))
-            }
-
-            "remove user from group" in {
-
-                val membershipsBeforeUpdate = getUserGroupMemberships(normalUserCreds.userIri, rootCreds)
-                membershipsBeforeUpdate should equal(Seq(imagesReviewerGroupIri))
-
-                val request = Delete(baseApiUrl + "/v1/users/groups/" + normalUserCreds.urlEncodedIri + "/" + imagesReviewerGroupIriEnc) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
-                assert(response.status === StatusCodes.OK)
-
-                val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
-                membershipsAfterUpdate should equal(Seq())
             }
         }
     }

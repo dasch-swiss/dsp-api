@@ -89,47 +89,47 @@ case class ChangeGroupApiRequestADM(name: Option[String] = None,
 sealed trait GroupsResponderRequestADM extends KnoraRequestADM
 
 // Requests
+
+
 /**
   * Get all information about all groups.
   *
   * @param requestingUser the user initiating the request.
   */
-case class GroupsGetRequestADM(requestingUser: Option[UserADM]) extends GroupsResponderRequestADM
+case class GroupsGetADM(requestingUser: UserADM) extends GroupsResponderRequestADM
+
+/**
+  * Get all information about all groups.
+  *
+  * @param requestingUser the user initiating the request.
+  */
+case class GroupsGetRequestADM(requestingUser: UserADM) extends GroupsResponderRequestADM
 
 /**
   * Get everything about a single group identified through it's IRI or shortname. Because it is only required to have unique
   * names inside a project, it is required to supply the name of the project in conjunction with the shortname.
   *
-  * @param maybeGroupIri   IRI of the group.
-  * @param maybeGroupName  the name of the group.
-  * @param maybeProjectIri the IRI of the project the group belongs to.
+  * @param groupIri   IRI of the group.
   * @param requestingUser the user initiating the request.
   */
-case class GroupGetRequestADM(maybeGroupIri: Option[IRI], maybeGroupName: Option[String], maybeProjectIri: Option[IRI], requestingUser: Option[UserADM]) extends GroupsResponderRequestADM {
-
-    // need either group IRI, or group name and project IRI
-    if (maybeGroupIri.isEmpty || (maybeGroupName.isEmpty || maybeProjectIri.isEmpty)) {
-        throw BadRequestException("Need to provide either group IRI, or group name and project IRI.")
-    }
-
-}
+case class GroupGetADM(groupIri: IRI, requestingUser: UserADM) extends GroupsResponderRequestADM
 
 /**
-  * Returns all members of the group identified by iri or by group name / project IRI.
+  * Get everything about a single group identified through it's IRI or shortname. Because it is only required to have unique
+  * names inside a project, it is required to supply the name of the project in conjunction with the shortname.
   *
-  * @param maybeGroupIri   IRI of the group.
-  * @param maybeGroupName  the name of the group.
-  * @param maybeProjectIri the IRI of the project the group belongs to.
+  * @param groupIri   IRI of the group.
   * @param requestingUser the user initiating the request.
   */
-case class GroupMembersGetRequestADM(maybeGroupIri: Option[IRI], maybeGroupName: Option[String], maybeProjectIri: Option[IRI], requestingUser: Option[UserADM]) extends GroupsResponderRequestADM {
+case class GroupGetRequestADM(groupIri: IRI, requestingUser: UserADM) extends GroupsResponderRequestADM
 
-    // need either group IRI, or group name and project IRI
-    if (maybeGroupIri.isEmpty || (maybeGroupName.isEmpty || maybeProjectIri.isEmpty)) {
-        throw BadRequestException("Need to provide either group IRI, or group name and project IRI.")
-    }
-
-}
+/**
+  * Returns all members of the group identified by iri.
+  *
+  * @param groupIri   IRI of the group.
+  * @param requestingUser the user initiating the request.
+  */
+case class GroupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM) extends GroupsResponderRequestADM
 
 /**
   * Requests the creation of a new group.
@@ -171,7 +171,7 @@ case class GroupPermissionUpdateRequestADM(requestingUser: UserADM,
   *
   * @param groups information about all existing groups.
   */
-case class GroupsResponseADM(groups: Seq[GroupADM]) extends KnoraResponseV1 with GroupsADMJsonProtocol {
+case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseV1 with GroupsADMJsonProtocol {
     def toJsValue = groupsResponseADMFormat.write(this)
 }
 
@@ -180,7 +180,7 @@ case class GroupsResponseADM(groups: Seq[GroupADM]) extends KnoraResponseV1 with
   *
   * @param group all information about the group.
   */
-case class GroupResponseADM(group: GroupADM) extends KnoraResponseV1 with GroupsADMJsonProtocol {
+case class GroupGetResponseADM(group: GroupADM) extends KnoraResponseV1 with GroupsADMJsonProtocol {
     def toJsValue = groupResponseADMFormat.write(this)
 }
 
@@ -189,7 +189,7 @@ case class GroupResponseADM(group: GroupADM) extends KnoraResponseV1 with Groups
   *
   * @param members the group's members.
   */
-case class GroupMembersResponseADM(members: Seq[UserADM]) extends KnoraResponseV1 with GroupsADMJsonProtocol {
+case class GroupMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResponseV1 with GroupsADMJsonProtocol {
     def toJsValue = groupMembersResponseADMFormat.write(this)
 }
 

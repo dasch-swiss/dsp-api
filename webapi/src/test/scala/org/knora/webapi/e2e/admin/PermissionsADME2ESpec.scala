@@ -1,30 +1,34 @@
 /*
  * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
  * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
  * This file is part of Knora.
+ *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * Knora is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
+ *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.e2e.v1
+package org.knora.webapi.e2e.admin
 
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.{E2ESpec, OntologyConstants, SharedAdminTestData, StartupFlags}
+import org.knora.webapi.{E2ESpec, OntologyConstants, SharedAdminTestData}
 import spray.json._
 
 import scala.concurrent.duration._
 
-object PermissionsV1E2ESpec {
+object PermissionsADME2ESpec {
     val config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -37,7 +41,7 @@ object PermissionsV1E2ESpec {
   *
   * This spec tests the 'v1/store' route.
   */
-class PermissionsV1E2ESpec extends E2ESpec(PermissionsV1E2ESpec.config) with TriplestoreJsonProtocol {
+class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with TriplestoreJsonProtocol {
 
     private val rdfDataObjects: List[RdfDataObject] = List.empty[RdfDataObject]
 

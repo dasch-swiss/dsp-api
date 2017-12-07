@@ -101,7 +101,7 @@
     <!-- Admin -->
     <logger name="org.knora.webapi.responders.admin.ListsResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.ListsAdminResponderSpec" level="INFO"/>
-    <logger name="org.knora.webapi.e2e.admin.ListsAdminE2ESpec" level="INFO"/>
+    <logger name="org.knora.webapi.e2e.admin.ListsADME2ESpec" level="INFO"/>
 
     <root level="INFO">
         <appender-ref ref="stdout"/>

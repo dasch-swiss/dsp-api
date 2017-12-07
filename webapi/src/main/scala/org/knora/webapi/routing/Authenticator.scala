@@ -20,7 +20,7 @@
 
 package org.knora.webapi.routing
 
-import java.util.UUID
+import java.util.{Base64, UUID}
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.headers.{HttpCookie, HttpCookiePair}
@@ -31,6 +31,7 @@ import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
 import io.igl.jwt._
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserInformationTypeADM}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
@@ -41,10 +42,6 @@ import spray.json.{JsNumber, JsObject, JsString}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.Success
-import java.util.Base64
-
-import org.knora.webapi.messages.admin.responder.usersmessages
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserInformationTypeADM}
 
 /**
   * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
@@ -75,7 +72,7 @@ trait Authenticator {
 
         val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
-        val userProfile = getUserProfileV1ThroughCredentialsV2(credentials) // will return or throw
+        val userProfile = getUserADMThroughCredentialsV2(credentials).asUserProfileV1 // will return or throw
 
         val sessionToken = JWTHelper.createToken(userProfile.userData.user_id.get, settings.jwtSecretKey, settings.jwtLongevity)
 
@@ -108,9 +105,9 @@ trait Authenticator {
 
         val settings = Settings(system)
 
-        val userProfile = getUserADMByEmail(credentials.email)
+        val userADM = getUserADMByEmail(credentials.email)
 
-        val token = JWTHelper.createToken(userProfile.userData.user_id.get, settings.jwtSecretKey, settings.jwtLongevity)
+        val token = JWTHelper.createToken(userADM.id, settings.jwtSecretKey, settings.jwtLongevity)
 
         HttpResponse(
             status = StatusCodes.OK,
@@ -140,7 +137,7 @@ trait Authenticator {
 
         val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
-        val userProfile = getUserProfileV1ThroughCredentialsV2(credentials) // will authenticate and either return or throw
+        val userProfile = getUserADMThroughCredentialsV2(credentials).asUserProfileV1 // will authenticate and either return or throw
 
         HttpResponse(
             status = StatusCodes.OK,
@@ -297,10 +294,10 @@ trait Authenticator {
         if (settings.skipAuthentication) {
             // return anonymous if skipAuthentication
             log.debug("getUserADM - Authentication skipping active, returning 'anonymousUser'.")
-            UserADM()
+            KnoraSystemInstances.Users.AnonymousUser
         } else if (credentials.isEmpty) {
             log.debug("getUserADM - No credentials found, returning 'anonymousUser'.")
-            UserADM()
+            KnoraSystemInstances.Users.AnonymousUser
         } else {
             val user: UserADM = getUserADMThroughCredentialsV2(credentials)
             log.debug("getUserProfileV1 - I got a UserProfileV1: {}", user.toString)

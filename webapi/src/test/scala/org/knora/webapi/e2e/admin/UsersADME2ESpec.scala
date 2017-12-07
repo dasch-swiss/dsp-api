@@ -360,7 +360,6 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with SessionJsonPr
             }
         }
 
-
         "used to modify project admin group membership" should {
 
             "add user to project admin group" in {

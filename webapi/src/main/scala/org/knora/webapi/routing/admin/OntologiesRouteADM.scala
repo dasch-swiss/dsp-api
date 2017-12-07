@@ -28,7 +28,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi.messages.admin.responder.ontologiesmessages._
-import org.knora.webapi.routing.{Authenticator, RouteUtilAdmin}
+import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
@@ -60,7 +60,7 @@ object OntologiesRouteADM extends Authenticator with OntologiesADMJsonProtocol {
 
                         val requestMessage = OntologiesGetRequestADMADM(projectIri, userProfile)
 
-                        RouteUtilAdmin.runJsonRoute(
+                        RouteUtilADM.runJsonRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -82,7 +82,7 @@ object OntologiesRouteADM extends Authenticator with OntologiesADMJsonProtocol {
                             userProfile
                         )
 
-                        RouteUtilAdmin.runJsonRoute(
+                        RouteUtilADM.runJsonRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -101,7 +101,7 @@ object OntologiesRouteADM extends Authenticator with OntologiesADMJsonProtocol {
 
                     val requestMessage = OntologyGetRequestADMADM(ontologyIri, userProfile)
 
-                    RouteUtilAdmin.runJsonRoute(
+                    RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -123,7 +123,7 @@ object OntologiesRouteADM extends Authenticator with OntologiesADMJsonProtocol {
                             userProfile
                         )
 
-                        RouteUtilAdmin.runJsonRoute(
+                        RouteUtilADM.runJsonRoute(
                             requestMessage,
                             requestContext,
                             settings,

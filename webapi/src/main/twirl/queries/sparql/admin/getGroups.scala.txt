@@ -18,25 +18,21 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
-@import org.knora.webapi.IRI
+@import org.knora.webapi._
 
 @**
- * Gets all information about a single project or all projects. Selection either through the project's IRI, shortname, or shortcode.
+ * Gets information about a single or all projects.
  *
  * @param triplestore the name of the triplestore being used.
- * @param maybeIri the project's IRI.
- * @param maybeShortname the project's shortname.
- * @param maybeShortcode the project's shortcode.
+ * @param maybeIri the IRI of the group.
  *@
 @(triplestore: String,
-  maybeIri: Option[IRI],
-  maybeShortname: Option[String],
-  maybeShortcode: Option[String])
+  maybeIri: Option[IRI])
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-CONSTRUCT { ?s ?p ?o . }
+CONSTRUCT { ?s ?p ?o }
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
@@ -44,17 +40,15 @@ CONSTRUCT { ?s ?p ?o . }
 WHERE {
 
     @if(maybeIri.nonEmpty) {
-        BIND(IRI("@maybeIri") as ?s)
+      BIND(IRI("@maybeIri") as ?s)
     }
 
-    @if(maybeShortname.nonEmpty) {
-        ?s knora-base:projectShortname "@maybeShortname.get"^^xsd:string .
-    }
-
-    @if(maybeShortcode.nonEmpty) {
-        ?s knora-base:projectShortcode "@maybeShortcode.get"^^xsd:string .
-    }
-
-    ?s rdf:type knora-base:knoraProject .
+    ?s rdf:type knora-base:UserGroup .
     ?s ?p ?o .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#UnknownUser>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#KnownUser>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#Creator>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#ProjectMember>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#ProjectAdmin>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#SystemAdmin>) .
 }

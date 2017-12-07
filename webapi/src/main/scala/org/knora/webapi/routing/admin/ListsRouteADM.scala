@@ -26,7 +26,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi.messages.admin.responder.listsmessages.{ListGetRequestADM, ListInfoGetRequestADM, ListNodeInfoGetRequestADM, ListsGetRequestADM}
-import org.knora.webapi.routing.{Authenticator, RouteUtilAdmin}
+import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
@@ -55,7 +55,7 @@ object ListsRouteADM extends Authenticator {
 
                         val requestMessage = ListsGetRequestADM(projectIri, userProfile)
 
-                        RouteUtilAdmin.runJsonRoute(
+                        RouteUtilADM.runJsonRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -78,7 +78,7 @@ object ListsRouteADM extends Authenticator {
 
                     val requestMessage = ListGetRequestADM(listIri, userProfile)
 
-                    RouteUtilAdmin.runJsonRoute(
+                    RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -104,7 +104,7 @@ object ListsRouteADM extends Authenticator {
 
                     val requestMessage = ListInfoGetRequestADM(listIri, userProfile)
 
-                    RouteUtilAdmin.runJsonRoute(
+                    RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -130,7 +130,7 @@ object ListsRouteADM extends Authenticator {
 
                     val requestMessage = ListNodeInfoGetRequestADM(listIri, userProfile)
 
-                    RouteUtilAdmin.runJsonRoute(
+                    RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
