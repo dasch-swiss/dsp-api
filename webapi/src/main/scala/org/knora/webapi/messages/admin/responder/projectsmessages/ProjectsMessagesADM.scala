@@ -109,7 +109,7 @@ sealed trait ProjectsResponderRequestADM extends KnoraRequestADM
 
 // Requests
 /**
-  * Get all information about all projects in form of [[ProjectsResponseADM]]. The ProjectsGetRequestV1 returns either
+  * Get all information about all projects in form of [[ProjectsGetResponseADM]]. The ProjectsGetRequestV1 returns either
   * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
   *
   * @param user the profile of the user making the request.
@@ -126,17 +126,17 @@ case class ProjectsGetADM(user: Option[UserADM]) extends ProjectsResponderReques
 
 /**
   * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
-  * of [[ProjectResponseADM]]. External use.
+  * of [[ProjectGetResponseADM]]. External use.
   *
   * @param maybeIri           the IRI of the project.
   * @param maybeShortname the project's short name.
   * @param maybeShortcode the project's shortcode.
-  * @param maybeUser the profile of the user making the request (optional).
+  * @param requestingUser the user making the request.
   */
 case class ProjectGetRequestADM(maybeIri: Option[IRI] = None,
                                 maybeShortname: Option[String] = None,
                                 maybeShortcode: Option[String] = None,
-                                maybeUser: Option[UserADM]) extends ProjectsResponderRequestADM {
+                                requestingUser: UserADM) extends ProjectsResponderRequestADM {
     val parametersCount = List(
         maybeIri,
         maybeShortname,
@@ -154,12 +154,12 @@ case class ProjectGetRequestADM(maybeIri: Option[IRI] = None,
   * @param maybeIri           the IRI of the project.
   * @param maybeShortname the project's short name.
   * @param maybeShortcode the project's shortcode.
-  * @param maybeUser the profile of the user making the request (optional).
+  * @param requestingUser the user making the request.
   */
 case class ProjectGetADM(maybeIri: Option[IRI],
                          maybeShortname: Option[String],
                          maybeShortcode: Option[String],
-                         maybeUser: Option[UserADM]) extends ProjectsResponderRequestADM {
+                         requestingUser: UserADM) extends ProjectsResponderRequestADM {
 
     val parametersCount = List(
         maybeIri,
@@ -177,12 +177,12 @@ case class ProjectGetADM(maybeIri: Option[IRI],
   * @param maybeIri           the IRI of the project.
   * @param maybeShortname the project's short name.
   * @param maybeShortcode the project's shortcode.
-  * @param maybeUser the profile of the user making the request (optional).
+  * @param requestingUser the user making the request.
   */
 case class ProjectMembersGetRequestADM(maybeIri: Option[IRI],
                                        maybeShortname: Option[String],
                                        maybeShortcode: Option[String],
-                                       maybeUser: Option[UserADM]) extends ProjectsResponderRequestADM {
+                                       requestingUser: UserADM) extends ProjectsResponderRequestADM {
 
     val parametersCount = List(
         maybeIri,
@@ -201,12 +201,12 @@ case class ProjectMembersGetRequestADM(maybeIri: Option[IRI],
   * @param maybeIri           the IRI of the project.
   * @param maybeShortname the project's short name.
   * @param maybeShortcode the project's shortcode.
-  * @param maybeUser the profile of the user making the request (optional).
+  * @param requestingUser the user making the request.
   */
 case class ProjectAdminMembersGetRequestADM(maybeIri: Option[IRI],
                                             maybeShortname: Option[String],
                                             maybeShortcode: Option[String],
-                                            maybeUser: Option[UserADM]) extends ProjectsResponderRequestADM {
+                                            requestingUser: UserADM) extends ProjectsResponderRequestADM {
 
     val parametersCount = List(
         maybeIri,
@@ -222,11 +222,11 @@ case class ProjectAdminMembersGetRequestADM(maybeIri: Option[IRI],
   * Requests the creation of a new project.
   *
   * @param createRequest the [[CreateProjectApiRequestV1]] information for creation a new project.
-  * @param user          the user creating the new project.
+  * @param requestingUser the user making the request.
   * @param apiRequestID  the ID of the API request.
   */
 case class ProjectCreateRequestADM(createRequest: CreateProjectApiRequestADM,
-                                   user: UserADM,
+                                   requestingUser: UserADM,
                                    apiRequestID: UUID) extends ProjectsResponderRequestADM
 
 /**
@@ -234,20 +234,22 @@ case class ProjectCreateRequestADM(createRequest: CreateProjectApiRequestADM,
   *
   * @param projectIri           the IRI of the project to be updated.
   * @param changeProjectRequest the data which needs to be update.
-  * @param user                 the user requesting the update.
+  * @param requestingUser the user making the request.
   * @param apiRequestID         the ID of the API request.
   */
 case class ProjectChangeRequestADM(projectIri: IRI,
                                    changeProjectRequest: ChangeProjectApiRequestADM,
-                                   user: UserADM,
+                                   requestingUser: UserADM,
                                    apiRequestID: UUID) extends ProjectsResponderRequestADM
 
 /**
   * Get all the existing ontologies from all projects as a sequence of [[org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoADM]].
   *
   * @param maybeProjectIri the profile of the user making the request.
+  * @param requestingUser the user making the request.
   */
-case class ProjectsOntologiesGetADM(maybeProjectIri: IRI) extends ProjectsADMJsonProtocol
+case class ProjectsOntologiesGetADM(maybeProjectIri: IRI,
+                                    requestingUser: UserADM) extends ProjectsADMJsonProtocol
 
 /**
   * Requests adding an ontology to the project. This is an internal message, which should
@@ -256,10 +258,12 @@ case class ProjectsOntologiesGetADM(maybeProjectIri: IRI) extends ProjectsADMJso
   *
   * @param projectIri the IRI of the project to be updated.
   * @param ontologyIri the IRI of the ontology to be added.
+  * @param requestingUser the user making the request.
   * @param apiRequestID the ID of the API request.
   */
 case class ProjectOntologyAddADM(projectIri: IRI,
                                  ontologyIri: IRI,
+                                 requestingUser: UserADM,
                                  apiRequestID: UUID) extends ProjectsResponderRequestADM
 
 
@@ -270,10 +274,12 @@ case class ProjectOntologyAddADM(projectIri: IRI,
   *
   * @param projectIri the IRI of the project to be updated.
   * @param ontologyIri the IRI of the ontology to be removed.
+  * @param requestingUser the user making the request.
   * @param apiRequestID the ID of the API request.
   */
 case class ProjectOntologyRemoveADM(projectIri: IRI,
                                     ontologyIri: IRI,
+                                    requestingUser: UserADM,
                                     apiRequestID: UUID) extends ProjectsResponderRequestADM
 
 // Responses
@@ -282,7 +288,7 @@ case class ProjectOntologyRemoveADM(projectIri: IRI,
   *
   * @param projects information about all existing projects.
   */
-case class ProjectsResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
+case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
     def toJsValue = projectsResponseADMFormat.write(this)
 }
 
@@ -291,7 +297,7 @@ case class ProjectsResponseADM(projects: Seq[ProjectADM]) extends KnoraResponseA
   *
   * @param project all information about the project.
   */
-case class ProjectResponseADM(project: ProjectADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
+case class ProjectGetResponseADM(project: ProjectADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
     def toJsValue = projectResponseADMFormat.write(this)
 }
 
@@ -407,8 +413,8 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 
     implicit val projectADMFormat: JsonFormat[ProjectADM] = jsonFormat11(ProjectADM)
-    implicit val projectsResponseADMFormat: RootJsonFormat[ProjectsResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectsResponseADM, "projects")))
-    implicit val projectResponseADMFormat: RootJsonFormat[ProjectResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectResponseADM, "project")))
+    implicit val projectsResponseADMFormat: RootJsonFormat[ProjectsGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectsGetResponseADM, "projects")))
+    implicit val projectResponseADMFormat: RootJsonFormat[ProjectGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectGetResponseADM, "project")))
 
     implicit val projectAdminMembersGetResponseADMFormat: RootJsonFormat[ProjectAdminMembersGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectAdminMembersGetResponseADM, "members")))
     implicit val projectMembersGetResponseADMFormat: RootJsonFormat[ProjectMembersGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectMembersGetResponseADM, "members")))

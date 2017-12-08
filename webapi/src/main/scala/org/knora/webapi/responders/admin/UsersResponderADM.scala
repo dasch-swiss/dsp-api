@@ -25,15 +25,15 @@ import java.util.UUID
 import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import arq.iri
-import cats.instances.map
+import org.knora.webapi
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM, GroupGetRequestADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserUpdatePayloadV1 => _, _}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.groupmessages.GroupInfoResponseV1
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
@@ -65,23 +65,20 @@ class UsersResponderADM extends Responder {
         case UsersGetRequestADM(userInformationTypeADM, requestingUser) => future2Message(sender(), usersGetRequestADM(userInformationTypeADM, requestingUser), log)
         case UserGetADM(maybeUserIri, maybeEmail, userInformationTypeADM, requestingUser) => future2Message(sender(), userGetADM(maybeUserIri, maybeEmail, userInformationTypeADM, requestingUser), log)
         case UserGetRequestADM(maybeUserIri, maybeEmail, userInformationTypeADM, requestingUser) => future2Message(sender(), userGetRequestADM(maybeUserIri, maybeEmail, userInformationTypeADM, requestingUser), log)
-        case UserProfileByIRIGetRequestV1(userIri, profileType, userProfile) => future2Message(sender(), userProfileByIRIGetRequestV1(userIri, profileType, userProfile), log)
-        case UserProfileByEmailGetV1(email, profileType) => future2Message(sender(), userProfileByEmailGetV1(email, profileType), log)
-        case UserProfileByEmailGetRequestV1(email, profileType, userProfile) => future2Message(sender(), userProfileByEmailGetRequestV1(email, profileType, userProfile), log)
-        case UserCreateRequestV1(createRequest, userProfile, apiRequestID) => future2Message(sender(), createNewUserV1(createRequest, userProfile, apiRequestID), log)
-        case UserChangeBasicUserDataRequestV1(userIri, changeUserRequest, userProfile, apiRequestID) => future2Message(sender(), changeBasicUserDataV1(userIri, changeUserRequest, userProfile, apiRequestID), log)
-        case UserChangePasswordRequestV1(userIri, changeUserRequest, userProfile, apiRequestID) => future2Message(sender(), changePasswordV1(userIri, changeUserRequest, userProfile, apiRequestID), log)
-        case UserChangeStatusRequestV1(userIri, changeUserRequest, userProfile, apiRequestID) => future2Message(sender(), changeUserStatusV1(userIri, changeUserRequest, userProfile, apiRequestID), log)
-        case UserChangeSystemAdminMembershipStatusRequestV1(userIri, changeSystemAdminMembershipStatusRequest, userProfile, apiRequestID) => future2Message(sender(), changeUserSystemAdminMembershipStatusV1(userIri, changeSystemAdminMembershipStatusRequest, userProfile, apiRequestID), log)
-        case UserProjectMembershipsGetRequestV1(userIri, userProfile, apiRequestID) => future2Message(sender(), userProjectMembershipsGetRequestV1(userIri, userProfile, apiRequestID), log)
-        case UserProjectMembershipAddRequestV1(userIri, projectIri, userProfile, apiRequestID) => future2Message(sender(), userProjectMembershipAddRequestV1(userIri, projectIri, userProfile, apiRequestID), log)
-        case UserProjectMembershipRemoveRequestV1(userIri, projectIri, userProfile, apiRequestID) => future2Message(sender(), userProjectMembershipRemoveRequestV1(userIri, projectIri, userProfile, apiRequestID), log)
-        case UserProjectAdminMembershipsGetRequestV1(userIri, userProfile, apiRequestID) => future2Message(sender(), userProjectAdminMembershipsGetRequestV1(userIri, userProfile, apiRequestID), log)
-        case UserProjectAdminMembershipAddRequestV1(userIri, projectIri, userProfile, apiRequestID) => future2Message(sender(), userProjectAdminMembershipAddRequestV1(userIri, projectIri, userProfile, apiRequestID), log)
-        case UserProjectAdminMembershipRemoveRequestV1(userIri, projectIri, userProfile, apiRequestID) => future2Message(sender(), userProjectAdminMembershipRemoveRequestV1(userIri, projectIri, userProfile, apiRequestID), log)
-        case UserGroupMembershipsGetRequestV1(userIri, userProfile, apiRequestID) => future2Message(sender(), userGroupMembershipsGetRequestV1(userIri, userProfile, apiRequestID), log)
-        case UserGroupMembershipAddRequestV1(userIri, projectIri, userProfile, apiRequestID) => future2Message(sender(), userGroupMembershipAddRequestV1(userIri, projectIri, userProfile, apiRequestID), log)
-        case UserGroupMembershipRemoveRequestV1(userIri, projectIri, userProfile, apiRequestID) => future2Message(sender(), userGroupMembershipRemoveRequestV1(userIri, projectIri, userProfile, apiRequestID), log)
+        case UserCreateRequestADM(createRequest, requestingUser, apiRequestID) => future2Message(sender(), createNewUserADM(createRequest, requestingUser, apiRequestID), log)
+        case UserChangeBasicUserInformationRequestADM(userIri, changeUserRequest, requestingUser, apiRequestID) => future2Message(sender(), changeBasicUserInformationADM(userIri, changeUserRequest, requestingUser, apiRequestID), log)
+        case UserChangePasswordRequestADM(userIri, changeUserRequest, requestingUser, apiRequestID) => future2Message(sender(), changePasswordADM(userIri, changeUserRequest, requestingUser, apiRequestID), log)
+        case UserChangeStatusRequestADM(userIri, changeUserRequest, requestingUser, apiRequestID) => future2Message(sender(), changeUserStatusADM(userIri, changeUserRequest, requestingUser, apiRequestID), log)
+        case UserChangeSystemAdminMembershipStatusRequestADM(userIri, changeSystemAdminMembershipStatusRequest, requestingUser, apiRequestID) => future2Message(sender(), changeUserSystemAdminMembershipStatusADM(userIri, changeSystemAdminMembershipStatusRequest, requestingUser, apiRequestID), log)
+        case UserProjectMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectMembershipsGetRequestADM(userIri, requestingUser, apiRequestID), log)
+        case UserProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectMembershipAddRequestV1(userIri, projectIri, requestingUser, apiRequestID), log)
+        case UserProjectMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectMembershipRemoveRequestV1(userIri, projectIri, requestingUser, apiRequestID), log)
+        case UserProjectAdminMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectAdminMembershipsGetRequestV1(userIri, requestingUser, apiRequestID), log)
+        case UserProjectAdminMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectAdminMembershipAddRequestV1(userIri, projectIri, requestingUser, apiRequestID), log)
+        case UserProjectAdminMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectAdminMembershipRemoveRequestV1(userIri, projectIri, requestingUser, apiRequestID), log)
+        case UserGroupMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) => future2Message(sender(), userGroupMembershipsGetRequestV1(userIri, requestingUser, apiRequestID), log)
+        case UserGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userGroupMembershipAddRequestV1(userIri, projectIri, requestingUser, apiRequestID), log)
+        case UserGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userGroupMembershipRemoveRequestV1(userIri, projectIri, requestingUser, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -321,7 +318,7 @@ class UsersResponderADM extends Responder {
       * @throws BadRequestException if the necessary parameters are not supplied.
       * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
       */
-    private def changeBasicUserDataADM(userIri: IRI, changeUserRequest: ChangeUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
+    private def changeBasicUserInformationADM(userIri: IRI, changeUserRequest: ChangeUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
         //log.debug(s"changeBasicUserDataV1: changeUserRequest: {}", changeUserRequest)
 
@@ -489,7 +486,7 @@ class UsersResponderADM extends Responder {
       * @throws BadRequestException if necessary parameters are not supplied.
       * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
       */
-    private def changeUserSystemAdminMembershipStatusV1(userIri: IRI, changeUserRequest: ChangeUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
+    private def changeUserSystemAdminMembershipStatusADM(userIri: IRI, changeUserRequest: ChangeUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
         //log.debug(s"changeUserSystemAdminMembershipStatusV1: changeUserRequest: {}", changeUserRequest)
 
@@ -529,37 +526,44 @@ class UsersResponderADM extends Responder {
 
 
     /**
-      * Returns the user's project memberships, where the result contains the IRIs of the projects the user is member of.
+      * Returns user's project memberships as a sequence of [[ProjectADM]].
+      *
+      * @param userIri the IRI of the user.
+      * @param requestingUser the requesting user.
+      * @param apiRequestID the unique api request ID.
+      * @return a sequence of [[ProjectADM]]
+      */
+    def userProjectMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[ProjectADM]] = {
+        for {
+            maybeUser <- userGetADM(maybeUserIri = Some(userIri), maybeUserEmail = None, userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            result = maybeUser match {
+                case Some(userADM) => userADM.projects
+                case None => Seq.empty[ProjectADM]
+            }
+
+            // _ = log.debug("userProjectMembershipsGetADM - userIri: {}, projects: {}", userIri, result)
+        } yield result
+    }
+
+    /**
+      * Returns the user's project memberships as [[UserProjectMembershipsGetResponseADM]].
       *
       * @param userIri        the user's IRI.
       * @param requestingUser the requesting user.
       * @param apiRequestID   the unique api request ID.
-      * @return a [[UserProjectMembershipsGetResponseV1]].
+      * @return a [[UserProjectMembershipsGetResponseADM]].
       */
     def userProjectMembershipsGetRequestADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserProjectMembershipsGetResponseADM] = {
+
         for {
-            sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
-                triplestore = settings.triplestoreType,
-                maybeIri = Some(userIri),
-                maybeEmail = None
-            ).toString())
-
-            //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
-
-            userQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
-
-            groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
-                case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
+            userExists <- userExists(userIri)
+            _ = if (!userExists) {
+                throw BadRequestException(s"User $userIri does not exist.")
             }
 
-            /* the projects the user is member of */
-            projectIris: Seq[IRI] = groupedUserData.get(OntologyConstants.KnoraBase.IsInProject) match {
-                case Some(projects) => projects
-                case None => Seq.empty[IRI]
-            }
-
-            // _ = log.debug("userProjectMembershipsGetRequestV1 - userIri: {}, projectIris: {}", userIri, projectIris)
-        } yield UserProjectMembershipsGetResponseV1(projects = projectIris)
+            projects: Seq[ProjectADM] <- userProjectMembershipsGetADM(userIri, requestingUser, apiRequestID = apiRequestID)
+            result = UserProjectMembershipsGetResponseADM(projects = projects)
+        } yield result
     }
 
     /**
@@ -567,18 +571,18 @@ class UsersResponderADM extends Responder {
       *
       * @param userIri       the user's IRI.
       * @param projectIri    the project's IRI.
-      * @param userProfileV1 the user profile of the requesting user.
+      * @param requestingUser the requesting user.
       * @param apiRequestID  the unique api request ID.
       * @return
       */
-    def userProjectMembershipAddRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    def userProjectMembershipAddRequestADM(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
         // log.debug(s"userProjectMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
         /**
           * The actual task run with an IRI lock.
           */
-        def userProjectMembershipAddRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+        def userProjectMembershipAddRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = for {
 
             // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
@@ -600,9 +604,9 @@ class UsersResponderADM extends Responder {
             _ = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
             // get users current project membership list
-            currentProjectMemberships <- userProjectMembershipsGetRequestV1(
+            currentProjectMemberships <- userProjectMembershipsGetRequestADM(
                 userIri = userIri,
-                userProfileV1 = userProfileV1,
+                requestingUser = userProfileV1,
                 apiRequestID = apiRequestID
             )
 
@@ -618,7 +622,7 @@ class UsersResponderADM extends Responder {
             // create the update request
             userUpdatePayload = UserUpdatePayloadV1(projects = Some(updatedProjectMembershipIris))
 
-            result <- updateUserV1(userIri, userUpdatePayload, userProfileV1, apiRequestID)
+            result <- updateUserADM(userIri, userUpdatePayload, userProfileV1, apiRequestID)
 
         } yield result
 
@@ -628,7 +632,7 @@ class UsersResponderADM extends Responder {
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
-                () => userProjectMembershipAddRequestTask(userIri, projectIri, userProfileV1, apiRequestID)
+                () => userProjectMembershipAddRequestTask(userIri, projectIri, requestingUser, apiRequestID)
             )
         } yield taskResult
 
@@ -639,25 +643,25 @@ class UsersResponderADM extends Responder {
       *
       * @param userIri       the user's IRI.
       * @param projectIri    the project's IRI.
-      * @param userProfileV1 the user profile of the requesting user.
+      * @param requestingUser the requesting user.
       * @param apiRequestID  the unique api request ID.
       * @return
       */
-    def userProjectMembershipRemoveRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    def userProjectMembershipRemoveRequestV1(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
         // log.debug(s"userProjectMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
         /**
           * The actual task run with an IRI lock.
           */
-        def userProjectMembershipRemoveRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+        def userProjectMembershipRemoveRequestTask(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = for {
 
             // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
             _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
 
             // check if the requesting user is allowed to perform updates
-            _ = if (!userProfileV1.permissionData.isProjectAdmin(projectIri) && !userProfileV1.permissionData.isSystemAdmin) {
+            _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
                 // not a project or system admin
                 // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
                 throw ForbiddenException("User's project membership can only be changed by a project or system administrator")
@@ -672,13 +676,12 @@ class UsersResponderADM extends Responder {
             _ = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
             // get users current project membership list
-            currentProjectMemberships <- userProjectMembershipsGetRequestV1(
+            currentProjectMemberships <- userProjectMembershipsGetADM(
                 userIri = userIri,
-                userProfileV1 = userProfileV1,
+                requestingUser = KnoraSystemInstances.Users.SystemUser,
                 apiRequestID = apiRequestID
             )
-
-            currentProjectMembershipIris: Seq[IRI] = currentProjectMemberships.projects
+            currentProjectMembershipIris = currentProjectMemberships.map(_.id)
 
             // check if user is not already a member and if he is then remove the project from to list
             updatedProjectMembershipIris = if (currentProjectMembershipIris.contains(projectIri)) {
@@ -687,10 +690,10 @@ class UsersResponderADM extends Responder {
                 throw BadRequestException(s"User $userIri is not member of project $projectIri.")
             }
 
-            // create the update request
-            userUpdatePayload = UserUpdatePayloadV1(projects = Some(updatedProjectMembershipIris))
+            // create the update request by using the SystemUser
+            userUpdatePayload = UserUpdatePayloadADM(projects = Some(updatedProjectMembershipIris))
 
-            result <- updateUserV1(userIri, userUpdatePayload, userProfileV1, apiRequestID)
+            result <- updateUserADM(userIri = userIri, userUpdatePayload = userUpdatePayload, requestingUser = KnoraSystemInstances.Users.SystemUser, apiRequestID = apiRequestID)
 
         } yield result
 
@@ -700,21 +703,23 @@ class UsersResponderADM extends Responder {
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
-                () => userProjectMembershipRemoveRequestTask(userIri, projectIri, userProfileV1, apiRequestID)
+                () => userProjectMembershipRemoveRequestTask(userIri, projectIri, requestingUser, apiRequestID)
             )
         } yield taskResult
     }
 
     /**
-      * Returns the user's project admin group memberships, where the result contains the IRIs of the projects the user
-      * is a member of the project admin group.
+      * Returns the user's project admin group memberships as a sequence of [[IRI]]
       *
       * @param userIri       the user's IRI.
-      * @param userProfileV1 the user profile of the requesting user.
+      * @param requestingUser the requesting user.
       * @param apiRequestID  the unique api request ID.
       * @return a [[UserProjectMembershipsGetResponseV1]].
       */
-    def userProjectAdminMembershipsGetRequestV1(userIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserProjectAdminMembershipsGetResponseV1] = {
+    def userProjectAdminMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[ProjectADM]] = {
+
+        // ToDo: only allow system user
+
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
                 triplestore = settings.triplestoreType,
@@ -735,8 +740,38 @@ class UsersResponderADM extends Responder {
                 case None => Seq.empty[IRI]
             }
 
+            maybeProjectFutures: Seq[Future[Option[ProjectADM]]] = projectIris.map {
+                projectIri => (responderManager ? ProjectGetADM(maybeIri = Some(projectIri), maybeShortcode = None, maybeShortname = None, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+            }
+            maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
+            projects: Seq[ProjectADM] = maybeProjects.flatten
+
             // _ = log.debug("userProjectAdminMembershipsGetRequestV1 - userIri: {}, projectIris: {}", userIri, projectIris)
-        } yield UserProjectAdminMembershipsGetResponseV1(projects = projectIris)
+        } yield projects
+    }
+
+    /**
+      * Returns the user's project admin group memberships, where the result contains the IRIs of the projects the user
+      * is a member of the project admin group.
+      *
+      * @param userIri       the user's IRI.
+      * @param requestingUser the requesting user.
+      * @param apiRequestID  the unique api request ID.
+      * @return a [[UserProjectMembershipsGetResponseV1]].
+      */
+    def userProjectAdminMembershipsGetRequestADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserProjectAdminMembershipsGetResponseADM] = {
+
+        // ToDo: which user is allowed to do this operation?
+        // ToDo: check permissions
+
+        for {
+            userExists <- userExists(userIri)
+            _ = if (!userExists) {
+                throw BadRequestException(s"User $userIri does not exist.")
+            }
+
+            projects: Seq[ProjectADM] <- userProjectAdminMembershipsGetADM(userIri = userIri, requestingUser = KnoraSystemInstances.Users.SystemUser, apiRequestID = apiRequestID)
+        } yield UserProjectAdminMembershipsGetResponseADM(projects = projects)
     }
 
     /**
@@ -744,25 +779,25 @@ class UsersResponderADM extends Responder {
       *
       * @param userIri       the user's IRI.
       * @param projectIri    the project's IRI.
-      * @param userProfileV1 the user profile of the requesting user.
+      * @param requestingUser the requesting user.
       * @param apiRequestID  the unique api request ID.
       * @return
       */
-    def userProjectAdminMembershipAddRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    def userProjectAdminMembershipAddRequestV1(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
         // log.debug(s"userProjectAdminMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
         /**
           * The actual task run with an IRI lock.
           */
-        def userProjectAdminMembershipAddRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+        def userProjectAdminMembershipAddRequestTask(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = for {
 
             // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
             _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
 
             // check if the requesting user is allowed to perform updates
-            _ = if (!userProfileV1.permissionData.isProjectAdmin(projectIri) && !userProfileV1.permissionData.isSystemAdmin) {
+            _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
                 // not a project or system admin
                 // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
                 throw ForbiddenException("User's project admin membership can only be changed by a project or system administrator")
@@ -777,13 +812,13 @@ class UsersResponderADM extends Responder {
             _ = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
             // get users current project membership list
-            currentProjectAdminMemberships <- userProjectAdminMembershipsGetRequestV1(
+            currentProjectAdminMemberships <- userProjectAdminMembershipsGetADM(
                 userIri = userIri,
-                userProfileV1 = userProfileV1,
+                requestingUser = KnoraSystemInstances.Users.SystemUser,
                 apiRequestID = apiRequestID
             )
 
-            currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.projects
+            currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
 
             // check if user is already member and if not then append to list
             updatedProjectAdminMembershipIris = if (!currentProjectAdminMembershipIris.contains(projectIri)) {
@@ -793,9 +828,9 @@ class UsersResponderADM extends Responder {
             }
 
             // create the update request
-            userUpdatePayload = UserUpdatePayloadV1(projectsAdmin = Some(updatedProjectAdminMembershipIris))
+            userUpdatePayload = UserUpdatePayloadADM(projectsAdmin = Some(updatedProjectAdminMembershipIris))
 
-            result <- updateUserV1(userIri, userUpdatePayload, userProfileV1, apiRequestID)
+            result <- updateUserADM(userIri, userUpdatePayload, requestingUser = KnoraSystemInstances.Users.SystemUser, apiRequestID)
 
         } yield result
 
@@ -805,7 +840,7 @@ class UsersResponderADM extends Responder {
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
-                () => userProjectAdminMembershipAddRequestTask(userIri, projectIri, userProfileV1, apiRequestID)
+                () => userProjectAdminMembershipAddRequestTask(userIri, projectIri, requestingUser, apiRequestID)
             )
         } yield taskResult
 
@@ -816,25 +851,25 @@ class UsersResponderADM extends Responder {
       *
       * @param userIri       the user's IRI.
       * @param projectIri    the project's IRI.
-      * @param userProfileV1 the user profile of the requesting user.
+      * @param requestingUser the requesting user.
       * @param apiRequestID  the unique api request ID.
       * @return
       */
-    def userProjectAdminMembershipRemoveRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    def userProjectAdminMembershipRemoveRequestV1(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
         // log.debug(s"userProjectAdminMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
         /**
           * The actual task run with an IRI lock.
           */
-        def userProjectAdminMembershipRemoveRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+        def userProjectAdminMembershipRemoveRequestTask(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = for {
 
             // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
             _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
 
             // check if the requesting user is allowed to perform updates
-            _ = if (!userProfileV1.permissionData.isProjectAdmin(projectIri) && !userProfileV1.permissionData.isSystemAdmin) {
+            _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
                 // not a project or system admin
                 // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
                 throw ForbiddenException("User's project admin membership can only be changed by a project or system administrator")
@@ -849,13 +884,13 @@ class UsersResponderADM extends Responder {
             _ = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
             // get users current project membership list
-            currentProjectAdminMemberships <- userProjectAdminMembershipsGetRequestV1(
+            currentProjectAdminMemberships <- userProjectAdminMembershipsGetADM(
                 userIri = userIri,
-                userProfileV1 = userProfileV1,
+                requestingUser = KnoraSystemInstances.Users.SystemUser,
                 apiRequestID = apiRequestID
             )
 
-            currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.projects
+            currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
 
             // check if user is not already a member and if he is then remove the project from to list
             updatedProjectAdminMembershipIris = if (currentProjectAdminMembershipIris.contains(projectIri)) {
@@ -865,24 +900,31 @@ class UsersResponderADM extends Responder {
             }
 
             // create the update request
-            userUpdatePayload = UserUpdatePayloadV1(projectsAdmin = Some(updatedProjectAdminMembershipIris))
+            userUpdatePayload = UserUpdatePayloadADM(projectsAdmin = Some(updatedProjectAdminMembershipIris))
 
-            result <- updateUserV1(userIri, userUpdatePayload, userProfileV1, apiRequestID)
+            result <- updateUserADM(userIri, userUpdatePayload, requestingUser = KnoraSystemInstances.Users.SystemUser, apiRequestID)
 
         } yield result
-
 
         for {
             // run the task with an IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
-                () => userProjectAdminMembershipRemoveRequestTask(userIri, projectIri, userProfileV1, apiRequestID)
+                () => userProjectAdminMembershipRemoveRequestTask(userIri, projectIri, requestingUser, apiRequestID)
             )
         } yield taskResult
     }
 
-    def userGroupMembershipsGetRequestV1(userIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserGroupMembershipsGetResponseV1] = {
+
+    /**
+      *
+      * @param userIri
+      * @param userProfileV1
+      * @param apiRequestID
+      * @return
+      */
+    def userGroupMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[GroupADM]] = {
 
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
@@ -905,18 +947,50 @@ class UsersResponderADM extends Responder {
             }
             //_ = log.debug("userDataByIriGetV1 - maybeUserDataV1: {}", maybeUserDataV1)
 
-        } yield UserGroupMembershipsGetResponseV1(groups = groupIris)
+        } yield UserGroupMembershipsGetResponseADM(groups = groupIris)
+
+    /**
+      *
+      * @param userIri
+      * @param userProfileV1
+      * @param apiRequestID
+      * @return
+      */
+    def userGroupMembershipsGetRequestADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserGroupMembershipsGetResponseADM] = {
+
+        for {
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
+                triplestore = settings.triplestoreType,
+                userIri = userIri
+            ).toString())
+
+            //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
+
+            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+
+            groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
+                case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
+            }
+
+            /* the groups the user is member of */
+            groupIris: Seq[IRI] = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
+                case Some(projects) => projects
+                case None => Seq.empty[IRI]
+            }
+            //_ = log.debug("userDataByIriGetV1 - maybeUserDataV1: {}", maybeUserDataV1)
+
+        } yield UserGroupMembershipsGetResponseADM(groups = groupIris)
 
     }
 
-    def userGroupMembershipAddRequestV1(userIri: IRI, groupIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
+    def userGroupMembershipAddRequestADM(userIri: IRI, groupIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = {
 
         // log.debug(s"userGroupMembershipAddRequestV1: userIri: {}, groupIri: {}", userIri, groupIri)
 
         /**
           * The actual task run with an IRI lock.
           */
-        def userGroupMembershipAddRequestTask(userIri: IRI, groupIri: IRI, userProfileV1: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
+        def userGroupMembershipAddRequestTask(userIri: IRI, groupIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
 
             // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
@@ -931,20 +1005,20 @@ class UsersResponderADM extends Responder {
             _ = if (!groupExists) throw NotFoundException(s"The group $groupIri does not exist.")
 
             // get group's info. we need the project IRI.
-            groupInfo <- (responderManager ? GroupInfoByIRIGetRequestV1(groupIri, None)).mapTo[GroupInfoResponseV1]
-            projectIri = groupInfo.group_info.project
+            maybeGroupADM <- (responderManager ? GroupGetADM(groupIri, KnoraSystemInstances.Users.SystemUser)).mapTo[Option[GroupADM]]
+            projectIri = maybeGroupADM.getOrElse(throw webapi.InconsistentTriplestoreDataException(s"Group $groupIri does not exist")).project.id
 
             // check if the requesting user is allowed to perform updates
-            _ = if (!userProfileV1.permissionData.isProjectAdmin(projectIri) && !userProfileV1.permissionData.isSystemAdmin) {
+            _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
                 // not a project or system admin
                 // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
                 throw ForbiddenException("User's group membership can only be changed by a project or system administrator")
             }
 
             // get users current group membership list
-            currentGroupMemberships <- userGroupMembershipsGetRequestV1(
+            currentGroupMemberships <- userGroupMembershipsGetADM(
                 userIri = userIri,
-                userProfileV1 = userProfileV1,
+                requestingUser = KnoraSystemInstances.Users.SystemUser,
                 apiRequestID = apiRequestID
             )
 
@@ -958,9 +1032,9 @@ class UsersResponderADM extends Responder {
             }
 
             // create the update request
-            userUpdatePayload = UserUpdatePayloadV1(groups = Some(updatedGroupMembershipIris))
+            userUpdatePayload = UserUpdatePayloadADM(groups = Some(updatedGroupMembershipIris))
 
-            result <- updateUserV1(userIri, userUpdatePayload, userProfileV1, apiRequestID)
+            result <- updateUserADM(userIri, userUpdatePayload, requestingUser = KnoraSystemInstances.Users.SystemUser, apiRequestID)
 
         } yield result
 
@@ -970,7 +1044,7 @@ class UsersResponderADM extends Responder {
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 userIri,
-                () => userGroupMembershipAddRequestTask(userIri, groupIri, userProfileV1, apiRequestID)
+                () => userGroupMembershipAddRequestTask(userIri, groupIri, requestingUser, apiRequestID)
             )
         } yield taskResult
 
@@ -998,7 +1072,7 @@ class UsersResponderADM extends Responder {
             _ = if (!projectExists) throw NotFoundException(s"The group $groupIri does not exist.")
 
             // get group's info. we need the project IRI.
-            groupInfo <- (responderManager ? GroupInfoByIRIGetRequestV1(groupIri, None)).mapTo[GroupInfoResponseV1]
+            groupInfo <- (responderManager ? GroupGetRequestADM(groupIri, None)).mapTo[GroupInfoResponseV1]
             projectIri = groupInfo.group_info.project
 
             // check if the requesting user is allowed to perform updates
@@ -1210,13 +1284,17 @@ class UsersResponderADM extends Responder {
                 /* get the user's permission profile from the permissions responder */
                 permissionData <- (responderManager ? PermissionDataGetADM(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionsDataADM]
 
-                maybeProjectInfoFutures: Seq[Future[Option[ProjectInfoV1]]] = projectIris.map {
-                    projectIri => (responderManager ? ProjectInfoByIRIGetV1(iri = projectIri, userProfileV1 = None)).mapTo[Option[ProjectInfoV1]]
+                maybeGroupFutures: Seq[Future[Option[GroupADM]]] = groupIris.map {
+                    groupIri => (responderManager ? GroupGetADM(groupIri = groupIri, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[GroupADM]]
                 }
+                maybeGroups: Seq[Option[GroupADM]] <- Future.sequence(maybeGroupFutures)
+                groups: Seq[GroupADM] = maybeGroups.flatten
 
-                maybeProjectInfos: Seq[Option[ProjectInfoV1]] <- Future.sequence(maybeProjectInfoFutures)
-                projectInfos = maybeProjectInfos.flatten
-                projectInfoMap: Map[IRI, ProjectInfoV1] = projectInfos.map(projectInfo => projectInfo.id -> projectInfo).toMap
+                maybeProjectFutures: Seq[Future[Option[ProjectADM]]] = projectIris.map {
+                    projectIri => (responderManager ? ProjectGetADM(maybeIri = Some(projectIri), maybeShortcode = None, maybeShortname = None, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+                }
+                maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
+                projects: Seq[ProjectADM] = maybeProjects.flatten
 
                 /* construct the user profile from the different parts */
                 user = UserADM(
@@ -1228,8 +1306,8 @@ class UsersResponderADM extends Responder {
                     familyName = propsMap.getOrElse(OntologyConstants.KnoraBase.FamilyName, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'familyName' defined.")).head.asInstanceOf[StringLiteralV2].value,
                     status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'status' defined.")).head.asInstanceOf[BooleanLiteralV2].value,,
                     lang = propsMap.getOrElse(OntologyConstants.KnoraBase.PreferredLanguage, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'preferredLanguage' defined.")).head.asInstanceOf[StringLiteralV2].value,,
-                    groups = groupIris,
-                    projects = projectInfoMap,
+                    groups = groups,
+                    projects = projects,
                     sessionId = None,
                     permissions = permissionData
                 )
@@ -1268,7 +1346,7 @@ class UsersResponderADM extends Responder {
       */
     def projectExists(projectIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.v1.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
+            askString <- Future(queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
             // _ = log.debug("projectExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -1285,7 +1363,7 @@ class UsersResponderADM extends Responder {
       */
     def groupExists(groupIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.v1.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
+            askString <- Future(queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
             // _ = log.debug("groupExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]

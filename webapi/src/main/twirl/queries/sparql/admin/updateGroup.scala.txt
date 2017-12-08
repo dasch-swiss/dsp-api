@@ -38,7 +38,7 @@
   groupIri: IRI,
   maybeName: Option[String],
   maybeDescription: Option[String],
-  maybeProject: Option[String],
+  maybeProject: Option[IRI],
   maybeStatus: Option[Boolean],
   maybeSelfjoin: Option[Boolean])
 

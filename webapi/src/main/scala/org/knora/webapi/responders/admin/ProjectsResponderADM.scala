@@ -57,10 +57,11 @@ class ProjectsResponderADM extends Responder {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case ProjectsGetRequestADM(userProfile) => future2Message(sender(), projectsGetRequestADM(userProfile), log)
-        case ProjectsGetADM(userProfile) => future2Message(sender(), projectsGetADM(userProfile), log)
-        case ProjectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, maybeUser) => future2Message(sender(), projectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, maybeUser), log)
-        case ProjectGetADM(maybeIri, maybeShortname, maybeShortcode, maybeUser) => future2Message(sender(), projectGetADM(maybeIri, maybeShortname, maybeShortcode, maybeUser), log)
+        case ProjectsGetADM(requestingUser) => future2Message(sender(), projectsGetADM(requestingUser), log)
+        case ProjectsGetRequestADM(requestingUser) => future2Message(sender(), projectsGetRequestADM(requestingUser), log)
+        case ProjectGetADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => future2Message(sender(), projectGetADM(maybeIri, maybeShortname, maybeShortcode, requestingUser), log)
+        case ProjectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => future2Message(sender(), projectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser), log)
+
 
         case ProjectMembersByIRIGetRequestV1(iri, userProfileV1) => future2Message(sender(), projectMembersByIRIGetRequestV1(iri, userProfileV1), log)
         case ProjectMembersByShortnameGetRequestV1(shortname, userProfileV1) => future2Message(sender(), projectMembersByShortnameGetRequestV1(shortname, userProfileV1), log)
@@ -81,7 +82,7 @@ class ProjectsResponderADM extends Responder {
       * @return all the projects as a [[ProjectsResponseV1]].
       * @throws NotFoundException if no projects are found.
       */
-    private def projectsGetRequestADM(user: Option[UserADM]): Future[ProjectsResponseADM] = {
+    private def projectsGetRequestADM(user: Option[UserADM]): Future[ProjectsGetResponseADM] = {
 
         //log.debug("projectsGetRequestV1")
 
@@ -89,7 +90,7 @@ class ProjectsResponderADM extends Responder {
             projects <- projectsGetADM(user)
 
             result = if (projects.nonEmpty) {
-                ProjectsResponseADM(
+                ProjectsGetResponseADM(
                     projects = projects
                 )
             } else {
@@ -144,40 +145,15 @@ class ProjectsResponderADM extends Responder {
     }
 
     /**
-      * Gets the project with the given project IRI and returns the information as a [[ProjectResponseADM]].
-      *
-      * @param maybeIri           the IRI of the project.
-      * @param maybeShortname the project's short name.
-      * @param maybeShortcode the project's shortcode.
-      * @param user the profile of the user making the request.
-      * @return information about the project as a [[ProjectInfoResponseV1]].
-      * @throws NotFoundException when no project for the given IRI can be found
-      */
-    private def projectGetRequestADM(maybeIri: Option[IRI], maybeShortname: Option[String], maybeShortcode: Option[String], user: Option[UserADM]): Future[ProjectResponseADM] = {
-
-        //log.debug("projectGetRequestADM - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
-
-        for {
-            maybeProject: Option[ProjectADM] <- projectGetADM(maybeIri, maybeShortname, maybeShortcode, user)
-            project = maybeProject match {
-                case Some(project) => project
-                case None => throw NotFoundException(s"Project '${Seq(maybeIri, maybeShortname, maybeShortcode).flatten.head}' not found")
-            }
-        } yield ProjectResponseADM(
-            project = project
-        )
-    }
-
-    /**
       * Gets the project with the given project IRI, shortname, or shortcode and returns the information as a [[ProjectADM]].
       *
       * @param maybeIri           the IRI of the project.
       * @param maybeShortname the project's short name.
       * @param maybeShortcode the project's shortcode.
-      * @param maybeUser the profile of the user making the request (optional).
+      * @param requestingUser the user making the request.
       * @return information about the project as a [[ProjectInfoV1]].
       */
-    private def projectGetADM(maybeIri: Option[IRI], maybeShortname: Option[String], maybeShortcode: Option[String], maybeUser: Option[UserADM]): Future[Option[ProjectADM]] = {
+    private def projectGetADM(maybeIri: Option[IRI], maybeShortname: Option[String], maybeShortcode: Option[String], requestingUser: UserADM): Future[Option[ProjectADM]] = {
 
         //log.debug("projectInfoByIRIGetV1 - projectIRI: {}", projectIri)
 
@@ -191,7 +167,7 @@ class ProjectsResponderADM extends Responder {
             projectResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
 
             projectInfo = if (projectResponse.statements.nonEmpty) {
-                Some(statements2ProjectADM(statements = projectResponse.statements.head, maybeUser))
+                Some(statements2ProjectADM(statements = projectResponse.statements.head, requestingUser))
             } else {
                 None
             }
@@ -200,6 +176,33 @@ class ProjectsResponderADM extends Responder {
 
         } yield projectInfo
     }
+
+    /**
+      * Gets the project with the given project IRI and returns the information as a [[ProjectGetResponseADM]].
+      *
+      * @param maybeIri           the IRI of the project.
+      * @param maybeShortname the project's short name.
+      * @param maybeShortcode the project's shortcode.
+      * @param requestingUser the user making the request.
+      * @return information about the project as a [[ProjectInfoResponseV1]].
+      * @throws NotFoundException when no project for the given IRI can be found
+      */
+    private def projectGetRequestADM(maybeIri: Option[IRI], maybeShortname: Option[String], maybeShortcode: Option[String], requestingUser: UserADM): Future[ProjectGetResponseADM] = {
+
+        //log.debug("projectGetRequestADM - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
+
+        for {
+            maybeProject: Option[ProjectADM] <- projectGetADM(maybeIri, maybeShortname, maybeShortcode, requestingUser)
+            project = maybeProject match {
+                case Some(project) => project
+                case None => throw NotFoundException(s"Project '${Seq(maybeIri, maybeShortname, maybeShortcode).flatten.head}' not found")
+            }
+        } yield ProjectGetResponseADM(
+            project = project
+        )
+    }
+
+
 
     /**
       * Gets the members of a project with the given IRI, shortname, oder shortcode.
@@ -730,10 +733,10 @@ class ProjectsResponderADM extends Responder {
       * Helper method that turns SPARQL result rows into a [[ProjectInfoV1]].
       *
       * @param statements results from the SPARQL query representing information about the project.
-      * @param maybeUser     the profile of user that is making the request.
-      * @return a [[ProjectInfoV1]] representing information about project.
+      * @param requestingUser     the user making the request.
+      * @return a [[ProjectADM]] representing information about project.
       */
-    private def statements2ProjectADM(statements: (IRI, Map[IRI, Seq[LiteralV2]]), maybeUser: Option[UserADM]): ProjectADM = {
+    private def statements2ProjectADM(statements: (IRI, Map[IRI, Seq[LiteralV2]]), requestingUser: UserADM): ProjectADM = {
 
         // log.debug("statements2ProjectADM - statements: {}", statements)
 

@@ -210,7 +210,7 @@ case class UserCreateRequestADM(createRequest: CreateUserApiRequestADM,
   * @param requestingUser    the user initiating the request.
   * @param apiRequestID      the ID of the API request.
   */
-case class UserChangeBasicUserDataRequestADM(userIri: IRI,
+case class UserChangeBasicUserInformationRequestADM(userIri: IRI,
                                              changeUserRequest: ChangeUserApiRequestADM,
                                              requestingUser: UserADM,
                                              apiRequestID: UUID) extends UsersResponderRequestADM
