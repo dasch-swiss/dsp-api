@@ -1212,7 +1212,7 @@
 						if (SALSAH.userprofile && SALSAH.userprofile.active_project) {
 							for (var p in SALSAH.userprofile.projects_info) {
 								if (SALSAH.userprofile.projects_info[p].id == SALSAH.userprofile.active_project) {
-									vocabulary_default = SALSAH.userprofile.projects_info[p].ontologyNamedGraph;
+									vocabulary_default = SALSAH.userprofile.projects_info[p].ontologies[0];
 									break;
 								}
 							}
@@ -1237,7 +1237,7 @@
 									if (data.vocabularies[i].active) {
 										vocsel.append(tmpele = $('<option>', {
 											value: data.vocabularies[i].id
-										}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].shortname + ']'));
+										}).append(data.vocabularies[i].longname + ' [' + SALSAH.vocabularyId2shortName(data.vocabularies[i].id) + ']'));
 										if (data.vocabularies[i].id == vocabulary_default) {
 											tmpele.prop({
 												selected: 'selected'
