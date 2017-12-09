@@ -25,7 +25,7 @@
 
     :hasFamilyName rdf:type owl:ObjectProperty ;
 
-              knora-base:subjectClassConstraint :person ;
+              knora-base:subjectClassConstraint :Person ;
 
               knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -50,7 +50,7 @@
 
     :hasGivenName rdf:type owl:ObjectProperty ;
 
-              knora-base:subjectClassConstraint :person ;
+              knora-base:subjectClassConstraint :Person ;
 
               knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -75,7 +75,7 @@
 
     :hasAlternativeName rdf:type owl:ObjectProperty ;
 
-              knora-base:subjectClassConstraint :person ;
+              knora-base:subjectClassConstraint :Person ;
 
               knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -100,7 +100,7 @@
 
     :hasIAFIdentifier rdf:type owl:ObjectProperty ;
 
-              knora-base:subjectClassConstraint :person ;
+              knora-base:subjectClassConstraint :Person ;
 
               knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -125,7 +125,7 @@
 
     :hasBirthPlace rdf:type owl:ObjectProperty ;
 
-              knora-base:subjectClassConstraint :person ;
+              knora-base:subjectClassConstraint :Person ;
 
               knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -150,7 +150,7 @@
 
     :hasBirthDate rdf:type owl:ObjectProperty ;
 
-              knora-base:subjectClassConstraint :person ;
+              knora-base:subjectClassConstraint :Person ;
 
               knora-base:objectClassConstraint knora-base:DateValue ;
 
@@ -175,7 +175,7 @@
 
     :hasDeathDate rdf:type owl:ObjectProperty ;
 
-              knora-base:subjectClassConstraint :person ;
+              knora-base:subjectClassConstraint :Person ;
 
               knora-base:objectClassConstraint knora-base:DateValue ;
 
@@ -200,7 +200,7 @@
 
     :hasDeathPlace rdf:type owl:ObjectProperty ;
 
-              knora-base:subjectClassConstraint :person ;
+              knora-base:subjectClassConstraint :Person ;
 
               knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -225,7 +225,7 @@
 
     :hasDeathPlace rdf:type owl:ObjectProperty ;
 
-              knora-base:subjectClassConstraint :person ;
+              knora-base:subjectClassConstraint :Person ;
 
               knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -250,7 +250,7 @@
 
     :hasBiography rdf:type owl:ObjectProperty ;
 
-              knora-base:subjectClassConstraint :person ;
+              knora-base:subjectClassConstraint :Person ;
 
               knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -275,7 +275,7 @@
 
     :hasBiographySource rdf:type owl:ObjectProperty ;
 
-              knora-base:subjectClassConstraint :person ;
+              knora-base:subjectClassConstraint :Person ;
 
               knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -300,7 +300,7 @@
 
     :hasRelation rdf:type owl:ObjectProperty ;
 
-              knora-base:subjectClassConstraint :person ;
+              knora-base:subjectClassConstraint :Person ;
 
               knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -357,7 +357,7 @@
     ### ###########################################
     ### webern:Person
 
-    :person rdf:type owl:Class ;
+    :Person rdf:type owl:Class ;
 
         rdfs:subClassOf knora-base:Resource, foaf:Person ,
                         [ rdf:type owl:Restriction ;
