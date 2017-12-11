@@ -14,34 +14,28 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v1
+package org.knora.webapi.responders.admin
 
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.storemessages.{ResetTriplestoreContentRequestV1, ResetTriplestoreContentResponseV1}
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 
 import scala.concurrent.Future
 
 /**
-  * This responder is used by [[org.knora.webapi.routing.v1.StoreRouteV1]], for piping through HTTP requests to the
+  * This responder is used by [[org.knora.webapi.routing.admin.StoreRouteADM]], for piping through HTTP requests to the
   * 'Store Module'
   */
-class StoreResponderV1 extends Responder {
+class StoreResponderADM extends Responder {
 
     /**
       * A user representing the Knora API server, used in those cases where a user is required.
       */
-    private val systemUser = UserProfileV1(
-        userData = UserDataV1(lang = "en"),
-        isSystemUser = true,
-        permissionData = PermissionsDataADM(anonymousUser = false)
-    )
+    private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
 
     def receive = {
         case ResetTriplestoreContentRequestV1(rdfDataObjects: Seq[RdfDataObject]) => future2Message(sender(), resetTriplestoreContent(rdfDataObjects), log)

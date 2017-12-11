@@ -184,9 +184,9 @@ class ResponderManager extends Actor with ActorLogging {
     protected val ckanRouterV1: ActorRef = makeDefaultCkanRouterV1
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[StoreResponderV1]].
+      * Constructs the default Akka routing actor that routes messages to [[StoreResponderADM]].
       */
-    protected final def makeDefaultStoreRouterV1: ActorRef = makeActor(FromConfig.props(Props[StoreResponderV1]), STORE_ROUTER_V1_ACTOR_NAME)
+    protected final def makeDefaultStoreRouterV1: ActorRef = makeActor(FromConfig.props(Props[StoreResponderADM]), STORE_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Store responder. Subclasses can override this

@@ -219,7 +219,7 @@ case class UserChangeBasicUserInformationRequestADM(userIri: IRI,
   * Request updating the users password.
   *
   * @param userIri           the IRI of the user to be updated.
-  * @param changeUserRequest the [[ChangeUserApiRequestV1]] object containing the old and new password.
+  * @param changeUserRequest the [[ChangeUserApiRequestADM]] object containing the old and new password.
   * @param requestingUser    the user initiating the request.
   * @param apiRequestID      the ID of the API request.
   */
@@ -232,7 +232,7 @@ case class UserChangePasswordRequestADM(userIri: IRI,
   * Request updating the users status ('knora-base:isActiveUser' property)
   *
   * @param userIri           the IRI of the user to be updated.
-  * @param changeUserRequest the [[ChangeUserApiRequestV1]] containing the new status (true / false).
+  * @param changeUserRequest the [[ChangeUserApiRequestADM]] containing the new status (true / false).
   * @param requestingUser    the user initiating the request.
   * @param apiRequestID      the ID of the API request.
   */
@@ -246,7 +246,7 @@ case class UserChangeStatusRequestADM(userIri: IRI,
   * Request updating the users system admin status ('knora-base:isInSystemAdminGroup' property)
   *
   * @param userIri           the IRI of the user to be updated.
-  * @param changeUserRequest the [[ChangeUserApiRequestV1]] containing
+  * @param changeUserRequest the [[ChangeUserApiRequestADM]] containing
   *                          the new system admin membership status (true / false).
   * @param requestingUser    the user initiating the request.
   * @param apiRequestID      the ID of the API request.
@@ -500,7 +500,7 @@ case class UserADM(id: IRI,
                     groups = Seq.empty[GroupADM], // removed groups
                     projects = Seq.empty[ProjectADM], // removed projects
                     sessionId = None, // removed sessionId
-                    permissions = PermissionsDataADM(anonymousUser = false) // removed permissions
+                    permissions = PermissionsDataADM() // removed permissions
                 )
             }
             case UserInformationTypeADM.RESTRICTED => {
@@ -586,13 +586,13 @@ case class UserADM(id: IRI,
 
             val v1Groups: Seq[IRI] = groups.map(_.id)
 
-            val projectInfos = projects.map(_.asProjectInfoV1)
-            val v1Projects: Map[IRI, ProjectInfoV1] = projectInfos.map(_.id).zip(projects).toMap[IRI, ProjectInfoV1]
+            val projectInfosV1 = projects.map(_.asProjectInfoV1)
+            val projects_info_v1: Map[IRI, ProjectInfoV1] = projectInfosV1.map(_.id).zip(projectInfosV1).toMap[IRI, ProjectInfoV1]
 
             UserProfileV1(
                 userData = asUserDataV1,
                 groups = v1Groups,
-                projects_info = v1Projects,
+                projects_info = projects_info_v1,
                 permissionData = permissions,
                 sessionId = sessionId
             )
@@ -630,7 +630,7 @@ object UserInformationTypeADM extends Enumeration {
 
     type UserInformationTypeADM = Value
 
-    val SHORT = Value(0, "short") // only userdata
+    val SHORT = Value(0, "short") // only basic user information (restricted and additionally without grpuos
     val RESTRICTED = Value(1, "restricted") // without sensitive information
     val FULL = Value(2, "full") // everything, including sensitive information
 

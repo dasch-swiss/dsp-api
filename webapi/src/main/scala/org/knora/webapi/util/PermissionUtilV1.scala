@@ -22,9 +22,8 @@ package org.knora.webapi.util
 
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.PermissionType
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionType, PermissionADM}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionType
 import org.knora.webapi.responders.v1.GroupedProps.{ValueLiterals, ValueProps}
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 import org.slf4j.LoggerFactory

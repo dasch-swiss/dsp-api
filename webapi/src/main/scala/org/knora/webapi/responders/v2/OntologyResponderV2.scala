@@ -25,9 +25,10 @@ import java.time.Instant
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectOntologyAddADM}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1, ProjectOntologyAddV1, ProjectsNamedGraphGetV1}
+import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1, ProjectsNamedGraphGetV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -1094,7 +1095,8 @@ class OntologyResponderV2 extends Responder {
                 }
 
                 // tell the projects responder that the ontology was created, so it can add it to the project's admin data.
-                newProjectInfo <- (responderManager ? ProjectOntologyAddV1(createOntologyRequest.projectIri.toString, internalOntologyIri.toString, createOntologyRequest.apiRequestID)).mapTo[ProjectInfoV1]
+                newProjectADM <- (responderManager ? ProjectOntologyAddADM(createOntologyRequest.projectIri.toString, internalOntologyIri.toString, requestingUser = KnoraSystemInstances.Users.SystemUser, createOntologyRequest.apiRequestID)).mapTo[ProjectADM]
+                newProjectInfo = newProjectADM.asProjectInfoV1
 
                 externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)
 

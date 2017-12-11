@@ -21,8 +21,8 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataType.PermissionProfileType
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
-import org.knora.webapi.messages.v1.responder.usermessages.UserADM
 import spray.json._
 
 

@@ -221,7 +221,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
       * @param createRequest the create request information.
       * @param requestingUser   the user making the request.
       * @param apiRequestID  the unique request ID.
-      * @return a [[GroupOperationResponseV1]]
+      * @return a [[GroupOperationResponseADM]]
       */
     private def createGroupADM(createRequest: CreateGroupApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[GroupOperationResponseADM] = {
 
@@ -293,7 +293,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
       * @param changeGroupRequest the change request.
       * @param requestingUser     the user making the request.
       * @param apiRequestID       the unique request ID.
-      * @return a [[GroupOperationResponseV1]].
+      * @return a [[GroupOperationResponseADM]].
       */
     private def changeGroupBasicInformationRequestADM(groupIri: IRI, changeGroupRequest: ChangeGroupApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[GroupOperationResponseADM] = {
 
@@ -346,7 +346,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
       * @param groupIri           the IRI of the group we are updating.
       * @param groupUpdatePayload the payload holding the information which we want to update.
       * @param requestingUser        the profile of the user making the request.
-      * @return a [[GroupOperationResponseV1]]
+      * @return a [[GroupOperationResponseADM]]
       */
     private def updateGroupADM(groupIri: IRI, groupUpdatePayload: GroupUpdatePayloadADM, requestingUser: UserADM): Future[GroupOperationResponseADM] = {
 
@@ -377,7 +377,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
             }
 
             /* Update group */
-            updateProjectSparqlString <- Future(queries.sparql.v1.txt.updateGroup(
+            updateProjectSparqlString <- Future(queries.sparql.admin.txt.updateGroup(
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
                 groupIri = groupIri,
@@ -450,7 +450,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
         if (propsMap.nonEmpty) {
             for {
                 projectIri <- projectIriFuture
-                maybeProject: Seq[Option[ProjectADM]] <- (responderManager ? ProjectGetADM(maybeIri = Some(projectIri), maybeShortcode = None, maybeShortname = None, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+                maybeProject: Option[ProjectADM] <- (responderManager ? ProjectGetADM(maybeIri = Some(projectIri), maybeShortcode = None, maybeShortname = None, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
                 project: ProjectADM = maybeProject.getOrElse(throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached."))
 
                 groupADM: GroupADM = GroupADM(

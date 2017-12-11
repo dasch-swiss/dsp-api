@@ -28,9 +28,10 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.apache.commons.validator.routines.UrlValidator
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
+import org.knora.webapi.messages.admin.responder.projectsmessages
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectsADMJsonProtocol, ProjectsGetRequestADM}
 import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.routing.{Authenticator, RouteUtilADM, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 
@@ -47,13 +48,13 @@ object ProjectsRouteADM extends Authenticator with ProjectsADMJsonProtocol {
         val responderManager = system.actorSelection("/user/responderManager")
         val stringFormatter = StringFormatter.getGeneralInstance
 
-        path("v1" / "projects") {
+        path("admin" / "projects") {
             get {
                 /* returns all projects */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-                    val requestMessage = ProjectsGetRequestV1(Some(userProfile))
-                    RouteUtilV1.runJsonRoute(
+                    val requestingUser = getUserADM(requestContext)
+                    val requestMessage = ProjectsGetRequestADM(requestingUser = requestingUser)
+                    RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -61,29 +62,29 @@ object ProjectsRouteADM extends Authenticator with ProjectsADMJsonProtocol {
                         log
                     )
             } ~
-                post {
-                    /* create a new project */
-                    entity(as[CreateProjectApiRequestV1]) { apiRequest =>
-                        requestContext =>
-                            val userProfile = getUserProfileV1(requestContext)
-                            val requestMessage = ProjectCreateRequestV1(
-                                createRequest = apiRequest,
-                                userProfileV1 = userProfile,
-                                apiRequestID = UUID.randomUUID()
-                            )
+            post {
+                /* create a new project */
+                entity(as[CreateProjectApiRequestV1]) { apiRequest =>
+                    requestContext =>
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestMessage = ProjectCreateRequestV1(
+                            createRequest = apiRequest,
+                            userProfileV1 = userProfile,
+                            apiRequestID = UUID.randomUUID()
+                        )
 
-                            RouteUtilV1.runJsonRoute(
-                                requestMessage,
-                                requestContext,
-                                settings,
-                                responderManager,
-                                log
-                            )
-                    }
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
                 }
-        } ~ path("v1" / "projects" / Segment) { value =>
+            }
+        } ~ path("admin" / "projects" / Segment) { value =>
             get {
-                /* returns a single project identified either through iri or shortname */
+                /* returns a single project identified either through iri, shortname, or shortcode */
                 parameters("identifier" ? "iri") { identifier: String =>
                     requestContext =>
 

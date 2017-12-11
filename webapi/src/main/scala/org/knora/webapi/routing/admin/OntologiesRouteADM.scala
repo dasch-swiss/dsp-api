@@ -37,7 +37,7 @@ import scala.concurrent.ExecutionContextExecutor
 /**
   * Provides a spray-routing function for API routes that deal with lists.
   */
-object OntologiesRouteADM extends Authenticator with OntologiesADMJsonProtocol {
+object OntologiesRouteADM extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
@@ -51,14 +51,14 @@ object OntologiesRouteADM extends Authenticator with OntologiesADMJsonProtocol {
                 /* return all ontologies */
                 parameters("projectIri".?) { maybeProjectIri: Option[IRI] =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val requestingUser = getUserADM(requestContext)
 
                         val projectIri: Option[IRI] = maybeProjectIri match {
                             case Some(potentialProjectIri) => Some(stringFormatter.validateAndEscapeIri(potentialProjectIri, () => throw BadRequestException(s"Invalid param project IRI: $potentialProjectIri")))
                             case None => None
                         }
 
-                        val requestMessage = OntologiesGetRequestADMADM(projectIri, userProfile)
+                        val requestMessage = OntologiesGetRequestADM(requestingUser)
 
                         RouteUtilADM.runJsonRoute(
                             requestMessage,
@@ -73,13 +73,13 @@ object OntologiesRouteADM extends Authenticator with OntologiesADMJsonProtocol {
                 /* create an ontology */
                 entity(as[CreateOntologyPayloadADM]) { apiRequest =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val requestingUser = getUserADM(requestContext)
 
-                        val requestMessage = OntologyCreateRequestADMADM(
+                        val requestMessage = OntologyCreateRequestADM(
                             ontologyName = apiRequest.ontologyName,
                             projectIri = apiRequest.projectIri,
                             apiRequestID = UUID.randomUUID(),
-                            userProfile
+                            requestingUser
                         )
 
                         RouteUtilADM.runJsonRoute(
@@ -96,10 +96,10 @@ object OntologiesRouteADM extends Authenticator with OntologiesADMJsonProtocol {
             get {
                 /* get an existing ontology dump as JSON-LD */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
                     val ontologyIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param ontology IRI: $iri"))
 
-                    val requestMessage = OntologyGetRequestADMADM(ontologyIri, userProfile)
+                    val requestMessage = OntologyGetRequestADM(ontologyIri, requestingUser)
 
                     RouteUtilADM.runJsonRoute(
                         requestMessage,
@@ -113,14 +113,14 @@ object OntologiesRouteADM extends Authenticator with OntologiesADMJsonProtocol {
                 /* update (overwrite) an existing ontology */
                 entity(as[String]) { updatePayload =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val requestingUser = getUserADM(requestContext)
                         val ontologyIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param ontology IRI: $iri"))
 
-                        val requestMessage = OntologyUpdateRequestADMADM(
+                        val requestMessage = OntologyUpdateRequestADM(
                             iri = ontologyIri,
                             data = updatePayload,
                             apiRequestID = UUID.randomUUID(),
-                            userProfile
+                            requestingUser
                         )
 
                         RouteUtilADM.runJsonRoute(

@@ -172,7 +172,7 @@ case class GroupPermissionUpdateRequestADM(requestingUser: UserADM,
   * @param groups information about all existing groups.
   */
 case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseV1 with GroupsADMJsonProtocol {
-    def toJsValue = groupsResponseADMFormat.write(this)
+    def toJsValue = groupsGetResponseADMFormat.write(this)
 }
 
 /**
@@ -262,9 +262,9 @@ trait GroupsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
     import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 
     implicit val groupADMFormat: JsonFormat[GroupADM] = jsonFormat6(GroupADM)
-    implicit val groupsResponseADMFormat: RootJsonFormat[GroupsResponseADM] = jsonFormat(GroupsResponseADM, "groups")
-    implicit val groupResponseADMFormat: RootJsonFormat[GroupResponseADM] = jsonFormat(GroupResponseADM, "group")
-    implicit val groupMembersResponseADMFormat: RootJsonFormat[GroupMembersResponseADM] = jsonFormat(GroupMembersResponseADM, "members")
+    implicit val groupsGetResponseADMFormat: RootJsonFormat[GroupsGetResponseADM] = jsonFormat(GroupsGetResponseADM, "groups")
+    implicit val groupResponseADMFormat: RootJsonFormat[GroupGetResponseADM] = jsonFormat(GroupGetResponseADM, "group")
+    implicit val groupMembersResponseADMFormat: RootJsonFormat[GroupMembersGetResponseADM] = jsonFormat(GroupMembersGetResponseADM, "members")
     implicit val createGroupApiRequestADMFormat: RootJsonFormat[CreateGroupApiRequestADM] = jsonFormat(CreateGroupApiRequestADM, "name", "description", "project", "status", "selfjoin")
     implicit val changeGroupApiRequestADMFormat: RootJsonFormat[ChangeGroupApiRequestADM] = jsonFormat(ChangeGroupApiRequestADM, "name", "description", "status", "selfjoin")
     implicit val groupOperationResponseADMFormat: RootJsonFormat[GroupOperationResponseADM] = jsonFormat(GroupOperationResponseADM, "group")

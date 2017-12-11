@@ -34,8 +34,8 @@ import spray.json.{DefaultJsonProtocol, RootJsonFormat, _}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
 
-case class CreateOntologyPayloadADM(ontologyName: String, projectIri: IRI) extends OntologiesADMJsonProtocol {
-    def toJsValue: JsValue = createOntologyPayloadADMFormat.write(this)
+case class CreateOntologyPayloadADM(ontologyName: String, projectIri: IRI) {
+    def toJsValue: JsValue = OntologiesADMJsonProtocol.createOntologyPayloadADMFormat.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -46,26 +46,38 @@ case class CreateOntologyPayloadADM(ontologyName: String, projectIri: IRI) exten
   */
 sealed trait OntologiesResponderRequestADM extends KnoraRequestADM
 
+/**
+  * Requests basic informations about all ontologies. A successful response will be a [[OntologiesGetResponseADM]]
+  *
+  * @param requestingUser the user making the request.
+  */
+case class OntologyInfosGetRequestADM(requestingUser: UserADM) extends OntologiesResponderRequestADM
+
+/**
+  * Requests basic informations about a single ontology. A successful response will be a [[OntologyGetResponseADM]]
+  *
+  * @param requestingUser the user making the request.
+  */
+case class OntologyInfoGetRequestADM(ontologyIri: IRI,
+                                     requestingUser: UserADM) extends OntologiesResponderRequestADM
 
 
 /**
-  * Requests a list of all ontologies or the ontologies inside a project. A successful response will be a [[OntologiesGetResponseADM]]
+  * Requests a list of all ontologies. A successful response will be a [[OntologiesGetResponseADM]]
   *
-  * @param projectIri  the IRI of the project.
-  * @param user the user making the request.
+  * @param requestingUser the user making the request.
   */
-case class OntologiesGetRequestADM(projectIri: Option[IRI] = None,
-                                   user: UserADM) extends OntologiesResponderRequestADM
+case class OntologiesGetRequestADM(requestingUser: UserADM) extends OntologiesResponderRequestADM
 
 
 /**
   * Requests an ontology (as JSON-LD). A successful response will be a [[OntologyGetResponseADM]].
   *
-  * @param iri the ontology IRI
-  * @param user the user making the request.
+  * @param ontologyIri the ontology IRI
+  * @param requestingUser the user making the request.
   */
-case class OntologyGetRequestADM(iri: IRI,
-                                 user: UserADM) extends OntologiesResponderRequestADM
+case class OntologyGetRequestADM(ontologyIri: IRI,
+                                 requestingUser: UserADM) extends OntologiesResponderRequestADM
 
 
 /**
@@ -74,12 +86,12 @@ case class OntologyGetRequestADM(iri: IRI,
   * @param ontologyName the name of the ontology to be created.
   * @param projectIri   the IRI of the project that the ontology will belong to.
   * @param apiRequestID the ID of the API request.
-  * @param user  the user making the request.
+  * @param requestingUser  the user making the request.
   */
 case class OntologyCreateRequestADM(ontologyName: String,
                                     projectIri: IRI,
                                     apiRequestID: UUID,
-                                    user: UserADM) extends OntologiesResponderRequestADM
+                                    requestingUser: UserADM) extends OntologiesResponderRequestADM
 
 
 /**
@@ -99,14 +111,31 @@ case class OntologyUpdateRequestADM(iri: IRI,
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
 
-
 /**
-  * Represents an response to [[OntologiesGetRequestADM]] consisting of a sequence of ontology IRIs.
+  * Represents an response to [[OntologyInfosGetRequestADM]] consisting of a sequence of [[OntologyInfoADM]].
   *
   * @param ontologies a sequence of IRIs.
   */
-case class OntologiesGetResponseADM(ontologies: Seq[OntologyInfoADM]) extends KnoraResponseADM with OntologiesADMJsonProtocol {
-    def toJsValue = ontologiesGetAdminResponseFormat.write(this)
+case class OntologyInfosGetResponseADM(ontologies: Seq[OntologyInfoADM]) extends KnoraResponseADM {
+    def toJsValue = OntologiesADMJsonProtocol.ontologyInfosGetResponseADMFormat.write(this)
+}
+
+/**
+  * Represents an response to [[OntologyInfoGetRequestADM]] consisting of a single [[OntologyInfoADM]].
+  *
+  * @param ontology the basic ontology information.
+  */
+case class OntologyInfoGetResponseADM(ontology: OntologyInfoADM) extends KnoraResponseADM {
+    def toJsValue = OntologiesADMJsonProtocol.ontologyInfoGetResponseADMFormat.write(this)
+}
+
+/**
+  * Represents an response to [[OntologiesGetRequestADM]] containing a sequence of [[OntologyDataADM]].
+  *
+  * @param ontologies a asequence of [[OntologyDataADM]].
+  */
+case class OntologiesGetResponseADM(ontologies: Seq[OntologyDataADM]) extends KnoraResponseADM {
+    def toJsValue = OntologiesADMJsonProtocol.ontologiesGetResponseADMFormat.write(this)
 }
 
 /**
@@ -114,8 +143,8 @@ case class OntologiesGetResponseADM(ontologies: Seq[OntologyInfoADM]) extends Kn
   *
   * @param ontology a [[OntologyDataADM]].
   */
-case class OntologyGetResponseADM(ontology: OntologyDataADM) extends KnoraResponseADM with OntologiesADMJsonProtocol {
-    def toJsValue = ontologGetAdminResponseFormat.write(this)
+case class OntologyGetResponseADM(ontology: OntologyDataADM) extends KnoraResponseADM {
+    def toJsValue = OntologiesADMJsonProtocol.ontologGetResponseADMFormat.write(this)
 }
 
 
@@ -124,8 +153,8 @@ case class OntologyGetResponseADM(ontology: OntologyDataADM) extends KnoraRespon
   *
   * @param ontology a [[OntologyDataADM]] of the newly created ontology.
   */
-case class OntologyCreateResponseADM(ontology: OntologyDataADM) extends KnoraResponseADM with OntologiesADMJsonProtocol {
-    def toJsValue = ontologyCreateAdminResponseFormat.write(this)
+case class OntologyCreateResponseADM(ontology: OntologyDataADM) extends KnoraResponseADM {
+    def toJsValue = OntologiesADMJsonProtocol.ontologyCreateResponseADMFormat.write(this)
 }
 
 
@@ -143,13 +172,14 @@ case class OntologyCreateResponseADM(ontology: OntologyDataADM) extends KnoraRes
 case class OntologyDataADM(ontologyIri: SmartIri, ontologyName: String, project: ProjectADM, data: String)
 
 /**
-  * Represents basic information of an ontology.
+  * Represents basic information about an ontology. When returned as part of project information, e.g., [[ProjectADM]],
+  * then the project information is omitted.
   *
   * @param ontologyIri the IRI of the ontology.
   * @param ontologyName the name of the ontology.
-  * @param project the [[ProjectInfoV1]] of the project to which this ontology belongs.
+  * @param project the [[ProjectADM]] of the project to which this ontology belongs.
   */
-case class OntologyInfoADM(ontologyIri: SmartIri, ontologyName: String, project: ProjectADM)
+case class OntologyInfoADM(ontologyIri: SmartIri, ontologyName: String, project: Option[ProjectADM])
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -158,12 +188,35 @@ case class OntologyInfoADM(ontologyIri: SmartIri, ontologyName: String, project:
 /**
   * A spray-json protocol for generating Knora API Admin JSON.
   */
-trait OntologiesADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsADMJsonProtocol {
+object OntologiesADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsADMJsonProtocol {
 
-    implicit val ontologyDataADMFormat: JsonFormat[OntologyDataADM] = jsonFormat4(OntologyDataADM)
-    implicit val ontologyInfoADMFormat: JsonFormat[OntologyInfoADM] = jsonFormat3(OntologyInfoADM)
+    implicit object SmartIriFormat extends JsonFormat[SmartIri] {
+        /**
+          * Converts a [[SmartIri]] to a [[JsValue]].
+          *
+          * @param smartiri a [[SmartIri]].
+          * @return a [[JsValue]].
+          */
+        def write(smartiri: SmartIri): JsValue = {
+            JsString(smartiri.toString)
+        }
+
+        /**
+          * Converts a [[JsValue]] to a [[SmartIri]].
+          *
+          * @param value a [[JsValue]].
+          * @return a [[SmartIri]].
+          */
+        def read(value: JsValue): SmartIri = ???
+    }
+
+    implicit val ontologyDataADMFormat: JsonFormat[OntologyDataADM] = lazyFormat(jsonFormat(OntologyDataADM, "ontologyIri", "ontologyName", "project", "data"))
+    implicit val ontologyInfoADMFormat: JsonFormat[OntologyInfoADM] = lazyFormat(jsonFormat(OntologyInfoADM, "ontologyIri", "ontologyName", "project"))
+    implicit val ontologyInfosGetResponseADMFormat: RootJsonFormat[OntologyInfosGetResponseADM] = jsonFormat(OntologyInfosGetResponseADM, "ontologies")
+    implicit val ontologyInfoGetResponseADMFormat: RootJsonFormat[OntologyInfoGetResponseADM] = jsonFormat(OntologyInfoGetResponseADM, "ontology")
+    implicit val ontologiesGetResponseADMFormat: RootJsonFormat[OntologiesGetResponseADM] = jsonFormat(OntologiesGetResponseADM, "ontologies")
+    implicit val ontologGetResponseADMFormat: RootJsonFormat[OntologyGetResponseADM] = jsonFormat(OntologyGetResponseADM, "ontology")
     implicit val createOntologyPayloadADMFormat: RootJsonFormat[CreateOntologyPayloadADM] = jsonFormat2(CreateOntologyPayloadADM)
-    implicit val ontologiesGetAdminResponseFormat: RootJsonFormat[OntologiesGetResponseADM] = jsonFormat(OntologiesGetResponseADM, "ontologies")
-    implicit val ontologGetAdminResponseFormat: RootJsonFormat[OntologyGetResponseADM] = jsonFormat(OntologyGetResponseADM, "ontology")
-    implicit val ontologyCreateAdminResponseFormat: RootJsonFormat[OntologyCreateResponseADM] = jsonFormat(OntologyCreateResponseADM, "ontology")
+
+    implicit val ontologyCreateResponseADMFormat: RootJsonFormat[OntologyCreateResponseADM] = jsonFormat(OntologyCreateResponseADM, "ontology")
 }

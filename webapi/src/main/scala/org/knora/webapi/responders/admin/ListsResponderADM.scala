@@ -19,8 +19,8 @@ package org.knora.webapi.responders.admin
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.listsmessages._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 
@@ -34,11 +34,11 @@ import scala.concurrent.Future
 class ListsResponderADM extends Responder {
 
     def receive: PartialFunction[Any, Unit] = {
-        case ListsGetRequestADM(projectIri, userProfile) => future2Message(sender(), listsGetAdminRequest(projectIri, userProfile), log)
-        case ListGetRequestADM(listIri, userProfile) => future2Message(sender(), listGetAdminRequest(listIri, userProfile), log)
-        case ListInfoGetRequestADM(listIri, userProfile) => future2Message(sender(), listInfoGetAdminRequest(listIri, userProfile), log)
-        case ListNodeInfoGetRequestADM(listIri, userProfile) => future2Message(sender(), listNodeInfoGetAdminRequest(listIri, userProfile), log)
-        case NodePathGetRequestADM(iri, userProfile) => future2Message(sender(), nodePathGetAdminRequest(iri, userProfile), log)
+        case ListsGetRequestADM(projectIri, requestingUser) => future2Message(sender(), listsGetAdminRequest(projectIri, requestingUser), log)
+        case ListGetRequestADM(listIri, requestingUser) => future2Message(sender(), listGetAdminRequest(listIri, requestingUser), log)
+        case ListInfoGetRequestADM(listIri, requestingUser) => future2Message(sender(), listInfoGetAdminRequest(listIri, requestingUser), log)
+        case ListNodeInfoGetRequestADM(listIri, requestingUser) => future2Message(sender(), listNodeInfoGetAdminRequest(listIri, requestingUser), log)
+        case NodePathGetRequestADM(iri, requestingUser) => future2Message(sender(), nodePathGetAdminRequest(iri, requestingUser), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -49,10 +49,10 @@ class ListsResponderADM extends Responder {
       * any children.
       *
       * @param projectIri  the IRI of the project the list belongs to.
-      * @param userProfile the profile of the user making the request.
+      * @param requestingUser the user making the request.
       * @return a [[ListsGetResponseADM]].
       */
-    def listsGetAdminRequest(projectIri: Option[IRI], userProfile: UserProfileV1): Future[ListsGetResponseADM] = {
+    def listsGetAdminRequest(projectIri: Option[IRI], requestingUser: UserADM): Future[ListsGetResponseADM] = {
 
         // log.debug("listsGetRequestV2")
 
@@ -69,12 +69,12 @@ class ListsResponderADM extends Responder {
             // Seq(subjectIri, (objectIri -> Seq(stringWithOptionalLand))
             statements = listsResponse.statements.toList
 
-            items: Seq[ListInfo] = statements.map {
+            items: Seq[ListInfoADM] = statements.map {
                 case (listIri: IRI, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
-                    ListInfo(
+                    ListInfoADM(
                         id = listIri,
-                        projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.asInstanceOf[IriLiteralV2].iri),
+                        projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.asInstanceOf[IriLiteralV2].value),
                         labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
                         comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
                     )
@@ -89,10 +89,10 @@ class ListsResponderADM extends Responder {
       * Retrieves a complete list (root and all children) from the triplestore and returns it as a [[ListGetResponseADM]].
       *
       * @param rootNodeIri the Iri if the root node of the list to be queried.
-      * @param userProfile the profile of the user making the request.
+      * @param requestingUser the user making the request.
       * @return a [[ListGetResponseADM]].
       */
-    def listGetAdminRequest(rootNodeIri: IRI, userProfile: UserProfileV1): Future[ListGetResponseADM] = {
+    def listGetAdminRequest(rootNodeIri: IRI, requestingUser: UserADM): Future[ListGetResponseADM] = {
 
         for {
             // this query will give us only the information about the root node.
@@ -110,7 +110,7 @@ class ListsResponderADM extends Responder {
             // _ = log.debug(s"listExtendedGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
 
             // here we know that the list exists and it is fine if children is an empty list
-            children: Seq[ListNode] <- listGetChildren(rootNodeIri, userProfile)
+            children: Seq[ListNodeADM] <- listGetChildren(rootNodeIri, requestingUser)
 
             // _ = log.debug(s"listGetRequestV2 - children count: {}", children.size)
 
@@ -118,7 +118,7 @@ class ListsResponderADM extends Responder {
             statements = listInfoResponse.statements
             listinfo = statements.head match {
                 case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringLiteralV2]]) =>
-                    ListInfo(
+                    ListInfoADM(
                         id = nodeIri,
                         projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
                         labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]),
@@ -126,7 +126,7 @@ class ListsResponderADM extends Responder {
                     )
             }
 
-            list = FullList(listinfo = listinfo, children = children)
+            list = FullListADM(listinfo = listinfo, children = children)
             // _ = log.debug(s"listGetRequestV2 - list: {}", MessageUtil.toSource(list))
 
         } yield ListGetResponseADM(list = list)
@@ -136,10 +136,10 @@ class ListsResponderADM extends Responder {
       * Retrieves information about a list (root) node.
       *
       * @param listIri the Iri if the list (root node) to be queried.
-      * @param userProfile the profile of the user making the request.
+      * @param requestingUser the user making the request.
       * @return a [[ListInfoGetResponseADM]].
       */
-    def listInfoGetAdminRequest(listIri: IRI, userProfile: UserProfileV1): Future[ListInfoGetResponseADM] = {
+    def listInfoGetAdminRequest(listIri: IRI, requestingUser: UserADM): Future[ListInfoGetResponseADM] = {
         for {
             sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
                 triplestore = settings.triplestoreType,
@@ -159,9 +159,9 @@ class ListsResponderADM extends Responder {
 
             // _ = log.debug(s"listNodeInfoGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
 
-            listinfo: ListInfo = statements.head match {
+            listinfo: ListInfoADM = statements.head match {
                 case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringLiteralV2]]) =>
-                    ListInfo (
+                    ListInfoADM (
                         id = nodeIri,
                         projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
                         labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]),
@@ -178,10 +178,10 @@ class ListsResponderADM extends Responder {
       * Retrieves information about a single (child) node.
       *
       * @param nodeIri the Iri if the child node to be queried.
-      * @param userProfile the profile of the user making the request.
+      * @param requestingUser the user making the request.
       * @return a [[ListNodeInfoGetResponseADM]].
       */
-    def listNodeInfoGetAdminRequest(nodeIri: IRI, userProfile: UserProfileV1): Future[ListNodeInfoGetResponseADM] = {
+    def listNodeInfoGetAdminRequest(nodeIri: IRI, requestingUser: UserADM): Future[ListNodeInfoGetResponseADM] = {
         for {
             sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
                 triplestore = settings.triplestoreType,
@@ -201,9 +201,9 @@ class ListsResponderADM extends Responder {
 
             // _ = log.debug(s"listNodeInfoGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
 
-            nodeinfo: ListNodeInfo = statements.head match {
+            nodeinfo: ListNodeInfoADM = statements.head match {
                 case (nodeIri: IRI, propsMap: Map[IRI, Seq[StringLiteralV2]]) =>
-                    ListNodeInfo (
+                    ListNodeInfoADM (
                         id = nodeIri,
                         name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.value),
                         labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]),
@@ -222,10 +222,10 @@ class ListsResponderADM extends Responder {
       * Retrieves a list from the triplestore and returns it as a sequence of child nodes.
       *
       * @param rootNodeIri the Iri of the root node of the list to be queried.
-      * @param userProfile the profile of the user making the request.
-      * @return a sequence of [[ListNode]].
+      * @param requestingUser the user making the request.
+      * @return a sequence of [[ListNodeADM]].
       */
-    private def listGetChildren(rootNodeIri: IRI, userProfile: UserProfileV1): Future[Seq[ListNode]] = {
+    private def listGetChildren(rootNodeIri: IRI, requestingUser: UserADM): Future[Seq[ListNodeADM]] = {
 
         /**
           * Compares the `position`-values of two nodes
@@ -234,7 +234,7 @@ class ListsResponderADM extends Responder {
           * @param list2 node in the same list
           * @return true if the `position` of list1 is lower than the one of list2
           */
-        def orderNodes(list1: ListNode, list2: ListNode): Boolean = {
+        def orderNodes(list1: ListNodeADM, list2: ListNodeADM): Boolean = {
             if (list1.position.nonEmpty && list2.position.nonEmpty) {
                 list1.position.get < list2.position.get
             } else {
@@ -243,14 +243,14 @@ class ListsResponderADM extends Responder {
         }
 
         /**
-          * This function recursively transforms SPARQL query results representing a hierarchical list into a [[ListNode]].
+          * This function recursively transforms SPARQL query results representing a hierarchical list into a [[ListNodeADM]].
           *
           * @param nodeIri          the IRI of the node to be created.
           * @param groupedByNodeIri a [[Map]] in which each key is the IRI of a node in the hierarchical list, and each value is a [[Seq]]
           *                         of SPARQL query results representing that node's children.
-          * @return a [[ListNode]].
+          * @return a [[ListNodeADM]].
           */
-        def createListChildNode(nodeIri: IRI, groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]], level: Int): ListNode = {
+        def createListChildNode(nodeIri: IRI, groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]], level: Int): ListNodeADM = {
 
             val childRows = groupedByNodeIri(nodeIri)
 
@@ -276,7 +276,7 @@ class ListsResponderADM extends Responder {
 
             val firstRowMap = childRows.head.rowMap
 
-            ListNode(
+            ListNodeADM(
                 id = nodeIri,
                 name = firstRowMap.get("nodeName"),
                 labels = if (firstRowMap.get("label").nonEmpty) {
@@ -287,7 +287,7 @@ class ListsResponderADM extends Responder {
                 comments = Seq.empty[StringLiteralV2],
                 children = if (firstRowMap.get("child").isEmpty) {
                     // If this node has no children, childRows will just contain one row with no value for "child".
-                    Seq.empty[ListNode]
+                    Seq.empty[ListNodeADM]
                 } else {
                     // Recursively get the child nodes.
                     childRows.map(childRow => createListChildNode(childRow.rowMap("child"), groupedByNodeIri, level + 1)).sortWith(orderNodes)
@@ -302,7 +302,7 @@ class ListsResponderADM extends Responder {
                 queries.sparql.admin.txt.getList(
                     triplestore = settings.triplestoreType,
                     rootNodeIri = rootNodeIri,
-                    preferredLanguage = userProfile.userData.lang,
+                    preferredLanguage = requestingUser.lang,
                     fallbackLanguage = settings.fallbackLanguage
                 ).toString()
             }
@@ -313,9 +313,9 @@ class ListsResponderADM extends Responder {
 
             rootNodeChildren = groupedByNodeIri.getOrElse(rootNodeIri, Seq.empty[VariableResultsRow])
 
-            children: Seq[ListNode] = if (rootNodeChildren.head.rowMap.get("child").isEmpty) {
+            children: Seq[ListNodeADM] = if (rootNodeChildren.head.rowMap.get("child").isEmpty) {
                 // The root node has no children, so we return an empty list.
-                Seq.empty[ListNode]
+                Seq.empty[ListNodeADM]
             } else {
                 // Process each child of the root node.
                 rootNodeChildren.map {
@@ -330,9 +330,9 @@ class ListsResponderADM extends Responder {
       * Provides the path to a particular hierarchical list node.
       *
       * @param queryNodeIri the IRI of the node whose path is to be queried.
-      * @param userProfile  the profile of the user making the request.
+      * @param requestingUser  the user making the request.
       */
-    private def nodePathGetAdminRequest(queryNodeIri: IRI, userProfile: UserProfileV1): Future[NodePathGetResponseADM] = {
+    private def nodePathGetAdminRequest(queryNodeIri: IRI, requestingUser: UserADM): Future[NodePathGetResponseADM] = {
         /**
           * Recursively constructs the path to a node.
           *
@@ -343,12 +343,12 @@ class ListsResponderADM extends Responder {
           * @return the complete path to `node`.
           */
         @tailrec
-        def makePath(node: IRI, nodeMap: Map[IRI, Map[String, String]], parentMap: Map[IRI, IRI], path: Seq[ListNode]): Seq[ListNode] = {
+        def makePath(node: IRI, nodeMap: Map[IRI, Map[String, String]], parentMap: Map[IRI, IRI], path: Seq[ListNodeADM]): Seq[ListNodeADM] = {
             // Get the details of the node.
             val nodeData = nodeMap(node)
 
             // Construct a NodePathElementV2 containing those details.
-            val pathElement = ListNode(
+            val pathElement = ListNodeADM(
                 id = nodeData("node"),
                 name = nodeData.get("nodeName"),
                 labels = if (nodeData.contains("label")) {
@@ -357,7 +357,7 @@ class ListsResponderADM extends Responder {
                     Seq.empty[StringLiteralV2]
                 },
                 comments = Seq.empty[StringLiteralV2],
-                children = Seq.empty[ListNode],
+                children = Seq.empty[ListNodeADM],
                 position = None
             )
 
@@ -382,7 +382,7 @@ class ListsResponderADM extends Responder {
                 queries.sparql.v2.txt.getNodePath(
                     triplestore = settings.triplestoreType,
                     queryNodeIri = queryNodeIri,
-                    preferredLanguage = userProfile.userData.lang,
+                    preferredLanguage = requestingUser.lang,
                     fallbackLanguage = settings.fallbackLanguage
                 ).toString()
             }

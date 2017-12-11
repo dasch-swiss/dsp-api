@@ -56,28 +56,7 @@ object GroupsRouteV1 extends Authenticator with GroupV1JsonProtocol {
                         responderManager,
                         log
                     )
-            } ~
-                post {
-                    /* create a new group */
-                    entity(as[CreateGroupApiRequestV1]) { apiRequest =>
-                        requestContext =>
-                            val userProfile = getUserProfileV1(requestContext)
-
-                            val requestMessage = GroupCreateRequestV1(
-                                createRequest = apiRequest,
-                                userProfile,
-                                apiRequestID = UUID.randomUUID()
-                            )
-
-                            RouteUtilV1.runJsonRoute(
-                                requestMessage,
-                                requestContext,
-                                settings,
-                                responderManager,
-                                log
-                            )
-                    }
-                }
+            }
         } ~ path("v1" / "groups" / Segment) { value =>
             get {
                 /* returns a single group identified either through iri or groupname */
@@ -108,53 +87,7 @@ object GroupsRouteV1 extends Authenticator with GroupV1JsonProtocol {
                             log
                         )
                 }
-            } ~
-                put {
-                    /* update a group identified by iri */
-                    entity(as[ChangeGroupApiRequestV1]) { apiRequest =>
-                        requestContext =>
-                            val userProfile = getUserProfileV1(requestContext)
-                            val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid group IRI $value"))
-
-                            /* the api request is already checked at time of creation. see case class. */
-
-                            val requestMessage = GroupChangeRequestV1(
-                                groupIri = checkedGroupIri,
-                                changeGroupRequest = apiRequest,
-                                userProfile = userProfile,
-                                apiRequestID = UUID.randomUUID()
-                            )
-
-                            RouteUtilV1.runJsonRoute(
-                                requestMessage,
-                                requestContext,
-                                settings,
-                                responderManager,
-                                log
-                            )
-                    }
-                } ~
-                delete {
-                    /* update group status to false */
-                    requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
-                        val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid group IRI $value"))
-
-                        val requestMessage = GroupChangeRequestV1(
-                            groupIri = checkedGroupIri,
-                            changeGroupRequest = ChangeGroupApiRequestV1(status = Some(false)),
-                            userProfile = userProfile,
-                            apiRequestID = UUID.randomUUID()
-                        )
-
-                        RouteUtilV1.runJsonRoute(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
-                        )
-                }
+            }
         } ~
             path("v1" / "groups" / "members" / Segment) { value =>
                 get {

@@ -21,11 +21,10 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.listsmessages.ListInfo
+import org.knora.webapi.messages.admin.responder.listsmessages.ListInfoADM
 import org.knora.webapi.messages.admin.responder.ontologiesmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlExtendedConstructRequest, SparqlExtendedConstructResponse, StringLiteralV2}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 
@@ -37,27 +36,26 @@ import scala.concurrent.Future
 class OntologiesResponderADM extends Responder {
 
     def receive: PartialFunction[Any, Unit] = {
-        case OntologiesGetRequestADM(projectIri, user) => future2Message(sender(), ontologiesGetRequestADM(projectIri, user), log)
-        case OntologyGetRequestADM(ontologyIri, user) => future2Message(sender(), ontologyGetRequestADM(ontologyIri, user), log)
-        case OntologyCreateRequestADM(ontologyName, projectIri, apiRequestID, user) => future2Message(sender(), ontologyCreateRequestADM(ontologyName, projectIri, apiRequestID, user), log)
+        case OntologiesGetRequestADM(projectIri, requestingUser) => future2Message(sender(), ontologiesGetRequestADM(projectIri, requestingUser), log)
+        case OntologyGetRequestADM(ontologyIri, requestingUser) => future2Message(sender(), ontologyGetRequestADM(ontologyIri, requestingUser), log)
+        case OntologyCreateRequestADM(ontologyName, projectIri, apiRequestID, requestingUser) => future2Message(sender(), ontologyCreateRequestADM(ontologyName, projectIri, apiRequestID, requestingUser), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
 
     /**
-      * Gets all ontologies and returns them as a [[OntologiesGetResponseADM]]. For performance reasons
-      * (as lists can be very large), we only return the IRI of the ontology.
+      * Gets all ontologies and returns them as a [[OntologiesGetResponseADM]].
       *
       * @param projectIri  the IRI of the project the ontology belongs to.
-      * @param user the user making the request.
+      * @param requestingUser the user making the request.
       * @return a [[OntologiesGetResponseADM]].
       */
-    def ontologiesGetRequestADM(projectIri: Option[IRI], user: UserADM): Future[OntologiesGetResponseADM] = {
+    def ontologiesGetRequestADM(projectIri: Option[IRI], requestingUser: UserADM): Future[OntologiesGetResponseADM] = {
 
         // log.debug("listsGetRequestV2")
 
         for {
-            sparqlQuery <- Future(queries.sparql.admin.txt.getLists(
+            sparqlQuery <- Future(queries.sparql.admin.txt.getLists(????????????????????????????
                 triplestore = settings.triplestoreType,
                 maybeProjectIri = projectIri
             ).toString())
@@ -69,10 +67,10 @@ class OntologiesResponderADM extends Responder {
             // Seq(subjectIri, (objectIri -> Seq(stringWithOptionalLand))
             statements = listsResponse.statements.toList
 
-            items: Seq[ListInfo] = statements.map {
+            items: Seq[ListInfoADM] = statements.map {
                 case (listIri: IRI, propsMap: Map[IRI, Seq[StringLiteralV2]]) =>
 
-                    ListInfo(
+                    ListInfoADM(
                         id = listIri,
                         projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
                         labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]),

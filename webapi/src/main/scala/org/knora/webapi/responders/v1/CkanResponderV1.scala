@@ -22,19 +22,18 @@ package org.knora.webapi.responders.v1
 
 import java.net.URLEncoder
 
-import akka.actor.{ActorSelection, Status}
+import akka.actor.ActorSelection
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.ckanmessages._
 import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByShortnameGetRequestV1, ProjectInfoResponseV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 
@@ -51,11 +50,7 @@ class CkanResponderV1 extends Responder {
     /**
       * A user representing the Knora API server, used in those cases where a user is required.
       */
-    private val systemUser = UserProfileV1(
-        userData = UserDataV1(lang = "en"),
-        isSystemUser = true,
-        permissionData = PermissionDataV1(anonymousUser = false)
-    )
+    private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
 
     def receive = {
         case CkanRequestV1(projects, limit, info, userProfile) => future2Message(sender(), getCkanResponseV1(projects, limit, info, userProfile), log)

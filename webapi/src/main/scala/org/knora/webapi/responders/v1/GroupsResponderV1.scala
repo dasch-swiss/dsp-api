@@ -58,12 +58,10 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
       */
     def receive = {
         case GroupsGetRequestV1(userProfile) => future2Message(sender(), groupsGetRequestV1(userProfile), log)
-        case GroupInfoByIRIGetRequest(iri, userProfile) => future2Message(sender(), groupInfoByIRIGetRequestV1(iri, userProfile), log)
-        case GroupInfoByNameGetRequest(projectIri, groupName, userProfile) => future2Message(sender(), groupInfoByNameGetRequest(projectIri, groupName, userProfile), log)
+        case GroupInfoByIRIGetRequestV1(iri, userProfile) => future2Message(sender(), groupInfoByIRIGetRequestV1(iri, userProfile), log)
+        case GroupInfoByNameGetRequestV1(projectIri, groupName, userProfile) => future2Message(sender(), groupInfoByNameGetRequest(projectIri, groupName, userProfile), log)
         case GroupMembersByIRIGetRequestV1(groupIri, userProfileV1) => future2Message(sender(), groupMembersByIRIGetRequestV1(groupIri, userProfileV1), log)
         case GroupMembersByNameGetRequestV1(projectIri, groupName, userProfileV1) => future2Message(sender(), groupMembersByNameRequestV1(projectIri, groupName, userProfileV1), log)
-        case GroupCreateRequestV1(newGroupInfo, userProfile, apiRequestID) => future2Message(sender(), createGroupV1(newGroupInfo, userProfile, apiRequestID), log)
-        case GroupChangeRequestV1(groupIri, changeGroupRequest, userProfileV1, apiRequestID) => future2Message(sender(), changeBasicInformationRequestV1(groupIri, changeGroupRequest, userProfileV1, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -329,229 +327,6 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
         } yield GroupMembersResponseV1(members = groupMemberIris)
     }
 
-
-    /**
-      * Create a new group.
-      *
-      * @param createRequest the create request information.
-      * @param userProfile   the profile of the user making the request.
-      * @param apiRequestID  the unique request ID.
-      * @return a [[GroupOperationResponseV1]]
-      */
-    private def createGroupV1(createRequest: CreateGroupApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[GroupOperationResponseV1] = {
-
-        log.debug("createGroupV1 - createRequest: {}", createRequest)
-
-        def createGroupTask(createRequest: CreateGroupApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[GroupOperationResponseV1] = for {
-            /* check if username or password are not empty */
-            _ <- Future(if (createRequest.name.isEmpty) throw BadRequestException("Group name cannot be empty"))
-            _ = if (createRequest.project.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-
-            /* check if the requesting user is allowed to create group */
-            _ = if (!userProfile.permissionData.isProjectAdmin(createRequest.project) && !userProfile.permissionData.isSystemAdmin) {
-                // not a project admin and not a system admin
-                throw ForbiddenException("A new group can only be created by a project or system admin.")
-            }
-
-            nameExists <- groupByNameExists(createRequest.project, Some(createRequest.name))
-            _ = if (nameExists) {
-                throw DuplicateValueException(s"Group with the name: '${createRequest.name}' already exists")
-            }
-
-            maybeProjectInfo: Option[ProjectInfoV1] <- (responderManager ? ProjectInfoByIRIGetV1(createRequest.project, None)).mapTo[Option[ProjectInfoV1]]
-
-            projectInfo: ProjectInfoV1 = maybeProjectInfo match {
-                case Some(pi) => pi
-                case None => throw NotFoundException(s"Cannot create group inside project: '${createRequest.project}. The project was not found.")
-            }
-
-            /* generate a new random group IRI */
-            groupIRI = knoraIdUtil.makeRandomGroupIri(projectInfo.shortcode)
-
-            /* create the group */
-            createNewGroupSparqlString = queries.sparql.v1.txt.createNewGroup(
-                adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
-                triplestore = settings.triplestoreType,
-                groupIri = groupIRI,
-                groupClassIri = OntologyConstants.KnoraBase.UserGroup,
-                name = createRequest.name,
-                maybeDescription = createRequest.description,
-                projectIri = createRequest.project,
-                status = createRequest.status,
-                hasSelfJoinEnabled = createRequest.selfjoin
-            ).toString
-            //_ = log.debug(s"createGroupV1 - createNewGroup: $createNewGroupSparqlString")
-            createGroupResponse <- (storeManager ? SparqlUpdateRequest(createNewGroupSparqlString)).mapTo[SparqlUpdateResponse]
-
-            /* Verify that the group was created */
-            sparqlQuery <- Future(queries.sparql.v1.txt.getGroupByIri(
-                triplestore = settings.triplestoreType,
-                groupIri = groupIRI
-            ).toString())
-            groupResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-
-            // check group response
-            _ = if (groupResponse.results.bindings.isEmpty) {
-                throw NotFoundException(s"User $groupIRI was not created. Please report this as a possible bug.")
-            }
-
-            // create group info from group response
-            groupInfo = createGroupInfoV1FromGroupResponse(
-                groupResponse = groupResponse.results.bindings,
-                groupIri = groupIRI,
-                Some(userProfile)
-            )
-
-            /* create the group operation response */
-            groupOperationResponseV1 = GroupOperationResponseV1(groupInfo)
-
-        } yield groupOperationResponseV1
-
-        for {
-            // run user creation with an global IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                GROUPS_GLOBAL_LOCK_IRI,
-                () => createGroupTask(createRequest, userProfile, apiRequestID)
-            )
-        } yield taskResult
-    }
-
-
-    /**
-      * Change group's basic information.
-      *
-      * @param groupIri           the IRI of the group we want to change.
-      * @param changeGroupRequest the change request.
-      * @param userProfile        the profile of the user making the request.
-      * @param apiRequestID       the unique request ID.
-      * @return a [[GroupOperationResponseV1]].
-      */
-    private def changeBasicInformationRequestV1(groupIri: IRI, changeGroupRequest: ChangeGroupApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[GroupOperationResponseV1] = {
-
-        /**
-          * The actual change group task run with an IRI lock.
-          */
-        def changeGroupTask(groupIri: IRI, changeGroupRequest: ChangeGroupApiRequestV1, userProfileV1: UserProfileV1): Future[GroupOperationResponseV1] = for {
-
-            _ <- Future(
-                // check if necessary information is present
-                if (groupIri.isEmpty) throw BadRequestException("Group IRI cannot be empty")
-            )
-
-            /* Get the project IRI which also verifies that the group exists. */
-            maybeGroupInfo <- groupInfoByIRIGetV1(groupIri, Some(userProfile))
-            groupInfo: GroupInfoV1 = maybeGroupInfo.getOrElse(throw NotFoundException(s"Group '$groupIri' not found. Aborting update request."))
-
-            /* check if the requesting user is allowed to perform updates */
-            _ = if (!userProfileV1.permissionData.isProjectAdmin(groupInfo.project) && !userProfileV1.permissionData.isSystemAdmin) {
-                // not a project admin and not a system admin
-                throw ForbiddenException("Group's information can only be changed by a project or system admin.")
-            }
-
-            /* create the update request */
-            groupUpdatePayload = GroupUpdatePayloadV1(
-                name = changeGroupRequest.name,
-                description = changeGroupRequest.description,
-                status = changeGroupRequest.status,
-                selfjoin = changeGroupRequest.selfjoin
-            )
-
-            result <- updateGroupV1(groupIri, groupUpdatePayload, userProfileV1)
-
-        } yield result
-
-        for {
-            // run the change status task with an IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                groupIri,
-                () => changeGroupTask(groupIri, changeGroupRequest, userProfile)
-            )
-        } yield taskResult
-
-    }
-
-    /**
-      * Main group update method.
-      *
-      * @param groupIri           the IRI of the group we are updating.
-      * @param groupUpdatePayload the payload holding the information which we want to update.
-      * @param userProfile        the profile of the user making the request.
-      * @return a [[GroupOperationResponseV1]]
-      */
-    private def updateGroupV1(groupIri: IRI, groupUpdatePayload: GroupUpdatePayloadV1, userProfile: UserProfileV1): Future[GroupOperationResponseV1] = {
-
-        log.debug("updateGroupV1 - groupIri: {}, groupUpdatePayload: {}", groupIri, groupUpdatePayload)
-
-        val parametersCount: Int = List(
-            groupUpdatePayload.name,
-            groupUpdatePayload.description,
-            groupUpdatePayload.project,
-            groupUpdatePayload.status,
-            groupUpdatePayload.selfjoin).flatten.size
-
-        if (parametersCount == 0) throw BadRequestException("No data would be changed. Aborting update request.")
-
-
-        for {
-            /* Verify that the group exists. */
-            maybeGroupInfo <- groupInfoByIRIGetV1(groupIri, Some(userProfile))
-            groupInfo: GroupInfoV1 = maybeGroupInfo.getOrElse(throw NotFoundException(s"Group '$groupIri' not found. Aborting update request."))
-
-            /* Verify that the potentially new name is unique */
-            maybeNewNameExists <- groupByNameExists(groupInfo.project, groupUpdatePayload.name)
-            _ = if (maybeNewNameExists && groupUpdatePayload.name.isDefined) {
-                throw BadRequestException(s"Group with the name: '${groupUpdatePayload.name.get}' already exists.")
-            }
-
-            /* Update group */
-            updateProjectSparqlString <- Future(queries.sparql.v1.txt.updateGroup(
-                adminNamedGraphIri = "http://www.knora.org/data/admin",
-                triplestore = settings.triplestoreType,
-                groupIri = groupIri,
-                maybeName = groupUpdatePayload.name,
-                maybeDescription = groupUpdatePayload.description,
-                maybeProject = groupUpdatePayload.project,
-                maybeStatus = groupUpdatePayload.status,
-                maybeSelfjoin = groupUpdatePayload.selfjoin
-            ).toString)
-            //_ = log.debug(s"updateProjectV1 - query: {}",updateProjectSparqlString)
-
-            updateGroupResponse <- (storeManager ? SparqlUpdateRequest(updateProjectSparqlString)).mapTo[SparqlUpdateResponse]
-
-            /* Verify that the project was updated. */
-            maybeUpdatedGroup <- groupInfoByIRIGetV1(groupIri, Some(userProfile))
-            updatedGroup: GroupInfoV1 = maybeUpdatedGroup.getOrElse(throw UpdateNotPerformedException("Group was not updated. Please report this as a possible bug."))
-
-            //_ = log.debug("updateProjectV1 - projectUpdatePayload: {} /  updatedProject: {}", projectUpdatePayload, updatedProject)
-
-            _ = if (groupUpdatePayload.name.isDefined) {
-                if (updatedGroup.name != groupUpdatePayload.name.get) throw UpdateNotPerformedException("Group's 'name' was not updated. Please report this as a possible bug.")
-            }
-
-            _ = if (groupUpdatePayload.description.isDefined) {
-                if (updatedGroup.description != groupUpdatePayload.description) throw UpdateNotPerformedException("Group's 'description' was not updated. Please report this as a possible bug.")
-            }
-
-            _ = if (groupUpdatePayload.project.isDefined) {
-                if (updatedGroup.project != groupUpdatePayload.project.get) throw UpdateNotPerformedException("Group's 'project' was not updated. Please report this as a possible bug.")
-            }
-
-            _ = if (groupUpdatePayload.status.isDefined) {
-                if (updatedGroup.status != groupUpdatePayload.status.get) throw UpdateNotPerformedException("Group's 'status' was not updated. Please report this as a possible bug.")
-            }
-
-            _ = if (groupUpdatePayload.selfjoin.isDefined) {
-                if (updatedGroup.selfjoin != groupUpdatePayload.selfjoin.get) throw UpdateNotPerformedException("Group's 'selfjoin' status was not updated. Please report this as a possible bug.")
-            }
-
-            // create the project operation response
-            groupOperationResponseV1 = GroupOperationResponseV1(group_info = updatedGroup)
-        } yield groupOperationResponseV1
-
-    }
-
     ////////////////////
     // Helper Methods //
     ////////////////////
@@ -590,7 +365,7 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
       */
     def groupByIriExists(groupIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.v1.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
+            askString <- Future(queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
             //_ = log.debug("groupExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -610,7 +385,7 @@ class GroupsResponderV1 extends Responder with GroupV1JsonProtocol {
         for {
             result: Boolean <- if (name.isDefined) {
                 for {
-                    askString <- Future(queries.sparql.v1.txt.checkGroupExistsByName(projectIri = projectIri, name = name.get).toString)
+                    askString <- Future(queries.sparql.admin.txt.checkGroupExistsByName(projectIri = projectIri, name = name.get).toString)
                     //_ = log.debug("groupExists - query: {}", askString)
 
                     checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]

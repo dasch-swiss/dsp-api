@@ -79,7 +79,7 @@ object GroupsRouteADM extends Authenticator with GroupsADMJsonProtocol {
                 }
             }
         } ~
-        path("v1" / "groups" / Segment) { value =>
+        path("admin" / "groups" / Segment) { value =>
             get {
                 /* returns a single group identified through iri */
                 requestContext =>
@@ -143,7 +143,7 @@ object GroupsRouteADM extends Authenticator with GroupsADMJsonProtocol {
                     )
             }
         } ~
-        path("v1" / "groups" / "members" / Segment) { value =>
+        path("admin" / "groups" / "members" / Segment) { value =>
             get {
                 /* returns all members of the group identified through iri or name/project */
                 requestContext =>

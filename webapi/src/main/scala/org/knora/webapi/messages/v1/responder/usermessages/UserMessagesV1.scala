@@ -24,9 +24,8 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionsDataADM, PermissionsADMJsonProtocol}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionsADMJsonProtocol, PermissionsDataADM}
 import org.knora.webapi.messages.v1.responder.groupmessages.GroupV1JsonProtocol
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionV1JsonProtocol
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
@@ -36,92 +35,7 @@ import spray.json._
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
 
-/**
-  * Represents an API request payload that asks the Knora API server to create a new user.
-  *
-  * @param email       the email of the user to be created (unique).
-  * @param givenName   the given name of the user to be created.
-  * @param familyName  the family name of the user to be created
-  * @param password    the password of the user to be created.
-  * @param status      the status of the user to be created (active = true, inactive = false).
-  * @param lang        the default language of the user to be created.
-  * @param systemAdmin the system admin membership.
-  */
-case class CreateUserApiRequestV1(email: String,
-                                  givenName: String,
-                                  familyName: String,
-                                  password: String,
-                                  status: Boolean,
-                                  lang: String,
-                                  systemAdmin: Boolean) {
-
-    def toJsValue: JsValue = UserV1JsonProtocol.createUserApiRequestV1Format.write(this)
-}
-
-/**
-  * Represents an API request payload that asks the Knora API server to update an existing user. Information that can
-  * be changed include the user's email, given name, family name, language, password, user status, and system admin
-  * membership.
-  *
-  * @param email       the new email address. Needs to be unique on the server.
-  * @param givenName   the new given name.
-  * @param familyName  the new family name.
-  * @param lang        the new ISO 639-1 code of the new preferred language.
-  * @param oldPassword the old password.
-  * @param newPassword the new password.
-  * @param status      the new user status (active = true, inactive = false).
-  * @param systemAdmin the new system admin membership status.
-  */
-case class ChangeUserApiRequestV1(email: Option[String] = None,
-                                  givenName: Option[String] = None,
-                                  familyName: Option[String] = None,
-                                  lang: Option[String] = None,
-                                  oldPassword: Option[String] = None,
-                                  newPassword: Option[String] = None,
-                                  status: Option[Boolean] = None,
-                                  systemAdmin: Option[Boolean] = None) {
-
-    val parametersCount: Int = List(
-        email,
-        givenName,
-        familyName,
-        lang,
-        oldPassword,
-        newPassword,
-        status,
-        systemAdmin
-    ).flatten.size
-
-    // something needs to be sent, i.e. everything 'None' is not allowed
-    if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
-
-
-    /* check that only allowed information for the 4 cases is send and not more. */
-
-    // change password case
-    if (oldPassword.isDefined || newPassword.isDefined) {
-        if (parametersCount > 2) {
-            throw BadRequestException("To many parameters sent for password change.")
-        } else if (parametersCount < 2) {
-            throw BadRequestException("To few parameters sent for password change.")
-        }
-    }
-
-    // change status case
-    if (status.isDefined) {
-        if (parametersCount > 1) throw BadRequestException("To many parameters sent for user status change.")
-    }
-
-    // change system admin membership case
-    if (systemAdmin.isDefined) {
-        if (parametersCount > 1) throw BadRequestException("To many parameters sent for system admin membership change.")
-    }
-
-    // change basic user information case
-    if (parametersCount > 4) throw BadRequestException("To many parameters sent for basic user information change.")
-
-    def toJsValue: JsValue = UserV1JsonProtocol.changeUserApiRequestV1Format.write(this)
-}
+// use 'admin' route for writing
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -188,7 +102,6 @@ case class UserProfileByEmailGetRequestV1(email: String,
                                           userProfileType: UserProfileType,
                                           userProfile: UserProfileV1) extends UsersResponderRequestV1
 
-
 /**
   * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
   *
@@ -197,71 +110,6 @@ case class UserProfileByEmailGetRequestV1(email: String,
   */
 case class UserProfileByEmailGetV1(email: String,
                                    userProfileType: UserProfileType) extends UsersResponderRequestV1
-
-/**
-  * Requests the creation of a new user.
-  *
-  * @param createRequest the [[CreateUserApiRequestV1]] information used for creating the new user.
-  * @param userProfile   the user profile of the user creating the new user.
-  * @param apiRequestID  the ID of the API request.
-  */
-case class UserCreateRequestV1(createRequest: CreateUserApiRequestV1,
-                               userProfile: UserProfileV1,
-                               apiRequestID: UUID) extends UsersResponderRequestV1
-
-/**
-  * Request updating of an existing user.
-  *
-  * @param userIri           the IRI of the user to be updated.
-  * @param changeUserRequest the data which needs to be update.
-  * @param userProfile       the user profile of the user requesting the update.
-  * @param apiRequestID      the ID of the API request.
-  */
-case class UserChangeBasicUserDataRequestV1(userIri: IRI,
-                                            changeUserRequest: ChangeUserApiRequestV1,
-                                            userProfile: UserProfileV1,
-                                            apiRequestID: UUID) extends UsersResponderRequestV1
-
-/**
-  * Request updating the users password.
-  *
-  * @param userIri           the IRI of the user to be updated.
-  * @param changeUserRequest the [[ChangeUserApiRequestV1]] object containing the old and new password.
-  * @param userProfile       the user profile of the user requesting the update.
-  * @param apiRequestID      the ID of the API request.
-  */
-case class UserChangePasswordRequestV1(userIri: IRI,
-                                       changeUserRequest: ChangeUserApiRequestV1,
-                                       userProfile: UserProfileV1,
-                                       apiRequestID: UUID) extends UsersResponderRequestV1
-
-/**
-  * Request updating the users status ('knora-base:isActiveUser' property)
-  *
-  * @param userIri           the IRI of the user to be updated.
-  * @param changeUserRequest the [[ChangeUserApiRequestV1]] containing the new status (true / false).
-  * @param userProfile       the user profile of the user requesting the update.
-  * @param apiRequestID      the ID of the API request.
-  */
-case class UserChangeStatusRequestV1(userIri: IRI,
-                                     changeUserRequest: ChangeUserApiRequestV1,
-                                     userProfile: UserProfileV1,
-                                     apiRequestID: UUID) extends UsersResponderRequestV1
-
-
-/**
-  * Request updating the users system admin status ('knora-base:isInSystemAdminGroup' property)
-  *
-  * @param userIri           the IRI of the user to be updated.
-  * @param changeUserRequest the [[ChangeUserApiRequestV1]] containing
-  *                          the new system admin membership status (true / false).
-  * @param userProfile       the user profile of the user requesting the update.
-  * @param apiRequestID      the ID of the API request.
-  */
-case class UserChangeSystemAdminMembershipStatusRequestV1(userIri: IRI,
-                                                          changeUserRequest: ChangeUserApiRequestV1,
-                                                          userProfile: UserProfileV1,
-                                                          apiRequestID: UUID) extends UsersResponderRequestV1
 
 /**
   * Requests user's project memberships.
@@ -275,32 +123,6 @@ case class UserProjectMembershipsGetRequestV1(userIri: IRI,
                                               apiRequestID: UUID) extends UsersResponderRequestV1
 
 /**
-  * Requests adding the user to a project.
-  *
-  * @param userIri       the IRI of the user to be updated.
-  * @param projectIri    the IRI of the project.
-  * @param userProfileV1 the user profile of the user requesting the update.
-  * @param apiRequestID  the ID of the API request.
-  */
-case class UserProjectMembershipAddRequestV1(userIri: IRI,
-                                             projectIri: IRI,
-                                             userProfileV1: UserProfileV1,
-                                             apiRequestID: UUID) extends UsersResponderRequestV1
-
-/**
-  * Requests removing the user from a project.
-  *
-  * @param userIri       the IRI of the user to be updated.
-  * @param projectIri    the IRI of the project.
-  * @param userProfileV1 the user profile of the user requesting the update.
-  * @param apiRequestID  the ID of the API request.
-  */
-case class UserProjectMembershipRemoveRequestV1(userIri: IRI,
-                                                projectIri: IRI,
-                                                userProfileV1: UserProfileV1,
-                                                apiRequestID: UUID) extends UsersResponderRequestV1
-
-/**
   * Requests user's project admin memberships.
   *
   * @param userIri       the IRI of the user.
@@ -312,32 +134,6 @@ case class UserProjectAdminMembershipsGetRequestV1(userIri: IRI,
                                                    apiRequestID: UUID) extends UsersResponderRequestV1
 
 /**
-  * Requests adding the user to a project as project admin.
-  *
-  * @param userIri       the IRI of the user to be updated.
-  * @param projectIri    the IRI of the project.
-  * @param userProfileV1 the user profile of the user requesting the update.
-  * @param apiRequestID  the ID of the API request.
-  */
-case class UserProjectAdminMembershipAddRequestV1(userIri: IRI,
-                                                  projectIri: IRI,
-                                                  userProfileV1: UserProfileV1,
-                                                  apiRequestID: UUID) extends UsersResponderRequestV1
-
-/**
-  * Requests removing the user from a project as project admin.
-  *
-  * @param userIri       the IRI of the user to be updated.
-  * @param projectIri    the IRI of the project.
-  * @param userProfileV1 the user profile of the user requesting the update.
-  * @param apiRequestID  the ID of the API request.
-  */
-case class UserProjectAdminMembershipRemoveRequestV1(userIri: IRI,
-                                                     projectIri: IRI,
-                                                     userProfileV1: UserProfileV1,
-                                                     apiRequestID: UUID) extends UsersResponderRequestV1
-
-/**
   * Requests user's group memberships.
   *
   * @param userIri       the IRI of the user.
@@ -347,33 +143,6 @@ case class UserProjectAdminMembershipRemoveRequestV1(userIri: IRI,
 case class UserGroupMembershipsGetRequestV1(userIri: IRI,
                                             userProfileV1: UserProfileV1,
                                             apiRequestID: UUID) extends UsersResponderRequestV1
-
-/**
-  * Requests adding the user to a group.
-  *
-  * @param userIri       the IRI of the user to be updated.
-  * @param groupIri      the IRI of the group.
-  * @param userProfileV1 the user profile of the user requesting the update.
-  * @param apiRequestID  the ID of the API request.
-  */
-case class UserGroupMembershipAddRequestV1(userIri: IRI,
-                                           groupIri: IRI,
-                                           userProfileV1: UserProfileV1,
-                                           apiRequestID: UUID) extends UsersResponderRequestV1
-
-/**
-  * Requests removing the user from a group.
-  *
-  * @param userIri       the IRI of the user to be updated.
-  * @param groupIri      the IRI of the group.
-  * @param userProfileV1 the user profile of the user requesting the update.
-  * @param apiRequestID  the ID of the API request.
-  */
-case class UserGroupMembershipRemoveRequestV1(userIri: IRI,
-                                              groupIri: IRI,
-                                              userProfileV1: UserProfileV1,
-                                              apiRequestID: UUID) extends UsersResponderRequestV1
-
 
 // Responses
 
@@ -422,15 +191,6 @@ case class UserGroupMembershipsGetResponseV1(groups: Seq[IRI]) extends KnoraResp
     def toJsValue: JsValue = UserV1JsonProtocol.userGroupMembershipsGetResponseV1Format.write(this)
 }
 
-/**
-  * Represents an answer to a user creating/modifying operation.
-  *
-  * @param userProfile the new user profile of the created/modified user.
-  */
-case class UserOperationResponseV1(userProfile: UserProfileV1) extends KnoraResponseV1 {
-    def toJsValue: JsValue = UserV1JsonProtocol.userOperationResponseV1Format.write(this)
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
@@ -448,7 +208,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                          projects_info: Map[IRI, ProjectInfoV1] = Map.empty[IRI, ProjectInfoV1],
                          sessionId: Option[String] = None,
                          isSystemUser: Boolean = false,
-                         permissionData: PermissionDataV1 = PermissionDataV1(anonymousUser = true)) {
+                         permissionData: PermissionsDataADM = PermissionsDataADM()) {
 
     /**
       * Check password using either SHA-1 or SCrypt.
@@ -497,7 +257,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     userData = newUserData,
                     groups = Vector.empty[IRI], // removed groups
                     projects_info = Map.empty[IRI, ProjectInfoV1], // removed projects
-                    permissionData = PermissionsDataADM(anonymousUser = false),
+                    permissionData = PermissionsDataADM(), // remove permissions
                     sessionId = None // removed sessionId
                 )
             }
@@ -552,7 +312,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
     }
 
     def isAnonymousUser: Boolean = {
-        permissionData.anonymousUser
+        userData.user_id.isEmpty
     }
 
     def isActive: Boolean = {
@@ -634,89 +394,6 @@ object UserProfileTypeV1 extends Enumeration {
     }
 }
 
-
-/**
-  * Payload used for updating of an existing user.
-  *
-  * @param email         the new email address. Needs to be unique on the server.
-  * @param givenName     the new given name.
-  * @param familyName    the new family name.
-  * @param password      the new password.
-  * @param status        the new status.
-  * @param lang          the new language.
-  * @param projects      the new project memberships list.
-  * @param projectsAdmin the new projects admin membership list.
-  * @param groups        the new group memberships list.
-  * @param systemAdmin   the new system admin membership
-  */
-case class UserUpdatePayloadV1(email: Option[String] = None,
-                               givenName: Option[String] = None,
-                               familyName: Option[String] = None,
-                               password: Option[String] = None,
-                               status: Option[Boolean] = None,
-                               lang: Option[String] = None,
-                               projects: Option[Seq[IRI]] = None,
-                               projectsAdmin: Option[Seq[IRI]] = None,
-                               groups: Option[Seq[IRI]] = None,
-                               systemAdmin: Option[Boolean] = None) {
-
-    val parametersCount: Int = List(
-        email,
-        givenName,
-        familyName,
-        password,
-        status,
-        lang,
-        projects,
-        projectsAdmin,
-        groups,
-        systemAdmin
-    ).flatten.size
-
-    // something needs to be sent, i.e. everything 'None' is not allowed
-    if (parametersCount == 0) {
-        throw BadRequestException("No data sent in API request.")
-    }
-
-    /* check that only allowed information for the 4 cases is send and not more. */
-
-    // change password case
-    if (password.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for password change.")
-    }
-
-    // change status case
-    if (status.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for user status change.")
-    }
-
-    // change system admin membership case
-    if (systemAdmin.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for system admin membership change.")
-    }
-
-    // change project memberships
-    if (projects.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for project membership change.")
-    }
-
-    // change projectAdmin memberships
-    if (projectsAdmin.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for projectAdmin membership change.")
-    }
-
-    // change group memberships
-    if (groups.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for group membership change.")
-    }
-
-    // change basic user information case
-    if (parametersCount > 4) {
-        throw BadRequestException("To many parameters sent for basic user information change.")
-    }
-
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
@@ -727,12 +404,9 @@ object UserV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
     implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat8(UserDataV1))
     implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
-    implicit val createUserApiRequestV1Format: RootJsonFormat[CreateUserApiRequestV1] = jsonFormat7(CreateUserApiRequestV1)
-    implicit val changeUserApiRequestV1Format: RootJsonFormat[ChangeUserApiRequestV1] = jsonFormat(ChangeUserApiRequestV1, "email", "givenName", "familyName", "lang", "oldPassword", "newPassword", "status", "systemAdmin")
     implicit val usersGetResponseV1Format: RootJsonFormat[UsersGetResponseV1] = jsonFormat1(UsersGetResponseV1)
     implicit val userProfileResponseV1Format: RootJsonFormat[UserProfileResponseV1] = jsonFormat1(UserProfileResponseV1)
     implicit val userProjectMembershipsGetResponseV1Format: RootJsonFormat[UserProjectMembershipsGetResponseV1] = jsonFormat1(UserProjectMembershipsGetResponseV1)
     implicit val userProjectAdminMembershipsGetResponseV1Format: RootJsonFormat[UserProjectAdminMembershipsGetResponseV1] = jsonFormat1(UserProjectAdminMembershipsGetResponseV1)
     implicit val userGroupMembershipsGetResponseV1Format: RootJsonFormat[UserGroupMembershipsGetResponseV1] = jsonFormat1(UserGroupMembershipsGetResponseV1)
-    implicit val userOperationResponseV1Format: RootJsonFormat[UserOperationResponseV1] = jsonFormat1(UserOperationResponseV1)
 }

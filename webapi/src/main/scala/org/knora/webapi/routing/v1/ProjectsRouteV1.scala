@@ -21,8 +21,6 @@
 
 package org.knora.webapi.routing.v1
 
-import java.util.UUID
-
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
@@ -59,27 +57,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                         responderManager,
                         log
                     )
-            } ~
-                post {
-                    /* create a new project */
-                    entity(as[CreateProjectApiRequestV1]) { apiRequest =>
-                        requestContext =>
-                            val userProfile = getUserProfileV1(requestContext)
-                            val requestMessage = ProjectCreateRequestV1(
-                                createRequest = apiRequest,
-                                userProfileV1 = userProfile,
-                                apiRequestID = UUID.randomUUID()
-                            )
-
-                            RouteUtilV1.runJsonRoute(
-                                requestMessage,
-                                requestContext,
-                                settings,
-                                responderManager,
-                                log
-                            )
-                    }
-                }
+            }
         } ~ path("v1" / "projects" / Segment) { value =>
             get {
                 /* returns a single project identified either through iri or shortname */
@@ -104,53 +82,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                             log
                         )
                 }
-            } ~
-                put {
-                    /* update a project identified by iri */
-                    entity(as[ChangeProjectApiRequestV1]) { apiRequest =>
-                        requestContext =>
-                            val userProfile = getUserProfileV1(requestContext)
-                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
-
-                            /* the api request is already checked at time of creation. see case class. */
-
-                            val requestMessage = ProjectChangeRequestV1(
-                                projectIri = checkedProjectIri,
-                                changeProjectRequest = apiRequest,
-                                userProfileV1 = userProfile,
-                                apiRequestID = UUID.randomUUID()
-                            )
-
-                            RouteUtilV1.runJsonRoute(
-                                requestMessage,
-                                requestContext,
-                                settings,
-                                responderManager,
-                                log
-                            )
-                    }
-                } ~
-                delete {
-                    /* update project status to false */
-                    requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
-                        val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
-
-                        val requestMessage = ProjectChangeRequestV1(
-                            projectIri = checkedProjectIri,
-                            changeProjectRequest = ChangeProjectApiRequestV1(status = Some(false)),
-                            userProfileV1 = userProfile,
-                            apiRequestID = UUID.randomUUID()
-                        )
-
-                        RouteUtilV1.runJsonRoute(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
-                        )
-                }
+            }
         } ~ path("v1" / "projects" / "members" / Segment) { value =>
             get {
                 /* returns all members part of a project identified through iri or shortname */

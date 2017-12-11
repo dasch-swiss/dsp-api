@@ -23,9 +23,10 @@ package org.knora.webapi.messages.admin.responder.projectsmessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
-import org.knora.webapi.messages.v1.responder.projectmessages.{CreateProjectApiRequestV1, ProjectInfoV1}
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.{BadRequestException, IRI}
 import spray.json.{DefaultJsonProtocol, JsonFormat, RootJsonFormat}
@@ -112,17 +113,17 @@ sealed trait ProjectsResponderRequestADM extends KnoraRequestADM
   * Get all information about all projects in form of [[ProjectsGetResponseADM]]. The ProjectsGetRequestV1 returns either
   * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
   *
-  * @param user the profile of the user making the request.
+  * @param requestingUser the user making the request.
   */
-case class ProjectsGetRequestADM(user: Option[UserADM]) extends ProjectsResponderRequestADM
+case class ProjectsGetRequestADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
   * Get all information about all projects in form of a sequence of [[ProjectADM]]. Returns an empty sequence if
   * no projects are found. Administration permission checking is skipped.
   *
-  * @param user the profile of the user making the request.
+  * @param requestingUser the user making the request.
   */
-case class ProjectsGetADM(user: Option[UserADM]) extends ProjectsResponderRequestADM
+case class ProjectsGetADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
   * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
@@ -221,7 +222,7 @@ case class ProjectAdminMembersGetRequestADM(maybeIri: Option[IRI],
 /**
   * Requests the creation of a new project.
   *
-  * @param createRequest the [[CreateProjectApiRequestV1]] information for creation a new project.
+  * @param createRequest the [[CreateProjectApiRequestADM]] information for creation a new project.
   * @param requestingUser the user making the request.
   * @param apiRequestID  the ID of the API request.
   */
@@ -243,13 +244,14 @@ case class ProjectChangeRequestADM(projectIri: IRI,
                                    apiRequestID: UUID) extends ProjectsResponderRequestADM
 
 /**
-  * Get all the existing ontologies from all projects as a sequence of [[org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoADM]].
+  * Get all the project ontologies as a sequence of [[org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoADM]].
   *
-  * @param maybeProjectIri the profile of the user making the request.
+  * @param projectIri the IRI of the project.
   * @param requestingUser the user making the request.
   */
-case class ProjectsOntologiesGetADM(maybeProjectIri: IRI,
-                                    requestingUser: UserADM) extends ProjectsADMJsonProtocol
+case class ProjectOntologyInfosGetADM(projectIri: IRI,
+                                      requestingUser: UserADM) extends ProjectsADMJsonProtocol
+
 
 /**
   * Requests adding an ontology to the project. This is an internal message, which should
@@ -356,7 +358,7 @@ case class ProjectADM(id: IRI,
                       keywords: Option[String],
                       logo: Option[String],
                       institution: Option[IRI],
-                      ontologies: Seq[IRI],
+                      ontologies: Seq[OntologyInfoADM],
                       status: Boolean,
                       selfjoin: Boolean) {
 
@@ -372,7 +374,7 @@ case class ProjectADM(id: IRI,
             keywords = keywords,
             logo = logo,
             institution = institution,
-            ontologies = ontologies,
+            ontologies = this.ontologies.map(_.ontologyIri.toString),
             status = status,
             selfjoin = selfjoin
         )
@@ -410,6 +412,7 @@ case class ProjectUpdatePayloadADM(shortname: Option[String] = None,
   */
 trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
 
+    import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologiesADMJsonProtocol._
     import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 
     implicit val projectADMFormat: JsonFormat[ProjectADM] = jsonFormat11(ProjectADM)

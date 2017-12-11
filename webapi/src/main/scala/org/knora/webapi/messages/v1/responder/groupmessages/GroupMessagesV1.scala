@@ -28,50 +28,7 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
 
-/**
-  * Represents an API request payload that asks the Knora API server to create a new group.
-  *
-  * @param name        the name of the group to be created (unique).
-  * @param description the description of the group to be created.
-  * @param project     the project inside which the group will be created.
-  * @param status      the status of the group to be created (active = true, inactive = false).
-  * @param selfjoin    the status of self-join of the group to be created.
-  */
-case class CreateGroupApiRequestV1(name: String,
-                                   description: Option[String],
-                                   project: IRI,
-                                   status: Boolean,
-                                   selfjoin: Boolean) extends GroupV1JsonProtocol {
-
-    def toJsValue = createGroupApiRequestV1Format.write(this)
-}
-
-/**
-  * Represents an API request payload that asks the Knora API server to update an existing group.
-  *
-  * @param name        the new group's name.
-  * @param description the new group's description.
-  * @param status      the new group's status.
-  * @param selfjoin    the new group's self-join status.
-  */
-case class ChangeGroupApiRequestV1(name: Option[String] = None,
-                                   description: Option[String] = None,
-                                   status: Option[Boolean] = None,
-                                   selfjoin: Option[Boolean] = None) extends GroupV1JsonProtocol {
-
-    val parametersCount = List(
-        name,
-        description,
-        status,
-        selfjoin
-    ).flatten.size
-
-    // something needs to be sent, i.e. everything 'None' is not allowed
-    if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
-
-
-    def toJsValue = changeGroupApiRequestV1Format.write(this)
-}
+// User 'admin' route for writing.
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -95,7 +52,7 @@ case class GroupsGetRequestV1(userProfile: Option[UserProfileV1]) extends Groups
   * @param groupIri      IRI of the group.
   * @param userProfileV1 the profile of the user making the request.
   */
-case class GroupInfoByIRIGetRequest(groupIri: IRI, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
+case class GroupInfoByIRIGetRequestV1(groupIri: IRI, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
 
 /**
   * Find everything about a single group identified through it's shortname. Because it is only required to have unique
@@ -105,7 +62,7 @@ case class GroupInfoByIRIGetRequest(groupIri: IRI, userProfileV1: Option[UserPro
   * @param groupName     the name of the group.
   * @param userProfileV1 the profile of the user making the request.
   */
-case class GroupInfoByNameGetRequest(projectIri: IRI, groupName: String, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
+case class GroupInfoByNameGetRequestV1(projectIri: IRI, groupName: String, userProfileV1: Option[UserProfileV1]) extends GroupsResponderRequestV1
 
 /**
   * Returns all members of the group identified by iri.
@@ -124,38 +81,6 @@ case class GroupMembersByIRIGetRequestV1(groupIri: IRI, userProfileV1: UserProfi
   */
 case class GroupMembersByNameGetRequestV1(projectIri: IRI, groupName: String, userProfileV1: UserProfileV1) extends GroupsResponderRequestV1
 
-/**
-  * Requests the creation of a new group.
-  *
-  * @param createRequest the [[CreateGroupApiRequestV1]] information for creating the new group.
-  * @param userProfile   the user profile of the user creating the new group.
-  * @param apiRequestID  the ID of the API request.
-  */
-case class GroupCreateRequestV1(createRequest: CreateGroupApiRequestV1,
-                                userProfile: UserProfileV1,
-                                apiRequestID: UUID) extends GroupsResponderRequestV1
-
-/**
-  * Request updating of an existing group.
-  *
-  * @param groupIri           the IRI of the group to be updated.
-  * @param changeGroupRequest the data which needs to be update.
-  * @param userProfile        the user profile of the user requesting the update.
-  * @param apiRequestID       the ID of the API request.
-  */
-case class GroupChangeRequestV1(groupIri: IRI,
-                                changeGroupRequest: ChangeGroupApiRequestV1,
-                                userProfile: UserProfileV1,
-                                apiRequestID: UUID) extends GroupsResponderRequestV1
-
-/**
-  * Request updating the group's permissions.
-  *
-  * @param userProfile  the user profile of the user requesting the update.
-  * @param apiRequestID the ID of the API request.
-  */
-case class GroupPermissionUpdateRequest(userProfile: UserProfileV1,
-                                        apiRequestID: UUID) extends GroupsResponderRequestV1
 
 
 // Responses
@@ -186,15 +111,6 @@ case class GroupMembersResponseV1(members: Seq[IRI]) extends KnoraResponseV1 wit
     def toJsValue = groupMembersResponseV1Format.write(this)
 }
 
-/**
-  * Represents an answer to a group creating/modifying operation.
-  *
-  * @param group_info the new group info of the created/modified group.
-  */
-case class GroupOperationResponseV1(group_info: GroupInfoV1) extends KnoraResponseV1 with GroupV1JsonProtocol {
-    def toJsValue = groupOperationResponseV1Format.write(this)
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
@@ -217,21 +133,6 @@ case class GroupInfoV1(id: IRI,
                        selfjoin: Boolean)
 
 
-/**
-  * Payload used for updating of an existing group.
-  *
-  * @param name        the name of the group.
-  * @param description the description of the group.
-  * @param project     the project this group belongs to.
-  * @param status      the group's status.
-  * @param selfjoin    the group's self-join status.
-  */
-case class GroupUpdatePayloadV1(name: Option[String] = None,
-                                description: Option[String] = None,
-                                project: Option[IRI] = None,
-                                status: Option[Boolean] = None,
-                                selfjoin: Option[Boolean] = None)
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formating
@@ -245,7 +146,4 @@ trait GroupV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     implicit val groupsResponseV1Format: RootJsonFormat[GroupsResponseV1] = jsonFormat(GroupsResponseV1, "groups")
     implicit val groupInfoResponseV1Format: RootJsonFormat[GroupInfoResponseV1] = jsonFormat(GroupInfoResponseV1, "group_info")
     implicit val groupMembersResponseV1Format: RootJsonFormat[GroupMembersResponseV1] = jsonFormat(GroupMembersResponseV1, "members")
-    implicit val createGroupApiRequestV1Format: RootJsonFormat[CreateGroupApiRequestV1] = jsonFormat(CreateGroupApiRequestV1, "name", "description", "project", "status", "selfjoin")
-    implicit val changeGroupApiRequestV1Format: RootJsonFormat[ChangeGroupApiRequestV1] = jsonFormat(ChangeGroupApiRequestV1, "name", "description", "status", "selfjoin")
-    implicit val groupOperationResponseV1Format: RootJsonFormat[GroupOperationResponseV1] = jsonFormat(GroupOperationResponseV1, "group_info")
 }
