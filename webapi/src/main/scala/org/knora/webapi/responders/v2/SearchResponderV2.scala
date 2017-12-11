@@ -1913,8 +1913,19 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                         val dependentResIris: Set[IRI] = dependentResourceVariablesConcat.flatMap {
                             dependentResVar: QueryVariable =>
-                                // Iris are concatenated, split them
-                                resultRow.rowMap(dependentResVar.variableName).split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSeq
+
+                                // check if key exists (the variable could be contained in an OPTIONAL or a UNION)
+                                val dependentResIriOption: Option[IRI] = resultRow.rowMap.get(dependentResVar.variableName)
+
+                                dependentResIriOption match {
+                                    case Some(depResIri: IRI) =>
+
+                                        // Iris are concatenated, split them
+                                        depResIri.split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSeq
+
+                                    case None => Set.empty[IRI] // no value present
+                                }
+
                         }
 
                         acc + (mainResIri -> dependentResIris)
@@ -1944,7 +1955,22 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                         val valueObjVarToIris: Map[QueryVariable, Set[IRI]] = valueObjectVariablesConcat.map {
                             (valueObjVarConcat: QueryVariable) =>
-                                valueObjVarConcat -> resultRow.rowMap(valueObjVarConcat.variableName).split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSet
+
+                                // check if key exists (the variable could be contained in an OPTIONAL or a UNION)
+                                val valueObjVarToIrisOption: Option[IRI] = resultRow.rowMap.get(valueObjVarConcat.variableName)
+
+                                val valueObjVarToIris: Set[IRI] = valueObjVarToIrisOption match {
+
+                                    case Some(valObjVarToIris) =>
+
+                                        // Iris are concatenated, split them
+                                        valObjVarToIris.split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSet
+
+                                    case None => Set.empty[IRI] // no value present
+
+                                }
+
+                                valueObjVarConcat -> valueObjVarToIris
                         }.toMap
 
                         acc + (mainResIri -> valueObjVarToIris)
