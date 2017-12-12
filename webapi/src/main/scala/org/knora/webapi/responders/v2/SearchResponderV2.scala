@@ -1913,8 +1913,19 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                         val dependentResIris: Set[IRI] = dependentResourceVariablesConcat.flatMap {
                             dependentResVar: QueryVariable =>
-                                // Iris are concatenated, split them
-                                resultRow.rowMap(dependentResVar.variableName).split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSeq
+
+                                // check if key exists (the variable could be contained in an OPTIONAL or a UNION)
+                                val dependentResIriOption: Option[IRI] = resultRow.rowMap.get(dependentResVar.variableName)
+
+                                dependentResIriOption match {
+                                    case Some(depResIri: IRI) =>
+
+                                        // Iris are concatenated, split them
+                                        depResIri.split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSeq
+
+                                    case None => Set.empty[IRI] // no value present
+                                }
+
                         }
 
                         acc + (mainResIri -> dependentResIris)
@@ -1933,7 +1944,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // the Iris of all dependent resources for all main resources
                 val allDependentResourceIris: Set[IRI] = dependentResourceIrisPerMainResource.values.flatten.toSet ++ dependentResourceIrisFromTypeInspection
 
-                // value objects variables present in the preequery's WHERE clause
+                // value objects variables present in the prequery's WHERE clause
                 val valueObjectVariablesConcat = nonTriplestoreSpecificConstructToSelectTransformer.getValueObjectVarsGroupConcat
 
                 // for each main resource, create a Map of value object variables and their values
@@ -1944,7 +1955,22 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                         val valueObjVarToIris: Map[QueryVariable, Set[IRI]] = valueObjectVariablesConcat.map {
                             (valueObjVarConcat: QueryVariable) =>
-                                valueObjVarConcat -> resultRow.rowMap(valueObjVarConcat.variableName).split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSet
+
+                                // check if key exists (the variable could be contained in an OPTIONAL or a UNION)
+                                val valueObjIrisOption: Option[IRI] = resultRow.rowMap.get(valueObjVarConcat.variableName)
+
+                                val valueObjIris: Set[IRI] = valueObjIrisOption match {
+
+                                    case Some(valObjIris) =>
+
+                                        // Iris are concatenated, split them
+                                        valObjIris.split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSet
+
+                                    case None => Set.empty[IRI] // no value present
+
+                                }
+
+                                valueObjVarConcat -> valueObjIris
                         }.toMap
 
                         acc + (mainResIri -> valueObjVarToIris)
