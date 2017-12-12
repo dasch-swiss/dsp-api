@@ -23,7 +23,7 @@ package org.knora.webapi.e2e.admin
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.{E2ESpec, OntologyConstants, SharedAdminTestData}
+import org.knora.webapi.{E2ESpec, OntologyConstants, SharedTestDataV1}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -54,7 +54,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
     "The Permissions Route ('v1/permissions/projectIri/groupIri')" should {
 
         "return administrative permissions" in {
-            val projectIri = java.net.URLEncoder.encode(SharedAdminTestData.imagesProjectInfo.id, "utf-8")
+            val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
             val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraBase.ProjectMember, "utf-8")
 
             val request = Get(baseApiUrl + s"/v1/permissions/$projectIri/$groupIri")

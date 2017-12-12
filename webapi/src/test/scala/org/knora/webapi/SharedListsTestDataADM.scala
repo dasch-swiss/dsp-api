@@ -20,27 +20,27 @@
 
 package org.knora.webapi
 
-import org.knora.webapi.messages.admin.responder.listsmessages.{ListInfo, ListNode, ListNodeInfo}
+import org.knora.webapi.messages.admin.responder.listsmessages.{ListInfoADM, ListNodeADM, ListNodeInfoADM}
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
-object SharedListsAdminTestData {
+object SharedListsTestDataADM {
 
 
-    val otherTreeListInfo: ListInfo = ListInfo (
+    val otherTreeListInfo: ListInfoADM = ListInfoADM (
         id = "http://data.knora.org/anything/otherTreeList",
-        projectIri = Some("http://rdfh.ch/projects/anything"),
+        projectIri = "http://rdfh.ch/projects/anything",
         labels = Seq(StringLiteralV2("Tree list root", Some("en"))),
         comments = Seq.empty[StringLiteralV2]
     )
 
-    val bigListInfo: ListInfo = ListInfo(
+    val bigListInfo: ListInfoADM = ListInfoADM(
         id = "http://rdfh.ch/lists/00FF/73d0ec0302",
-        projectIri = Some("http://rdfh.ch/projects/00FF"),
+        projectIri = "http://rdfh.ch/projects/00FF",
         labels = Seq(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr"))),
         comments = Seq(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
     )
 
-    val summerNodeInfo: ListNodeInfo = ListNodeInfo (
+    val summerNodeInfo: ListNodeInfoADM = ListNodeInfoADM (
         id = "http://rdfh.ch/lists/00FF/526f26ed04",
         name = Some("sommer"),
         labels = Seq(StringLiteralV2("Sommer")),
@@ -48,58 +48,58 @@ object SharedListsAdminTestData {
         position = Some(0)
     )
 
-    val seasonListNodes: Seq[ListNode] = Seq(
-        ListNode(
+    val seasonListNodes: Seq[ListNodeADM] = Seq(
+        ListNodeADM(
             id = "http://rdfh.ch/lists/00FF/526f26ed04",
             name = Some("sommer"),
             labels = Seq(StringLiteralV2("Sommer")),
             comments = Seq.empty[StringLiteralV2],
-            children = Seq.empty[ListNode],
+            children = Seq.empty[ListNodeADM],
             position = Some(0)
         ),
-        ListNode(
+        ListNodeADM(
             id = "http://rdfh.ch/lists/00FF/eda2792605",
             name = Some("winter"),
             labels = Seq(StringLiteralV2("Winter")),
             comments = Seq.empty[StringLiteralV2],
-            children = Seq.empty[ListNode],
+            children = Seq.empty[ListNodeADM],
             position = Some(1)
         )
     )
 
-    val nodePath: Seq[ListNode] = Seq(
-        ListNode(
+    val nodePath: Seq[ListNodeADM] = Seq(
+        ListNodeADM(
             id = "http://rdfh.ch/lists/00FF/691eee1cbe",
             name = Some("4KUN"),
             labels = Seq(StringLiteralV2("KUNST")),
             comments = Seq.empty[StringLiteralV2],
-            children = Seq.empty[ListNode],
+            children = Seq.empty[ListNodeADM],
             position = None
 
         ),
-        ListNode(
+        ListNodeADM(
             id = "http://rdfh.ch/lists/00FF/2ebd2706c1",
             name = Some("7"),
             labels = Seq(StringLiteralV2("FILM UND FOTO")),
             comments = Seq.empty[StringLiteralV2],
-            children = Seq.empty[ListNode],
+            children = Seq.empty[ListNodeADM],
             position = None
         ),
-        ListNode(
+        ListNodeADM(
             id = "http://rdfh.ch/lists/00FF/c7f07a3fc1",
             name = Some("1"),
             labels = Seq(StringLiteralV2("Heidi Film")),
             comments = Seq.empty[StringLiteralV2],
-            children = Seq.empty[ListNode],
+            children = Seq.empty[ListNodeADM],
             position = None
         )
     )
 
-    val bigListNodes: Seq[ListNode] = Vector(
-            ListNode(
+    val bigListNodes: Seq[ListNodeADM] = Vector(
+            ListNodeADM(
                 position = Some(0),
                 children = Vector(
-                    ListNode(
+                    ListNodeADM(
                         position = Some(0),
                         children = Nil,
                         comments = Nil,
@@ -110,7 +110,7 @@ object SharedListsAdminTestData {
                         name = Some("1"),
                         id = "http://rdfh.ch/lists/00FF/412821d3a6"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(1),
                         children = Nil,
                         comments = Nil,
@@ -130,12 +130,12 @@ object SharedListsAdminTestData {
                 name = Some("1ALL"),
                 id = "http://rdfh.ch/lists/00FF/a8f4cd99a6"
             ),
-            ListNode(
+            ListNodeADM(
                 position = Some(1),
                 children = Vector(
-                    ListNode(
+                    ListNodeADM(
                         position = Some(0),
-                        children = Vector(ListNode(
+                        children = Vector(ListNodeADM(
                             position = Some(0),
                             children = Nil,
                             comments = Nil,
@@ -154,9 +154,9 @@ object SharedListsAdminTestData {
                         name = Some("1"),
                         id = "http://rdfh.ch/lists/00FF/0cc31a7fa7"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(1),
-                        children = Vector(ListNode(
+                        children = Vector(ListNodeADM(
                             position = Some(0),
                             children = Nil,
                             comments = Nil,
@@ -175,10 +175,10 @@ object SharedListsAdminTestData {
                         name = Some("2"),
                         id = "http://rdfh.ch/lists/00FF/3e2ac1f1a7"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(2),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -189,7 +189,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/09c5ba9da8"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -200,7 +200,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/a2f80dd7a8"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -211,7 +211,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/3b2c6110a9"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -222,7 +222,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/d45fb449a9"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -233,7 +233,7 @@ object SharedListsAdminTestData {
                                 name = Some("5"),
                                 id = "http://rdfh.ch/lists/00FF/6d930783a9"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
@@ -244,7 +244,7 @@ object SharedListsAdminTestData {
                                 name = Some("6"),
                                 id = "http://rdfh.ch/lists/00FF/06c75abca9"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
@@ -255,10 +255,10 @@ object SharedListsAdminTestData {
                                 name = Some("7"),
                                 id = "http://rdfh.ch/lists/00FF/9ffaadf5a9"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(7),
                                 children = Vector(
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
@@ -269,7 +269,7 @@ object SharedListsAdminTestData {
                                         name = Some("1"),
                                         id = "http://rdfh.ch/lists/00FF/d1615468aa"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
@@ -280,7 +280,7 @@ object SharedListsAdminTestData {
                                         name = Some("2"),
                                         id = "http://rdfh.ch/lists/00FF/6a95a7a1aa"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(2),
                                         children = Nil,
                                         comments = Nil,
@@ -291,7 +291,7 @@ object SharedListsAdminTestData {
                                         name = Some("3"),
                                         id = "http://rdfh.ch/lists/00FF/03c9fadaaa"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(3),
                                         children = Nil,
                                         comments = Nil,
@@ -302,7 +302,7 @@ object SharedListsAdminTestData {
                                         name = Some("4"),
                                         id = "http://rdfh.ch/lists/00FF/9cfc4d14ab"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(4),
                                         children = Nil,
                                         comments = Nil,
@@ -313,7 +313,7 @@ object SharedListsAdminTestData {
                                         name = Some("5"),
                                         id = "http://rdfh.ch/lists/00FF/3530a14dab"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(5),
                                         children = Nil,
                                         comments = Nil,
@@ -324,7 +324,7 @@ object SharedListsAdminTestData {
                                         name = Some("6"),
                                         id = "http://rdfh.ch/lists/00FF/ce63f486ab"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(6),
                                         children = Nil,
                                         comments = Nil,
@@ -335,7 +335,7 @@ object SharedListsAdminTestData {
                                         name = Some("7"),
                                         id = "http://rdfh.ch/lists/00FF/679747c0ab"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(7),
                                         children = Nil,
                                         comments = Nil,
@@ -346,7 +346,7 @@ object SharedListsAdminTestData {
                                         name = Some("8"),
                                         id = "http://rdfh.ch/lists/00FF/00cb9af9ab"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(8),
                                         children = Nil,
                                         comments = Nil,
@@ -357,7 +357,7 @@ object SharedListsAdminTestData {
                                         name = Some("9"),
                                         id = "http://rdfh.ch/lists/00FF/99feed32ac"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(9),
                                         children = Nil,
                                         comments = Nil,
@@ -368,7 +368,7 @@ object SharedListsAdminTestData {
                                         name = Some("10"),
                                         id = "http://rdfh.ch/lists/00FF/3232416cac"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(10),
                                         children = Nil,
                                         comments = Nil,
@@ -379,7 +379,7 @@ object SharedListsAdminTestData {
                                         name = Some("11"),
                                         id = "http://rdfh.ch/lists/00FF/cb6594a5ac"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(11),
                                         children = Nil,
                                         comments = Nil,
@@ -390,7 +390,7 @@ object SharedListsAdminTestData {
                                         name = Some("12"),
                                         id = "http://rdfh.ch/lists/00FF/6499e7deac"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(12),
                                         children = Nil,
                                         comments = Nil,
@@ -401,7 +401,7 @@ object SharedListsAdminTestData {
                                         name = Some("13"),
                                         id = "http://rdfh.ch/lists/00FF/fdcc3a18ad"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(13),
                                         children = Nil,
                                         comments = Nil,
@@ -412,7 +412,7 @@ object SharedListsAdminTestData {
                                         name = Some("14"),
                                         id = "http://rdfh.ch/lists/00FF/96008e51ad"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(14),
                                         children = Nil,
                                         comments = Nil,
@@ -423,7 +423,7 @@ object SharedListsAdminTestData {
                                         name = Some("15"),
                                         id = "http://rdfh.ch/lists/00FF/2f34e18aad"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(15),
                                         children = Nil,
                                         comments = Nil,
@@ -434,7 +434,7 @@ object SharedListsAdminTestData {
                                         name = Some("16"),
                                         id = "http://rdfh.ch/lists/00FF/c86734c4ad"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(16),
                                         children = Nil,
                                         comments = Nil,
@@ -445,7 +445,7 @@ object SharedListsAdminTestData {
                                         name = Some("17"),
                                         id = "http://rdfh.ch/lists/00FF/619b87fdad"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(17),
                                         children = Nil,
                                         comments = Nil,
@@ -465,10 +465,10 @@ object SharedListsAdminTestData {
                                 name = Some("8"),
                                 id = "http://rdfh.ch/lists/00FF/382e012faa"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(8),
                                 children = Vector(
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
@@ -479,7 +479,7 @@ object SharedListsAdminTestData {
                                         name = Some("1"),
                                         id = "http://rdfh.ch/lists/00FF/2c3681a9ae"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
@@ -490,7 +490,7 @@ object SharedListsAdminTestData {
                                         name = Some("2"),
                                         id = "http://rdfh.ch/lists/00FF/c569d4e2ae"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(2),
                                         children = Nil,
                                         comments = Nil,
@@ -501,7 +501,7 @@ object SharedListsAdminTestData {
                                         name = Some("3"),
                                         id = "http://rdfh.ch/lists/00FF/5e9d271caf"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(3),
                                         children = Nil,
                                         comments = Nil,
@@ -512,7 +512,7 @@ object SharedListsAdminTestData {
                                         name = Some("4"),
                                         id = "http://rdfh.ch/lists/00FF/f7d07a55af"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(4),
                                         children = Nil,
                                         comments = Nil,
@@ -523,7 +523,7 @@ object SharedListsAdminTestData {
                                         name = Some("5"),
                                         id = "http://rdfh.ch/lists/00FF/9004ce8eaf"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(5),
                                         children = Nil,
                                         comments = Nil,
@@ -534,7 +534,7 @@ object SharedListsAdminTestData {
                                         name = Some("6"),
                                         id = "http://rdfh.ch/lists/00FF/293821c8af"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(6),
                                         children = Nil,
                                         comments = Nil,
@@ -545,7 +545,7 @@ object SharedListsAdminTestData {
                                         name = Some("7"),
                                         id = "http://rdfh.ch/lists/00FF/c26b7401b0"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(7),
                                         children = Nil,
                                         comments = Nil,
@@ -556,7 +556,7 @@ object SharedListsAdminTestData {
                                         name = Some("8"),
                                         id = "http://rdfh.ch/lists/00FF/5b9fc73ab0"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(8),
                                         children = Nil,
                                         comments = Nil,
@@ -567,7 +567,7 @@ object SharedListsAdminTestData {
                                         name = Some("9"),
                                         id = "http://rdfh.ch/lists/00FF/f4d21a74b0"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(9),
                                         children = Nil,
                                         comments = Nil,
@@ -578,7 +578,7 @@ object SharedListsAdminTestData {
                                         name = Some("10"),
                                         id = "http://rdfh.ch/lists/00FF/8d066eadb0"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(10),
                                         children = Nil,
                                         comments = Nil,
@@ -589,7 +589,7 @@ object SharedListsAdminTestData {
                                         name = Some("11"),
                                         id = "http://rdfh.ch/lists/00FF/263ac1e6b0"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(11),
                                         children = Nil,
                                         comments = Nil,
@@ -600,7 +600,7 @@ object SharedListsAdminTestData {
                                         name = Some("12"),
                                         id = "http://rdfh.ch/lists/00FF/bf6d1420b1"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(12),
                                         children = Nil,
                                         comments = Nil,
@@ -611,7 +611,7 @@ object SharedListsAdminTestData {
                                         name = Some("13"),
                                         id = "http://rdfh.ch/lists/00FF/58a16759b1"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(13),
                                         children = Nil,
                                         comments = Nil,
@@ -622,7 +622,7 @@ object SharedListsAdminTestData {
                                         name = Some("14"),
                                         id = "http://rdfh.ch/lists/00FF/f1d4ba92b1"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(14),
                                         children = Nil,
                                         comments = Nil,
@@ -633,7 +633,7 @@ object SharedListsAdminTestData {
                                         name = Some("15"),
                                         id = "http://rdfh.ch/lists/00FF/8a080eccb1"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(15),
                                         children = Nil,
                                         comments = Nil,
@@ -644,7 +644,7 @@ object SharedListsAdminTestData {
                                         name = Some("16"),
                                         id = "http://rdfh.ch/lists/00FF/233c6105b2"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(16),
                                         children = Nil,
                                         comments = Nil,
@@ -655,7 +655,7 @@ object SharedListsAdminTestData {
                                         name = Some("17"),
                                         id = "http://rdfh.ch/lists/00FF/bc6fb43eb2"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(17),
                                         children = Nil,
                                         comments = Nil,
@@ -684,10 +684,10 @@ object SharedListsAdminTestData {
                         name = Some("3"),
                         id = "http://rdfh.ch/lists/00FF/70916764a8"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(3),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -698,7 +698,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/870aaeeab2"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -709,7 +709,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/203e0124b3"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -720,7 +720,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/b971545db3"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -731,7 +731,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/52a5a796b3"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -742,7 +742,7 @@ object SharedListsAdminTestData {
                                 name = Some("5"),
                                 id = "http://rdfh.ch/lists/00FF/ebd8facfb3"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
@@ -753,7 +753,7 @@ object SharedListsAdminTestData {
                                 name = Some("6"),
                                 id = "http://rdfh.ch/lists/00FF/840c4e09b4"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
@@ -773,10 +773,10 @@ object SharedListsAdminTestData {
                         name = Some("4"),
                         id = "http://rdfh.ch/lists/00FF/eed65ab1b2"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(4),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -787,7 +787,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/4fa747b5b4"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -798,7 +798,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/e8da9aeeb4"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -818,10 +818,10 @@ object SharedListsAdminTestData {
                         name = Some("5"),
                         id = "http://rdfh.ch/lists/00FF/b673f47bb4"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(5),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -832,7 +832,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/1a424161b5"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -861,10 +861,10 @@ object SharedListsAdminTestData {
                 name = Some("2GEO"),
                 id = "http://rdfh.ch/lists/00FF/738fc745a7"
             ),
-            ListNode(
+            ListNodeADM(
                 position = Some(2),
                 children = Vector(
-                    ListNode(
+                    ListNodeADM(
                         position = Some(0),
                         children = Nil,
                         comments = Nil,
@@ -875,7 +875,7 @@ object SharedListsAdminTestData {
                         name = Some("1"),
                         id = "http://rdfh.ch/lists/00FF/de02f5180501"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(1),
                         children = Nil,
                         comments = Nil,
@@ -886,7 +886,7 @@ object SharedListsAdminTestData {
                         name = Some("2"),
                         id = "http://rdfh.ch/lists/00FF/773648520501"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(2),
                         children = Nil,
                         comments = Nil,
@@ -897,7 +897,7 @@ object SharedListsAdminTestData {
                         name = Some("3"),
                         id = "http://rdfh.ch/lists/00FF/106a9b8b0501"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(3),
                         children = Nil,
                         comments = Nil,
@@ -908,13 +908,13 @@ object SharedListsAdminTestData {
                         name = Some("4"),
                         id = "http://rdfh.ch/lists/00FF/a99deec40501"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(4),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Vector(
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
@@ -925,7 +925,7 @@ object SharedListsAdminTestData {
                                         name = Some("1"),
                                         id = "http://rdfh.ch/lists/00FF/1744e17fb6"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
@@ -936,7 +936,7 @@ object SharedListsAdminTestData {
                                         name = Some("2"),
                                         id = "http://rdfh.ch/lists/00FF/b07734b9b6"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(2),
                                         children = Nil,
                                         comments = Nil,
@@ -947,7 +947,7 @@ object SharedListsAdminTestData {
                                         name = Some("3"),
                                         id = "http://rdfh.ch/lists/00FF/49ab87f2b6"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(3),
                                         children = Nil,
                                         comments = Nil,
@@ -958,7 +958,7 @@ object SharedListsAdminTestData {
                                         name = Some("4"),
                                         id = "http://rdfh.ch/lists/00FF/e2deda2bb7"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(4),
                                         children = Nil,
                                         comments = Nil,
@@ -969,7 +969,7 @@ object SharedListsAdminTestData {
                                         name = Some("5"),
                                         id = "http://rdfh.ch/lists/00FF/7b122e65b7"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(5),
                                         children = Nil,
                                         comments = Nil,
@@ -980,7 +980,7 @@ object SharedListsAdminTestData {
                                         name = Some("6"),
                                         id = "http://rdfh.ch/lists/00FF/1446819eb7"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(6),
                                         children = Nil,
                                         comments = Nil,
@@ -991,7 +991,7 @@ object SharedListsAdminTestData {
                                         name = Some("7"),
                                         id = "http://rdfh.ch/lists/00FF/ad79d4d7b7"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(7),
                                         children = Nil,
                                         comments = Nil,
@@ -1002,7 +1002,7 @@ object SharedListsAdminTestData {
                                         name = Some("8"),
                                         id = "http://rdfh.ch/lists/00FF/46ad2711b8"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(8),
                                         children = Nil,
                                         comments = Nil,
@@ -1013,7 +1013,7 @@ object SharedListsAdminTestData {
                                         name = Some("9"),
                                         id = "http://rdfh.ch/lists/00FF/dfe07a4ab8"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(9),
                                         children = Nil,
                                         comments = Nil,
@@ -1024,7 +1024,7 @@ object SharedListsAdminTestData {
                                         name = Some("10"),
                                         id = "http://rdfh.ch/lists/00FF/7814ce83b8"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(10),
                                         children = Nil,
                                         comments = Nil,
@@ -1035,7 +1035,7 @@ object SharedListsAdminTestData {
                                         name = Some("11"),
                                         id = "http://rdfh.ch/lists/00FF/114821bdb8"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(11),
                                         children = Nil,
                                         comments = Nil,
@@ -1046,7 +1046,7 @@ object SharedListsAdminTestData {
                                         name = Some("12"),
                                         id = "http://rdfh.ch/lists/00FF/aa7b74f6b8"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(12),
                                         children = Nil,
                                         comments = Nil,
@@ -1057,7 +1057,7 @@ object SharedListsAdminTestData {
                                         name = Some("13"),
                                         id = "http://rdfh.ch/lists/00FF/43afc72fb9"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(13),
                                         children = Nil,
                                         comments = Nil,
@@ -1068,7 +1068,7 @@ object SharedListsAdminTestData {
                                         name = Some("14"),
                                         id = "http://rdfh.ch/lists/00FF/dce21a69b9"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(14),
                                         children = Nil,
                                         comments = Nil,
@@ -1079,7 +1079,7 @@ object SharedListsAdminTestData {
                                         name = Some("15"),
                                         id = "http://rdfh.ch/lists/00FF/75166ea2b9"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(15),
                                         children = Nil,
                                         comments = Nil,
@@ -1090,7 +1090,7 @@ object SharedListsAdminTestData {
                                         name = Some("16"),
                                         id = "http://rdfh.ch/lists/00FF/0e4ac1dbb9"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(16),
                                         children = Nil,
                                         comments = Nil,
@@ -1101,7 +1101,7 @@ object SharedListsAdminTestData {
                                         name = Some("17"),
                                         id = "http://rdfh.ch/lists/00FF/a77d1415ba"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(17),
                                         children = Nil,
                                         comments = Nil,
@@ -1112,7 +1112,7 @@ object SharedListsAdminTestData {
                                         name = Some("18"),
                                         id = "http://rdfh.ch/lists/00FF/40b1674eba"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(18),
                                         children = Nil,
                                         comments = Nil,
@@ -1123,7 +1123,7 @@ object SharedListsAdminTestData {
                                         name = Some("19"),
                                         id = "http://rdfh.ch/lists/00FF/d9e4ba87ba"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(19),
                                         children = Nil,
                                         comments = Nil,
@@ -1134,7 +1134,7 @@ object SharedListsAdminTestData {
                                         name = Some("20"),
                                         id = "http://rdfh.ch/lists/00FF/72180ec1ba"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(20),
                                         children = Nil,
                                         comments = Nil,
@@ -1145,7 +1145,7 @@ object SharedListsAdminTestData {
                                         name = Some("21"),
                                         id = "http://rdfh.ch/lists/00FF/0b4c61faba"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(21),
                                         children = Nil,
                                         comments = Nil,
@@ -1156,7 +1156,7 @@ object SharedListsAdminTestData {
                                         name = Some("22"),
                                         id = "http://rdfh.ch/lists/00FF/a47fb433bb"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(22),
                                         children = Nil,
                                         comments = Nil,
@@ -1167,7 +1167,7 @@ object SharedListsAdminTestData {
                                         name = Some("23"),
                                         id = "http://rdfh.ch/lists/00FF/3db3076dbb"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(23),
                                         children = Nil,
                                         comments = Nil,
@@ -1178,7 +1178,7 @@ object SharedListsAdminTestData {
                                         name = Some("24"),
                                         id = "http://rdfh.ch/lists/00FF/d6e65aa6bb"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(24),
                                         children = Nil,
                                         comments = Nil,
@@ -1189,7 +1189,7 @@ object SharedListsAdminTestData {
                                         name = Some("25"),
                                         id = "http://rdfh.ch/lists/00FF/6f1aaedfbb"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(25),
                                         children = Nil,
                                         comments = Nil,
@@ -1209,7 +1209,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/7e108e46b6"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -1220,7 +1220,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/a1815452bc"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -1231,7 +1231,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/3ab5a78bbc"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -1242,7 +1242,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/d3e8fac4bc"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -1253,7 +1253,7 @@ object SharedListsAdminTestData {
                                 name = Some("5"),
                                 id = "http://rdfh.ch/lists/00FF/6c1c4efebc"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
@@ -1264,7 +1264,7 @@ object SharedListsAdminTestData {
                                 name = Some("6"),
                                 id = "http://rdfh.ch/lists/00FF/0550a137bd"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
@@ -1284,7 +1284,7 @@ object SharedListsAdminTestData {
                         name = Some("5"),
                         id = "http://rdfh.ch/lists/00FF/e5dc3a0db6"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(5),
                         children = Nil,
                         comments = Nil,
@@ -1295,7 +1295,7 @@ object SharedListsAdminTestData {
                         name = Some("7"),
                         id = "http://rdfh.ch/lists/00FF/37b747aabd"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(6),
                         children = Nil,
                         comments = Nil,
@@ -1315,13 +1315,13 @@ object SharedListsAdminTestData {
                 name = Some("3GES"),
                 id = "http://rdfh.ch/lists/00FF/4ca9e7d3b5"
             ),
-            ListNode(
+            ListNodeADM(
                 position = Some(3),
                 children = Vector(
-                    ListNode(
+                    ListNodeADM(
                         position = Some(0),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -1332,7 +1332,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/9b85948fbe"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -1343,7 +1343,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/34b9e7c8be"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -1354,7 +1354,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/cdec3a02bf"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -1365,7 +1365,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/66208e3bbf"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -1385,10 +1385,10 @@ object SharedListsAdminTestData {
                         name = Some("5"),
                         id = "http://rdfh.ch/lists/00FF/02524156be"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(1),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -1399,7 +1399,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/31bb87e7bf"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -1410,7 +1410,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/caeeda20c0"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -1421,7 +1421,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/63222e5ac0"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -1432,7 +1432,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/fc558193c0"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -1452,10 +1452,10 @@ object SharedListsAdminTestData {
                         name = Some("6"),
                         id = "http://rdfh.ch/lists/00FF/988734aebf"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(2),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -1466,7 +1466,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/c7f07a3fc1"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -1477,7 +1477,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/6024ce78c1"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -1497,10 +1497,10 @@ object SharedListsAdminTestData {
                         name = Some("7"),
                         id = "http://rdfh.ch/lists/00FF/2ebd2706c1"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(3),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -1511,7 +1511,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/2bbfc724c2"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -1522,7 +1522,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/c4f21a5ec2"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -1533,7 +1533,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/5d266e97c2"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -1544,7 +1544,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/f659c1d0c2"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -1555,7 +1555,7 @@ object SharedListsAdminTestData {
                                 name = Some("5"),
                                 id = "http://rdfh.ch/lists/00FF/8f8d140ac3"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
@@ -1575,10 +1575,10 @@ object SharedListsAdminTestData {
                         name = Some("8"),
                         id = "http://rdfh.ch/lists/00FF/928b74ebc1"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(4),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -1589,7 +1589,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/5a280eb6c3"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -1600,7 +1600,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/f35b61efc3"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -1620,10 +1620,10 @@ object SharedListsAdminTestData {
                         name = Some("9"),
                         id = "http://rdfh.ch/lists/00FF/c1f4ba7cc3"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(5),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -1634,7 +1634,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/bef65a9bc4"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -1663,10 +1663,10 @@ object SharedListsAdminTestData {
                 name = Some("4KUN"),
                 id = "http://rdfh.ch/lists/00FF/691eee1cbe"
             ),
-            ListNode(
+            ListNodeADM(
                 position = Some(4),
                 children = Vector(
-                    ListNode(
+                    ListNodeADM(
                         position = Some(0),
                         children = Nil,
                         comments = Nil,
@@ -1677,10 +1677,10 @@ object SharedListsAdminTestData {
                         name = Some("1"),
                         id = "http://rdfh.ch/lists/00FF/89915447c5"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(1),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -1691,7 +1691,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/bbf8fab9c5"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -1711,7 +1711,7 @@ object SharedListsAdminTestData {
                         name = Some("3"),
                         id = "http://rdfh.ch/lists/00FF/22c5a780c5"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(2),
                         children = Nil,
                         comments = Nil,
@@ -1731,13 +1731,13 @@ object SharedListsAdminTestData {
                 name = Some("5MED"),
                 id = "http://rdfh.ch/lists/00FF/f05d010ec5"
             ),
-            ListNode(
+            ListNodeADM(
                 position = Some(5),
                 children = Vector(
-                    ListNode(
+                    ListNodeADM(
                         position = Some(0),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -1748,7 +1748,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/b8fa9ad8c6"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -1759,7 +1759,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/512eee11c7"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -1779,10 +1779,10 @@ object SharedListsAdminTestData {
                         name = Some("2"),
                         id = "http://rdfh.ch/lists/00FF/1fc7479fc6"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(1),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -1793,7 +1793,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/1cc9e7bdc7"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -1813,7 +1813,7 @@ object SharedListsAdminTestData {
                         name = Some("3"),
                         id = "http://rdfh.ch/lists/00FF/83959484c7"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(2),
                         children = Nil,
                         comments = Nil,
@@ -1824,10 +1824,10 @@ object SharedListsAdminTestData {
                         name = Some("4"),
                         id = "http://rdfh.ch/lists/00FF/4e308e30c8"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(3),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -1838,7 +1838,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/809734a3c8"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -1849,7 +1849,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/19cb87dcc8"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -1860,7 +1860,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/b2feda15c9"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -1880,7 +1880,7 @@ object SharedListsAdminTestData {
                         name = Some("5"),
                         id = "http://rdfh.ch/lists/00FF/e763e169c8"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(4),
                         children = Nil,
                         comments = Nil,
@@ -1900,11 +1900,11 @@ object SharedListsAdminTestData {
                 name = Some("6NAT"),
                 id = "http://rdfh.ch/lists/00FF/8693f465c6"
             ),
-            ListNode(
+            ListNodeADM(
                 position = Some(6),
-                children = Vector(ListNode(
+                children = Vector(ListNodeADM(
                     position = Some(0),
-                    children = Vector(ListNode(
+                    children = Vector(ListNodeADM(
                         position = Some(0),
                         children = Nil,
                         comments = Nil,
@@ -1931,10 +1931,10 @@ object SharedListsAdminTestData {
                 name = Some("7REL"),
                 id = "http://rdfh.ch/lists/00FF/7d99d4c1c9"
             ),
-            ListNode(
+            ListNodeADM(
                 position = Some(7),
                 children = Vector(
-                    ListNode(
+                    ListNodeADM(
                         position = Some(0),
                         children = Nil,
                         comments = Nil,
@@ -1945,10 +1945,10 @@ object SharedListsAdminTestData {
                         name = Some("1"),
                         id = "http://rdfh.ch/lists/00FF/e16721a7ca"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(1),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -1959,7 +1959,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/13cfc719cb"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -1970,7 +1970,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/ac021b53cb"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -1981,7 +1981,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/45366e8ccb"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -2001,7 +2001,7 @@ object SharedListsAdminTestData {
                         name = Some("2"),
                         id = "http://rdfh.ch/lists/00FF/7a9b74e0ca"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(2),
                         children = Nil,
                         comments = Nil,
@@ -2012,10 +2012,10 @@ object SharedListsAdminTestData {
                         name = Some("3"),
                         id = "http://rdfh.ch/lists/00FF/779d14ffcb"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(3),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -2026,7 +2026,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/a904bb71cc"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -2037,7 +2037,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/42380eabcc"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -2048,7 +2048,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/db6b61e4cc"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -2059,7 +2059,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/749fb41dcd"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -2070,7 +2070,7 @@ object SharedListsAdminTestData {
                                 name = Some("5"),
                                 id = "http://rdfh.ch/lists/00FF/0dd30757cd"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
@@ -2090,7 +2090,7 @@ object SharedListsAdminTestData {
                         name = Some("4"),
                         id = "http://rdfh.ch/lists/00FF/10d16738cc"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(4),
                         children = Nil,
                         comments = Nil,
@@ -2101,7 +2101,7 @@ object SharedListsAdminTestData {
                         name = Some("6"),
                         id = "http://rdfh.ch/lists/00FF/3f3aaec9cd"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(5),
                         children = Nil,
                         comments = Nil,
@@ -2121,13 +2121,13 @@ object SharedListsAdminTestData {
                 name = Some("8SOZ"),
                 id = "http://rdfh.ch/lists/00FF/4834ce6dca"
             ),
-            ListNode(
+            ListNodeADM(
                 position = Some(8),
                 children = Vector(
-                    ListNode(
+                    ListNodeADM(
                         position = Some(0),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -2138,7 +2138,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/a308fbaece"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -2149,7 +2149,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/3c3c4ee8ce"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -2160,7 +2160,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/d56fa121cf"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -2171,7 +2171,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/6ea3f45acf"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -2182,7 +2182,7 @@ object SharedListsAdminTestData {
                                 name = Some("5"),
                                 id = "http://rdfh.ch/lists/00FF/07d74794cf"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
@@ -2193,7 +2193,7 @@ object SharedListsAdminTestData {
                                 name = Some("6"),
                                 id = "http://rdfh.ch/lists/00FF/a00a9bcdcf"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
@@ -2204,7 +2204,7 @@ object SharedListsAdminTestData {
                                 name = Some("7"),
                                 id = "http://rdfh.ch/lists/00FF/393eee06d0"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(7),
                                 children = Nil,
                                 comments = Nil,
@@ -2215,7 +2215,7 @@ object SharedListsAdminTestData {
                                 name = Some("8"),
                                 id = "http://rdfh.ch/lists/00FF/d2714140d0"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(8),
                                 children = Nil,
                                 comments = Nil,
@@ -2226,7 +2226,7 @@ object SharedListsAdminTestData {
                                 name = Some("9"),
                                 id = "http://rdfh.ch/lists/00FF/6ba59479d0"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(9),
                                 children = Nil,
                                 comments = Nil,
@@ -2237,7 +2237,7 @@ object SharedListsAdminTestData {
                                 name = Some("10"),
                                 id = "http://rdfh.ch/lists/00FF/04d9e7b2d0"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(10),
                                 children = Nil,
                                 comments = Nil,
@@ -2248,7 +2248,7 @@ object SharedListsAdminTestData {
                                 name = Some("11"),
                                 id = "http://rdfh.ch/lists/00FF/9d0c3becd0"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(11),
                                 children = Nil,
                                 comments = Nil,
@@ -2259,7 +2259,7 @@ object SharedListsAdminTestData {
                                 name = Some("12"),
                                 id = "http://rdfh.ch/lists/00FF/36408e25d1"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(12),
                                 children = Nil,
                                 comments = Nil,
@@ -2270,7 +2270,7 @@ object SharedListsAdminTestData {
                                 name = Some("13"),
                                 id = "http://rdfh.ch/lists/00FF/cf73e15ed1"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(13),
                                 children = Nil,
                                 comments = Nil,
@@ -2290,10 +2290,10 @@ object SharedListsAdminTestData {
                         name = Some("0"),
                         id = "http://rdfh.ch/lists/00FF/0ad5a775ce"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(1),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -2304,7 +2304,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/9a0edb0ad2"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -2315,7 +2315,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/33422e44d2"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -2326,7 +2326,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/cc75817dd2"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -2337,7 +2337,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/65a9d4b6d2"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -2357,10 +2357,10 @@ object SharedListsAdminTestData {
                         name = Some("1"),
                         id = "http://rdfh.ch/lists/00FF/01db87d1d1"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(2),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -2371,7 +2371,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/3044ce62d3"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -2382,7 +2382,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/c977219cd3"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -2393,7 +2393,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/62ab74d5d3"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -2404,7 +2404,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/fbdec70ed4"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -2415,7 +2415,7 @@ object SharedListsAdminTestData {
                                 name = Some("5"),
                                 id = "http://rdfh.ch/lists/00FF/94121b48d4"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
@@ -2426,7 +2426,7 @@ object SharedListsAdminTestData {
                                 name = Some("6"),
                                 id = "http://rdfh.ch/lists/00FF/2d466e81d4"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
@@ -2446,7 +2446,7 @@ object SharedListsAdminTestData {
                         name = Some("2"),
                         id = "http://rdfh.ch/lists/00FF/97107b29d3"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(3),
                         children = Nil,
                         comments = Nil,
@@ -2457,10 +2457,10 @@ object SharedListsAdminTestData {
                         name = Some("2-2"),
                         id = "http://rdfh.ch/lists/00FF/5fad14f4d4"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(4),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -2471,7 +2471,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/9114bb66d5"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -2482,7 +2482,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/2a480ea0d5"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -2493,7 +2493,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/c37b61d9d5"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -2504,7 +2504,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/5cafb412d6"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -2515,7 +2515,7 @@ object SharedListsAdminTestData {
                                 name = Some("5"),
                                 id = "http://rdfh.ch/lists/00FF/f5e2074cd6"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
@@ -2526,7 +2526,7 @@ object SharedListsAdminTestData {
                                 name = Some("6"),
                                 id = "http://rdfh.ch/lists/00FF/8e165b85d6"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
@@ -2537,7 +2537,7 @@ object SharedListsAdminTestData {
                                 name = Some("7"),
                                 id = "http://rdfh.ch/lists/00FF/274aaebed6"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(7),
                                 children = Nil,
                                 comments = Nil,
@@ -2557,10 +2557,10 @@ object SharedListsAdminTestData {
                         name = Some("2-3"),
                         id = "http://rdfh.ch/lists/00FF/f8e0672dd5"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(5),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -2571,7 +2571,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/f2e4a76ad7"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -2591,7 +2591,7 @@ object SharedListsAdminTestData {
                         name = Some("2-4"),
                         id = "http://rdfh.ch/lists/00FF/59b15431d7"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(6),
                         children = Nil,
                         comments = Nil,
@@ -2602,10 +2602,10 @@ object SharedListsAdminTestData {
                         name = Some("2-5"),
                         id = "http://rdfh.ch/lists/00FF/244c4eddd7"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(7),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -2616,7 +2616,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/56b3f44fd8"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -2636,10 +2636,10 @@ object SharedListsAdminTestData {
                         name = Some("3"),
                         id = "http://rdfh.ch/lists/00FF/bd7fa116d8"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(8),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -2650,10 +2650,10 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/214eeefbd8"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Vector(
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
@@ -2664,7 +2664,7 @@ object SharedListsAdminTestData {
                                         name = Some("1"),
                                         id = "http://rdfh.ch/lists/00FF/53b5946ed9"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
@@ -2675,7 +2675,7 @@ object SharedListsAdminTestData {
                                         name = Some("2"),
                                         id = "http://rdfh.ch/lists/00FF/ece8e7a7d9"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(2),
                                         children = Nil,
                                         comments = Nil,
@@ -2686,7 +2686,7 @@ object SharedListsAdminTestData {
                                         name = Some("3"),
                                         id = "http://rdfh.ch/lists/00FF/851c3be1d9"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(3),
                                         children = Nil,
                                         comments = Nil,
@@ -2697,7 +2697,7 @@ object SharedListsAdminTestData {
                                         name = Some("4"),
                                         id = "http://rdfh.ch/lists/00FF/1e508e1ada"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(4),
                                         children = Nil,
                                         comments = Nil,
@@ -2708,7 +2708,7 @@ object SharedListsAdminTestData {
                                         name = Some("5"),
                                         id = "http://rdfh.ch/lists/00FF/b783e153da"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(5),
                                         children = Nil,
                                         comments = Nil,
@@ -2719,7 +2719,7 @@ object SharedListsAdminTestData {
                                         name = Some("6"),
                                         id = "http://rdfh.ch/lists/00FF/50b7348dda"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(6),
                                         children = Nil,
                                         comments = Nil,
@@ -2739,7 +2739,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/ba814135d9"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -2750,7 +2750,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/821edbffda"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -2761,9 +2761,9 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/1b522e39db"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
-                                children = Vector(ListNode(
+                                children = Vector(ListNodeADM(
                                     position = Some(0),
                                     children = Nil,
                                     comments = Nil,
@@ -2782,7 +2782,7 @@ object SharedListsAdminTestData {
                                 name = Some("5"),
                                 id = "http://rdfh.ch/lists/00FF/b4858172db"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
@@ -2793,7 +2793,7 @@ object SharedListsAdminTestData {
                                 name = Some("6"),
                                 id = "http://rdfh.ch/lists/00FF/e6ec27e5db"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
@@ -2813,13 +2813,13 @@ object SharedListsAdminTestData {
                         name = Some("4"),
                         id = "http://rdfh.ch/lists/00FF/881a9bc2d8"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(9),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Vector(
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
@@ -2830,7 +2830,7 @@ object SharedListsAdminTestData {
                                         name = Some("1"),
                                         id = "http://rdfh.ch/lists/00FF/4abb74cadc"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
@@ -2841,7 +2841,7 @@ object SharedListsAdminTestData {
                                         name = Some("2"),
                                         id = "http://rdfh.ch/lists/00FF/e3eec703dd"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(2),
                                         children = Nil,
                                         comments = Nil,
@@ -2861,10 +2861,10 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/b1872191dc"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Vector(
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
@@ -2875,7 +2875,7 @@ object SharedListsAdminTestData {
                                         name = Some("1"),
                                         id = "http://rdfh.ch/lists/00FF/ae89c1afdd"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
@@ -2895,7 +2895,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/15566e76dd"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -2915,10 +2915,10 @@ object SharedListsAdminTestData {
                         name = Some("5"),
                         id = "http://rdfh.ch/lists/00FF/1854ce57dc"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(10),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -2929,7 +2929,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/7924bb5bde"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -2940,7 +2940,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/12580e95de"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -2951,7 +2951,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/ab8b61cede"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -2962,7 +2962,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/44bfb407df"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -2973,7 +2973,7 @@ object SharedListsAdminTestData {
                                 name = Some("5"),
                                 id = "http://rdfh.ch/lists/00FF/ddf20741df"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
@@ -2984,7 +2984,7 @@ object SharedListsAdminTestData {
                                 name = Some("6"),
                                 id = "http://rdfh.ch/lists/00FF/76265b7adf"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
@@ -2995,7 +2995,7 @@ object SharedListsAdminTestData {
                                 name = Some("7"),
                                 id = "http://rdfh.ch/lists/00FF/0f5aaeb3df"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(7),
                                 children = Nil,
                                 comments = Nil,
@@ -3015,10 +3015,10 @@ object SharedListsAdminTestData {
                         name = Some("6"),
                         id = "http://rdfh.ch/lists/00FF/e0f06722de"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(11),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -3029,7 +3029,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/daf4a75fe0"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -3040,7 +3040,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/7328fb98e0"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -3051,10 +3051,10 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/0c5c4ed2e0"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Vector(
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
@@ -3065,7 +3065,7 @@ object SharedListsAdminTestData {
                                         name = Some("1"),
                                         id = "http://rdfh.ch/lists/00FF/3ec3f444e1"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
@@ -3076,7 +3076,7 @@ object SharedListsAdminTestData {
                                         name = Some("2"),
                                         id = "http://rdfh.ch/lists/00FF/d7f6477ee1"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(2),
                                         children = Nil,
                                         comments = Nil,
@@ -3096,7 +3096,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/a58fa10be1"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -3107,7 +3107,7 @@ object SharedListsAdminTestData {
                                 name = Some("5"),
                                 id = "http://rdfh.ch/lists/00FF/095eeef0e1"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
@@ -3127,10 +3127,10 @@ object SharedListsAdminTestData {
                         name = Some("7"),
                         id = "http://rdfh.ch/lists/00FF/41c15426e0"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(12),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -3141,7 +3141,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/d4f8e79ce2"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -3152,7 +3152,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/6d2c3bd6e2"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -3163,7 +3163,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/06608e0fe3"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -3174,7 +3174,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/9f93e148e3"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -3194,10 +3194,10 @@ object SharedListsAdminTestData {
                         name = Some("8"),
                         id = "http://rdfh.ch/lists/00FF/3bc59463e2"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(13),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -3208,7 +3208,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/6a2edbf4e3"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -3219,7 +3219,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/03622e2ee4"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -3230,7 +3230,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/9c958167e4"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -3241,7 +3241,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/35c9d4a0e4"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -3261,13 +3261,13 @@ object SharedListsAdminTestData {
                         name = Some("9"),
                         id = "http://rdfh.ch/lists/00FF/d1fa87bbe3"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(14),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Vector(
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
@@ -3278,7 +3278,7 @@ object SharedListsAdminTestData {
                                         name = Some("1"),
                                         id = "http://rdfh.ch/lists/00FF/99972186e5"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
@@ -3289,7 +3289,7 @@ object SharedListsAdminTestData {
                                         name = Some("2"),
                                         id = "http://rdfh.ch/lists/00FF/32cb74bfe5"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(2),
                                         children = Nil,
                                         comments = Nil,
@@ -3300,7 +3300,7 @@ object SharedListsAdminTestData {
                                         name = Some("3"),
                                         id = "http://rdfh.ch/lists/00FF/cbfec7f8e5"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(3),
                                         children = Nil,
                                         comments = Nil,
@@ -3311,7 +3311,7 @@ object SharedListsAdminTestData {
                                         name = Some("4"),
                                         id = "http://rdfh.ch/lists/00FF/64321b32e6"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(4),
                                         children = Nil,
                                         comments = Nil,
@@ -3331,7 +3331,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/0064ce4ce5"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -3342,7 +3342,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/9699c1a4e6"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -3353,7 +3353,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/2fcd14dee6"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -3364,7 +3364,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/c8006817e7"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -3375,7 +3375,7 @@ object SharedListsAdminTestData {
                                 name = Some("5"),
                                 id = "http://rdfh.ch/lists/00FF/6134bb50e7"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
@@ -3386,7 +3386,7 @@ object SharedListsAdminTestData {
                                 name = Some("6"),
                                 id = "http://rdfh.ch/lists/00FF/fa670e8ae7"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
@@ -3406,10 +3406,10 @@ object SharedListsAdminTestData {
                         name = Some("10"),
                         id = "http://rdfh.ch/lists/00FF/67307b13e5"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(15),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -3420,7 +3420,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/c5020836e8"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -3431,7 +3431,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/5e365b6fe8"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -3442,7 +3442,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/f769aea8e8"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -3453,7 +3453,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/909d01e2e8"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -3464,7 +3464,7 @@ object SharedListsAdminTestData {
                                 name = Some("5"),
                                 id = "http://rdfh.ch/lists/00FF/29d1541be9"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
@@ -3475,7 +3475,7 @@ object SharedListsAdminTestData {
                                 name = Some("6"),
                                 id = "http://rdfh.ch/lists/00FF/c204a854e9"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
@@ -3486,7 +3486,7 @@ object SharedListsAdminTestData {
                                 name = Some("7"),
                                 id = "http://rdfh.ch/lists/00FF/5b38fb8de9"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(7),
                                 children = Nil,
                                 comments = Nil,
@@ -3515,13 +3515,13 @@ object SharedListsAdminTestData {
                 name = Some("9SPO"),
                 id = "http://rdfh.ch/lists/00FF/71a1543cce"
             ),
-            ListNode(
+            ListNodeADM(
                 position = Some(9),
                 children = Vector(
-                    ListNode(
+                    ListNodeADM(
                         position = Some(0),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -3532,7 +3532,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/bf064873ea"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -3543,7 +3543,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/583a9bacea"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -3554,7 +3554,7 @@ object SharedListsAdminTestData {
                                 name = Some("3"),
                                 id = "http://rdfh.ch/lists/00FF/f16deee5ea"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(3),
                                 children = Nil,
                                 comments = Nil,
@@ -3565,7 +3565,7 @@ object SharedListsAdminTestData {
                                 name = Some("4"),
                                 id = "http://rdfh.ch/lists/00FF/8aa1411feb"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(4),
                                 children = Nil,
                                 comments = Nil,
@@ -3576,7 +3576,7 @@ object SharedListsAdminTestData {
                                 name = Some("5"),
                                 id = "http://rdfh.ch/lists/00FF/23d59458eb"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(5),
                                 children = Nil,
                                 comments = Nil,
@@ -3587,7 +3587,7 @@ object SharedListsAdminTestData {
                                 name = Some("6"),
                                 id = "http://rdfh.ch/lists/00FF/bc08e891eb"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(6),
                                 children = Nil,
                                 comments = Nil,
@@ -3598,7 +3598,7 @@ object SharedListsAdminTestData {
                                 name = Some("7"),
                                 id = "http://rdfh.ch/lists/00FF/553c3bcbeb"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(7),
                                 children = Nil,
                                 comments = Nil,
@@ -3609,7 +3609,7 @@ object SharedListsAdminTestData {
                                 name = Some("8"),
                                 id = "http://rdfh.ch/lists/00FF/ee6f8e04ec"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(8),
                                 children = Nil,
                                 comments = Nil,
@@ -3620,7 +3620,7 @@ object SharedListsAdminTestData {
                                 name = Some("9"),
                                 id = "http://rdfh.ch/lists/00FF/87a3e13dec"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(9),
                                 children = Nil,
                                 comments = Nil,
@@ -3631,7 +3631,7 @@ object SharedListsAdminTestData {
                                 name = Some("10"),
                                 id = "http://rdfh.ch/lists/00FF/20d73477ec"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(10),
                                 children = Nil,
                                 comments = Nil,
@@ -3642,7 +3642,7 @@ object SharedListsAdminTestData {
                                 name = Some("11"),
                                 id = "http://rdfh.ch/lists/00FF/b90a88b0ec"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(11),
                                 children = Nil,
                                 comments = Nil,
@@ -3653,7 +3653,7 @@ object SharedListsAdminTestData {
                                 name = Some("12"),
                                 id = "http://rdfh.ch/lists/00FF/523edbe9ec"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(12),
                                 children = Nil,
                                 comments = Nil,
@@ -3673,9 +3673,9 @@ object SharedListsAdminTestData {
                         name = Some("1"),
                         id = "http://rdfh.ch/lists/00FF/26d3f439ea"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(1),
-                        children = Vector(ListNode(
+                        children = Vector(ListNodeADM(
                             position = Some(0),
                             children = Nil,
                             comments = Nil,
@@ -3694,10 +3694,10 @@ object SharedListsAdminTestData {
                         name = Some("1-1"),
                         id = "http://rdfh.ch/lists/00FF/84a5815ced"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(2),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -3708,7 +3708,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/4f407b08ee"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -3719,7 +3719,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/e873ce41ee"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -3739,13 +3739,13 @@ object SharedListsAdminTestData {
                         name = Some("2"),
                         id = "http://rdfh.ch/lists/00FF/b60c28cfed"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(3),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Vector(
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(0),
                                         children = Nil,
                                         comments = Nil,
@@ -3756,7 +3756,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_a"),
                                         id = "http://rdfh.ch/lists/00FF/97744976b801"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(1),
                                         children = Nil,
                                         comments = Nil,
@@ -3767,7 +3767,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_b"),
                                         id = "http://rdfh.ch/lists/00FF/30a89cafb801"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(2),
                                         children = Nil,
                                         comments = Nil,
@@ -3778,7 +3778,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_c"),
                                         id = "http://rdfh.ch/lists/00FF/c9dbefe8b801"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(3),
                                         children = Nil,
                                         comments = Nil,
@@ -3789,7 +3789,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_d"),
                                         id = "http://rdfh.ch/lists/00FF/620f4322b901"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(4),
                                         children = Nil,
                                         comments = Nil,
@@ -3800,7 +3800,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_e"),
                                         id = "http://rdfh.ch/lists/00FF/fb42965bb901"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(5),
                                         children = Nil,
                                         comments = Nil,
@@ -3811,7 +3811,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_f"),
                                         id = "http://rdfh.ch/lists/00FF/9476e994b901"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(6),
                                         children = Nil,
                                         comments = Nil,
@@ -3822,7 +3822,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_g"),
                                         id = "http://rdfh.ch/lists/00FF/2daa3cceb901"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(7),
                                         children = Nil,
                                         comments = Nil,
@@ -3833,7 +3833,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_h"),
                                         id = "http://rdfh.ch/lists/00FF/c6dd8f07ba01"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(8),
                                         children = Nil,
                                         comments = Nil,
@@ -3844,7 +3844,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_i"),
                                         id = "http://rdfh.ch/lists/00FF/5f11e340ba01"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(9),
                                         children = Nil,
                                         comments = Nil,
@@ -3855,7 +3855,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_j"),
                                         id = "http://rdfh.ch/lists/00FF/f844367aba01"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(10),
                                         children = Nil,
                                         comments = Nil,
@@ -3866,7 +3866,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_k"),
                                         id = "http://rdfh.ch/lists/00FF/917889b3ba01"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(11),
                                         children = Nil,
                                         comments = Nil,
@@ -3877,7 +3877,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_l"),
                                         id = "http://rdfh.ch/lists/00FF/2aacdcecba01"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(12),
                                         children = Nil,
                                         comments = Nil,
@@ -3888,7 +3888,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_m"),
                                         id = "http://rdfh.ch/lists/00FF/c3df2f26bb01"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(13),
                                         children = Nil,
                                         comments = Nil,
@@ -3899,7 +3899,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_n"),
                                         id = "http://rdfh.ch/lists/00FF/5c13835fbb01"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(14),
                                         children = Nil,
                                         comments = Nil,
@@ -3910,7 +3910,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_o"),
                                         id = "http://rdfh.ch/lists/00FF/f546d698bb01"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(15),
                                         children = Nil,
                                         comments = Nil,
@@ -3921,7 +3921,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_p"),
                                         id = "http://rdfh.ch/lists/00FF/8e7a29d2bb01"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(16),
                                         children = Nil,
                                         comments = Nil,
@@ -3932,7 +3932,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_q"),
                                         id = "http://rdfh.ch/lists/00FF/27ae7c0bbc01"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(17),
                                         children = Nil,
                                         comments = Nil,
@@ -3943,7 +3943,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_r"),
                                         id = "http://rdfh.ch/lists/00FF/c0e1cf44bc01"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(18),
                                         children = Nil,
                                         comments = Nil,
@@ -3954,7 +3954,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_s"),
                                         id = "http://rdfh.ch/lists/00FF/5915237ebc01"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(19),
                                         children = Nil,
                                         comments = Nil,
@@ -3965,7 +3965,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_t"),
                                         id = "http://rdfh.ch/lists/00FF/f24876b7bc01"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(20),
                                         children = Nil,
                                         comments = Nil,
@@ -3976,7 +3976,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_u"),
                                         id = "http://rdfh.ch/lists/00FF/8b7cc9f0bc01"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(21),
                                         children = Nil,
                                         comments = Nil,
@@ -3987,7 +3987,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_v"),
                                         id = "http://rdfh.ch/lists/00FF/24b01c2abd01"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(22),
                                         children = Nil,
                                         comments = Nil,
@@ -3998,7 +3998,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_w"),
                                         id = "http://rdfh.ch/lists/00FF/9f29173c3b02"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(23),
                                         children = Nil,
                                         comments = Nil,
@@ -4009,7 +4009,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_x"),
                                         id = "http://rdfh.ch/lists/00FF/bde36f63bd01"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(24),
                                         children = Nil,
                                         comments = Nil,
@@ -4020,7 +4020,7 @@ object SharedListsAdminTestData {
                                         name = Some("hotel_y"),
                                         id = "http://rdfh.ch/lists/00FF/5617c39cbd01"
                                     ),
-                                    ListNode(
+                                    ListNodeADM(
                                         position = Some(25),
                                         children = Nil,
                                         comments = Nil,
@@ -4040,7 +4040,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/b30ec8edee"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -4051,7 +4051,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/4c421b27ef"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -4071,10 +4071,10 @@ object SharedListsAdminTestData {
                         name = Some("3"),
                         id = "http://rdfh.ch/lists/00FF/1adb74b4ee"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(4),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -4085,7 +4085,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/17dd14d3ef"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -4096,7 +4096,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/b010680cf0"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -4116,10 +4116,10 @@ object SharedListsAdminTestData {
                         name = Some("4"),
                         id = "http://rdfh.ch/lists/00FF/7ea9c199ef"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(5),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -4130,7 +4130,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/7bab61b8f0"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -4141,7 +4141,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/14dfb4f1f0"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -4161,10 +4161,10 @@ object SharedListsAdminTestData {
                         name = Some("6"),
                         id = "http://rdfh.ch/lists/00FF/e2770e7ff0"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(6),
                         children = Vector(
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(0),
                                 children = Nil,
                                 comments = Nil,
@@ -4175,7 +4175,7 @@ object SharedListsAdminTestData {
                                 name = Some("1"),
                                 id = "http://rdfh.ch/lists/00FF/df79ae9df1"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(1),
                                 children = Nil,
                                 comments = Nil,
@@ -4186,7 +4186,7 @@ object SharedListsAdminTestData {
                                 name = Some("2"),
                                 id = "http://rdfh.ch/lists/00FF/78ad01d7f1"
                             ),
-                            ListNode(
+                            ListNodeADM(
                                 position = Some(2),
                                 children = Nil,
                                 comments = Nil,
@@ -4206,7 +4206,7 @@ object SharedListsAdminTestData {
                         name = Some("7"),
                         id = "http://rdfh.ch/lists/00FF/46465b64f1"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(7),
                         children = Nil,
                         comments = Nil,
@@ -4217,7 +4217,7 @@ object SharedListsAdminTestData {
                         name = Some("8"),
                         id = "http://rdfh.ch/lists/00FF/aa14a849f2"
                     ),
-                    ListNode(
+                    ListNodeADM(
                         position = Some(8),
                         children = Nil,
                         comments = Nil,

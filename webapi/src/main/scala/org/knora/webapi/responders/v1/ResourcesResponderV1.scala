@@ -1264,7 +1264,7 @@ class ResourcesResponderV1 extends Responder {
                 resourceClassIri =>
                     for {
                         defaultObjectAccessPermissions <- {
-                            responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
+                            responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri = projectIri, resourceClassIri = resourceClassIri, targetUser = userProfile, requestingUser = KnoraSystemInstances.Users.SystemUser)
                         }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                     } yield (resourceClassIri, defaultObjectAccessPermissions.permissionLiteral)
             }
@@ -1282,7 +1282,8 @@ class ResourcesResponderV1 extends Responder {
                                         projectIri = projectIri,
                                         resourceClassIri = resourceClassIri,
                                         propertyIri = propertyIri,
-                                        userProfile.permissionData)
+                                        targetUser = userProfile,
+                                        requestingUser = KnoraSystemInstances.Users.SystemUser)
                                 }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                             } yield (propertyIri, defaultObjectAccessPermissions.permissionLiteral)
                     }
@@ -1713,7 +1714,7 @@ class ResourcesResponderV1 extends Responder {
             // Get the default object access permissions of the resource class and its properties.
 
             defaultResourceClassAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseADM <- {
-                responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
+                responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri = projectIri, resourceClassIri = resourceClassIri, targetUser = userProfile, requestingUser = KnoraSystemInstances.Users.SystemUser)
             }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
 
             defaultResourceClassAccessPermissions = defaultResourceClassAccessPermissionsResponse.permissionLiteral
@@ -1726,7 +1727,8 @@ class ResourcesResponderV1 extends Responder {
                                 projectIri = projectIri,
                                 resourceClassIri = resourceClassIri,
                                 propertyIri = propertyIri,
-                                userProfile.permissionData)
+                                targetUser = userProfile,
+                                requestingUser = KnoraSystemInstances.Users.SystemUser)
                         }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                     } yield (propertyIri, defaultObjectAccessPermissions.permissionLiteral)
             }

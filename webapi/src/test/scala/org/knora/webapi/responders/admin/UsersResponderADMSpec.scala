@@ -60,19 +60,19 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
     private implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
-    private val rootUser = SharedAdminTestData.rootUser
+    private val rootUser = SharedTestDataV1.rootUser
     private val rootUserIri = rootUser.userData.user_id.get
     private val rootUserEmail = rootUser.userData.email.get
 
-    private val normalUser = SharedAdminTestData.normalUser
+    private val normalUser = SharedTestDataV1.normalUser
     private val normalUserIri = normalUser.userData.user_id.get
 
-    private val incunabulaUser = SharedAdminTestData.incunabulaProjectAdminUser
+    private val incunabulaUser = SharedTestDataV1.incunabulaProjectAdminUser
     private val incunabulaUserIri = incunabulaUser.userData.user_id.get
     private val incunabulaUserEmail = incunabulaUser.userData.email.get
 
-    private val imagesProjectIri = SharedAdminTestData.imagesProjectInfo.id
-    private val imagesReviewerGroupIri = SharedAdminTestData.imagesReviewerGroupInfo.id
+    private val imagesProjectIri = SharedTestDataV1.imagesProjectInfo.id
+    private val imagesReviewerGroupIri = SharedTestDataV1.imagesReviewerGroupInfo.id
 
     private val actorUnderTest = TestActorRef[UsersResponderADM]
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
@@ -84,7 +84,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedAdminTestData.rootUser)
+        responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
@@ -158,7 +158,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                         lang = "en",
                         systemAdmin = false
                     ),
-                    userProfile = SharedAdminTestData.anonymousUser,
+                    userProfile = SharedTestDataV1.anonymousUser,
                     apiRequestID = UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
@@ -182,7 +182,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                         lang = "en",
                         systemAdmin = false
                     ),
-                    SharedAdminTestData.anonymousUser,
+                    SharedTestDataV1.anonymousUser,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(DuplicateValueException(s"User with the email: 'root@example.com' already exists")))
@@ -201,7 +201,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                         lang = "en",
                         systemAdmin = false
                     ),
-                    SharedAdminTestData.anonymousUser,
+                    SharedTestDataV1.anonymousUser,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Email cannot be empty")))
@@ -217,7 +217,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                         lang = "en",
                         systemAdmin = false
                     ),
-                    SharedAdminTestData.anonymousUser,
+                    SharedTestDataV1.anonymousUser,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Password cannot be empty")))
@@ -233,7 +233,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                         lang = "en",
                         systemAdmin = false
                     ),
-                    SharedAdminTestData.anonymousUser,
+                    SharedTestDataV1.anonymousUser,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Given name cannot be empty")))
@@ -249,7 +249,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                         lang = "en",
                         systemAdmin = false
                     ),
-                    SharedAdminTestData.anonymousUser,
+                    SharedTestDataV1.anonymousUser,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Family name cannot be empty")))
@@ -262,14 +262,14 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
                 /* User information is updated by the user */
                 actorUnderTest ! UserChangeBasicUserDataRequestV1(
-                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
                     changeUserRequest = ChangeUserApiRequestV1(
                         email = None,
                         givenName = Some("Donald"),
                         familyName = None,
                         lang = None
                     ),
-                    userProfile = SharedAdminTestData.normalUser,
+                    userProfile = SharedTestDataV1.normalUser,
                     UUID.randomUUID
                 )
 
@@ -278,14 +278,14 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
                 /* User information is updated by a system admin */
                 actorUnderTest ! UserChangeBasicUserDataRequestV1(
-                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
                     changeUserRequest = ChangeUserApiRequestV1(
                         email = None,
                         givenName = None,
                         familyName = Some("Duck"),
                         lang = None
                     ),
-                    userProfile = SharedAdminTestData.superUser,
+                    userProfile = SharedTestDataV1.superUser,
                     UUID.randomUUID
                 )
 
@@ -294,31 +294,31 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
                 /* User information is updated by a system admin */
                 actorUnderTest ! UserChangeBasicUserDataRequestV1(
-                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
                     changeUserRequest = ChangeUserApiRequestV1(
                         email = None,
-                        givenName = Some(SharedAdminTestData.normalUser.userData.firstname.get),
-                        familyName = Some(SharedAdminTestData.normalUser.userData.lastname.get),
+                        givenName = Some(SharedTestDataV1.normalUser.userData.firstname.get),
+                        familyName = Some(SharedTestDataV1.normalUser.userData.lastname.get),
                         lang = None
                     ),
-                    userProfile = SharedAdminTestData.superUser,
+                    userProfile = SharedTestDataV1.superUser,
                     UUID.randomUUID
                 )
 
                 val response3 = expectMsgType[UserOperationResponseV1](timeout)
-                response3.userProfile.userData.firstname.get should equal (SharedAdminTestData.normalUser.userData.firstname.get)
-                response3.userProfile.userData.lastname.get should equal (SharedAdminTestData.normalUser.userData.lastname.get)
+                response3.userProfile.userData.firstname.get should equal (SharedTestDataV1.normalUser.userData.firstname.get)
+                response3.userProfile.userData.lastname.get should equal (SharedTestDataV1.normalUser.userData.lastname.get)
 
             }
 
             "UPDATE the user's password" in {
                 actorUnderTest ! UserChangePasswordRequestV1(
-                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
                     changeUserRequest = ChangeUserApiRequestV1(
                         oldPassword = Some("test"),
                         newPassword = Some("test123456")
                     ),
-                    userProfile = SharedAdminTestData.normalUser,
+                    userProfile = SharedTestDataV1.normalUser,
                     apiRequestID = UUID.randomUUID()
                 )
 
@@ -330,12 +330,12 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
                 // By doing the change again, I can check if the first change was indeed successful.
                 actorUnderTest ! UserChangePasswordRequestV1(
-                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
                     changeUserRequest = ChangeUserApiRequestV1(
                         oldPassword = Some("test123456"),
                         newPassword = Some("test")
                     ),
-                    userProfile = SharedAdminTestData.normalUser,
+                    userProfile = SharedTestDataV1.normalUser,
                     apiRequestID = UUID.randomUUID()
                 )
 
@@ -344,9 +344,9 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "UPDATE the user's status, (deleting) making him inactive " in {
                 actorUnderTest ! UserChangeStatusRequestV1(
-                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
                     changeUserRequest = ChangeUserApiRequestV1(status = Some(false)),
-                    userProfile = SharedAdminTestData.superUser,
+                    userProfile = SharedTestDataV1.superUser,
                     UUID.randomUUID()
                 )
 
@@ -354,9 +354,9 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 response1.userProfile.userData.status.get should equal (false)
 
                 actorUnderTest ! UserChangeStatusRequestV1(
-                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
                     changeUserRequest = ChangeUserApiRequestV1(status = Some(true)),
-                    userProfile = SharedAdminTestData.superUser,
+                    userProfile = SharedTestDataV1.superUser,
                     UUID.randomUUID()
                 )
 
@@ -366,9 +366,9 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "UPDATE the user's system admin membership" in {
                 actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestV1(
-                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
                     changeUserRequest = ChangeUserApiRequestV1(systemAdmin = Some(true)),
-                    userProfile = SharedAdminTestData.superUser,
+                    userProfile = SharedTestDataV1.superUser,
                     UUID.randomUUID()
                 )
 
@@ -376,9 +376,9 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 response1.userProfile.permissionData.isSystemAdmin should equal (true)
 
                 actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestV1(
-                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
                     changeUserRequest = ChangeUserApiRequestV1(systemAdmin = Some(false)),
-                    userProfile = SharedAdminTestData.superUser,
+                    userProfile = SharedTestDataV1.superUser,
                     UUID.randomUUID()
                 )
 
@@ -391,44 +391,44 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
                 /* User information is updated by other normal user */
                 actorUnderTest ! UserChangeBasicUserDataRequestV1(
-                    userIri = SharedAdminTestData.superUser.userData.user_id.get,
+                    userIri = SharedTestDataV1.superUser.userData.user_id.get,
                     changeUserRequest = ChangeUserApiRequestV1(
                         email = None,
                         givenName = Some("Donald"),
                         familyName = None,
                         lang = None
                     ),
-                    userProfile = SharedAdminTestData.normalUser,
+                    userProfile = SharedTestDataV1.normalUser,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
 
                 /* Password is updated by other normal user */
                 actorUnderTest ! UserChangePasswordRequestV1(
-                    userIri = SharedAdminTestData.superUser.userData.user_id.get,
+                    userIri = SharedTestDataV1.superUser.userData.user_id.get,
                     changeUserRequest = ChangeUserApiRequestV1(
                         oldPassword = Some("test"),
                         newPassword = Some("test123456")
                     ),
-                    userProfile = SharedAdminTestData.normalUser,
+                    userProfile = SharedTestDataV1.normalUser,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(ForbiddenException("User's password can only be changed by the user itself")))
 
                 /* Status is updated by other normal user */
                 actorUnderTest ! UserChangeStatusRequestV1(
-                    userIri = SharedAdminTestData.superUser.userData.user_id.get,
+                    userIri = SharedTestDataV1.superUser.userData.user_id.get,
                     changeUserRequest = ChangeUserApiRequestV1(status = Some(false)),
-                    userProfile = SharedAdminTestData.normalUser,
+                    userProfile = SharedTestDataV1.normalUser,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(ForbiddenException("User's status can only be changed by the user itself or a system administrator")))
 
                 /* System admin group membership */
                 actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestV1(
-                    userIri = SharedAdminTestData.normalUser.userData.user_id.get,
+                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
                     changeUserRequest = ChangeUserApiRequestV1(systemAdmin = Some(true)),
-                    userProfile = SharedAdminTestData.normalUser,
+                    userProfile = SharedTestDataV1.normalUser,
                     UUID.randomUUID()
                 )
                 expectMsg(Failure(ForbiddenException("User's system admin membership can only be changed by a system administrator")))

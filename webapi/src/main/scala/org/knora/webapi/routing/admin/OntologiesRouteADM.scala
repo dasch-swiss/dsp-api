@@ -27,6 +27,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
+import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologiesADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.ontologiesmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter

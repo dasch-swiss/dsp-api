@@ -24,7 +24,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
+import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupShortADM, GroupsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionsADMJsonProtocol, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
@@ -211,9 +211,9 @@ case class UserCreateRequestADM(createRequest: CreateUserApiRequestADM,
   * @param apiRequestID      the ID of the API request.
   */
 case class UserChangeBasicUserInformationRequestADM(userIri: IRI,
-                                             changeUserRequest: ChangeUserApiRequestADM,
-                                             requestingUser: UserADM,
-                                             apiRequestID: UUID) extends UsersResponderRequestADM
+                                                    changeUserRequest: ChangeUserApiRequestADM,
+                                                    requestingUser: UserADM,
+                                                    apiRequestID: UUID) extends UsersResponderRequestADM
 
 /**
   * Request updating the users password.
@@ -430,18 +430,18 @@ case class UserOperationResponseADM(user: UserADM) extends KnoraResponseV1 {
 /**
   * Represents a user's profile.
   *
-  * @param id           The user's IRI.
-  * @param email        The user's email address.
-  * @param password     The user's hashed password.
-  * @param token        The API token. Can be used instead of email/password for authentication.
-  * @param givenName    The user's given name.
-  * @param familyName   The user's surname.
-  * @param status       The user's status.
-  * @param lang         The ISO 639-1 code of the user's preferred language.
-  * @param groups       The groups that the user belongs to.
-  * @param projects     The projects that the user belongs to.
-  * @param sessionId    The sessionId,.
-  * @param permissions  The user's permissions.
+  * @param id          The user's IRI.
+  * @param email       The user's email address.
+  * @param password    The user's hashed password.
+  * @param token       The API token. Can be used instead of email/password for authentication.
+  * @param givenName   The user's given name.
+  * @param familyName  The user's surname.
+  * @param status      The user's status.
+  * @param lang        The ISO 639-1 code of the user's preferred language.
+  * @param groups      The groups that the user belongs to.
+  * @param projects    The projects that the user belongs to.
+  * @param sessionId   The sessionId,.
+  * @param permissions The user's permissions.
   */
 case class UserADM(id: IRI,
                    email: String,

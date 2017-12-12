@@ -24,7 +24,7 @@ import akka.actor.ActorSelection
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.OntologyConstants
+import org.knora.webapi.{KnoraSystemInstances, OntologyConstants}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceFullResponseV1
@@ -47,11 +47,7 @@ object ResourceHtmlView {
     /**
       * A user representing the Knora API server, used in those cases where a user is required.
       */
-    private val systemUser = UserProfileV1(
-        userData = UserDataV1(lang = "en"),
-        isSystemUser = true,
-        permissionData = PermissionsDataADM(anonymousUser = false)
-    )
+    private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
 
     def propertiesHtmlView(response: ResourceFullResponseV1, responderManager: ActorSelection): String = {
 

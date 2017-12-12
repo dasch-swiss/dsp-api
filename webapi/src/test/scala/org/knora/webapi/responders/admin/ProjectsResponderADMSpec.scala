@@ -32,6 +32,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse, NamedGraphV1}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
+import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.MutableTestIri
@@ -39,7 +40,7 @@ import org.knora.webapi.util.MutableTestIri
 import scala.concurrent.duration._
 
 
-object ProjectsResponderV1Spec {
+object ProjectsResponderADMSpec {
 
     val config: Config = ConfigFactory.parseString(
         """
@@ -51,14 +52,14 @@ object ProjectsResponderV1Spec {
 /**
   * This spec is used to test the messages received by the [[ProjectsResponderV1]] actor.
   */
-class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) with ImplicitSender {
+class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config) with ImplicitSender {
 
     private implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
     private val rootUserProfileV1 = SharedTestDataV1.rootUser
 
-    private val actorUnderTest = TestActorRef[ProjectsResponderV1]
+    private val actorUnderTest = TestActorRef[ProjectsResponderADM]
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 

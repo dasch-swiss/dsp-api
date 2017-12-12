@@ -49,11 +49,11 @@ object ListsRouteADM extends Authenticator {
                 /* return all lists */
                 parameters("projectIri".?) { maybeProjectIri: Option[IRI] =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val requestingUser = getUserADM(requestContext)
 
                         val projectIri = stringFormatter.toOptionalIri(maybeProjectIri, () => throw BadRequestException(s"Invalid param project IRI: $maybeProjectIri"))
 
-                        val requestMessage = ListsGetRequestADM(projectIri, userProfile)
+                        val requestMessage = ListsGetRequestADM(projectIri, requestingUser)
 
                         RouteUtilADM.runJsonRoute(
                             requestMessage,
@@ -73,10 +73,10 @@ object ListsRouteADM extends Authenticator {
             get {
                 /* return a list (a graph with all list nodes) */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
                     val listIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = ListGetRequestADM(listIri, userProfile)
+                    val requestMessage = ListGetRequestADM(listIri, requestingUser)
 
                     RouteUtilADM.runJsonRoute(
                         requestMessage,
@@ -99,10 +99,10 @@ object ListsRouteADM extends Authenticator {
             get {
                 /* return information about a list (without children) */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
                     val listIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = ListInfoGetRequestADM(listIri, userProfile)
+                    val requestMessage = ListInfoGetRequestADM(listIri, requestingUser)
 
                     RouteUtilADM.runJsonRoute(
                         requestMessage,
@@ -125,10 +125,10 @@ object ListsRouteADM extends Authenticator {
             get {
                 /* return information about a single node (without children) */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
                     val listIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = ListNodeInfoGetRequestADM(listIri, userProfile)
+                    val requestMessage = ListNodeInfoGetRequestADM(listIri, requestingUser)
 
                     RouteUtilADM.runJsonRoute(
                         requestMessage,

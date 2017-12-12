@@ -35,12 +35,13 @@ import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManag
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.SharedTestDataV1._
+import org.knora.webapi.messages.admin.responder.groupsmessages.{CreateGroupApiRequestADM, GroupCreateRequestADM}
 import org.knora.webapi.responders.admin.GroupsResponderADM
 
 import scala.concurrent.duration._
 
 
-object GroupsResponderV1Spec {
+object GroupsResponderADMSpec {
 
     val config: Config = ConfigFactory.parseString(
         """
@@ -52,7 +53,7 @@ object GroupsResponderV1Spec {
 /**
   * This spec is used to test the messages received by the [[UsersResponderV1]] actor.
   */
-class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with ImplicitSender {
+class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) with ImplicitSender {
 
     implicit private val executionContext = system.dispatcher
     private val timeout = 5.seconds
@@ -63,7 +64,7 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
 
     private val rootUserProfileV1 = SharedTestDataV1.rootUser
 
-    private val actorUnderTest = TestActorRef[GroupsResponderV1]
+    private val actorUnderTest = TestActorRef[GroupsResponderADM]
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
@@ -106,8 +107,8 @@ class GroupsResponderV1Spec extends CoreSpec(GroupsResponderV1Spec.config) with 
             val newGroupIri = new MutableTestIri
 
             "CREATE the group and return the group's info if the supplied group name is unique" in {
-                actorUnderTest ! GroupCreateRequestV1(
-                    CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), SharedTestDataV1.IMAGES_PROJECT_IRI, true, false),
+                actorUnderTest ! GroupCreateRequestADM(
+                    CreateGroupApiRequestADM("NewGroup", Some("NewGroupDescription"), SharedTestDataV1.IMAGES_PROJECT_IRI, true, false),
                     SharedTestDataV1.imagesUser01,
                     UUID.randomUUID
                 )

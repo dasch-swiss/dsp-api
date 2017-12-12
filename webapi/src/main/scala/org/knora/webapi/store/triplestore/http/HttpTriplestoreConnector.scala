@@ -254,7 +254,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             /**
               * A collection of all the statements in the input file, grouped and sorted by subject IRI.
               */
-            private var statements = Map.empty[IRI, Map[IRI, Seq[StringLiteralV2]]]
+            private var statements = Map.empty[IRI, Map[IRI, Seq[LiteralV2]]]
 
             override def handleComment(comment: IRI): Unit = {}
 
@@ -272,7 +272,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                     case RDF.LANGSTRING => StringLiteralV2(value = lit.stringValue, language = lit.getLanguage.asScala)
                     case XMLSchema.BOOLEAN => BooleanLiteralV2(value = lit.booleanValue)
                     case XMLSchema.STRING => if (stringFormatter.isIri(lit.stringValue)) {
-                        IriLiteralV2(iri = lit.stringValue)
+                        IriLiteralV2(value = lit.stringValue)
                     } else {
                         StringLiteralV2(value = lit.stringValue)
                     }

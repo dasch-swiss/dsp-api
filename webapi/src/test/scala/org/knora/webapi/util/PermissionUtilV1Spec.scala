@@ -45,7 +45,7 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionType, PermissionADM}
 import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionType
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.{CoreSpec, IRI, OntologyConstants, SharedAdminTestData}
+import org.knora.webapi.{CoreSpec, IRI, OntologyConstants, SharedTestDataV1}
 
 import scala.collection.Map
 
@@ -73,9 +73,9 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             PermissionUtilV1.getUserPermissionV1(
                 subjectIri = "http://rdfh.ch/00014b43f902",
                 subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
+                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
-                userProfile = SharedAdminTestData.incunabulaMemberUser
+                userProfile = SharedTestDataV1.incunabulaMemberUser
             ) should equal(Some(6)) // modify permission
         }
 
@@ -83,9 +83,9 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             PermissionUtilV1.getUserPermissionV1(
                 subjectIri = "http://rdfh.ch/00014b43f902",
                 subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
+                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
-                userProfile = SharedAdminTestData.incunabulaProjectAdminUser
+                userProfile = SharedTestDataV1.incunabulaProjectAdminUser
             ) should equal(Some(8)) // change rights permission
         }
 
@@ -93,9 +93,9 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             PermissionUtilV1.getUserPermissionV1(
                 subjectIri = "http://rdfh.ch/00014b43f902",
                 subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
+                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
-                userProfile = SharedAdminTestData.incunabulaCreatorUser
+                userProfile = SharedTestDataV1.incunabulaCreatorUser
             ) should equal(Some(8)) // change rights permission
         }
 
@@ -103,9 +103,9 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             PermissionUtilV1.getUserPermissionV1(
                 subjectIri = "http://rdfh.ch/00014b43f902",
                 subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
+                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
-                userProfile = SharedAdminTestData.rootUser
+                userProfile = SharedTestDataV1.rootUser
             ) should equal(Some(8)) // change rights permission
         }
 
@@ -113,9 +113,9 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             PermissionUtilV1.getUserPermissionV1(
                 subjectIri = "http://rdfh.ch/00014b43f902",
                 subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
+                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
-                userProfile = SharedAdminTestData.normalUser
+                userProfile = SharedTestDataV1.normalUser
             ) should equal(Some(2)) // restricted view permission
         }
 
@@ -123,22 +123,22 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             PermissionUtilV1.getUserPermissionV1(
                 subjectIri = "http://rdfh.ch/00014b43f902",
                 subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
+                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
-                userProfile = SharedAdminTestData.anonymousUser
+                userProfile = SharedTestDataV1.anonymousUser
             ) should equal(Some(1)) // restricted view permission
         }
 
         "return user's max permission from assertions for a specific resource" in {
             val assertions: Seq[(IRI, String)] = Seq(
                 (OntologyConstants.KnoraBase.AttachedToUser, "http://rdfh.ch/users/91e19f1e01"),
-                (OntologyConstants.KnoraBase.AttachedToProject, SharedAdminTestData.INCUNABULA_PROJECT_IRI),
+                (OntologyConstants.KnoraBase.AttachedToProject, SharedTestDataV1.INCUNABULA_PROJECT_IRI),
                 (OntologyConstants.KnoraBase.HasPermissions, permissionLiteral)
             )
             PermissionUtilV1.getUserPermissionV1FromAssertions(
                 subjectIri = "http://rdfh.ch/00014b43f902",
                 assertions = assertions,
-                userProfile = SharedAdminTestData.incunabulaMemberUser
+                userProfile = SharedTestDataV1.incunabulaMemberUser
             ) should equal(Some(6)) // modify permissions
         }
 

@@ -26,7 +26,7 @@ import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoADM
+import org.knora.webapi.messages.admin.responder.ontologiesmessages.{OntologyInfoADM, OntologyInfoShortADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserInformationTypeADM}
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -53,7 +53,7 @@ class ProjectsResponderADM extends Responder {
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
-    def receive = {
+    def receive: PartialFunction[Any, Unit] = {
         case ProjectsGetADM(requestingUser) => future2Message(sender(), projectsGetADM(requestingUser), log)
         case ProjectsGetRequestADM(requestingUser) => future2Message(sender(), projectsGetRequestADM(requestingUser), log)
         case ProjectGetADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => future2Message(sender(), projectGetADM(maybeIri, maybeShortname, maybeShortcode, requestingUser), log)
@@ -95,11 +95,10 @@ class ProjectsResponderADM extends Responder {
 
                     val ontologyIris = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, Seq.empty[IRI]).map(_.asInstanceOf[IriLiteralV2].value)
 
-                    val ontologyInfos: Seq[OntologyInfoADM] = ontologyIris.map { ontologyIri =>
-                        OntologyInfoADM(
+                    val ontologyInfos: Seq[OntologyInfoShortADM] = ontologyIris.map { ontologyIri =>
+                        OntologyInfoShortADM(
                             ontologyIri = SmartIri(ontologyIri),
-                            ontologyName = SmartIri(ontologyIri).getOntologyName,
-                            project = None
+                            ontologyName = SmartIri(ontologyIri).getOntologyName
                         )
                     }
 
@@ -198,7 +197,7 @@ class ProjectsResponderADM extends Responder {
         for {
             maybeProject: Option[ProjectADM] <- projectGetADM(maybeIri, maybeShortname, maybeShortcode, requestingUser)
             project = maybeProject match {
-                case Some(project) => project
+                case Some(p) => p
                 case None => throw NotFoundException(s"Project '${Seq(maybeIri, maybeShortname, maybeShortcode).flatten.head}' not found")
             }
         } yield ProjectGetResponseADM(
@@ -480,7 +479,7 @@ class ProjectsResponderADM extends Responder {
             // _ = log.debug("projectOntologyAddV1 - ontologyAddTask - maybeProjectInfo: {}", maybeProjectInfo)
 
             ontologies: Seq[IRI] = maybeProject match {
-                case Some(project) => project.ontologies :+ ontologyIri
+                case Some(project) => project.ontologies.map(_.ontologyIri.toString) :+ ontologyIri
                 case None => throw NotFoundException(s"Project '$projectIri' not found. Aborting update request.")
             }
 
@@ -669,11 +668,10 @@ class ProjectsResponderADM extends Responder {
 
         val ontologyIris = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, Seq.empty[IRI]).map(_.asInstanceOf[IriLiteralV2].value)
 
-        val ontologyInfos: Seq[OntologyInfoADM] = ontologyIris.map { ontologyIri =>
-            OntologyInfoADM(
+        val ontologyInfos: Seq[OntologyInfoShortADM] = ontologyIris.map { ontologyIri =>
+            OntologyInfoShortADM(
                 ontologyIri = SmartIri(ontologyIri),
-                ontologyName = SmartIri(ontologyIri).getOntologyName,
-                project = None
+                ontologyName = SmartIri(ontologyIri).getOntologyName
             )
         }
 

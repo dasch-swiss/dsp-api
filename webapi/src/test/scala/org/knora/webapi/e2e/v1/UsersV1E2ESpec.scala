@@ -25,7 +25,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Tripl
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, IRI, SharedAdminTestData}
+import org.knora.webapi.{E2ESpec, IRI, SharedTestDataV1}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -50,24 +50,24 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
     private val rdfDataObjects = List.empty[RdfDataObject]
 
     val rootCreds = CredentialsV1(
-        SharedAdminTestData.rootUser.userData.user_id.get,
-        SharedAdminTestData.rootUser.userData.email.get,
+        SharedTestDataV1.rootUser.userData.user_id.get,
+        SharedTestDataV1.rootUser.userData.email.get,
         "test"
     )
 
     val normalUserCreds = CredentialsV1(
-        SharedAdminTestData.normalUser.userData.user_id.get,
-        SharedAdminTestData.normalUser.userData.email.get,
+        SharedTestDataV1.normalUser.userData.user_id.get,
+        SharedTestDataV1.normalUser.userData.email.get,
         "test"
     )
 
-    val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedAdminTestData.inactiveUser.userData.email.get, "utf-8")
+    val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedTestDataV1.inactiveUser.userData.email.get, "utf-8")
 
 
-    val normalUserIri = SharedAdminTestData.normalUser.userData.user_id.get
+    val normalUserIri = SharedTestDataV1.normalUser.userData.user_id.get
     val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
 
-    val multiUserIri = SharedAdminTestData.multiuserUser.userData.user_id.get
+    val multiUserIri = SharedTestDataV1.multiuserUser.userData.user_id.get
     val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
 
     val wrongEmail = "wrong@example.com"
@@ -76,10 +76,10 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
     val testPass = java.net.URLEncoder.encode("test", "utf-8")
     val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
 
-    val imagesProjectIri = SharedAdminTestData.imagesProjectInfo.id
+    val imagesProjectIri = SharedTestDataV1.imagesProjectInfo.id
     val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
 
-    val imagesReviewerGroupIri = SharedAdminTestData.imagesReviewerGroupInfo.id
+    val imagesReviewerGroupIri = SharedTestDataV1.imagesReviewerGroupInfo.id
     val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
 
     /**
@@ -165,7 +165,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 assert(response.status === StatusCodes.OK)
 
                 val projects: Seq[IRI] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[IRI]]
-                projects should contain allElementsOf Seq(SharedAdminTestData.IMAGES_PROJECT_IRI, SharedAdminTestData.INCUNABULA_PROJECT_IRI, SharedAdminTestData.ANYTHING_PROJECT_IRI)
+                projects should contain allElementsOf Seq(SharedTestDataV1.IMAGES_PROJECT_IRI, SharedTestDataV1.INCUNABULA_PROJECT_IRI, SharedTestDataV1.ANYTHING_PROJECT_IRI)
 
                 // testing getUserProjectMemberships method, which should return the same result
                 projects should contain allElementsOf getUserProjectMemberships(multiUserIri, rootCreds)
@@ -181,7 +181,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 assert(response.status === StatusCodes.OK)
 
                 val projects: Seq[IRI] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[IRI]]
-                projects should contain allElementsOf Seq(SharedAdminTestData.IMAGES_PROJECT_IRI, SharedAdminTestData.INCUNABULA_PROJECT_IRI, SharedAdminTestData.ANYTHING_PROJECT_IRI)
+                projects should contain allElementsOf Seq(SharedTestDataV1.IMAGES_PROJECT_IRI, SharedTestDataV1.INCUNABULA_PROJECT_IRI, SharedTestDataV1.ANYTHING_PROJECT_IRI)
 
                 // explicitly testing 'getUserProjectsAdminMemberships' method, which should return the same result
                 projects should contain allElementsOf getUserProjectAdminMemberships(multiUserIri, rootCreds)

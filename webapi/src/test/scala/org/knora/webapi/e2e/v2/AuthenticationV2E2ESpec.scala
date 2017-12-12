@@ -24,7 +24,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.{AuthenticationV2JsonProtocol, LoginResponse}
-import org.knora.webapi.{E2ESpec, SharedAdminTestData}
+import org.knora.webapi.{E2ESpec, SharedTestDataV1}
 import spray.json._
 
 import scala.concurrent.Await
@@ -55,11 +55,11 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
         // RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
 
-    private val rootIri = SharedAdminTestData.rootUser.userData.user_id.get
+    private val rootIri = SharedTestDataV1.rootUser.userData.user_id.get
     private val rootIriEnc = java.net.URLEncoder.encode(rootIri, "utf-8")
-    private val rootEmail = SharedAdminTestData.rootUser.userData.email.get
+    private val rootEmail = SharedTestDataV1.rootUser.userData.email.get
     private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
-    private val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedAdminTestData.inactiveUser.userData.email.get, "utf-8")
+    private val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedTestDataV1.inactiveUser.userData.email.get, "utf-8")
     private val wrongEmail = "wrong@example.com"
     private val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
     private val testPass = java.net.URLEncoder.encode("test", "utf-8")

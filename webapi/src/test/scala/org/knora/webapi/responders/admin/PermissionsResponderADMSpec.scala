@@ -20,9 +20,9 @@ import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.SharedAdminTestData._
+import org.knora.webapi.SharedTestDataV1._
 import org.knora.webapi.SharedPermissionsTestData._
-import org.knora.webapi.SharedOntologyTestData._
+import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
@@ -58,8 +58,8 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
     private val knoraIdUtil = new KnoraIdUtil
 
-    private val rootUser = SharedAdminTestData.rootUser
-    private val multiuserUserProfileV1 = SharedAdminTestData.multiuserUser
+    private val rootUser = SharedTestDataV1.rootUser
+    private val multiuserUserProfileV1 = SharedTestDataV1.multiuserUser
 
     private val actorUnderTest = TestActorRef[PermissionsResponderADM]
     private val underlyingActorUnderTest = actorUnderTest.underlyingActor
@@ -76,7 +76,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedAdminTestData.rootUser)
+        responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
         expectMsg(20.seconds, LoadOntologiesResponse())
     }
 
@@ -87,86 +87,86 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
 
             "return the permissions profile (root user)" in {
                 actorUnderTest ! PermissionDataGetADM(
-                    projectIris = SharedAdminTestData.rootUser.projects_info.keys.toSeq,
-                    groupIris = SharedAdminTestData.rootUser.groups,
+                    projectIris = SharedTestDataV1.rootUser.projects_info.keys.toSeq,
+                    groupIris = SharedTestDataV1.rootUser.groups,
                     isInProjectAdminGroups = Seq.empty[IRI],
                     isInSystemAdminGroup = true
                 )
-                expectMsg(SharedAdminTestData.rootUser.permissionData)
+                expectMsg(SharedTestDataV1.rootUser.permissionData)
             }
 
             "return the permissions profile (multi group user)" in {
                 actorUnderTest ! PermissionDataGetADM(
-                    projectIris = SharedAdminTestData.multiuserUser.projects_info.keys.toSeq,
-                    groupIris = SharedAdminTestData.multiuserUser.groups,
+                    projectIris = SharedTestDataV1.multiuserUser.projects_info.keys.toSeq,
+                    groupIris = SharedTestDataV1.multiuserUser.groups,
                     isInProjectAdminGroups = Seq(INCUNABULA_PROJECT_IRI, IMAGES_PROJECT_IRI),
                     isInSystemAdminGroup = false
                 )
-                expectMsg(SharedAdminTestData.multiuserUser.permissionData)
+                expectMsg(SharedTestDataV1.multiuserUser.permissionData)
             }
 
             "return the permissions profile (incunabula project admin user)" in {
                 actorUnderTest ! PermissionDataGetADM(
-                    projectIris = SharedAdminTestData.incunabulaProjectAdminUser.projects_info.keys.toSeq,
-                    groupIris = SharedAdminTestData.incunabulaProjectAdminUser.groups,
+                    projectIris = SharedTestDataV1.incunabulaProjectAdminUser.projects_info.keys.toSeq,
+                    groupIris = SharedTestDataV1.incunabulaProjectAdminUser.groups,
                     isInProjectAdminGroups = Seq(INCUNABULA_PROJECT_IRI),
                     isInSystemAdminGroup = false
                 )
-                expectMsg(SharedAdminTestData.incunabulaProjectAdminUser.permissionData)
+                expectMsg(SharedTestDataV1.incunabulaProjectAdminUser.permissionData)
             }
 
             "return the permissions profile (incunabula creator user)" in {
                 actorUnderTest ! PermissionDataGetADM(
-                    projectIris = SharedAdminTestData.incunabulaProjectAdminUser.projects_info.keys.toSeq,
-                    groupIris = SharedAdminTestData.incunabulaCreatorUser.groups,
+                    projectIris = SharedTestDataV1.incunabulaProjectAdminUser.projects_info.keys.toSeq,
+                    groupIris = SharedTestDataV1.incunabulaCreatorUser.groups,
                     isInProjectAdminGroups = Seq.empty[IRI],
                     isInSystemAdminGroup = false
                 )
-                expectMsg(SharedAdminTestData.incunabulaCreatorUser.permissionData)
+                expectMsg(SharedTestDataV1.incunabulaCreatorUser.permissionData)
             }
 
             "return the permissions profile (incunabula normal project member user)" in {
                 actorUnderTest ! PermissionDataGetADM(
-                    projectIris = SharedAdminTestData.incunabulaProjectAdminUser.projects_info.keys.toSeq,
-                    groupIris = SharedAdminTestData.incunabulaMemberUser.groups,
+                    projectIris = SharedTestDataV1.incunabulaProjectAdminUser.projects_info.keys.toSeq,
+                    groupIris = SharedTestDataV1.incunabulaMemberUser.groups,
                     isInProjectAdminGroups = Seq.empty[IRI],
                     isInSystemAdminGroup = false
                 )
-                expectMsg(SharedAdminTestData.incunabulaMemberUser.permissionData)
+                expectMsg(SharedTestDataV1.incunabulaMemberUser.permissionData)
             }
 
             "return the permissions profile (images user 01)" in {
                 actorUnderTest ! PermissionDataGetADM(
-                    projectIris = SharedAdminTestData.imagesUser01.projects_info.keys.toSeq,
-                    groupIris = SharedAdminTestData.imagesUser01.groups,
+                    projectIris = SharedTestDataV1.imagesUser01.projects_info.keys.toSeq,
+                    groupIris = SharedTestDataV1.imagesUser01.groups,
                     isInProjectAdminGroups = Seq(IMAGES_PROJECT_IRI),
                     isInSystemAdminGroup = false
                 )
-                expectMsg(SharedAdminTestData.imagesUser01.permissionData)
+                expectMsg(SharedTestDataV1.imagesUser01.permissionData)
             }
 
             "return the permissions profile (images-reviewer-user)" in {
                 actorUnderTest ! PermissionDataGetADM(
-                    projectIris = SharedAdminTestData.imagesReviewerUser.projects_info.keys.toSeq,
-                    groupIris = SharedAdminTestData.imagesReviewerUser.groups,
+                    projectIris = SharedTestDataV1.imagesReviewerUser.projects_info.keys.toSeq,
+                    groupIris = SharedTestDataV1.imagesReviewerUser.groups,
                     isInProjectAdminGroups = Seq.empty[IRI],
                     isInSystemAdminGroup = false
                 )
-                expectMsg(SharedAdminTestData.imagesReviewerUser.permissionData)
+                expectMsg(SharedTestDataV1.imagesReviewerUser.permissionData)
             }
 
             "return the permissions profile (anything user 01)" in {
                 actorUnderTest ! PermissionDataGetADM(
-                    projectIris = SharedAdminTestData.anythingUser1.projects_info.keys.toSeq,
-                    groupIris = SharedAdminTestData.anythingUser1.groups,
+                    projectIris = SharedTestDataV1.anythingUser1.projects_info.keys.toSeq,
+                    groupIris = SharedTestDataV1.anythingUser1.groups,
                     isInProjectAdminGroups = Seq.empty[IRI],
                     isInSystemAdminGroup = false
                 )
-                expectMsg(SharedAdminTestData.anythingUser1.permissionData)
+                expectMsg(SharedTestDataV1.anythingUser1.permissionData)
             }
 
             "return user's administrative permissions (helper method used in queries before)" in {
-                val result: Map[IRI, Set[PermissionADM]] = Await.result(underlyingActorUnderTest.userAdministrativePermissionsGetV1(multiuserUserProfileV1.permissionData.groupsPerProject).mapTo[Map[IRI, Set[PermissionADM]]], 1.seconds)
+                val result: Map[IRI, Set[PermissionADM]] = Await.result(underlyingActorUnderTest.userAdministrativePermissionsGetADM(multiuserUserProfileV1.permissionData.groupsPerProject).mapTo[Map[IRI, Set[PermissionADM]]], 1.seconds)
                 result should equal(multiuserUserProfileV1.permissionData.administrativePermissionsPerProject)
             }
         }
@@ -176,7 +176,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             "return all AdministrativePermissions for project " in {
                 actorUnderTest ! AdministrativePermissionsForProjectGetRequestADM(
                     projectIri = IMAGES_PROJECT_IRI,
-                    SharedAdminTestData.rootUser
+                    SharedTestDataV1.rootUser
                 )
                 expectMsg(AdministrativePermissionsForProjectGetResponseADM(
                     Seq(perm002_a3.p, perm002_a2.p, perm002_a1.p)
@@ -187,7 +187,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                 actorUnderTest ! AdministrativePermissionForProjectGroupGetRequestADM(
                     projectIri = IMAGES_PROJECT_IRI,
                     groupIri = OntologyConstants.KnoraBase.ProjectMember,
-                    SharedAdminTestData.rootUser
+                    SharedTestDataV1.rootUser
                 )
                 expectMsg(AdministrativePermissionForProjectGroupGetResponseADM(perm002_a1.p))
             }
@@ -195,7 +195,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             "return AdministrativePermission for IRI " in {
                 actorUnderTest ! AdministrativePermissionForIriGetRequestADM(
                     administrativePermissionIri = perm002_a1.iri,
-                    SharedAdminTestData.rootUser
+                    SharedTestDataV1.rootUser
                 )
                 expectMsg(AdministrativePermissionForIriGetResponseADM(perm002_a1.p))
             }
@@ -247,7 +247,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             "return all DefaultObjectAccessPermissions for project" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsForProjectGetRequestADM(
                     projectIri = IMAGES_PROJECT_IRI,
-                    SharedAdminTestData.rootUser
+                    SharedTestDataV1.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionsForProjectGetResponseADM(
                     defaultObjectAccessPermissions = Seq(perm002_d2.p, perm002_d1.p)
@@ -257,7 +257,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
             "return DefaultObjectAccessPermission for IRI" in {
                 actorUnderTest ! DefaultObjectAccessPermissionForIriGetRequestADM(
                     defaultObjectAccessPermissionIri = perm002_d1.iri,
-                    SharedAdminTestData.rootUser
+                    SharedTestDataV1.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionForIriGetResponseADM(
                     defaultObjectAccessPermission = perm002_d1.p
@@ -270,7 +270,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     groupIRI = Some(OntologyConstants.KnoraBase.ProjectMember),
                     resourceClassIRI = None,
                     propertyIRI = None,
-                    userProfile = SharedAdminTestData.rootUser
+                    userProfile = SharedTestDataV1.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionGetResponseADM(
                     defaultObjectAccessPermission = perm003_d1.p
@@ -283,7 +283,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     groupIRI = None,
                     resourceClassIRI = Some(INCUNABULA_BOOK_RESOURCE_CLASS),
                     propertyIRI = None,
-                    userProfile = SharedAdminTestData.rootUser
+                    userProfile = SharedTestDataV1.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionGetResponseADM(
                     defaultObjectAccessPermission = perm003_d2.p
@@ -296,7 +296,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                     groupIRI = None,
                     resourceClassIRI = None,
                     propertyIRI = Some(OntologyConstants.KnoraBase.HasStillImageFileValue),
-                    userProfile = SharedAdminTestData.rootUser
+                    userProfile = SharedTestDataV1.rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionGetResponseADM(
                     defaultObjectAccessPermission = perm001_d3.p
@@ -448,7 +448,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
                         PermissionADM.viewPermission(OntologyConstants.KnoraBase.KnownUser),
                         PermissionADM.modifyPermission(OntologyConstants.KnoraBase.ProjectMember)
                     )
-                val result: Set[PermissionADM] = Await.result(underlyingActorUnderTest.defaultObjectAccessPermissionsForGroupsGetV1(IMAGES_PROJECT_IRI, groups), 1.seconds)
+                val result: Set[PermissionADM] = Await.result(underlyingActorUnderTest.defaultObjectAccessPermissionsForGroupsGetADM(IMAGES_PROJECT_IRI, groups), 1.seconds)
                 result should equal(expected)
             }
 

@@ -30,7 +30,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Tripl
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, SharedAdminTestData, SharedListsAdminTestData}
+import org.knora.webapi.{E2ESpec, SharedTestDataV1, SharedListsTestDataADM}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -58,24 +58,24 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
     )
 
     val rootCreds = CredentialsV1(
-        SharedAdminTestData.rootUser.userData.user_id.get,
-        SharedAdminTestData.rootUser.userData.email.get,
+        SharedTestDataV1.rootUser.userData.user_id.get,
+        SharedTestDataV1.rootUser.userData.email.get,
         "test"
     )
 
     val normalUserCreds = CredentialsV1(
-        SharedAdminTestData.normalUser.userData.user_id.get,
-        SharedAdminTestData.normalUser.userData.email.get,
+        SharedTestDataV1.normalUser.userData.user_id.get,
+        SharedTestDataV1.normalUser.userData.email.get,
         "test"
     )
 
-    val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedAdminTestData.inactiveUser.userData.email.get, "utf-8")
+    val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedTestDataV1.inactiveUser.userData.email.get, "utf-8")
 
 
-    val normalUserIri = SharedAdminTestData.normalUser.userData.user_id.get
+    val normalUserIri = SharedTestDataV1.normalUser.userData.user_id.get
     val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
 
-    val multiUserIri = SharedAdminTestData.multiuserUser.userData.user_id.get
+    val multiUserIri = SharedTestDataV1.multiuserUser.userData.user_id.get
     val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
 
     val wrongEmail = "wrong@example.com"
@@ -84,15 +84,15 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
     val testPass = java.net.URLEncoder.encode("test", "utf-8")
     val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
 
-    val imagesProjectIri = SharedAdminTestData.imagesProjectInfo.id
+    val imagesProjectIri = SharedTestDataV1.imagesProjectInfo.id
     val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
 
-    val imagesReviewerGroupIri = SharedAdminTestData.imagesReviewerGroupInfo.id
+    val imagesReviewerGroupIri = SharedTestDataV1.imagesReviewerGroupInfo.id
     val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
 
 
-    val bigListInfo: ListInfo = SharedListsAdminTestData.bigListInfo
-    val bigListNodes: Seq[ListNode] = SharedListsAdminTestData.bigListNodes
+    val bigListInfo: ListInfo = SharedListsTestDataADM.bigListInfo
+    val bigListNodes: Seq[ListNode] = SharedListsTestDataADM.bigListNodes
 
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
@@ -155,7 +155,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val receivedListInfo: ListInfo = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListInfo]
 
-                val expectedListInfo: ListInfo = SharedListsAdminTestData.bigListInfo
+                val expectedListInfo: ListInfo = SharedListsTestDataADM.bigListInfo
 
                 receivedListInfo.sorted should be (expectedListInfo.sorted)
             }

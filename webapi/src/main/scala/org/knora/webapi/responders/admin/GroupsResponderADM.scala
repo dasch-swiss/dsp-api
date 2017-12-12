@@ -55,7 +55,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
-    def receive = {
+    def receive: PartialFunction[Any, Unit] = {
         case GroupsGetADM(requestingUser) => future2Message(sender(), groupsGetADM(requestingUser), log)
         case GroupsGetRequestADM(requestingUser) => future2Message(sender(), groupsGetRequestADM(requestingUser), log)
         case GroupGetADM(groupIri, requestingUser) => future2Message(sender(), groupGetADM(groupIri, requestingUser), log)
@@ -100,7 +100,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
                         group = GroupADM(
                             id = groupIri,
                             name = propsMap.getOrElse(OntologyConstants.KnoraBase.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no name attached")).head.asInstanceOf[StringLiteralV2].value,
-                            description = propsMap.get(OntologyConstants.KnoraBase.GroupDescription).map(_.head.asInstanceOf[StringLiteralV2].value),
+                            description = propsMap.getOrElse(OntologyConstants.KnoraBase.GroupDescription, throw InconsistentTriplestoreDataException(s"Group $groupIri has no description attached")).head.asInstanceOf[StringLiteralV2].value,
                             project = projectADM,
                             status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Group $groupIri has no status attached")).head.asInstanceOf[BooleanLiteralV2].value,
                             selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Group $groupIri has no status attached")).head.asInstanceOf[BooleanLiteralV2].value
@@ -402,7 +402,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
             }
 
             _ = if (groupUpdatePayload.description.isDefined) {
-                if (updatedGroup.description != groupUpdatePayload.description) throw UpdateNotPerformedException("Group's 'description' was not updated. Please report this as a possible bug.")
+                if (updatedGroup.description != groupUpdatePayload.description.get) throw UpdateNotPerformedException("Group's 'description' was not updated. Please report this as a possible bug.")
             }
 
             /*
@@ -456,7 +456,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
                 groupADM: GroupADM = GroupADM(
                     id = groupIri,
                     name = propsMap.getOrElse(OntologyConstants.KnoraBase.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no groupName attached")).head.asInstanceOf[StringLiteralV2].value,
-                    description = propsMap.get(OntologyConstants.KnoraBase.GroupDescription).map(_.head.asInstanceOf[StringLiteralV2].value),
+                    description = propsMap.getOrElse(OntologyConstants.KnoraBase.GroupDescription, throw InconsistentTriplestoreDataException(s"Group $groupIri has no description attached")).head.asInstanceOf[StringLiteralV2].value,
                     project = project,
                     status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Group $groupIri has no status attached")).head.asInstanceOf[BooleanLiteralV2].value,
                     selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Group $groupIri has no selfJoin attached")).head.asInstanceOf[BooleanLiteralV2].value

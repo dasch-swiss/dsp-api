@@ -27,17 +27,17 @@ import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
   */
 class UserMessagesV1Spec extends WordSpecLike with Matchers {
 
-    private val lang = SharedAdminTestData.rootUser.userData.lang
-    private val user_id = SharedAdminTestData.rootUser.userData.user_id
-    private val token = SharedAdminTestData.rootUser.userData.token
-    private val firstname = SharedAdminTestData.rootUser.userData.firstname
-    private val lastname = SharedAdminTestData.rootUser.userData.lastname
-    private val email = SharedAdminTestData.rootUser.userData.email
-    private val password = SharedAdminTestData.rootUser.userData.password
-    private val groups = SharedAdminTestData.rootUser.groups
-    private val projects_info = SharedAdminTestData.rootUser.projects_info
-    private val permissionData = SharedAdminTestData.rootUser.permissionData
-    private val sessionId = SharedAdminTestData.rootUser.sessionId
+    private val lang = SharedTestDataV1.rootUser.userData.lang
+    private val user_id = SharedTestDataV1.rootUser.userData.user_id
+    private val token = SharedTestDataV1.rootUser.userData.token
+    private val firstname = SharedTestDataV1.rootUser.userData.firstname
+    private val lastname = SharedTestDataV1.rootUser.userData.lastname
+    private val email = SharedTestDataV1.rootUser.userData.email
+    private val password = SharedTestDataV1.rootUser.userData.password
+    private val groups = SharedTestDataV1.rootUser.groups
+    private val projects_info = SharedTestDataV1.rootUser.projects_info
+    private val permissionData = SharedTestDataV1.rootUser.permissionData
+    private val sessionId = SharedTestDataV1.rootUser.sessionId
 
 
     "The UserProfileV1 case class " should {
@@ -96,7 +96,7 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
         }
 
         "allow checking the password (2)" in {
-            SharedAdminTestData.rootUser.passwordMatch("test") should equal(true)
+            SharedTestDataV1.rootUser.passwordMatch("test") should equal(true)
         }
     }
 }

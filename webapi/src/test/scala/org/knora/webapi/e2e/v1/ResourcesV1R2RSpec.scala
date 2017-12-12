@@ -31,8 +31,8 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.SharedOntologyTestData._
-import org.knora.webapi.SharedAdminTestData._
+import org.knora.webapi.SharedOntologyTestDataADM._
+import org.knora.webapi.SharedTestDataV1._
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
@@ -69,19 +69,19 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
-    private val imagesUser = SharedAdminTestData.imagesUser01
+    private val imagesUser = SharedTestDataV1.imagesUser01
     private val imagesUserEmail = imagesUser.userData.email.get
 
-    private val incunabulaUser = SharedAdminTestData.incunabulaProjectAdminUser
+    private val incunabulaUser = SharedTestDataV1.incunabulaProjectAdminUser
     private val incunabulaUserEmail = incunabulaUser.userData.email.get
 
-    private val incunabulaUser2 = SharedAdminTestData.incunabulaCreatorUser
+    private val incunabulaUser2 = SharedTestDataV1.incunabulaCreatorUser
     private val incunabulaUserEmail2 = incunabulaUser2.userData.email.get
 
-    private val anythingUser = SharedAdminTestData.anythingUser1
+    private val anythingUser = SharedTestDataV1.anythingUser1
     private val anythingUserEmail = anythingUser.userData.email.get
 
-    private val biblioUser = SharedAdminTestData.biblioUser
+    private val biblioUser = SharedTestDataV1.biblioUser
     private val biblioUserEmail = biblioUser.userData.email.get
 
 
@@ -103,7 +103,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 30.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataV1.rootUser), 30.seconds)
     }
 
     private val firstThingIri = new MutableTestIri

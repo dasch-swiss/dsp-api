@@ -163,11 +163,11 @@ case class FullListADM(listinfo: ListInfoADM, children: Seq[ListNodeADM]) {
   * Represents basic information about a list, the information stored in the list's root node.
   *
   * @param id         the IRI of the list.
-  * @param projectIri the IRI of the project this list belongs to (optional).
+  * @param projectIri the IRI of the project this list belongs to.
   * @param labels     the labels of the list in all available languages.
   * @param comments   the comments attached to the list in all available languages.
   */
-case class ListInfoADM(id: IRI, projectIri: Option[IRI], labels: Seq[StringLiteralV2], comments: Seq[StringLiteralV2]) {
+case class ListInfoADM(id: IRI, projectIri: IRI, labels: Seq[StringLiteralV2], comments: Seq[StringLiteralV2]) {
     /**
       * Sorts the whole hierarchy.
       *
@@ -274,7 +274,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
             val fields = value.asJsObject.fields
 
             val id = fields.getOrElse("id", throw DeserializationException("The expected field 'id' is missing.")).convertTo[String]
-            val projectIri: Option[IRI] = fields.get("projectIri").map(_.convertTo[String])
+            val projectIri: IRI = fields.getOrElse("projectIri", throw DeserializationException("The expected field 'projectIri' is missing.")).convertTo[String]
             val labels = fields.get("labels") match {
                 case Some(JsArray(values)) => values.map(_.convertTo[StringLiteralV2])
                 case None => Seq.empty[StringLiteralV2]

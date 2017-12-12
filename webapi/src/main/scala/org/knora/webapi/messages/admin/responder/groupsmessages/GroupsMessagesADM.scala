@@ -218,7 +218,7 @@ case class GroupOperationResponseADM(group: GroupADM) extends KnoraResponseV1 wi
   */
 case class GroupADM(id: IRI,
                     name: String,
-                    description: Option[String] = None,
+                    description: String,
                     project: ProjectADM,
                     status: Boolean,
                     selfjoin: Boolean) {
@@ -228,14 +228,40 @@ case class GroupADM(id: IRI,
         GroupInfoV1(
             id = id,
             name = name,
-            description = description,
+            description = Some(description),
             project = project.id,
+            status = status,
+            selfjoin = selfjoin
+        )
+    }
+
+    def asGroupShortADM: GroupShortADM = {
+
+        GroupShortADM(
+            id = id,
+            name = name,
+            description = description,
             status = status,
             selfjoin = selfjoin
         )
     }
 }
 
+/**
+  * The information describing a group (without project).
+  *
+  * @param id          the IRI if the group.
+  * @param name        the name of the group.
+  * @param description the description of the group.
+  * @param status      the group's status.
+  * @param selfjoin    the group's self-join status.
+  *
+  */
+case class GroupShortADM(id: IRI,
+                    name: String,
+                    description: String,
+                    status: Boolean,
+                    selfjoin: Boolean)
 
 /**
   * Payload used for updating of an existing group.
@@ -262,6 +288,7 @@ trait GroupsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
     import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 
     implicit val groupADMFormat: JsonFormat[GroupADM] = jsonFormat6(GroupADM)
+    implicit val groupShortADMFormat: JsonFormat[GroupShortADM] = jsonFormat5(GroupShortADM)
     implicit val groupsGetResponseADMFormat: RootJsonFormat[GroupsGetResponseADM] = jsonFormat(GroupsGetResponseADM, "groups")
     implicit val groupResponseADMFormat: RootJsonFormat[GroupGetResponseADM] = jsonFormat(GroupGetResponseADM, "group")
     implicit val groupMembersResponseADMFormat: RootJsonFormat[GroupMembersGetResponseADM] = jsonFormat(GroupMembersGetResponseADM, "members")

@@ -30,7 +30,7 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.SharedAdminTestData._
+import org.knora.webapi.SharedTestDataV1._
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders.{ResponderManager, _}
@@ -66,7 +66,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
-    private val anythingUser = SharedAdminTestData.anythingUser1
+    private val anythingUser = SharedTestDataV1.anythingUser1
     private val anythingUserEmail = anythingUser.userData.email.get
 
     private val password = "test"
@@ -86,7 +86,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 30.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataV1.rootUser), 30.seconds)
     }
 
     private val firstTextValueIri = new MutableTestIri

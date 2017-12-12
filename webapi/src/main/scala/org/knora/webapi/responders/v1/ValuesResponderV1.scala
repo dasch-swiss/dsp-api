@@ -197,7 +197,8 @@ class ValuesResponderV1 extends Responder {
                     projectIri = projectIri,
                     resourceClassIri = resourceClassIri,
                     propertyIri = createValueRequest.propertyIri,
-                    createValueRequest.userProfile.permissionData
+                    targetUser = createValueRequest.userProfile,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
             }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
             _ = log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
@@ -874,7 +875,8 @@ class ValuesResponderV1 extends Responder {
                         projectIri = findResourceWithValueResult.projectIri,
                         resourceClassIri = resourceClassIri,
                         propertyIri = findResourceWithValueResult.propertyIri,
-                        permissionData = changeValueRequest.userProfile.permissionData)
+                        targetUser = changeValueRequest.userProfile,
+                        requestingUser = KnoraSystemInstances.Users.SystemUser)
                 }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                 _ = log.debug(s"changeValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 

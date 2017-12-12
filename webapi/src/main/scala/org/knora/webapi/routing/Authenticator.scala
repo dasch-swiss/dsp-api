@@ -610,7 +610,7 @@ object Authenticator {
     private def getUserADMByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserADM = {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
         val userProfileV1Future = for {
-            maybeUser <- (responderManager ? UserGetADM(maybeUserIri = Some(iri), maybeEmail = None, UserInformationTypeADM.FULL, requestingUser = None)).mapTo[Option[UserADM]]
+            maybeUser <- (responderManager ? UserGetADM(maybeUserIri = Some(iri), maybeEmail = None, UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
             user = maybeUser match {
                 case Some(up) => up
                 case None => {
@@ -640,7 +640,7 @@ object Authenticator {
 
         if (email.nonEmpty) {
             val userADMFuture = for {
-                maybeUserADM <- (responderManager ? UserGetADM(maybeUserIri = None, maybeEmail = Some(email), UserInformationTypeADM.FULL, requestingUser = None)).mapTo[Option[UserADM]]
+                maybeUserADM <- (responderManager ? UserGetADM(maybeUserIri = None, maybeEmail = Some(email), UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
                 user = maybeUserADM match {
                     case Some(u) => u
                     case None => {

@@ -56,19 +56,19 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     private implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
-    private val rootUser = SharedAdminTestData.rootUser
+    private val rootUser = SharedTestDataV1.rootUser
     private val rootUserIri = rootUser.userData.user_id.get
     private val rootUserEmail = rootUser.userData.email.get
 
-    private val normalUser = SharedAdminTestData.normalUser
+    private val normalUser = SharedTestDataV1.normalUser
     private val normalUserIri = normalUser.userData.user_id.get
 
-    private val incunabulaUser = SharedAdminTestData.incunabulaProjectAdminUser
+    private val incunabulaUser = SharedTestDataV1.incunabulaProjectAdminUser
     private val incunabulaUserIri = incunabulaUser.userData.user_id.get
     private val incunabulaUserEmail = incunabulaUser.userData.email.get
 
-    private val imagesProjectIri = SharedAdminTestData.imagesProjectInfo.id
-    private val imagesReviewerGroupIri = SharedAdminTestData.imagesReviewerGroupInfo.id
+    private val imagesProjectIri = SharedTestDataV1.imagesProjectInfo.id
+    private val imagesReviewerGroupIri = SharedTestDataV1.imagesReviewerGroupInfo.id
 
     private val actorUnderTest = TestActorRef[UsersResponderV1]
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
@@ -80,7 +80,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedAdminTestData.rootUser)
+        responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 

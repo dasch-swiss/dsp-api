@@ -33,7 +33,7 @@ import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtoco
 import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, SharedAdminTestData}
+import org.knora.webapi.{E2ESpec, SharedTestDataV1}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -58,12 +58,12 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
     private val rdfDataObjects = List.empty[RdfDataObject]
 
-    val rootEmail = SharedAdminTestData.rootUser.userData.email.get
+    val rootEmail = SharedTestDataV1.rootUser.userData.email.get
     val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
     val testPass = java.net.URLEncoder.encode("test", "utf-8")
-    val projectIri = SharedAdminTestData.imagesProjectInfo.id
+    val projectIri = SharedTestDataV1.imagesProjectInfo.id
     val projectIriEnc = java.net.URLEncoder.encode(projectIri, "utf-8")
-    val projectShortName = SharedAdminTestData.imagesProjectInfo.shortname
+    val projectShortName = SharedTestDataV1.imagesProjectInfo.shortname
     val projectShortnameEnc = java.net.URLEncoder.encode(projectShortName, "utf-8")
 
 

@@ -22,28 +22,27 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.apache.commons.validator.routines.UrlValidator
+import akka.util.Timeout
 import org.knora.webapi._
+
+import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
-import org.knora.webapi.routing.{Authenticator, RouteUtilADM, RouteUtilV1}
+import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
+
+import scala.concurrent.ExecutionContextExecutor
 
 /**
   * Provides a spray-routing function for API routes that deal with lists.
   */
 object UsersRouteADM extends Authenticator {
 
-    /* bring json protocol into scope */
-
-    private val schemes = Array("http", "https")
-    private val urlValidator = new UrlValidator(schemes)
-
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
 
         implicit val system: ActorSystem = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = settings.defaultTimeout
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
         val stringFormatter = StringFormatter.getGeneralInstance
 
@@ -143,7 +142,7 @@ object UsersRouteADM extends Authenticator {
                             )
                         } else {
                             /* update existing user's basic information */
-                            UserChangeBasicUserDataRequestADM(
+                            UserChangeBasicUserInformationRequestADM(
                                 userIri,
                                 changeUserRequest = apiRequest,
                                 requestingUser,

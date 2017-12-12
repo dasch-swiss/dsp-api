@@ -18,9 +18,8 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.admin.responder.listadminmessages
+package org.knora.webapi.messages.admin.responder.listsmessages
 
-import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.scalatest.{Matchers, WordSpecLike}
 import spray.json._
@@ -28,15 +27,15 @@ import spray.json._
 /**
   * This spec is used to test 'ListAdminMessages'.
   */
-class ListsAdminMessagesSpec extends WordSpecLike with Matchers with ListADMJsonProtocol {
+class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonProtocol {
 
     "Conversion from case class to JSON and back" should {
 
         "work for a 'ListInfo'" in {
 
-            val listInfo: ListInfo = ListInfo (
+            val listInfo: ListInfoADM = ListInfoADM (
                 id = "http://data.knora.org/lists/73d0ec0302",
-                projectIri = Some("http://rdfh.ch/projects/00FF"),
+                projectIri = "http://rdfh.ch/projects/00FF",
                 labels = Seq(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr"))),
                 comments = Seq(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
             )
@@ -45,14 +44,14 @@ class ListsAdminMessagesSpec extends WordSpecLike with Matchers with ListADMJson
 
             // json should be ("")
 
-            val converted: ListInfo = json.parseJson.convertTo[ListInfo]
+            val converted: ListInfoADM = json.parseJson.convertTo[ListInfoADM]
 
             converted should be(listInfo)
         }
 
         "work for a 'ListNodeInfo'" in {
 
-            val listNodeInfo: ListNodeInfo = ListNodeInfo (
+            val listNodeInfo: ListNodeInfoADM = ListNodeInfoADM (
                 id = "http://rdfh.ch/lists/00FF/526f26ed04",
                 name = Some("sommer"),
                 labels = Seq(StringLiteralV2("Sommer")),
@@ -64,19 +63,19 @@ class ListsAdminMessagesSpec extends WordSpecLike with Matchers with ListADMJson
 
             // json should be ("")
 
-            val converted: ListNodeInfo = json.parseJson.convertTo[ListNodeInfo]
+            val converted: ListNodeInfoADM = json.parseJson.convertTo[ListNodeInfoADM]
 
             converted should be(listNodeInfo)
         }
 
         "work for a 'ListNode'" in {
 
-            val listNode: ListNode = ListNode(
+            val listNode: ListNodeADM = ListNodeADM(
                 id = "http://rdfh.ch/lists/00FF/526f26ed04",
                 name = Some("sommer"),
                 labels = Seq(StringLiteralV2("Sommer")),
                 comments = Seq.empty[StringLiteralV2],
-                children = Seq.empty[ListNode],
+                children = Seq.empty[ListNodeADM],
                 position = Some(0)
             )
 
@@ -84,34 +83,34 @@ class ListsAdminMessagesSpec extends WordSpecLike with Matchers with ListADMJson
 
             // json should be ("")
 
-            val converted: ListNode = json.parseJson.convertTo[ListNode]
+            val converted: ListNodeADM = json.parseJson.convertTo[ListNodeADM]
 
             converted should be(listNode)
         }
 
         "work for a 'FullList'" in {
 
-            val listInfo: ListInfo = ListInfo (
+            val listInfo: ListInfoADM = ListInfoADM (
                 id = "http://data.knora.org/lists/73d0ec0302",
-                projectIri = Some("http://rdfh.ch/projects/00FF"),
+                projectIri = "http://rdfh.ch/projects/00FF",
                 labels = Seq(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr"))),
                 comments = Seq(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
             )
 
-            val listNode: ListNode = ListNode(
+            val listNode: ListNodeADM = ListNodeADM(
                 id = "http://rdfh.ch/lists/00FF/526f26ed04",
                 name = Some("sommer"),
                 labels = Seq(StringLiteralV2("Sommer")),
                 comments = Seq.empty[StringLiteralV2],
-                children = Seq.empty[ListNode],
+                children = Seq.empty[ListNodeADM],
                 position = Some(0)
             )
 
-            val json = FullList(listInfo, Seq(listNode)).toJson.compactPrint
+            val json = FullListADM(listInfo, Seq(listNode)).toJson.compactPrint
 
             // json should be ("")
 
-            val converted: FullList = json.parseJson.convertTo[FullList]
+            val converted: FullListADM = json.parseJson.convertTo[FullListADM]
 
             converted.listinfo should be(listInfo)
             converted.children.head should be(listNode)

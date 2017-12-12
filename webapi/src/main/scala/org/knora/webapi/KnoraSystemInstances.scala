@@ -21,7 +21,7 @@
 package org.knora.webapi
 
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
-import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoADM
+import org.knora.webapi.messages.admin.responder.ontologiesmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -42,7 +42,7 @@ object KnoraSystemInstances {
             familyName = "Anonymous",
             status = true,
             lang = "en",
-            groups = Vector.empty[GroupADM],
+            groups = Seq.empty[GroupADM],
             projects = Seq.empty[ProjectADM],
             sessionId = None,
             permissions = PermissionsDataADM()
@@ -57,7 +57,7 @@ object KnoraSystemInstances {
             familyName  = "System",
             status = true,
             lang = "en",
-            groups = Vector.empty[GroupADM],
+            groups = Seq.empty[GroupADM],
             projects = Seq.empty[ProjectADM],
             sessionId = None,
             permissions = PermissionsDataADM()
@@ -67,6 +67,7 @@ object KnoraSystemInstances {
     object Projects {
 
         val knoraBase: SmartIri = SmartIri("http://www.knora.org/ontology/knora-base")
+
         val SystemProject = ProjectADM(
             id = OntologyConstants.KnoraBase.SystemProject,
             shortname = "SystemProject",
@@ -76,7 +77,7 @@ object KnoraSystemInstances {
             keywords = None,
             logo = None,
             institution = None,
-            ontologies = Seq(OntologyInfoADM(ontologyIri = knoraBase, ontologyName = knoraBase.getOntologyName, project = None)),
+            ontologies = Seq(ontologiesmessages.OntologyInfoShortADM(ontologyIri = knoraBase, ontologyName = knoraBase.getOntologyName)),
             status = true,
             selfjoin = false
         )

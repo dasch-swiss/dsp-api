@@ -29,7 +29,7 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.{KnoraPasswor
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.util.{ActorUtil, CacheUtil}
-import org.knora.webapi.{BadCredentialsException, CoreSpec, SharedAdminTestData}
+import org.knora.webapi.{BadCredentialsException, CoreSpec, SharedTestDataV1}
 import org.scalatest.PrivateMethodTester
 
 import scala.concurrent.Future
@@ -50,7 +50,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     implicit val executionContext = system.dispatcher
     implicit val timeout: Timeout = Duration(5, SECONDS)
 
-    val rootUserProfileV1 = SharedAdminTestData.rootUser
+    val rootUserProfileV1 = SharedTestDataV1.rootUser
     val rootUserEmail = rootUserProfileV1.userData.email.get
     val rootUserPassword = "test"
 

@@ -24,8 +24,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.eclipse.rdf4j.model.{Resource, Statement}
 import org.eclipse.rdf4j.rio.turtle._
 import org.eclipse.rdf4j.rio.{RDFHandler, RDFWriter}
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionType, PermissionADM}
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionType
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 import org.rogach.scallop._

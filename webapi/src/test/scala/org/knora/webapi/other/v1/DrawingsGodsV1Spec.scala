@@ -30,7 +30,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Reset
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.{MutableTestIri, MutableUserProfileV1}
-import org.knora.webapi.{CoreSpec, LiveActorMaker, OntologyConstants, SharedAdminTestData}
+import org.knora.webapi.{CoreSpec, LiveActorMaker, OntologyConstants, SharedTestDataV1}
 
 import scala.concurrent.duration._
 
@@ -65,7 +65,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedAdminTestData.rootUser)
+        responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 

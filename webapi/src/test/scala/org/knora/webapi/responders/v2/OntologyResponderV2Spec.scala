@@ -19,8 +19,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    private val userProfile = SharedAdminTestData.imagesUser01
-    private val projectWithProjectID = SharedAdminTestData.IMAGES_PROJECT_IRI.toSmartIri
+    private val userProfile = SharedTestDataV1.imagesUser01
+    private val projectWithProjectID = SharedTestDataV1.IMAGES_PROJECT_IRI.toSmartIri
 
     private val actorUnderTest = TestActorRef[OntologyResponderV2]
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)

@@ -20,13 +20,26 @@
 
 package org.knora.webapi
 
-object SharedOntologyTestData {
+import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoADM
+import org.knora.webapi.util.SmartIri
 
+object SharedOntologyTestDataADM {
+
+    val imagesOntologyInfo = OntologyInfoADM(
+        ontologyIri = SmartIri(IMAGES_ONTOLOGY_IRI),
+        ontologyName = "images",
+        project = SharedTestDataADM.imagesProject
+    )
     val IMAGES_ONTOLOGY_IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "00FF/images"
     val IMAGES_TITEL_PROPERTY = IMAGES_ONTOLOGY_IRI + "#" + "titel"
     val IMAGES_BILD_RESOURCE_CLASS = IMAGES_ONTOLOGY_IRI + "#" + "bild"
 
 
+    val incunabulaOntologyInfo = OntologyInfoADM(
+        ontologyIri = SmartIri(INCUNABULA_ONTOLOGY_IRI),
+        ontologyName = "incunabula",
+        project = SharedTestDataADM.incunabulaProject
+    )
     val INCUNABULA_ONTOLOGY_IRI =  OntologyConstants.KnoraInternal.InternalOntologyStart + "incunabula"
     val INCUNABULA_BOOK_RESOURCE_CLASS = INCUNABULA_ONTOLOGY_IRI + "#" + "book"
     val INCUNABULA_PAGE_RESOURCE_CLASS = INCUNABULA_ONTOLOGY_IRI + "#" + "page"

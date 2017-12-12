@@ -21,10 +21,10 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.listsmessages.ListInfoADM
 import org.knora.webapi.messages.admin.responder.ontologiesmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlExtendedConstructRequest, SparqlExtendedConstructResponse, StringLiteralV2}
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlExtendedConstructRequest, SparqlExtendedConstructResponse}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 
@@ -36,7 +36,7 @@ import scala.concurrent.Future
 class OntologiesResponderADM extends Responder {
 
     def receive: PartialFunction[Any, Unit] = {
-        case OntologiesGetRequestADM(projectIri, requestingUser) => future2Message(sender(), ontologiesGetRequestADM(projectIri, requestingUser), log)
+        case OntologyInfosGetRequestADM(requestingUser) => future2Message(sender(), ontologieInfosGetRequestADM(requestingUser), log)
         case OntologyGetRequestADM(ontologyIri, requestingUser) => future2Message(sender(), ontologyGetRequestADM(ontologyIri, requestingUser), log)
         case OntologyCreateRequestADM(ontologyName, projectIri, apiRequestID, requestingUser) => future2Message(sender(), ontologyCreateRequestADM(ontologyName, projectIri, apiRequestID, requestingUser), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
@@ -46,43 +46,29 @@ class OntologiesResponderADM extends Responder {
     /**
       * Gets all ontologies and returns them as a [[OntologiesGetResponseADM]].
       *
-      * @param projectIri  the IRI of the project the ontology belongs to.
       * @param requestingUser the user making the request.
       * @return a [[OntologiesGetResponseADM]].
       */
-    def ontologiesGetRequestADM(projectIri: Option[IRI], requestingUser: UserADM): Future[OntologiesGetResponseADM] = {
+    def ontologieInfosGetRequestADM(requestingUser: UserADM): Future[OntologyInfosGetResponseADM] = {
 
-        // log.debug("listsGetRequestV2")
+        // log.debug("ontologiesGetRequestADM")
+
+        // ToDo: Check user permissions
 
         for {
-            sparqlQuery <- Future(queries.sparql.admin.txt.getLists(????????????????????????????
-                triplestore = settings.triplestoreType,
-                maybeProjectIri = projectIri
-            ).toString())
+            projects <- (responderManager ? ProjectsGetADM(requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Seq[ProjectADM]]
 
-            listsResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
-
-            // _ = log.debug("listsGetAdminRequest - listsResponse: {}", listsResponse )
-
-            // Seq(subjectIri, (objectIri -> Seq(stringWithOptionalLand))
-            statements = listsResponse.statements.toList
-
-            items: Seq[ListInfoADM] = statements.map {
-                case (listIri: IRI, propsMap: Map[IRI, Seq[StringLiteralV2]]) =>
-
-                    ListInfoADM(
-                        id = listIri,
-                        projectIri = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject).map(_.head.value),
-                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2])
+            ontologies: Seq[OntologyInfoADM] = projects.flatMap {
+                project => project.ontologies.map {
+                    ontInfo => OntologyInfoADM(
+                        ontologyIri = ontInfo.ontologyIri,
+                        ontologyName = ontInfo.ontologyName,
+                        project = project
                     )
+                }
             }
 
-            // _ = log.debug("listsGetAdminRequest - items: {}", items)
-
-            ontologies = Seq.empty[OntologyInfoADM]
-
-        } yield OntologiesGetResponseADM(ontologies = ontologies)
+        } yield OntologyInfosGetResponseADM(ontologies = ontologies)
     }
 
     /**
@@ -129,7 +115,7 @@ class OntologiesResponderADM extends Responder {
 //            list = FullList(listinfo = listinfo, children = children)
             // _ = log.debug(s"listGetRequestV2 - list: {}", MessageUtil.toSource(list))
 
-            data = OntologyDataADM("", "", ???, "")
+            data = OntologyDataADM(???, "", ???, "")
 
         } yield OntologyGetResponseADM(ontology = data)
     }
@@ -146,7 +132,7 @@ class OntologiesResponderADM extends Responder {
     def ontologyCreateRequestADM(ontologyName: String, projectIri: IRI, apiRequestID: UUID, user: UserADM): Future[OntologyCreateResponseADM] = {
         for {
 
-            data <- FastFuture.successful(OntologyDataADM("", "", ???, ""))
+            data <- FastFuture.successful(OntologyDataADM(???, "", ???, ""))
 
         } yield OntologyCreateResponseADM(ontology = data)
 

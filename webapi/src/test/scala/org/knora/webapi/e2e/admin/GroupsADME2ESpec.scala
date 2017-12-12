@@ -31,7 +31,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Tripl
 import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoV1, GroupV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, SharedAdminTestData}
+import org.knora.webapi.{E2ESpec, SharedTestDataV1}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -56,16 +56,16 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
     private val rdfDataObjects = List.empty[RdfDataObject]
 
-    val rootEmail = SharedAdminTestData.rootUser.userData.email.get
+    val rootEmail = SharedTestDataV1.rootUser.userData.email.get
     val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
-    val imagesUser01Email = SharedAdminTestData.imagesUser01.userData.email.get
+    val imagesUser01Email = SharedTestDataV1.imagesUser01.userData.email.get
     val testPass = java.net.URLEncoder.encode("test", "utf-8")
 
-    val groupIri = SharedAdminTestData.imagesReviewerGroupInfo.id
+    val groupIri = SharedTestDataV1.imagesReviewerGroupInfo.id
     val groupIriEnc = java.net.URLEncoder.encode(groupIri, "utf-8")
-    val groupName = SharedAdminTestData.imagesReviewerGroupInfo.name
+    val groupName = SharedTestDataV1.imagesReviewerGroupInfo.name
     val groupNameEnc = java.net.URLEncoder.encode(groupName, "utf-8")
-    val projectIri = SharedAdminTestData.imagesReviewerGroupInfo.project
+    val projectIri = SharedTestDataV1.imagesReviewerGroupInfo.project
     val projectIriEnc = java.net.URLEncoder.encode(projectIri, "utf-8")
 
     "Load test data" in {
@@ -110,7 +110,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
                        |{
                        |    "name": "NewGroup",
                        |    "description": "NewGroupDescription",
-                       |    "project": "${SharedAdminTestData.IMAGES_PROJECT_IRI}",
+                       |    "project": "${SharedTestDataV1.IMAGES_PROJECT_IRI}",
                        |    "status": true,
                        |    "selfjoin": false
                        |}
@@ -126,7 +126,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
                 groupInfo.name should be ("NewGroup")
                 groupInfo.description should be (Some("NewGroupDescription"))
-                groupInfo.project should be (SharedAdminTestData.IMAGES_PROJECT_IRI)
+                groupInfo.project should be (SharedTestDataV1.IMAGES_PROJECT_IRI)
                 groupInfo.status should be (true)
                 groupInfo.selfjoin should be (false)
 
@@ -155,7 +155,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
                 groupInfo.name should be ("UpdatedGroupName")
                 groupInfo.description should be (Some("UpdatedGroupDescription"))
-                groupInfo.project should be (SharedAdminTestData.IMAGES_PROJECT_IRI)
+                groupInfo.project should be (SharedTestDataV1.IMAGES_PROJECT_IRI)
                 groupInfo.status should be (true)
                 groupInfo.selfjoin should be (false)
 
@@ -173,7 +173,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
                 groupInfo.name should be ("UpdatedGroupName")
                 groupInfo.description should be (Some("UpdatedGroupDescription"))
-                groupInfo.project should be (SharedAdminTestData.IMAGES_PROJECT_IRI)
+                groupInfo.project should be (SharedTestDataV1.IMAGES_PROJECT_IRI)
                 groupInfo.status should be (false)
                 groupInfo.selfjoin should be (false)
 
