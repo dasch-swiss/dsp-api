@@ -1076,7 +1076,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "get a book a page points to and include the page in the results (all properties present in WHERE clause)" in {
             val sparqlSimplified =
-            """
+                """
             PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
             PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
 
@@ -1181,6 +1181,54 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/bookWithIncomingPagesOnlyLink.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "get incoming links pointing to an incunbaula:book, excluding isPartOf and isRegionOf" in {
+            var sparqlSimplified =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |
+                  |     ?incomingRes knora-api:isMainResource true .
+                  |
+                  |     ?incomingRes ?incomingProp <http://data.knora.org/8be1b7cf7103> .
+                  |
+                  |} WHERE {
+                  |
+                  |     ?incomingRes a knora-api:Resource .
+                  |
+                  |     ?incomingRes ?incomingProp <http://data.knora.org/8be1b7cf7103> .
+                  |
+                  |     <http://data.knora.org/8be1b7cf7103> a knora-api:Resource .
+                  |
+                  |     ?incomingProp knora-api:objectType knora-api:Resource .
+                  |
+                  |     knora-api:isRegionOf knora-api:objectType knora-api:Resource .
+                  |     knora-api:isPartOf knora-api:objectType knora-api:Resource .
+                  |
+                  |     FILTER NOT EXISTS {
+                  |         ?incomingRes  knora-api:isRegionOf <http://data.knora.org/8be1b7cf7103> .
+                  |     }
+                  |
+                  |     FILTER NOT EXISTS {
+                  |         ?incomingRes  knora-api:isPartOf <http://data.knora.org/8be1b7cf7103> .
+                  |     }
+                  |
+                  |} OFFSET 0
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/IncomingLinksForBook.jsonld"))
 
                 compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -1418,6 +1466,108 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithBoolean.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkCountQuery(responseAs[String], 1)
+
+            }
+
+        }
+
+        "search for an anything:Thing that may have a Boolean value that is true" in {
+            // set OFFSET to 1 to get "Testding for extended search"
+            val sparqlSimplified =
+                """
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasBoolean ?boolean .
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     OPTIONAL {
+                  |
+                  |         ?thing anything:hasBoolean ?boolean .
+                  |         anything:hasBoolean knora-api:objectType xsd:boolean .
+                  |
+                  |         ?boolean a xsd:boolean .
+                  |
+                  |         FILTER(?boolean = true)
+                  |     }
+                  |} OFFSET 1
+                  |
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOptional.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                // this is the second page of results
+                checkCountQuery(responseAs[String], 7)
+
+            }
+
+        }
+
+        "search for an anything:Thing that either has a Boolean value that is true or a decimal value that equals 2.1 (or both)" in {
+
+            val sparqlSimplified =
+                """
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasBoolean ?boolean .
+                  |
+                  |     ?thing anything:hasDecimal ?decimal .
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     {
+                  |         ?thing anything:hasBoolean ?boolean .
+                  |         anything:hasBoolean knora-api:objectType xsd:boolean .
+                  |
+                  |         ?boolean a xsd:boolean .
+                  |
+                  |         FILTER(?boolean = true)
+                  |     } UNION {
+                  |         ?thing anything:hasDecimal ?decimal .
+                  |         anything:hasDecimal knora-api:objectType xsd:decimal .
+                  |
+                  |         ?decimal a xsd:decimal .
+                  |
+                  |         FILTER(?decimal = 2.1)
+                  |     }
+                  |
+                  |} OFFSET 0
+                  |
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOrDecimal.jsonld"))
 
                 compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
