@@ -42,8 +42,8 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 INSERT {
     GRAPH ?ontologyNamedGraph {
-        ?ontology rdf:type owl:Ontology .
-        ?ontology rdfs:label """@ontologyLabel"""^^xsd:string ;
+        ?ontology rdf:type owl:Ontology ;
+            rdfs:label """@ontologyLabel"""^^xsd:string ;
             knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
     }
 }

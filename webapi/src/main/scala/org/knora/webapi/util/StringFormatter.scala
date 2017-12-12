@@ -1603,38 +1603,6 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     }
 
     /**
-      * Given an ontology IRI requested by the user, converts it to the IRI of an ontology that the ontology responder knows about.
-      *
-      * @param requestedOntology the IRI of the ontology that the user requested.
-      * @return the IRI of an ontology that the ontology responder can provide.
-      */
-    def requestedOntologyToOntologyForResponder(requestedOntology: SmartIri): SmartIri = {
-        if (OntologyConstants.ConstantOntologies.contains(requestedOntology.toString)) {
-            // The client is asking about a constant ontology, so don't translate its IRI.
-            requestedOntology
-        } else {
-            // The client is asking about a non-constant ontology. Translate its IRI to an internal ontology IRI.
-            requestedOntology.toOntologySchema(InternalSchema)
-        }
-    }
-
-    /**
-      * Given an ontology entity IRI requested by the user, converts it to the IRI of an entity that the ontology responder knows about.
-      *
-      * @param requestedEntity the IRI of the entity that the user requested.
-      * @return the IRI of an entity that the ontology responder can provide.
-      */
-    def requestedEntityToEntityForResponder(requestedEntity: SmartIri): SmartIri = {
-        if (OntologyConstants.ConstantOntologies.contains(requestedEntity.getOntologyFromEntity.toString)) {
-            // The client is asking about an entity in a constant ontology, so don't translate its IRI.
-            requestedEntity
-        } else {
-            // The client is asking about a non-constant entity. Translate its IRI to an internal entity IRI.
-            requestedEntity.toOntologySchema(InternalSchema)
-        }
-    }
-
-    /**
       * Determines whether a URL path refers to a built-in API v2 ontology (simple or complex).
       *
       * @param urlPath the URL path.

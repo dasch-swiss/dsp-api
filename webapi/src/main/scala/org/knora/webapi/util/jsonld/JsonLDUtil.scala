@@ -22,7 +22,7 @@ package org.knora.webapi.util.jsonld
 
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
-import org.knora.webapi.util.{JavaUtil, SmartIri}
+import org.knora.webapi.util.{JavaUtil, SmartIri, StringFormatter}
 import org.knora.webapi.{BadRequestException, IRI}
 
 /**
@@ -109,8 +109,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
 
     /**
-      * Gets the required array value of this JSON-LD object, throwing
-      * [[BadRequestException]] if the property is not found or if its value is not an array.
+      * Gets the required array value of this JSON-LD object. If the value is not an array,
+      * returns a one-element array containing the value. Throws
+      * [[BadRequestException]] if the property is not found.
       *
       * @param key the key of the required value.
       * @return the required value.
@@ -118,7 +119,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     def requireArray(key: String): JsonLDArray = {
         value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
             case obj: JsonLDArray => obj
-            case other => throw BadRequestException(s"Invalid $key: $other (array expected)")
+            case other => JsonLDArray(Seq(other))
         }
     }
 
@@ -157,7 +158,27 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
   * @param value a sequence of JSON-LD values.
   */
 case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
+    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
     override def toAny: Seq[Any] = value.map(_.toAny)
+
+    /**
+      * Tries to interpret the elements of this array as JSON-LD objects containing `@language` and `@value`,
+      * and returns the results as a map of language codes to values. Throws [[BadRequestException]]
+      * if the array can't be interpreted in this way.
+      *
+      * @return a map of language keys to values.
+      */
+    def toObjsWithLang: Map[String, String] = {
+        value.map {
+            case obj: JsonLDObject =>
+                val lang = obj.requireString("@language", stringFormatter.toSparqlEncodedString)
+                val text = obj.requireString("@value", stringFormatter.toSparqlEncodedString)
+                lang -> text
+
+            case other => throw BadRequestException(s"Expected JSON-LD object: $other")
+        }
+    }.toMap
 }
 
 /**

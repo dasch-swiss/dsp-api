@@ -70,8 +70,6 @@ object OntologiesRouteV2 extends Authenticator {
                     }
 
                     val requestedOntology = requestedOntologyStr.toSmartIriWithErr(throw BadRequestException(s"Invalid ontology IRI: $requestedOntologyStr"))
-                    val ontologyForResponder: SmartIri = stringFormatter.requestedOntologyToOntologyForResponder(requestedOntology)
-                    val ontologiesForResponder: Set[SmartIri] = Set(ontologyForResponder)
 
                     val responseSchema = requestedOntology.getOntologySchema match {
                         case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
@@ -83,7 +81,7 @@ object OntologiesRouteV2 extends Authenticator {
                     val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = OntologyEntitiesGetRequestV2(
-                        ontologyGraphIris = ontologiesForResponder,
+                        ontologyGraphIris = Set(requestedOntology),
                         responseSchema = responseSchema,
                         allLanguages = allLanguages,
                         userProfile = userProfile
@@ -138,57 +136,127 @@ object OntologiesRouteV2 extends Authenticator {
                 }
             }
         } ~ path("v2" / "ontologies" / "metadata" / Segments) { (projectIris: List[IRI]) =>
-                get {
-                    requestContext => {
-                        val userProfile = getUserProfileV1(requestContext)
-                        val validatedProjectIris = projectIris.map(iri => stringFormatter.validateAndEscapeIri(iri, throw BadRequestException("Invalid project IRI: $iri"))).toSet
-                        val requestMessage = OntologyMetadataGetRequestV2(projectIris = validatedProjectIris, userProfile = userProfile)
+            get {
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+                    val validatedProjectIris = projectIris.map(iri => stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid project IRI: $iri"))).toSet
+                    val requestMessage = OntologyMetadataGetRequestV2(projectIris = validatedProjectIris, userProfile = userProfile)
 
-                        RouteUtilV2.runJsonRoute(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
-                        )
-                    }
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
                 }
-            } ~ path("v2" / "ontologies" / "allentities" / Segments) { (externalOntologyIris: List[IRI]) =>
-                get {
+            }
+        } ~ path("v2" / "ontologies" / "allentities" / Segments) { (externalOntologyIris: List[IRI]) =>
+            get {
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val ontologiesAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalOntologyIris.map {
+                        (namedGraphStr: IRI) =>
+                            val requestedOntologyIri: SmartIri = namedGraphStr.toSmartIriWithErr(throw BadRequestException(s"Invalid ontology IRI: $namedGraphStr"))
+
+                            val schema = requestedOntologyIri.getOntologySchema match {
+                                case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
+                                case _ => throw BadRequestException(s"Invalid ontology IRI: $namedGraphStr")
+                            }
+
+                            (requestedOntologyIri, schema)
+                    }.toSet
+
+                    val (ontologiesForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = ontologiesAndSchemas.unzip
+
+                    // Decide which API schema to use for the response.
+                    val responseSchema = if (schemas.size == 1) {
+                        schemas.head
+                    } else {
+                        // The client requested different schemas.
+                        throw BadRequestException("The request refers to multiple API schemas")
+                    }
+
+                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+                    val allLanguagesStr = params.get(ALL_LANGUAGES)
+                    val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
+
+                    val requestMessage = OntologyEntitiesGetRequestV2(
+                        ontologyGraphIris = ontologiesForResponder,
+                        responseSchema = responseSchema,
+                        allLanguages = allLanguages,
+                        userProfile = userProfile
+                    )
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log,
+                        responseSchema = responseSchema
+                    )
+                }
+            }
+        } ~ path("v2" / "ontologies" / "classes" / Segments) { (externalResourceClassIris: List[IRI]) =>
+            get {
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val classesAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalResourceClassIris.map {
+                        (classIriStr: IRI) =>
+                            val requestedClassIri: SmartIri = classIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid class IRI: $classIriStr"))
+
+                            val schema = requestedClassIri.getOntologySchema match {
+                                case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
+                                case _ => throw BadRequestException(s"Invalid class IRI: $classIriStr")
+                            }
+
+                            (requestedClassIri, schema)
+                    }.toSet
+
+                    val (classesForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = classesAndSchemas.unzip
+
+                    // Decide which API schema to use for the response.
+                    val responseSchema = if (schemas.size == 1) {
+                        schemas.head
+                    } else {
+                        // The client requested different schemas.
+                        throw BadRequestException("The request refers to multiple API schemas")
+                    }
+
+                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+                    val allLanguagesStr = params.get(ALL_LANGUAGES)
+                    val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
+
+                    val requestMessage = ClassesGetRequestV2(
+                        resourceClassIris = classesForResponder,
+                        responseSchema = responseSchema,
+                        allLanguages = allLanguages,
+                        userProfile = userProfile
+                    )
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log,
+                        responseSchema
+                    )
+                }
+            }
+        } ~ path("v2" / "ontologies" / "properties") {
+            post {
+                entity(as[String]) { jsonRequest =>
                     requestContext => {
                         val userProfile = getUserProfileV1(requestContext)
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-                        val ontologiesAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalOntologyIris.map {
-                            (namedGraphStr: IRI) =>
-                                val requestedOntologyIri: SmartIri = namedGraphStr.toSmartIriWithErr(throw BadRequestException(s"Invalid ontology IRI: $namedGraphStr"))
-
-                                val schema = requestedOntologyIri.getOntologySchema match {
-                                    case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
-                                    case _ => throw BadRequestException(s"Invalid ontology IRI: $namedGraphStr")
-                                }
-
-                                val ontologyForResponder = stringFormatter.requestedOntologyToOntologyForResponder(requestedOntologyIri)
-                                (ontologyForResponder, schema)
-                        }.toSet
-
-                        val (ontologiesForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = ontologiesAndSchemas.unzip
-
-                        // Decide which API schema to use for the response.
-                        val responseSchema = if (schemas.size == 1) {
-                            schemas.head
-                        } else {
-                            // The client requested different schemas.
-                            throw BadRequestException("The request refers to multiple API schemas")
-                        }
-
-                        val params: Map[String, String] = requestContext.request.uri.query().toMap
-                        val allLanguagesStr = params.get(ALL_LANGUAGES)
-                        val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
-
-                        val requestMessage = OntologyEntitiesGetRequestV2(
-                            ontologyGraphIris = ontologiesForResponder,
-                            responseSchema = responseSchema,
-                            allLanguages = allLanguages,
+                        val requestMessage: CreatePropertyRequestV2 = CreatePropertyRequestV2.fromJsonLD(
+                            jsonLDDocument = requestDoc,
+                            apiRequestID = UUID.randomUUID,
                             userProfile = userProfile
                         )
 
@@ -198,47 +266,68 @@ object OntologiesRouteV2 extends Authenticator {
                             settings,
                             responderManager,
                             log,
-                            responseSchema = responseSchema
+                            responseSchema = ApiV2WithValueObjects
                         )
                     }
                 }
-            } ~ path("v2" / "ontologies" / "classes" / Segments) { (externalResourceClassIris: List[IRI]) =>
-                get {
+            }
+        } ~ path("v2" / "ontologies" / "properties" / Segments) { (externalPropertyIris: List[IRI]) =>
+            get {
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val propsAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalPropertyIris.map {
+                        (propIriStr: IRI) =>
+                            val requestedPropIri: SmartIri = propIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $propIriStr"))
+
+                            val schema = requestedPropIri.getOntologySchema match {
+                                case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
+                                case _ => throw BadRequestException(s"Invalid property IRI: $propIriStr")
+                            }
+
+                            (requestedPropIri, schema)
+                    }.toSet
+
+                    val (propsForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = propsAndSchemas.unzip
+
+                    // Decide which API schema to use for the response.
+                    val responseSchema = if (schemas.size == 1) {
+                        schemas.head
+                    } else {
+                        // The client requested different schemas.
+                        throw BadRequestException("The request refers to multiple API schemas")
+                    }
+
+                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+                    val allLanguagesStr = params.get(ALL_LANGUAGES)
+                    val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
+
+                    val requestMessage = PropertiesGetRequestV2(
+                        propertyIris = propsForResponder,
+                        allLanguages = allLanguages,
+                        userProfile = userProfile
+                    )
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log,
+                        responseSchema = responseSchema
+                    )
+                }
+            }
+        } ~ path("v2" / "ontologies") {
+            post {
+                entity(as[String]) { jsonRequest =>
                     requestContext => {
                         val userProfile = getUserProfileV1(requestContext)
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-                        val classesAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalResourceClassIris.map {
-                            (classIriStr: IRI) =>
-                                val requestedClassIri: SmartIri = classIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid class IRI: $classIriStr"))
-
-                                val schema = requestedClassIri.getOntologySchema match {
-                                    case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
-                                    case _ => throw BadRequestException(s"Invalid class IRI: $classIriStr")
-                                }
-
-                                val classForResponder = stringFormatter.requestedEntityToEntityForResponder(requestedClassIri)
-
-                                (classForResponder, schema)
-                        }.toSet
-
-                        val (classesForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = classesAndSchemas.unzip
-
-                        // Decide which API schema to use for the response.
-                        val responseSchema = if (schemas.size == 1) {
-                            schemas.head
-                        } else {
-                            // The client requested different schemas.
-                            throw BadRequestException("The request refers to multiple API schemas")
-                        }
-
-                        val params: Map[String, String] = requestContext.request.uri.query().toMap
-                        val allLanguagesStr = params.get(ALL_LANGUAGES)
-                        val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
-
-                        val requestMessage = ClassesGetRequestV2(
-                            resourceClassIris = classesForResponder,
-                            responseSchema = responseSchema,
-                            allLanguages = allLanguages,
+                        val requestMessage: CreateOntologyRequestV2 = CreateOntologyRequestV2.fromJsonLD(
+                            jsonLDDocument = requestDoc,
+                            apiRequestID = UUID.randomUUID,
                             userProfile = userProfile
                         )
 
@@ -248,82 +337,11 @@ object OntologiesRouteV2 extends Authenticator {
                             settings,
                             responderManager,
                             log,
-                            responseSchema
+                            responseSchema = ApiV2WithValueObjects
                         )
-                    }
-                }
-            } ~ path("v2" / "ontologies" / "properties" / Segments) { (externalPropertyIris: List[IRI]) =>
-                get {
-                    requestContext => {
-                        val userProfile = getUserProfileV1(requestContext)
-
-                        val propsAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalPropertyIris.map {
-                            (propIriStr: IRI) =>
-                                val requestedPropIri: SmartIri = propIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid class IRI: $propIriStr"))
-
-                                val schema = requestedPropIri.getOntologySchema match {
-                                    case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
-                                    case _ => throw BadRequestException(s"Invalid class IRI: $propIriStr")
-                                }
-
-                                val propForResponder = stringFormatter.requestedEntityToEntityForResponder(requestedPropIri)
-                                (propForResponder, schema)
-                        }.toSet
-
-                        val (propsForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = propsAndSchemas.unzip
-
-                        // Decide which API schema to use for the response.
-                        val responseSchema = if (schemas.size == 1) {
-                            schemas.head
-                        } else {
-                            // The client requested different schemas.
-                            throw BadRequestException("The request refers to multiple API schemas")
-                        }
-
-                        val params: Map[String, String] = requestContext.request.uri.query().toMap
-                        val allLanguagesStr = params.get(ALL_LANGUAGES)
-                        val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
-
-                        val requestMessage = PropertyEntitiesGetRequestV2(
-                            propertyIris = propsForResponder,
-                            allLanguages = allLanguages,
-                            userProfile = userProfile
-                        )
-
-                        RouteUtilV2.runJsonRoute(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            responseSchema = responseSchema
-                        )
-                    }
-                }
-            } ~ path("v2" / "ontologies") {
-                post {
-                    entity(as[String]) { jsonRequest =>
-                        requestContext => {
-                            val userProfile = getUserProfileV1(requestContext)
-                            val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-                            val requestMessage: CreateOntologyRequestV2 = CreateOntologyRequestV2.fromJsonLD(
-                                jsonLDDocument = requestDoc,
-                                apiRequestID = UUID.randomUUID,
-                                userProfile = userProfile
-                            )
-
-                            RouteUtilV2.runJsonRoute(
-                                requestMessage,
-                                requestContext,
-                                settings,
-                                responderManager,
-                                log,
-                                responseSchema = ApiV2WithValueObjects
-                            )
-                        }
                     }
                 }
             }
         }
     }
+}

@@ -89,7 +89,7 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
 }
 
 /**
-  * Requests the addition of a property to an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
+  * Requests the addition of a property to an ontology. A successful response will be a [[ReadOntologiesV2]].
   *
   * @param propertyInfoContent information about the property to be created.
   * @param apiRequestID        the ID of the API request.
@@ -104,21 +104,31 @@ case class CreatePropertyRequestV2(propertyInfoContent: PropertyInfoContentV2,
 /**
   * Constructs instances of [[CreatePropertyRequestV2]] based on JSON-LD requests.
   */
-/*
 object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreatePropertyRequestV2] {
+    private val PropertyPredicates = Set(
+        "@id",
+        "@type",
+        OntologyConstants.Rdfs.SubPropertyOf,
+        OntologyConstants.KnoraApiV2WithValueObjects.SubjectType,
+        OntologyConstants.KnoraApiV2WithValueObjects.ObjectType,
+        OntologyConstants.Rdfs.Label,
+        OntologyConstants.Rdfs.Comment
+    )
+
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
                             userProfile: UserProfileV1): CreatePropertyRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val hasOntologies: JsonLDObject = jsonLDDocument.requireObject(OntologyConstants.KnoraApiV2WithValueObjects.HasOntologies)
-        val externalOntologyIri: SmartIri = hasOntologies.requireString("@id", stringFormatter.toSmartIriWithErr)
+        val ontologyObj: JsonLDObject = jsonLDDocument.requireObject(OntologyConstants.KnoraApiV2WithValueObjects.HasOntologies)
+        val externalOntologyIri: SmartIri = ontologyObj.requireString("@id", stringFormatter.toSmartIriWithErr)
 
         if (!(externalOntologyIri.isKnoraOntologyIri && externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
             throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIri")
         }
 
-        val hasProperties: Map[String, JsonLDValue] = hasOntologies.requireObject(OntologyConstants.KnoraApiV2WithValueObjects.HasProperties).value
+        val lastModificationDate: Instant = ontologyObj.requireString(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
+        val hasProperties: Map[String, JsonLDValue] = ontologyObj.requireObject(OntologyConstants.KnoraApiV2WithValueObjects.HasProperties).value
 
         if (hasProperties.isEmpty || hasProperties.size > 1) {
             throw BadRequestException(s"${OntologyConstants.KnoraApiV2WithValueObjects.HasProperties} must contain one property definition")
@@ -127,6 +137,12 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
         val propertyDef: JsonLDObject = hasProperties.values.head match {
             case obj: JsonLDObject => obj
             case _ => throw BadRequestException(s"The definition of property ${hasProperties.keys.head} is invalid")
+        }
+
+        val extraPredicates = propertyDef.value.keySet -- PropertyPredicates
+
+        if (extraPredicates.nonEmpty) {
+            throw BadRequestException(s"One or more submitted property predicates are not allowed: ${extraPredicates.mkString(", ")}")
         }
 
         val propertyIri: SmartIri = propertyDef.requireString("@id", stringFormatter.toSmartIriWithErr)
@@ -143,14 +159,63 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
             throw BadRequestException(s"Property $propertyIri must be an owl:ObjectProperty")
         }
 
+        val subPropertyOf: Set[SmartIri] = propertyDef.requireArray(OntologyConstants.Rdfs.SubPropertyOf).value.map {
+            case JsonLDString(superProperty) => superProperty.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $superProperty"))
+            case other => throw BadRequestException(s"Expected property IRI: $other")
+        }.toSet
+
+        val subjectType: SmartIri = propertyDef.requireString(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType, stringFormatter.toSmartIriWithErr)
+
+        val subjectTypePred = PredicateInfoV2(
+            predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+            ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
+            objects = Set(subjectType.toString)
+        )
+
+        val objectType: SmartIri = propertyDef.requireString(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType, stringFormatter.toSmartIriWithErr)
+
+        val objectTypePred = PredicateInfoV2(
+            predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+            ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
+            objects = Set(objectType.toString)
+        )
+
+        val labelPred = PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            ontologyIri = externalOntologyIri,
+            objectsWithLang = propertyDef.requireArray(OntologyConstants.Rdfs.Label).toObjsWithLang
+        )
+
+        val commentPred = PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            ontologyIri = externalOntologyIri,
+            objectsWithLang = propertyDef.requireArray(OntologyConstants.Rdfs.Comment).toObjsWithLang
+        )
+
+        CreatePropertyRequestV2(
+            propertyInfoContent = PropertyInfoContentV2(
+                propertyIri = propertyIri,
+                ontologyIri = externalOntologyIri,
+                predicates = Map(
+                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> subjectTypePred,
+                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> objectTypePred,
+                    OntologyConstants.Rdfs.Label.toSmartIri -> labelPred,
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> commentPred
+                ),
+                subPropertyOf = subPropertyOf,
+                ontologySchema = ApiV2WithValueObjects
+            ),
+            lastModificationDate = lastModificationDate,
+            apiRequestID = apiRequestID,
+            userProfile = userProfile
+        )
     }
 }
-*/
 
 /**
   * Requests a change in the metadata of an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
   *
-  * @param ontologyIri          the internal ontology IRI.
+  * @param ontologyIri          the external ontology IRI.
   * @param label                the ontology's new label.
   * @param lastModificationDate the ontology's last modification date, returned in a previous operation.
   * @param apiRequestID         the ID of the API request.
@@ -172,18 +237,11 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val externalOntologyIri: SmartIri = jsonLDDocument.requireString("@id", stringFormatter.toSmartIriWithErr)
-
-        if (!externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
-            throw BadRequestException(s"Invalid ontology IRI for request: $externalOntologyIri")
-        }
-
-        val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
-
         val label: String = jsonLDDocument.requireString(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
         val lastModificationDate: Instant = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
 
         ChangeOntologyMetadataRequestV2(
-            ontologyIri = internalOntologyIri,
+            ontologyIri = externalOntologyIri,
             label = label,
             lastModificationDate = lastModificationDate,
             apiRequestID = apiRequestID,
@@ -331,13 +389,13 @@ case class OntologyEntitiesGetRequestV2(ontologyGraphIris: Set[SmartIri], respon
 case class ClassesGetRequestV2(resourceClassIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
-  * Requests the entity definitions for the given property Iris. A successful response will be a [[ReadOntologiesV2]].
+  * Requests the definitions of the specified properties. A successful response will be a [[ReadOntologiesV2]].
   *
   * @param propertyIris the IRIs of the properties to be queried.
   * @param allLanguages true if information in all available languages should be returned.
   * @param userProfile  the profile of the user making the request.
   */
-case class PropertyEntitiesGetRequestV2(propertyIris: Set[SmartIri], allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class PropertiesGetRequestV2(propertyIris: Set[SmartIri], allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 
 /**
@@ -632,7 +690,7 @@ case class PredicateInfoV2(predicateIri: SmartIri,
                            objects: Set[String] = Set.empty[String],
                            objectsWithLang: Map[String, String] = Map.empty[String, String]) extends PredicateConverter {
     // TODO: This class should really store its IRI objects as SmartIris. But this would need more help
-    // from OntologyResponderV2 and probably also from the store package.
+    // from OntologyResponderV2 and probably also from the store package (#668).
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

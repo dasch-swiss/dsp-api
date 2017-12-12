@@ -64,7 +64,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             val newLabel = "The modified foo ontology"
 
             actorUnderTest ! ChangeOntologyMetadataRequestV2(
-                ontologyIri = fooIri.get.toSmartIri,
+                ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2WithValueObjects),
                 label = newLabel,
                 lastModificationDate = fooLastModDate,
                 apiRequestID = UUID.randomUUID,
