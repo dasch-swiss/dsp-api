@@ -216,7 +216,7 @@ export module projectFormats {
         /**
          * The project's short code.
          */
-        shortcode: string;
+        shortcode?: string;
 
         /**
          * A description of the project.

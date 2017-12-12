@@ -1141,6 +1141,9 @@
 							var labelStr = tmplabelFirstElem.richtext_value.utf8str;
 							propvals['__LABEL__'] = undefined;
 
+							// fake a click to show up the model dialog
+							$('#hiddenaddrespending').click();
+
 							SALSAH.ApiPost('resources', {
 								restype_id: rtinfo.name,
 								properties: propvals,
@@ -1149,6 +1152,10 @@
 								label: labelStr
 
 							}, function(data) {
+
+								// release the modal when we are called back from the async method
+								$('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
+
 								if (data.status == ApiErrors.OK) {
 									if (typeof localdata.settings.on_submit_cb === "function") {
 										localdata.settings.on_submit_cb(data);
@@ -1160,6 +1167,9 @@
 										alert('XXXX' + data.errormsg);
 									}
 								}
+							}).fail(function() {
+								// release the modal when the async method failed
+								$('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
 							});
 							return false;
 						}));
@@ -1202,7 +1212,7 @@
 						if (SALSAH.userprofile && SALSAH.userprofile.active_project) {
 							for (var p in SALSAH.userprofile.projects_info) {
 								if (SALSAH.userprofile.projects_info[p].id == SALSAH.userprofile.active_project) {
-									vocabulary_default = SALSAH.userprofile.projects_info[p].ontologyNamedGraph;
+									vocabulary_default = SALSAH.userprofile.projects_info[p].ontologies[0];
 									break;
 								}
 							}
@@ -1227,7 +1237,7 @@
 									if (data.vocabularies[i].active) {
 										vocsel.append(tmpele = $('<option>', {
 											value: data.vocabularies[i].id
-										}).append(data.vocabularies[i].longname + ' [' + data.vocabularies[i].shortname + ']'));
+										}).append(data.vocabularies[i].longname + ' [' + SALSAH.vocabularyId2shortName(data.vocabularies[i].id) + ']'));
 										if (data.vocabularies[i].id == vocabulary_default) {
 											tmpele.prop({
 												selected: 'selected'
