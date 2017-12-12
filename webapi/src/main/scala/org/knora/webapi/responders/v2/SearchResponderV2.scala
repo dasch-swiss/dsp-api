@@ -1944,7 +1944,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // the Iris of all dependent resources for all main resources
                 val allDependentResourceIris: Set[IRI] = dependentResourceIrisPerMainResource.values.flatten.toSet ++ dependentResourceIrisFromTypeInspection
 
-                // value objects variables present in the preequery's WHERE clause
+                // value objects variables present in the prequery's WHERE clause
                 val valueObjectVariablesConcat = nonTriplestoreSpecificConstructToSelectTransformer.getValueObjectVarsGroupConcat
 
                 // for each main resource, create a Map of value object variables and their values
@@ -1957,20 +1957,20 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             (valueObjVarConcat: QueryVariable) =>
 
                                 // check if key exists (the variable could be contained in an OPTIONAL or a UNION)
-                                val valueObjVarToIrisOption: Option[IRI] = resultRow.rowMap.get(valueObjVarConcat.variableName)
+                                val valueObjIrisOption: Option[IRI] = resultRow.rowMap.get(valueObjVarConcat.variableName)
 
-                                val valueObjVarToIris: Set[IRI] = valueObjVarToIrisOption match {
+                                val valueObjIris: Set[IRI] = valueObjIrisOption match {
 
-                                    case Some(valObjVarToIris) =>
+                                    case Some(valObjIris) =>
 
                                         // Iris are concatenated, split them
-                                        valObjVarToIris.split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSet
+                                        valObjIris.split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSet
 
                                     case None => Set.empty[IRI] // no value present
 
                                 }
 
-                                valueObjVarConcat -> valueObjVarToIris
+                                valueObjVarConcat -> valueObjIris
                         }.toMap
 
                         acc + (mainResIri -> valueObjVarToIris)
