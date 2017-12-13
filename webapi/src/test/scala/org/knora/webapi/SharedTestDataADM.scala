@@ -27,12 +27,15 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
+import org.knora.webapi.util.StringFormatter
 
 /**
   * This object holds the same user which are loaded with '_test_data/all_data/admin-data.ttl'. Using this object
   * in tests, allows easier updating of details as they change over time.
   */
 object SharedTestDataADM {
+
+    implicit val stringFormatter = StringFormatter.getGeneralInstance
 
     /*************************************/
     /** System Admin Data               **/
@@ -237,7 +240,7 @@ object SharedTestDataADM {
     )
 
     /* represents the full project info of the images project */
-    def imagesProject = ProjectADM(
+    def imagesProject: ProjectADM = ProjectADM(
         id = IMAGES_PROJECT_IRI,
         shortname = "images",
         shortcode = Some("00FF"),
@@ -289,21 +292,19 @@ object SharedTestDataADM {
     val INCUNABULA_PROJECT_IRI = "http://rdfh.ch/projects/77275339"
 
     /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
-    def incunabulaProjectAdminUser = UserProfileV1(
-        userData = UserDataV1(
-            user_id = Some("http://rdfh.ch/users/b83acc5f05"),
-            firstname = Some("User"),
-            lastname = Some("Test"),
-            email = Some("user.test@example.com"),
-            password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
-            token = None,
-            status = Some(true),
-            lang = "de"
-        ),
-        groups = Vector.empty[IRI],
-        projects_info = Map(INCUNABULA_PROJECT_IRI -> incunabulaProjectInfo),
+    def incunabulaProjectAdminUser = UserADM(
+        id = "http://rdfh.ch/users/b83acc5f05",
+        email = "user.test@example.com",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
+        token = None,
+        givenName = "User",
+        familyName = "Test",
+        status = true,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq(incunabulaProject),
         sessionId = None,
-        permissionData = PermissionsDataADM(
+        permissions = PermissionsDataADM(
             groupsPerProject = Map(
                 INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
             ),
@@ -317,21 +318,19 @@ object SharedTestDataADM {
     )
 
     /* represents 'root-alt' (Incunabula ProjectMember) as found in admin-data.ttl  */
-    def incunabulaCreatorUser = UserProfileV1(
-        userData = UserDataV1(
-            user_id = Some("http://rdfh.ch/users/91e19f1e01"),
-            firstname = Some("Administrator-alt"),
-            lastname = Some("Admin-alt"),
-            email = Some("root-alt@example.com"),
-            password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
-            token = None,
-            status = Some(true),
-            lang = "de"
-        ),
-        groups = Vector.empty[IRI],
-        projects_info = Map(INCUNABULA_PROJECT_IRI -> incunabulaProjectInfo),
+    def incunabulaCreatorUser: UserADM = UserADM(
+        id = "http://rdfh.ch/users/91e19f1e01",
+        email = "root-alt@example.com",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
+        token = None,
+        givenName = "Administrator-alt",
+        familyName = "Admin-alt",
+        status = true,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq(incunabulaProject),
         sessionId = None,
-        permissionData = PermissionsDataADM(
+        permissions = PermissionsDataADM(
             groupsPerProject = Map(
                 INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
             ),
@@ -344,21 +343,19 @@ object SharedTestDataADM {
     )
 
     /* represents 'root-alt' (Incunabula Creator and ProjectMember) as found in admin-data.ttl  */
-    def incunabulaMemberUser = UserProfileV1(
-        userData = UserDataV1(
-            user_id = Some("http://rdfh.ch/users/incunabulaMemberUser"),
-            firstname = Some("User"),
-            lastname = Some("Test2"),
-            email = Some("user.test2t@test.ch"),
-            password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
-            token = None,
-            status = Some(true),
-            lang = "de"
-        ),
-        groups = Vector.empty[IRI],
-        projects_info = Map(INCUNABULA_PROJECT_IRI -> incunabulaProjectInfo),
+    def incunabulaMemberUser = UserADM(
+        id = "http://rdfh.ch/users/incunabulaMemberUser",
+        email = "user.test2t@test.ch",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
+        token = None,
+        givenName = "User",
+        familyName = "Test2",
+        status = true,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq(incunabulaProject),
         sessionId = None,
-        permissionData = PermissionsDataADM(
+        permissions = PermissionsDataADM(
             groupsPerProject = Map(
                 INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
             ),
@@ -371,7 +368,7 @@ object SharedTestDataADM {
     )
 
     /* represents the ProjectInfoV1 of the incunabula project */
-    def incunabulaProject = ProjectADM(
+    def incunabulaProject: ProjectADM = ProjectADM(
         id = INCUNABULA_PROJECT_IRI,
         shortname = "incunabula",
         shortcode = None,
@@ -391,21 +388,19 @@ object SharedTestDataADM {
 
     val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/anything"
 
-    def anythingUser1 = UserProfileV1(
-        userData = UserDataV1(
-            user_id = Some("http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"),
-            firstname = Some("Anything"),
-            lastname = Some("User01"),
-            email = Some("anything.user01@example.org"),
-            password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
-            token = None,
-            status = Some(true),
-            lang = "de"
-        ),
-        groups = Seq.empty[IRI],
-        projects_info = Map(ANYTHING_PROJECT_IRI -> anythingProjectInfo),
+    def anythingUser1: UserADM = UserADM(
+        id = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+        email = "anything.user01@example.org",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
+        token = None,
+        givenName = "Anything",
+        familyName = "User01",
+        status = true,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq(anythingProject),
         sessionId = None,
-        permissionData = PermissionsDataADM(
+        permissions = PermissionsDataADM(
             groupsPerProject = Map(
                 ANYTHING_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
             ),
@@ -418,21 +413,19 @@ object SharedTestDataADM {
 
     )
 
-    def anythingUser2 = UserProfileV1(
-        userData = UserDataV1(
-            user_id = Some("http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"),
-            firstname = Some("Anything"),
-            lastname = Some("User02"),
-            email = Some("anything.user02@example.org"),
-            password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
-            token = None,
-            status = Some(true),
-            lang = "de"
-        ),
-        groups = Vector.empty[IRI],
-        projects_info = Map(ANYTHING_PROJECT_IRI -> anythingProjectInfo),
+    def anythingUser2: UserADM = UserADM(
+        id = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
+        email = "anything.user02@example.org",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
+        token = None,
+        givenName = "Anything",
+        familyName = "User02",
+        status = true,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq(anythingProject),
         sessionId = None,
-        permissionData = PermissionsDataADM(
+        permissions = PermissionsDataADM(
             groupsPerProject = Map(
                 ANYTHING_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
             ),
@@ -444,7 +437,7 @@ object SharedTestDataADM {
         )
     )
 
-    def anythingProjectInfo = ProjectInfoV1(
+    def anythingProject: ProjectADM = ProjectADM(
         id = ANYTHING_PROJECT_IRI,
         shortname = "anything",
         shortcode = None,
@@ -453,7 +446,7 @@ object SharedTestDataADM {
         keywords = None,
         logo = None,
         institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/anything"),
+        ontologies = Seq(SharedOntologyTestDataADM.anythingOntologyInfo.asOntologyInfoShortADM),
         status = true,
         selfjoin = false
     )
@@ -527,13 +520,13 @@ object SharedTestDataADM {
     def dokubibProjectInfo = ProjectInfoV1(
         id = DOKUBIB_PROJECT_IRI,
         shortname = "dokubib",
-        shortcode = None,
+        shortcode = Some("00FE"),
         longname = Some("Dokubib"),
         description = Some("Dokubib"),
         keywords = None,
         logo = None,
         institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/dokubib"),
+        ontologies = Seq("http://www.knora.org/ontology/00FE/dokubib"),
         status = false,
         selfjoin = false
     )
