@@ -105,6 +105,9 @@ case class CreatePropertyRequestV2(propertyInfoContent: PropertyInfoContentV2,
   * Constructs instances of [[CreatePropertyRequestV2]] based on JSON-LD requests.
   */
 object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreatePropertyRequestV2] {
+    /**
+      * The predicates that are expected in a submitted property definition.
+      */
     private val PropertyPredicates = Set(
         "@id",
         "@type",
@@ -120,6 +123,8 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
                             userProfile: UserProfileV1): CreatePropertyRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+        // Here we expect the same structure that would be returned by a ReadOntologiesV2.
+
         val ontologyObj: JsonLDObject = jsonLDDocument.requireObject(OntologyConstants.KnoraApiV2WithValueObjects.HasOntologies)
         val externalOntologyIri: SmartIri = ontologyObj.requireString("@id", stringFormatter.toSmartIriWithErr)
 
@@ -127,7 +132,9 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
             throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIri")
         }
 
+        // The knora-api:lastModificationDate submitted with an update request is the one returned by the previous read or update request.
         val lastModificationDate: Instant = ontologyObj.requireString(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
+
         val hasProperties: Map[String, JsonLDValue] = ontologyObj.requireObject(OntologyConstants.KnoraApiV2WithValueObjects.HasProperties).value
 
         if (hasProperties.isEmpty || hasProperties.size > 1) {

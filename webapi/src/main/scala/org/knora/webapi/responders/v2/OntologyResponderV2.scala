@@ -1349,6 +1349,8 @@ class OntologyResponderV2 extends Responder {
 
                 // Update the ontology cache.
 
+                // TODO: ensure that the cached data is still in an ErrorHandlingMap.
+
                 _ = storeCacheData(cacheData.copy(
                     ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> metadata)
                 ))
@@ -1433,6 +1435,8 @@ class OntologyResponderV2 extends Responder {
 
                 // Update the ontology cache.
 
+                // TODO: ensure that the cached data is still in an ErrorHandlingMap.
+
                 /*
                 _ = storeCacheData(cacheData.copy(
                     propertyDefs = cacheData.propertyDefs + (internalPropertyIri -> internalPropertyDef)
@@ -1465,6 +1469,13 @@ class OntologyResponderV2 extends Responder {
         } yield taskResult
     }
 
+    /**
+      * Checks the last modification date of an ontology before an update.
+      *
+      * @param internalOntologyIri the internal IRI of the ontology.
+      * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
+      * @return a failed Future if the expected last modification date is not found.
+      */
     private def checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri: SmartIri, expectedLastModificationDate: Instant): Future[Unit] = {
         checkOntologyLastModificationDate(
             internalOntologyIri = internalOntologyIri,
@@ -1473,6 +1484,13 @@ class OntologyResponderV2 extends Responder {
         )
     }
 
+    /**
+      * Checks the last modification date of an ontology after an update.
+      *
+      * @param internalOntologyIri the internal IRI of the ontology.
+      * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
+      * @return a failed Future if the expected last modification date is not found.
+      */
     private def checkOntologyLastModificationDateAfterUpdate(internalOntologyIri: SmartIri, expectedLastModificationDate: Instant): Future[Unit] = {
         checkOntologyLastModificationDate(
             internalOntologyIri = internalOntologyIri,
@@ -1481,6 +1499,14 @@ class OntologyResponderV2 extends Responder {
         )
     }
 
+    /**
+      * Checks the last modification date of an ontology.
+      *
+      * @param internalOntologyIri the internal IRI of the ontology.
+      * @param expectedLastModificationDate the last modification date that the ontology is expected to have.
+      * @param errorFun a function that throws an exception. It will be called if the expected last modification date is not found.
+      * @return a failed Future if the expected last modification date is not found.
+      */
     private def checkOntologyLastModificationDate(internalOntologyIri: SmartIri, expectedLastModificationDate: Instant, errorFun: => Nothing): Future[Unit] = {
         for {
             existingOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(internalOntologyIri)
@@ -1501,6 +1527,13 @@ class OntologyResponderV2 extends Responder {
         } yield ()
     }
 
+    /**
+      * Checks whether the user has permission to update an ontology.
+      *
+      * @param internalOntologyIri the internal IRI of the ontology.
+      * @param userProfile the profile of the user making the request.
+      * @return a failed Future if the user doesn't have the necessary permission.
+      */
     private def checkPermissionsForOntologyUpdate(internalOntologyIri: SmartIri, userProfile: UserProfileV1): Future[Unit] = {
         for {
             // Get the project that the ontology belongs to.
@@ -1510,7 +1543,6 @@ class OntologyResponderV2 extends Responder {
             )).mapTo[ProjectInfoResponseV1]
 
 
-            // Check if the requesting user is allowed to change the ontology metadata.
             _ = if (!userProfile.permissionData.isProjectAdmin(projectInfo.project_info.id.toString) && !userProfile.permissionData.isSystemAdmin) {
                 // not a project or system admin
                 throw ForbiddenException("Ontology metadata can only be changed by a project or system admin.")
@@ -1518,6 +1550,13 @@ class OntologyResponderV2 extends Responder {
         } yield ()
     }
 
+
+    /**
+      * Checks whether an ontology IRI is valid for an update.
+      *
+      * @param externalOntologyIri the external IRI of the ontology.
+      * @return a failed Future if the IRI is not valid for an update.
+      */
     private def checkExternalOntologyIriForUpdate(externalOntologyIri: SmartIri): Future[Unit] = {
         if (!externalOntologyIri.isKnoraOntologyIri) {
             FastFuture.failed(throw BadRequestException(s"Invalid ontology IRI for request: $externalOntologyIri}"))
@@ -1530,6 +1569,14 @@ class OntologyResponderV2 extends Responder {
         }
     }
 
+    /**
+      * Checks whether an entity IRI is valid for an update.
+      *
+      * @param externalEntityIri the external IRI of the entity.
+      * @param externalOntologyIri the external IRI of the entity's ontology, which should already have been checked
+      *                            using `checkExternalOntologyIriForUpdate`.
+      * @return a failed Future if the entity IRI is not valid for an update, or is not from the specified ontology.
+      */
     private def checkExternalEntityIriForUpdate(externalEntityIri: SmartIri, externalOntologyIri: SmartIri): Future[Unit] = {
         if (!externalEntityIri.isKnoraApiV2EntityIri) {
             FastFuture.failed(throw BadRequestException(s"Invalid entity IRI for request: $externalEntityIri"))
