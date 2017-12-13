@@ -20,21 +20,22 @@
 # #################################################################
 # 
 # 
-# http://data.knora.org/webern/testperson1
+# http://rdfh.ch/08AE/testperson1
+# webern:testperson1
 
-<http://data.knora.org/webern/testperson1> a webern:Person, owl:NamedIndividual ;
-	webern:comment <http://data.knora.org/webern/testperson1/values/df1260ad43d5> ;
-	webern:hasAlternativeName <http://data.knora.org/webern/testperson1/values/88c91a1d-23bc-413d-b966-78b525715575> ;
-	webern:hasBiography <http://data.knora.org/webern/testperson1/values/3855051b-c47c-4e61-8cd7-76404efdc67b> ;
-	webern:hasBiographySource <http://data.knora.org/webern/testperson1/values/4ab0cfaa-479a-4cd6-946e-2b51c4b9d016> ;
-	webern:hasBirthDate <http://data.knora.org/webern/testperson1/values/6f3e4026-18bd-4039-9805-7d0d4e317690> ;
-	webern:hasBirthPlace <http://data.knora.org/webern/testperson1/values/a588947a-44e6-45fb-aec3-3d57887f038c> ;
-	webern:hasDeathDate <http://data.knora.org/webern/testperson1/values/b5349bdd-6f5d-4538-ad0f-7b9440760f55> ;
-	webern:hasDeathPlace <http://data.knora.org/webern/testperson1/values/47b2992554d5> ;
-	webern:hasFamilyName <http://data.knora.org/webern/testperson1/values/576dede4-8cc9-4e72-ac8c-8ea5dff9c668> ;
-	webern:hasGivenName <http://data.knora.org/webern/testperson1/values/20526fec-6106-4b9d-a41b-faccbe028340> ;
-	webern:hasIAFIdentifier <http://data.knora.org/webern/testperson1/values/50e58896-fd0f-49c7-9786-f9cdd4c9ce56> ;
-	webern:hasRelation <http://data.knora.org/webern/testperson1/values/f7675f26-4b01-4432-be74-9ae3aa24d2af> ;
+<http://rdfh.ch/08AE/testperson1> a webern:Person ;
+	webern:comment <http://rdfh.ch/08AE/testperson1/values/df1260ad43d5> ;
+	webern:hasAlternativeName <http://rdfh.ch/08AE/testperson1/values/88c91a1d-23bc-413d-b966-78b525715575> ;
+	webern:hasBiography <http://rdfh.ch/08AE/testperson1/values/3855051b-c47c-4e61-8cd7-76404efdc67b> ;
+	webern:hasBiographySource <http://rdfh.ch/08AE/testperson1/values/4ab0cfaa-479a-4cd6-946e-2b51c4b9d016> ;
+	webern:hasBirthDate <http://rdfh.ch/08AE/testperson1/values/6f3e4026-18bd-4039-9805-7d0d4e317690> ;
+	webern:hasBirthPlace <http://rdfh.ch/08AE/testperson1/values/a588947a-44e6-45fb-aec3-3d57887f038c> ;
+	webern:hasDeathDate <http://rdfh.ch/08AE/testperson1/values/b5349bdd-6f5d-4538-ad0f-7b9440760f55> ;
+	webern:hasDeathPlace <http://rdfh.ch/08AE/testperson1/values/47b2992554d5> ;
+	webern:hasFamilyName <http://rdfh.ch/08AE/testperson1/values/576dede4-8cc9-4e72-ac8c-8ea5dff9c668> ;
+	webern:hasGivenName <http://rdfh.ch/08AE/testperson1/values/20526fec-6106-4b9d-a41b-faccbe028340> ;
+	webern:hasIAFIdentifier <http://rdfh.ch/08AE/testperson1/values/50e58896-fd0f-49c7-9786-f9cdd4c9ce56> ;
+	webern:hasRelation <http://rdfh.ch/08AE/testperson1/values/f7675f26-4b01-4432-be74-9ae3aa24d2af> ;
 	knora-base:attachedToProject <http://rdfh.ch/projects/08AE> ;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:creationDate "2017-12-01T17:00:00Z"^^xsd:dateTimeStamp ;
@@ -44,10 +45,10 @@
 
 
 #
-# http://data.knora.org/webern/testperson1/values/576dede4-8cc9-4e72-ac8c-8ea5dff9c668
-# hasFamiliyName
+# http://rdfh.ch/08AE/testperson1/values/576dede4-8cc9-4e72-ac8c-8ea5dff9c668
+# hasFamilyName
 
-<http://data.knora.org/webern/testperson1/values/576dede4-8cc9-4e72-ac8c-8ea5dff9c668> a knora-base:TextValue, owl:NamedIndividual ;
+<http://rdfh.ch/08AE/testperson1/values/576dede4-8cc9-4e72-ac8c-8ea5dff9c668> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -56,10 +57,10 @@
 	knora-base:valueHasString "Polnauer" .
 
 # 
-# http://data.knora.org/webern/testperson1/values/20526fec-6106-4b9d-a41b-faccbe028340
+# http://rdfh.ch/08AE/testperson1/values/20526fec-6106-4b9d-a41b-faccbe028340
 # hasGivenName
 
-<http://data.knora.org/webern/testperson1/values/20526fec-6106-4b9d-a41b-faccbe028340> a knora-base:TextValue, owl:NamedIndividual ;
+<http://rdfh.ch/08AE/testperson1/values/20526fec-6106-4b9d-a41b-faccbe028340> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -68,10 +69,10 @@
 	knora-base:valueHasString "Josef" .
 
 # 
-# http://data.knora.org/webern/testperson1/values/88c91a1d-23bc-413d-b966-78b525715575
+# http://rdfh.ch/08AE/testperson1/values/88c91a1d-23bc-413d-b966-78b525715575
 # hasAlternativeName
 
-<http://data.knora.org/webern/testperson1/values/88c91a1d-23bc-413d-b966-78b525715575> a knora-base:TextValue, owl:NamedIndividual ;
+<http://rdfh.ch/08AE/testperson1/values/88c91a1d-23bc-413d-b966-78b525715575> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -80,10 +81,10 @@
 	knora-base:valueHasString "Josef Maximilian Polnauer" .
 
 #
-# http://data.knora.org/webern/testperson1/values/50e58896-fd0f-49c7-9786-f9cdd4c9ce56
+# http://rdfh.ch/08AE/testperson1/values/50e58896-fd0f-49c7-9786-f9cdd4c9ce56
 # hasIAFIdentifier
 
-<http://data.knora.org/webern/testperson1/values/50e58896-fd0f-49c7-9786-f9cdd4c9ce56> a knora-base:TextValue, owl:NamedIndividual ;
+<http://rdfh.ch/08AE/testperson1/values/50e58896-fd0f-49c7-9786-f9cdd4c9ce56> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -92,10 +93,10 @@
 	knora-base:valueHasString "1017673659" .
 
 #
-# http://data.knora.org/webern/testperson1/values/6f3e4026-18bd-4039-9805-7d0d4e317690
+# http://rdfh.ch/08AE/testperson1/values/6f3e4026-18bd-4039-9805-7d0d4e317690
 # hasBirthDate
 
-<http://data.knora.org/webern/testperson1/values/6f3e4026-18bd-4039-9805-7d0d4e317690> a knora-base:DateValue, owl:NamedIndividual ;
+<http://rdfh.ch/08AE/testperson1/values/6f3e4026-18bd-4039-9805-7d0d4e317690> a knora-base:DateValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -109,10 +110,10 @@
     knora-base:valueHasEndPrecision "DAY" .
 
 #
-# http://data.knora.org/webern/testperson1/values/b5349bdd-6f5d-4538-ad0f-7b9440760f55
+# http://rdfh.ch/08AE/testperson1/values/b5349bdd-6f5d-4538-ad0f-7b9440760f55
 # webern:hasDeathDate
 
-<http://data.knora.org/webern/testperson1/values/b5349bdd-6f5d-4538-ad0f-7b9440760f55> a knora-base:DateValue, owl:NamedIndividual ;
+<http://rdfh.ch/08AE/testperson1/values/b5349bdd-6f5d-4538-ad0f-7b9440760f55> a knora-base:DateValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -126,10 +127,10 @@
     knora-base:valueHasEndPrecision "DAY" .
 
 #
-# http://data.knora.org/webern/testperson1/values/a588947a-44e6-45fb-aec3-3d57887f038c
+# http://rdfh.ch/08AE/testperson1/values/a588947a-44e6-45fb-aec3-3d57887f038c
 # webern:hasBirthPlace
 
-<http://data.knora.org/webern/testperson1/values/a588947a-44e6-45fb-aec3-3d57887f038c> a knora-base:TextValue, owl:NamedIndividual ;
+<http://rdfh.ch/08AE/testperson1/values/a588947a-44e6-45fb-aec3-3d57887f038c> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -138,10 +139,10 @@
 	knora-base:valueHasString "Wien" .
 
 #
-# http://data.knora.org/webern/testperson1/values/47b2992554d5
+# http://rdfh.ch/08AE/testperson1/values/47b2992554d5
 # webern:hasDeathPlace
 
-<http://data.knora.org/webern/testperson1/values/47b2992554d5> a knora-base:TextValue, owl:NamedIndividual ;
+<http://rdfh.ch/08AE/testperson1/values/47b2992554d5> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -150,10 +151,10 @@
 	knora-base:valueHasString "Wien" .
 
 #
-# http://data.knora.org/webern/testperson1/values/3855051b-c47c-4e61-8cd7-76404efdc67b
+# http://rdfh.ch/08AE/testperson1/values/3855051b-c47c-4e61-8cd7-76404efdc67b
 # webern:hasBiography
 
-<http://data.knora.org/webern/testperson1/values/3855051b-c47c-4e61-8cd7-76404efdc67b> a knora-base:TextValue, owl:NamedIndividual ;
+<http://rdfh.ch/08AE/testperson1/values/3855051b-c47c-4e61-8cd7-76404efdc67b> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -162,10 +163,10 @@
 	knora-base:valueHasString "Musikstudien bei Arnold Schönberg (1909 bis 1911), Alban Berg (1911 bis 1913). Studien bei Guido Adler (1927 Promotion in Innsbruck). Beamter (bei den österreichischen Bundesbahnen, nach dem Zweiten Weltkrieg  beim Finanzministerium), Musikwissenschaftler, Bibliothekar, nach seiner Pensionierung auch Kompositionslehrer. Herausgeber des Briefwechsels Anton Webern und Hildegard Jone (stark gekürzt)." .
 
 #
-# http://data.knora.org/webern/testperson1/values/4ab0cfaa-479a-4cd6-946e-2b51c4b9d016
+# http://rdfh.ch/08AE/testperson1/values/4ab0cfaa-479a-4cd6-946e-2b51c4b9d016
 # webern:hasBiographySource
 
-<http://data.knora.org/webern/testperson1/values/4ab0cfaa-479a-4cd6-946e-2b51c4b9d016> a knora-base:TextValue, owl:NamedIndividual ;
+<http://rdfh.ch/08AE/testperson1/values/4ab0cfaa-479a-4cd6-946e-2b51c4b9d016> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -175,10 +176,10 @@
 
 
 #
-# http://data.knora.org/webern/testperson1/values/f7675f26-4b01-4432-be74-9ae3aa24d2af
+# http://rdfh.ch/08AE/testperson1/values/f7675f26-4b01-4432-be74-9ae3aa24d2af
 # webern:hasRelation
 
-<http://data.knora.org/webern/testperson1/values/f7675f26-4b01-4432-be74-9ae3aa24d2af> a knora-base:TextValue, owl:NamedIndividual ;
+<http://rdfh.ch/08AE/testperson1/values/f7675f26-4b01-4432-be74-9ae3aa24d2af> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -187,10 +188,10 @@
 	knora-base:valueHasString "Angehöriger des Schönberg-Kreises. Freund." .
 
 #
-# http://data.knora.org/webern/testperson1/values/df1260ad43d5
+# http://rdfh.ch/08AE/testperson1/values/df1260ad43d5
 # webern:comment
 
-<http://data.knora.org/webern/testperson1/values/df1260ad43d5> a knora-base:TextValue, owl:NamedIndividual ;
+<http://rdfh.ch/08AE/testperson1/values/df1260ad43d5> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
