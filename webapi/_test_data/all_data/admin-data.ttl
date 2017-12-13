@@ -478,6 +478,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://rdfh.ch/projects/08AE> a knora-base:knoraProject ;
   knora-base:projectShortname "webern"^^xsd:string ;
+  knora-base:projectShortcode "08AE"^^xsd:string ;
   knora-base:projectLongname "Anton Webern Gesamtausgabe"^^xsd:string ;
   knora-base:projectDescription "Historisch-kritische Edition des Gesamtschaffens von Anton Webern."^^xsd:string ;
   knora-base:projectOntology <http://www.knora.org/ontology/08AE/webern> ;
