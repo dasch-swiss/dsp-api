@@ -460,7 +460,7 @@ object SharedTestDataV1 {
         groups = Vector.empty[IRI],
         projects_info = Map(BIBLIO_PROJECT_IRI -> biblioProjectInfo),
         sessionId = None,
-        permissionData = PermissionsDataADM(anonymousUser = false)
+        permissionData = PermissionsDataADM()
     )
 
     /************************************/
