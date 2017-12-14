@@ -42,8 +42,7 @@ package org.knora.webapi.util
 
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionType, PermissionADM}
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionType
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.{CoreSpec, IRI, OntologyConstants, SharedTestDataV1}
 

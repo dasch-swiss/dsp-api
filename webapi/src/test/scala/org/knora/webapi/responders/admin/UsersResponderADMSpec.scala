@@ -20,7 +20,7 @@
 
 /**
   * To be able to test UsersResponder, we need to be able to start UsersResponder isolated. Now the UsersResponder
-  * extend ResponderV1 which messes up testing, as we cannot inject the TestActor system.
+  * extend ResponderADM which messes up testing, as we cannot inject the TestActor system.
   */
 package org.knora.webapi.responders.admin
 
@@ -31,12 +31,12 @@ import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupMembersGetRequestADM, GroupMembersGetResponseADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectAdminMembersGetRequestADM, ProjectAdminMembersGetResponseADM, ProjectMembersGetRequestADM, ProjectMembersGetResponseADM}
+import org.knora.webapi.messages.admin.responder.usersmessages
+import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.groupmessages.{GroupMembersByIRIGetRequestV1, GroupMembersResponseV1}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.responders.v1.{UsersResponderV1, UsersResponderV1Spec}
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 
@@ -60,19 +60,14 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
     private implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
-    private val rootUser = SharedTestDataV1.rootUser
-    private val rootUserIri = rootUser.userData.user_id.get
-    private val rootUserEmail = rootUser.userData.email.get
+    private val rootUser = SharedTestDataADM.rootUser
 
-    private val normalUser = SharedTestDataV1.normalUser
-    private val normalUserIri = normalUser.userData.user_id.get
+    private val normalUser = SharedTestDataADM.normalUser
 
-    private val incunabulaUser = SharedTestDataV1.incunabulaProjectAdminUser
-    private val incunabulaUserIri = incunabulaUser.userData.user_id.get
-    private val incunabulaUserEmail = incunabulaUser.userData.email.get
+    private val incunabulaUser = SharedTestDataADM.incunabulaProjectAdminUser
 
-    private val imagesProjectIri = SharedTestDataV1.imagesProjectInfo.id
-    private val imagesReviewerGroupIri = SharedTestDataV1.imagesReviewerGroupInfo.id
+    private val imagesProject = SharedTestDataADM.imagesProject
+    private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
 
     private val actorUnderTest = TestActorRef[UsersResponderADM]
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
@@ -92,8 +87,8 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
         "asked about all users" should {
             "return a list" in {
-                actorUnderTest ! UsersGetRequestV1(rootUser)
-                val response = expectMsgType[UsersGetResponseV1](timeout)
+                actorUnderTest ! UsersGetRequestADM(requestingUser = rootUser)
+                val response = expectMsgType[UsersGetResponseADM](timeout)
                 response.users.nonEmpty should be (true)
                 response.users.size should be (17)
             }
@@ -102,22 +97,42 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         "asked about an user identified by 'iri' " should {
 
             "return a profile if the user (root user) is known" in {
-                actorUnderTest ! UserProfileByIRIGetV1(rootUserIri, UserProfileTypeV1.FULL)
-                expectMsg(Some(rootUser.ofType(UserProfileTypeV1.FULL)))
+                actorUnderTest ! UserGetADM(
+                    maybeIri = Some(rootUser.id),
+                    maybeEmail = None,
+                    userInformationTypeADM = UserInformationTypeADM.FULL,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
+                expectMsg(Some(rootUser.ofType(UserInformationTypeADM.FULL)))
             }
 
             "return a profile if the user (incunabula user) is known" in {
-                actorUnderTest ! UserProfileByIRIGetV1(incunabulaUserIri, UserProfileTypeV1.FULL)
-                expectMsg(Some(incunabulaUser.ofType(UserProfileTypeV1.FULL)))
+                actorUnderTest ! UserGetADM(
+                    maybeIri = Some(incunabulaUser.id),
+                    maybeEmail = None,
+                    userInformationTypeADM = UserInformationTypeADM.FULL,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
+                expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.FULL)))
             }
 
             "return 'NotFoundException' when the user is unknown " in {
-                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/notexisting", UserProfileTypeV1.RESTRICTED, rootUser)
+                actorUnderTest ! UserGetRequestADM(
+                    maybeIri = Some("http://data.knora.org/users/notexisting"),
+                    maybeEmail = None,
+                    userInformationTypeADM = UserInformationTypeADM.FULL,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
                 expectMsg(Failure(NotFoundException(s"User 'http://data.knora.org/users/notexisting' not found")))
             }
 
             "return 'None' when the user is unknown " in {
-                actorUnderTest ! UserProfileByIRIGetV1("http://data.knora.org/users/notexisting", UserProfileTypeV1.RESTRICTED)
+                actorUnderTest ! UserGetADM(
+                    maybeIri = Some("http://data.knora.org/users/notexisting"),
+                    maybeEmail = None,
+                    userInformationTypeADM = UserInformationTypeADM.FULL,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
                 expectMsg(None)
             }
         }
@@ -125,22 +140,42 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         "asked about an user identified by 'email'" should {
 
             "return a profile if the user (root user) is known" in {
-                actorUnderTest ! UserProfileByEmailGetV1(rootUserEmail, UserProfileTypeV1.RESTRICTED)
-                expectMsg(Some(rootUser.ofType(UserProfileTypeV1.RESTRICTED)))
+                actorUnderTest ! UserGetADM(
+                    maybeIri = None,
+                    maybeEmail = Some(rootUser.email),
+                    userInformationTypeADM = UserInformationTypeADM.FULL,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
+                expectMsg(Some(rootUser.ofType(UserInformationTypeADM.FULL)))
             }
 
             "return a profile if the user (incunabula user) is known" in {
-                actorUnderTest ! UserProfileByEmailGetV1(incunabulaUserEmail, UserProfileTypeV1.RESTRICTED)
-                expectMsg(Some(incunabulaUser.ofType(UserProfileTypeV1.RESTRICTED)))
+                actorUnderTest ! UserGetADM(
+                    maybeIri = None,
+                    maybeEmail = Some(incunabulaUser.email),
+                    userInformationTypeADM = UserInformationTypeADM.FULL,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
+                expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.FULL)))
             }
 
             "return 'NotFoundException' when the user is unknown" in {
-                actorUnderTest ! UserProfileByEmailGetRequestV1("userwrong@example.com", UserProfileTypeV1.RESTRICTED, rootUser)
+                actorUnderTest ! UserGetRequestADM(
+                    maybeIri = None,
+                    maybeEmail = Some("userwrong@example.com"),
+                    userInformationTypeADM = UserInformationTypeADM.FULL,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
                 expectMsg(Failure(NotFoundException(s"User 'userwrong@example.com' not found")))
             }
 
             "return 'None' when the user is unknown" in {
-                actorUnderTest ! UserProfileByEmailGetV1("userwrong@example.com", UserProfileTypeV1.RESTRICTED)
+                actorUnderTest ! UserGetADM(
+                    maybeIri = None,
+                    maybeEmail = Some("userwrong@example.com"),
+                    userInformationTypeADM = UserInformationTypeADM.FULL,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
                 expectMsg(None)
             }
         }
@@ -148,8 +183,8 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         "asked to create a new user" should {
 
             "CREATE the user and return it's profile if the supplied email is unique " in {
-                actorUnderTest ! UserCreateRequestV1(
-                    createRequest = CreateUserApiRequestV1(
+                actorUnderTest ! UserCreateRequestADM(
+                    createRequest = CreateUserApiRequestADM(
                         email = "donald.duck@example.com",
                         givenName = "Donald",
                         familyName = "Duck",
@@ -158,22 +193,22 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                         lang = "en",
                         systemAdmin = false
                     ),
-                    userProfile = SharedTestDataV1.anonymousUser,
+                    requestingUser = SharedTestDataADM.anonymousUser,
                     apiRequestID = UUID.randomUUID
                 )
                 expectMsgPF(timeout) {
-                    case UserOperationResponseV1(newUserProfile) => {
-                        assert(newUserProfile.userData.firstname.get.equals("Donald"))
-                        assert(newUserProfile.userData.lastname.get.equals("Duck"))
-                        assert(newUserProfile.userData.email.get.equals("donald.duck@example.com"))
-                        assert(newUserProfile.userData.lang.equals("en"))
+                    case UserOperationResponseADM(newUser) => {
+                        assert(newUser.givenName.equals("Donald"))
+                        assert(newUser.familyName.equals("Duck"))
+                        assert(newUser.email.equals("donald.duck@example.com"))
+                        assert(newUser.lang.equals("en"))
                     }
                 }
             }
 
             "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
-                actorUnderTest ! UserCreateRequestV1(
-                    createRequest = CreateUserApiRequestV1(
+                actorUnderTest ! UserCreateRequestADM(
+                    createRequest = CreateUserApiRequestADM(
                         email = "root@example.com",
                         givenName = "Donal",
                         familyName = "Duck",
@@ -182,7 +217,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                         lang = "en",
                         systemAdmin = false
                     ),
-                    SharedTestDataV1.anonymousUser,
+                    SharedTestDataADM.anonymousUser,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(DuplicateValueException(s"User with the email: 'root@example.com' already exists")))
@@ -191,8 +226,8 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             "return 'BadRequestException' if 'email' or 'password' or 'givenName' or 'familyName' are missing" in {
 
                 /* missing email */
-                actorUnderTest ! UserCreateRequestV1(
-                    createRequest = CreateUserApiRequestV1(
+                actorUnderTest ! UserCreateRequestADM(
+                    createRequest = CreateUserApiRequestADM(
                         email = "",
                         givenName = "Donald",
                         familyName = "Duck",
@@ -201,14 +236,14 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                         lang = "en",
                         systemAdmin = false
                     ),
-                    SharedTestDataV1.anonymousUser,
+                    SharedTestDataADM.anonymousUser,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Email cannot be empty")))
 
                 /* missing password */
-                actorUnderTest ! UserCreateRequestV1(
-                    createRequest = CreateUserApiRequestV1(
+                actorUnderTest ! UserCreateRequestADM(
+                    createRequest = CreateUserApiRequestADM(
                         email = "donald.duck@example.com",
                         givenName = "Donald",
                         familyName = "Duck",
@@ -217,14 +252,14 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                         lang = "en",
                         systemAdmin = false
                     ),
-                    SharedTestDataV1.anonymousUser,
+                    SharedTestDataADM.anonymousUser,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Password cannot be empty")))
 
                 /* missing givenName */
-                actorUnderTest ! UserCreateRequestV1(
-                    createRequest = CreateUserApiRequestV1(
+                actorUnderTest ! UserCreateRequestADM(
+                    createRequest = CreateUserApiRequestADM(
                         email = "donald.duck@example.com",
                         givenName = "",
                         familyName = "Duck",
@@ -233,14 +268,14 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                         lang = "en",
                         systemAdmin = false
                     ),
-                    SharedTestDataV1.anonymousUser,
+                    SharedTestDataADM.anonymousUser,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Given name cannot be empty")))
 
                 /* missing familyName */
-                actorUnderTest ! UserCreateRequestV1(
-                    createRequest = CreateUserApiRequestV1(
+                actorUnderTest ! UserCreateRequestADM(
+                    createRequest = CreateUserApiRequestADM(
                         email = "donald.duck@example.com",
                         givenName = "Donald",
                         familyName = "",
@@ -249,7 +284,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                         lang = "en",
                         systemAdmin = false
                     ),
-                    SharedTestDataV1.anonymousUser,
+                    SharedTestDataADM.anonymousUser,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Family name cannot be empty")))
@@ -261,174 +296,174 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             "UPDATE the user's basic information" in {
 
                 /* User information is updated by the user */
-                actorUnderTest ! UserChangeBasicUserDataRequestV1(
-                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(
+                actorUnderTest ! UserChangeBasicUserInformationRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
                         email = None,
                         givenName = Some("Donald"),
                         familyName = None,
                         lang = None
                     ),
-                    userProfile = SharedTestDataV1.normalUser,
+                    requestingUser = SharedTestDataADM.normalUser,
                     UUID.randomUUID
                 )
 
-                val response1 = expectMsgType[UserOperationResponseV1](timeout)
-                response1.userProfile.userData.firstname.get should equal ("Donald")
+                val response1 = expectMsgType[UserOperationResponseADM](timeout)
+                response1.user.givenName should equal ("Donald")
 
                 /* User information is updated by a system admin */
-                actorUnderTest ! UserChangeBasicUserDataRequestV1(
-                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(
+                actorUnderTest ! UserChangeBasicUserInformationRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
                         email = None,
                         givenName = None,
                         familyName = Some("Duck"),
                         lang = None
                     ),
-                    userProfile = SharedTestDataV1.superUser,
+                    requestingUser = SharedTestDataADM.superUser,
                     UUID.randomUUID
                 )
 
-                val response2 = expectMsgType[UserOperationResponseV1](timeout)
-                response2.userProfile.userData.lastname.get should equal ("Duck")
+                val response2 = expectMsgType[UserOperationResponseADM](timeout)
+                response2.user.familyName should equal ("Duck")
 
                 /* User information is updated by a system admin */
-                actorUnderTest ! UserChangeBasicUserDataRequestV1(
-                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(
+                actorUnderTest ! UserChangeBasicUserInformationRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
                         email = None,
-                        givenName = Some(SharedTestDataV1.normalUser.userData.firstname.get),
-                        familyName = Some(SharedTestDataV1.normalUser.userData.lastname.get),
+                        givenName = Some(SharedTestDataADM.normalUser.givenName),
+                        familyName = Some(SharedTestDataADM.normalUser.familyName),
                         lang = None
                     ),
-                    userProfile = SharedTestDataV1.superUser,
+                    requestingUser = SharedTestDataADM.superUser,
                     UUID.randomUUID
                 )
 
-                val response3 = expectMsgType[UserOperationResponseV1](timeout)
-                response3.userProfile.userData.firstname.get should equal (SharedTestDataV1.normalUser.userData.firstname.get)
-                response3.userProfile.userData.lastname.get should equal (SharedTestDataV1.normalUser.userData.lastname.get)
+                val response3 = expectMsgType[UserOperationResponseADM](timeout)
+                response3.user.givenName should equal (SharedTestDataADM.normalUser.givenName)
+                response3.user.familyName should equal (SharedTestDataADM.normalUser.familyName)
 
             }
 
             "UPDATE the user's password" in {
-                actorUnderTest ! UserChangePasswordRequestV1(
-                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(
+                actorUnderTest ! UserChangePasswordRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
                         oldPassword = Some("test"),
                         newPassword = Some("test123456")
                     ),
-                    userProfile = SharedTestDataV1.normalUser,
+                    requestingUser = SharedTestDataADM.normalUser,
                     apiRequestID = UUID.randomUUID()
                 )
 
                 // Can't check if password was changed directly, since it will not be returned. If no error message
                 // is returned, then I can assume that the password was successfully changed, as this check is
                 // performed in the responder itself.
-                expectMsgType[UserOperationResponseV1](timeout)
+                expectMsgType[UserOperationResponseADM](timeout)
 
 
                 // By doing the change again, I can check if the first change was indeed successful.
-                actorUnderTest ! UserChangePasswordRequestV1(
-                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(
+                actorUnderTest ! UserChangePasswordRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
                         oldPassword = Some("test123456"),
                         newPassword = Some("test")
                     ),
-                    userProfile = SharedTestDataV1.normalUser,
+                    requestingUser = SharedTestDataADM.normalUser,
                     apiRequestID = UUID.randomUUID()
                 )
 
-                expectMsgType[UserOperationResponseV1](timeout)
+                expectMsgType[UserOperationResponseADM](timeout)
             }
 
             "UPDATE the user's status, (deleting) making him inactive " in {
-                actorUnderTest ! UserChangeStatusRequestV1(
-                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(status = Some(false)),
-                    userProfile = SharedTestDataV1.superUser,
+                actorUnderTest ! UserChangeStatusRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
+                    requestingUser = SharedTestDataADM.superUser,
                     UUID.randomUUID()
                 )
 
-                val response1 = expectMsgType[UserOperationResponseV1](timeout)
-                response1.userProfile.userData.status.get should equal (false)
+                val response1 = expectMsgType[UserOperationResponseADM](timeout)
+                response1.user.status should equal (false)
 
-                actorUnderTest ! UserChangeStatusRequestV1(
-                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(status = Some(true)),
-                    userProfile = SharedTestDataV1.superUser,
+                actorUnderTest ! UserChangeStatusRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(status = Some(true)),
+                    requestingUser = SharedTestDataADM.superUser,
                     UUID.randomUUID()
                 )
 
-                val response2 = expectMsgType[UserOperationResponseV1](timeout)
-                response2.userProfile.userData.status.get should equal (true)
+                val response2 = expectMsgType[UserOperationResponseADM](timeout)
+                response2.user.status should equal (true)
             }
 
             "UPDATE the user's system admin membership" in {
-                actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestV1(
-                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(systemAdmin = Some(true)),
-                    userProfile = SharedTestDataV1.superUser,
+                actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(systemAdmin = Some(true)),
+                    requestingUser = SharedTestDataADM.superUser,
                     UUID.randomUUID()
                 )
 
-                val response1 = expectMsgType[UserOperationResponseV1](timeout)
-                response1.userProfile.permissionData.isSystemAdmin should equal (true)
+                val response1 = expectMsgType[UserOperationResponseADM](timeout)
+                response1.user.isSystemAdmin should equal (true)
 
-                actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestV1(
-                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(systemAdmin = Some(false)),
-                    userProfile = SharedTestDataV1.superUser,
+                actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(systemAdmin = Some(false)),
+                    requestingUser = SharedTestDataADM.superUser,
                     UUID.randomUUID()
                 )
 
-                val response2 = expectMsgType[UserOperationResponseV1](timeout)
-                response2.userProfile.permissionData.isSystemAdmin should equal (false)
+                val response2 = expectMsgType[UserOperationResponseADM](timeout)
+                response2.user.permissions.isSystemAdmin should equal (false)
             }
 
 
             "return a 'ForbiddenException' if the user requesting update is not the user itself or system admin" in {
 
                 /* User information is updated by other normal user */
-                actorUnderTest ! UserChangeBasicUserDataRequestV1(
-                    userIri = SharedTestDataV1.superUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(
+                actorUnderTest ! UserChangeBasicUserInformationRequestADM(
+                    userIri = SharedTestDataADM.superUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
                         email = None,
                         givenName = Some("Donald"),
                         familyName = None,
                         lang = None
                     ),
-                    userProfile = SharedTestDataV1.normalUser,
+                    requestingUser = SharedTestDataADM.normalUser,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
 
                 /* Password is updated by other normal user */
-                actorUnderTest ! UserChangePasswordRequestV1(
-                    userIri = SharedTestDataV1.superUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(
+                actorUnderTest ! UserChangePasswordRequestADM(
+                    userIri = SharedTestDataADM.superUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
                         oldPassword = Some("test"),
                         newPassword = Some("test123456")
                     ),
-                    userProfile = SharedTestDataV1.normalUser,
+                    requestingUser = SharedTestDataADM.normalUser,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(ForbiddenException("User's password can only be changed by the user itself")))
 
                 /* Status is updated by other normal user */
-                actorUnderTest ! UserChangeStatusRequestV1(
-                    userIri = SharedTestDataV1.superUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(status = Some(false)),
-                    userProfile = SharedTestDataV1.normalUser,
+                actorUnderTest ! UserChangeStatusRequestADM(
+                    userIri = SharedTestDataADM.superUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
+                    requestingUser = SharedTestDataADM.normalUser,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(ForbiddenException("User's status can only be changed by the user itself or a system administrator")))
 
                 /* System admin group membership */
-                actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestV1(
-                    userIri = SharedTestDataV1.normalUser.userData.user_id.get,
-                    changeUserRequest = ChangeUserApiRequestV1(systemAdmin = Some(true)),
-                    userProfile = SharedTestDataV1.normalUser,
+                actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(systemAdmin = Some(true)),
+                    requestingUser = SharedTestDataADM.normalUser,
                     UUID.randomUUID()
                 )
                 expectMsg(Failure(ForbiddenException("User's system admin membership can only be changed by a system administrator")))
@@ -436,7 +471,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return 'BadRequest' if nothing would be changed during the update" in {
 
-                an [BadRequestException] should be thrownBy ChangeUserApiRequestV1(None, None, None, None, None, None, None, None)
+                an [BadRequestException] should be thrownBy ChangeUserApiRequestADM(None, None, None, None, None, None, None, None)
             }
         }
 
@@ -444,50 +479,60 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "ADD user to project" in {
 
-                actorUnderTest ! UserProjectMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
-                val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseV1](timeout)
+                actorUnderTest ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
                 membershipsBeforeUpdate.projects should equal (Seq())
 
-                actorUnderTest ! UserProjectMembershipAddRequestV1(normalUserIri, imagesProjectIri, rootUser, UUID.randomUUID())
-                expectMsgType[UserOperationResponseV1](timeout)
+                actorUnderTest ! UserProjectMembershipAddRequestADM(normalUser.id, imagesProject.id, rootUser, UUID.randomUUID())
+                expectMsgType[UserOperationResponseADM](timeout)
 
-                actorUnderTest ! UserProjectMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
-                val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseV1](timeout)
-                membershipsAfterUpdate.projects should equal (Seq(imagesProjectIri))
+                actorUnderTest ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
+                membershipsAfterUpdate.projects should equal (Seq(imagesProject))
 
-                responderManager ! ProjectMembersByIRIGetRequestV1(imagesProjectIri, rootUser)
-                val received: ProjectMembersGetResponseV1 = expectMsgType[ProjectMembersGetResponseV1](timeout)
+                responderManager ! ProjectMembersGetRequestADM(
+                    maybeIri = Some(imagesProject.id),
+                    maybeShortname = None,
+                    maybeShortcode = None,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
+                val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
 
-                received.members should contain (normalUser.ofType(UserProfileTypeV1.SHORT).userData)
+                received.members should contain (normalUser.ofType(UserInformationTypeADM.RESTRICTED))
             }
 
             "DELETE user from project" in {
 
-                actorUnderTest ! UserProjectMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
-                val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseV1](timeout)
-                membershipsBeforeUpdate.projects should equal (Seq(imagesProjectIri))
+                actorUnderTest ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
+                membershipsBeforeUpdate.projects should equal (Seq(imagesProject))
 
-                actorUnderTest ! UserProjectMembershipRemoveRequestV1(normalUserIri, imagesProjectIri, rootUser, UUID.randomUUID())
-                expectMsgType[UserOperationResponseV1](timeout)
+                actorUnderTest ! UserProjectMembershipRemoveRequestADM(normalUser.id, imagesProject.id, rootUser, UUID.randomUUID())
+                expectMsgType[UserOperationResponseADM](timeout)
 
-                actorUnderTest ! UserProjectMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
-                val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseV1](timeout)
+                actorUnderTest ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
                 membershipsAfterUpdate.projects should equal (Seq())
 
-                responderManager ! ProjectMembersByIRIGetRequestV1(imagesProjectIri, rootUser)
-                val received: ProjectMembersGetResponseV1 = expectMsgType[ProjectMembersGetResponseV1](timeout)
+                responderManager ! ProjectMembersGetRequestADM(
+                    maybeIri = Some(imagesProject.id),
+                    maybeShortname = None,
+                    maybeShortcode = None,
+                    requestingUser = rootUser
+                )
+                val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
 
-                received.members should not contain normalUser.ofType(UserProfileTypeV1.SHORT).userData
+                received.members should not contain normalUser.ofType(UserInformationTypeADM.RESTRICTED)
             }
 
             "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
 
                 /* User is added to a project by a normal user */
-                actorUnderTest ! UserProjectMembershipAddRequestV1(normalUserIri, imagesProjectIri, normalUser, UUID.randomUUID())
+                actorUnderTest ! UserProjectMembershipAddRequestADM(normalUser.id, imagesProject.id, normalUser, UUID.randomUUID())
                 expectMsg(Failure(ForbiddenException("User's project membership can only be changed by a project or system administrator")))
 
                 /* User is removed from a project by a normal user */
-                actorUnderTest ! UserProjectMembershipRemoveRequestV1(normalUserIri, imagesProjectIri, normalUser, UUID.randomUUID())
+                actorUnderTest ! UserProjectMembershipRemoveRequestADM(normalUser.id, imagesProject.id, normalUser, UUID.randomUUID())
                 expectMsg(Failure(ForbiddenException("User's project membership can only be changed by a project or system administrator")))
             }
 
@@ -497,49 +542,59 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "ADD user to project admin group" in {
 
-                actorUnderTest ! UserProjectAdminMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
-                val membershipsBeforeUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseV1](timeout)
+                actorUnderTest ! UserProjectAdminMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                val membershipsBeforeUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseADM](timeout)
                 membershipsBeforeUpdate.projects should equal (Seq())
 
-                actorUnderTest ! UserProjectAdminMembershipAddRequestV1(normalUserIri, imagesProjectIri, rootUser, UUID.randomUUID())
-                expectMsgType[UserOperationResponseV1](timeout)
+                actorUnderTest ! UserProjectAdminMembershipAddRequestADM(normalUser.id, imagesProject.id, rootUser, UUID.randomUUID())
+                expectMsgType[UserOperationResponseADM](timeout)
 
-                actorUnderTest ! UserProjectAdminMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
-                val membershipsAfterUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseV1](timeout)
-                membershipsAfterUpdate.projects should equal (Seq(imagesProjectIri))
+                actorUnderTest ! UserProjectAdminMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                val membershipsAfterUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseADM](timeout)
+                membershipsAfterUpdate.projects should equal (Seq(imagesProject))
 
-                responderManager ! ProjectAdminMembersByIRIGetRequestV1(imagesProjectIri, rootUser)
-                val received: ProjectAdminMembersGetResponseV1 = expectMsgType[ProjectAdminMembersGetResponseV1](timeout)
+                responderManager ! ProjectAdminMembersGetRequestADM(
+                    maybeIri = Some(imagesProject.id),
+                    maybeShortname = None,
+                    maybeShortcode = None,
+                    requestingUser = rootUser
+                )
+                val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
 
-                received.members should contain (normalUser.ofType(UserProfileTypeV1.SHORT).userData)
+                received.members should contain (normalUser.ofType(UserInformationTypeADM.RESTRICTED))
             }
 
             "DELETE user from project admin group" in {
-                actorUnderTest ! UserProjectAdminMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
-                val membershipsBeforeUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseV1](timeout)
-                membershipsBeforeUpdate.projects should equal (Seq(imagesProjectIri))
+                actorUnderTest ! UserProjectAdminMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                val membershipsBeforeUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseADM](timeout)
+                membershipsBeforeUpdate.projects should equal (Seq(imagesProject))
 
-                actorUnderTest ! UserProjectAdminMembershipRemoveRequestV1(normalUserIri, imagesProjectIri, rootUser, UUID.randomUUID())
-                expectMsgType[UserOperationResponseV1](timeout)
+                actorUnderTest ! UserProjectAdminMembershipRemoveRequestADM(normalUser.id, imagesProject.id, rootUser, UUID.randomUUID())
+                expectMsgType[UserOperationResponseADM](timeout)
 
-                actorUnderTest ! UserProjectAdminMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
-                val membershipsAfterUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseV1](timeout)
+                actorUnderTest ! UserProjectAdminMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                val membershipsAfterUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseADM](timeout)
                 membershipsAfterUpdate.projects should equal (Seq())
 
-                responderManager ! ProjectAdminMembersByIRIGetRequestV1(imagesProjectIri, rootUser)
-                val received: ProjectAdminMembersGetResponseV1 = expectMsgType[ProjectAdminMembersGetResponseV1](timeout)
+                responderManager ! ProjectAdminMembersGetRequestADM(
+                    maybeIri = Some(imagesProject.id),
+                    maybeShortname = None,
+                    maybeShortcode = None,
+                    requestingUser = rootUser
+                )
+                val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
 
-                received.members should not contain normalUser.ofType(UserProfileTypeV1.SHORT).userData
+                received.members should not contain normalUser.ofType(UserInformationTypeADM.RESTRICTED)
             }
 
             "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
 
                 /* User is added to a project by a normal user */
-                actorUnderTest ! UserProjectAdminMembershipAddRequestV1(normalUserIri, imagesProjectIri, normalUser, UUID.randomUUID())
+                actorUnderTest ! UserProjectAdminMembershipAddRequestADM(normalUser.id, imagesProject.id, normalUser, UUID.randomUUID())
                 expectMsg(Failure(ForbiddenException("User's project admin membership can only be changed by a project or system administrator")))
 
                 /* User is removed from a project by a normal user */
-                actorUnderTest ! UserProjectAdminMembershipRemoveRequestV1(normalUserIri, imagesProjectIri, normalUser, UUID.randomUUID())
+                actorUnderTest ! UserProjectAdminMembershipRemoveRequestADM(normalUser.id, imagesProject.id, normalUser, UUID.randomUUID())
                 expectMsg(Failure(ForbiddenException("User's project admin membership can only be changed by a project or system administrator")))
             }
 
@@ -548,49 +603,55 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         "asked to update the user's group membership" should {
 
             "ADD user to group" in {
-                actorUnderTest ! UserGroupMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
-                val membershipsBeforeUpdate = expectMsgType[UserGroupMembershipsGetResponseV1](timeout)
+                actorUnderTest ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                val membershipsBeforeUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
                 membershipsBeforeUpdate.groups should equal (Seq())
 
-                actorUnderTest ! UserGroupMembershipAddRequestV1(normalUserIri, imagesReviewerGroupIri, rootUser, UUID.randomUUID())
-                expectMsgType[UserOperationResponseV1](timeout)
+                actorUnderTest ! UserGroupMembershipAddRequestADM(normalUser.id, imagesReviewerGroup.id, rootUser, UUID.randomUUID())
+                expectMsgType[UserOperationResponseADM](timeout)
 
-                actorUnderTest ! UserGroupMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
-                val membershipsAfterUpdate = expectMsgType[UserGroupMembershipsGetResponseV1](timeout)
-                membershipsAfterUpdate.groups should equal (Seq(imagesReviewerGroupIri))
+                actorUnderTest ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                val membershipsAfterUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
+                membershipsAfterUpdate.groups should equal (Seq(imagesReviewerGroup.id))
 
-                responderManager ! GroupMembersByIRIGetRequestV1(imagesReviewerGroupIri, rootUser)
-                val received: GroupMembersResponseV1 = expectMsgType[GroupMembersResponseV1](timeout)
+                responderManager ! GroupMembersGetRequestADM(
+                    groupIri = imagesReviewerGroup.id,
+                    requestingUser = rootUser
+                )
+                val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
 
-                received.members should contain (normalUser.ofType(UserProfileTypeV1.SHORT).userData.user_id.get)
+                received.members should contain (normalUser.ofType(UserInformationTypeADM.RESTRICTED))
             }
 
             "DELETE user from group" in {
-                actorUnderTest ! UserGroupMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
-                val membershipsBeforeUpdate = expectMsgType[UserGroupMembershipsGetResponseV1](timeout)
-                membershipsBeforeUpdate.groups should equal (Seq(imagesReviewerGroupIri))
+                actorUnderTest ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                val membershipsBeforeUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
+                membershipsBeforeUpdate.groups should equal (Seq(imagesReviewerGroup.id))
 
-                actorUnderTest ! UserGroupMembershipRemoveRequestV1(normalUserIri, imagesReviewerGroupIri, rootUser, UUID.randomUUID())
-                expectMsgType[UserOperationResponseV1](timeout)
+                actorUnderTest ! UserGroupMembershipRemoveRequestADM(normalUser.id, imagesReviewerGroup.id, rootUser, UUID.randomUUID())
+                expectMsgType[UserOperationResponseADM](timeout)
 
-                actorUnderTest ! UserGroupMembershipsGetRequestV1(normalUserIri, rootUser, UUID.randomUUID())
-                val membershipsAfterUpdate = expectMsgType[UserGroupMembershipsGetResponseV1](timeout)
+                actorUnderTest ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                val membershipsAfterUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
                 membershipsAfterUpdate.groups should equal (Seq())
 
-                responderManager ! GroupMembersByIRIGetRequestV1(imagesReviewerGroupIri, rootUser)
-                val received: GroupMembersResponseV1 = expectMsgType[GroupMembersResponseV1](timeout)
+                responderManager ! GroupMembersGetRequestADM(
+                    groupIri = imagesReviewerGroup.id,
+                    requestingUser = rootUser
+                )
+                val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
 
-                received.members should not contain normalUser.ofType(UserProfileTypeV1.SHORT).userData.user_id.get
+                received.members should not contain normalUser.ofType(UserInformationTypeADM.RESTRICTED)
             }
 
             "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
 
                 /* User is added to a project by a normal user */
-                actorUnderTest ! UserGroupMembershipAddRequestV1(normalUserIri, imagesReviewerGroupIri, normalUser, UUID.randomUUID())
+                actorUnderTest ! UserGroupMembershipAddRequestADM(normalUser.id, imagesReviewerGroup.id, normalUser, UUID.randomUUID())
                 expectMsg(Failure(ForbiddenException("User's group membership can only be changed by a project or system administrator")))
 
                 /* User is removed from a project by a normal user */
-                actorUnderTest ! UserGroupMembershipRemoveRequestV1(normalUserIri, imagesReviewerGroupIri, normalUser, UUID.randomUUID())
+                actorUnderTest ! UserGroupMembershipRemoveRequestADM(normalUser.id, imagesReviewerGroup.id, normalUser, UUID.randomUUID())
                 expectMsg(Failure(ForbiddenException("User's group membership can only be changed by a project or system administrator")))
             }
 

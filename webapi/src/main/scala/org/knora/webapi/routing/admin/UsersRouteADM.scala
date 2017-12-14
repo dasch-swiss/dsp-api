@@ -92,10 +92,10 @@ object UsersRouteADM extends Authenticator {
 
                         /* check if email or iri was supplied */
                         val requestMessage = if (identifier == "email") {
-                            UserGetRequestADM(maybeUserIri = None, maybeEmail = Some(value), UserInformationTypeADM.RESTRICTED, requestingUser)
+                            UserGetRequestADM(maybeIri = None, maybeEmail = Some(value), UserInformationTypeADM.RESTRICTED, requestingUser)
                         } else {
                             val userIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
-                            UserGetRequestADM(maybeUserIri = Some(userIri), maybeEmail = None, UserInformationTypeADM.RESTRICTED, requestingUser)
+                            UserGetRequestADM(maybeIri = Some(userIri), maybeEmail = None, UserInformationTypeADM.RESTRICTED, requestingUser)
                         }
                         RouteUtilADM.runJsonRoute(
                             requestMessage,

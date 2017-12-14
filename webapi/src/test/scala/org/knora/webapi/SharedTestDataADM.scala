@@ -214,7 +214,7 @@ object SharedTestDataADM {
     )
 
     /* represents 'images-reviewer-user' as found in admin-data.ttl  */
-    def imagesReviewerUserADM = UserADM(
+    def imagesReviewerUser = UserADM(
         id = "http://rdfh.ch/users/images-reviewer-user",
         email = "images-reviewer-user@example.com",
         password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"

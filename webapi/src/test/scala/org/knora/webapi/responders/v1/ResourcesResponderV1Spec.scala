@@ -25,16 +25,16 @@ import java.util.UUID
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi._
 import org.knora.webapi.SharedOntologyTestDataADM._
+import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{ObjectAccessPermissionADM, ObjectAccessPermissionsForResourceGetADM, PermissionADM}
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.messages.v1.responder.permissionmessages.{ObjectAccessPermissionV1, PermissionV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
@@ -837,7 +837,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             PermissionADM.restrictedViewPermission("http://www.knora.org/ontology/knora-base#UnknownUser")
         )
 
-        responderManager ! ObjectAccessPermissionsForResourceGetADM(resourceIri = newBookResourceIri.get)
+        responderManager ! ObjectAccessPermissionsForResourceGetADM(resourceIri = newBookResourceIri.get, requestingUser = KnoraSystemInstances.Users.SystemUser)
         expectMsgPF(timeout) {
             case Some(permission) => {
                 val perms = permission.asInstanceOf[ObjectAccessPermissionADM].hasPermissions

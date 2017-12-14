@@ -18,11 +18,10 @@ package org.knora.webapi.messages.admin.responder.permissionsmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataType.PermissionProfileType
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v1.responder.KnoraResponseV1
+import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import spray.json._
 
@@ -46,7 +45,8 @@ sealed trait PermissionsResponderRequestADM extends KnoraRequestADM
 case class PermissionDataGetADM(projectIris: Seq[IRI],
                                 groupIris: Seq[IRI],
                                 isInProjectAdminGroups: Seq[IRI],
-                                isInSystemAdminGroup: Boolean
+                                isInSystemAdminGroup: Boolean,
+                                requestingUser: UserADM
                               ) extends PermissionsResponderRequestADM
 
 /**
@@ -68,18 +68,18 @@ case class PermissionDataGetADM(projectIris: Seq[IRI],
   * A successful response will contain a list of [[AdministrativePermissionADM]].
   *
   * @param projectIri    the project for which the administrative permissions are queried.
-  * @param userProfileV1 the user initiation the request.
+  * @param requestingUser the user initiation the request.
   */
-case class AdministrativePermissionsForProjectGetRequestADM(projectIri: IRI, userProfileV1: UserADM) extends PermissionsResponderRequestADM
+case class AdministrativePermissionsForProjectGetRequestADM(projectIri: IRI, requestingUser: UserADM) extends PermissionsResponderRequestADM
 
 /**
   * A message that requests an administrative permission object identified through his IRI.
   * A successful response will contain an [[AdministrativePermissionADM]] object.
   *
   * @param administrativePermissionIri the iri of the administrative permission object.
-  * @param userProfileV1               the user initiation the request.
+  * @param requestingUser               the user initiating the request.
   */
-case class AdministrativePermissionForIriGetRequestADM(administrativePermissionIri: IRI, userProfileV1: UserADM) extends PermissionsResponderRequestADM
+case class AdministrativePermissionForIriGetRequestADM(administrativePermissionIri: IRI, requestingUser: UserADM) extends PermissionsResponderRequestADM
 
 /**
   * A message that requests an administrative permission object identified by project and group.
@@ -87,8 +87,9 @@ case class AdministrativePermissionForIriGetRequestADM(administrativePermissionI
   *
   * @param projectIri the project.
   * @param groupIri   the group.
+  * @param requestingUser the user initiating the request.
   */
-case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI, groupIri: IRI) extends PermissionsResponderRequestADM
+case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI, groupIri: IRI, requestingUser: UserADM) extends PermissionsResponderRequestADM
 
 /**
   * A message that requests an administrative permission object identified by project and group.
@@ -104,16 +105,16 @@ case class AdministrativePermissionForProjectGroupGetRequestADM(projectIri: IRI,
 /**
   * Create a single [[AdministrativePermissionADM]].
   *
-  * @param newAdministrativePermissionV1
+  * @param newAdministrativePermission
   */
-case class AdministrativePermissionCreateRequestADM(newAdministrativePermissionV1: NewAdministrativePermissionADM, userProfileV1: UserADM) extends PermissionsResponderRequestADM
+case class AdministrativePermissionCreateRequestADM(newAdministrativePermission: NewAdministrativePermissionADM, requestingUser: UserADM) extends PermissionsResponderRequestADM
 
 /**
   * Delete a single [[AdministrativePermissionADM]]
   *
   * @param administrativePermissionIri
   */
-case class AdministrativePermissionDeleteRequestADM(administrativePermissionIri: IRI, userProfileV1: UserADM) extends PermissionsResponderRequestADM
+case class AdministrativePermissionDeleteRequestADM(administrativePermissionIri: IRI, requestingUser: UserADM) extends PermissionsResponderRequestADM
 
 /**
   * Update a single [[AdministrativePermissionADM]]
@@ -130,14 +131,14 @@ case class AdministrativePermissionUpdateRequestADM(requestingUser: UserADM) ext
   *
   * @param resourceIri the IRI of the resource.
   */
-case class ObjectAccessPermissionsForResourceGetADM(resourceIri: IRI) extends PermissionsResponderRequestADM
+case class ObjectAccessPermissionsForResourceGetADM(resourceIri: IRI, requestingUser: UserADM) extends PermissionsResponderRequestADM
 
 /**
   * A message that requests the object access permissions attached to a value via the 'knora-base:hasPermissions' property.
   *
   * @param valueIri the IRI of the value.
   */
-case class ObjectAccessPermissionsForValueGetADM(valueIri: IRI) extends PermissionsResponderRequestADM
+case class ObjectAccessPermissionsForValueGetADM(valueIri: IRI, requestingUser: UserADM) extends PermissionsResponderRequestADM
 
 
 // Default Object Access Permissions
@@ -160,7 +161,7 @@ case class DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri: IRI
   * @param resourceClassIRI the resource class.
   * @param propertyIRI      the property.
   */
-case class DefaultObjectAccessPermissionGetADM(projectIRI: IRI, groupIRI: Option[IRI], resourceClassIRI: Option[IRI], propertyIRI: Option[IRI]) extends PermissionsResponderRequestADM
+case class DefaultObjectAccessPermissionGetADM(projectIRI: IRI, groupIRI: Option[IRI], resourceClassIRI: Option[IRI], propertyIRI: Option[IRI], requestingUser: UserADM) extends PermissionsResponderRequestADM
 
 /**
   * A message that requests an object access permission identified by project and either group / resource class / property.

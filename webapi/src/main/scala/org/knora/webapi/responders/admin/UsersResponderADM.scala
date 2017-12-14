@@ -1266,7 +1266,12 @@ class UsersResponderADM extends Responder {
 
             for {
                 /* get the user's permission profile from the permissions responder */
-                permissionData <- (responderManager ? PermissionDataGetADM(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionsDataADM]
+                permissionData <- (responderManager ? PermissionDataGetADM(projectIris = projectIris,
+                    groupIris = groupIris,
+                    isInProjectAdminGroups = isInProjectAdminGroups,
+                    isInSystemAdminGroup = isInSystemAdminGroup,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )).mapTo[PermissionsDataADM]
 
                 maybeGroupFutures: Seq[Future[Option[GroupADM]]] = groupIris.map {
                     groupIri => (responderManager ? GroupGetADM(groupIri = groupIri, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[GroupADM]]

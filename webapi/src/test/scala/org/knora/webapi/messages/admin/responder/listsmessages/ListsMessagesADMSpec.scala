@@ -106,11 +106,11 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
                 position = Some(0)
             )
 
-            val json = FullListADM(listInfo, Seq(listNode)).toJson.compactPrint
+            val json = ListFullADM(listInfo, Seq(listNode)).toJson.compactPrint
 
             // json should be ("")
 
-            val converted: FullListADM = json.parseJson.convertTo[FullListADM]
+            val converted: ListFullADM = json.parseJson.convertTo[ListFullADM]
 
             converted.listinfo should be(listInfo)
             converted.children.head should be(listNode)

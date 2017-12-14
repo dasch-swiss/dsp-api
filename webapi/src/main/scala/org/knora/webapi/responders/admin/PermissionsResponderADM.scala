@@ -52,15 +52,15 @@ class PermissionsResponderADM extends Responder {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case PermissionDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup) => future2Message(sender(), permissionsDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup), log)
+        case PermissionDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, requestingUser) => future2Message(sender(), permissionsDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, requestingUser), log)
         case AdministrativePermissionsForProjectGetRequestADM(projectIri, requestingUser) => future2Message(sender(), administrativePermissionsForProjectGetRequestADM(projectIri, requestingUser), log)
         case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser) => future2Message(sender(), administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser), log)
-        case AdministrativePermissionForProjectGroupGetADM(projectIri, groupIri) => future2Message(sender(), administrativePermissionForProjectGroupGetADM(projectIri, groupIri), log)
+        case AdministrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser) => future2Message(sender(), administrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser), log)
         case AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser) => future2Message(sender(), administrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser), log)
         case AdministrativePermissionCreateRequestADM(newAdministrativePermissionV1, requestingUser) => future2Message(sender(), administrativePermissionCreateRequestADM(newAdministrativePermissionV1, requestingUser), log)
         //case AdministrativePermissionDeleteRequestV1(administrativePermissionIri, requestingUser) => future2Message(sender(), deleteAdministrativePermissionV1(administrativePermissionIri, requestingUser), log)
-        case ObjectAccessPermissionsForResourceGetADM(resourceIri) => future2Message(sender(), objectAccessPermissionsForResourceGetADM(resourceIri), log)
-        case ObjectAccessPermissionsForValueGetADM(valueIri) => future2Message(sender(), objectAccessPermissionsForValueGetADM(valueIri), log)
+        case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) => future2Message(sender(), objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser), log)
+        case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) => future2Message(sender(), objectAccessPermissionsForValueGetADM(valueIri, requestingUser), log)
         case DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser) => future2Message(sender(), defaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser), log)
         case DefaultObjectAccessPermissionForIriGetRequestADM(defaultObjectAccessPermissionIri, requestingUser) => future2Message(sender(), defaultObjectAccessPermissionForIriGetRequestADM(defaultObjectAccessPermissionIri, requestingUser), log)
         case DefaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser) => future2Message(sender(), defaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser), log)
@@ -86,9 +86,15 @@ class PermissionsResponderADM extends Responder {
       * @param isInSystemAdminGroup   the flag denoting membership in the SystemAdmin group.
       * @return
       */
-    def permissionsDataGetADM(projectIris: Seq[IRI], groupIris: Seq[IRI], isInProjectAdminGroups: Seq[IRI], isInSystemAdminGroup: Boolean): Future[PermissionsDataADM] = {
+    def permissionsDataGetADM(projectIris: Seq[IRI], groupIris: Seq[IRI], isInProjectAdminGroups: Seq[IRI], isInSystemAdminGroup: Boolean, requestingUser: UserADM): Future[PermissionsDataADM] = {
         // find out which project each group belongs to
         //_ = log.debug("getPermissionsProfileV1 - find out to which project each group belongs to")
+
+
+        if (!requestingUser.isSystemUser) {
+            FastFuture.failed(throw ForbiddenException("Request only allowed for SystemUser."))
+        }
+
         val groupFutures: Seq[Future[(IRI, IRI)]] = if (groupIris.nonEmpty) {
             groupIris.map {
                 groupIri =>
@@ -282,7 +288,7 @@ class PermissionsResponderADM extends Responder {
             groupIri <- groups
             //_ = log.debug(s"administrativePermissionForGroupsGetADM - projectIri: $projectIri, groupIri: $groupIri")
 
-            groupPermissions: Future[Seq[PermissionADM]] = administrativePermissionForProjectGroupGetADM(projectIri, groupIri).map {
+            groupPermissions: Future[Seq[PermissionADM]] = administrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser = KnoraSystemInstances.Users.SystemUser).map {
                 case Some(ap: AdministrativePermissionADM) => ap.hasPermissions.toSeq
                 case None => Seq.empty[PermissionADM]
             }
@@ -408,7 +414,7 @@ class PermissionsResponderADM extends Responder {
       * @param groupIri   the group.
       * @return an option containing an [[AdministrativePermissionADM]]
       */
-    private def administrativePermissionForProjectGroupGetADM(projectIri: IRI, groupIri: IRI): Future[Option[AdministrativePermissionADM]] = {
+    private def administrativePermissionForProjectGroupGetADM(projectIri: IRI, groupIri: IRI, requestingUser: UserADM): Future[Option[AdministrativePermissionADM]] = {
         for {
             // check if necessary field are not empty.
             _ <- Future(if (projectIri.isEmpty) throw BadRequestException("Project cannot be empty"))
@@ -461,7 +467,7 @@ class PermissionsResponderADM extends Responder {
         // FIXME: Check user's permission for operation (issue #370)
 
         for {
-            ap <- administrativePermissionForProjectGroupGetADM(projectIri, groupIri)
+            ap <- administrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
             result = ap match {
                 case Some(ap) => permissionsmessages.AdministrativePermissionForProjectGroupGetResponseADM(ap)
                 case None => throw NotFoundException(s"No Administrative Permission found for project: $projectIri, group: $groupIri combination")
@@ -488,7 +494,7 @@ class PermissionsResponderADM extends Responder {
                 if (newAdministrativePermissionV1.hasNewPermissions.isEmpty) throw BadRequestException("New permissions cannot be empty")
             }
 
-            checkResult <- administrativePermissionForProjectGroupGetADM(newAdministrativePermissionV1.forProject, newAdministrativePermissionV1.forGroup)
+            checkResult <- administrativePermissionForProjectGroupGetADM(newAdministrativePermissionV1.forProject, newAdministrativePermissionV1.forGroup, requestingUser = KnoraSystemInstances.Users.SystemUser)
 
             _ = checkResult match {
                 case Some(ap) => throw DuplicateValueException(s"Permission for project: '${newAdministrativePermissionV1.forProject}' and group: '${newAdministrativePermissionV1.forGroup}' combination already exists.")
@@ -517,7 +523,7 @@ class PermissionsResponderADM extends Responder {
       * @param resourceIri the IRI of the resource.
       * @return a sequence of [[PermissionADM]]
       */
-    def objectAccessPermissionsForResourceGetADM(resourceIri: IRI): Future[Option[ObjectAccessPermissionADM]] = {
+    def objectAccessPermissionsForResourceGetADM(resourceIri: IRI, requestingUser: UserADM): Future[Option[ObjectAccessPermissionADM]] = {
         log.debug(s"objectAccessPermissionsForResourceGetV1 - resourceIRI: $resourceIri")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getObjectAccessPermission(
@@ -554,7 +560,7 @@ class PermissionsResponderADM extends Responder {
       * @param valueIri the IRI of the value.
       * @return a sequence of [[PermissionADM]]
       */
-    def objectAccessPermissionsForValueGetADM(valueIri: IRI): Future[Option[ObjectAccessPermissionADM]] = {
+    def objectAccessPermissionsForValueGetADM(valueIri: IRI, requestingUser: UserADM): Future[Option[ObjectAccessPermissionADM]] = {
         log.debug(s"objectAccessPermissionsForValueGetV1 - resourceIRI: $valueIri")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getObjectAccessPermission(

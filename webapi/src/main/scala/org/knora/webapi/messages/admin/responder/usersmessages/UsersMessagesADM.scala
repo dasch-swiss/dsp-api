@@ -24,7 +24,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupShortADM, GroupsADMJsonProtocol}
+import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionsADMJsonProtocol, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
@@ -156,18 +156,18 @@ case class UsersGetRequestADM(userInformationTypeADM: UserInformationTypeADM = U
 /**
   * A message that requests a user's profile either by IRI or email. A successful response will be a [[UserADM]].
   *
-  * @param maybeUserIri           the IRI of the user to be queried.
-  * @param maybeEmail             the email of the user to be queried.
+  * @param maybeIri           the IRI of the user to be queried.
+  * @param maybeEmail the email of the user to be queried.
   * @param userInformationTypeADM the extent of the information returned.
-  * @param requestingUser         the user initiating the request.
+  * @param requestingUser the user initiating the request.
   */
-case class UserGetADM(maybeUserIri: Option[IRI],
+case class UserGetADM(maybeIri: Option[IRI],
                       maybeEmail: Option[String],
                       userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
                       requestingUser: UserADM) extends UsersResponderRequestADM {
 
     // need either user IRI or email
-    if (maybeUserIri.isEmpty && maybeEmail.isEmpty) {
+    if (maybeIri.isEmpty && maybeEmail.isEmpty) {
         throw BadRequestException("Need to provide the user IRI and/or email.")
     }
 }
@@ -175,18 +175,18 @@ case class UserGetADM(maybeUserIri: Option[IRI],
 /**
   * A message that requests a user's profile either by IRI or email. A successful response will be a [[UserResponseADM]].
   *
-  * @param maybeUserIri           the IRI of the user to be queried.
-  * @param maybeEmail             the email of the user to be queried.
+  * @param maybeIri           the IRI of the user to be queried.
+  * @param maybeEmail the email of the user to be queried.
   * @param userInformationTypeADM the extent of the information returned.
-  * @param requestingUser         the user initiating the request.
+  * @param requestingUser the user initiating the request.
   */
-case class UserGetRequestADM(maybeUserIri: Option[IRI],
+case class UserGetRequestADM(maybeIri: Option[IRI],
                              maybeEmail: Option[String],
                              userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
                              requestingUser: UserADM) extends UsersResponderRequestADM {
 
     // need either user IRI or email
-    if (maybeUserIri.isEmpty && maybeEmail.isEmpty) {
+    if (maybeIri.isEmpty && maybeEmail.isEmpty) {
         throw BadRequestException("Need to provide the user IRI and/or email.")
     }
 }
@@ -540,6 +540,11 @@ case class UserADM(id: IRI,
         }
     }
 
+    /* Is the user a member of the SystemAdmin group */
+    def isSystemAdmin: Boolean = {
+        permissions.groupsPerProject.getOrElse(OntologyConstants.KnoraBase.SystemProject, List.empty[IRI]).contains(OntologyConstants.KnoraBase.SystemAdmin)
+    }
+
     def isSystemUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraBase.SystemUser)
 
     def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraBase.AnonymousUser)
@@ -590,10 +595,13 @@ case class UserADM(id: IRI,
             val projects_info_v1: Map[IRI, ProjectInfoV1] = projectInfosV1.map(_.id).zip(projectInfosV1).toMap[IRI, ProjectInfoV1]
 
             UserProfileV1(
-                userData = asUserDataV1,
+                userData = this.asUserDataV1,
                 groups = v1Groups,
                 projects_info = projects_info_v1,
-                permissionData = permissions,
+                permissionData = PermissionsDataADM(
+                    groupsPerProject = permissions.groupsPerProject,
+                    administrativePermissionsPerProject = permissions.administrativePermissionsPerProject
+                ),
                 sessionId = sessionId
             )
         }
@@ -601,7 +609,11 @@ case class UserADM(id: IRI,
 
     def asUserDataV1: UserDataV1 = {
         UserDataV1(
-            user_id = Some(id),
+            user_id = if (this.isAnonymousUser) {
+                None
+            } else {
+                Some(id)
+            },
             email = Some(email),
             password = password,
             token = token,

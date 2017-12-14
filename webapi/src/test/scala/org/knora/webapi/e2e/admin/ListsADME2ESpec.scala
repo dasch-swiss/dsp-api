@@ -30,7 +30,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Tripl
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, SharedTestDataV1, SharedListsTestDataADM}
+import org.knora.webapi.{E2ESpec, SharedListsTestDataADM, SharedTestDataADM, SharedTestDataV1}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -69,30 +69,30 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
         "test"
     )
 
-    val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedTestDataV1.inactiveUser.userData.email.get, "utf-8")
+    private val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedTestDataV1.inactiveUser.userData.email.get, "utf-8")
 
 
-    val normalUserIri = SharedTestDataV1.normalUser.userData.user_id.get
-    val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
+    private val normalUserIri = SharedTestDataADM.normalUser.id
+    private val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
 
-    val multiUserIri = SharedTestDataV1.multiuserUser.userData.user_id.get
-    val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
+    private val multiUserIri = SharedTestDataADM.multiuserUser.id
+    private val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
 
-    val wrongEmail = "wrong@example.com"
-    val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
+    private val wrongEmail = "wrong@example.com"
+    private val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
 
-    val testPass = java.net.URLEncoder.encode("test", "utf-8")
-    val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
+    private val testPass = java.net.URLEncoder.encode("test", "utf-8")
+    private val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
 
-    val imagesProjectIri = SharedTestDataV1.imagesProjectInfo.id
-    val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
+    private val imagesProjectIri = SharedTestDataADM.imagesProject.id
+    private val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
 
-    val imagesReviewerGroupIri = SharedTestDataV1.imagesReviewerGroupInfo.id
-    val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
+    private val imagesReviewerGroupIri = SharedTestDataADM.imagesReviewerGroup.id
+    private val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
 
 
-    val bigListInfo: ListInfo = SharedListsTestDataADM.bigListInfo
-    val bigListNodes: Seq[ListNode] = SharedListsTestDataADM.bigListNodes
+    private val bigListInfo: ListInfoADM = SharedListsTestDataADM.bigListInfo
+    private val bigListNodes: Seq[ListNodeADM] = SharedListsTestDataADM.bigListNodes
 
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
@@ -111,7 +111,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 response.status should be(StatusCodes.OK)
 
-                val lists: Seq[ListNodeInfo] = AkkaHttpUtils.httpResponseToJson(response).fields("items").convertTo[Seq[ListNodeInfo]]
+                val lists: Seq[ListNodeInfoADM] = AkkaHttpUtils.httpResponseToJson(response).fields("items").convertTo[Seq[ListNodeInfoADM]]
 
                 // log.debug("lists: {}", lists)
 
@@ -125,7 +125,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 response.status should be(StatusCodes.OK)
 
-                val lists: Seq[ListNodeInfo] = AkkaHttpUtils.httpResponseToJson(response).fields("items").convertTo[Seq[ListNodeInfo]]
+                val lists: Seq[ListNodeInfoADM] = AkkaHttpUtils.httpResponseToJson(response).fields("items").convertTo[Seq[ListNodeInfoADM]]
 
                 // log.debug("lists: {}", lists)
 
@@ -139,7 +139,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 response.status should be(StatusCodes.OK)
 
-                val lists: Seq[ListNodeInfo] = AkkaHttpUtils.httpResponseToJson(response).fields("items").convertTo[Seq[ListNodeInfo]]
+                val lists: Seq[ListNodeInfoADM] = AkkaHttpUtils.httpResponseToJson(response).fields("items").convertTo[Seq[ListNodeInfoADM]]
 
                 // log.debug("lists: {}", lists)
 
@@ -153,9 +153,9 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 response.status should be(StatusCodes.OK)
 
-                val receivedListInfo: ListInfo = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListInfo]
+                val receivedListInfo: ListInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListInfoADM]
 
-                val expectedListInfo: ListInfo = SharedListsTestDataADM.bigListInfo
+                val expectedListInfo: ListInfoADM = SharedListsTestDataADM.bigListInfo
 
                 receivedListInfo.sorted should be (expectedListInfo.sorted)
             }
@@ -167,7 +167,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 response.status should be(StatusCodes.OK)
 
-                val receivedList: FullList = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[FullList]
+                val receivedList: ListFullADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListFullADM]
                 receivedList.listinfo.sorted should be (bigListInfo.sorted)
                 receivedList.children.map(_.sorted) should be (bigListNodes.map(_.sorted))
             }

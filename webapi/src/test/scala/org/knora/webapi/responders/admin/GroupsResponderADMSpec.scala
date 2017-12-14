@@ -16,9 +16,9 @@
 
 /**
   * To be able to test UsersResponder, we need to be able to start UsersResponder isolated. Now the UsersResponder
-  * extend ResponderV1 which messes up testing, as we cannot inject the TestActor system.
+  * extend ResponderADM which messes up testing, as we cannot inject the TestActor system.
   */
-package org.knora.webapi.responders.v1
+package org.knora.webapi.responders.admin
 
 import java.util.UUID
 
@@ -26,17 +26,15 @@ import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.groupsmessages._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.groupmessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.MutableTestIri
-import org.knora.webapi.SharedTestDataV1._
-import org.knora.webapi.messages.admin.responder.groupsmessages.{CreateGroupApiRequestADM, GroupCreateRequestADM}
-import org.knora.webapi.responders.admin.GroupsResponderADM
 
 import scala.concurrent.duration._
 
@@ -51,18 +49,18 @@ object GroupsResponderADMSpec {
 }
 
 /**
-  * This spec is used to test the messages received by the [[UsersResponderV1]] actor.
+  * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.UsersResponderADM]] actor.
   */
 class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) with ImplicitSender {
 
     implicit private val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
-    private val imagesReviewerGroupInfo = SharedTestDataV1.imagesReviewerGroupInfo
-    private val imagesProjectAdminGroupInfo = SharedTestDataV1.imagesProjectAdminGroupInfo
-    private val imagesProjectMemberGroupInfo = SharedTestDataV1.imagesProjectMemberGroupInfo
+    private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
+    private val imagesProjectAdminGroup = SharedTestDataADM.imagesProjectAdminGroup
+    private val imagesProjectMemberGroup = SharedTestDataADM.imagesProjectMemberGroup
 
-    private val rootUserProfileV1 = SharedTestDataV1.rootUser
+    private val rootUser = SharedTestDataADM.rootUser
 
     private val actorUnderTest = TestActorRef[GroupsResponderADM]
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
@@ -82,23 +80,12 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
         "asked about a group identified by 'iri' " should {
             "return group info if the group is known " in {
-                actorUnderTest ! GroupInfoByIRIGetRequestV1(imagesReviewerGroupInfo.id, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imagesReviewerGroupInfo))
+                actorUnderTest ! GroupGetRequestADM(imagesReviewerGroup.id, rootUser)
+                expectMsg(GroupGetResponseADM(imagesReviewerGroup))
             }
             "return 'NotFoundException' when the group is unknown " in {
-                actorUnderTest ! GroupInfoByIRIGetRequestV1("http://data.knora.org/groups/notexisting", Some(rootUserProfileV1))
+                actorUnderTest ! GroupGetRequestADM("http://data.knora.org/groups/notexisting", rootUser)
                 expectMsg(Failure(NotFoundException(s"For the given group iri 'http://data.knora.org/groups/notexisting' no information was found")))
-            }
-        }
-
-        "asked about a group identified by 'name' " should {
-            "return group info if the group is known " in {
-                actorUnderTest ! GroupInfoByNameGetRequestV1(imagesProjectAdminGroupInfo.project, imagesProjectAdminGroupInfo.name, Some(rootUserProfileV1))
-                expectMsg(GroupInfoResponseV1(imagesProjectAdminGroupInfo))
-            }
-            "return 'NotFoundException' when the group is unknown " in {
-                actorUnderTest ! GroupInfoByNameGetRequestV1(imagesProjectMemberGroupInfo.project, "groupwrong", Some(rootUserProfileV1))
-                expectMsg(Failure(NotFoundException(s"For the given group name 'groupwrong' no information was found")))
             }
         }
 
@@ -108,13 +95,13 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
             "CREATE the group and return the group's info if the supplied group name is unique" in {
                 actorUnderTest ! GroupCreateRequestADM(
-                    CreateGroupApiRequestADM("NewGroup", Some("NewGroupDescription"), SharedTestDataV1.IMAGES_PROJECT_IRI, true, false),
-                    SharedTestDataV1.imagesUser01,
+                    CreateGroupApiRequestADM("NewGroup", Some("NewGroupDescription"), SharedTestDataADM.IMAGES_PROJECT_IRI, status = true, selfjoin = false),
+                    SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
                 )
 
-                val received: GroupOperationResponseV1 = expectMsgType[GroupOperationResponseV1](timeout)
-                val newGroupInfo = received.group_info
+                val received: GroupOperationResponseADM = expectMsgType[GroupOperationResponseADM](timeout)
+                val newGroupInfo = received.group
 
                 newGroupInfo.name should equal ("NewGroup")
                 newGroupInfo.description should equal (Some("NewGroupDescription"))
@@ -127,9 +114,9 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             }
 
             "return a 'DuplicateValueException' if the supplied group name is not unique" in {
-                actorUnderTest ! GroupCreateRequestV1(
-                    CreateGroupApiRequestV1("NewGroup", Some("NewGroupDescription"), SharedTestDataV1.IMAGES_PROJECT_IRI, true, false),
-                    SharedTestDataV1.imagesUser01,
+                actorUnderTest ! GroupCreateRequestADM(
+                    CreateGroupApiRequestADM("NewGroup", Some("NewGroupDescription"), SharedTestDataADM.IMAGES_PROJECT_IRI, status = true, selfjoin = false),
+                    SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(DuplicateValueException(s"Group with the name: 'NewGroup' already exists")))
@@ -138,45 +125,45 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             "return 'BadRequestException' if group name or project IRI are missing" in {
 
                 /* missing group name */
-                actorUnderTest ! GroupCreateRequestV1(
-                    CreateGroupApiRequestV1("", Some("NoNameGroupDescription"), SharedTestDataV1.IMAGES_PROJECT_IRI, true, false),
-                    SharedTestDataV1.imagesUser01,
+                actorUnderTest ! GroupCreateRequestADM(
+                    CreateGroupApiRequestADM("", Some("NoNameGroupDescription"), SharedTestDataADM.IMAGES_PROJECT_IRI, status = true, selfjoin = false),
+                    SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Group name cannot be empty")))
 
                 /* missing project */
-                actorUnderTest ! GroupCreateRequestV1(
-                    CreateGroupApiRequestV1("OtherNewGroup", Some("OtherNewGroupDescription"), "", true, false),
-                    SharedTestDataV1.imagesUser01,
+                actorUnderTest ! GroupCreateRequestADM(
+                    CreateGroupApiRequestADM("OtherNewGroup", Some("OtherNewGroupDescription"), "", status = true, selfjoin = false),
+                    SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
                 )
                 expectMsg(Failure(BadRequestException("Project IRI cannot be empty")))
             }
 
             "UPDATE a group" in {
-                actorUnderTest ! GroupChangeRequestV1(
+                actorUnderTest ! GroupChangeRequestADM(
                     newGroupIri.get,
-                    ChangeGroupApiRequestV1(Some("UpdatedGroupName"), Some("UpdatedDescription")),
-                    SharedTestDataV1.imagesUser01,
+                    ChangeGroupApiRequestADM(Some("UpdatedGroupName"), Some("""UpdatedDescription with "quotes" and <html tag>""")),
+                    SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
                 )
 
-                val received: GroupOperationResponseV1 = expectMsgType[GroupOperationResponseV1](timeout)
-                val updatedGroupInfo = received.group_info
+                val received: GroupOperationResponseADM = expectMsgType[GroupOperationResponseADM](timeout)
+                val updatedGroupInfo = received.group
 
                 updatedGroupInfo.name should equal ("UpdatedGroupName")
-                updatedGroupInfo.description should equal (Some("UpdatedDescription"))
-                updatedGroupInfo.project should equal (SharedTestDataV1.IMAGES_PROJECT_IRI)
+                updatedGroupInfo.description should equal (Some("""UpdatedDescription with "quotes" and <html tag>"""))
+                updatedGroupInfo.project should equal (SharedTestDataADM.IMAGES_PROJECT_IRI)
                 updatedGroupInfo.status should equal (true)
                 updatedGroupInfo.selfjoin should equal (false)
             }
 
             "return 'NotFound' if a not existing group IRI is submitted during update" in {
-                actorUnderTest ! GroupChangeRequestV1(
+                actorUnderTest ! GroupChangeRequestADM(
                     groupIri = "http://data.knora.org/groups/notexisting",
-                    ChangeGroupApiRequestV1(Some("UpdatedGroupName"), Some("UpdatedDescription")),
-                    SharedTestDataV1.imagesUser01,
+                    ChangeGroupApiRequestADM(Some("UpdatedGroupName"), Some("UpdatedDescription")),
+                    SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
                 )
 
@@ -184,10 +171,10 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             }
 
             "return 'BadRequest' if the new group name already exists inside the project" in {
-                actorUnderTest ! GroupChangeRequestV1(
+                actorUnderTest ! GroupChangeRequestADM(
                     newGroupIri.get,
-                    ChangeGroupApiRequestV1(Some("Image reviewer"), Some("UpdatedDescription")),
-                    SharedTestDataV1.imagesUser01,
+                    ChangeGroupApiRequestADM(Some("Image reviewer"), Some("UpdatedDescription")),
+                    SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
                 )
 
@@ -196,12 +183,12 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
             "return 'BadRequest' if nothing would be changed during the update" in {
 
-                an [BadRequestException] should be thrownBy ChangeGroupApiRequestV1(None, None, None, None)
+                an [BadRequestException] should be thrownBy ChangeGroupApiRequestADM(None, None, None, None)
 
                 /*
-                actorUnderTest ! GroupChangeRequestV1(
+                actorUnderTest ! GroupChangeRequestADM(
                     newGroupIri.get,
-                    ChangeGroupApiRequestV1(None, None, None, None),
+                    ChangeGroupApiRequestADM(None, None, None, None),
                     SharedAdminTestData.imagesUser01,
                     UUID.randomUUID
                 )
@@ -214,45 +201,23 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         "used to query members" should {
 
             "return all members of a group identified by IRI" in {
-                actorUnderTest ! GroupMembersByIRIGetRequestV1(
-                    groupIri = SharedTestDataV1.imagesReviewerGroupInfo.id,
-                    userProfileV1 = SharedTestDataV1.rootUser
+                actorUnderTest ! GroupMembersGetRequestADM(
+                    groupIri = SharedTestDataADM.imagesReviewerGroup.id,
+                    requestingUser = SharedTestDataADM.rootUser
                 )
-                val received: GroupMembersResponseV1 = expectMsgType[GroupMembersResponseV1](timeout)
+                val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
                 received.members should contain allElementsOf Seq(
-                    SharedTestDataV1.multiuserUser.ofType(UserProfileTypeV1.SHORT).userData.user_id.get,
-                    SharedTestDataV1.imagesReviewerUser.ofType(UserProfileTypeV1.SHORT).userData.user_id.get
-                )
-            }
-
-            "return all members of a group identified by shortname / project IRI combination" in {
-                actorUnderTest ! GroupMembersByNameGetRequestV1(
-                    projectIri = IMAGES_PROJECT_IRI,
-                    groupName = SharedTestDataV1.imagesReviewerGroupInfo.name,
-                    userProfileV1 = SharedTestDataV1.rootUser
-                )
-                val received: GroupMembersResponseV1 = expectMsgType[GroupMembersResponseV1](timeout)
-                received.members should contain allElementsOf Seq(
-                    SharedTestDataV1.multiuserUser.ofType(UserProfileTypeV1.SHORT).userData.user_id.get,
-                    SharedTestDataV1.imagesReviewerUser.ofType(UserProfileTypeV1.SHORT).userData.user_id.get
+                    SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.RESTRICTED),
+                    SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.RESTRICTED)
                 )
             }
 
             "return 'NotFound' when the group IRI is unknown" in {
-                actorUnderTest ! GroupMembersByIRIGetRequestV1(
+                actorUnderTest ! GroupMembersGetRequestADM(
                     groupIri = "http://data.knora.org/groups/notexisting",
-                    SharedTestDataV1.rootUser
+                    requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Failure(NotFoundException(s"Group 'http://data.knora.org/groups/notexisting' not found.")))
-            }
-
-            "return 'NotFound' when the group shortname / project IRI combination is unknown" in {
-                actorUnderTest ! GroupMembersByNameGetRequestV1(
-                    projectIri = IMAGES_PROJECT_IRI,
-                    groupName = "groupwrong",
-                    SharedTestDataV1.rootUser
-                )
-                expectMsg(Failure(NotFoundException(s"Group 'groupwrong' not found.")))
             }
         }
     }

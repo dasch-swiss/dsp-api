@@ -103,7 +103,7 @@ case class ListsGetResponseADM(items: Seq[ListInfoADM]) extends KnoraResponseADM
   *
   * @param list the complete list.
   */
-case class ListGetResponseADM(list: FullListADM) extends KnoraResponseADM with ListADMJsonProtocol {
+case class ListGetResponseADM(list: ListFullADM) extends KnoraResponseADM with ListADMJsonProtocol {
 
     def toJsValue = listGetResponseADMFormat.write(this)
 }
@@ -144,14 +144,14 @@ case class NodePathGetResponseADM(nodelist: Seq[ListNodeADM]) extends KnoraRespo
 // Components of messages
 
 
-case class FullListADM(listinfo: ListInfoADM, children: Seq[ListNodeADM]) {
+case class ListFullADM(listinfo: ListInfoADM, children: Seq[ListNodeADM]) {
     /**
       * Sorts the whole hierarchy.
       *
       * @return a sorted [[List]].
       */
-    def sorted: FullListADM = {
-        FullListADM(
+    def sorted: ListFullADM = {
+        ListFullADM(
             listinfo = listinfo,
             children = children.sortBy(_.id)
         )
@@ -413,14 +413,14 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         }
     }
 
-    implicit object ListFormat extends JsonFormat[FullListADM] {
+    implicit object ListFormat extends JsonFormat[ListFullADM] {
         /**
-          * Converts a [[FullListADM]] to a [[JsValue]].
+          * Converts a [[ListFullADM]] to a [[JsValue]].
           *
-          * @param list a [[FullListADM]].
+          * @param list a [[ListFullADM]].
           * @return a [[JsValue]].
           */
-        def write(list: FullListADM): JsValue = {
+        def write(list: ListFullADM): JsValue = {
             JsObject(
                 "listinfo" -> list.listinfo.toJson,
                 "children" -> JsArray(list.children.map(_.toJson).toVector)
@@ -433,7 +433,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           * @param value a [[JsValue]].
           * @return a [[List]].
           */
-        def read(value: JsValue): FullListADM = {
+        def read(value: JsValue): ListFullADM = {
 
             val fields = value.asJsObject.fields
 
@@ -444,7 +444,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
                 case _ => throw DeserializationException("The expected field 'children' is in the wrong format.")
             }
 
-            FullListADM(
+            ListFullADM(
                 listinfo = listinfo,
                 children = children
             )

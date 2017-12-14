@@ -126,7 +126,7 @@ class ListsResponderADM extends Responder {
                     )
             }
 
-            list = FullListADM(listinfo = listinfo, children = children)
+            list = ListFullADM(listinfo = listinfo, children = children)
             // _ = log.debug(s"listGetRequestV2 - list: {}", MessageUtil.toSource(list))
 
         } yield ListGetResponseADM(list = list)

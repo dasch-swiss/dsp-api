@@ -17,8 +17,8 @@
 package org.knora.webapi.messages.v1.responder.usermessages
 
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataType, PermissionsDataADM}
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataType
 import org.scalatest.{Matchers, WordSpecLike}
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
@@ -85,7 +85,7 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
                     password = Some(hp),
                     lang = lang
                 ),
-                permissionData = PermissionsDataADM(anonymousUser = false)
+                permissionData = permissionsmessages.PermissionsDataADM()
             )
 
             // test SCrypt
