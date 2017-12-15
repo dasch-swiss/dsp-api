@@ -14,7 +14,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v1
+package org.knora.webapi.responders.admin
 
 import akka.actor.Props
 import akka.actor.Status.Failure
@@ -28,7 +28,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.responders._
-import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.KnoraIdUtil
 
@@ -37,7 +36,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 
-object PermissionsResponderV1Spec {
+object PermissionsResponderADMSpec {
 
     val config: Config = ConfigFactory.parseString(
         """
@@ -50,7 +49,7 @@ object PermissionsResponderV1Spec {
 /**
   * This spec is used to test the [[PermissionsResponderADM]] actor.
   */
-class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.config) with ImplicitSender {
+class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.config) with ImplicitSender {
 
     private implicit val executionContext = system.dispatcher
     private val timeout = 30.seconds
@@ -80,7 +79,7 @@ class PermissionsResponderV1Spec extends CoreSpec(PermissionsResponderV1Spec.con
     }
 
 
-    "The PermissionsResponderV1 " when {
+    "The PermissionsResponderADM" when {
 
         "queried about the permission profile" should {
 

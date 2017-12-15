@@ -33,6 +33,7 @@ object OntologyConstants {
         val Predicate: IRI = RdfPrefixExpansion + "predicate"
         val Object: IRI = RdfPrefixExpansion + "object"
         val Property: IRI = RdfPrefixExpansion + "Property"
+        val LangString: IRI = RdfPrefixExpansion + "langString"
     }
 
     object Rdfs {

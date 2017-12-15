@@ -21,15 +21,12 @@
 package org.knora.webapi
 
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
-import org.knora.webapi.messages.admin.responder.ontologiesmessages
+import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoShortADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 object KnoraSystemInstances {
-
-    implicit val stringFormat = StringFormatter.getGeneralInstance
 
     object Users {
 
@@ -66,8 +63,6 @@ object KnoraSystemInstances {
 
     object Projects {
 
-        val knoraBase: SmartIri = SmartIri("http://www.knora.org/ontology/knora-base")
-
         val SystemProject = ProjectADM(
             id = OntologyConstants.KnoraBase.SystemProject,
             shortname = "SystemProject",
@@ -77,7 +72,9 @@ object KnoraSystemInstances {
             keywords = None,
             logo = None,
             institution = None,
-            ontologies = Seq(ontologiesmessages.OntologyInfoShortADM(ontologyIri = knoraBase, ontologyName = knoraBase.getOntologyName)),
+            ontologies = Seq(OntologyInfoShortADM(
+                ontologyIri = "http://www.knora.org/ontology/knora-base",
+                ontologyName = "knora-base")),
             status = true,
             selfjoin = false
         )

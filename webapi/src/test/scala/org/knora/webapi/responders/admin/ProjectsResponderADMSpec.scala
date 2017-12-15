@@ -18,7 +18,7 @@
   * To be able to test UsersResponder, we need to be able to start UsersResponder isolated. Now the UsersResponder
   * extend ResponderADM which messes up testing, as we cannot inject the TestActor system.
   */
-package org.knora.webapi.responders.v1
+package org.knora.webapi.responders.admin
 
 import java.util.UUID
 
@@ -26,17 +26,15 @@ import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoShortADM
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}
+import org.knora.webapi.util.{MutableTestIri, StringFormatter}
 
 import scala.concurrent.duration._
 
@@ -312,7 +310,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 )
 
                 val received: ProjectADM = expectMsgType[ProjectADM](timeout)
-                received.ontologies should be (Seq(OntologyInfoShortADM(SmartIri("http://www.knora.org/ontology/blabla1"), "blabla1")))
+                received.ontologies should be (Seq(OntologyInfoShortADM("http://www.knora.org/ontology/blabla1", "blabla1")))
             }
 
             "REMOVE an ontology from the project" in {

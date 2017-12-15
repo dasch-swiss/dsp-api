@@ -32,7 +32,7 @@ import akka.stream.ActorMaterializer
 import arq.iri
 import org.apache.commons.lang3.StringUtils
 import org.eclipse.rdf4j.model.Statement
-import org.eclipse.rdf4j.model.impl.SimpleLiteral
+import org.eclipse.rdf4j.model.impl.{SimpleIRI, SimpleLiteral}
 import org.eclipse.rdf4j.rio.RDFHandler
 import org.eclipse.rdf4j.rio.turtle._
 import org.knora.webapi.SettingsConstants._
@@ -267,16 +267,14 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 val subjectIri = st.getSubject.stringValue
                 val predicateIri = st.getPredicate.stringValue
 
-                val lit: SimpleLiteral = st.getObject.asInstanceOf[SimpleLiteral]
-                val objectLiteral: LiteralV2 = lit.getDatatype match {
-                    case RDF.LANGSTRING => StringLiteralV2(value = lit.stringValue, language = lit.getLanguage.asScala)
-                    case XMLSchema.BOOLEAN => BooleanLiteralV2(value = lit.booleanValue)
-                    case XMLSchema.STRING => if (stringFormatter.isIri(lit.stringValue)) {
-                        IriLiteralV2(value = lit.stringValue)
-                    } else {
-                        StringLiteralV2(value = lit.stringValue)
+                val objectLiteral: LiteralV2 = st.getObject match {
+                    case iri: SimpleIRI => IriLiteralV2(value = iri.stringValue)
+                    case lit: SimpleLiteral => lit.getDatatype.toString match {
+                        case OntologyConstants.Rdf.LangString => StringLiteralV2(value = lit.stringValue, language = lit.getLanguage.asScala)
+                        case OntologyConstants.Xsd.String => StringLiteralV2(value = lit.stringValue, language = None)
+                        case OntologyConstants.Xsd.Boolean => BooleanLiteralV2(value = lit.booleanValue)
+                        case unknown => throw NotImplementedException(s"The literal type '$unknown' is not implemented.")
                     }
-                    case unknown => throw NotImplementedException(s"The literal type '$unknown' is not implemented.")
                 }
 
                 val currentStatementsForSubject: Map[IRI, Seq[LiteralV2]] = statements.getOrElse(subjectIri, Map.empty[IRI, Seq[LiteralV2]])

@@ -464,9 +464,9 @@ case class UserADM(id: IRI,
       * @return true if password matches and false if password doesn't match.
       */
     def passwordMatch(password: String): Boolean = {
-        password.exists {
+        this.password.exists {
             hashedPassword =>
-                if (hashedPassword.toString.startsWith("$e0801$")) {
+                if (hashedPassword.startsWith("$e0801$")) {
                     //println(s"UserProfileV1 - passwordMatch - password: $password, hashedPassword: hashedPassword")
                     import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
                     val encoder = new SCryptPasswordEncoder
@@ -477,6 +477,7 @@ case class UserADM(id: IRI,
                 }
         }
     }
+
 
     /**
       * Creating a [[UserADM]] of the requested type.

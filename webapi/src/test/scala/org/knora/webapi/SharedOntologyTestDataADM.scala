@@ -21,14 +21,11 @@
 package org.knora.webapi
 
 import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoADM
-import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 object SharedOntologyTestDataADM {
 
-    implicit val stringFormatter = StringFormatter.getGeneralInstance
-
     val imagesOntologyInfo = OntologyInfoADM(
-        ontologyIri = SmartIri(IMAGES_ONTOLOGY_IRI),
+        ontologyIri = IMAGES_ONTOLOGY_IRI,
         ontologyName = "images",
         project = SharedTestDataADM.imagesProject
     )
@@ -38,7 +35,7 @@ object SharedOntologyTestDataADM {
 
 
     val incunabulaOntologyInfo = OntologyInfoADM(
-        ontologyIri = SmartIri(INCUNABULA_ONTOLOGY_IRI),
+        ontologyIri = INCUNABULA_ONTOLOGY_IRI,
         ontologyName = "incunabula",
         project = SharedTestDataADM.incunabulaProject
     )
@@ -47,7 +44,7 @@ object SharedOntologyTestDataADM {
     val INCUNABULA_PAGE_RESOURCE_CLASS = INCUNABULA_ONTOLOGY_IRI + "#" + "page"
 
     val anythingOntologyInfo = OntologyInfoADM(
-        ontologyIri = SmartIri(ANYTHING_ONTOLOGY_IRI),
+        ontologyIri = ANYTHING_ONTOLOGY_IRI,
         ontologyName = "anything",
         project = SharedTestDataADM.anythingProject
     )

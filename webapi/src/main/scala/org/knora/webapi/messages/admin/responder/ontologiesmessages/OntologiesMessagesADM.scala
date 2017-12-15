@@ -28,7 +28,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, P
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
-import org.knora.webapi.util.SmartIri
 import spray.json.{DefaultJsonProtocol, RootJsonFormat, _}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -169,7 +168,7 @@ case class OntologyCreateResponseADM(ontology: OntologyDataADM) extends KnoraRes
   * @param project the [[ProjectInfoV1]] of the project to which this ontology belongs.
   * @param data the contents of the the ontology as an JSON-LD string.
   */
-case class OntologyDataADM(ontologyIri: SmartIri, ontologyName: String, project: ProjectADM, data: String)
+case class OntologyDataADM(ontologyIri: IRI, ontologyName: String, project: ProjectADM, data: String)
 
 /**
   * Represents basic information about an ontology (with project).
@@ -178,7 +177,7 @@ case class OntologyDataADM(ontologyIri: SmartIri, ontologyName: String, project:
   * @param ontologyName the name of the ontology.
   * @param project the [[ProjectADM]] of the project to which this ontology belongs.
   */
-case class OntologyInfoADM(ontologyIri: SmartIri, ontologyName: String, project: ProjectADM) {
+case class OntologyInfoADM(ontologyIri: IRI, ontologyName: String, project: ProjectADM) {
 
     def asOntologyInfoShortADM: OntologyInfoShortADM = {
         OntologyInfoShortADM(
@@ -194,7 +193,7 @@ case class OntologyInfoADM(ontologyIri: SmartIri, ontologyName: String, project:
   * @param ontologyIri the IRI of the ontology.
   * @param ontologyName the name of the ontology.
   */
-case class OntologyInfoShortADM(ontologyIri: SmartIri, ontologyName: String)
+case class OntologyInfoShortADM(ontologyIri: IRI, ontologyName: String)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -204,26 +203,6 @@ case class OntologyInfoShortADM(ontologyIri: SmartIri, ontologyName: String)
   * A spray-json protocol for generating Knora API Admin JSON.
   */
 object OntologiesADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsADMJsonProtocol {
-
-    implicit object SmartIriFormat extends JsonFormat[SmartIri] {
-        /**
-          * Converts a [[SmartIri]] to a [[JsValue]].
-          *
-          * @param smartiri a [[SmartIri]].
-          * @return a [[JsValue]].
-          */
-        def write(smartiri: SmartIri): JsValue = {
-            JsString(smartiri.toString)
-        }
-
-        /**
-          * Converts a [[JsValue]] to a [[SmartIri]].
-          *
-          * @param value a [[JsValue]].
-          * @return a [[SmartIri]].
-          */
-        def read(value: JsValue): SmartIri = ???
-    }
 
     implicit val ontologyDataADMFormat: JsonFormat[OntologyDataADM] = lazyFormat(jsonFormat(OntologyDataADM, "ontologyIri", "ontologyName", "project", "data"))
     implicit val ontologyInfoLongADMFormat: JsonFormat[OntologyInfoADM] = lazyFormat(jsonFormat(OntologyInfoADM, "ontologyIri", "ontologyName", "project"))

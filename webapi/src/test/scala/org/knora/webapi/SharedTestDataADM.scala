@@ -22,20 +22,16 @@ package org.knora.webapi
 
 import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
+import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoShortADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
-import org.knora.webapi.util.StringFormatter
 
 /**
   * This object holds the same user which are loaded with '_test_data/all_data/admin-data.ttl'. Using this object
   * in tests, allows easier updating of details as they change over time.
   */
 object SharedTestDataADM {
-
-    implicit val stringFormatter = StringFormatter.getGeneralInstance
 
     /*************************************/
     /** System Admin Data               **/
@@ -249,7 +245,10 @@ object SharedTestDataADM {
         keywords = Some("images, collection"),
         logo = None,
         institution = None,
-        ontologies = Seq(SharedOntologyTestDataADM.imagesOntologyInfo.asOntologyInfoShortADM),
+        ontologies = Seq(OntologyInfoShortADM(
+            ontologyIri = SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI,
+            ontologyName = "images"
+        )),
         status = true,
         selfjoin = false
     )
@@ -377,7 +376,10 @@ object SharedTestDataADM {
         keywords = Some("Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images"),
         logo = Some("incunabula_logo.png"),
         institution = None,
-        ontologies = Seq(SharedOntologyTestDataADM.incunabulaOntologyInfo.asOntologyInfoShortADM),
+        ontologies = Seq(OntologyInfoShortADM(
+            ontologyIri = SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI,
+            ontologyName = "incunabula"
+        )),
         status = true,
         selfjoin = false
     )
@@ -446,7 +448,10 @@ object SharedTestDataADM {
         keywords = None,
         logo = None,
         institution = None,
-        ontologies = Seq(SharedOntologyTestDataADM.anythingOntologyInfo.asOntologyInfoShortADM),
+        ontologies = Seq(OntologyInfoShortADM(
+            ontologyIri = SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI,
+            ontologyName = "anything"
+        )),
         status = true,
         selfjoin = false
     )
@@ -458,7 +463,7 @@ object SharedTestDataADM {
 
     val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
 
-    def beolProjectInfo = ProjectInfoV1(
+    def beolProject = ProjectADM(
         id = BEOL_PROJECT_IRI,
         shortname = "beol",
         shortcode = None,
@@ -467,7 +472,10 @@ object SharedTestDataADM {
         keywords = None,
         logo = None,
         institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/beol"),
+        ontologies = Seq(OntologyInfoShortADM(
+            ontologyIri = "http://www.knora.org/ontology/beol",
+            ontologyName = "beol"
+        )),
         status = true,
         selfjoin = false
     )
@@ -479,7 +487,7 @@ object SharedTestDataADM {
 
     val BIBLIO_PROJECT_IRI = "http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ"
 
-    def biblioProjectInfo = ProjectInfoV1(
+    def biblioProject = ProjectADM(
         id = BIBLIO_PROJECT_IRI,
         shortname = "biblio",
         shortcode = None,
@@ -488,27 +496,28 @@ object SharedTestDataADM {
         keywords = None,
         logo = None,
         institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/biblio"),
+        ontologies = Seq(OntologyInfoShortADM(
+            ontologyIri = "http://www.knora.org/ontology/biblio",
+            ontologyName = "biblio"
+        )),
         status = true,
         selfjoin = false
     )
 
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
-    def biblioUser = UserProfileV1(
-        UserDataV1(
-            user_id = Some("http://rdfh.ch/users/Q-6Sssu8TBWrcCGuVJ0lVw"),
-            firstname = Some("biblio"),
-            lastname = Some("biblio"),
-            email = Some("biblio@example.com"),
-            password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
-            token = None,
-            status = Some(true),
-            lang = "en"
-        ),
-        groups = Vector.empty[IRI],
-        projects_info = Map(BIBLIO_PROJECT_IRI -> biblioProjectInfo),
+    def biblioUser = UserADM(
+        id = "http://rdfh.ch/users/Q-6Sssu8TBWrcCGuVJ0lVw",
+        email = "biblio@example.com",
+        password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
+        token = None,
+        givenName = "biblio",
+        familyName = "biblio",
+        status = true,
+        lang = "en",
+        groups = Seq.empty[GroupADM],
+        projects = Seq(biblioProject),
         sessionId = None,
-        permissionData = PermissionsDataADM()
+        permissions = PermissionsDataADM()
     )
 
     /************************************/
@@ -517,7 +526,7 @@ object SharedTestDataADM {
 
     val DOKUBIB_PROJECT_IRI = "http://rdfh.ch/projects/b83b99ca01"
 
-    def dokubibProjectInfo = ProjectInfoV1(
+    def dokubibProject = ProjectADM(
         id = DOKUBIB_PROJECT_IRI,
         shortname = "dokubib",
         shortcode = Some("00FE"),
@@ -526,7 +535,10 @@ object SharedTestDataADM {
         keywords = None,
         logo = None,
         institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/00FE/dokubib"),
+        ontologies = Seq(OntologyInfoShortADM(
+                ontologyIri = "http://www.knora.org/ontology/00FE/dokubib",
+                ontologyName = "dokubib"
+        )),
         status = false,
         selfjoin = false
     )

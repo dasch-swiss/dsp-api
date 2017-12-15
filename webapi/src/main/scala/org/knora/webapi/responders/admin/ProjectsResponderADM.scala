@@ -97,7 +97,7 @@ class ProjectsResponderADM extends Responder {
 
                     val ontologyInfos: Seq[OntologyInfoShortADM] = ontologyIris.map { ontologyIri =>
                         OntologyInfoShortADM(
-                            ontologyIri = SmartIri(ontologyIri),
+                            ontologyIri = ontologyIri,
                             ontologyName = SmartIri(ontologyIri).getOntologyName
                         )
                     }
@@ -130,6 +130,8 @@ class ProjectsResponderADM extends Responder {
     private def projectsGetRequestADM(requestingUser: UserADM): Future[ProjectsGetResponseADM] = {
 
         //log.debug("projectsGetRequestV1")
+
+        // ToDo: What permissions should be required, if any?
 
         for {
             projects <- projectsGetADM(requestingUser = requestingUser)
@@ -670,7 +672,7 @@ class ProjectsResponderADM extends Responder {
 
         val ontologyInfos: Seq[OntologyInfoShortADM] = ontologyIris.map { ontologyIri =>
             OntologyInfoShortADM(
-                ontologyIri = SmartIri(ontologyIri),
+                ontologyIri = ontologyIri,
                 ontologyName = SmartIri(ontologyIri).getOntologyName
             )
         }

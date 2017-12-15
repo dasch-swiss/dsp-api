@@ -47,17 +47,17 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, 600.seconds)
     }
 
-    "The Permissions Route ('v1/permissions/projectIri/groupIri')" should {
+    "The Permissions Route ('admin/permissions/projectIri/groupIri')" should {
 
         "return administrative permissions" in {
             val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
             val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraBase.ProjectMember, "utf-8")
 
-            val request = Get(baseApiUrl + s"/v1/permissions/$projectIri/$groupIri")
+            val request = Get(baseApiUrl + s"/admin/permissions/$projectIri/$groupIri")
             val response = singleAwaitingRequest(request, 1.seconds)
             log.debug("==>> " + response.toString)
             assert(response.status === StatusCodes.OK)

@@ -57,7 +57,7 @@ class PermissionsResponderADM extends Responder {
         case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser) => future2Message(sender(), administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser), log)
         case AdministrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser) => future2Message(sender(), administrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser), log)
         case AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser) => future2Message(sender(), administrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser), log)
-        case AdministrativePermissionCreateRequestADM(newAdministrativePermissionV1, requestingUser) => future2Message(sender(), administrativePermissionCreateRequestADM(newAdministrativePermissionV1, requestingUser), log)
+        case AdministrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser) => future2Message(sender(), administrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser), log)
         //case AdministrativePermissionDeleteRequestV1(administrativePermissionIri, requestingUser) => future2Message(sender(), deleteAdministrativePermissionV1(administrativePermissionIri, requestingUser), log)
         case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) => future2Message(sender(), objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser), log)
         case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) => future2Message(sender(), objectAccessPermissionsForValueGetADM(valueIri, requestingUser), log)

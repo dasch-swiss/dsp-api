@@ -24,6 +24,7 @@ import akka.actor.ActorDSL._
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{KnoraPasswordCredentialsV2, KnoraTokenCredentialsV2}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
@@ -67,24 +68,24 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         }
     })
 
-    val getUserProfileV1ByEmail = PrivateMethod[Try[UserProfileV1]]('getUserProfileV1ByEmail)
+    val getUserADMByEmail = PrivateMethod[Try[UserADM]]('getUserADMByEmail)
     val authenticateCredentialsV2 = PrivateMethod[Boolean]('authenticateCredentialsV2)
 
     "During Authentication" when {
         "called, the 'getUserProfileV1ByEmail' method " should {
             "succeed with the correct 'email' " in {
-                Authenticator invokePrivate getUserProfileV1ByEmail(rootUserEmail, system, timeout, executionContext) should be(rootUserProfileV1)
+                Authenticator invokePrivate getUserADMByEmail(rootUserEmail, system, timeout, executionContext) should be(rootUserProfileV1)
             }
 
             "fail with the wrong 'email' " in {
                 an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate getUserProfileV1ByEmail("wronguser@example.com", system, timeout, executionContext)
+                    Authenticator invokePrivate getUserADMByEmail("wronguser@example.com", system, timeout, executionContext)
                 }
             }
 
             "fail when not providing a email " in {
                 an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate getUserProfileV1ByEmail("", system, timeout, executionContext)
+                    Authenticator invokePrivate getUserADMByEmail("", system, timeout, executionContext)
                 }
             }
         }
