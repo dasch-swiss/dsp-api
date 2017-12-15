@@ -323,7 +323,7 @@
 ##########################################################
 
 ### Administrative Permissions on ProjectMember
-<http://rdfh.ch/permissions/008-a1>
+<http://rdfh.ch/permissions/08AE/008-a1>
 
                       rdf:type knora-base:AdministrativePermission ;
 
@@ -335,7 +335,7 @@
 
 
 ### Administrative Permissions on ProjectAdmin
-<http://rdfh.ch/permissions/008-a2>
+<http://rdfh.ch/permissions/08AE/008-a2>
 
                       rdf:type knora-base:AdministrativePermission ;
 
@@ -347,7 +347,7 @@
 
 
 ### Default Object Access Permissions on ProjectMember Group
-<http://rdfh.ch/permissions/008-d1>
+<http://rdfh.ch/permissions/08AE/008-d1>
 
                       rdf:type knora-base:DefaultObjectAccessPermission ;
 
