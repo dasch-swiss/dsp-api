@@ -72,14 +72,14 @@ object SharedPermissionsTestData {
 
     val perm002_a1: ap =
         ap(
-            iri = "http://rdfh.ch/permissions/002-a1",
-            p = AdministrativePermissionV1(iri = "http://rdfh.ch/permissions/002-a1", forProject = IMAGES_PROJECT_IRI, forGroup = OntologyConstants.KnoraBase.ProjectMember, hasPermissions = Set(PermissionV1.ProjectResourceCreateAllPermission))
+            iri = "http://rdfh.ch/permissions/00FF/a1",
+            p = AdministrativePermissionV1(iri = "http://rdfh.ch/permissions/00FF/a1", forProject = IMAGES_PROJECT_IRI, forGroup = OntologyConstants.KnoraBase.ProjectMember, hasPermissions = Set(PermissionV1.ProjectResourceCreateAllPermission))
         )
 
     val perm002_a2: ap =
         ap(
-            iri = "http://rdfh.ch/permissions/002-a2",
-            p = AdministrativePermissionV1(iri = "http://rdfh.ch/permissions/002-a2", forProject = IMAGES_PROJECT_IRI, forGroup = OntologyConstants.KnoraBase.ProjectAdmin, hasPermissions = Set(
+            iri = "http://rdfh.ch/permissions/00FF/a2",
+            p = AdministrativePermissionV1(iri = "http://rdfh.ch/permissions/00FF/a2", forProject = IMAGES_PROJECT_IRI, forGroup = OntologyConstants.KnoraBase.ProjectAdmin, hasPermissions = Set(
                                 PermissionV1.ProjectResourceCreateAllPermission,
                                 PermissionV1.ProjectAdminAllPermission
                             ))
@@ -87,8 +87,8 @@ object SharedPermissionsTestData {
 
     val perm002_a3: ap =
         ap(
-            iri = "http://rdfh.ch/permissions/002-a3",
-            p = AdministrativePermissionV1(iri = "http://rdfh.ch/permissions/002-a3", forProject = IMAGES_PROJECT_IRI, forGroup = "http://rdfh.ch/groups/00FF/images-reviewer", hasPermissions = Set(
+            iri = "http://rdfh.ch/permissions/00FF/a3",
+            p = AdministrativePermissionV1(iri = "http://rdfh.ch/permissions/00FF/a3", forProject = IMAGES_PROJECT_IRI, forGroup = "http://rdfh.ch/groups/00FF/images-reviewer", hasPermissions = Set(
                 PermissionV1.projectResourceCreateRestrictedPermission(s"$IMAGES_ONTOLOGY_IRI#bild"),
                 PermissionV1.projectResourceCreateRestrictedPermission(s"$IMAGES_ONTOLOGY_IRI#bildformat")
             ))
@@ -96,8 +96,8 @@ object SharedPermissionsTestData {
 
     val perm002_d1: doap =
         doap(
-            iri = "http://rdfh.ch/permissions/002-d1",
-            p = DefaultObjectAccessPermissionV1(iri = "http://rdfh.ch/permissions/002-d1", forProject = IMAGES_PROJECT_IRI, forGroup = Some(OntologyConstants.KnoraBase.ProjectMember), forResourceClass = None, forProperty = None, hasPermissions = Set(
+            iri = "http://rdfh.ch/permissions/00FF/d1",
+            p = DefaultObjectAccessPermissionV1(iri = "http://rdfh.ch/permissions/00FF/d1", forProject = IMAGES_PROJECT_IRI, forGroup = Some(OntologyConstants.KnoraBase.ProjectMember), forResourceClass = None, forProperty = None, hasPermissions = Set(
                                 PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
                                 PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
                                 PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser)
@@ -106,8 +106,8 @@ object SharedPermissionsTestData {
 
     val perm002_d2: doap =
         doap(
-            iri = "http://rdfh.ch/permissions/002-d2",
-            p = DefaultObjectAccessPermissionV1(iri = "http://rdfh.ch/permissions/002-d2", forProject = IMAGES_PROJECT_IRI, forGroup = Some(OntologyConstants.KnoraBase.KnownUser), forResourceClass = None, forProperty = None, hasPermissions = Set(
+            iri = "http://rdfh.ch/permissions/00FF/d2",
+            p = DefaultObjectAccessPermissionV1(iri = "http://rdfh.ch/permissions/00FF/d2", forProject = IMAGES_PROJECT_IRI, forGroup = Some(OntologyConstants.KnoraBase.KnownUser), forResourceClass = None, forProperty = None, hasPermissions = Set(
                 PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
                 PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
                 PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser)
