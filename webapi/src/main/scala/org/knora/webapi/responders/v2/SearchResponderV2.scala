@@ -689,6 +689,35 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                             )
                                         )
 
+                                    case OntologyConstants.Xsd.Uri =>
+
+                                        // make sure that the right argument is a Uri literal
+                                        val uriLiteral: XsdLiteral = filterCompare.rightArg match {
+                                            case uriLiteral: XsdLiteral if uriLiteral.datatype.toString == OntologyConstants.Xsd.Uri => uriLiteral
+
+                                            case other => throw SparqlSearchException(s"right argument in CompareExpression for Uri property was expected to be a Uri literal, but $other is given.")
+                                        }
+
+                                        // create a variable representing the Uri literal
+                                        val uriValHasString = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasUri)
+
+                                        // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
+                                        valueVariablesCreatedInFilters.put(queryVar, uriValHasString)
+
+                                        // check if operator is supported for Uri operations
+                                        if (!(filterCompare.operator.equals(CompareExpressionOperator.EQUALS) || filterCompare.operator.equals(CompareExpressionOperator.NOT_EQUALS))) {
+                                            throw SparqlSearchException(s"Filter expressions for a Uri value supports the following operators: ${CompareExpressionOperator.EQUALS}, ${CompareExpressionOperator.NOT_EQUALS}, but ${filterCompare.operator} given")
+                                        }
+
+                                        TransformedFilterExpression(
+                                            CompareExpression(uriValHasString, filterCompare.operator, uriLiteral),
+                                            Seq(
+                                                // connects the value object with the value literal
+                                                StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasUri.toSmartIri), uriValHasString)
+                                            )
+                                        )
+
+
                                     case OntologyConstants.KnoraApiV2Simple.Date =>
 
                                         // make sure that the right argument is a string literal (dates are represented as knora date strings in knora-api simple)
