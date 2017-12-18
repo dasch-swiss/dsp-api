@@ -313,3 +313,11 @@ var SALSAH_API_LEGACY = {
 
 };
 
+/*
+ * work out an ontology's short name out of its URI
+ * arg id : ontology's URI, for example: `http://www.knora.org/ontology/0103/theatre-societe`
+ * return: the very last part of the URI, in this example: `theatre-societe`
+ */
+SALSAH.vocabularyId2shortName = function(ontologyid) {
+	return ontologyid.substr(ontologyid.lastIndexOf('/') + 1)
+}
