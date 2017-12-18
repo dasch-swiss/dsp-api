@@ -1142,10 +1142,10 @@ class OntologyResponderV2 extends Responder {
       */
     private def loadOntologyMetadata(internalOntologyIri: SmartIri): Future[Option[OntologyMetadataV2]] = {
         for {
-            cacheData <- getCacheData
-
-            _ = if (!internalOntologyIri.getOntologySchema.contains(InternalSchema)) {
-                throw AssertionException(s"Expected an internal ontology IRI: $internalOntologyIri")
+            _ <- Future {
+                if (!internalOntologyIri.getOntologySchema.contains(InternalSchema)) {
+                    throw AssertionException(s"Expected an internal ontology IRI: $internalOntologyIri")
+                }
             }
 
             getOntologyInfoSparql = queries.sparql.v2.txt.getOntologyInfo(
@@ -1349,8 +1349,6 @@ class OntologyResponderV2 extends Responder {
 
                 // Update the ontology cache.
 
-                // TODO: ensure that the cached data is still in an ErrorHandlingMap.
-
                 _ = storeCacheData(cacheData.copy(
                     ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> metadata)
                 ))
@@ -1376,20 +1374,65 @@ class OntologyResponderV2 extends Responder {
         } yield taskResult
     }
 
+    /**
+      * Creates a property in an existing ontology.
+      *
+      * @param createPropertyRequest the request to create the property.
+      * @return a [[ReadOntologiesV2]] in the internal schema, the containing the definition of the new property.
+      */
     private def createProperty(createPropertyRequest: CreatePropertyRequestV2): Future[ReadOntologiesV2] = {
         def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologiesV2] = {
             for {
                 cacheData <- getCacheData
+                internalPropertyDef = createPropertyRequest.propertyInfoContent.toOntologySchema(InternalSchema)
 
                 // Check that the ontology exists and has not been updated by another user since the client last read it.
                 _ <- checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = createPropertyRequest.lastModificationDate)
 
+                // Check that the property's rdf:type is owl:ObjectProperty.
+
+                rdfType: SmartIri = internalPropertyDef.requireIriPredicate(OntologyConstants.Rdf.Type.toSmartIri, throw BadRequestException(s"No rdf:type specified"))
+
+                _ = if (rdfType != OntologyConstants.Owl.ObjectProperty.toSmartIri) {
+                    throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
+                }
+
+                // Don't allow new file value properties to be created.
+
+                isFileValueProp <- propertyDefIsFileValueProp(internalPropertyDef)
+
+                _ = if (isFileValueProp) {
+                    throw BadRequestException("New file value properties cannot be created")
+                }
+
+                // Don't allow new link value properties to be created directly, because we do that automatically when creating a link property.
+
+                isLinkValueProp <- propertyDefIsLinkValueProp(internalPropertyDef)
+
+                _ = if (isLinkValueProp) {
+                    throw BadRequestException("New link value properties cannot be created directly. Create a link property instead.")
+                }
+
                 // Check that the property doesn't exist yet.
-                _ = if (!cacheData.propertyDefs.contains(internalPropertyIri)) {
+                _ = if (cacheData.propertyDefs.contains(internalPropertyIri)) {
                     throw BadRequestException(s"Property ${createPropertyRequest.propertyInfoContent.propertyIri} already exists")
                 }
 
-                internalPropertyDef = createPropertyRequest.propertyInfoContent.toOntologySchema(InternalSchema)
+                // Find out whether this property is a link property.
+                isLinkProp <- propertyDefIsLinkProp(internalPropertyDef)
+
+                // If we're creating a link property, make the definition of the corresponding link value property.
+                maybeLinkValuePropDef: Option[PropertyInfoContentV2] = if (isLinkProp) {
+                    val linkValuePropDef = linkPropertyDefToLinkValuePropertyDef(internalPropertyDef)
+
+                    if (cacheData.propertyDefs.contains(linkValuePropDef.propertyIri)) {
+                        throw BadRequestException(s"Link value property ${linkValuePropDef.propertyIri} already exists")
+                    }
+
+                    Some(linkValuePropDef)
+                } else {
+                    None
+                }
 
                 // Check that the superproperties exist.
 
@@ -1399,32 +1442,48 @@ class OntologyResponderV2 extends Responder {
                     throw BadRequestException(s"One or more specified Knora superproperties do not exist: ${missingSuperProperties.mkString(", ")}")
                 }
 
-                // Check that the subject and object class constraints exist and are Knora resource classes.
+                // Check that there's a knora-base:subjectClassConstraint and that it's a valid Knora internal class IRI.
 
-                subjectClassConstraint: SmartIri = internalPropertyDef.predicates(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri).objects.head.toKnoraInternalSmartIri
+                subjectClassConstraint = internalPropertyDef.requireIriPredicate(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri, throw BadRequestException(s"No knora-api:subjectType specified"))
 
-                _ = if (!cacheData.classDefs.contains(subjectClassConstraint)) {
-                    throw BadRequestException(s"No such Knora resource class ${subjectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}")
+                _ = if (!subjectClassConstraint.isKnoraInternalEntityIri) {
+                    throw BadRequestException(s"Invalid knora-api:subjectClassConstraint: ${subjectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}")
                 }
 
-                objectClassConstraint: SmartIri = internalPropertyDef.predicates(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri).objects.head.toKnoraInternalSmartIri
+                // Check that the object class constraint designates a class that exists. Note that we can't do this for the
+                // subject class constraint, because a class can't be created until its properties have been created.
 
-                _ = if (!cacheData.classDefs.contains(objectClassConstraint)) {
-                    throw BadRequestException(s"No such Knora resource class ${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}")
+                objectClassConstraint: SmartIri = internalPropertyDef.requireIriPredicate(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw BadRequestException(s"No knora-api:objectType specified"))
+
+                // If this is a link property, ensure that its object class constraint refers to a Knora resource class.
+                _ = if (isLinkProp) {
+                    if (!cacheData.classDefs.contains(objectClassConstraint)) {
+                        throw BadRequestException(s"Invalid object class constraint for link property: ${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}")
+                    }
+                } else {
+                    // Otherwise, ensure its object class constraint is a Knora value class, and is not LinkValue or a file value class.
+
+                    if (!OntologyConstants.KnoraBase.ValueClasses.contains(objectClassConstraint.toString) ||
+                        OntologyConstants.KnoraBase.FileValueClasses.contains(objectClassConstraint.toString) ||
+                        objectClassConstraint.toString == OntologyConstants.KnoraBase.LinkValue) {
+                        throw BadRequestException(s"Invalid object class constraint for value property: ${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}")
+                    }
                 }
 
-                // Add the property.
+                // TODO: check that the object and subject types are compatible with the object and subject types of the superproperties. Narrowing is allowed, expansion is not.
+
+                // Add the property (and the link value property if needed).
+
                 currentTime: Instant = Instant.now
 
                 updateSparql = queries.sparql.v2.txt.createProperty(
                     triplestore = settings.triplestoreType,
-                    ontologyNamedGraphIri = internalOntologyIri.toString,
-                    ontologyIri = internalOntologyIri.toString,
-                    propertyIri = internalPropertyIri.toString,
-                    predicates = internalPropertyDef.predicates.values.toSeq,
-                    subPropertyOf = internalPropertyDef.subPropertyOf.map(_.toString).toSeq,
-                    lastModificationDate = createPropertyRequest.lastModificationDate.toString,
-                    currentTime = currentTime.toString
+                    ontologyNamedGraphIri = internalOntologyIri,
+                    ontologyIri = internalOntologyIri,
+                    propertyDef = internalPropertyDef,
+                    maybeLinkValuePropertyDef = maybeLinkValuePropDef,
+                    lastModificationDate = createPropertyRequest.lastModificationDate,
+                    currentTime = currentTime
                 ).toString()
 
                 _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
@@ -1435,14 +1494,33 @@ class OntologyResponderV2 extends Responder {
 
                 // Update the ontology cache.
 
-                // TODO: ensure that the cached data is still in an ErrorHandlingMap.
+                readPropertyInfo = ReadPropertyInfoV2(
+                    entityInfoContent = internalPropertyDef,
+                    isEditable = true,
+                    isLinkProp = isLinkProp
+                )
 
-                /*
+                maybeLinkValuePropertyCacheEntry: Option[(SmartIri, ReadPropertyInfoV2)] = maybeLinkValuePropDef.map {
+                     linkValuePropDef =>
+                         linkValuePropDef.propertyIri -> ReadPropertyInfoV2(
+                            entityInfoContent = linkValuePropDef,
+                            isLinkValueProp = true
+                        )
+                }
+
+                updatedOntologyMetadata = cacheData.ontologyMetadata(internalOntologyIri).copy(
+                    lastModificationDate = Some(currentTime)
+                )
+
                 _ = storeCacheData(cacheData.copy(
-                    propertyDefs = cacheData.propertyDefs + (internalPropertyIri -> internalPropertyDef)
+                    ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> updatedOntologyMetadata),
+                    propertyDefs = cacheData.propertyDefs ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> readPropertyInfo)
                 ))
-                */
-            } yield ???
+
+                // Read the data back from the cache.
+
+                response <- getPropertyDefinitionsV2(propertyIris = Set(internalPropertyIri), allLanguages = true, userProfile = createPropertyRequest.userProfile)
+            } yield response
         }
 
         for {
@@ -1589,5 +1667,82 @@ class OntologyResponderV2 extends Responder {
         } else {
             FastFuture.successful(())
         }
+    }
+
+    /**
+      * Checks whether a property definition represents a link property, according to its rdfs:subPropertyOf.
+      *
+      * @param internalPropertyDef the property definition, in the internal schema.
+      * @return `true` if the definition represents a link property.
+      */
+    private def propertyDefIsLinkProp(internalPropertyDef: PropertyInfoContentV2): Future[Boolean] = {
+        for {
+            cacheData <- getCacheData
+
+            isLinkProp = internalPropertyDef.subPropertyOf.exists {
+                superPropIri =>
+                    val superPropDef = cacheData.propertyDefs.getOrElse(superPropIri, throw InconsistentTriplestoreDataException(s"Property $superPropIri not found"))
+                    superPropDef.isLinkProp
+            }
+        } yield isLinkProp
+    }
+
+    /**
+      * Checks whether a property definition represents a link value property, according to its rdfs:subPropertyOf.
+      *
+      * @param internalPropertyDef the property definition, in the internal schema.
+      * @return `true` if the definition represents a link value property.
+      */
+    private def propertyDefIsLinkValueProp(internalPropertyDef: PropertyInfoContentV2): Future[Boolean] = {
+        for {
+            cacheData <- getCacheData
+
+            isLinkProp = internalPropertyDef.subPropertyOf.exists {
+                superPropIri =>
+                    val superPropDef = cacheData.propertyDefs.getOrElse(superPropIri, throw InconsistentTriplestoreDataException(s"Property $superPropIri not found"))
+                    superPropDef.isLinkValueProp
+            }
+        } yield isLinkProp
+    }
+
+    /**
+      * Checks whether a property definition represents a file value property, according to its rdfs:subPropertyOf.
+      *
+      * @param internalPropertyDef the property definition, in the internal schema.
+      * @return `true` if the definition represents a file value property.
+      */
+    private def propertyDefIsFileValueProp(internalPropertyDef: PropertyInfoContentV2): Future[Boolean] = {
+        for {
+            cacheData <- getCacheData
+
+            isFileValueProp = internalPropertyDef.subPropertyOf.exists {
+                superPropIri =>
+                    val superPropDef = cacheData.propertyDefs.getOrElse(superPropIri, throw InconsistentTriplestoreDataException(s"Property $superPropIri not found"))
+                    superPropDef.isFileValueProp
+            }
+        } yield isFileValueProp
+    }
+
+    /**
+      * Given the definition of a link property, returns the definition of the corresponding link value property.
+      *
+      * @param internalPropertyDef the definition of the the link property, in the internal schema.
+      * @return the definition of the corresponding link value property.
+      */
+    private def linkPropertyDefToLinkValuePropertyDef(internalPropertyDef: PropertyInfoContentV2): PropertyInfoContentV2 = {
+        val newIri = internalPropertyDef.propertyIri.fromLinkPropToLinkValueProp
+
+        val newPredicates: Map[SmartIri, PredicateInfoV2] = (internalPropertyDef.predicates - OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri) +
+            (OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri -> PredicateInfoV2(
+                predicateIri = OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
+                ontologyIri = internalPropertyDef.ontologyIri,
+                objects = Set(OntologyConstants.KnoraBase.LinkValue)
+            ))
+
+        internalPropertyDef.copy(
+            propertyIri = newIri,
+            predicates = newPredicates,
+            subPropertyOf = Set(OntologyConstants.KnoraBase.HasLinkToValue.toSmartIri)
+        )
     }
 }

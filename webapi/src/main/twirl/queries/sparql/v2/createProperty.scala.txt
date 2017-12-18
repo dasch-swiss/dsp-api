@@ -18,29 +18,30 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
-@import org.knora.webapi.IRI
-@import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
+@import org.knora.webapi._
+@import org.knora.webapi.util.SmartIri
+@import org.knora.webapi.messages.v2.responder.ontologymessages._
+@import java.time.Instant
 
 @*
  * Creates a new property in an existing ontology. If the property already exists, this update does nothing.
  *
  * @param triplestore the name of the triplestore being used.
- * @param ontologyNamedGraphIri the IRI of the named graph where the ontology should be stored.
- * @param ontologyIri the IRI of the ontology to be created.
- * @param propertyIri the IRI of the property to be created.
- * @param predicates predicates to be attached to the property.
- * @param subPropertyOf the IRIs of the properties that this is a subproperty of.
+ * @param ontologyNamedGraphIri the IRI of the named graph where the ontology is stored.
+ * @param ontologyIri the IRI of the ontology in which the property should be created.
+ * @param propertyDef the definition of the property to be created.
+ * @param maybeLinkValuePropertyDef the definition of an optional link property that will also be created
+ *        if provided.
  * @param lastModificationDate the xsd:dateTimeStamp that was attached to the ontology when it was last modified.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
  *@
 @(triplestore: String,
-  ontologyNamedGraphIri: IRI,
-  ontologyIri: IRI,
-  propertyIri: IRI,
-  predicates: Seq[PredicateInfoV2],
-  subPropertyOf: Seq[IRI],
-  lastModificationDate: String,
-  currentTime: String)
+  ontologyNamedGraphIri: SmartIri,
+  ontologyIri: SmartIri,
+  propertyDef: PropertyInfoContentV2,
+  maybeLinkValuePropertyDef: Option[PropertyInfoContentV2],
+  lastModificationDate: Instant,
+  currentTime: Instant)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -56,33 +57,30 @@ DELETE {
     GRAPH ?ontologyNamedGraph {
         ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
 
-        ?property rdf:type owl:ObjectProperty .
+        @* Insert the property. *@
 
-        @for(superProp <- subPropertyOf) {
-
-            ?property rdfs:subPropertyOf <@superProp> .
-
+        @{
+            queries.sparql.v2.txt.generateInsertStatementsForCreateProperty(propertyDef)
         }
 
-        @for(predicate <- predicates) {
+        @* Also insert a link value property if requested. *@
 
-            @* All objects that don't have languages must be IRIs (#668). *@
+        @maybeLinkValuePropertyDef match {
 
-            @for(obj <- predicate.objects) {
+            case Some(linkValuePropertyInfoContent) => {
 
-                ?property <@predicate.predicateIri> <@obj> .
-
-            }
-
-            @for((lang, text) <- predicate.objectsWithLang) {
-
-                ?property <@predicate.predicateIri> """@text"""@@@lang .
+                @{
+                    queries.sparql.v2.txt.generateInsertStatementsForCreateProperty(linkValuePropertyInfoContent)
+                }
 
             }
+
+            case None => {}
 
         }
 
     }
+
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
 @if(triplestore.startsWith("graphdb")) {
@@ -91,7 +89,6 @@ DELETE {
 WHERE {
     BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
     BIND(IRI("@ontologyIri") AS ?ontology)
-    BIND(IRI("@propertyIri") AS ?property)
 
     GRAPH ?ontologyNamedGraph {
          ?ontology rdf:type owl:Ontology ;
@@ -99,6 +96,20 @@ WHERE {
     }
 
     FILTER NOT EXISTS {
-        ?property rdf:type ?existingPropertyType .
+        <@propertyDef.propertyIri> rdf:type ?existingPropertyType .
+    }
+
+    @maybeLinkValuePropertyDef match {
+
+        case Some(linkValuePropertyInfoContent) => {
+
+            FILTER NOT EXISTS {
+                @linkValuePropertyInfoContent.propertyIri rdf:type ?existingLinkValuePropertyType .
+            }
+
+        }
+
+        case None => {}
+
     }
 }

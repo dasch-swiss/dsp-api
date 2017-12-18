@@ -26,7 +26,8 @@ package org.knora.webapi
 object OntologyConstants {
 
     object Rdf {
-        val RdfPrefixExpansion: IRI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        val RdfOntologyIri: IRI = "http://www.w3.org/1999/02/22-rdf-syntax-ns"
+        val RdfPrefixExpansion: IRI = RdfOntologyIri + "#"
 
         val Type: IRI = RdfPrefixExpansion + "type"
         val Subject: IRI = RdfPrefixExpansion + "subject"
@@ -36,7 +37,8 @@ object OntologyConstants {
     }
 
     object Rdfs {
-        val RdfsPrefixExpansion = "http://www.w3.org/2000/01/rdf-schema#"
+        val RdfsOntologyIri: IRI = "http://www.w3.org/2000/01/rdf-schema"
+        val RdfsPrefixExpansion: IRI = RdfsOntologyIri + "#"
 
         val Label: IRI = RdfsPrefixExpansion + "label"
         val Comment: IRI = RdfsPrefixExpansion + "comment"
@@ -207,7 +209,7 @@ object OntologyConstants {
 
         val ResourceProperty: IRI = KnoraBasePrefixExpansion + "resourceProperty"
         val HasValue: IRI = KnoraBasePrefixExpansion + "hasValue"
-        val HasIncomingLinks = KnoraBasePrefixExpansion + "hasIncomingLinks"
+        val HasIncomingLinks: IRI = KnoraBasePrefixExpansion + "hasIncomingLinks"
         val HasFileValue: IRI = KnoraBasePrefixExpansion + "hasFileValue"
         val HasStillImageFileValue: IRI = KnoraBasePrefixExpansion + "hasStillImageFileValue"
         val HasMovingImageFileValue: IRI = KnoraBasePrefixExpansion + "hasMovingImageFileValue"
@@ -247,6 +249,16 @@ object OntologyConstants {
         val StillImageFileValue: IRI = KnoraBasePrefixExpansion + "StillImageFileValue"
         val MovingImageFileValue: IRI = KnoraBasePrefixExpansion + "MovingImageFileValue"
         val TextFileValue: IRI = KnoraBasePrefixExpansion + "TextFileValue"
+
+        val FileValueClasses: Set[IRI] = Set(
+            FileValue,
+            StillImageFileValue,
+            MovingImageFileValue,
+            AudioFileValue,
+            DDDFileValue,
+            TextFileValue,
+            DocumentFileValue
+        )
 
         val ValueClasses: Set[IRI] = Set(
             TextValue,
@@ -591,6 +603,7 @@ object OntologyConstants {
         val GeonameValue: IRI = KnoraApiV2PrefixExpansion + "GeonameValue"
         val FileValue: IRI = KnoraApiV2PrefixExpansion + "FileValue"
         val ColorValue: IRI = KnoraApiV2PrefixExpansion + "ColorValue"
+
         val StillImageFileValue: IRI = KnoraApiV2PrefixExpansion + "StillImageFileValue"
         val MovingImageFileValue: IRI = KnoraApiV2PrefixExpansion + "MovingImageFileValue"
         val AudioFileValue: IRI = KnoraApiV2PrefixExpansion + "AudioFileValue"

@@ -408,13 +408,13 @@ case class PropertiesGetRequestV2(propertyIris: Set[SmartIri], allLanguages: Boo
 /**
   * Represents the contents of an ontology to be returned in an API response.
   *
-  * @param ontologyMetadata   metadata about the ontology.
-  * @param classes            information about non-standoff classes.
-  * @param properties         information about non-standoff properties.
-  * @param standoffClasses    information about standoff classes.
-  * @param standoffProperties information about standoff properties.
-  * @param userLang           the preferred language in which the information should be returned, or [[None]] if information
-  *                           should be returned in all available languages.
+  * @param ontologyMetadata     metadata about the ontology.
+  * @param classes              information about non-standoff classes.
+  * @param properties           information about non-standoff properties.
+  * @param standoffClasses      information about standoff classes.
+  * @param standoffProperties   information about standoff properties.
+  * @param userLang             the preferred language in which the information should be returned, or [[None]] if information
+  *                             should be returned in all available languages.
   */
 case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
                           classes: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2],
@@ -544,7 +544,13 @@ case class ReadOntologiesV2(ontologies: Seq[ReadOntologyV2]) extends KnoraRespon
         toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
     }
 
-    private def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologiesV2 = {
+    /**
+      * Converts this [[ReadOntologiesV2]] to the specified ontology schema.
+      *
+      * @param targetSchema the target schema.
+      * @return the same ontology definitions as represented in the target schema.
+      */
+    def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologiesV2 = {
         copy(ontologies.map(_.toOntologySchema(targetSchema)))
     }
 
@@ -1089,6 +1095,10 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
                                  ontologySchema: OntologySchema) extends EntityInfoContentV2 with KnoraContentV2[PropertyInfoContentV2] {
 
     import PropertyInfoContentV2._
+
+    def requireIriPredicate(predicateIri: SmartIri, errorFun: => Nothing): SmartIri = {
+        predicates.getOrElse(predicateIri, errorFun).objects.headOption.getOrElse(errorFun).toSmartIri
+    }
 
     override def toOntologySchema(targetSchema: OntologySchema): PropertyInfoContentV2 = {
 
