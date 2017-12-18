@@ -40,14 +40,20 @@ send "load ../_test_data/all_data/anything-data.ttl into http://www.knora.org/da
 expect $prompt
 send "load ../_test_data/ontologies/beol-onto.ttl into http://www.knora.org/ontology/beol .\r"
 expect $prompt
-send "load ../_test_data/all_data/beol-data.ttl into http://www.knora.org/data/beol .\r"
-expect $prompt
+
+
+
 send "load ../_test_data/ontologies/biblio-onto.ttl into http://www.knora.org/ontology/biblio .\r"
 expect $prompt
 send "load ../_test_data/all_data/biblio-data.ttl into http://www.knora.org/data/biblio .\r"
 expect $prompt
 send "load ../_test_data/ontologies/example.ttl into http://www.knora.org/ontology/0001/example .\r"
 expect $prompt
+
+
+send "load ../_test_data/all_data/beol-data.ttl into http://www.knora.org/data/beol .\r"
+expect $prompt
+
 send "close .\r"
 expect $prompt
 send "exit .\r"
