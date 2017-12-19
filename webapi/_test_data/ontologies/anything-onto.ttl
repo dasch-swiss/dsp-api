@@ -12,7 +12,8 @@
 
 @prefix : <http://www.knora.org/ontology/anything#> .
 <http://www.knora.org/ontology/anything> rdf:type owl:Ontology ;
-    rdfs:label "The anything ontology" .
+    rdfs:label "The anything ontology" ;
+    knora-base:lastModificationDate "2017-12-19T15:23:42.166Z"^^xsd:dateTimeStamp .
 
 
 :hasListItem rdf:type owl:ObjectProperty ;

@@ -336,6 +336,12 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
     def getEntityName: String
 
     /**
+      * If this is a Knora ontology IRI, constructs a Knora entity IRI based on it. Otherwise, throws [[DataConversionException]].
+      * @param entityName the name of the entity.
+      */
+    def makeEntityIri(entityName: String): SmartIri
+
+    /**
       * Returns the IRI's [[OntologySchema]], or `None` if this is not a Knora definition IRI.
       */
     def getOntologySchema: Option[OntologySchema]
@@ -755,7 +761,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         override def getProjectCode: Option[String] = iriInfo.projectCode
 
         lazy val ontologyFromEntity: SmartIri = if (isKnoraOntologyIri) {
-            this
+            throw DataConversionException(s"$iri is not a Knora entity IRI")
         } else {
             val lastHashPos = iri.lastIndexOf('#')
 
@@ -777,6 +783,15 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         }
 
         override def getOntologyFromEntity: SmartIri = ontologyFromEntity
+
+        override def makeEntityIri(entityName: String): SmartIri = {
+            if (isKnoraOntologyIri) {
+                val entityIriStr = iri + "#" + validateNCName(entityName, throw DataConversionException(s"Invalid entity name: $entityName"))
+                getOrCacheSmartIri(entityIriStr, () => new SmartIriImpl(entityIriStr))
+            } else {
+                throw DataConversionException(s"$iri is not a Knora ontology IRI")
+            }
+        }
 
         override def getOntologyName: String = {
             iriInfo.ontologyName match {
@@ -825,18 +840,36 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                     } else if (targetSchema == InternalSchema) {
                         externalToInternalOntologyIri
                     } else {
-                        throw DataConversionException(s"Cannot convert IRI $iri from ${iriInfo.ontologySchema} to $targetSchema")
+                        throw DataConversionException(s"Cannot convert $iri to $targetSchema")
                     }
                 } else if (isKnoraEntityIri) {
-                    if (iriInfo.ontologySchema.contains(InternalSchema)) {
-                        targetSchema match {
-                            case externalSchema: ApiV2Schema => internalToExternalEntityIri(externalSchema)
-                            case _ => throw DataConversionException(s"Cannot convert $iri to $targetSchema")
-                        }
-                    } else if (targetSchema == InternalSchema) {
-                        externalToInternalEntityIri
-                    } else {
-                        throw DataConversionException(s"Cannot convert $iri to $targetSchema")
+                    // Can we do an automatic replacement of one predicate with another?
+                    OntologyConstants.CorrespondingPredicates.get((iriInfo.ontologySchema.get, targetSchema)) match {
+                        case Some(predicateMap: Map[IRI, IRI]) =>
+                            predicateMap.get(iri) match {
+                                case Some(convertedIri) =>
+                                    // Yes. Return the corresponding predicate in the target schema.
+                                    getOrCacheSmartIri(
+                                        iriStr = convertedIri,
+                                        creationFun = {
+                                            () => new SmartIriImpl(convertedIri)
+                                        })
+
+                                case None =>
+                                    // No. Convert the IRI using a formal procedure.
+                                    if (iriInfo.ontologySchema.contains(InternalSchema)) {
+                                        targetSchema match {
+                                            case externalSchema: ApiV2Schema => internalToExternalEntityIri(externalSchema)
+                                            case _ => throw DataConversionException(s"Cannot convert $iri to $targetSchema")
+                                        }
+                                    } else if (targetSchema == InternalSchema) {
+                                        externalToInternalEntityIri
+                                    } else {
+                                        throw DataConversionException(s"Cannot convert $iri to $targetSchema")
+                                    }
+                            }
+
+                        case None => throw DataConversionException(s"Cannot convert $iri to $targetSchema")
                     }
                 } else {
                     throw AssertionException(s"IRI $iri is a Knora IRI, but is neither an ontology IRI nor an entity IRI")

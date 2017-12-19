@@ -81,6 +81,7 @@ class OntologyResponderV2 extends Responder {
       * @param resourceAndValueSubClassOfRelations a map of IRIs of resource and value classes to sets of the IRIs of their base classes.
       * @param resourceSuperClassOfRelations       a map of IRIs of resource classes to sets of the IRIs of their subclasses.
       * @param propertyDefs                        a map of property IRIs to property definitions.
+      * @param subPropertyOfRelations              a map of property IRIs to sets of the IRIs of their base properties.
       * @param ontologyStandoffClasses             a map of ontology IRIs to sets of standoff class IRIs defined in each ontology.
       * @param ontologyStandoffProperties          a map of property IRIs to sets of standoff property IRIs defined in each ontology.
       * @param standoffClassDefs                   a map of standoff class IRIs to definitions.
@@ -94,6 +95,7 @@ class OntologyResponderV2 extends Responder {
                                          resourceAndValueSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                          resourceSuperClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                          propertyDefs: Map[SmartIri, ReadPropertyInfoV2],
+                                         subPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
                                          ontologyStandoffClasses: Map[SmartIri, Set[SmartIri]],
                                          ontologyStandoffProperties: Map[SmartIri, Set[SmartIri]],
                                          standoffClassDefs: Map[SmartIri, ReadClassInfoV2],
@@ -767,6 +769,7 @@ class OntologyResponderV2 extends Responder {
                 resourceAndValueSubClassOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allResourceSubClassOfRelations ++ allValueSubClassOfRelations, { key => s"Class not found: $key" }),
                 resourceSuperClassOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allResourceSuperClassOfRelations, { key => s"Class not found: $key" }),
                 propertyDefs = new ErrorHandlingMap[SmartIri, ReadPropertyInfoV2](allPropertyDefs, { key => s"Property not found: $key" }),
+                subPropertyOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSubPropertyOfRelations, { key => s"Property not found: $key" }),
                 ontologyStandoffClasses = new ErrorHandlingMap[SmartIri, Set[SmartIri]](standoffGraphClassMap, { key => s"Ontology not found: $key" }),
                 ontologyStandoffProperties = new ErrorHandlingMap[SmartIri, Set[SmartIri]](standoffGraphPropMap, { key => s"Ontology not found: $key" }),
                 standoffClassDefs = new ErrorHandlingMap[SmartIri, ReadClassInfoV2](standoffClassEntityInfos, { key => s"Standoff class def not found $key" }),
@@ -967,9 +970,10 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[ReadOntologyMetadataV2]].
       */
-    private def getOntologyMetadataForProjectsV2(projectIris: Set[IRI], userProfile: UserProfileV1): Future[ReadOntologyMetadataV2] = {
+    private def getOntologyMetadataForProjectsV2(projectIris: Set[SmartIri], userProfile: UserProfileV1): Future[ReadOntologyMetadataV2] = {
         for {
             cacheData <- getCacheData
+            projectIriStrs = projectIris.map(_.toString)
             namedGraphInfos: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
             filteredNamedGraphInfos = namedGraphInfos.filterNot(_.id == OntologyConstants.KnoraBase.KnoraBaseOntologyIri)
             returnAllOntologies: Boolean = projectIris.isEmpty
@@ -977,7 +981,7 @@ class OntologyResponderV2 extends Responder {
             namedGraphsToReturn = if (returnAllOntologies) {
                 filteredNamedGraphInfos
             } else {
-                filteredNamedGraphInfos.filter(namedGraphInfo => projectIris.contains(namedGraphInfo.project_id))
+                filteredNamedGraphInfos.filter(namedGraphInfo => projectIriStrs.contains(namedGraphInfo.project_id))
             }
 
             ontologyInfoV2s = namedGraphsToReturn.map {
@@ -1271,9 +1275,10 @@ class OntologyResponderV2 extends Responder {
             projectIri = createOntologyRequest.projectIri
 
             // check if the requesting user is allowed to create an ontology
-            _ = if (!userProfile.permissionData.isProjectAdmin(projectIri.toString) && !userProfile.permissionData.isSystemAdmin) {
-                // not a project or system admin
-                throw ForbiddenException("A new ontology can only be created by a project or system admin.")
+            _ = if (!(userProfile.permissionData.isProjectAdmin(projectIri.toString) || userProfile.permissionData.isSystemAdmin)) {
+                println(s"userProfile: $userProfile")
+                println(s"userProfile.permissionData.isProjectAdmin(<${projectIri.toString}>): ${userProfile.permissionData.isProjectAdmin(projectIri.toString)}")
+                throw ForbiddenException(s"A new ontology in the project ${createOntologyRequest.projectIri} can only be created by an admin of that project, or by a system admin.")
             }
 
             // Get project info for the shortcode.
@@ -1434,30 +1439,29 @@ class OntologyResponderV2 extends Responder {
                     None
                 }
 
-                // Check that the superproperties exist.
+                // Check that the superproperties that are Knora properties exist.
 
-                missingSuperProperties = internalPropertyDef.subPropertyOf.filter(_.isKnoraEntityIri) -- cacheData.propertyDefs.keySet
+                missingSuperProperties = internalPropertyDef.subPropertyOf.filter(_.isKnoraInternalEntityIri) -- cacheData.propertyDefs.keySet
 
                 _ = if (missingSuperProperties.nonEmpty) {
                     throw BadRequestException(s"One or more specified Knora superproperties do not exist: ${missingSuperProperties.mkString(", ")}")
                 }
 
-                // Check that there's a knora-base:subjectClassConstraint and that it's a valid Knora internal class IRI.
+                // Check that the subject class constraint designates a Knora resource class that exists.
 
                 subjectClassConstraint = internalPropertyDef.requireIriPredicate(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri, throw BadRequestException(s"No knora-api:subjectType specified"))
 
-                _ = if (!subjectClassConstraint.isKnoraInternalEntityIri) {
-                    throw BadRequestException(s"Invalid knora-api:subjectClassConstraint: ${subjectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}")
+                _ = if (!(subjectClassConstraint.isKnoraInternalEntityIri && cacheData.classDefs.contains(subjectClassConstraint))) {
+                    throw BadRequestException(s"Invalid subject class constraint: ${subjectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}")
                 }
 
-                // Check that the object class constraint designates a class that exists. Note that we can't do this for the
-                // subject class constraint, because a class can't be created until its properties have been created.
+                // Check that the object class constraint designates an appropriate class that exists.
 
                 objectClassConstraint: SmartIri = internalPropertyDef.requireIriPredicate(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw BadRequestException(s"No knora-api:objectType specified"))
 
                 // If this is a link property, ensure that its object class constraint refers to a Knora resource class.
                 _ = if (isLinkProp) {
-                    if (!cacheData.classDefs.contains(objectClassConstraint)) {
+                    if (!(objectClassConstraint.isKnoraInternalEntityIri && cacheData.classDefs.contains(objectClassConstraint))) {
                         throw BadRequestException(s"Invalid object class constraint for link property: ${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}")
                     }
                 } else {
@@ -1470,7 +1474,27 @@ class OntologyResponderV2 extends Responder {
                     }
                 }
 
-                // TODO: check that the object and subject types are compatible with the object and subject types of the superproperties. Narrowing is allowed, expansion is not.
+                allSuperPropertyIris: Set[SmartIri] = internalPropertyDef.subPropertyOf.flatMap {
+                    superPropertyIri => cacheData.subPropertyOfRelations.getOrElse(superPropertyIri, Set.empty[SmartIri])
+                }
+
+                // Check that the subject type is a subclass of the subject types of the base properties.
+
+                _ <- checkPropertyConstraint(
+                    newInternalPropertyIri = internalPropertyIri,
+                    constraintPredicateIri = OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri,
+                    constraintValueInNewProperty = subjectClassConstraint,
+                    allSuperPropertyIris = allSuperPropertyIris
+                )
+
+                // Check that the object type is a subclass of the object types of the base properties.
+
+                _ <- checkPropertyConstraint(
+                    newInternalPropertyIri = internalPropertyIri,
+                    constraintPredicateIri = OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
+                    constraintValueInNewProperty = objectClassConstraint,
+                    allSuperPropertyIris = allSuperPropertyIris
+                )
 
                 // Add the property (and the link value property if needed).
 
@@ -1501,8 +1525,8 @@ class OntologyResponderV2 extends Responder {
                 )
 
                 maybeLinkValuePropertyCacheEntry: Option[(SmartIri, ReadPropertyInfoV2)] = maybeLinkValuePropDef.map {
-                     linkValuePropDef =>
-                         linkValuePropDef.propertyIri -> ReadPropertyInfoV2(
+                    linkValuePropDef =>
+                        linkValuePropDef.propertyIri -> ReadPropertyInfoV2(
                             entityInfoContent = linkValuePropDef,
                             isLinkValueProp = true
                         )
@@ -1514,7 +1538,8 @@ class OntologyResponderV2 extends Responder {
 
                 _ = storeCacheData(cacheData.copy(
                     ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> updatedOntologyMetadata),
-                    propertyDefs = cacheData.propertyDefs ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> readPropertyInfo)
+                    propertyDefs = cacheData.propertyDefs ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> readPropertyInfo),
+                    subPropertyOfRelations = cacheData.subPropertyOfRelations + (internalPropertyIri -> (allSuperPropertyIris + internalPropertyIri))
                 ))
 
                 // Read the data back from the cache.
@@ -1547,10 +1572,56 @@ class OntologyResponderV2 extends Responder {
         } yield taskResult
     }
 
+
+    /**
+      * Before creating a new property, checks that the new property's `knora-base:subjectClassConstraint` or `knora-base:objectClassConstraint`
+      * is compatible with (i.e. a subclass of) the ones in all its base properties.
+      *
+      * @param newInternalPropertyIri       the internal IRI of the new property.
+      * @param constraintPredicateIri       the internal IRI of the constraint, i.e. `knora-base:subjectClassConstraint` or `knora-base:objectClassConstraint`.
+      * @param constraintValueInNewProperty the value of the constraint in the new property.
+      * @param allSuperPropertyIris         the IRIs of all the base properties of the new property, including indirect base properties, but not including the new
+      *                                     property itself.
+      * @return unit, but throws an exception if the new property's constraint value is not valid.
+      */
+    private def checkPropertyConstraint(newInternalPropertyIri: SmartIri, constraintPredicateIri: SmartIri, constraintValueInNewProperty: SmartIri, allSuperPropertyIris: Set[SmartIri]): Future[Unit] = {
+        for {
+            cacheData <- getCacheData
+
+            // Get the definitions of all the superproperties of the new property for which definitions are available.
+            superPropertyInfos: Set[ReadPropertyInfoV2] = allSuperPropertyIris.flatMap(superPropertyIri => cacheData.propertyDefs.get(superPropertyIri))
+
+            // For each superproperty definition, get the value of the specified constraint in that definition, if any. Here we
+            // make a map of superproperty IRIs to superproperty constraint values.
+            superPropertyConstraintValues: Map[SmartIri, SmartIri] = superPropertyInfos.flatMap {
+                superPropertyInfo =>
+                    superPropertyInfo.entityInfoContent.predicates.get(constraintPredicateIri).flatMap(_.objects.headOption.map(_.toSmartIri)).map {
+                        superPropertyConstraintValue => superPropertyInfo.entityInfoContent.propertyIri -> superPropertyConstraintValue
+                    }
+            }.toMap
+
+            // Check that the constraint value in the new property is a subclass of the constraint value in every superproperty.
+
+            superClassesOfConstraintValueInNewProperty = cacheData.resourceAndValueSubClassOfRelations(constraintValueInNewProperty)
+
+            _ = superPropertyConstraintValues.foreach {
+                case (superPropertyIri, superPropertyConstraintValue) =>
+                    if (!superClassesOfConstraintValueInNewProperty.contains(superPropertyConstraintValue)) {
+                        throw BadRequestException(s"Property ${newInternalPropertyIri.toOntologySchema(ApiV2WithValueObjects)} cannot have a ${constraintPredicateIri.toOntologySchema(ApiV2WithValueObjects)} of " +
+                            s"${constraintValueInNewProperty.toOntologySchema(ApiV2WithValueObjects)}, because that is not a subclass of " +
+                            s"${superPropertyConstraintValue.toOntologySchema(ApiV2WithValueObjects)}, which is the ${constraintPredicateIri.toOntologySchema(ApiV2WithValueObjects)} of " +
+                            s"a base property, ${superPropertyIri.toOntologySchema(ApiV2WithValueObjects)}"
+                        )
+                    }
+            }
+
+        } yield ()
+    }
+
     /**
       * Checks the last modification date of an ontology before an update.
       *
-      * @param internalOntologyIri the internal IRI of the ontology.
+      * @param internalOntologyIri          the internal IRI of the ontology.
       * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
       * @return a failed Future if the expected last modification date is not found.
       */
@@ -1565,7 +1636,7 @@ class OntologyResponderV2 extends Responder {
     /**
       * Checks the last modification date of an ontology after an update.
       *
-      * @param internalOntologyIri the internal IRI of the ontology.
+      * @param internalOntologyIri          the internal IRI of the ontology.
       * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
       * @return a failed Future if the expected last modification date is not found.
       */
@@ -1580,9 +1651,9 @@ class OntologyResponderV2 extends Responder {
     /**
       * Checks the last modification date of an ontology.
       *
-      * @param internalOntologyIri the internal IRI of the ontology.
+      * @param internalOntologyIri          the internal IRI of the ontology.
       * @param expectedLastModificationDate the last modification date that the ontology is expected to have.
-      * @param errorFun a function that throws an exception. It will be called if the expected last modification date is not found.
+      * @param errorFun                     a function that throws an exception. It will be called if the expected last modification date is not found.
       * @return a failed Future if the expected last modification date is not found.
       */
     private def checkOntologyLastModificationDate(internalOntologyIri: SmartIri, expectedLastModificationDate: Instant, errorFun: => Nothing): Future[Unit] = {
@@ -1609,7 +1680,7 @@ class OntologyResponderV2 extends Responder {
       * Checks whether the user has permission to update an ontology.
       *
       * @param internalOntologyIri the internal IRI of the ontology.
-      * @param userProfile the profile of the user making the request.
+      * @param userProfile         the profile of the user making the request.
       * @return a failed Future if the user doesn't have the necessary permission.
       */
     private def checkPermissionsForOntologyUpdate(internalOntologyIri: SmartIri, userProfile: UserProfileV1): Future[Unit] = {
@@ -1623,7 +1694,7 @@ class OntologyResponderV2 extends Responder {
 
             _ = if (!userProfile.permissionData.isProjectAdmin(projectInfo.project_info.id.toString) && !userProfile.permissionData.isSystemAdmin) {
                 // not a project or system admin
-                throw ForbiddenException("Ontology metadata can only be changed by a project or system admin.")
+                throw ForbiddenException("Ontologies can be modified only by a project or system admin.")
             }
         } yield ()
     }
@@ -1650,7 +1721,7 @@ class OntologyResponderV2 extends Responder {
     /**
       * Checks whether an entity IRI is valid for an update.
       *
-      * @param externalEntityIri the external IRI of the entity.
+      * @param externalEntityIri   the external IRI of the entity.
       * @param externalOntologyIri the external IRI of the entity's ontology, which should already have been checked
       *                            using `checkExternalOntologyIriForUpdate`.
       * @return a failed Future if the entity IRI is not valid for an update, or is not from the specified ontology.
@@ -1681,8 +1752,10 @@ class OntologyResponderV2 extends Responder {
 
             isLinkProp = internalPropertyDef.subPropertyOf.exists {
                 superPropIri =>
-                    val superPropDef = cacheData.propertyDefs.getOrElse(superPropIri, throw InconsistentTriplestoreDataException(s"Property $superPropIri not found"))
-                    superPropDef.isLinkProp
+                    cacheData.propertyDefs.get(superPropIri) match {
+                        case Some(superPropDef) => superPropDef.isLinkProp
+                        case None => false
+                    }
             }
         } yield isLinkProp
     }
@@ -1699,8 +1772,10 @@ class OntologyResponderV2 extends Responder {
 
             isLinkProp = internalPropertyDef.subPropertyOf.exists {
                 superPropIri =>
-                    val superPropDef = cacheData.propertyDefs.getOrElse(superPropIri, throw InconsistentTriplestoreDataException(s"Property $superPropIri not found"))
-                    superPropDef.isLinkValueProp
+                    cacheData.propertyDefs.get(superPropIri) match {
+                        case Some(superPropDef) => superPropDef.isLinkValueProp
+                        case None => false
+                    }
             }
         } yield isLinkProp
     }
@@ -1717,8 +1792,10 @@ class OntologyResponderV2 extends Responder {
 
             isFileValueProp = internalPropertyDef.subPropertyOf.exists {
                 superPropIri =>
-                    val superPropDef = cacheData.propertyDefs.getOrElse(superPropIri, throw InconsistentTriplestoreDataException(s"Property $superPropIri not found"))
-                    superPropDef.isFileValueProp
+                    cacheData.propertyDefs.get(superPropIri) match {
+                        case Some(superPropDef) => superPropDef.isFileValueProp
+                        case None => false
+                    }
             }
         } yield isFileValueProp
     }

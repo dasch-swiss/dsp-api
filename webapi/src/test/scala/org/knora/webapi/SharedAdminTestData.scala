@@ -451,10 +451,11 @@ object SharedAdminTestData {
         sessionId = None,
         permissionData = PermissionDataV1(
             groupsPerProject = Map(
-                ANYTHING_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+                ANYTHING_PROJECT_IRI ->  List(OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
             ),
             administrativePermissionsPerProject = Map(
                 ANYTHING_PROJECT_IRI -> Set(
+                    PermissionV1.ProjectAdminAllPermission,
                     PermissionV1.ProjectResourceCreateAllPermission
                 )
             ),

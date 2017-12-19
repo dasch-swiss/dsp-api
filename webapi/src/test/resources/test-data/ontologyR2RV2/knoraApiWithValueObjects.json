@@ -497,8 +497,8 @@
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#valueCreationDate"
         } ]
       },
-      "knora-api:IntegerValue" : {
-        "@id" : "knora-api:IntegerValue",
+      "knora-api:IntValue" : {
+        "@id" : "knora-api:IntValue",
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents an integer value.",
         "rdfs:label" : "Integer value",
@@ -510,7 +510,7 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#integerValueAsInteger"
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#intValueAsInt"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -1459,12 +1459,12 @@
         "rdfs:label" : "Hierarchical list value as list node",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#valueHas"
       },
-      "knora-api:integerValueAsInteger" : {
-        "@id" : "knora-api:integerValueAsInteger",
+      "knora-api:intValueAsInt" : {
+        "@id" : "knora-api:intValueAsInt",
         "@type" : "owl:DatatypeProperty",
         "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#integer",
-        "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#IntegerValue",
-        "rdfs:comment" : "Represents the literal integer value of an IntegerValue.",
+        "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#IntValue",
+        "rdfs:comment" : "Represents the literal integer value of an IntValue.",
         "rdfs:label" : "Integer value as integer",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#valueHas"
       },

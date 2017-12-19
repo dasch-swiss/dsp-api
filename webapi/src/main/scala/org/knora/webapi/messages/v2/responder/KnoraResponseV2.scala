@@ -241,7 +241,7 @@ case class IntegerValueContentV2(valueHasString: String, valueHasInteger: Int, c
 
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.IntegerValueAsInteger -> JsonLDInt(valueHasInteger)))
+        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt -> JsonLDInt(valueHasInteger)))
     }
 
 }

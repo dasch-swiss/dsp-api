@@ -373,7 +373,7 @@ case class OntologyEntityIrisGetRequestV2(ontologyIri: SmartIri, userProfile: Us
   *                    about all ontologies is returned.
   * @param userProfile the profile of the user making the request.
   */
-case class OntologyMetadataGetRequestV2(projectIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class OntologyMetadataGetRequestV2(projectIris: Set[SmartIri] = Set.empty[SmartIri], userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
   * Requests entity definitions for the given ontologies.
@@ -701,7 +701,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2], includeKn
 case class PredicateInfoV2(predicateIri: SmartIri,
                            ontologyIri: SmartIri,
                            objects: Set[String] = Set.empty[String],
-                           objectsWithLang: Map[String, String] = Map.empty[String, String]) extends PredicateConverter {
+                           objectsWithLang: Map[String, String] = Map.empty[String, String]) {
     // TODO: This class should really store its IRI objects as SmartIris. But this would need more help
     // from OntologyResponderV2 and probably also from the store package (#668).
 
@@ -715,7 +715,7 @@ case class PredicateInfoV2(predicateIri: SmartIri,
       */
     def justPredicateToOntologySchema(targetSchema: OntologySchema): PredicateInfoV2 = {
         copy(
-            predicateIri = predicateIriToOntologySchema(predicateIri, targetSchema),
+            predicateIri = predicateIri.toOntologySchema(targetSchema),
             ontologyIri = ontologyIri.toOntologySchema(targetSchema)
         )
     }
@@ -733,7 +733,7 @@ case class PredicateInfoV2(predicateIri: SmartIri,
         }
 
         copy(
-            predicateIri = predicateIriToOntologySchema(predicateIri, targetSchema),
+            predicateIri = predicateIri.toOntologySchema(targetSchema),
             ontologyIri = ontologyIri.toOntologySchema(targetSchema),
             objects = objects.map(_.toSmartIri.toOntologySchema(targetSchema).toString)
         )
@@ -822,52 +822,11 @@ object Cardinality extends Enumeration {
     def knoraCardinality2OwlCardinality(knoraCardinality: Value): OwlCardinalityInfo = knoraCardinality2OwlCardinalityMap(knoraCardinality)
 }
 
-/**
-  * Helps convert predicate IRIs from one ontology schema to another.
-  */
-sealed trait PredicateConverter {
-    /**
-      * Converts a predicate IRI from one ontology schema to another, taking into account the corresponding
-      * predicates in [[OntologyConstants.CorrespondingPredicates]].
-      *
-      * @param predicateIri the predicate IRI to be converted.
-      * @param targetSchema the target schema.
-      * @return the converted IRI.
-      */
-    protected def predicateIriToOntologySchema(predicateIri: SmartIri, targetSchema: OntologySchema)(implicit stringFormatter: StringFormatter): SmartIri = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-        predicateIri.getOntologySchema match {
-            case Some(sourceSchema) =>
-                if (sourceSchema == targetSchema) {
-                    predicateIri
-                } else {
-                    sourceSchema match {
-                        case knoraSourceSchema: OntologySchema =>
-                            OntologyConstants.CorrespondingPredicates.get((knoraSourceSchema, targetSchema)) match {
-                                case Some(predicateMap: Map[IRI, IRI]) =>
-                                    predicateMap.get(predicateIri.toString) match {
-                                        case Some(convertedIri) => convertedIri.toSmartIri
-                                        case None => predicateIri.toOntologySchema(targetSchema)
-                                    }
-
-                                case None => throw DataConversionException(s"Conversion from $knoraSourceSchema to $targetSchema is not supported")
-                            }
-
-                        case _ => predicateIri
-                    }
-                }
-
-            case None => predicateIri
-        }
-
-    }
-}
 
 /**
   * Represents information about an ontology entity (a class or property definition).
   */
-sealed trait EntityInfoContentV2 extends PredicateConverter {
+sealed trait EntityInfoContentV2 {
     /**
       * The predicates of the entity, and their objects.
       */
@@ -887,7 +846,7 @@ sealed trait EntityInfoContentV2 extends PredicateConverter {
     protected def convertPredicates(predsWithKnoraDefinitionIriObjs: Set[SmartIri], targetSchema: OntologySchema): Map[SmartIri, PredicateInfoV2] = {
         predicates.map {
             case (predicateIri, predicateInfo) =>
-                val convertedPredicateIri = predicateIriToOntologySchema(predicateIri, targetSchema)
+                val convertedPredicateIri = predicateIri.toOntologySchema(targetSchema)
 
                 val convertedPredicateInfo = if (predsWithKnoraDefinitionIriObjs.contains(predicateIri)) {
                     predicateInfo.predicateAndObjectsToOntologySchema(targetSchema)

@@ -6,6 +6,7 @@
   }, {
     "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
     "@type" : "http://www.w3.org/2002/07/owl#Ontology",
+    "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z",
     "rdfs:label" : "The anything ontology"
   }, {
     "@id" : "http://0.0.0.0:3333/ontology/beol/v2",

@@ -591,7 +591,7 @@ object OntologyConstants {
 
         val Value: IRI = KnoraApiV2PrefixExpansion + "Value"
         val TextValue: IRI = KnoraApiV2PrefixExpansion + "TextValue"
-        val IntegerValue: IRI = KnoraApiV2PrefixExpansion + "IntegerValue"
+        val IntValue: IRI = KnoraApiV2PrefixExpansion + "IntValue"
         val DecimalValue: IRI = KnoraApiV2PrefixExpansion + "DecimalValue"
         val BooleanValue: IRI = KnoraApiV2PrefixExpansion + "BooleanValue"
         val DateValue: IRI = KnoraApiV2PrefixExpansion + "DateValue"
@@ -644,7 +644,7 @@ object OntologyConstants {
         val TextValueAsXml: IRI = KnoraApiV2PrefixExpansion + "textValueAsXml"
         val TextValueHasMapping: IRI = KnoraApiV2PrefixExpansion + "textValueHasMapping"
 
-        val IntegerValueAsInteger: IRI = KnoraApiV2PrefixExpansion + "integerValueAsInteger"
+        val IntValueAsInt: IRI = KnoraApiV2PrefixExpansion + "intValueAsInt"
 
         val DecimalValueAsDecimal: IRI = KnoraApiV2PrefixExpansion + "decimalValueAsDecimal"
 

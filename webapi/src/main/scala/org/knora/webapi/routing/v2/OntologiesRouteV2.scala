@@ -139,7 +139,7 @@ object OntologiesRouteV2 extends Authenticator {
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
-                    val validatedProjectIris = projectIris.map(iri => stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid project IRI: $iri"))).toSet
+                    val validatedProjectIris = projectIris.map(iri => iri.toSmartIriWithErr(throw BadRequestException(s"Invalid project IRI: $iri"))).toSet
                     val requestMessage = OntologyMetadataGetRequestV2(projectIris = validatedProjectIris, userProfile = userProfile)
 
                     RouteUtilV2.runJsonRoute(

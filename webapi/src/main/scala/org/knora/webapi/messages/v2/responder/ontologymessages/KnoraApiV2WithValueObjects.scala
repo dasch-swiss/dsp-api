@@ -1539,8 +1539,8 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val IntegerValue: ReadClassInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObjects.IntegerValue,
+    val IntValue: ReadClassInfoV2 = makeClass(
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.IntValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
             makePredicate(
@@ -1557,16 +1557,16 @@ object KnoraApiV2WithValueObjects {
             )
         ),
         directCardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.IntegerValueAsInteger -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt -> Cardinality.MustHaveOne
         ),
         inheritedCardinalities = Value.allCardinalities
     )
 
-    val IntegerValueAsInteger: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IntegerValueAsInteger,
+    val IntValueAsInt: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.IntegerValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.IntValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
@@ -1578,7 +1578,7 @@ object KnoraApiV2WithValueObjects {
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "Represents the literal integer value of an IntegerValue."
+                    LanguageCodes.EN -> "Represents the literal integer value of an IntValue."
                 )
             )
         )
@@ -2413,7 +2413,7 @@ object KnoraApiV2WithValueObjects {
         TextValue,
         DateValue,
         LinkValue,
-        IntegerValue,
+        IntValue,
         DecimalValue,
         BooleanValue,
         GeomValue,
@@ -2485,7 +2485,7 @@ object KnoraApiV2WithValueObjects {
         DateValueHasCalendar,
         LinkValueHasTarget,
         LinkValueHasTargetIri,
-        IntegerValueAsInteger,
+        IntValueAsInt,
         DecimalValueAsDecimal,
         BooleanValueAsBoolean,
         GeometryValueAsGeometry,
