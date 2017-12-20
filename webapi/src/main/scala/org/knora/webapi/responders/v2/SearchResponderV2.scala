@@ -1966,8 +1966,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 }.toSet
 
                 // the user may have defined Iris of dependent resources in the input query (type annotations)
+                // only add them if they are mentioned in a positive context (not negated like in a FILTER NOT EXISTS or MINUS)
                 val dependentResourceIrisFromTypeInspection: Set[IRI] = typeInspectionResult.typedEntities.collect {
-                    case (iri: TypeableIri, _: NonPropertyTypeInfo) => iri.iri.toString
+                    case (iri: TypeableIri, _: NonPropertyTypeInfo) if whereClauseWithoutAnnotations.positiveEntities.contains(IriRef(iri.iri)) =>
+                        iri.iri.toString
                 }.toSet
 
                 // the Iris of all dependent resources for all main resources

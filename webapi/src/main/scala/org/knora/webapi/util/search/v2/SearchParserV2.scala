@@ -68,7 +68,7 @@ object SearchParserV2 {
     /**
       * An RDF4J [[algebra.QueryModelVisitor]] that converts a [[ParsedQuery]] into a [[ConstructQuery]].
       */
-    class ConstructQueryModelVisitor extends algebra.QueryModelVisitor[SparqlSearchException] {
+    class ConstructQueryModelVisitor(isInNegation: Boolean = false) extends algebra.QueryModelVisitor[SparqlSearchException] {
         private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Represents a statement pattern in the CONSTRUCT clause. Each string could be a variable name or a parser-generated
@@ -89,6 +89,9 @@ object SearchParserV2 {
 
         // The OFFSET specified in the input query.
         private var offset: Long = 0
+
+        // Entities mentioned positively (i.e. not only in a FILTER NOT EXISTS or MINUS) in the WHERE clause.
+        private val positiveEntities: collection.mutable.Set[Entity] = collection.mutable.Set.empty[Entity]
 
         /**
           * After this visitor has visited the parse tree, this method returns a [[ConstructQuery]] representing
@@ -135,7 +138,7 @@ object SearchParserV2 {
 
             ConstructQuery(
                 constructClause = ConstructClause(statements = constructStatements),
-                whereClause = WhereClause(patterns = getWherePatterns),
+                whereClause = WhereClause(patterns = getWherePatterns, positiveEntities = positiveEntities.toSet),
                 orderBy = orderBy,
                 offset = offset
             )
@@ -192,7 +195,7 @@ object SearchParserV2 {
           * @return a [[Entity]].
           */
         private def makeEntity(objVar: algebra.Var): Entity = {
-            if (objVar.isAnonymous || objVar.isConstant) {
+            val entity = if (objVar.isAnonymous || objVar.isConstant) {
                 objVar.getValue match {
                     case iri: rdf4j.model.IRI => makeIri(iri)
 
@@ -206,6 +209,12 @@ object SearchParserV2 {
             } else {
                 QueryVariable(objVar.getName)
             }
+
+            if (!isInNegation) {
+                positiveEntities += entity
+            }
+
+            entity
         }
 
         override def meet(node: algebra.StatementPattern): Unit = {
@@ -251,8 +260,9 @@ object SearchParserV2 {
                 case _: algebra.Union => throw SparqlSearchException("Nested UNIONs are not allowed in search queries")
 
                 case otherLeftArg =>
-                    val leftArgVisitor = new ConstructQueryModelVisitor
+                    val leftArgVisitor = new ConstructQueryModelVisitor(isInNegation = isInNegation)
                     otherLeftArg.visit(leftArgVisitor)
+                    positiveEntities ++= leftArgVisitor.positiveEntities
                     checkBlockPatterns(leftArgVisitor.getWherePatterns)
             }
 
@@ -261,8 +271,9 @@ object SearchParserV2 {
                 case rightArgUnion: algebra.Union =>
                     // If the right arg is also a UNION, recursively get its blocks. This represents a sequence of
                     // UNIONs rather than a nested UNION.
-                    val rightArgVisitor = new ConstructQueryModelVisitor
+                    val rightArgVisitor = new ConstructQueryModelVisitor(isInNegation = isInNegation)
                     rightArgUnion.visit(rightArgVisitor)
+                    positiveEntities ++= rightArgVisitor.positiveEntities
                     val rightWherePatterns = rightArgVisitor.getWherePatterns
 
                     if (rightWherePatterns.size > 1) {
@@ -275,8 +286,9 @@ object SearchParserV2 {
                     }
 
                 case otherRightArg =>
-                    val rightArgVisitor = new ConstructQueryModelVisitor
+                    val rightArgVisitor = new ConstructQueryModelVisitor(isInNegation = isInNegation)
                     otherRightArg.visit(rightArgVisitor)
+                    positiveEntities ++= rightArgVisitor.positiveEntities
                     Seq(checkBlockPatterns(rightArgVisitor.getWherePatterns))
             }
 
@@ -472,7 +484,7 @@ object SearchParserV2 {
             node.getLeftArg.visit(this)
 
             // Get the patterns inside the MINUS.
-            val subQueryVisitor = new ConstructQueryModelVisitor
+            val subQueryVisitor = new ConstructQueryModelVisitor(isInNegation = true)
             node.getRightArg.visit(subQueryVisitor)
             wherePatterns.append(MinusPattern(subQueryVisitor.getWherePatterns))
         }
@@ -557,7 +569,7 @@ object SearchParserV2 {
             def makeFilterNotExists(not: algebra.Not): FilterNotExistsPattern = {
                 not.getArg match {
                     case exists: algebra.Exists =>
-                        val subQueryVisitor = new ConstructQueryModelVisitor
+                        val subQueryVisitor = new ConstructQueryModelVisitor(isInNegation = true)
                         exists.getSubQuery.visit(subQueryVisitor)
                         FilterNotExistsPattern(subQueryVisitor.getWherePatterns)
 
@@ -693,8 +705,9 @@ object SearchParserV2 {
             node.getLeftArg.visit(this)
 
             // Visit the nodes that are in the OPTIONAL.
-            val rightArgVisitor = new ConstructQueryModelVisitor
+            val rightArgVisitor = new ConstructQueryModelVisitor(isInNegation = isInNegation)
             node.getRightArg.visit(rightArgVisitor)
+            positiveEntities ++= rightArgVisitor.positiveEntities
             wherePatterns.append(OptionalPattern(checkBlockPatterns(rightArgVisitor.getWherePatterns)))
         }
 
