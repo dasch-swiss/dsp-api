@@ -16,8 +16,9 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesReq
 import org.knora.webapi.responders._
 import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.store._
-import org.knora.webapi.util.jsonld.{JsonLDObject, JsonLDString}
-import org.knora.webapi.util.{AkkaHttpUtils, FileUtil, MutableTestIri}
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.jsonld.{JsonLDArray, JsonLDObject, JsonLDString}
+import org.knora.webapi.util.{AkkaHttpUtils, FileUtil, MutableTestIri, StringFormatter}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -47,6 +48,8 @@ class OntologyV2R2RSpec extends R2RSpec {
           |# akka.loglevel = "DEBUG"
           |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
+
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
@@ -81,6 +84,9 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     private val fooIri = new MutableTestIri
     private var fooLastModDate: Instant = Instant.now
+
+    private val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/anything/v2".toSmartIri
+    private var anythingLastModDate: Instant = Instant.now
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
@@ -336,5 +342,67 @@ class OntologyV2R2RSpec extends R2RSpec {
             }
         }
 
+        "create an ordinary property in the 'anything' ontology as a subproperty of knora-api:hasValue and schema:name" in {
+            val params =
+                """
+                  |{
+                  |  "knora-api:hasOntologies" : {
+                  |    "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+                  |    "@type" : "owl:Ontology",
+                  |    "knora-api:hasProperties" : {
+                  |      "anything:hasName" : {
+                  |        "@id" : "anything:hasName",
+                  |        "@type" : "owl:ObjectProperty",
+                  |        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+                  |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/anything/v2#Thing",
+                  |        "rdfs:comment" : [ {
+                  |          "@language" : "en",
+                  |          "@value" : "The name of a Thing"
+                  |        }, {
+                  |          "@language" : "de",
+                  |          "@value" : "Der Name eines Dinges"
+                  |        } ],
+                  |        "rdfs:label" : [ {
+                  |          "@language" : "en",
+                  |          "@value" : "has name"
+                  |        }, {
+                  |          "@language" : "de",
+                  |          "@value" : "hat Namen"
+                  |        } ],
+                  |        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://schema.org/name" ]
+                  |      }
+                  |    },
+                  |    "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
+                  |  },
+                  |  "@context" : {
+                  |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                  |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                  |    "owl" : "http://www.w3.org/2002/07/owl#",
+                  |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                  |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                  |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+                  |  }
+                  |}
+                """.stripMargin
+
+            Post("/v2/ontologies/properties", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJsonDoc = responseToJsonLDDocument(response)
+
+                responseJsonDoc.body.value(OntologyConstants.KnoraApiV2WithValueObjects.HasOntologies) match {
+                    case anythingOntology: JsonLDObject =>
+                        val hasProperties: JsonLDObject = anythingOntology.value(OntologyConstants.KnoraApiV2WithValueObjects.HasProperties).asInstanceOf[JsonLDObject]
+                        val property: JsonLDObject = hasProperties.value(AnythingOntologyIri.makeEntityIri("hasName").toString).asInstanceOf[JsonLDObject]
+                        val subPropertyOf: JsonLDArray = property.value(OntologyConstants.Rdfs.SubPropertyOf).asInstanceOf[JsonLDArray]
+                        assert(subPropertyOf == JsonLDArray(Seq(JsonLDString(OntologyConstants.KnoraApiV2WithValueObjects.HasValue), JsonLDString(OntologyConstants.SchemaOrg.Name))))
+
+                        val lastModDate = Instant.parse(anythingOntology.value(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).asInstanceOf[JsonLDString].value)
+                        assert(lastModDate.isAfter(anythingLastModDate))
+                        anythingLastModDate = lastModDate
+
+                    case _ => throw AssertionException(s"Unexpected response: $responseJsonDoc")
+                }
+            }
+        }
     }
 }

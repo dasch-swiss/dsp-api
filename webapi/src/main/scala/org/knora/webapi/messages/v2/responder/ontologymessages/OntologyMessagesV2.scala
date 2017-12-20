@@ -166,6 +166,12 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
             throw BadRequestException(s"Property $propertyIri must be an owl:ObjectProperty")
         }
 
+        val rdfTypePred = PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            ontologyIri = OntologyConstants.Rdf.RdfOntologyIri.toSmartIri,
+            objects = Set(propertyType.toString)
+        )
+
         val subPropertyOf: Set[SmartIri] = propertyDef.requireArray(OntologyConstants.Rdfs.SubPropertyOf).value.map {
             case JsonLDString(superProperty) => superProperty.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $superProperty"))
             case other => throw BadRequestException(s"Expected property IRI: $other")
@@ -204,6 +210,7 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
                 propertyIri = propertyIri,
                 ontologyIri = externalOntologyIri,
                 predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> rdfTypePred,
                     OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> subjectTypePred,
                     OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> objectTypePred,
                     OntologyConstants.Rdfs.Label.toSmartIri -> labelPred,
