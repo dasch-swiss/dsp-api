@@ -23,7 +23,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val imagesUserProfile = SharedAdminTestData.imagesUser01
     private val imagesProjectIri = SharedAdminTestData.IMAGES_PROJECT_IRI.toSmartIri
 
-    private val anythingUserProfile = SharedAdminTestData.anythingUser1
+    private val anythingUserProfile = SharedAdminTestData.anythingAdminUser
     private val anythingProjectIri = SharedAdminTestData.ANYTHING_PROJECT_IRI.toSmartIri
 
     private val actorUnderTest = TestActorRef[OntologyResponderV2]

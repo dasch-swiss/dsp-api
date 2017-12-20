@@ -87,7 +87,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       * @tparam T the type of the validation function's return value.
       * @return the return value of the validation function.
       */
-    def requireString[T](key: String, validationFun: (String, => Nothing) => T ): T = {
+    def requireString[T](key: String, validationFun: (String, => Nothing) => T): T = {
         value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
             case JsonLDString(str) => validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
             case other => throw BadRequestException(s"Invalid $key: $other (string expected)")
