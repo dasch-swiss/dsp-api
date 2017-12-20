@@ -1276,8 +1276,8 @@ class OntologyResponderV2 extends Responder {
 
             // check if the requesting user is allowed to create an ontology
             _ = if (!(userProfile.permissionData.isProjectAdmin(projectIri.toString) || userProfile.permissionData.isSystemAdmin)) {
-                println(s"userProfile: $userProfile")
-                println(s"userProfile.permissionData.isProjectAdmin(<${projectIri.toString}>): ${userProfile.permissionData.isProjectAdmin(projectIri.toString)}")
+                // println(s"userProfile: $userProfile")
+                // println(s"userProfile.permissionData.isProjectAdmin(<${projectIri.toString}>): ${userProfile.permissionData.isProjectAdmin(projectIri.toString)}")
                 throw ForbiddenException(s"A new ontology in the project ${createOntologyRequest.projectIri} can only be created by an admin of that project, or by a system admin.")
             }
 
@@ -1818,7 +1818,7 @@ class OntologyResponderV2 extends Responder {
       * @return the definition of the corresponding link value property.
       */
     private def linkPropertyDefToLinkValuePropertyDef(internalPropertyDef: PropertyInfoContentV2): PropertyInfoContentV2 = {
-        val newIri = internalPropertyDef.propertyIri.fromLinkPropToLinkValueProp
+        val linkValuePropIri = internalPropertyDef.propertyIri.fromLinkPropToLinkValueProp
 
         val newPredicates: Map[SmartIri, PredicateInfoV2] = (internalPropertyDef.predicates - OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri) +
             (OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri -> PredicateInfoV2(
@@ -1828,7 +1828,7 @@ class OntologyResponderV2 extends Responder {
             ))
 
         internalPropertyDef.copy(
-            propertyIri = newIri,
+            propertyIri = linkValuePropIri,
             predicates = newPredicates,
             subPropertyOf = Set(OntologyConstants.KnoraBase.HasLinkToValue.toSmartIri)
         )

@@ -104,7 +104,7 @@ WHERE {
         case Some(linkValuePropertyInfoContent) => {
 
             FILTER NOT EXISTS {
-                @linkValuePropertyInfoContent.propertyIri rdf:type ?existingLinkValuePropertyType .
+                <@linkValuePropertyInfoContent.propertyIri> rdf:type ?existingLinkValuePropertyType .
             }
 
         }

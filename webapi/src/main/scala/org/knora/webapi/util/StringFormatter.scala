@@ -1031,16 +1031,23 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                 throw DataConversionException(s"IRI $iri is not a Knora entity IRI, so it cannot be a link value property IRI")
             }
 
-            if (iri.endsWith("Value")) {
-                val convertedIriStr = iri.substring(0, iri.length - "Value".length)
+            val entityName = getEntityName
+
+            if (entityName.endsWith("Value")) {
+                val convertedEntityName = entityName.substring(0, entityName.length - "Value".length)
+                val convertedIriStr = getOntologyFromEntity.makeEntityIri(convertedEntityName).toString
 
                 getOrCacheSmartIri(
                     iriStr = convertedIriStr,
                     creationFun = {
                         () =>
+                            val convertedSmartIriInfo = iriInfo.copy(
+                                entityName = Some(convertedEntityName)
+                            )
+
                             new SmartIriImpl(
                                 iriStr = convertedIriStr,
-                                parsedIriInfo = Some(iriInfo)
+                                parsedIriInfo = Some(convertedSmartIriInfo)
                             )
                     }
                 )
@@ -1056,15 +1063,21 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                 throw DataConversionException(s"IRI $iri is not a Knora entity IRI, so it cannot be a link property IRI")
             }
 
-            val convertedIriStr = iri + "Value"
+            val entityName = getEntityName
+            val convertedEntityName = entityName + "Value"
+            val convertedIriStr = getOntologyFromEntity.makeEntityIri(convertedEntityName).toString
 
             getOrCacheSmartIri(
                 iriStr = convertedIriStr,
                 creationFun = {
                     () =>
+                        val convertedSmartIriInfo = iriInfo.copy(
+                            entityName = Some(convertedEntityName)
+                        )
+
                         new SmartIriImpl(
                             iriStr = convertedIriStr,
-                            parsedIriInfo = Some(iriInfo)
+                            parsedIriInfo = Some(convertedSmartIriInfo)
                         )
                 }
             )

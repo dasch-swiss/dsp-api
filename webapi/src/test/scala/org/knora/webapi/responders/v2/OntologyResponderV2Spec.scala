@@ -260,12 +260,158 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case msg: ReadOntologiesV2 =>
                     val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
                     val ontology = externalMsg.ontologies.head
+                    val property = ontology.properties(propertyIri)
+                    property.entityInfoContent should ===(propertyInfoContent)
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+
+            // Reload the ontology cache and see if we get the same result.
+
+            responderManager ! LoadOntologiesRequest(anythingUserProfile)
+            expectMsg(10.seconds, LoadOntologiesResponse())
+
+            responderManager ! PropertiesGetRequestV2(
+                propertyIris = Set(propertyIri),
+                allLanguages = true,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val readPropertyInfo: ReadPropertyInfoV2 = externalMsg.ontologies.head.properties.values.head
+                    readPropertyInfo.entityInfoContent should ===(propertyInfoContent)
+            }
+        }
+
+        "create a link property in the 'anything' ontology, and automatically create the corresponding link value property" in {
+
+            actorUnderTest ! OntologyMetadataGetRequestV2(
+                projectIris = Set(anythingProjectIri),
+                userProfile = anythingUserProfile
+            )
+
+            val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
+            anythingLastModDate = metadataResponse.ontologies.head.lastModificationDate.get
+
+            val propertyIri = AnythingOntologyIri.makeEntityIri("hasInterestingThing")
+
+            val propertyInfoContent = PropertyInfoContentV2(
+                propertyIri = propertyIri,
+                ontologyIri = AnythingOntologyIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        ontologyIri = OntologyConstants.Rdf.RdfOntologyIri.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.ObjectProperty)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
+                        objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
+                        objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "has interesting thing"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "an interesting Thing"
+                        )
+                    )
+                ),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreatePropertyRequestV2(
+                propertyInfoContent = propertyInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val property = ontology.properties(propertyIri)
+                    assert(property.isLinkProp)
+                    assert(!property.isLinkValueProp)
                     ontology.properties(propertyIri).entityInfoContent should ===(propertyInfoContent)
                     val metadata = ontology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
             }
+
+            // Check that the link value property was created.
+
+            val linkValuePropIri = propertyIri.fromLinkPropToLinkValueProp
+
+            responderManager ! PropertiesGetRequestV2(
+                propertyIris = Set(linkValuePropIri),
+                allLanguages = true,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val readPropertyInfo: ReadPropertyInfoV2 = externalMsg.ontologies.head.properties.values.head
+                    assert(readPropertyInfo.entityInfoContent.propertyIri == linkValuePropIri)
+                    assert(!readPropertyInfo.isLinkProp)
+                    assert(readPropertyInfo.isLinkValueProp)
+            }
+
+            // Reload the ontology cache and see if we get the same result.
+
+            responderManager ! LoadOntologiesRequest(anythingUserProfile)
+            expectMsg(10.seconds, LoadOntologiesResponse())
+
+            responderManager ! PropertiesGetRequestV2(
+                propertyIris = Set(propertyIri),
+                allLanguages = true,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val readPropertyInfo: ReadPropertyInfoV2 = externalMsg.ontologies.head.properties.values.head
+                    assert(readPropertyInfo.isLinkProp)
+                    assert(!readPropertyInfo.isLinkValueProp)
+                    readPropertyInfo.entityInfoContent should ===(propertyInfoContent)
+            }
+
+            responderManager ! PropertiesGetRequestV2(
+                propertyIris = Set(linkValuePropIri),
+                allLanguages = true,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val readPropertyInfo: ReadPropertyInfoV2 = externalMsg.ontologies.head.properties.values.head
+                    assert(readPropertyInfo.entityInfoContent.propertyIri == linkValuePropIri)
+                    assert(!readPropertyInfo.isLinkProp)
+                    assert(readPropertyInfo.isLinkValueProp)
+            }
+
         }
 
         "not create a property without an rdf:type" in {
