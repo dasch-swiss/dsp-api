@@ -24,10 +24,15 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
 object OntologyV2R2RSpec {
-    private val userProfile = SharedAdminTestData.imagesUser01
-    private val username = userProfile.userData.email.get
+    private val imagesUserProfile = SharedAdminTestData.imagesUser01
+    private val imagesUsername = imagesUserProfile.userData.email.get
+    private val imagesProjectIri = SharedAdminTestData.IMAGES_PROJECT_IRI
+
+    private val anythingUserProfile = SharedAdminTestData.anythingAdminUser
+    private val anythingUsername = anythingUserProfile.userData.email.get
+    private val anythingProjectIri = SharedAdminTestData.ANYTHING_PROJECT_IRI
+
     private val password = "test"
-    private val projectWithProjectID = SharedAdminTestData.IMAGES_PROJECT_IRI
 }
 
 /**
@@ -91,7 +96,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "serve metadata for the ontologies of one project" in {
-            val projectIri = URLEncoder.encode(projectWithProjectID, "UTF-8")
+            val projectIri = URLEncoder.encode(imagesProjectIri, "UTF-8")
 
             Get(s"/v2/ontologies/metadata/$projectIri") ~> ontologiesPath ~> check {
                 val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
@@ -266,7 +271,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 s"""
                    |{
                    |    "knora-api:ontologyName": "foo",
-                   |    "knora-api:projectIri": "$projectWithProjectID",
+                   |    "knora-api:projectIri": "$imagesProjectIri",
                    |    "rdfs:label": "$label",
                    |    "@context": {
                    |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
@@ -275,7 +280,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |}
                 """.stripMargin
 
-            Post("/v2/ontologies", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(username, password)) ~> ontologiesPath ~> check {
+            Post("/v2/ontologies", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
@@ -311,7 +316,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |}
                 """.stripMargin
 
-            Put("/v2/ontologies/metadata", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(username, password)) ~> ontologiesPath ~> check {
+            Put("/v2/ontologies/metadata", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
@@ -330,5 +335,6 @@ class OntologyV2R2RSpec extends R2RSpec {
                 }
             }
         }
+
     }
 }

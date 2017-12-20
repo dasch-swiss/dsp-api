@@ -1451,7 +1451,7 @@ class OntologyResponderV2 extends Responder {
 
                 subjectClassConstraint = internalPropertyDef.requireIriPredicate(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri, throw BadRequestException(s"No knora-api:subjectType specified"))
 
-                _ = if (!(subjectClassConstraint.isKnoraInternalEntityIri && cacheData.classDefs.contains(subjectClassConstraint))) {
+                _ = if (!isKnoraInternalResourceClass(subjectClassConstraint, cacheData)) {
                     throw BadRequestException(s"Invalid subject class constraint: ${subjectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}")
                 }
 
@@ -1461,7 +1461,7 @@ class OntologyResponderV2 extends Responder {
 
                 // If this is a link property, ensure that its object class constraint refers to a Knora resource class.
                 _ = if (isLinkProp) {
-                    if (!(objectClassConstraint.isKnoraInternalEntityIri && cacheData.classDefs.contains(objectClassConstraint))) {
+                    if (!isKnoraInternalResourceClass(objectClassConstraint, cacheData)) {
                         throw BadRequestException(s"Invalid object class constraint for link property: ${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}")
                     }
                 } else {
@@ -1572,6 +1572,17 @@ class OntologyResponderV2 extends Responder {
         } yield taskResult
     }
 
+    /**
+      * Checks whether a class IRI refers to a Knora internal resource class.
+      *
+      * @param classIri the class IRI.
+      * @return `true` if the class IRI refers to a Knora internal resource class.
+      */
+    private def isKnoraInternalResourceClass(classIri: SmartIri, cacheData: OntologyCacheData): Boolean = {
+        classIri.isKnoraInternalEntityIri &&
+            cacheData.classDefs.contains(classIri) &&
+            cacheData.resourceAndValueSubClassOfRelations(classIri).contains(OntologyConstants.KnoraBase.Resource.toSmartIri)
+    }
 
     /**
       * Before creating a new property, checks that the new property's `knora-base:subjectClassConstraint` or `knora-base:objectClassConstraint`
