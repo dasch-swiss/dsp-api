@@ -293,6 +293,34 @@ class SearchParserV2Spec extends CoreSpec() {
                 operator = CompareExpressionOperator.LESS_THAN,
                 leftArg = QueryVariable("pubdate")
             ))
+        ), positiveEntities = Set(
+            IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#publoc".toSmartIri, None),
+            XsdLiteral("14", "http://www.w3.org/2001/XMLSchema#integer".toSmartIri),
+            QueryVariable("page"),
+            IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#publisher".toSmartIri, None),
+            IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None),
+            QueryVariable("bookPubLoc"),
+            IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#book".toSmartIri, None),
+            QueryVariable("bookLabel"),
+            IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#page".toSmartIri, None),
+            IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#seqnum".toSmartIri, None),
+            XsdLiteral("a8r", "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+            IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#pubdate".toSmartIri, None),
+            IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#isPartOf".toSmartIri, None),
+            XsdLiteral("a7r", "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+            IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri, None),
+            QueryVariable("bookPublisher"),
+            XsdLiteral("16", "http://www.w3.org/2001/XMLSchema#integer".toSmartIri),
+            IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+            QueryVariable("book"),
+            XsdLiteral("a9r", "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+            IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#pagenum".toSmartIri, None),
+            QueryVariable("pubdate"),
+            QueryVariable("seqnum"),
+            QueryVariable("bookType"),
+            QueryVariable("pageLabel"),
+            XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri),
+            QueryVariable("pageType")
         )),
         constructClause = ConstructClause(statements = Vector(
             StatementPattern(
@@ -340,7 +368,6 @@ class SearchParserV2Spec extends CoreSpec() {
             )
         ))
     )
-
 
     val QueryWithBind: String =
         """
@@ -395,7 +422,16 @@ class SearchParserV2Spec extends CoreSpec() {
                 pred = IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#hasOtherThing".toSmartIri),
                 subj = QueryVariable(variableName = "thing")
             )))
-        )),
+        ),
+            positiveEntities = Set(
+                QueryVariable("thingLabel"),
+                QueryVariable("thing"),
+                IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri, None),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+                QueryVariable("thingType"),
+                IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#Thing".toSmartIri, None)
+            )
+        ),
         constructClause = ConstructClause(statements = Vector(
             StatementPattern(
                 namedGraph = None,
@@ -447,7 +483,16 @@ class SearchParserV2Spec extends CoreSpec() {
                 pred = IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#hasOtherThing".toSmartIri),
                 subj = QueryVariable(variableName = "thing")
             )))
-        )),
+        ),
+            positiveEntities = Set(
+                QueryVariable("thingLabel"),
+                QueryVariable("thing"),
+                IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri, None),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+                QueryVariable("thingType"),
+                IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#Thing".toSmartIri, None)
+            )
+        ),
         constructClause = ConstructClause(statements = Vector(
             StatementPattern(
                 namedGraph = None,
@@ -488,7 +533,16 @@ class SearchParserV2Spec extends CoreSpec() {
             obj = IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#Thing".toSmartIri),
             pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
             subj = QueryVariable(variableName = "thing")
-        ))),
+        )),
+            positiveEntities = Set(
+                QueryVariable("thingLabel"),
+                QueryVariable("thing"),
+                IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri, None),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+                QueryVariable("thingType"),
+                IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#Thing".toSmartIri, None)
+            )
+        ),
         constructClause = ConstructClause(statements = Vector(
             StatementPattern(
                 namedGraph = None,
@@ -771,7 +825,16 @@ class SearchParserV2Spec extends CoreSpec() {
                     leftArg = QueryVariable(variableName = "linkingProp")
                 )
             ))
-        )),
+        ),
+            positiveEntities = Set(
+                QueryVariable("linkingProp"),
+                QueryVariable("resource"),
+                IriRef("http://data.knora.org/a-thing".toSmartIri, None),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo".toSmartIri, None),
+                IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#Thing".toSmartIri, None)
+            )
+        ),
         constructClause = ConstructClause(statements = Vector(StatementPattern(
             obj = IriRef("http://data.knora.org/a-thing".toSmartIri),
             pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo".toSmartIri),
