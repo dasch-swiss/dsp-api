@@ -258,7 +258,7 @@ class SipiResponderV1 extends Responder {
                     val textStoreResult = try {
                         responseAsJson.convertTo[SipiTextResponse]
                     } catch {
-                        case e: DeserializationException => throw SipiException(message = "JSON response returned by Sipi is invalid, it cannot be turned into a SipiImageConversionResponse", e = e, log = log)
+                        case e: DeserializationException => throw SipiException(message = "JSON response returned by Sipi is invalid, it cannot be turned into a SipiTextResponse", e = e, log = log)
                     }
 
                     Vector(TextFileValueV1(

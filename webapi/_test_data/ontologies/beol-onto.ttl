@@ -14,38 +14,38 @@
 
 <http://www.knora.org/ontology/beol> rdf:type owl:Ontology .
 
-    ##########################################################
-    #
-    # PROPERTIES
-    #
-    ##########################################################
+##########################################################
+#
+# PROPERTIES
+#
+##########################################################
 
 
-    ### ###########################################
-    ### beol:title
+### ###########################################
+### beol:title
 
-    :title rdf:type owl:ObjectProperty ;
+:title rdf:type owl:ObjectProperty ;
 
-           rdfs:subPropertyOf dc:title ;
+       rdfs:subPropertyOf dc:title ;
 
-           rdfs:label "Titel"@de ,
-                      "Titre"@fr ,
-                      "Titolo"@it ,
-                      "Title"@en ;
+       rdfs:label "Titel"@de ,
+                  "Titre"@fr ,
+                  "Titolo"@it ,
+                  "Title"@en ;
 
-           rdfs:comment """Titel"""@de ,
-                        """Title"""@en;
+       rdfs:comment """Titel"""@de ,
+                    """Title"""@en;
 
-       knora-base:subjectClassConstraint :writtenSource ;
+   knora-base:subjectClassConstraint :writtenSource ;
 
-           knora-base:objectClassConstraint knora-base:TextValue ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
 
-           salsah-gui:guiOrder "1"^^xsd:integer ;
+       salsah-gui:guiOrder "1"^^xsd:integer ;
 
-           salsah-gui:guiElement salsah-gui:SimpleText ;
+       salsah-gui:guiElement salsah-gui:SimpleText ;
 
-           salsah-gui:guiAttribute "size=80" ,
-                                   "maxlength=255" .
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" .
 
 ### ###########################################
 ### beol:creationDate
@@ -576,224 +576,96 @@
                     salsah-gui:guiElement salsah-gui:Searchbox .
 
 
-    ### ###########################################
-    ### beol:hasGivenName
+### ###########################################
+### beol:hasGivenName
 
-    :hasGivenName rdf:type owl:ObjectProperty ;
+:hasGivenName rdf:type owl:ObjectProperty ;
 
-                  rdfs:label "Vorname"@de ,
-                            "given name"@en ,
-                            "prénom"@fr ,
-                            "nome di battesimo"@it ;
+              rdfs:label "Vorname"@de ,
+                        "given name"@en ,
+                        "prénom"@fr ,
+                        "nome di battesimo"@it ;
 
-                  rdfs:comment """Represents a Given name."""@en ;
+              rdfs:comment """Represents a Given name."""@en ;
 
-                  knora-base:objectClassConstraint knora-base:TextValue ;
+              knora-base:objectClassConstraint knora-base:TextValue ;
 
-                  salsah-gui:guiElement salsah-gui:SimpleText ;
+              salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                  knora-base:subjectClassConstraint :person ;
+              knora-base:subjectClassConstraint :person ;
 
-                  rdfs:subPropertyOf knora-base:hasValue .
+              rdfs:subPropertyOf knora-base:hasValue .
 
-    ### ###########################################
-    ### beol:hasFamilyName
 
-    :hasFamilyName rdf:type owl:ObjectProperty ;
+### ###########################################
+### beol:hasFamilyName
 
-                   rdfs:label "Nachname"@de ,
-                            "family name"@en ,
-                            "nom de famille"@fr ,
-                            "nome di famiglia"@it ;
+:hasFamilyName rdf:type owl:ObjectProperty ;
 
-                   rdfs:comment """Represents a family name."""@en ;
+               rdfs:label "Nachname"@de ,
+                        "family name"@en ,
+                        "nom de famille"@fr ,
+                        "nome di famiglia"@it ;
 
-                   knora-base:objectClassConstraint knora-base:TextValue ;
+               rdfs:comment """Represents a family name."""@en ;
 
-                   salsah-gui:guiElement salsah-gui:SimpleText ;
+               knora-base:objectClassConstraint knora-base:TextValue ;
 
-                   knora-base:subjectClassConstraint :person ;
+               salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                   rdfs:subPropertyOf knora-base:hasValue .
+               knora-base:subjectClassConstraint :person ;
 
-    ### ###########################################
-    ### beol:personHasTitle
+               rdfs:subPropertyOf knora-base:hasValue .
 
-    :personHasTitle rdf:type owl:ObjectProperty ;
 
-                    rdfs:label "Titel"@de ,
-                             "Title"@en ;
+### ###########################################
+### beol:personHasTitle
 
-                    rdfs:comment """Represents title of person."""@en ;
+:personHasTitle rdf:type owl:ObjectProperty ;
 
-                    knora-base:objectClassConstraint knora-base:TextValue ;
+                rdfs:label "Titel"@de ,
+                         "Title"@en ;
 
-                    salsah-gui:guiElement salsah-gui:SimpleText ;
+                rdfs:comment """Represents title of person."""@en ;
 
-                    knora-base:subjectClassConstraint :person ;
+                knora-base:objectClassConstraint knora-base:TextValue ;
 
-                    rdfs:subPropertyOf knora-base:hasValue .
+                salsah-gui:guiElement salsah-gui:SimpleText ;
 
-    ### ###########################################
-    ### beol:hasAlternativeName
+                knora-base:subjectClassConstraint :person ;
 
-    :hasAlternativeName rdf:type owl:ObjectProperty ;
+                rdfs:subPropertyOf knora-base:hasValue .
 
-                   rdfs:label "Alternative-Name"@de ,
-                            "alternative name"@en ;
 
-                   rdfs:comment """Represents alternative name."""@en ;
+### ###########################################
+### beol:hasAlternativeName
 
-                   knora-base:objectClassConstraint knora-base:TextValue ;
+:hasAlternativeName rdf:type owl:ObjectProperty ;
 
-                   salsah-gui:guiElement salsah-gui:SimpleText ;
+               rdfs:label "Alternative-Name"@de ,
+                        "alternative name"@en ;
 
-                   knora-base:subjectClassConstraint :person ;
+               rdfs:comment """Represents alternative name."""@en ;
 
-                   rdfs:subPropertyOf knora-base:hasValue .
+               knora-base:objectClassConstraint knora-base:TextValue ;
 
-    ### ###########################################
-    ### beol:hasIAFIdentifier
+               salsah-gui:guiElement salsah-gui:SimpleText ;
 
-    :hasIAFIdentifier rdf:type owl:ObjectProperty ;
+               knora-base:subjectClassConstraint :person ;
 
-                      rdfs:label "Gemeinsame Normdatei (GND)"@de ,
-                                 "Integrated Authority File"@en ;
+               rdfs:subPropertyOf knora-base:hasValue .
 
-                      rdfs:comment """Repräsentiert eine GND-Nummer."""@de,
-                                   """Represents an IAF identifier."""@en ;
 
-                      knora-base:objectClassConstraint knora-base:TextValue ;
+### ###########################################
+### beol:hasIAFIdentifier
 
-                      salsah-gui:guiElement salsah-gui:SimpleText ;
+:hasIAFIdentifier rdf:type owl:ObjectProperty ;
 
-                      knora-base:subjectClassConstraint :person ;
+                  rdfs:label "Gemeinsame Normdatei (GND)"@de ,
+                             "Integrated Authority File"@en ;
 
-                      rdfs:subPropertyOf knora-base:hasValue .
-
-
-    ### ###########################################
-    ### beol:hasBirthDate
-
-    :hasBirthDate rdf:type owl:ObjectProperty ;
-
-                  rdfs:label "Geburtsdatum"@de ,
-                             "date of birth"@en ;
-
-                  rdfs:comment """Repräsentiert ein Geburtsdatum."""@de,
-                               """Represents a date of birth."""@en ;
-
-                  knora-base:objectClassConstraint knora-base:DateValue ;
-
-                  salsah-gui:guiElement salsah-gui:Date ;
-
-                  knora-base:subjectClassConstraint :person ;
-
-                  rdfs:subPropertyOf knora-base:hasValue .
-
-
-    ### ###########################################
-    ### beol:hasDeathDate
-
-    :hasDeathDate rdf:type owl:ObjectProperty ;
-
-                  rdfs:label "Sterbedatum"@de ,
-                             "date of death"@en ;
-
-                  rdfs:comment """Repräsentiert ein Sterbedatum."""@de,
-                               """Represents a date of death."""@en ;
-
-                  knora-base:objectClassConstraint knora-base:DateValue ;
-
-                  salsah-gui:guiElement salsah-gui:Date ;
-
-                  knora-base:subjectClassConstraint :person ;
-
-                  rdfs:subPropertyOf knora-base:hasValue .
-
-    ### ###########################################
-    ### beol:hasFloruitDate
-
-    :hasFloruitDate rdf:type owl:ObjectProperty ;
-
-                  rdfs:label "Floruit-Dataum"@de ,
-                             "Floruit Date"@en ;
-
-                  rdfs:comment """Repräsentiert ein Floruit-Dataum."""@de,
-                               """Represents a floruit date."""@en ;
-
-                  knora-base:objectClassConstraint knora-base:DateValue ;
-
-                  salsah-gui:guiElement salsah-gui:Date ;
-
-                  knora-base:subjectClassConstraint :person ;
-
-                  rdfs:subPropertyOf knora-base:hasValue .
-
-    ### ###########################################
-    ### beol:hasMarriageDate
-
-    :hasMarriageDate rdf:type owl:ObjectProperty ;
-
-                  rdfs:label "Hochzeitdataum"@de ,
-                             "Marriage Date"@en ;
-
-                  rdfs:comment """Repräsentiert ein Hochzeitdatum."""@de,
-                               """Represents a marriage date."""@en ;
-
-                  knora-base:objectClassConstraint knora-base:DateValue ;
-
-                  salsah-gui:guiElement salsah-gui:Date ;
-
-                  knora-base:subjectClassConstraint :person ;
-
-                  rdfs:subPropertyOf knora-base:hasValue .
-
-    ### ###########################################
-    ### beol:hasBirthPlace
-
-    :hasBirthPlace rdf:type owl:ObjectProperty ;
-
-                   rdfs:label "Geburtsort"@de ,
-                             "Birth Place"@en ;
-
-                   rdfs:comment """Represents a birth place."""@en ;
-
-                   knora-base:objectClassConstraint knora-base:TextValue ;
-
-                   salsah-gui:guiElement salsah-gui:SimpleText ;
-
-                   knora-base:subjectClassConstraint :person ;
-
-                   rdfs:subPropertyOf knora-base:hasValue .
-
-    ### ###########################################
-    ### beol:hasDeathPlace
-
-    :hasDeathPlace rdf:type owl:ObjectProperty ;
-
-                   rdfs:label "Todesort"@de ,
-                             "Place of death"@en ;
-
-                   rdfs:comment """Represents a place of death."""@en ;
-
-                   knora-base:objectClassConstraint knora-base:TextValue ;
-
-                   salsah-gui:guiElement salsah-gui:SimpleText ;
-
-                   knora-base:subjectClassConstraint :person ;
-
-                   rdfs:subPropertyOf knora-base:hasValue .
-
-   ### ###########################################
-   ### beol:hasFloruitPlace
-
-   :hasFloruitPlace rdf:type owl:ObjectProperty ;
-
-                  rdfs:label "Floruit-Ort"@de ,
-                            "Place of Floruit"@en ;
-
-                  rdfs:comment """Represents a place a person is seen."""@en ;
+                  rdfs:comment """Repräsentiert eine GND-Nummer."""@de,
+                               """Represents an IAF identifier."""@en ;
 
                   knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -804,49 +676,199 @@
                   rdfs:subPropertyOf knora-base:hasValue .
 
 
-   ### ###########################################
-   ### beol:hasMarriagePlace
+### ###########################################
+### beol:hasBirthDate
 
-   :hasMarriagePlace rdf:type owl:ObjectProperty ;
+:hasBirthDate rdf:type owl:ObjectProperty ;
 
-                  rdfs:label "Trauugsort"@de ,
-                            "Place of Marriage"@en ;
+              rdfs:label "Geburtsdatum"@de ,
+                         "date of birth"@en ;
 
-                  rdfs:comment """Represents a place a person is married in."""@en ;
+              rdfs:comment """Repräsentiert ein Geburtsdatum."""@de,
+                           """Represents a date of birth."""@en ;
 
-                  knora-base:objectClassConstraint knora-base:TextValue ;
+              knora-base:objectClassConstraint knora-base:DateValue ;
 
-                  salsah-gui:guiElement salsah-gui:SimpleText ;
+              salsah-gui:guiElement salsah-gui:Date ;
 
-                  knora-base:subjectClassConstraint :person ;
+              knora-base:subjectClassConstraint :person ;
 
-                  rdfs:subPropertyOf knora-base:hasValue .
-
-   ### ###########################################
-   ### beol:hasDictionaryEntries
-
-   :hasDictionaryEntries rdf:type owl:ObjectProperty ;
-
-                 rdfs:label "Indexeinträge"@de ,
-                           "Dictionary Entries"@en ;
-
-                 rdfs:comment """Represents entries in dictionaries about the person."""@en ;
-
-                 knora-base:objectClassConstraint knora-base:TextValue ;
-
-                 salsah-gui:guiElement salsah-gui:SimpleText ;
-
-                 knora-base:subjectClassConstraint :person ;
-
-                 rdfs:subPropertyOf knora-base:hasValue .
+              rdfs:subPropertyOf knora-base:hasValue .
 
 
+### ###########################################
+### beol:hasDeathDate
 
-    ##########################################################
-    #
-    # RESOURCES
-    #
-    ##########################################################
+:hasDeathDate rdf:type owl:ObjectProperty ;
+
+              rdfs:label "Sterbedatum"@de ,
+                         "date of death"@en ;
+
+              rdfs:comment """Repräsentiert ein Sterbedatum."""@de,
+                           """Represents a date of death."""@en ;
+
+              knora-base:objectClassConstraint knora-base:DateValue ;
+
+              salsah-gui:guiElement salsah-gui:Date ;
+
+              knora-base:subjectClassConstraint :person ;
+
+              rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:hasFloruitDate
+
+:hasFloruitDate rdf:type owl:ObjectProperty ;
+
+              rdfs:label "Floruit-Dataum"@de ,
+                         "Floruit Date"@en ;
+
+              rdfs:comment """Repräsentiert ein Floruit-Dataum."""@de,
+                           """Represents a floruit date."""@en ;
+
+              knora-base:objectClassConstraint knora-base:DateValue ;
+
+              salsah-gui:guiElement salsah-gui:Date ;
+
+              knora-base:subjectClassConstraint :person ;
+
+              rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:hasMarriageDate
+
+:hasMarriageDate rdf:type owl:ObjectProperty ;
+
+              rdfs:label "Hochzeitdataum"@de ,
+                         "Marriage Date"@en ;
+
+              rdfs:comment """Repräsentiert ein Hochzeitdatum."""@de,
+                           """Represents a marriage date."""@en ;
+
+              knora-base:objectClassConstraint knora-base:DateValue ;
+
+              salsah-gui:guiElement salsah-gui:Date ;
+
+              knora-base:subjectClassConstraint :person ;
+
+              rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:hasBirthPlace
+
+:hasBirthPlace rdf:type owl:ObjectProperty ;
+
+               rdfs:label "Geburtsort"@de ,
+                         "Birth Place"@en ;
+
+               rdfs:comment """Represents a birth place."""@en ;
+
+               knora-base:objectClassConstraint knora-base:TextValue ;
+
+               salsah-gui:guiElement salsah-gui:SimpleText ;
+
+               knora-base:subjectClassConstraint :person ;
+
+               rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:hasDeathPlace
+
+:hasDeathPlace rdf:type owl:ObjectProperty ;
+
+               rdfs:label "Todesort"@de ,
+                         "Place of death"@en ;
+
+               rdfs:comment """Represents a place of death."""@en ;
+
+               knora-base:objectClassConstraint knora-base:TextValue ;
+
+               salsah-gui:guiElement salsah-gui:SimpleText ;
+
+               knora-base:subjectClassConstraint :person ;
+
+               rdfs:subPropertyOf knora-base:hasValue .
+
+### ###########################################
+### beol:hasFloruitPlace
+
+:hasFloruitPlace rdf:type owl:ObjectProperty ;
+
+              rdfs:label "Floruit-Ort"@de ,
+                        "Place of Floruit"@en ;
+
+              rdfs:comment """Represents a place a person is seen."""@en ;
+
+              knora-base:objectClassConstraint knora-base:TextValue ;
+
+              salsah-gui:guiElement salsah-gui:SimpleText ;
+
+              knora-base:subjectClassConstraint :person ;
+
+              rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:hasMarriagePlace
+
+:hasMarriagePlace rdf:type owl:ObjectProperty ;
+
+              rdfs:label "Trauugsort"@de ,
+                        "Place of Marriage"@en ;
+
+              rdfs:comment """Represents a place a person is married in."""@en ;
+
+              knora-base:objectClassConstraint knora-base:TextValue ;
+
+              salsah-gui:guiElement salsah-gui:SimpleText ;
+
+              knora-base:subjectClassConstraint :person ;
+
+              rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:hasDictionaryEntries
+
+:hasDictionaryEntries rdf:type owl:ObjectProperty ;
+
+             rdfs:label "Indexeinträge"@de ,
+                       "Dictionary Entries"@en ;
+
+             rdfs:comment """Represents entries in dictionaries about the person."""@en ;
+
+             knora-base:objectClassConstraint knora-base:TextValue ;
+
+             salsah-gui:guiElement salsah-gui:SimpleText ;
+
+             knora-base:subjectClassConstraint :person ;
+
+             rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:standoffFontType
+
+:standoffFontType rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                  rdfs:comment "Represents a webfont type for special character"@en ;
+
+                  knora-base:subjectClassConstraint :StandoffFontTag ;
+
+                  knora-base:objectDatatypeConstraint xsd:string .
+
+
+##########################################################
+#
+# RESOURCES
+#
+##########################################################
 
 
 
@@ -1229,7 +1251,7 @@
 
               rdfs:comment "represents a page break"@en .
 
-
+###  http://www.knora.org/ontology/beol#StandoffHtmlTag
 :StandoffHtmlTag rdf:type owl:Class ;
 
             rdfs:subClassOf knora-base:StandoffTag ;
@@ -1237,6 +1259,7 @@
             rdfs:comment "represents a HTML tag in MediaWiki"@en .
 
 
+###  http://www.knora.org/ontology/beol#StandoffReferenceTag
 :StandoffReferenceTag  rdf:type owl:Class ;
 
              rdfs:subClassOf knora-base:StandoffTag ;
@@ -1244,6 +1267,7 @@
              rdfs:comment "represents a footnote (<ref>) tag in MediaWiki"@en .
 
 
+###  http://www.knora.org/ontology/beol#standoffTableTagHasBorder
 :standoffTableTagHasBorder rdf:type owl:DatatypeProperty ;
 
              rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
@@ -1255,6 +1279,7 @@
              knora-base:objectDatatypeConstraint xsd:string .
 
 
+###  http://www.knora.org/ontology/beol#standoffTableTagHasCellPadding
 :standoffTableTagHasCellPadding rdf:type owl:DatatypeProperty ;
 
              rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
@@ -1266,6 +1291,7 @@
              knora-base:objectDatatypeConstraint xsd:string .
 
 
+###  http://www.knora.org/ontology/beol#standoffTableCellTagHasWidth
 :standoffTableCellTagHasWidth rdf:type owl:DatatypeProperty ;
 
                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
@@ -1277,6 +1303,7 @@
                  knora-base:objectDatatypeConstraint xsd:string .
 
 
+###  http://www.knora.org/ontology/beol#standoffTableCellTagHasWidth
 :standoffTableCellTagHasWidth rdf:type owl:DatatypeProperty ;
 
                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
@@ -1288,6 +1315,7 @@
                  knora-base:objectDatatypeConstraint xsd:string .
 
 
+###  http://www.knora.org/ontology/beol#standoffTableCellTagHasAlignment
 :standoffTableCellTagHasAlignment rdf:type owl:DatatypeProperty ;
 
                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
@@ -1299,6 +1327,7 @@
                  knora-base:objectDatatypeConstraint xsd:string .
 
 
+###  http://www.knora.org/ontology/beol#standoffTableCellTagHasVerticalAlignment
 :standoffTableCellTagHasVerticalAlignment rdf:type owl:DatatypeProperty ;
 
                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
@@ -1310,6 +1339,7 @@
                  knora-base:objectDatatypeConstraint xsd:string .
 
 
+###  http://www.knora.org/ontology/beol#standoffTableCellTagHasRowSpan
 :standoffTableCellTagHasRowSpan rdf:type owl:DatatypeProperty ;
 
                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
@@ -1320,6 +1350,7 @@
 
                  knora-base:objectDatatypeConstraint xsd:string .
 
+###  http://www.knora.org/ontology/beol#standoffTableCellTagHasColumnSpan
 :standoffTableCellTagHasColumnSpan rdf:type owl:DatatypeProperty ;
 
                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
@@ -1331,6 +1362,7 @@
                  knora-base:objectDatatypeConstraint xsd:string .
 
 
+###  http://www.knora.org/ontology/beol#StandoffTableTag
 :StandoffTableTag rdf:type owl:Class;
 
              rdfs:subClassOf standoff:StandoffTableTag ,
@@ -1343,6 +1375,8 @@
                owl:maxCardinality "1"^^xsd:nonNegativeInteger
              ] .
 
+
+###  http://www.knora.org/ontology/beol#StandoffTableCellTag
 :StandoffTableCellTag rdf:type owl:Class ;
 
              rdfs:subClassOf standoff:StandoffTableCellTag ,
@@ -1367,14 +1401,16 @@
                owl:maxCardinality "1"^^xsd:nonNegativeInteger
              ] .
 
-###  http://www.knora.org/ontology/beol#StandoffSmallcapsTag
 
+###  http://www.knora.org/ontology/beol#StandoffSmallcapsTag
 :StandoffSmallTag rdf:type owl:Class ;
 
                 rdfs:subClassOf standoff:StandoffVisualTag ;
 
                 rdfs:comment "Represents text in small letters format in a TextValue"@en .
 
+
+###  http://www.knora.org/ontology/beol#StandoffEntityTag
 :StandoffEntityTag  rdf:type owl:Class ;
 
              rdfs:subClassOf knora-base:StandoffLinkTag ;
@@ -1382,8 +1418,21 @@
              rdfs:comment "represents an entity (<entity>) tag in text"@en .
 
 
+###  http://www.knora.org/ontology/beol#StandoffFigureTag
 :StandoffFigureTag  rdf:type owl:Class ;
 
              rdfs:subClassOf knora-base:StandoffUriTag ;
 
              rdfs:comment "represents a figure in text"@en .
+
+
+###  http://www.knora.org/ontology/beol#StandoffFontTag
+:StandoffFontTag rdf:type owl:Class ;
+
+              rdfs:subClassOf knora-base:StandoffTag ,
+              [ rdf:type owl:Restriction ;
+                owl:onProperty :standoffFontType ;
+                owl:minCardinality "1"^^xsd:nonNegativeInteger
+              ] ;
+
+              rdfs:comment "Represents font for special character"@en .
