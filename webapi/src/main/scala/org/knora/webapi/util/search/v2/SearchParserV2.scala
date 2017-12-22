@@ -67,6 +67,8 @@ object SearchParserV2 {
 
     /**
       * An RDF4J [[algebra.QueryModelVisitor]] that converts a [[ParsedQuery]] into a [[ConstructQuery]].
+      *
+      * @param isInNegation Indicates if the element currently processed is in a context of negation (FILTER NOT EXISTS or MINUS).
       */
     class ConstructQueryModelVisitor(isInNegation: Boolean = false) extends algebra.QueryModelVisitor[SparqlSearchException] {
         private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -195,7 +197,7 @@ object SearchParserV2 {
           * @return a [[Entity]].
           */
         private def makeEntity(objVar: algebra.Var): Entity = {
-            val entity = if (objVar.isAnonymous || objVar.isConstant) {
+            val entity: Entity = if (objVar.isAnonymous || objVar.isConstant) {
                 objVar.getValue match {
                     case iri: rdf4j.model.IRI => makeIri(iri)
 
@@ -210,8 +212,20 @@ object SearchParserV2 {
                 QueryVariable(objVar.getName)
             }
 
+            // only add entity to positiveEntities if it is not in a negative context (FILTER NOT EXISTS, MINUS)
             if (!isInNegation) {
-                positiveEntities += entity
+
+                // only add entity to positive entities if it is an Iri or a query variable
+                // ignore literals
+                entity match {
+                    case iri: IriRef =>
+                        positiveEntities += iri
+
+                    case queryVar: QueryVariable =>
+                        positiveEntities += queryVar
+
+                    case _ =>
+                }
             }
 
             entity

@@ -295,7 +295,6 @@ class SearchParserV2Spec extends CoreSpec() {
             ))
         ), positiveEntities = Set(
             IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#publoc".toSmartIri, None),
-            XsdLiteral("14", "http://www.w3.org/2001/XMLSchema#integer".toSmartIri),
             QueryVariable("page"),
             IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#publisher".toSmartIri, None),
             IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None),
@@ -304,22 +303,17 @@ class SearchParserV2Spec extends CoreSpec() {
             QueryVariable("bookLabel"),
             IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#page".toSmartIri, None),
             IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#seqnum".toSmartIri, None),
-            XsdLiteral("a8r", "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
             IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#pubdate".toSmartIri, None),
             IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#isPartOf".toSmartIri, None),
-            XsdLiteral("a7r", "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
             IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri, None),
             QueryVariable("bookPublisher"),
-            XsdLiteral("16", "http://www.w3.org/2001/XMLSchema#integer".toSmartIri),
             IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
             QueryVariable("book"),
-            XsdLiteral("a9r", "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
             IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#pagenum".toSmartIri, None),
             QueryVariable("pubdate"),
             QueryVariable("seqnum"),
             QueryVariable("bookType"),
             QueryVariable("pageLabel"),
-            XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri),
             QueryVariable("pageType")
         )),
         constructClause = ConstructClause(statements = Vector(
@@ -423,7 +417,7 @@ class SearchParserV2Spec extends CoreSpec() {
                 subj = QueryVariable(variableName = "thing")
             )))
         ),
-            positiveEntities = Set(
+            positiveEntities = Set( // note that entities from `?thing anything:hasOtherThing ?aThing .` must not be not mentioned here (unless they are also present elsewhere)
                 QueryVariable("thingLabel"),
                 QueryVariable("thing"),
                 IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri, None),
@@ -484,7 +478,7 @@ class SearchParserV2Spec extends CoreSpec() {
                 subj = QueryVariable(variableName = "thing")
             )))
         ),
-            positiveEntities = Set(
+            positiveEntities = Set( // note that entities from `?thing anything:hasOtherThing ?aThing .` must not be not mentioned here (unless they are also present elsewhere)
                 QueryVariable("thingLabel"),
                 QueryVariable("thing"),
                 IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri, None),
