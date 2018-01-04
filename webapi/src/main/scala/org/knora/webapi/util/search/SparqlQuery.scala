@@ -350,7 +350,7 @@ case class ConstructClause(statements: Seq[StatementPattern]) extends SparqlGene
   *
   * @param patterns the patterns in the WHERE clause.
   */
-case class WhereClause(patterns: Seq[QueryPattern]) extends SparqlGenerator {
+case class WhereClause(patterns: Seq[QueryPattern], positiveEntities: Set[Entity] = Set.empty[Entity]) extends SparqlGenerator {
     def toSparql: String = "WHERE {\n" + patterns.map(_.toSparql).mkString + "}\n"
 }
 
