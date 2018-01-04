@@ -104,7 +104,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! ExtendedSearchGetRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein, SharedAdminTestData.anonymousUser)
 
-            // extended search sorty by resource Iri by default if no order criterion is indicated
+            // extended search sort by resource Iri by default if no order criterion is indicated
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
                     compareReadResourcesSequenceV2Response(expected = searchResponderV2SpecFullData.booksWithTitleZeitgloeckleinResponse, received = response)
@@ -116,7 +116,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! ExtendedSearchGetRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein, SharedAdminTestData.anonymousUser)
 
-            // extended search sorty by resource Iri by default if no order criterion is indicated
+            // extended search sort by resource Iri by default if no order criterion is indicated
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
                     // TODO: do better testing once JSON-LD can be converted back into case classes

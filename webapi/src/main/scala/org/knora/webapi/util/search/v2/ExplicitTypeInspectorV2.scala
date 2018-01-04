@@ -63,6 +63,7 @@ class ExplicitTypeInspectorV2 extends TypeInspector {
             OntologyConstants.Xsd.String,
             OntologyConstants.Xsd.Integer,
             OntologyConstants.Xsd.Decimal,
+            OntologyConstants.Xsd.Uri,
             OntologyConstants.KnoraApiV2Simple.Resource,
             OntologyConstants.KnoraApiV2Simple.Date,
             OntologyConstants.KnoraApiV2Simple.Geom,
@@ -144,7 +145,9 @@ class ExplicitTypeInspectorV2 extends TypeInspector {
       * @return the same WHERE clause, minus any type annotations.
       */
     def removeTypeAnnotations(whereClause: WhereClause): WhereClause = {
-        WhereClause(removeTypeAnnotationsFromPatterns(whereClause.patterns))
+        whereClause.copy(
+            patterns = removeTypeAnnotationsFromPatterns(whereClause.patterns)
+        )
     }
 
     /**
