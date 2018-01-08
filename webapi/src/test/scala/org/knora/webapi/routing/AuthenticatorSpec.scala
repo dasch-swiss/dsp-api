@@ -24,13 +24,12 @@ import akka.actor.ActorDSL._
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserInformationTypeADM}
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{KnoraPasswordCredentialsV2, KnoraTokenCredentialsV2}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.util.{ActorUtil, CacheUtil}
-import org.knora.webapi.{BadCredentialsException, CoreSpec, SharedTestDataV1}
+import org.knora.webapi._
 import org.scalatest.PrivateMethodTester
 
 import scala.concurrent.Future
@@ -51,16 +50,16 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     implicit val executionContext = system.dispatcher
     implicit val timeout: Timeout = Duration(5, SECONDS)
 
-    val rootUserProfileV1 = SharedTestDataV1.rootUser
-    val rootUserEmail = rootUserProfileV1.userData.email.get
+    val rootUser = SharedTestDataADM.rootUser
+    val rootUserEmail = rootUser.email
     val rootUserPassword = "test"
 
 
     val mockUsersActor = actor(RESPONDER_MANAGER_ACTOR_NAME)(new Act {
         become {
-            case UserProfileByEmailGetV1(submittedEmail, userProfileType) => {
-                if (submittedEmail == "root@example.com") {
-                    ActorUtil.future2Message(sender, Future(Some(rootUserProfileV1)), logger)
+            case UserGetADM(maybeIri, maybeEmail, userInformationTypeADM, requestingUser) => {
+                if (maybeEmail.contains(rootUserEmail)) {
+                    ActorUtil.future2Message(sender, Future(Some(rootUser)), logger)
                 } else {
                     ActorUtil.future2Message(sender, Future(None), logger)
                 }
@@ -72,9 +71,9 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     val authenticateCredentialsV2 = PrivateMethod[Boolean]('authenticateCredentialsV2)
 
     "During Authentication" when {
-        "called, the 'getUserProfileV1ByEmail' method " should {
+        "called, the 'getUserADMByEmail' method " should {
             "succeed with the correct 'email' " in {
-                Authenticator invokePrivate getUserADMByEmail(rootUserEmail, system, timeout, executionContext) should be(rootUserProfileV1)
+                Authenticator invokePrivate getUserADMByEmail(rootUserEmail, system, timeout, executionContext) should be(rootUser)
             }
 
             "fail with the wrong 'email' " in {

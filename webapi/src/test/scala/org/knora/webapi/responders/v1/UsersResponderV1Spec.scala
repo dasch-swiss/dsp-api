@@ -86,8 +86,9 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             "return a list" in {
                 actorUnderTest ! UsersGetRequestV1(rootUser)
                 val response = expectMsgType[UsersGetResponseV1](timeout)
+                // println(response.users)
                 response.users.nonEmpty should be (true)
-                response.users.size should be (17)
+                response.users.size should be (18)
             }
         }
 

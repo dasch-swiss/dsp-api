@@ -153,7 +153,7 @@ class UsersResponderADM extends Responder {
       * @return a [[UserADM]] describing the user.
       */
     private def userGetADM(maybeUserIri: Option[IRI], maybeUserEmail: Option[String], userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[Option[UserADM]] = {
-        // log.debug(s"userProfileByIRIGetV1: userIri = $userIRI', clean = '$profileType'")
+        // log.debug(s"userGetADM: maybeUserIri: {}, maybeUserEmail: {}, userInformationType: {}, requestingUser: {}", maybeUserIri, maybeUserEmail, userInformationType, requestingUser )
 
         val userFromCache = if (maybeUserIri.nonEmpty) {
             CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, maybeUserIri.get)
