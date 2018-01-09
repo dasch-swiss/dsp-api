@@ -1165,6 +1165,9 @@ sealed trait EntityInfoContentV2 {
     }
 }
 
+/**
+  * Processes predicates from a JSON-LD class or property definition.
+  */
 object EntityInfoContentV2 {
     /**
       * Processes predicates from a JSON-LD class or property definition. Converts `@type` to `rdf:type`. Ignores
