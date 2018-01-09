@@ -677,7 +677,7 @@ object InputOntologyV2 {
             throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIri")
         }
 
-        val ontologyLabel = ontologyObj.requireString(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
+        val ontologyLabel = ontologyObj.maybeString(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
 
         val lastModificationDate: Option[Instant] =
             ontologyObj.maybeString(OntologyConstants.KnoraApiV2Simple.LastModificationDate, stringFormatter.toInstant).
@@ -1710,11 +1710,11 @@ case class SubClassInfoV2(id: SmartIri, label: String)
   * Returns metadata about an ontology.
   *
   * @param ontologyIri          the IRI of the ontology.
-  * @param label                the label of the ontology.
+  * @param label                the label of the ontology, if any.
   * @param lastModificationDate the ontology's last modification date, if any.
   */
 case class OntologyMetadataV2(ontologyIri: SmartIri,
-                              label: String,
+                              label: Option[String] = None,
                               lastModificationDate: Option[Instant] = None) extends KnoraContentV2[OntologyMetadataV2] {
     override def toOntologySchema(targetSchema: OntologySchema): OntologyMetadataV2 = {
         copy(
@@ -1723,6 +1723,11 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
     }
 
     def toJsonLD(targetSchema: ApiV2Schema): Map[String, JsonLDValue] = {
+
+        val maybeLabelStatement: Option[(IRI, JsonLDString)] = label.map {
+            labelStr => OntologyConstants.Rdfs.Label -> JsonLDString(labelStr)
+        }
+
         val maybeLastModDateStatement: Option[(IRI, JsonLDString)] = lastModificationDate.map {
             lastModDate =>
                 val lastModDateProp = targetSchema match {
@@ -1734,9 +1739,9 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
         }
 
 
+
         Map("@id" -> JsonLDString(ontologyIri.toString),
-            "@type" -> JsonLDString(OntologyConstants.Owl.Ontology),
-            OntologyConstants.Rdfs.Label -> JsonLDString(label)
-        ) ++ maybeLastModDateStatement
+            "@type" -> JsonLDString(OntologyConstants.Owl.Ontology)
+        ) ++ maybeLabelStatement ++ maybeLastModDateStatement
     }
 }

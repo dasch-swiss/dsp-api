@@ -32,7 +32,7 @@ object KnoraApiV2WithValueObjects {
 
     val OntologyMetadata = OntologyMetadataV2(
         ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
-        label = "The default knora-api ontology"
+        label = Some("The default knora-api ontology")
     )
 
     val Resource: ReadClassInfoV2 = makeClass(

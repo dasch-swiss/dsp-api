@@ -249,7 +249,7 @@ class OntologyResponderV2 extends Responder {
 
                         Some(ontologySmartIri -> OntologyMetadataV2(
                             ontologyIri = ontologySmartIri,
-                            label = ontologyLabel,
+                            label = Some(ontologyLabel),
                             lastModificationDate = lastModificationDate
                         ))
                     }
@@ -1195,7 +1195,7 @@ class OntologyResponderV2 extends Responder {
 
                         Some(OntologyMetadataV2(
                             ontologyIri = internalOntologyIri,
-                            label = label,
+                            label = Some(label),
                             lastModificationDate = lastModificationDate
                         ))
 
@@ -1264,7 +1264,7 @@ class OntologyResponderV2 extends Responder {
             } yield ReadOntologyMetadataV2(
                 ontologies = Set(OntologyMetadataV2(
                     ontologyIri = internalOntologyIri,
-                    label = createOntologyRequest.label,
+                    label = Some(createOntologyRequest.label),
                     lastModificationDate = Some(currentTime)
                 ))
             )
@@ -1340,7 +1340,7 @@ class OntologyResponderV2 extends Responder {
                     case Some(newOntologyMetadata) =>
                         if (newOntologyMetadata != OntologyMetadataV2(
                             ontologyIri = internalOntologyIri,
-                            label = changeOntologyMetadataRequest.label,
+                            label = Some(changeOntologyMetadataRequest.label),
                             lastModificationDate = Some(currentTime)
                         )) {
                             throw UpdateNotPerformedException()
