@@ -25,16 +25,18 @@ Knora IRIs
 
 The IRIs used in Knora repositories and in the Knora API v2 follow certain conventions.
 
-Project Codes
--------------
+Project Short-Codes
+-------------------
 
-A project code is a hexadecimal number of at least four digits, assigned by the DaSCH_ to uniquely
-identify a Knora project regardless of where it is hosted. Project codes are currently optional. It
+A project short-code is a hexadecimal number of at least four digits, assigned by the DaSCH_ to uniquely
+identify a Knora project regardless of where it is hosted. Project short-codes are currently optional. It
 is recommended that new projects request a project code and use it in their ontology IRIs, to avoid
 possible future naming conflicts.
 
-The range of project IDs from ``0000`` to ``00FF`` inclusive is reserved for local testing. Thus,
-the first useful project will be ``0100``.
+The range of project IDs from ``0001`` to ``00FF`` inclusive is reserved for local testing, and also the ID ``0000`` is
+reserved for future use by the system. Thus, the first useful project will be ``0100``.
+
+In the beginning, Unil will use the IDs ``0100`` to ``07FF``, and Unibas ``0800`` to ``08FF`.
 
 IRIs for Ontologies and Ontology Entities
 -----------------------------------------
@@ -53,7 +55,7 @@ ontology in the triplestore. An internal project-specific ontology IRI has the f
 
 ::
 
-   http://www.knora.org/ontology/[PROJECT_CODE/]ONTOLOGY_NAME
+   http://www.knora.org/ontology/PROJECT_SHORTCODE/ONTOLOGY_NAME
 
 For example, the ontology IRI based on project code ``0001`` and ontology name ``example`` would be:
 
@@ -88,7 +90,7 @@ The IRI of an external Knora ontology has the form:
 
 ::
 
-   http://HOST[:PORT]/ontology/[PROJECT_CODE/]ONTOLOGY_NAME/API_VERSION
+   http://HOST[:PORT]/ontology/PROJECT_SHORTCODE/ONTOLOGY_NAME/API_VERSION
 
 For built-in ontologies, the host is always ``api.knora.org``. Otherwise, the hostname and port
 configured in ``application.conf`` under ``app.http.knora-api.host`` and ``app.http.knora-api.http-
@@ -161,19 +163,19 @@ possible to make resource IRIs directly dereferenceable in the future.
 
 The formats of generated data IRIs for different types of objects are as follows:
 
-- Project: ``http://rdfh.ch/projects/PROJECT_UUID``
-- Resource: ``http://rdfh.ch/PROJECT_CODE/RESOURCE_UUID``. The current implementation actually uses
+- Resource: ``http://rdfh.ch/PROJECT_SHORTCODE/RESOURCE_UUID``. The current implementation actually uses
   the project shortname, but it will be changed to use the project code
   (`issue #654 <https://github.com/dhlab-basel/Knora/issues/654>`_).
-- Value: ``http://rdfh.ch/PROJECT_CODE/RESOURCE_UUID/values/VALUE_UUID``
-- Standoff tag: ``http://rdfh.ch/PROJECT_CODE/RESOURCE_UUID/values/VALUE_UUID/STANDOFF_UUID``
-- Group: ``http://rdfh.ch/groups/GROUP_UUID``
+- Value: ``http://rdfh.ch/PROJECT_SHORTCODE/RESOURCE_UUID/values/VALUE_UUID``
+- Standoff tag: ``http://rdfh.ch/PROJECT_SHORTCODE/RESOURCE_UUID/values/VALUE_UUID/STANDOFF_UUID``
+- XML-to-standoff mapping: ``http://rdfh.ch/PROJECT_SHORTCODE/mappings/MAPPING_NAME``
+- XML-to-standoff mapping element: ``http://rdfh.ch/PROJECT_SHORTCODE/mappings/MAPPING_NAME/elements/MAPPING_ELEMENT_UUID``
+- Project: ``http://rdfh.ch/projects/PROJECT_SHORTCODE``
+- Group: ``http://rdfh.ch/groups/PROJECT_SHORTCODE/GROUP_UUID``
+- Permission: ``http://rdfh.ch/permissions/PROJECT_SHORTCODE/PERMISSION_UUID``
+- Lists: ``http://rdfh.ch/lists/PROJECT_SHORTCODE/LIST_UUID``
 - User: ``http://rdfh.ch/users/USER_UUID``
-- Permission: ``http://rdfh.ch/permissions/PERMISSION_UUID``
-- XML-to-standoff mapping: ``http://rdfh.ch/PROJECT_CODE/mappings/MAPPING_NAME``
-- XML-to-standoff mapping element: ``http://rdfh.ch/PROJECT_CODE/mappings/MAPPING_NAME/elements/MAPPING_ELEMENT_UUID``
 
-TODO: Document list IRIs (`PR #572 <https://github.com/dhlab-basel/Knora/pull/572>`_).
 
 .. _permalinks:
 
