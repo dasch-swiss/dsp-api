@@ -403,6 +403,11 @@ class OntologyResponderV2 extends Responder {
                     // Group the rows for each resource class by predicate IRI.
                     val groupedByPredicate: Map[SmartIri, Seq[VariableResultsRow]] = resourceClassRows.filter(_.rowMap.contains("resourceClassPred")).groupBy(_.rowMap("resourceClassPred").toSmartIri) - OntologyConstants.Rdfs.SubClassOf.toSmartIri
 
+                    val rdfType = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    )
+
                     val predicates: Map[SmartIri, PredicateInfoV2] = groupedByPredicate.map {
                         case (predicateIri, predicateRows) =>
                             val (predicateRowsWithLang, predicateRowsWithoutLang) = predicateRows.partition(_.rowMap.contains("resourceClassObjLang"))
@@ -413,11 +418,10 @@ class OntologyResponderV2 extends Responder {
 
                             predicateIri -> PredicateInfoV2(
                                 predicateIri = predicateIri,
-                                ontologyIri = resourceClassIri.getOntologyFromEntity,
                                 objects = objects,
                                 objectsWithLang = objectsWithLang
                             )
-                    }
+                    } + rdfType
 
                     // Get the OWL cardinalities for the class.
                     val allOwlCardinalitiesForClass: Set[OwlCardinalityOnProperty] = resourceCardinalitiesWithInheritance(resourceClassIri)
@@ -455,9 +459,7 @@ class OntologyResponderV2 extends Responder {
 
                     val resourceEntityInfo = ReadClassInfoV2(
                         entityInfoContent = ClassInfoContentV2(
-                            rdfType = OntologyConstants.Owl.Class.toSmartIri,
                             classIri = resourceClassIri,
-                            ontologyIri = ontologyIri,
                             predicates = new ErrorHandlingMap(predicates, { key: SmartIri => s"Predicate $key not found for resource class $resourceClassIri" }),
                             directCardinalities = directCardinalities,
                             subClassOf = directResourceSubClassOfRelations.getOrElse(resourceClassIri, Set.empty[SmartIri]),
@@ -489,7 +491,6 @@ class OntologyResponderV2 extends Responder {
 
                             predicateIri -> PredicateInfoV2(
                                 predicateIri = predicateIri,
-                                ontologyIri = predicateIri.getOntologyFromEntity,
                                 objects = objects,
                                 objectsWithLang = objectsWithLang
                             )
@@ -500,7 +501,6 @@ class OntologyResponderV2 extends Responder {
                     val propertyEntityInfo = ReadPropertyInfoV2(
                         entityInfoContent = PropertyInfoContentV2(
                             propertyIri = propertyIri,
-                            ontologyIri = ontologyIri,
                             predicates = predicates,
                             subPropertyOf = directSubPropertyOfRelations.getOrElse(propertyIri, Set.empty[SmartIri]),
                             ontologySchema = InternalSchema
@@ -650,6 +650,11 @@ class OntologyResponderV2 extends Responder {
 
                     val standoffGroupedByPredicate: Map[SmartIri, Seq[VariableResultsRow]] = standoffClassRows.filter(_.rowMap.contains("standoffClassPred")).groupBy(_.rowMap("standoffClassPred").toSmartIri) - OntologyConstants.Rdfs.SubClassOf.toSmartIri
 
+                    val rdfType = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    )
+
                     val predicates: Map[SmartIri, PredicateInfoV2] = standoffGroupedByPredicate.map {
                         case (predicateIri, predicateRows) =>
                             val (predicateRowsWithLang, predicateRowsWithoutLang) = predicateRows.partition(_.rowMap.contains("standoffClassObjLang"))
@@ -660,11 +665,10 @@ class OntologyResponderV2 extends Responder {
 
                             predicateIri -> PredicateInfoV2(
                                 predicateIri = predicateIri,
-                                ontologyIri = standoffClassIri.getOntologyFromEntity,
                                 objects = objects,
                                 objectsWithLang = objectsWithLang
                             )
-                    }
+                    } + rdfType
 
                     val allOwlCardinalitiesForClass: Set[OwlCardinalityOnProperty] = standoffCardinalitiesWithInheritance(standoffClassIri)
 
@@ -689,18 +693,16 @@ class OntologyResponderV2 extends Responder {
 
                     val standoffInfo = ReadClassInfoV2(
                         entityInfoContent = ClassInfoContentV2(
-                            rdfType = OntologyConstants.Owl.Class.toSmartIri,
                             classIri = standoffClassIri,
-                            ontologyIri = standoffClassIri.getOntologyFromEntity,
                             predicates = predicates,
                             directCardinalities = directCardinalities,
-                            standoffDataType = standoffDataType.headOption match {
-                                case Some(dataType: SmartIri) => Some(StandoffDataTypeClasses.lookup(dataType.toString, throw InconsistentTriplestoreDataException(s"$dataType is not a valid standoff data type")))
-                                case None => None
-                            },
                             subClassOf = directStandoffSubClassOfRelations.getOrElse(standoffClassIri, Set.empty[SmartIri]),
                             ontologySchema = InternalSchema
                         ),
+                        standoffDataType = standoffDataType.headOption match {
+                            case Some(dataType: SmartIri) => Some(StandoffDataTypeClasses.lookup(dataType.toString, throw InconsistentTriplestoreDataException(s"$dataType is not a valid standoff data type")))
+                            case None => None
+                        },
                         inheritedCardinalities = inheritedCardinalities
                     )
 
@@ -730,7 +732,6 @@ class OntologyResponderV2 extends Responder {
 
                             predicateIri -> PredicateInfoV2(
                                 predicateIri = predicateIri,
-                                ontologyIri = predicateIri.getOntologyFromEntity,
                                 objects = objects,
                                 objectsWithLang = objectsWithLang
                             )
@@ -739,7 +740,6 @@ class OntologyResponderV2 extends Responder {
                     val standoffPropertyEntityInfo = ReadPropertyInfoV2(
                         entityInfoContent = PropertyInfoContentV2(
                             propertyIri = standoffPropertyIri,
-                            ontologyIri = standoffPropertyIri.getOntologyFromEntity,
                             predicates = predicates,
                             subPropertyOf = directStandoffSubPropertyOfRelations.getOrElse(standoffPropertyIri, Set.empty[SmartIri]),
                             ontologySchema = InternalSchema
@@ -753,7 +753,7 @@ class OntologyResponderV2 extends Responder {
             // collect all the standoff classes that have a data type (i.e. are subclasses of a data type standoff class)
             standoffClassEntityInfosWithDataType: Map[SmartIri, ReadClassInfoV2] = standoffClassEntityInfos.filter {
                 case (standoffClassIri: SmartIri, entityInfo: ReadClassInfoV2) =>
-                    entityInfo.entityInfoContent.standoffDataType.isDefined
+                    entityInfo.standoffDataType.isDefined
             }
 
             allClassDefs = resourceEntityInfos ++ KnoraApiV2Simple.Classes ++ KnoraApiV2WithValueObjects.Classes
@@ -1079,7 +1079,7 @@ class OntologyResponderV2 extends Responder {
                 None
             }
 
-            classesInOntologies = classInfoResponse.classInfoMap.values.groupBy(_.entityInfoContent.ontologyIri).map {
+            classesInOntologies = classInfoResponse.classInfoMap.values.groupBy(_.entityInfoContent.classIri.getOntologyFromEntity).map {
                 case (ontologyIri, classInfos) =>
                     ReadOntologyV2(
                         ontologyMetadata = getCachedOntologyMetadata(ontologyIri, cacheData),
@@ -1116,7 +1116,7 @@ class OntologyResponderV2 extends Responder {
                 None
             }
 
-            propertiesInOntologies = propertiesResponse.propertyInfoMap.values.groupBy(_.entityInfoContent.ontologyIri).map {
+            propertiesInOntologies = propertiesResponse.propertyInfoMap.values.groupBy(_.entityInfoContent.propertyIri.getOntologyFromEntity).map {
                 case (ontologyIri, propertyInfos) =>
                     ReadOntologyV2(
                         ontologyMetadata = getCachedOntologyMetadata(ontologyIri, cacheData),
@@ -1447,12 +1447,15 @@ class OntologyResponderV2 extends Responder {
                     throw BadRequestException(s"One or more specified Knora superproperties do not exist: ${missingSuperProperties.mkString(", ")}")
                 }
 
-                // Check that the subject class constraint designates a Knora resource class that exists.
+                // Check that the subject class constraint, if provided, designates a Knora resource class that exists.
 
-                subjectClassConstraint = internalPropertyDef.requireIriPredicate(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri, throw BadRequestException(s"No knora-api:subjectType specified"))
+                maybeSubjectClassConstraint: Option[SmartIri] = internalPropertyDef.predicates.get(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri).flatMap(_.objects.headOption.map(_.toSmartIri))
 
-                _ = if (!isKnoraInternalResourceClass(subjectClassConstraint, cacheData)) {
-                    throw BadRequestException(s"Invalid subject class constraint: ${subjectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}")
+                _ = maybeSubjectClassConstraint.foreach {
+                    subjectClassConstraint =>
+                        if (!isKnoraInternalResourceClass(subjectClassConstraint, cacheData)) {
+                            throw BadRequestException(s"Invalid subject class constraint: ${subjectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}")
+                        }
                 }
 
                 // Check that the object class constraint designates an appropriate class that exists.
@@ -1478,16 +1481,21 @@ class OntologyResponderV2 extends Responder {
                     superPropertyIri => cacheData.subPropertyOfRelations.getOrElse(superPropertyIri, Set.empty[SmartIri])
                 }
 
-                // Check that the subject type is a subclass of the subject types of the base properties.
+                // Check that the subject class, if provided, is a subclass of the subject classes of the base properties.
 
-                _ <- checkPropertyConstraint(
-                    newInternalPropertyIri = internalPropertyIri,
-                    constraintPredicateIri = OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri,
-                    constraintValueInNewProperty = subjectClassConstraint,
-                    allSuperPropertyIris = allSuperPropertyIris
-                )
+                _ <- maybeSubjectClassConstraint match {
+                    case Some(subjectClassConstraint) =>
+                        checkPropertyConstraint(
+                            newInternalPropertyIri = internalPropertyIri,
+                            constraintPredicateIri = OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri,
+                            constraintValueInNewProperty = subjectClassConstraint,
+                            allSuperPropertyIris = allSuperPropertyIris
+                        )
 
-                // Check that the object type is a subclass of the object types of the base properties.
+                    case None => FastFuture.successful(())
+                }
+
+                // Check that the object class is a subclass of the object classes of the base properties.
 
                 _ <- checkPropertyConstraint(
                     newInternalPropertyIri = internalPropertyIri,
@@ -1551,11 +1559,11 @@ class OntologyResponderV2 extends Responder {
         for {
             userProfile <- FastFuture.successful(createPropertyRequest.userProfile)
 
-            externalOntologyIri = createPropertyRequest.propertyInfoContent.ontologyIri
+            externalOntologyIri = createPropertyRequest.propertyInfoContent.propertyIri.getOntologyFromEntity
             _ <- checkExternalOntologyIriForUpdate(externalOntologyIri)
 
             externalPropertyIri = createPropertyRequest.propertyInfoContent.propertyIri
-            _ <- checkExternalEntityIriForUpdate(externalEntityIri = externalPropertyIri, externalOntologyIri = externalOntologyIri)
+            _ <- checkExternalEntityIriForUpdate(externalEntityIri = externalPropertyIri)
 
             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
             _ <- checkPermissionsForOntologyUpdate(internalOntologyIri = internalOntologyIri, userProfile = userProfile)
@@ -1732,20 +1740,14 @@ class OntologyResponderV2 extends Responder {
     /**
       * Checks whether an entity IRI is valid for an update.
       *
-      * @param externalEntityIri   the external IRI of the entity.
-      * @param externalOntologyIri the external IRI of the entity's ontology, which should already have been checked
-      *                            using `checkExternalOntologyIriForUpdate`.
+      * @param externalEntityIri the external IRI of the entity.
       * @return a failed Future if the entity IRI is not valid for an update, or is not from the specified ontology.
       */
-    private def checkExternalEntityIriForUpdate(externalEntityIri: SmartIri, externalOntologyIri: SmartIri): Future[Unit] = {
+    private def checkExternalEntityIriForUpdate(externalEntityIri: SmartIri): Future[Unit] = {
         if (!externalEntityIri.isKnoraApiV2EntityIri) {
             FastFuture.failed(throw BadRequestException(s"Invalid entity IRI for request: $externalEntityIri"))
         } else if (!externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
             FastFuture.failed(throw BadRequestException(s"Invalid ontology schema for request: $externalEntityIri"))
-        } else if (externalEntityIri.getOntologyFromEntity != externalOntologyIri) {
-            FastFuture.failed(throw BadRequestException(s"Entity $externalEntityIri cannot be part of $externalOntologyIri"))
-        } else if (externalEntityIri.isKnoraBuiltInDefinitionIri) {
-            FastFuture.failed(throw BadRequestException(s"Ontology $externalOntologyIri cannot be modified via the Knora API"))
         } else {
             FastFuture.successful(())
         }
@@ -1823,7 +1825,6 @@ class OntologyResponderV2 extends Responder {
         val newPredicates: Map[SmartIri, PredicateInfoV2] = (internalPropertyDef.predicates - OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri) +
             (OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri -> PredicateInfoV2(
                 predicateIri = OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
-                ontologyIri = internalPropertyDef.ontologyIri,
                 objects = Set(OntologyConstants.KnoraBase.LinkValue)
             ))
 

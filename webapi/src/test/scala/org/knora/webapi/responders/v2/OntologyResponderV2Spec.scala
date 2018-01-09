@@ -211,26 +211,21 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
-                ontologyIri = AnythingOntologyIri,
                 predicates = Map(
                     OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdf.RdfOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.Owl.ObjectProperty)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.TextValue)
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "has name",
                             "de" -> "hat Namen"
@@ -238,7 +233,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     ),
                     OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "The name of a Thing",
                             "de" -> "Der Name eines Dinges"
@@ -301,33 +295,27 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
-                ontologyIri = AnythingOntologyIri,
                 predicates = Map(
                     OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdf.RdfOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.Owl.ObjectProperty)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "has interesting thing"
                         )
                     ),
                     OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "an interesting Thing"
                         )
@@ -420,79 +408,23 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
-                ontologyIri = AnythingOntologyIri,
                 predicates = Map(
                     OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.TextValue)
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "wrong property"
                         )
                     ),
                     OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
-                        objectsWithLang = Map(
-                            "en" -> "An invalid property definition"
-                        )
-                    )
-                ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
-            )
-
-            actorUnderTest ! CreatePropertyRequestV2(
-                propertyInfoContent = propertyInfoContent,
-                lastModificationDate = anythingLastModDate,
-                apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
-            )
-
-            expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure =>
-                    if (printErrorMessages) println(msg.cause.getMessage)
-                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
-            }
-        }
-
-        "not create a property without a knora-base:subjectType" in {
-
-            val propertyIri = AnythingOntologyIri.makeEntityIri("wrongProperty")
-
-            val propertyInfoContent = PropertyInfoContentV2(
-                propertyIri = propertyIri,
-                ontologyIri = AnythingOntologyIri,
-                predicates = Map(
-                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdf.RdfOntologyIri.toSmartIri,
-                        objects = Set(OntologyConstants.Owl.ObjectProperty)
-                    ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
-                        objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.TextValue)
-                    ),
-                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
-                        objectsWithLang = Map(
-                            "en" -> "wrong property"
-                        )
-                    ),
-                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "An invalid property definition"
                         )
@@ -522,33 +454,27 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
-                ontologyIri = AnythingOntologyIri,
                 predicates = Map(
                     OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdf.RdfOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.Owl.ObjectProperty)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(AnythingOntologyIri.makeEntityIri("NonexistentClass").toString)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.TextValue)
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "wrong property"
                         )
                     ),
                     OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "An invalid property definition"
                         )
@@ -578,33 +504,27 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
-                ontologyIri = AnythingOntologyIri,
                 predicates = Map(
                     OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdf.RdfOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.Owl.ObjectProperty)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion + "NonexistentClass")
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "wrong property"
                         )
                     ),
                     OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "An invalid property definition"
                         )
@@ -634,33 +554,27 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
-                ontologyIri = AnythingOntologyIri,
                 predicates = Map(
                     OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdf.RdfOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.Owl.ObjectProperty)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.FileValue)
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "wrong property"
                         )
                     ),
                     OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "An invalid property definition"
                         )
@@ -690,33 +604,27 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
-                ontologyIri = AnythingOntologyIri,
                 predicates = Map(
                     OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdf.RdfOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.Owl.ObjectProperty)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue)
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "wrong property"
                         )
                     ),
                     OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "An invalid property definition"
                         )
@@ -746,33 +654,27 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
-                ontologyIri = AnythingOntologyIri,
                 predicates = Map(
                     OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdf.RdfOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.Owl.ObjectProperty)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue)
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "wrong property"
                         )
                     ),
                     OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "An invalid property definition"
                         )
@@ -803,33 +705,27 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
-                ontologyIri = AnythingOntologyIri,
                 predicates = Map(
                     OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdf.RdfOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.Owl.ObjectProperty)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue)
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "wrong property"
                         )
                     ),
                     OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "An invalid property definition"
                         )
@@ -859,33 +755,27 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
-                ontologyIri = AnythingOntologyIri,
                 predicates = Map(
                     OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdf.RdfOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.Owl.ObjectProperty)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "wrong property"
                         )
                     ),
                     OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "An invalid property definition"
                         )
@@ -915,33 +805,27 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
-                ontologyIri = AnythingOntologyIri,
                 predicates = Map(
                     OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdf.RdfOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.Owl.ObjectProperty)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.TextValue)
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "wrong property"
                         )
                     ),
                     OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "An invalid property definition"
                         )
@@ -971,33 +855,27 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
-                ontologyIri = AnythingOntologyIri,
                 predicates = Map(
                     OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdf.RdfOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.Owl.ObjectProperty)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.IntValue)
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "wrong property"
                         )
                     ),
                     OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "An invalid property definition"
                         )
@@ -1028,33 +906,27 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
-                ontologyIri = AnythingOntologyIri,
                 predicates = Map(
                     OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdf.RdfOntologyIri.toSmartIri,
                         objects = Set(OntologyConstants.Owl.ObjectProperty)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                         objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "wrong property"
                         )
                     ),
                     OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        ontologyIri = OntologyConstants.Rdfs.RdfsOntologyIri.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "An invalid property definition"
                         )

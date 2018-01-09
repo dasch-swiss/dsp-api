@@ -277,11 +277,6 @@ class PredicateInfoV1(predicateInfoV2: PredicateInfoV2) {
     def predicateIri: IRI = predicateInfoV2.predicateIri.toString
 
     /**
-      * Returns the IRI of the ontology in which the assertions occur.
-      */
-    def ontologyIri: IRI = predicateInfoV2.ontologyIri.toString
-
-    /**
       * Returns the objects of the predicate that have no language codes.
       */
     def objects: Set[String] = predicateInfoV2.objects
@@ -348,11 +343,6 @@ class ClassInfoV1(classInfoV2: ReadClassInfoV2) extends EntityInfoV1 {
     def resourceClassIri: IRI = classInfoV2.entityInfoContent.classIri.toString
 
     /**
-      * Returns the IRI of the ontology in which the resource class.
-      */
-    def ontologyIri: IRI = classInfoV2.entityInfoContent.ontologyIri.toString
-
-    /**
       * Returns a [[Map]] of properties to [[Cardinality.Value]] objects representing the resource class's
       *                            cardinalities on those properties.
       */
@@ -381,7 +371,7 @@ class ClassInfoV1(classInfoV2: ReadClassInfoV2) extends EntityInfoV1 {
       * If this is a standoff tag class, returns the standoff datatype tag class (if any) that it
       * is a subclass of.
       */
-    def standoffDataType: Option[StandoffDataTypeClasses.Value] = classInfoV2.entityInfoContent.standoffDataType
+    def standoffDataType: Option[StandoffDataTypeClasses.Value] = classInfoV2.standoffDataType
 }
 
 /**
@@ -399,7 +389,7 @@ class PropertyInfoV1(propertyInfoV2: ReadPropertyInfoV2) extends EntityInfoV1 {
     /**
       * Returns the IRI of the ontology in which the property is defined.
       */
-    def ontologyIri: IRI = propertyInfoV2.entityInfoContent.ontologyIri.toString
+    def ontologyIri: IRI = propertyInfoV2.entityInfoContent.propertyIri.getOntologyFromEntity.toString
 
     /**
       * Returns `true` if the property is a subproperty of `knora-base:hasLinkTo`.
