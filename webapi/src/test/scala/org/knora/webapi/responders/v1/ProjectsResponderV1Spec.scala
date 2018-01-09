@@ -322,7 +322,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 actorUnderTest ! ProjectsNamedGraphGetV1(SharedAdminTestData.rootUser)
 
                 val received: Seq[NamedGraphV1] = expectMsgType[Seq[NamedGraphV1]]
-                received.size should be (7)
+                received.size should be (8)
             }
 
             "return all named graphs after adding a new ontology" in {
@@ -337,7 +337,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 actorUnderTest ! ProjectsNamedGraphGetV1(SharedAdminTestData.rootUser)
 
                 val received02: Seq[NamedGraphV1] = expectMsgType[Seq[NamedGraphV1]]
-                received02.size should be (8)
+                received02.size should be (9)
             }
         }
 

@@ -611,4 +611,24 @@ object SharedAdminTestData {
         selfjoin = false
     )
 
+    /************************************/
+    /** WEBERN                         **/
+    /************************************/
+
+    val WEBERN_PROJECT_IRI = "http://rdfh.ch/projects/08AE"
+
+    def webernProjectInfo = ProjectInfoV1(
+        id = WEBERN_PROJECT_IRI,
+        shortname = "webern",
+        shortcode = Some("08AE"),
+        longname = Some("Anton Webern Gesamtausgabe"),
+        description = Some("Historisch-kritische Edition des Gesamtschaffens von Anton Webern."),
+        keywords = None,
+        logo = None,
+        institution = None,
+        ontologies = Seq("http://www.knora.org/ontology/08AE/webern"),
+        status = false,
+        selfjoin = false
+    )
+
 }

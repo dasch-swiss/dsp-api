@@ -82,7 +82,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             val response = expectMsgType[ReadOntologyMetadataV2](timeout)
             val metadata = response.ontologies.head
             assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/foo")
-            assert(metadata.label == newLabel)
+            assert(metadata.label.contains(newLabel))
             val newFooLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
             assert(newFooLastModDate.isAfter(fooLastModDate))
             fooLastModDate = newFooLastModDate
