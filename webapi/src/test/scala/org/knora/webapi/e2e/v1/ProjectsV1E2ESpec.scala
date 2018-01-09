@@ -80,7 +80,7 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
                 // log.debug("projects as objects: {}", AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectInfoV1]])
 
                 val projects: Seq[ProjectInfoV1] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectInfoV1]]
-                projects.size should be (7)
+                projects.size should be (8)
 
             }
 
