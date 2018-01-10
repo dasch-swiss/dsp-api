@@ -13,11 +13,12 @@ import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.ResetTriplestoreContent
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologiesV2
 import org.knora.webapi.responders._
 import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.store._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.jsonld.{JsonLDArray, JsonLDObject, JsonLDString}
+import org.knora.webapi.util.jsonld.{JsonLDArray, JsonLDObject, JsonLDString, JsonLDUtil}
 import org.knora.webapi.util.{AkkaHttpUtils, FileUtil, MutableTestIri, StringFormatter}
 import spray.json._
 
@@ -385,23 +386,14 @@ class OntologyV2R2RSpec extends R2RSpec {
                   |}
                 """.stripMargin
 
+            val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params))
+
             Post("/v2/ontologies/properties", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
-
-                responseJsonDoc.body.value(OntologyConstants.KnoraApiV2WithValueObjects.HasOntologies) match {
-                    case anythingOntology: JsonLDObject =>
-                        val hasProperties: JsonLDObject = anythingOntology.value(OntologyConstants.KnoraApiV2WithValueObjects.HasProperties).asInstanceOf[JsonLDObject]
-                        val property: JsonLDObject = hasProperties.value(AnythingOntologyIri.makeEntityIri("hasName").toString).asInstanceOf[JsonLDObject]
-                        val subPropertyOf: JsonLDArray = property.value(OntologyConstants.Rdfs.SubPropertyOf).asInstanceOf[JsonLDArray]
-                        assert(subPropertyOf == JsonLDArray(Seq(JsonLDString(OntologyConstants.KnoraApiV2WithValueObjects.HasValue), JsonLDString(OntologyConstants.SchemaOrg.Name))))
-
-                        val lastModDate = Instant.parse(anythingOntology.value(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).asInstanceOf[JsonLDString].value)
-                        assert(lastModDate.isAfter(anythingLastModDate))
-                        anythingLastModDate = lastModDate
-
-                    case _ => throw AssertionException(s"Unexpected response: $responseJsonDoc")
-                }
+                val responseAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true)
+                responseAsInput.ontologies.head.properties should ===(paramsAsInput.ontologies.head.properties)
+                assert(responseAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get.isAfter(paramsAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get))
             }
         }
     }
