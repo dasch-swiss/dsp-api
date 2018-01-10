@@ -548,6 +548,13 @@ case class InputOntologiesV2(ontologies: Seq[InputOntologyV2]) {
     }
 }
 
+/**
+  * Processes JSON-LD received either from the client or from the API server. This is intended to support
+  * two use cases:
+  *
+  * 1. When an update request is received, an [[InputOntologiesV2]] can be used to construct an update request message.
+  * 1. In a test, in which the submitted JSON-LD is similar to the server's response, both can be converted to [[InputOntologiesV2]] objects for comparison.
+  */
 object InputOntologiesV2 {
     /**
       * Constructs an [[InputOntologiesV2]] based on JSON-LD input.

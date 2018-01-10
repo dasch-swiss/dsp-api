@@ -386,13 +386,18 @@ class OntologyV2R2RSpec extends R2RSpec {
                   |}
                 """.stripMargin
 
+            // Convert the submitted JSON-LD to an InputOntologiesV2 so we can compare it to the response.
             val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params))
 
             Post("/v2/ontologies/properties", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
+
+                // Comvert the response to an InputOntologiesV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true)
                 responseAsInput.ontologies.head.properties should ===(paramsAsInput.ontologies.head.properties)
+
+                // Check that the ontology's last modification date was updated.
                 assert(responseAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get.isAfter(paramsAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get))
             }
         }
