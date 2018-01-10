@@ -69,11 +69,11 @@ INSERT {
             }
 
             @if(maybeLongname.nonEmpty) {
-                knora-base:projectLongname "@maybeLongname.get"^^xsd:string ;
+                knora-base:projectLongname """@maybeLongname.get"""^^xsd:string ;
             }
 
             @if(maybeDescription.nonEmpty) {
-                knora-base:projectDescription "@maybeDescription.get"^^xsd:string ;
+                knora-base:projectDescription """@maybeDescription.get"""^^xsd:string ;
             }
 
             @if(maybeKeywords.nonEmpty) {

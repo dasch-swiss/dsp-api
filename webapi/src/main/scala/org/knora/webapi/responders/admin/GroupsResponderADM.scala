@@ -146,30 +146,37 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
             ).toString())
             groupResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
 
-            // check group response
-            groupADM: Option[GroupADM] <- statements2GroupADM(statements = groupResponse.statements.head, requestingUser = requestingUser)
+            _ = if (groupResponse.statements.isEmpty) {
 
-        } yield groupADM
+            }
+
+            maybeGroup: Option[GroupADM] <- if (groupResponse.statements.isEmpty) {
+                FastFuture.successful(None)
+            } else {
+                statements2GroupADM(statements = groupResponse.statements.head, requestingUser = requestingUser)
+            }
+
+            _ = log.debug("groupGetADM - result: {}", maybeGroup)
+
+        } yield maybeGroup
     }
 
     /**
-      * Gets the group with the given group IRI and returns the information as a [[GroupInfoResponseV1]].
+      * Gets the group with the given group IRI and returns the information as a [[GroupGetResponseADM]].
       *
       * @param groupIri    the IRI of the group requested.
       * @param requestingUser the user initiating the request.
-      * @return information about the group as a [[GroupInfoResponseV1]].
+      * @return information about the group as a [[GroupGetResponseADM]].
       */
     private def groupGetRequestADM(groupIri: IRI, requestingUser: UserADM): Future[GroupGetResponseADM] = {
 
         for {
             maybeGroupADM: Option[GroupADM] <- groupGetADM(groupIri, requestingUser)
-            groupADM = maybeGroupADM match {
-                case Some(gi) => gi
+            result = maybeGroupADM match {
+                case Some(group) => GroupGetResponseADM(group = group)
                 case None => throw NotFoundException(s"For the given group iri '$groupIri' no information was found")
             }
-        } yield GroupGetResponseADM(
-            group = groupADM
-        )
+        } yield result
     }
 
     /**
@@ -204,13 +211,15 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
                 Seq.empty[IRI]
             }
 
+            _ = log.debug("groupMembersGetRequestADM - groupMemberIris: {}", groupMemberIris)
+
             maybeUsersFutures: Seq[Future[Option[UserADM]]] = groupMemberIris.map {
                 userIri => (responderManager ? UserGetADM(maybeIri = Some(userIri), maybeEmail = None, userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
             }
             maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUsersFutures)
             users: Seq[UserADM] = maybeUsers.flatten
 
-            //_ = log.debug(s"groupMembersByIRIGetRequestV1 - groupMemberIris: $groupMemberIris")
+            _ = log.debug("groupMembersGetRequestADM - users: {}", users)
 
         } yield GroupMembersGetResponseADM(members = users)
     }
@@ -350,7 +359,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
       */
     private def updateGroupADM(groupIri: IRI, groupUpdatePayload: GroupUpdatePayloadADM, requestingUser: UserADM): Future[GroupOperationResponseADM] = {
 
-        log.debug("updateGroupV1 - groupIri: {}, groupUpdatePayload: {}", groupIri, groupUpdatePayload)
+        log.debug("updateGroupADM - groupIri: {}, groupUpdatePayload: {}", groupIri, groupUpdatePayload)
 
         val parametersCount: Int = List(
             groupUpdatePayload.name,
@@ -367,14 +376,18 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
             groupADM: GroupADM = maybeGroupADM.getOrElse(throw NotFoundException(s"Group '$groupIri' not found. Aborting update request."))
 
             /* Verify that the potentially new name is unique */
-            _ = if (groupUpdatePayload.name.nonEmpty) {
+            groupByNameAlreadyExists <- if (groupUpdatePayload.name.nonEmpty) {
                 val newName = groupUpdatePayload.name.get
-                groupByNameAndProjectExists(newName, groupADM.project.id).map {
-                    result: Boolean => if(result) {
-                        throw BadRequestException(s"Group with the name: '${groupUpdatePayload.name.get}' already exists.")
-                    }
-                }
+                groupByNameAndProjectExists(newName, groupADM.project.id)
+            } else {
+                FastFuture.successful(false)
             }
+
+            _ = if (groupByNameAlreadyExists) {
+                log.debug("updateGroupADM - about to throw an exception. Group with that name already exists.")
+                throw BadRequestException(s"Group with the name: '${groupUpdatePayload.name.get}' already exists.")
+            }
+
 
             /* Update group */
             updateProjectSparqlString <- Future(queries.sparql.admin.txt.updateGroup(
@@ -436,10 +449,12 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
       */
     private def statements2GroupADM(statements: (IRI, Map[IRI, Seq[LiteralV2]]), requestingUser: UserADM): Future[Option[GroupADM]] = {
 
+        log.debug("statements2GroupADM - statements: {}", statements)
+
         val groupIri: IRI = statements._1
         val propsMap: Map[IRI, Seq[LiteralV2]] = statements._2
 
-        //log.debug(s"group properties: ${groupProperties.toString}")
+        log.debug("statements2GroupADM - groupIri: {}", groupIri)
 
         val maybeProjectIri = propsMap.get(OntologyConstants.KnoraBase.BelongsToProject)
         val projectIriFuture: Future[IRI] = maybeProjectIri match {
@@ -498,8 +513,10 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
             //_ = log.debug("groupExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-            checkResult = checkUserExistsResponse.result
-        } yield checkResult
+            result = checkUserExistsResponse.result
+
+            _ = log.debug("groupByNameAndProjectExists - name: {}, projectIri: {}, result: {}", name, projectIri, result)
+        } yield result
 
     }
 

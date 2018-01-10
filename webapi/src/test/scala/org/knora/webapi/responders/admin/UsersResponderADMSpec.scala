@@ -33,7 +33,6 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupMembersGetRequestADM, GroupMembersGetResponseADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectAdminMembersGetRequestADM, ProjectAdminMembersGetResponseADM, ProjectMembersGetRequestADM, ProjectMembersGetResponseADM}
-import org.knora.webapi.messages.admin.responder.usersmessages
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
@@ -75,6 +74,8 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
     private val rdfDataObjects = List() /* sending an empty list, will only load the default ontologies and data */
 
+    val log = akka.event.Logging(system, this.getClass())
+
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
@@ -82,7 +83,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
-
     "The UsersResponder " when {
 
         "asked about all users" should {
@@ -90,7 +90,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 actorUnderTest ! UsersGetRequestADM(requestingUser = rootUser)
                 val response = expectMsgType[UsersGetResponseADM](timeout)
                 response.users.nonEmpty should be (true)
-                response.users.size should be (17)
+                response.users.size should be (18)
             }
         }
 
@@ -484,7 +484,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 membershipsBeforeUpdate.projects should equal (Seq())
 
                 actorUnderTest ! UserProjectMembershipAddRequestADM(normalUser.id, imagesProject.id, rootUser, UUID.randomUUID())
-                expectMsgType[UserOperationResponseADM](timeout)
+                val membershipUpdateResponse = expectMsgType[UserOperationResponseADM](timeout)
 
                 actorUnderTest ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
                 val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
@@ -498,7 +498,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 )
                 val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
 
-                received.members should contain (normalUser.ofType(UserInformationTypeADM.RESTRICTED))
+                received.members.map(_.id) should contain (normalUser.id)
             }
 
             "DELETE user from project" in {
@@ -612,7 +612,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
                 actorUnderTest ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
                 val membershipsAfterUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
-                membershipsAfterUpdate.groups should equal (Seq(imagesReviewerGroup.id))
+                membershipsAfterUpdate.groups.map(_.id) should equal (Seq(imagesReviewerGroup.id))
 
                 responderManager ! GroupMembersGetRequestADM(
                     groupIri = imagesReviewerGroup.id,
@@ -620,13 +620,13 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 )
                 val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
 
-                received.members should contain (normalUser.ofType(UserInformationTypeADM.RESTRICTED))
+                received.members.map(_.id) should contain (normalUser.id)
             }
 
             "DELETE user from group" in {
                 actorUnderTest ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
                 val membershipsBeforeUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
-                membershipsBeforeUpdate.groups should equal (Seq(imagesReviewerGroup.id))
+                membershipsBeforeUpdate.groups.map(_.id) should equal (Seq(imagesReviewerGroup.id))
 
                 actorUnderTest ! UserGroupMembershipRemoveRequestADM(normalUser.id, imagesReviewerGroup.id, rootUser, UUID.randomUUID())
                 expectMsgType[UserOperationResponseADM](timeout)
@@ -641,7 +641,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 )
                 val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
 
-                received.members should not contain normalUser.ofType(UserInformationTypeADM.RESTRICTED)
+                received.members.map(_.id) should not contain normalUser.id
             }
 
             "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {

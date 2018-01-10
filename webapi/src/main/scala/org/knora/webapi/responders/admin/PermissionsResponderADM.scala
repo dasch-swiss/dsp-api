@@ -18,7 +18,9 @@ package org.knora.webapi.responders.admin
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import cats.syntax.group
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -99,8 +101,9 @@ class PermissionsResponderADM extends Responder {
             groupIris.map {
                 groupIri =>
                     for {
-                        groupInfo <- (responderManager ? GroupInfoByIRIGetRequestV1(groupIri, None)).mapTo[GroupInfoResponseV1]
-                        res = (groupInfo.group_info.project, groupIri)
+                        maybeGroup <- (responderManager ? GroupGetADM(groupIri, KnoraSystemInstances.Users.SystemUser)).mapTo[Option[GroupADM]]
+                        group = maybeGroup.getOrElse(throw InconsistentTriplestoreDataException(s"Cannot find information for group: '$groupIri'. Please report as possible bug."))
+                        res = (group.project.id, groupIri)
                     } yield res
             }
         } else {

@@ -56,6 +56,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
     implicit private val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
+    private val imagesProject = SharedTestDataADM.imagesProject
     private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
     private val imagesProjectAdminGroup = SharedTestDataADM.imagesProjectAdminGroup
     private val imagesProjectMemberGroup = SharedTestDataADM.imagesProjectMemberGroup
@@ -95,7 +96,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
             "CREATE the group and return the group's info if the supplied group name is unique" in {
                 actorUnderTest ! GroupCreateRequestADM(
-                    CreateGroupApiRequestADM("NewGroup", Some("NewGroupDescription"), SharedTestDataADM.IMAGES_PROJECT_IRI, status = true, selfjoin = false),
+                    CreateGroupApiRequestADM("NewGroup", Some("""NewGroupDescription with "quotes" and <html tag>"""), SharedTestDataADM.IMAGES_PROJECT_IRI, status = true, selfjoin = false),
                     SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
                 )
@@ -104,8 +105,8 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                 val newGroupInfo = received.group
 
                 newGroupInfo.name should equal ("NewGroup")
-                newGroupInfo.description should equal (Some("NewGroupDescription"))
-                newGroupInfo.project should equal (IMAGES_PROJECT_IRI)
+                newGroupInfo.description should equal ("""NewGroupDescription with "quotes" and <html tag>""")
+                newGroupInfo.project should equal (imagesProject)
                 newGroupInfo.status should equal (true)
                 newGroupInfo.selfjoin should equal (false)
 
@@ -153,13 +154,13 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                 val updatedGroupInfo = received.group
 
                 updatedGroupInfo.name should equal ("UpdatedGroupName")
-                updatedGroupInfo.description should equal (Some("""UpdatedDescription with "quotes" and <html tag>"""))
-                updatedGroupInfo.project should equal (SharedTestDataADM.IMAGES_PROJECT_IRI)
+                updatedGroupInfo.description should equal ("""UpdatedDescription with "quotes" and <html tag>""")
+                updatedGroupInfo.project should equal (imagesProject)
                 updatedGroupInfo.status should equal (true)
                 updatedGroupInfo.selfjoin should equal (false)
             }
 
-            "return 'NotFound' if a not existing group IRI is submitted during update" in {
+            "return 'NotFound' if a not-existing group IRI is submitted during update" in {
                 actorUnderTest ! GroupChangeRequestADM(
                     groupIri = "http://data.knora.org/groups/notexisting",
                     ChangeGroupApiRequestADM(Some("UpdatedGroupName"), Some("UpdatedDescription")),
@@ -206,10 +207,10 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
-                received.members should contain allElementsOf Seq(
+                received.members.map(_.id) should contain allElementsOf Seq(
                     SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.RESTRICTED),
                     SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.RESTRICTED)
-                )
+                ).map(_.id)
             }
 
             "return 'NotFound' when the group IRI is unknown" in {

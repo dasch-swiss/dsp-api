@@ -58,7 +58,7 @@ INSERT {
             knora-base:groupName "@name"^^xsd:string ;
 
             @if(maybeDescription.nonEmpty) {
-                knora-base:groupDescription "@maybeDescription.get"^^xsd:string ;
+                knora-base:groupDescription """@maybeDescription.get"""^^xsd:string ;
             }
 
             knora-base:belongsToProject ?projectIri ;

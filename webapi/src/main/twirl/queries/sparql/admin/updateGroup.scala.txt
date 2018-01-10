@@ -83,7 +83,7 @@ DELETE {
     }
 
     @if(maybeDescription.nonEmpty) {
-        ?group knora-base:groupDescription "@maybeDescription.get"^^xsd:string .
+        ?group knora-base:groupDescription """@maybeDescription.get"""^^xsd:string .
     }
 
     @if(maybeProject.nonEmpty) {

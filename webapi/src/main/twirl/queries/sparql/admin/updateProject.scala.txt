@@ -107,11 +107,11 @@ DELETE {
     }
 
     @if(maybeLongname.nonEmpty) {
-        ?project knora-base:projectLongname "@maybeLongname.get"^^xsd:string .
+        ?project knora-base:projectLongname """@maybeLongname.get"""^^xsd:string .
     }
 
     @if(maybeDescription.nonEmpty) {
-        ?project knora-base:projectDescription "@maybeDescription.get"^^xsd:string .
+        ?project knora-base:projectDescription """@maybeDescription.get"""^^xsd:string .
     }
 
     @if(maybeKeywords.nonEmpty) {

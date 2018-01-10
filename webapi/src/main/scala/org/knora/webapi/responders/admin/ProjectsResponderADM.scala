@@ -33,7 +33,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{KnoraIdUtil, SmartIri, StringFormatter}
+import org.knora.webapi.util.{KnoraIdUtil, MessageUtil, SmartIri, StringFormatter}
 
 import scala.concurrent.Future
 
@@ -221,7 +221,7 @@ class ProjectsResponderADM extends Responder {
       */
     private def projectMembersGetRequestADM(maybeIri: Option[IRI], maybeShortname: Option[String], maybeShortcode: Option[String], requestingUser: UserADM): Future[ProjectMembersGetResponseADM] = {
 
-        //log.debug("projectMembersGetRequestADM - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
+        log.debug("projectMembersGetRequestADM - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
 
         for {
             sparqlQueryString <- Future(queries.sparql.admin.txt.getProjectMembers(
@@ -230,12 +230,13 @@ class ProjectsResponderADM extends Responder {
                 maybeShortname = maybeShortname,
                 maybeShortcode = maybeShortcode
             ).toString())
-            //_ = log.debug(s"projectMembersByIRIGetRequestV1 - query: $sparqlQueryString")
+            //_ = log.debug(s"projectMembersGetRequestADM - query: $sparqlQueryString")
 
             projectMembersResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
-            //_ = log.debug(s"projectMembersByIRIGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
 
             statements = projectMembersResponse.statements.toList
+
+            // _ = log.debug(s"projectMembersGetRequestADM - statements: {}", MessageUtil.toSource(statements))
 
             // get project member IRI from results rows
             userIris: Seq[IRI] = if (statements.nonEmpty) {
@@ -250,7 +251,7 @@ class ProjectsResponderADM extends Responder {
             maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUserFutures)
             users: Seq[UserADM] = maybeUsers.flatten
 
-            //_ = log.debug(s"projectMembersGetRequestADM - users: $users")
+            _ = log.debug(s"projectMembersGetRequestADM - users: {}", users)
 
         } yield ProjectMembersGetResponseADM(members = users)
     }
@@ -351,7 +352,7 @@ class ProjectsResponderADM extends Responder {
             projectDataGraphString = "http://www.knora.org/data/" + createRequest.shortname
 
             // Create the new project.
-            createNewProjectSparqlString = queries.sparql.v1.txt.createNewProject(
+            createNewProjectSparqlString = queries.sparql.admin.txt.createNewProject(
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 projectIri = newProjectIRI,
@@ -583,7 +584,7 @@ class ProjectsResponderADM extends Responder {
             }
 
             /* Update project */
-            updateProjectSparqlString <- Future(queries.sparql.v1.txt.updateProject(
+            updateProjectSparqlString <- Future(queries.sparql.admin.txt.updateProject(
                 adminNamedGraphIri = "http://www.knora.org/data/admin",
                 triplestore = settings.triplestoreType,
                 projectIri = projectIri,

@@ -79,7 +79,7 @@ class UsersResponderADM extends Responder {
         case UserProjectAdminMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectAdminMembershipRemoveRequestV1(userIri, projectIri, requestingUser, apiRequestID), log)
         case UserGroupMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) => future2Message(sender(), userGroupMembershipsGetRequestADM(userIri, requestingUser, apiRequestID), log)
         case UserGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID), log)
-        case UserGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userGroupMembershipRemoveRequestV1(userIri, projectIri, requestingUser, apiRequestID), log)
+        case UserGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -96,13 +96,17 @@ class UsersResponderADM extends Responder {
         //log.debug("usersGetV1")
 
         for {
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getUsers(
-                triplestore = settings.triplestoreType
+            sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
+                triplestore = settings.triplestoreType,
+                maybeIri = None,
+                maybeEmail = None
             ).toString())
 
-            usersResponse <- (storeManager ? SparqlConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
+            usersResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
 
             statements = usersResponse.statements.toList
+
+            // _ = log.debug("usersGetADM - statements: {}", statements)
 
             users: Seq[UserADM] = statements.map {
                 case (userIri: IRI, propsMap: Map[IRI, LiteralV2]) =>
@@ -112,11 +116,8 @@ class UsersResponderADM extends Responder {
                         email = propsMap.getOrElse(OntologyConstants.KnoraBase.Email, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'email' defined.")).head.asInstanceOf[StringLiteralV2].value,
                         givenName = propsMap.getOrElse(OntologyConstants.KnoraBase.GivenName, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'givenName' defined.")).head.asInstanceOf[StringLiteralV2].value,
                         familyName = propsMap.getOrElse(OntologyConstants.KnoraBase.FamilyName, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'familyName' defined.")).head.asInstanceOf[StringLiteralV2].value,
-                        status = propsMap.get(OntologyConstants.KnoraBase.Status).head.asInstanceOf[BooleanLiteralV2].value,
-                        lang = propsMap.get(OntologyConstants.KnoraBase.PreferredLanguage).map(_.head.asInstanceOf[StringLiteralV2].value) match {
-                            case Some(langList) => langList
-                            case None => settings.fallbackLanguage
-                        }
+                        status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'status' defined.")).head.asInstanceOf[BooleanLiteralV2].value,
+                        lang = propsMap.getOrElse(OntologyConstants.KnoraBase.PreferredLanguage, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'preferedLanguage' defined.")).head.asInstanceOf[StringLiteralV2].value
                     )
             }
 
@@ -163,12 +164,14 @@ class UsersResponderADM extends Responder {
             throw BadRequestException("Need to provide the user IRI and/or email.")
         }
 
-        userFromCache match {
+        val user = userFromCache match {
             case Some(user) =>
                 // found a user profile in the cache
-                log.debug(s"userGetADM - cache hit: $user")
+                log.debug("userGetADM - cache hit for: {}", List(maybeUserIri, maybeUserEmail).flatten.head)
                 FastFuture.successful(Some(user.ofType(userInformationType)))
             case None => {
+                // didn't find a user profile in the cache
+                log.debug("userGetADM - no cache hit for: {}", List(maybeUserIri, maybeUserEmail).flatten.head)
                 for {
                     sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
                         triplestore = settings.triplestoreType,
@@ -176,16 +179,13 @@ class UsersResponderADM extends Responder {
                         maybeEmail = maybeUserEmail
                     ).toString())
 
-                    // _ = log.debug(s"userProfileByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
-
                     userQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
 
                     maybeUserADM: Option[UserADM] <- if (userQueryResponse.statements.nonEmpty) {
-                        statements2UserADM(statements = userQueryResponse.statements.head, requestingUser)
+                        statements2UserADM(userQueryResponse.statements.head, requestingUser)
                     } else {
                         FastFuture.successful(None)
                     }
-
 
                     _ = if (maybeUserADM.nonEmpty) {
                         writeUserADMToCache(maybeUserADM.get)
@@ -193,10 +193,12 @@ class UsersResponderADM extends Responder {
 
                     result = maybeUserADM.map(_.ofType(userInformationType))
 
-                    // _ = log.debug("userProfileByIRIGetV1 - maybeUserProfileV1: {}", MessageUtil.toSource(maybeUserProfileV1))
-                } yield result // UserProfileV1(userData, groups, projects_info, sessionId, isSystemUser, permissionData)
+                } yield result
             }
         }
+
+        // _ = log.debug("userGetADM - user: {}", MessageUtil.toSource(user))
+        user
     }
 
     /**
@@ -213,7 +215,7 @@ class UsersResponderADM extends Responder {
             maybeUserADM <- userGetADM(maybeUserIri, maybeUserEmail, userInformationType, requestingUser)
             result = maybeUserADM match {
                 case Some(user) => UserResponseADM(user = user)
-                case None => throw NotFoundException(s"User '${Seq(maybeUserIri, maybeUserEmail).flatten}' not found")
+                case None => throw NotFoundException(s"User '${Seq(maybeUserIri, maybeUserEmail).flatten.head}' not found")
             }
         } yield result
     }
@@ -259,7 +261,7 @@ class UsersResponderADM extends Responder {
             hashedPassword = encoder.encode(createRequest.password)
 
             // Create the new user.
-            createNewUserSparqlString = queries.sparql.v1.txt.createNewUser(
+            createNewUserSparqlString = queries.sparql.admin.txt.createNewUser(
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
@@ -1008,12 +1010,16 @@ class UsersResponderADM extends Responder {
 
             currentGroupMembershipIris: Seq[IRI] = currentGroupMemberships.map(_.id)
 
+            _ = log.debug("userGroupMembershipAddRequestADM - currentGroupMembershipIris: {}", currentGroupMembershipIris)
+
             // check if user is already member and if not then append to list
             updatedGroupMembershipIris = if (!currentGroupMembershipIris.contains(groupIri)) {
                 currentGroupMembershipIris :+ groupIri
             } else {
                 throw BadRequestException(s"User $userIri is already member of group $groupIri.")
             }
+
+            _ = log.debug("userGroupMembershipAddRequestADM - updatedGroupMembershipIris: {}", updatedGroupMembershipIris)
 
             // create the update request
             userUpdatePayload = UserUpdatePayloadADM(groups = Some(updatedGroupMembershipIris))
@@ -1034,7 +1040,7 @@ class UsersResponderADM extends Responder {
 
     }
 
-    def userGroupMembershipRemoveRequestV1(userIri: IRI, groupIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
+    def userGroupMembershipRemoveRequestADM(userIri: IRI, groupIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
         // log.debug(s"userGroupMembershipRemoveRequestV1: userIri: {}, groupIri: {}", userIri, groupIri)
 
@@ -1075,12 +1081,16 @@ class UsersResponderADM extends Responder {
 
             currentGroupMembershipIris: Seq[IRI] = currentGroupMemberships.groups.map(_.id)
 
+            _ = log.debug("userGroupMembershipRemoveRequestADM - currentGroupMembershipIris: {}", currentGroupMembershipIris)
+
             // check if user is not already a member and if he is then remove the project from to list
             updatedGroupMembershipIris = if (currentGroupMembershipIris.contains(groupIri)) {
                 currentGroupMembershipIris diff Seq(groupIri)
             } else {
                 throw BadRequestException(s"User $userIri is not member of group $groupIri.")
             }
+
+            _ = log.debug("userGroupMembershipRemoveRequestADM - updatedGroupMembershipIris: {}", updatedGroupMembershipIris)
 
             // create the update request
             userUpdatePayload = UserUpdatePayloadADM(groups = Some(updatedGroupMembershipIris))
@@ -1125,7 +1135,7 @@ class UsersResponderADM extends Responder {
 
         for {
             /* Update the user */
-            updateUserSparqlString <- Future(queries.sparql.v1.txt.updateUser(
+            updateUserSparqlString <- Future(queries.sparql.admin.txt.updateUser(
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
@@ -1236,27 +1246,31 @@ class UsersResponderADM extends Responder {
       * @return a [[UserADM]] containing the user's data.
       */
     private def statements2UserADM(statements: (IRI, Map[IRI, Seq[LiteralV2]]), requestingUser: UserADM): Future[Option[UserADM]] = {
+
         // log.debug("statements2UserADM - statements: {}", statements)
 
         val userIri: IRI = statements._1
         val propsMap: Map[IRI, Seq[LiteralV2]] = statements._2
 
+        log.debug("statements2UserADM - userIri: {}", userIri)
 
         if (propsMap.nonEmpty) {
 
-            /* the projects the user is member of */
+            /* the groups the user is member of (only explicit groups) */
+            val groupIris: Seq[IRI] = propsMap.get(OntologyConstants.KnoraBase.IsInGroup) match {
+                case Some(groups) => groups.map(_.asInstanceOf[IriLiteralV2].value)
+                case None => Seq.empty[IRI]
+            }
+
+            // log.debug(s"statements2UserADM - groupIris: {}", MessageUtil.toSource(groupIris))
+
+            /* the projects the user is member of (only explicit projects) */
             val projectIris: Seq[IRI] = propsMap.get(OntologyConstants.KnoraBase.IsInProject) match {
                 case Some(projects) => projects.map(_.asInstanceOf[IriLiteralV2].value)
                 case None => Seq.empty[IRI]
             }
 
-            /* the groups the user is member of (only explicit groups) */
-            val groupIris: Seq[IRI] = propsMap.get(OntologyConstants.KnoraBase.IsInGroup) match {
-                case Some(groups) => groups.map(_.asInstanceOf[IriLiteralV2].value)
-                case None => Vector.empty[IRI]
-            }
-
-            // log.debug(s"userDataQueryResponse2UserProfile - groupIris: ${MessageUtil.toSource(groupIris)}")
+            // log.debug(s"statements2UserADM - projectIris: {}", MessageUtil.toSource(projectIris))
 
             /* the projects for which the user is implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group */
             val isInProjectAdminGroups: Seq[IRI] = propsMap.getOrElse(OntologyConstants.KnoraBase.IsInProjectAdminGroup, Vector.empty[IRI]).map(_.asInstanceOf[IriLiteralV2].value)
@@ -1279,11 +1293,15 @@ class UsersResponderADM extends Responder {
                 maybeGroups: Seq[Option[GroupADM]] <- Future.sequence(maybeGroupFutures)
                 groups: Seq[GroupADM] = maybeGroups.flatten
 
+                // _ = log.debug("statements2UserADM - groups: {}", MessageUtil.toSource(groups))
+
                 maybeProjectFutures: Seq[Future[Option[ProjectADM]]] = projectIris.map {
                     projectIri => (responderManager ? ProjectGetADM(maybeIri = Some(projectIri), maybeShortcode = None, maybeShortname = None, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
                 }
                 maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
                 projects: Seq[ProjectADM] = maybeProjects.flatten
+
+                // _ = log.debug("statements2UserADM - projects: {}", MessageUtil.toSource(projects))
 
                 /* construct the user profile from the different parts */
                 user = UserADM(
@@ -1300,7 +1318,7 @@ class UsersResponderADM extends Responder {
                     sessionId = None,
                     permissions = permissionData
                 )
-                // _ = log.debug(s"Retrieved UserProfileV1: ${up.toString}")
+                // _ = log.debug(s"statements2UserADM - user: {}", user.toString)
 
                 result: Option[UserADM] = Some(user)
             } yield result

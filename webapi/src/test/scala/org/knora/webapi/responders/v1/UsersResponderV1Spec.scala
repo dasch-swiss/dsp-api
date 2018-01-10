@@ -96,7 +96,9 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
             "return a profile if the user (root user) is known" in {
                 actorUnderTest ! UserProfileByIRIGetV1(rootUserIri, UserProfileTypeV1.FULL)
-                expectMsg(Some(rootUser.ofType(UserProfileTypeV1.FULL)))
+                val response = expectMsgType[Option[UserProfileV1]](timeout)
+                // println(response)
+                response should equal(Some(rootUser.ofType(UserProfileTypeV1.FULL)))
             }
 
             "return a profile if the user (incunabula user) is known" in {

@@ -50,7 +50,7 @@ object SharedTestDataADM {
         status = true,
         lang = "de",
         groups = Seq.empty[GroupADM],
-        projects = Seq(KnoraSystemInstances.Projects.SystemProject),
+        projects = Seq.empty[ProjectADM],
         sessionId = None,
         permissions = PermissionsDataADM(
             groupsPerProject = Map(
@@ -71,7 +71,7 @@ object SharedTestDataADM {
         status = true,
         lang = "de",
         groups = Seq.empty[GroupADM],
-        projects = Seq(KnoraSystemInstances.Projects.SystemProject),
+        projects = Seq.empty[ProjectADM],
         sessionId = None,
         permissions = PermissionsDataADM(
             groupsPerProject = Map(

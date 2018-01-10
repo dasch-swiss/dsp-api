@@ -204,7 +204,7 @@ case class UserGroupMembershipsGetResponseV1(groups: Seq[IRI]) extends KnoraResp
   * @param permissionData the user's permission data.
   */
 case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
-                         groups: Seq[IRI] = Vector.empty[IRI],
+                         groups: Seq[IRI] = Seq.empty[IRI],
                          projects_info: Map[IRI, ProjectInfoV1] = Map.empty[IRI, ProjectInfoV1],
                          sessionId: Option[String] = None,
                          isSystemUser: Boolean = false,
