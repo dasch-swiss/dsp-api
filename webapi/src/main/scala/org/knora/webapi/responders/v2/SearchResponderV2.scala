@@ -484,6 +484,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         // A Map of XSD types to the corresponding knora-base value predicates that point to literals.
         // This allows us to handle different types of values (value objects).
         protected val literalTypesToValueTypeIris: Map[IRI, IRI] = Map(
+            OntologyConstants.Xsd.Uri -> OntologyConstants.KnoraBase.ValueHasUri,
             OntologyConstants.Xsd.Integer -> OntologyConstants.KnoraBase.ValueHasInteger,
             OntologyConstants.Xsd.Decimal -> OntologyConstants.KnoraBase.ValueHasDecimal,
             OntologyConstants.Xsd.Boolean -> OntologyConstants.KnoraBase.ValueHasBoolean,
