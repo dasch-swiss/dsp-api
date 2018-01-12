@@ -128,6 +128,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 case compareExpr: CompareExpression => CompareExpression(leftArg = preprocessFilterExpression(compareExpr.leftArg), operator = compareExpr.operator, rightArg = preprocessFilterExpression(compareExpr.rightArg))
                 case andExpr: AndExpression => AndExpression(leftArg = preprocessFilterExpression(andExpr.leftArg), rightArg = preprocessFilterExpression(andExpr.rightArg))
                 case orExpr: OrExpression => OrExpression(leftArg = preprocessFilterExpression(orExpr.leftArg), rightArg = preprocessFilterExpression(orExpr.rightArg))
+                case regex: RegexFunction => regex // no preprocessing needed since no Knora entity IRIs are involved (schema conversion)
             }
         }
 
@@ -864,6 +865,52 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         filterExpressionLeft.additionalStatements ++ filterExpressionRight.additionalStatements
                     )
 
+                case regexFunction: RegexFunction =>
+
+                    // make sure that the query variable (first argument of regex function) represents a text value
+
+                    // make a key to look up information in type inspection results
+                    val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(regexFunction.textValueVar)
+
+                    // get information about the queryVar's type
+                    if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
+
+                        // get type information for regexFunction.textValueVar
+                        val typeInfo: SparqlEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
+
+                        typeInfo match {
+
+                            case nonPropInfo: NonPropertyTypeInfo =>
+
+                                nonPropInfo.typeIri.toString match {
+
+                                    case OntologyConstants.Xsd.String => () // xsd:string is expected, TODO: should also xsd:anyUri be allowed?
+
+                                    case _ => throw SparqlSearchException(s"${regexFunction.textValueVar} is expected to be of type xsd:string")
+                                }
+
+                            case _ => throw SparqlSearchException(s"${regexFunction.textValueVar} is expected to be of type NonPropertyTypeInfo")
+                        }
+
+                    } else {
+                        throw SparqlSearchException(s"type information about ${regexFunction.textValueVar} is missing")
+                    }
+
+                    // create a variable representing the string literal
+                    val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(regexFunction.textValueVar, OntologyConstants.KnoraBase.ValueHasString)
+
+                    // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
+                    valueVariablesCreatedInFilters.put(regexFunction.textValueVar, textValHasString)
+
+                    TransformedFilterExpression(
+                        RegexFunction(textValHasString, regexFunction.pattern, regexFunction.modifier),
+                        Seq(
+                            // connects the value object with the value literal
+                            StatementPattern.makeExplicit(subj = regexFunction.textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString)
+                        )
+                    )
+
+
                 case other => throw NotImplementedException(s"$other not supported as FilterExpression")
             }
 
@@ -1324,7 +1371,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // get the mappings
             mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullQueryPath, userProfile)
 
-        // _ = println(mappingsAsMap)
+            // _ = println(mappingsAsMap)
 
 
         } yield ReadResourcesSequenceV2(
@@ -1872,7 +1919,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         }
 
         for {
-        // Do type inspection and remove type annotations from the WHERE clause.
+            // Do type inspection and remove type annotations from the WHERE clause.
 
             typeInspector <- FastFuture.successful(new ExplicitTypeInspectorV2())
             whereClauseWithoutAnnotations: WhereClause = typeInspector.removeTypeAnnotations(inputQuery.whereClause)
@@ -2251,7 +2298,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * Performs a search for resources by their rdfs:label.
       *
       * @param searchValue          the values to search for.
-      * @param offset the offset to be used for paging.
+      * @param offset               the offset to be used for paging.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
       * @param userProfile          the profile of the client making the request.
@@ -2308,7 +2355,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 Future(None)
             }
 
-        //_ = println(queryResultsSeparated)
+            //_ = println(queryResultsSeparated)
 
         } yield ReadResourcesSequenceV2(
             numberOfResources = queryResultsSeparated.size,

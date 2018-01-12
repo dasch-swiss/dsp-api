@@ -273,6 +273,17 @@ case class FilterPattern(expression: Expression) extends QueryPattern {
 }
 
 /**
+  * Represents a regex function in a query (in a FILTER).
+  *
+  * @param textValueVar the variable representing the text value to be checked against the provided pattern.
+  * @param pattern the REGEX pattern to be used.
+  * @param modifier the modifier to be used.
+  */
+case class RegexFunction(textValueVar: QueryVariable, pattern: String, modifier: String) extends Expression {
+    def toSparql: String = s"""regex(${textValueVar.toSparql}, "$pattern", "$modifier")"""
+}
+
+/**
   * Represents VALUES in a query.
   *
   * @param variable the variable that the values will be assigned to.

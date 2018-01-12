@@ -635,6 +635,47 @@ object SearchParserV2 {
 
                     case sparqlVar: algebra.Var => makeEntity(sparqlVar)
 
+                    case regex: algebra.Regex =>
+
+                        // first argument representing the text value to be checked
+                        val textValueArg: algebra.ValueExpr = regex.getArg
+
+                        val textValueVar = textValueArg match {
+                            case objVar: algebra.Var =>
+                                makeEntity(objVar) match {
+                                    case queryVar: QueryVariable => queryVar
+                                    case _ => throw SparqlSearchException(s"Entity $objVar not allowed in regex function as the first argument, a variable is required")
+                                }
+                            case other => throw SparqlSearchException(s"$other is not allowed in regex function as first argument, a variable is required")
+                        }
+
+                        // second argument representing the REGEX pattern to be used to perform the check
+                        val patternArg: algebra.ValueExpr = regex.getPatternArg
+
+                        val pattern: String = patternArg match {
+                            case valConstant: algebra.ValueConstant =>
+                                valConstant.getValue.stringValue()
+                            case other => throw SparqlSearchException(s"$other not allowed in regex function as the second argument, a string is expected")
+
+                        }
+
+                        // third argument representing the modifier to be used with when applying the REGEX pattern
+                        val modifierArg: algebra.ValueExpr = regex.getFlagsArg
+
+                        val modifier: String = modifierArg match {
+                            case valConstant: algebra.ValueConstant =>
+                                valConstant.getValue.stringValue()
+                            case other => throw SparqlSearchException(s"$other not allowed in regex function as the third argument, a string is expected")
+
+                        }
+
+                        RegexFunction(
+                            textValueVar = textValueVar,
+                            pattern = pattern,
+                            modifier = modifier
+                        )
+
+
                     case other => throw SparqlSearchException(s"Unsupported FILTER expression: $other")
                 }
             }
