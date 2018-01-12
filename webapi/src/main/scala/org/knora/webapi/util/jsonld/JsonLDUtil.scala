@@ -314,8 +314,19 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject) {
       * A convenience function that calls `body.maybeBoolean`.
       */
     def maybeBoolean(key: String): Option[JsonLDBoolean] = body.maybeBoolean(key)
-}
 
+    /**
+      * Converts this [[JsonLDDocument]] to a pretty-printed JSON-LD string.
+      *
+      * @return the formatted document.
+      */
+    def toPrettyString: String = {
+        val contextAsJava = JavaUtil.deepScalaToJava(context.toAny)
+        val jsonAsJava = JavaUtil.deepScalaToJava(body.toAny)
+        val compacted = JsonLdProcessor.compact(jsonAsJava, contextAsJava, new JsonLdOptions())
+        JsonUtils.toPrettyString(compacted)
+    }
+}
 
 /**
   * Utility functions for working with JSON-LD.
