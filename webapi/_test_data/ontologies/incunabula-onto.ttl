@@ -11,7 +11,8 @@
 
 @prefix : <http://www.knora.org/ontology/incunabula#> .
 
-<http://www.knora.org/ontology/incunabula> rdf:type owl:Ontology .
+<http://www.knora.org/ontology/incunabula> rdf:type owl:Ontology ;
+    rdfs:label "The incunabula ontology" .
 
 ##########################################################
 #

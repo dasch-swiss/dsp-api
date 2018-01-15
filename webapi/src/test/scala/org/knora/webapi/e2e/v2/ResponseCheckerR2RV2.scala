@@ -27,8 +27,6 @@ import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi.util.JavaUtil
 import org.knora.webapi.{IRI, InvalidApiJsonException}
 
-import scala.collection.JavaConverters._
-
 object ResponseCheckerR2RV2 {
 
     private val numberOfItemsMember: IRI = "http://schema.org/numberOfItems"

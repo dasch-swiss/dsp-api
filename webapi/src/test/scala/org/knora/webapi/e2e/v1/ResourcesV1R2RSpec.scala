@@ -81,6 +81,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val anythingUser = SharedAdminTestData.anythingUser1
     private val anythingUserEmail = anythingUser.userData.email.get
 
+    private val anythingAdmin = SharedAdminTestData.anythingAdminUser
+    private val anythingAdminEmail = anythingAdmin.userData.email.get
+
     private val biblioUser = SharedAdminTestData.biblioUser
     private val biblioUserEmail = biblioUser.userData.email.get
 
@@ -1443,7 +1446,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val projectIri = URLEncoder.encode("http://rdfh.ch/projects/anything", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPath ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 responseStr should include("createdResources")
@@ -1599,7 +1602,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val projectIri = URLEncoder.encode("http://rdfh.ch/projects/anything", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlStringBuilder.toString)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlStringBuilder.toString)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPath ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 responseStr should include("createdResources")

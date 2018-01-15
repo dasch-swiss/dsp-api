@@ -11,7 +11,9 @@
 # A trivial ontology, used only for testing Knora.
 
 @prefix : <http://www.knora.org/ontology/anything#> .
-<http://www.knora.org/ontology/anything> rdf:type owl:Ontology .
+<http://www.knora.org/ontology/anything> rdf:type owl:Ontology ;
+    rdfs:label "The anything ontology" ;
+    knora-base:lastModificationDate "2017-12-19T15:23:42.166Z"^^xsd:dateTimeStamp .
 
 
 :hasListItem rdf:type owl:ObjectProperty ;
@@ -71,7 +73,7 @@
                salsah-gui:guiOrder "1"^^xsd:integer ;
 
                salsah-gui:guiElement salsah-gui:Searchbox ;
-	       
+
 	           salsah-gui:guiAttribute "size=45".
 
 

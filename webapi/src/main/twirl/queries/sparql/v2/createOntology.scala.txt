@@ -31,6 +31,7 @@
 @(triplestore: String,
   ontologyNamedGraphIri: IRI,
   ontologyIri: IRI,
+  ontologyLabel: String,
   currentTime: String)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -41,8 +42,9 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 INSERT {
     GRAPH ?ontologyNamedGraph {
-        ?ontology rdf:type owl:Ontology .
-        ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+        ?ontology rdf:type owl:Ontology ;
+            rdfs:label """@ontologyLabel"""^^xsd:string ;
+            knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@

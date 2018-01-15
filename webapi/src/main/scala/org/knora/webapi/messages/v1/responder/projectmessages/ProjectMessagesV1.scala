@@ -75,7 +75,7 @@ case class ChangeProjectApiRequestV1(shortname: Option[String] = None,
                                      status: Option[Boolean] = None,
                                      selfjoin: Option[Boolean] = None) extends ProjectV1JsonProtocol {
 
-    val parametersCount = List(
+    val parametersCount: Int = List(
         shortname,
         longname,
         description,
@@ -129,7 +129,7 @@ case class ProjectsGetV1(userProfile: Option[UserProfileV1]) extends ProjectsRes
 case class ProjectsNamedGraphGetV1(userProfile: UserProfileV1) extends ProjectsResponderRequestV1
 
 /**
-  * Get info about a single project identified through its IRI. The response is in form of [[ProjectInfoResponseV1]].
+  * Get info about a single project identified through its IRI. A successful response will be a [[ProjectInfoResponseV1]].
   *
   * @param iri           the IRI of the project.
   * @param userProfileV1 the profile of the user making the request (optional).
@@ -137,7 +137,7 @@ case class ProjectsNamedGraphGetV1(userProfile: UserProfileV1) extends ProjectsR
 case class ProjectInfoByIRIGetRequestV1(iri: IRI, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
-  * Get info about a single project identified through its IRI. The response is in form of [[ProjectInfoV1]].
+  * Get info about a single project identified through its IRI. A successful response will be an [[Option[ProjectInfoV1] ]].
   *
   * @param iri           the IRI of the project.
   * @param userProfileV1 the profile of the user making the request (optional).
@@ -151,6 +151,14 @@ case class ProjectInfoByIRIGetV1(iri: IRI, userProfileV1: Option[UserProfileV1])
   * @param userProfileV1 the profile of the user making the request.
   */
 case class ProjectInfoByShortnameGetRequestV1(shortname: String, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+
+/**
+  * Gets info about a single project identified by an ontology that belongs to the project. A successful response will be a [[ProjectInfoResponseV1]].
+  *
+  * @param ontologyIri the ontology IRI.
+  * @param userProfileV1 the profile of the user making the request.
+  */
+case class ProjectInfoByOntologyGetRequestV1(ontologyIri: IRI, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
   * Returns all users belonging to a project.

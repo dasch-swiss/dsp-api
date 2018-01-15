@@ -31,12 +31,11 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetReque
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.ResponderWithStandoffV2
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util._
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.search.ApacheLuceneSupport.{CombineSearchTerms, MatchStringWhileTyping}
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.v2._
-import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, StringFormatter, SmartIri}
-import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, SmartIri, StringFormatter, _}
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -735,7 +734,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                         }
 
                                         // validate Knora  date string
-                                        val dateStr: String = stringFormatter.validateDate(dateStringLiteral.value, () => throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"))
+                                        val dateStr: String = stringFormatter.validateDate(dateStringLiteral.value, throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"))
 
                                         val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
 

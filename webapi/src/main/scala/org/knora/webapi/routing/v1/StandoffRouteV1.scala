@@ -109,11 +109,11 @@ object StandoffRouteV1 extends Authenticator {
                                 val xml: String = allParts.getOrElse(XML_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!")).toString
 
                                 CreateMappingRequestV1(
-                                    projectIri = stringFormatter.validateAndEscapeIri(standoffApiJSONRequest.project_id, () => throw BadRequestException("invalid project IRI")),
+                                    projectIri = stringFormatter.validateAndEscapeIri(standoffApiJSONRequest.project_id, throw BadRequestException("invalid project IRI")),
                                     xml = xml,
                                     userProfile = userProfile,
-                                    label = stringFormatter.toSparqlEncodedString(standoffApiJSONRequest.label, () => throw BadRequestException("'label' contains invalid characters")),
-                                    mappingName = stringFormatter.toSparqlEncodedString(standoffApiJSONRequest.mappingName, () => throw BadRequestException("'mappingName' contains invalid characters")),
+                                    label = stringFormatter.toSparqlEncodedString(standoffApiJSONRequest.label, throw BadRequestException("'label' contains invalid characters")),
+                                    mappingName = stringFormatter.toSparqlEncodedString(standoffApiJSONRequest.mappingName, throw BadRequestException("'mappingName' contains invalid characters")),
                                     apiRequestID = UUID.randomUUID
                                 )
 
