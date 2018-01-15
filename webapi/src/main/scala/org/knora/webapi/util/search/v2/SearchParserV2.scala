@@ -635,6 +635,18 @@ object SearchParserV2 {
 
                     case sparqlVar: algebra.Var => makeEntity(sparqlVar)
 
+                    case functionCall: algebra.FunctionCall =>
+                        val functionIri = IriRef(functionCall.getURI.toSmartIri)
+                        val args: Seq[Entity] = functionCall.getArgs.asScala.map(arg => makeFilterExpression(arg)).map {
+                            case entity: Entity => entity
+                            case other => throw SparqlSearchException(s"Unsupported argument in function: $other")
+                        }
+
+                        FunctionCallExpression(
+                            functionIri = functionIri,
+                            args = args
+                        )
+
                     case other => throw SparqlSearchException(s"Unsupported FILTER expression: $other")
                 }
             }
