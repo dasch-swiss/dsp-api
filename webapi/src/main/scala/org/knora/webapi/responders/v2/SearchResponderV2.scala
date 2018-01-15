@@ -508,10 +508,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         /**
           * Represents a transformed Filter expression and additional statement patterns that possibly had to be created during transformation.
           *
-          * @param expression           the transformed Filter expression.
+          * @param expression           the transformed Filter expression. In some cases, a given FILTER expression is replaced by additional statements.
           * @param additionalStatements additionally created statement patterns.
           */
-        protected case class TransformedFilterExpression(expression: Expression, additionalStatements: Seq[StatementPattern] = Seq.empty[StatementPattern])
+        protected case class TransformedFilterExpression(expression: Option[Expression], additionalStatements: Seq[StatementPattern] = Seq.empty[StatementPattern])
 
         /**
           * Transforms a Filter expression provided in the input query (knora-api simple) into a knora-base compliant Filter expression.
@@ -570,14 +570,17 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                                     operator = filterCompare.operator,
                                                     rightArg = IriRef(iriRef.iri.fromLinkPropToLinkValueProp)) // create link value property from linking property
 
-                                                TransformedFilterExpression(AndExpression(
-                                                    leftArg = userProvidedRestriction,
-                                                    rightArg = restrictionForLinkValueProp)
+                                                TransformedFilterExpression(
+                                                    Some(
+                                                        AndExpression(
+                                                            leftArg = userProvidedRestriction,
+                                                            rightArg = restrictionForLinkValueProp)
+                                                    )
                                                 )
 
                                             case other =>
                                                 // not a linking property, just return the provided restriction
-                                                TransformedFilterExpression(userProvidedRestriction)
+                                                TransformedFilterExpression(Some(userProvidedRestriction))
                                         }
 
 
@@ -607,7 +610,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                         valueVariablesCreatedInFilters.put(queryVar, intValHasInteger)
 
                                         TransformedFilterExpression(
-                                            CompareExpression(intValHasInteger, filterCompare.operator, integerLiteral),
+                                            Some(CompareExpression(intValHasInteger, filterCompare.operator, integerLiteral)),
                                             Seq(
                                                 // connects the value object with the value literal
                                                 StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasInteger.toSmartIri), intValHasInteger)
@@ -630,7 +633,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                         valueVariablesCreatedInFilters.put(queryVar, decimalValHasDecimal)
 
                                         TransformedFilterExpression(
-                                            CompareExpression(decimalValHasDecimal, filterCompare.operator, decimalLiteral),
+                                            Some(CompareExpression(decimalValHasDecimal, filterCompare.operator, decimalLiteral)),
                                             Seq(
                                                 // connects the value object with the value literal
                                                 StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasDecimal.toSmartIri), decimalValHasDecimal)
@@ -658,7 +661,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                         }
 
                                         TransformedFilterExpression(
-                                            CompareExpression(booleanValHasBoolean, filterCompare.operator, booleanLiteral),
+                                            Some(CompareExpression(booleanValHasBoolean, filterCompare.operator, booleanLiteral)),
                                             Seq(
                                                 // connects the value object with the value literal
                                                 StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasBoolean.toSmartIri), booleanValHasBoolean)
@@ -686,7 +689,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                         }
 
                                         TransformedFilterExpression(
-                                            CompareExpression(textValHasString, filterCompare.operator, stringLiteral),
+                                            Some(CompareExpression(textValHasString, filterCompare.operator, stringLiteral)),
                                             Seq(
                                                 // connects the value object with the value literal
                                                 StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString)
@@ -714,7 +717,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                         }
 
                                         TransformedFilterExpression(
-                                            CompareExpression(uriValHasString, filterCompare.operator, uriLiteral),
+                                            Some(CompareExpression(uriValHasString, filterCompare.operator, uriLiteral)),
                                             Seq(
                                                 // connects the value object with the value literal
                                                 StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasUri.toSmartIri), uriValHasString)
@@ -764,7 +767,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                                 val filter = AndExpression(leftArgFilter, rightArgFilter)
 
                                                 TransformedFilterExpression(
-                                                    filter,
+                                                    Some(filter),
                                                     Seq(
                                                         dateValStartStatement, dateValEndStatement
                                                     )
@@ -780,7 +783,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                                 val filter = OrExpression(leftArgFilter, rightArgFilter)
 
                                                 TransformedFilterExpression(
-                                                    filter,
+                                                    Some(filter),
                                                     Seq(
                                                         dateValStartStatement, dateValEndStatement
                                                     )
@@ -792,7 +795,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                                 val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.LESS_THAN, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
                                                 TransformedFilterExpression(
-                                                    filter,
+                                                    Some(filter),
                                                     Seq(dateValStartStatement, dateValEndStatement) // dateValStartStatement may be used as ORDER BY statement
                                                 )
 
@@ -802,7 +805,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                                 val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
                                                 TransformedFilterExpression(
-                                                    filter,
+                                                    Some(filter),
                                                     Seq(dateValStartStatement)
                                                 )
 
@@ -812,7 +815,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                                 val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.GREATER_THAN, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
                                                 TransformedFilterExpression(
-                                                    filter,
+                                                    Some(filter),
                                                     Seq(dateValStartStatement)
                                                 )
 
@@ -822,7 +825,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                                 val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
                                                 TransformedFilterExpression(
-                                                    filter,
+                                                    Some(filter),
                                                     Seq(dateValStartStatement, dateValEndStatement) // dateValStartStatement may be used as ORDER BY statement
                                                 )
 
@@ -851,7 +854,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     // recreate Or expression and include additional statements
                     TransformedFilterExpression(
-                        OrExpression(filterExpressionLeft.expression, filterExpressionRight.expression),
+                        Some(OrExpression(filterExpressionLeft.expression.getOrElse(throw DataConversionException("Expression was expected from previous FILTER conversion, but None given")), filterExpressionRight.expression.getOrElse(throw DataConversionException("Expression was expected from previous FILTER conversion, but None given")))),
                         filterExpressionLeft.additionalStatements ++ filterExpressionRight.additionalStatements
                     )
 
@@ -863,7 +866,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     // recreate And expression and include additional statements
                     TransformedFilterExpression(
-                        AndExpression(filterExpressionLeft.expression, filterExpressionRight.expression),
+                        Some(AndExpression(filterExpressionLeft.expression.getOrElse(throw DataConversionException("Expression was expected from previous FILTER conversion, but None given")), filterExpressionRight.expression.getOrElse(throw DataConversionException("Expression was expected from previous FILTER conversion, but None given")))),
                         filterExpressionLeft.additionalStatements ++ filterExpressionRight.additionalStatements
                     )
 
@@ -905,7 +908,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     valueVariablesCreatedInFilters.put(regexFunction.textValueVar, textValHasString)
 
                     TransformedFilterExpression(
-                        RegexFunction(textValHasString, regexFunction.pattern, regexFunction.modifier),
+                        Some(RegexFunction(textValHasString, regexFunction.pattern, regexFunction.modifier)),
                         Seq(
                             // connects the value object with the value literal
                             StatementPattern.makeExplicit(subj = regexFunction.textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString)
@@ -950,7 +953,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     valueVariablesCreatedInFilters.put(matchFunction.textValueVar, textValHasString)
 
                     TransformedFilterExpression(
-                        CompareExpression(XsdLiteral("true", OntologyConstants.Xsd.Boolean.toSmartIri), CompareExpressionOperator.EQUALS, XsdLiteral("true", OntologyConstants.Xsd.Boolean.toSmartIri)), // TODO: stupid hack, find a better way to do this
+                        None, // FILTER has been replaced by statements
                         Seq(
                             // connects the value object with the value literal
                             StatementPattern.makeExplicit(subj = matchFunction.textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString),
@@ -1488,7 +1491,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = {
                 val filterExpression: TransformedFilterExpression = transformFilterExpression(filterPattern.expression, typeInspection = typeInspectionResult)
 
-                filterExpression.additionalStatements :+ FilterPattern(filterExpression.expression)
+                filterExpression.expression match {
+                    case Some(expression: Expression) => filterExpression.additionalStatements :+ FilterPattern(expression)
+
+                    case None => filterExpression.additionalStatements // no FILTER expression given
+                }
+
             }
 
             def getSelectVariables: Seq[SelectQueryColumn] = {
@@ -1639,7 +1647,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 val filterExpression: TransformedFilterExpression = transformFilterExpression(filterPattern.expression, typeInspection = typeInspectionResult)
 
-                filterExpression.additionalStatements :+ FilterPattern(filterExpression.expression)
+                filterExpression.expression match {
+                    case Some(expression: Expression) => filterExpression.additionalStatements :+ FilterPattern(expression)
+
+                    case None => filterExpression.additionalStatements // no FILTER expression given
+                }
 
             }
 
@@ -2013,7 +2025,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-             _ = println(triplestoreSpecificPrequery.toSparql)
+            // _ = println(triplestoreSpecificPrequery.toSparql)
 
             prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 
