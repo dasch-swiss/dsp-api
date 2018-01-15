@@ -152,6 +152,7 @@ object OntologyConstants {
         val mappingHasDefaultXSLTransformation: IRI = KnoraBasePrefixExpansion + "mappingHasDefaultXSLTransformation"
 
         val IsMainResource: IRI = KnoraBasePrefixExpansion + "isMainResource"
+        val MatchesTextIndex = KnoraBasePrefixExpansion + "matchesTextIndex" // virtual property to be repleced by a triplestore-specific one
 
         val AbstractResourceClasses = Set(
             Resource,
@@ -494,6 +495,14 @@ object OntologyConstants {
 
     object Dc {
         val DcOntologyLabel: String = "dc"
+    }
+
+    object Ontotext {
+        val LuceneFulltext = "http://www.ontotext.com/owlim/lucene#fullTextSearchIndex"
+    }
+
+    object XPathFunctions {
+        val Contains = "http://www.w3.org/2005/xpath-functions#contains"
     }
 
     object KnoraXmlImportV1 {
