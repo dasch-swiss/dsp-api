@@ -297,7 +297,7 @@ object DateUtilV1 {
       */
     def createJDNValueV1FromDateString(dateStr: String): JulianDayNumberValueV1 = {
         val stringFormatter = StringFormatter.getGeneralInstance
-        val datestring = stringFormatter.validateDate(dateStr, () => throw BadRequestException(s"Invalid date format: $dateStr"))
+        val datestring = stringFormatter.validateDate(dateStr, throw BadRequestException(s"Invalid date format: $dateStr"))
 
         // parse date: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
         val parsedDate = datestring.split(StringFormatter.CalendarSeparator)

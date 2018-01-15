@@ -51,7 +51,7 @@ object ListsAdminRoute extends Authenticator {
                     requestContext =>
                         val userProfile = getUserProfileV1(requestContext)
 
-                        val projectIri = stringFormatter.toOptionalIri(maybeProjectIri, () => throw BadRequestException(s"Invalid param project IRI: $maybeProjectIri"))
+                        val projectIri = stringFormatter.toOptionalIri(maybeProjectIri, throw BadRequestException(s"Invalid param project IRI: $maybeProjectIri"))
 
                         val requestMessage = ListsGetAdminRequest(projectIri, userProfile)
 
@@ -74,7 +74,7 @@ object ListsAdminRoute extends Authenticator {
                 /* return a list (a graph with all list nodes) */
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
-                    val listIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
+                    val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                     val requestMessage = ListGetAdminRequest(listIri, userProfile)
 
@@ -100,7 +100,7 @@ object ListsAdminRoute extends Authenticator {
                 /* return information about a list (without children) */
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
-                    val listIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
+                    val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                     val requestMessage = ListInfoGetAdminRequest(listIri, userProfile)
 
@@ -126,7 +126,7 @@ object ListsAdminRoute extends Authenticator {
                 /* return information about a single node (without children) */
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
-                    val listIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param list IRI: $iri"))
+                    val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                     val requestMessage = ListNodeInfoGetAdminRequest(listIri, userProfile)
 

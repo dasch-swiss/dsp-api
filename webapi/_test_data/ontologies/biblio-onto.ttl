@@ -14,7 +14,8 @@
 
 @prefix : <http://www.knora.org/ontology/biblio#> .
 
-<http://www.knora.org/ontology/biblio> rdf:type owl:Ontology .
+<http://www.knora.org/ontology/biblio> rdf:type owl:Ontology ;
+    rdfs:label "The Biblio ontology" .
 
 
 #################################################################

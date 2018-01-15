@@ -26,7 +26,7 @@
         "incunabula:seqnum" : {
           "@id" : "http://data.knora.org/50e7460a7203/values/44150900c10d",
           "@type" : "knora-api:IntValue",
-          "knora-api:integerValueAsInteger" : 1
+          "knora-api:intValueAsInt" : 1
         },
         "knora-api:hasStillImageFileValue" : [ {
           "@id" : "http://data.knora.org/50e7460a7203/reps/bf87bff7b706",

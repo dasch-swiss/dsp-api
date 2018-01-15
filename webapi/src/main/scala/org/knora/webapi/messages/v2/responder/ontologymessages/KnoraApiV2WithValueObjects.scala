@@ -21,14 +21,19 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import org.knora.webapi._
-import org.knora.webapi.util.{StringFormatter, SmartIri}
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
   * Represents the `knora-api` ontology, version 2, in the [[ApiV2WithValueObjects]] schema.
   */
 object KnoraApiV2WithValueObjects {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+    val OntologyMetadata = OntologyMetadataV2(
+        ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
+        label = Some("The default knora-api ontology")
+    )
 
     val Resource: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Resource,
@@ -1534,8 +1539,8 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val IntegerValue: ReadClassInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObjects.IntegerValue,
+    val IntValue: ReadClassInfoV2 = makeClass(
+        classIri = OntologyConstants.KnoraApiV2WithValueObjects.IntValue,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Value),
         predicates = Seq(
             makePredicate(
@@ -1552,16 +1557,16 @@ object KnoraApiV2WithValueObjects {
             )
         ),
         directCardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.IntegerValueAsInteger -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt -> Cardinality.MustHaveOne
         ),
         inheritedCardinalities = Value.allCardinalities
     )
 
-    val IntegerValueAsInteger: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IntegerValueAsInteger,
+    val IntValueAsInt: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.IntegerValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.IntValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
@@ -1573,7 +1578,7 @@ object KnoraApiV2WithValueObjects {
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "Represents the literal integer value of an IntegerValue."
+                    LanguageCodes.EN -> "Represents the literal integer value of an IntValue."
                 )
             )
         )
@@ -2408,7 +2413,7 @@ object KnoraApiV2WithValueObjects {
         TextValue,
         DateValue,
         LinkValue,
-        IntegerValue,
+        IntValue,
         DecimalValue,
         BooleanValue,
         GeomValue,
@@ -2480,7 +2485,7 @@ object KnoraApiV2WithValueObjects {
         DateValueHasCalendar,
         LinkValueHasTarget,
         LinkValueHasTargetIri,
-        IntegerValueAsInteger,
+        IntValueAsInt,
         DecimalValueAsDecimal,
         BooleanValueAsBoolean,
         GeometryValueAsGeometry,
@@ -2522,7 +2527,6 @@ object KnoraApiV2WithValueObjects {
                               objectsWithLang: Map[String, String] = Map.empty[String, String]): PredicateInfoV2 = {
         PredicateInfoV2(
             predicateIri = predicateIri.toSmartIri,
-            ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
             objects = objects,
             objectsWithLang = objectsWithLang
         )
@@ -2576,7 +2580,6 @@ object KnoraApiV2WithValueObjects {
         ReadPropertyInfoV2(
             entityInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri.toSmartIri,
-                ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                 ontologySchema = ApiV2WithValueObjects,
                 predicates = predsWithTypes.map {
                     pred => pred.predicateIri -> pred
@@ -2606,23 +2609,21 @@ object KnoraApiV2WithValueObjects {
                           canBeInstantiated: Boolean = false,
                           directCardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
                           inheritedCardinalities: Map[SmartIri, Cardinality.Value] = Map.empty[SmartIri, Cardinality.Value]): ReadClassInfoV2 = {
-        val predicatesWithType = predicates :+ makePredicate(
-            predicateIri = OntologyConstants.Rdf.Type,
+        val rdfType = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
             objects = Set(OntologyConstants.Owl.Class)
         )
 
         ReadClassInfoV2(
             entityInfoContent = ClassInfoContentV2(
-                rdfType = OntologyConstants.Owl.Class.toSmartIri,
                 classIri = classIri.toSmartIri,
-                predicates = predicatesWithType.map {
+                predicates = predicates.map {
                     pred => pred.predicateIri -> pred
-                }.toMap,
+                }.toMap + rdfType,
                 directCardinalities = directCardinalities.map {
                     case (propertyIri, cardinality) => propertyIri.toSmartIri -> cardinality
                 },
                 subClassOf = subClassOf.map(iri => iri.toSmartIri),
-                ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
                 ontologySchema = ApiV2WithValueObjects
             ),
             inheritedCardinalities = inheritedCardinalities,

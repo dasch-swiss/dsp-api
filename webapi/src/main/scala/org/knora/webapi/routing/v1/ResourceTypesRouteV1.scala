@@ -49,7 +49,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                     val userProfile = getUserProfileV1(requestContext)
 
                     // TODO: Check that this is the IRI of a resource type and not just any IRI
-                    val resourceTypeIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid resource class IRI: $iri"))
+                    val resourceTypeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid resource class IRI: $iri"))
 
                     val requestMessage = ResourceTypeGetRequestV1(resourceTypeIri, userProfile)
 
@@ -71,7 +71,7 @@ object ResourceTypesRouteV1 extends Authenticator {
 
                     val namedGraphIri = vocabularyId match {
                         case "0" => None // if param vocabulary is set to 0, query all named graphs
-                        case other => Some(stringFormatter.validateAndEscapeIri(vocabularyId, () => throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId")))
+                        case other => Some(stringFormatter.validateAndEscapeIri(vocabularyId, throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId")))
                     }
 
                     val requestMessage = ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile)
@@ -101,12 +101,12 @@ object ResourceTypesRouteV1 extends Authenticator {
                         case Some("0") => // 0 means that all named graphs should be queried
                             PropertyTypesForNamedGraphGetRequestV1(namedGraph = None, userProfile = userProfile)
                         case Some(vocId) =>
-                            val namedGraphIri = stringFormatter.validateAndEscapeIri(vocId, () => throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId"))
+                            val namedGraphIri = stringFormatter.validateAndEscapeIri(vocId, throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId"))
                             PropertyTypesForNamedGraphGetRequestV1(namedGraph = Some(namedGraphIri), userProfile = userProfile)
                         case None => // no vocabulary id given, check for restype
                             resourcetypeId match {
                                 case Some(restypeId) => // get property types for given resource type
-                                    val resourceClassIri = stringFormatter.validateAndEscapeIri(restypeId, () => throw BadRequestException(s"Invalid vocabulary IRI: $restypeId"))
+                                    val resourceClassIri = stringFormatter.validateAndEscapeIri(restypeId, throw BadRequestException(s"Invalid vocabulary IRI: $restypeId"))
                                     PropertyTypesForResourceTypeGetRequestV1(restypeId, userProfile)
                                 case None => // no params given, get all property types (behaves like vocbulary=0)
                                     PropertyTypesForNamedGraphGetRequestV1(namedGraph = None, userProfile = userProfile)
@@ -158,7 +158,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                         val userProfile = getUserProfileV1(requestContext)
 
                         // TODO: Check that this is the IRI of a resource type and not just any IRI
-                        val resourceClassIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid resource class IRI: $iri"))
+                        val resourceClassIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid resource class IRI: $iri"))
 
                         val requestMessage = SubClassesGetRequestV1(resourceClassIri, userProfile)
 

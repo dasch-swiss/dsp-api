@@ -211,7 +211,7 @@ class StandoffResponderV1 extends Responder {
                     case defaultTrans: NodeSeq if defaultTrans.length == 1 =>
 
                         // check if the IRI is valid
-                        val transIri = stringFormatter.validateAndEscapeIri(defaultTrans.headOption.getOrElse(throw BadRequestException("could not access <defaultXSLTransformation>")).text, () => throw BadRequestException(s"XSL transformation ${defaultTrans.head.text} is not a valid IRI"))
+                        val transIri = stringFormatter.validateAndEscapeIri(defaultTrans.headOption.getOrElse(throw BadRequestException("could not access <defaultXSLTransformation>")).text, throw BadRequestException(s"XSL transformation ${defaultTrans.head.text} is not a valid IRI"))
 
                         // try to obtain the XSL transformation to make sure that it really exists
                         // TODO: add a test to the integration tests
@@ -240,7 +240,7 @@ class StandoffResponderV1 extends Responder {
                         // get the boolean indicating if the element requires a separator in the text once it is converted to standoff
                         val separatorBooleanAsString = (curMappingEle \ "tag" \ "separatesWords").headOption.getOrElse(throw BadRequestException(s"no '<separatesWords>' given for node $curMappingEle")).text
 
-                        val separatorRequired: Boolean = stringFormatter.validateBoolean(separatorBooleanAsString, () => throw BadRequestException(s"<separatesWords> could not be converted to Boolean: $separatorBooleanAsString"))
+                        val separatorRequired: Boolean = stringFormatter.validateBoolean(separatorBooleanAsString, throw BadRequestException(s"<separatesWords> could not be converted to Boolean: $separatorBooleanAsString"))
 
                         // get the standoff class IRI
                         val standoffClassIri = (curMappingEle \ "standoffClass" \ "classIri").headOption.getOrElse(throw BadRequestException(s"no '<classIri>' given for node $curMappingEle")).text
@@ -261,9 +261,9 @@ class StandoffResponderV1 extends Responder {
                                 val propIri = (curAttributeNode \ "propertyIri").headOption.getOrElse(throw BadRequestException(s"no '<propertyIri>' given for attribute $curAttributeNode")).text
 
                                 MappingXMLAttribute(
-                                    attributeName = stringFormatter.toSparqlEncodedString(attrName, () => throw BadRequestException(s"tagname $attrName contains invalid characters")),
-                                    namespace = stringFormatter.toSparqlEncodedString(attributeNamespace, () => throw BadRequestException(s"tagname $attributeNamespace contains invalid characters")),
-                                    standoffProperty = stringFormatter.validateAndEscapeIri(propIri, () => throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")),
+                                    attributeName = stringFormatter.toSparqlEncodedString(attrName, throw BadRequestException(s"tagname $attrName contains invalid characters")),
+                                    namespace = stringFormatter.toSparqlEncodedString(attributeNamespace, throw BadRequestException(s"tagname $attributeNamespace contains invalid characters")),
+                                    standoffProperty = stringFormatter.validateAndEscapeIri(propIri, throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")),
                                     mappingXMLAttributeElementIri = knoraIdUtil.makeRandomMappingElementIri(mappingIri)
                                 )
 
@@ -276,12 +276,12 @@ class StandoffResponderV1 extends Responder {
                         val standoffDataTypeOption: Option[MappingStandoffDatatypeClass] = if (datatypeMaybe.nonEmpty) {
                             val dataTypeXML = (datatypeMaybe \ "type").headOption.getOrElse(throw BadRequestException(s"no '<type>' given for datatype")).text
 
-                            val dataType: StandoffDataTypeClasses.Value = StandoffDataTypeClasses.lookup(dataTypeXML, () => throw BadRequestException(s"Invalid data type provided for $tagName"))
+                            val dataType: StandoffDataTypeClasses.Value = StandoffDataTypeClasses.lookup(dataTypeXML, throw BadRequestException(s"Invalid data type provided for $tagName"))
                             val dataTypeAttribute: String = (datatypeMaybe \ "attributeName").headOption.getOrElse(throw BadRequestException(s"no '<attributeName>' given for datatype")).text
 
                             Some(MappingStandoffDatatypeClass(
                                 datatype = dataType.toString, // safe because it is an enumeration
-                                attributeName = stringFormatter.toSparqlEncodedString(dataTypeAttribute, () => throw BadRequestException(s"tagname $dataTypeAttribute contains invalid characters")),
+                                attributeName = stringFormatter.toSparqlEncodedString(dataTypeAttribute, throw BadRequestException(s"tagname $dataTypeAttribute contains invalid characters")),
                                 mappingStandoffDataTypeClassElementIri = knoraIdUtil.makeRandomMappingElementIri(mappingIri)
                             ))
                         } else {
@@ -289,10 +289,10 @@ class StandoffResponderV1 extends Responder {
                         }
 
                         MappingElement(
-                            tagName = stringFormatter.toSparqlEncodedString(tagName, () => throw BadRequestException(s"tagname $tagName contains invalid characters")),
-                            namespace = stringFormatter.toSparqlEncodedString(tagNamespace, () => throw BadRequestException(s"namespace $tagNamespace contains invalid characters")),
-                            className = stringFormatter.toSparqlEncodedString(className, () => throw BadRequestException(s"classname $className contains invalid characters")),
-                            standoffClass = stringFormatter.validateAndEscapeIri(standoffClassIri, () => throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")),
+                            tagName = stringFormatter.toSparqlEncodedString(tagName, throw BadRequestException(s"tagname $tagName contains invalid characters")),
+                            namespace = stringFormatter.toSparqlEncodedString(tagNamespace, throw BadRequestException(s"namespace $tagNamespace contains invalid characters")),
+                            className = stringFormatter.toSparqlEncodedString(className, throw BadRequestException(s"classname $className contains invalid characters")),
+                            standoffClass = stringFormatter.validateAndEscapeIri(standoffClassIri, throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")),
                             attributes = attributes,
                             standoffDataTypeClass = standoffDataTypeOption,
                             mappingElementIri = knoraIdUtil.makeRandomMappingElementIri(mappingIri),
@@ -473,7 +473,7 @@ class StandoffResponderV1 extends Responder {
 
                     case Some(dataTypeClass: MappingStandoffDatatypeClass) =>
 
-                        val dataType = StandoffDataTypeClasses.lookup(dataTypeClass.datatype, () => throw BadRequestException(s"Invalid data type provided for $tagname"))
+                        val dataType = StandoffDataTypeClasses.lookup(dataTypeClass.datatype, throw BadRequestException(s"Invalid data type provided for $tagname"))
 
                         val dataTypeAttribute = dataTypeClass.attributeName
 

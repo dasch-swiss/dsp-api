@@ -219,10 +219,10 @@ object CompareExpressionOperator extends Enumeration {
       * @param errorFun the function to be called in case of an error.
       * @return the requested value.
       */
-    def lookup(name: String, errorFun: () => Nothing): Value = {
+    def lookup(name: String, errorFun: => Nothing): Value = {
         valueMap.get(name) match {
             case Some(value) => value
-            case None => errorFun()
+            case None => errorFun
         }
     }
 }
