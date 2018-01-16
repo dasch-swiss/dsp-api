@@ -30,13 +30,13 @@ import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, ontologymessages}
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.OwlCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{CacheUtil, ErrorHandlingMap, SmartIri}
+import org.knora.webapi.util.{ActorUtil, CacheUtil, ErrorHandlingMap, SmartIri}
 
 import scala.concurrent.Future
 
@@ -118,6 +118,7 @@ class OntologyResponderV2 extends Responder {
         case createOntologyRequest: CreateOntologyRequestV2 => future2Message(sender(), createOntology(createOntologyRequest), log)
         case changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2 => future2Message(sender(), changeOntologyMetadata(changeOntologyMetadataRequest), log)
         case createPropertyRequest: CreatePropertyRequestV2 => future2Message(sender(), createProperty(createPropertyRequest), log)
+        case changePropertyLabelRequest: ChangePropertyLabelRequestV2 => future2Message(sender(), changePropertyLabel(changePropertyLabelRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -1229,10 +1230,10 @@ class OntologyResponderV2 extends Responder {
 
                 createOntologySparql = queries.sparql.v2.txt.createOntology(
                     triplestore = settings.triplestoreType,
-                    ontologyNamedGraphIri = internalOntologyIri.toString,
-                    ontologyIri = internalOntologyIri.toString,
+                    ontologyNamedGraphIri = internalOntologyIri,
+                    ontologyIri = internalOntologyIri,
                     ontologyLabel = createOntologyRequest.label,
-                    currentTime = currentTime.toString
+                    currentTime = currentTime
                 ).toString
 
                 _ <- (storeManager ? SparqlUpdateRequest(createOntologySparql)).mapTo[SparqlUpdateResponse]
@@ -1323,11 +1324,11 @@ class OntologyResponderV2 extends Responder {
 
                 updateSparql = queries.sparql.v2.txt.changeOntologyMetadata(
                     triplestore = settings.triplestoreType,
-                    ontologyNamedGraphIri = internalOntologyIri.toString,
-                    ontologyIri = internalOntologyIri.toString,
+                    ontologyNamedGraphIri = internalOntologyIri,
+                    ontologyIri = internalOntologyIri,
                     newLabel = changeOntologyMetadataRequest.label,
-                    lastModificationDate = changeOntologyMetadataRequest.lastModificationDate.toString,
-                    currentTime = currentTime.toString
+                    lastModificationDate = changeOntologyMetadataRequest.lastModificationDate,
+                    currentTime = currentTime
                 ).toString()
 
                 _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
@@ -1427,14 +1428,14 @@ class OntologyResponderV2 extends Responder {
                 isLinkProp <- propertyDefIsLinkProp(internalPropertyDef)
 
                 // If we're creating a link property, make the definition of the corresponding link value property.
-                maybeLinkValuePropDef: Option[PropertyInfoContentV2] = if (isLinkProp) {
-                    val linkValuePropDef = linkPropertyDefToLinkValuePropertyDef(internalPropertyDef)
+                maybeLinkValuePropertyDef: Option[PropertyInfoContentV2] = if (isLinkProp) {
+                    val linkValuePropertyDef = linkPropertyDefToLinkValuePropertyDef(internalPropertyDef)
 
-                    if (cacheData.propertyDefs.contains(linkValuePropDef.propertyIri)) {
-                        throw BadRequestException(s"Link value property ${linkValuePropDef.propertyIri} already exists")
+                    if (cacheData.propertyDefs.contains(linkValuePropertyDef.propertyIri)) {
+                        throw BadRequestException(s"Link value property ${linkValuePropertyDef.propertyIri} already exists")
                     }
 
-                    Some(linkValuePropDef)
+                    Some(linkValuePropertyDef)
                 } else {
                     None
                 }
@@ -1513,14 +1514,14 @@ class OntologyResponderV2 extends Responder {
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
                     propertyDef = internalPropertyDef,
-                    maybeLinkValuePropertyDef = maybeLinkValuePropDef,
+                    maybeLinkValuePropertyDef = maybeLinkValuePropertyDef,
                     lastModificationDate = createPropertyRequest.lastModificationDate,
                     currentTime = currentTime
                 ).toString()
 
                 _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
 
-                // Check that the ontology was updated.
+                // Check that the ontology's last modification date was updated.
 
                 _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
 
@@ -1532,6 +1533,18 @@ class OntologyResponderV2 extends Responder {
                     throw InconsistentTriplestoreDataException(s"Attempted to save property definition $internalPropertyDef, but $loadedPropertyDef was saved")
                 }
 
+                maybeLoadedLinkValuePropertyDefFuture: Option[Future[PropertyInfoContentV2]] = maybeLinkValuePropertyDef.map(linkValuePropertyDef => loadPropertyDefinition(linkValuePropertyDef.propertyIri))
+                maybeLoadedLinkValuePropertyDef: Option[PropertyInfoContentV2] <- ActorUtil.optionFuture2FutureOption(maybeLoadedLinkValuePropertyDefFuture)
+
+                _ = (maybeLoadedLinkValuePropertyDef, maybeLinkValuePropertyDef) match {
+                    case (Some(loadedLinkValuePropertyDef), Some(newLinkValuePropertyDef)) =>
+                        if (loadedLinkValuePropertyDef != maybeLinkValuePropertyDef.get) {
+                            throw InconsistentTriplestoreDataException(s"Attempted to save link value property definition $newLinkValuePropertyDef, but $loadedLinkValuePropertyDef was saved")
+                        }
+
+                    case _ => ()
+                }
+
                 // Update the ontology cache.
 
                 readPropertyInfo = ReadPropertyInfoV2(
@@ -1540,10 +1553,10 @@ class OntologyResponderV2 extends Responder {
                     isLinkProp = isLinkProp
                 )
 
-                maybeLinkValuePropertyCacheEntry: Option[(SmartIri, ReadPropertyInfoV2)] = maybeLinkValuePropDef.map {
-                    linkValuePropDef =>
-                        linkValuePropDef.propertyIri -> ReadPropertyInfoV2(
-                            entityInfoContent = linkValuePropDef,
+                maybeLinkValuePropertyCacheEntry: Option[(SmartIri, ReadPropertyInfoV2)] = maybeLinkValuePropertyDef.map {
+                    linkValuePropertyDef =>
+                        linkValuePropertyDef.propertyIri -> ReadPropertyInfoV2(
+                            entityInfoContent = linkValuePropertyDef,
                             isLinkValueProp = true
                         )
                 }
@@ -1588,6 +1601,144 @@ class OntologyResponderV2 extends Responder {
         } yield taskResult
     }
 
+    private def changePropertyLabel(changePropertyLabelRequest: ChangePropertyLabelRequestV2): Future[ReadOntologiesV2] = {
+        def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologiesV2] = {
+            for {
+                cacheData <- getCacheData
+                currentPropertyDef = cacheData.propertyDefs.getOrElse(internalPropertyIri, throw BadRequestException(s"Property ${changePropertyLabelRequest.propertyIri} not found"))
+
+                // Check that the ontology exists and has not been updated by another user since the client last read it.
+                _ <- checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = changePropertyLabelRequest.lastModificationDate)
+
+                // Check that the new labels are different from the current ones.
+
+                currentLabels = currentPropertyDef.entityInfoContent.predicates.getOrElse(OntologyConstants.Rdfs.Label.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $internalPropertyIri has no rdfs:label")).objectsWithLang
+
+                _ = if (currentLabels == changePropertyLabelRequest.labels) {
+                    throw BadRequestException(s"The submitted labels are the same as the current labels of property ${changePropertyLabelRequest.propertyIri}")
+                }
+
+                // Make a definition of the property with the new labels.
+
+                newLabelPredicate = PredicateInfoV2(
+                    predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                    objectsWithLang = changePropertyLabelRequest.labels
+                )
+
+                newInternalPropertyDef = currentPropertyDef.entityInfoContent.copy(
+                    predicates = currentPropertyDef.entityInfoContent.predicates + (OntologyConstants.Rdfs.Label.toSmartIri -> newLabelPredicate)
+                )
+
+                // If this is a link property, make a definition of the corresponding link value property with the new labels.
+
+                maybeNewLinkValuePropertyDef = if (currentPropertyDef.isLinkProp) {
+                    val linkValuePropertyIri = internalPropertyIri.fromLinkPropToLinkValueProp
+                    val currentLinkValuePropertyDef = cacheData.propertyDefs.getOrElse(linkValuePropertyIri, throw InconsistentTriplestoreDataException(s"Link value property $linkValuePropertyIri not found"))
+
+                    Some(currentLinkValuePropertyDef.entityInfoContent.copy(
+                        predicates = currentPropertyDef.entityInfoContent.predicates + (OntologyConstants.Rdfs.Label.toSmartIri -> newLabelPredicate)
+                    ))
+                } else {
+                    None
+                }
+
+                // Do the update.
+
+                currentTime: Instant = Instant.now
+
+                updateSparql = queries.sparql.v2.txt.changePropertyLabels(
+                    triplestore = settings.triplestoreType,
+                    ontologyNamedGraphIri = internalOntologyIri,
+                    ontologyIri = internalOntologyIri,
+                    propertyIri = internalPropertyIri,
+                    maybeLinkValuePropertyIri = maybeNewLinkValuePropertyDef.map(_.propertyIri),
+                    newLabels = changePropertyLabelRequest.labels,
+                    lastModificationDate = changePropertyLabelRequest.lastModificationDate,
+                    currentTime = currentTime
+                ).toString()
+
+
+                _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
+
+                // Check that the ontology's last modification date was updated.
+
+                _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
+
+                // Check that the data that was saved corresponds to the data that was submitted.
+
+                loadedPropertyDef <- loadPropertyDefinition(internalPropertyIri)
+
+                _ = if (loadedPropertyDef != newInternalPropertyDef) {
+                    throw InconsistentTriplestoreDataException(s"Attempted to save property definition $newInternalPropertyDef, but $loadedPropertyDef was saved")
+                }
+
+                maybeLoadedLinkValuePropertyDefFuture: Option[Future[PropertyInfoContentV2]] = maybeNewLinkValuePropertyDef.map(linkValuePropertyDef => loadPropertyDefinition(linkValuePropertyDef.propertyIri))
+                maybeLoadedLinkValuePropertyDef: Option[PropertyInfoContentV2] <- ActorUtil.optionFuture2FutureOption(maybeLoadedLinkValuePropertyDefFuture)
+
+                _ = (maybeLoadedLinkValuePropertyDef, maybeNewLinkValuePropertyDef) match {
+                    case (Some(loadedLinkValuePropertyDef), Some(newLinkValuePropertyDef)) =>
+                        if (loadedLinkValuePropertyDef != maybeNewLinkValuePropertyDef.get) {
+                            throw InconsistentTriplestoreDataException(s"Attempted to save link value property definition $newLinkValuePropertyDef, but $loadedLinkValuePropertyDef was saved")
+                        }
+
+                    case _ => ()
+                }
+
+                // Update the ontology cache.
+
+                readPropertyInfo = ReadPropertyInfoV2(
+                    entityInfoContent = newInternalPropertyDef,
+                    isEditable = true,
+                    isLinkProp = currentPropertyDef.isLinkProp
+                )
+
+                maybeLinkValuePropertyCacheEntry: Option[(SmartIri, ReadPropertyInfoV2)] = maybeNewLinkValuePropertyDef.map {
+                    linkValuePropertyDef =>
+                        linkValuePropertyDef.propertyIri -> ReadPropertyInfoV2(
+                            entityInfoContent = linkValuePropertyDef,
+                            isLinkValueProp = true
+                        )
+                }
+
+                updatedOntologyMetadata = cacheData.ontologyMetadata(internalOntologyIri).copy(
+                    lastModificationDate = Some(currentTime)
+                )
+
+                _ = storeCacheData(cacheData.copy(
+                    ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> updatedOntologyMetadata),
+                    propertyDefs = cacheData.propertyDefs ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> readPropertyInfo)
+                ))
+
+                // Read the data back from the cache.
+
+                response <- getPropertyDefinitionsV2(propertyIris = Set(internalPropertyIri), allLanguages = true, userProfile = changePropertyLabelRequest.userProfile)
+            } yield response
+        }
+
+        for {
+            userProfile <- FastFuture.successful(changePropertyLabelRequest.userProfile)
+
+            externalOntologyIri = changePropertyLabelRequest.propertyIri.getOntologyFromEntity
+            _ <- checkExternalOntologyIriForUpdate(externalOntologyIri)
+
+            externalPropertyIri = changePropertyLabelRequest.propertyIri
+            _ <- checkExternalEntityIriForUpdate(externalEntityIri = externalPropertyIri)
+
+            internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+            _ <- checkPermissionsForOntologyUpdate(internalOntologyIri = internalOntologyIri, userProfile = userProfile)
+
+            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID = changePropertyLabelRequest.apiRequestID,
+                iri = internalOntologyIri.toString,
+                task = () => makeTaskFuture(
+                    internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema),
+                    internalOntologyIri = internalOntologyIri
+                )
+            )
+        } yield taskResult
+    }
+
     /**
       * Loads a property definition from the triplestore and converts it to a [[PropertyInfoContentV2]].
       *
@@ -1598,7 +1749,7 @@ class OntologyResponderV2 extends Responder {
         for {
             sparql <- Future(queries.sparql.v2.txt.getPropertyDefinition(
                 triplestore = settings.triplestoreType,
-                propertyIri = propertyIri.toString
+                propertyIri = propertyIri
             ).toString())
 
             constructResponse <- (storeManager ? SparqlExtendedConstructRequest(sparql)).mapTo[SparqlExtendedConstructResponse]
@@ -1841,7 +1992,7 @@ class OntologyResponderV2 extends Responder {
             isLinkProp = internalPropertyDef.subPropertyOf.exists {
                 superPropIri =>
                     cacheData.propertyDefs.get(superPropIri) match {
-                        case Some(superPropDef) => superPropDef.isLinkProp
+                        case Some(superPropertyDef) => superPropertyDef.isLinkProp
                         case None => false
                     }
             }
@@ -1861,7 +2012,7 @@ class OntologyResponderV2 extends Responder {
             isLinkProp = internalPropertyDef.subPropertyOf.exists {
                 superPropIri =>
                     cacheData.propertyDefs.get(superPropIri) match {
-                        case Some(superPropDef) => superPropDef.isLinkValueProp
+                        case Some(superPropertyDef) => superPropertyDef.isLinkValueProp
                         case None => false
                     }
             }
@@ -1881,7 +2032,7 @@ class OntologyResponderV2 extends Responder {
             isFileValueProp = internalPropertyDef.subPropertyOf.exists {
                 superPropIri =>
                     cacheData.propertyDefs.get(superPropIri) match {
-                        case Some(superPropDef) => superPropDef.isFileValueProp
+                        case Some(superPropertyDef) => superPropertyDef.isFileValueProp
                         case None => false
                     }
             }

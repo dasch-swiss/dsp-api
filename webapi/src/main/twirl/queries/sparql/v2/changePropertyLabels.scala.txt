@@ -22,19 +22,22 @@
 @import java.time.Instant
 
 @*
- * Changes the metadata attached to an ontology.
+ * Changes the label of a property.
  *
  * @param triplestore the name of the triplestore being used.
- * @param ontologyNamedGraphIri the IRI of the named graph where the ontology should be stored.
- * @param ontologyIri the IRI of the ontology to be created.
- * @param newLabel the ontology's new label.
+ * @param ontologyNamedGraphIri the IRI of the named graph where the ontology is stored.
+ * @param ontologyIri the IRI of the ontology to be modified.
+ * @param propertyIri the IRI of the property to be modified.
+ * @param newLabels the property's new labels.
  * @param lastModificationDate the xsd:dateTimeStamp that was attached to the ontology when it was last modified.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
  *@
 @(triplestore: String,
   ontologyNamedGraphIri: SmartIri,
   ontologyIri: SmartIri,
-  newLabel: String,
+  propertyIri: SmartIri,
+  maybeLinkValuePropertyIri: Option[SmartIri],
+  newLabels: Map[String, String],
   lastModificationDate: Instant,
   currentTime: Instant)
 
@@ -46,13 +49,46 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 DELETE {
     GRAPH ?ontologyNamedGraph {
-        ?ontology rdfs:label ?oldLabel ;
-            knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+        ?ontology knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+        ?property rdfs:label ?oldLabel .
+
+        @maybeLinkValuePropertyIri match {
+
+            case Some(linkValuePropertyIri) => {
+
+                <@linkValuePropertyIri> rdfs:label ?oldLinkValuePropertyLabel .
+
+            }
+
+            case None => {}
+
+        }
     }
 } INSERT {
     GRAPH ?ontologyNamedGraph {
-        ?ontology rdfs:label """@newLabel"""^^xsd:string ;
-            knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+        ?ontology rdfs:label knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+
+        @for((newLabelText, newLabelLang) <- newLabels) {
+
+            ?property """@newLabelText"""@newLabelLang .
+
+        }
+
+        @maybeLinkValuePropertyIri match {
+
+            case Some(linkValuePropertyIri) => {
+
+                @for((newLabelText, newLabelLang) <- newLabels) {
+
+                    <@linkValuePropertyIri> """@newLabelText"""@newLabelLang .
+
+                }
+
+            }
+
+            case None => {}
+
+        }
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
@@ -62,10 +98,24 @@ DELETE {
 WHERE {
     BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
     BIND(IRI("@ontologyIri") AS ?ontology)
+    BIND(IRI("@propertyIri") AS ?property)
 
     GRAPH ?ontologyNamedGraph {
         ?ontology rdf:type owl:Ontology ;
-            rdfs:label ?oldLabel ;
             knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+
+        ?property rdfs:label ?oldLabel .
+
+        @maybeLinkValuePropertyIri match {
+
+            case Some(linkValuePropertyIri) => {
+
+                <@linkValuePropertyIri> rdfs:label ?oldLinkValuePropertyLabel .
+
+            }
+
+            case None => {}
+
+        }
     }
 }

@@ -99,7 +99,6 @@ case class CreatePropertyRequestV2(propertyInfoContent: PropertyInfoContentV2,
                                    apiRequestID: UUID,
                                    userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
-
 /**
   * Constructs instances of [[CreatePropertyRequestV2]] based on JSON-LD requests.
   */
@@ -210,6 +209,31 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
         )
     }
 }
+
+/**
+  * Requests that a property's labels are changed.
+  *
+  * @param propertyIri          the IRI of the property.
+  * @param labels                the property's new labels (a map of language codes to values).
+  * @param lastModificationDate the ontology's last modification date.
+  * @param apiRequestID         the ID of the API request.
+  * @param userProfile          the profile of the user making the request.
+  */
+case class ChangePropertyLabelRequestV2(propertyIri: SmartIri,
+                                        labels: Map[String, String],
+                                        lastModificationDate: Instant,
+                                        apiRequestID: UUID,
+                                        userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+
+
+object ChangePropertyLabelRequestV2 extends KnoraJsonLDRequestReaderV2[ChangePropertyLabelRequestV2] {
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, userProfile: UserProfileV1): ChangePropertyLabelRequestV2 = {
+        // TODO
+
+        ???
+    }
+}
+
 
 /**
   * Requests a change in the metadata of an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
@@ -559,7 +583,7 @@ object InputOntologiesV2 {
     /**
       * Constructs an [[InputOntologiesV2]] based on JSON-LD input.
       *
-      * @param jsonLDDocument the JSON-LD input.
+      * @param jsonLDDocument  the JSON-LD input.
       * @param ignoreExtraData if `true`, extra data in the JSON-LD will be ignored. This is used only in testing.
       *                        Otherwise, extra data will cause an exception to be thrown.
       * @return a case class instance representing the input.
@@ -673,7 +697,7 @@ object InputOntologyV2 {
     /**
       * Constructs an [[InputOntologyV2]] based on a JSON-LD object.
       *
-      * @param ontologyObj a JSON-LD object representing information about the ontology.
+      * @param ontologyObj     a JSON-LD object representing information about the ontology.
       * @param ignoreExtraData if `true`, extra data in the JSON-LD will be ignored. This is used only in testing.
       *                        Otherwise, extra data will cause an exception to be thrown.
       * @return an [[InputOntologyV2]] representing the same information.
@@ -1596,7 +1620,7 @@ object ClassInfoContentV2 {
     /**
       * Converts a JSON-LD class definition into a [[ClassInfoContentV2]].
       *
-      * @param jsonLDClassDef a JSON-LD object representing a class definition.
+      * @param jsonLDClassDef  a JSON-LD object representing a class definition.
       * @param ignoreExtraData if `true`, extra data in the class definition will be ignored. This is used only in testing.
       *                        Otherwise, extra data will cause an exception to be thrown.
       * @return a [[ClassInfoContentV2]] representing the class definition.
@@ -1817,8 +1841,8 @@ object PropertyInfoContentV2 {
       * Reads a [[PropertyInfoContentV2]] from a JSON-LD object.
       *
       * @param jsonLDPropertyDef the JSON-LD object representing a property definition.
-      * @param ignoreExtraData if `true`, extra data in the property definition will be ignored. This is used only in testing.
-      *                        Otherwise, extra data will cause an exception to be thrown.
+      * @param ignoreExtraData   if `true`, extra data in the property definition will be ignored. This is used only in testing.
+      *                          Otherwise, extra data will cause an exception to be thrown.
       * @return a [[PropertyInfoContentV2]] representing the property definition.
       */
     def fromJsonLDObject(jsonLDPropertyDef: JsonLDObject, ignoreExtraData: Boolean): PropertyInfoContentV2 = {

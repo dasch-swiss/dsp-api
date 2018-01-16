@@ -18,7 +18,8 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
-@import org.knora.webapi.IRI
+@import org.knora.webapi.util.SmartIri
+@import java.time.Instant
 
 @*
  * Creates a new, empty ontology. If the ontology already exists, this update does nothing.
@@ -29,10 +30,10 @@
  * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
  *@
 @(triplestore: String,
-  ontologyNamedGraphIri: IRI,
-  ontologyIri: IRI,
+  ontologyNamedGraphIri: SmartIri,
+  ontologyIri: SmartIri,
   ontologyLabel: String,
-  currentTime: String)
+  currentTime: Instant)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
