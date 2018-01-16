@@ -1520,9 +1520,17 @@ class OntologyResponderV2 extends Responder {
 
                 _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
 
-                // Check that the update was successful.
+                // Check that the ontology was updated.
 
                 _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
+
+                // Check that the data that was saved corresponds to the data that was submitted.
+
+                loadedPropertyDef <- loadPropertyDefinition(internalPropertyIri)
+
+                _ = if (loadedPropertyDef != internalPropertyDef) {
+                    throw InconsistentTriplestoreDataException(s"Attempted to save property definition $internalPropertyDef, but $loadedPropertyDef was saved")
+                }
 
                 // Update the ontology cache.
 
@@ -1578,6 +1586,73 @@ class OntologyResponderV2 extends Responder {
                 )
             )
         } yield taskResult
+    }
+
+    /**
+      * Loads a property definition from the triplestore and converts it to a [[PropertyInfoContentV2]].
+      *
+      * @param propertyIri the IRI of the property to be loaded.
+      * @return a [[PropertyInfoContentV2]] representing the property definition.
+      */
+    private def loadPropertyDefinition(propertyIri: SmartIri): Future[PropertyInfoContentV2] = {
+        for {
+            sparql <- Future(queries.sparql.v2.txt.getPropertyDefinition(
+                triplestore = settings.triplestoreType,
+                propertyIri = propertyIri.toString
+            ).toString())
+
+            constructResponse <- (storeManager ? SparqlExtendedConstructRequest(sparql)).mapTo[SparqlExtendedConstructResponse]
+        } yield constructResponseToPropertyDefinition(constructResponse)
+    }
+
+    /**
+      * Converts a SPARQL CONSTRUCT response to a [[PropertyInfoContentV2]].
+      *
+      * @param constructResponse the SPARQL CONSTRUCT response to be read.
+      * @return a [[PropertyInfoContentV2]] representing a property definition.
+      */
+    private def constructResponseToPropertyDefinition(constructResponse: SparqlExtendedConstructResponse): PropertyInfoContentV2 = {
+        val statements = constructResponse.statements
+
+        if (statements.size != 1) {
+            throw InconsistentTriplestoreDataException(s"Expected one subject, got ${statements.size}")
+        }
+
+        val propertyIri = statements.keySet.head.toSmartIri
+
+        if (!propertyIri.getOntologySchema.contains(InternalSchema)) {
+            throw InconsistentTriplestoreDataException(s"Expected an internal property schema, got ${propertyIri.getOntologySchema}")
+        }
+
+        val propertyDefMap: Map[IRI, Seq[StringV2]] = statements.values.head
+        val subPropertyOf: Set[SmartIri] = propertyDefMap.getOrElse(OntologyConstants.Rdfs.SubPropertyOf,
+            throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:subPropertyOf")).map(_.value.toSmartIri).toSet
+
+        val otherPreds: Map[SmartIri, PredicateInfoV2] = (propertyDefMap - OntologyConstants.Rdfs.SubPropertyOf).map {
+            case (predIriStr: IRI, predObjs: Seq[StringV2]) =>
+                val predicateIri = predIriStr.toSmartIri
+
+                val predicateInfo = if (predObjs.exists(_.language.nonEmpty)) {
+                    PredicateInfoV2(
+                        predicateIri = predicateIri,
+                        objectsWithLang = predObjs.map(stringV2 => stringV2.language.getOrElse(throw InconsistentTriplestoreDataException(s"Missing language tag in predicate $predicateIri")) -> stringV2.value).toMap
+                    )
+                } else {
+                    PredicateInfoV2(
+                        predicateIri = predicateIri,
+                        objects = predObjs.map(_.value).toSet
+                    )
+                }
+
+                predicateIri -> predicateInfo
+        }
+
+        PropertyInfoContentV2(
+            propertyIri = propertyIri,
+            subPropertyOf = subPropertyOf,
+            predicates = otherPreds,
+            ontologySchema = propertyIri.getOntologySchema.get
+        )
     }
 
     /**

@@ -21,11 +21,13 @@
 @import org.knora.webapi.IRI
 
 @*
- * Gets the predicates and objects of an ontology IRI.
+ * Gets a resource class definition.
  *
  * @param triplestore the name of the triplestore being used.
+ * @param classIri the IRI of the class.
  *@
-@(triplestore: String)
+@(triplestore: String,
+  classIri: IRI)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -34,13 +36,26 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 CONSTRUCT {
-    ?ontology ?ontologyPred ?ontologyObj .
+    ?class ?classPred ?classObj ;
+        rdfs:subClassOf [ rdf:type owl:Restriction ;
+                          owl:onProperty ?onProperty ;
+                          ?cardinalityPred ?cardinalityValue
+                        ] .
 }
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    ?ontology rdf:type owl:Ontology ;
-        ?ontologyPred ?ontologyObj .
+    BIND(IRI("@classIri") AS ?class)
+
+    ?class rdf:type owl:Class ;
+        ?classPred ?classObj .
+
+    OPTIONAL {
+        ?class rdfs:subClassOf [ rdf:type owl:Restriction ;
+                                 owl:onProperty ?onProperty ;
+                                 ?cardinalityPred ?cardinalityValue
+                               ] .
+    }
 }
