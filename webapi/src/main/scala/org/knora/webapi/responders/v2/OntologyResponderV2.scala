@@ -118,7 +118,7 @@ class OntologyResponderV2 extends Responder {
         case createOntologyRequest: CreateOntologyRequestV2 => future2Message(sender(), createOntology(createOntologyRequest), log)
         case changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2 => future2Message(sender(), changeOntologyMetadata(changeOntologyMetadataRequest), log)
         case createPropertyRequest: CreatePropertyRequestV2 => future2Message(sender(), createProperty(createPropertyRequest), log)
-        case changePropertyLabelRequest: ChangePropertyLabelRequestV2 => future2Message(sender(), changePropertyLabel(changePropertyLabelRequest), log)
+        case changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2 => future2Message(sender(), changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -1601,42 +1601,42 @@ class OntologyResponderV2 extends Responder {
         } yield taskResult
     }
 
-    private def changePropertyLabel(changePropertyLabelRequest: ChangePropertyLabelRequestV2): Future[ReadOntologiesV2] = {
+    private def changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2): Future[ReadOntologiesV2] = {
         def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologiesV2] = {
             for {
                 cacheData <- getCacheData
-                currentPropertyDef = cacheData.propertyDefs.getOrElse(internalPropertyIri, throw BadRequestException(s"Property ${changePropertyLabelRequest.propertyIri} not found"))
+                currentPropertyDef = cacheData.propertyDefs.getOrElse(internalPropertyIri, throw BadRequestException(s"Property ${changePropertyLabelsOrCommentsRequest.propertyIri} not found"))
 
                 // Check that the ontology exists and has not been updated by another user since the client last read it.
-                _ <- checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = changePropertyLabelRequest.lastModificationDate)
+                _ <- checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = changePropertyLabelsOrCommentsRequest.lastModificationDate)
 
-                // Check that the new labels are different from the current ones.
+                // Check that the new labels/comments are different from the current ones.
 
-                currentLabels = currentPropertyDef.entityInfoContent.predicates.getOrElse(OntologyConstants.Rdfs.Label.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $internalPropertyIri has no rdfs:label")).objectsWithLang
+                currentLabelsOrComments = currentPropertyDef.entityInfoContent.predicates.getOrElse(changePropertyLabelsOrCommentsRequest.predicateToUpdate, throw InconsistentTriplestoreDataException(s"Property $internalPropertyIri has no ${changePropertyLabelsOrCommentsRequest.predicateToUpdate}")).objectsWithLang
 
-                _ = if (currentLabels == changePropertyLabelRequest.labels) {
-                    throw BadRequestException(s"The submitted labels are the same as the current labels of property ${changePropertyLabelRequest.propertyIri}")
+                _ = if (currentLabelsOrComments == changePropertyLabelsOrCommentsRequest.newObjects) {
+                    throw BadRequestException(s"The submitted objects of ${changePropertyLabelsOrCommentsRequest.propertyIri} are the same as the current ones in property ${changePropertyLabelsOrCommentsRequest.propertyIri}")
                 }
 
-                // Make a definition of the property with the new labels.
+                // Make a definition of the property with the new labels/comments.
 
-                newLabelPredicate = PredicateInfoV2(
-                    predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                    objectsWithLang = changePropertyLabelRequest.labels
+                newLabelOrCommentPredicate = PredicateInfoV2(
+                    predicateIri = changePropertyLabelsOrCommentsRequest.predicateToUpdate,
+                    objectsWithLang = changePropertyLabelsOrCommentsRequest.newObjects
                 )
 
                 newInternalPropertyDef = currentPropertyDef.entityInfoContent.copy(
-                    predicates = currentPropertyDef.entityInfoContent.predicates + (OntologyConstants.Rdfs.Label.toSmartIri -> newLabelPredicate)
+                    predicates = currentPropertyDef.entityInfoContent.predicates + (changePropertyLabelsOrCommentsRequest.predicateToUpdate -> newLabelOrCommentPredicate)
                 )
 
-                // If this is a link property, make a definition of the corresponding link value property with the new labels.
+                // If this is a link property, make a definition of the corresponding link value property with the new labels/comments.
 
                 maybeNewLinkValuePropertyDef = if (currentPropertyDef.isLinkProp) {
                     val linkValuePropertyIri = internalPropertyIri.fromLinkPropToLinkValueProp
                     val currentLinkValuePropertyDef = cacheData.propertyDefs.getOrElse(linkValuePropertyIri, throw InconsistentTriplestoreDataException(s"Link value property $linkValuePropertyIri not found"))
 
                     Some(currentLinkValuePropertyDef.entityInfoContent.copy(
-                        predicates = currentPropertyDef.entityInfoContent.predicates + (OntologyConstants.Rdfs.Label.toSmartIri -> newLabelPredicate)
+                        predicates = currentPropertyDef.entityInfoContent.predicates + (changePropertyLabelsOrCommentsRequest.predicateToUpdate -> newLabelOrCommentPredicate)
                     ))
                 } else {
                     None
@@ -1646,17 +1646,17 @@ class OntologyResponderV2 extends Responder {
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = queries.sparql.v2.txt.changePropertyLabels(
+                updateSparql = queries.sparql.v2.txt.changePropertyLabelsOrComments(
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
                     propertyIri = internalPropertyIri,
                     maybeLinkValuePropertyIri = maybeNewLinkValuePropertyDef.map(_.propertyIri),
-                    newLabels = changePropertyLabelRequest.labels,
-                    lastModificationDate = changePropertyLabelRequest.lastModificationDate,
+                    predicateToUpdate = changePropertyLabelsOrCommentsRequest.predicateToUpdate,
+                    newObjects = changePropertyLabelsOrCommentsRequest.newObjects,
+                    lastModificationDate = changePropertyLabelsOrCommentsRequest.lastModificationDate,
                     currentTime = currentTime
                 ).toString()
-
 
                 _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
 
@@ -1711,17 +1711,17 @@ class OntologyResponderV2 extends Responder {
 
                 // Read the data back from the cache.
 
-                response <- getPropertyDefinitionsV2(propertyIris = Set(internalPropertyIri), allLanguages = true, userProfile = changePropertyLabelRequest.userProfile)
+                response <- getPropertyDefinitionsV2(propertyIris = Set(internalPropertyIri), allLanguages = true, userProfile = changePropertyLabelsOrCommentsRequest.userProfile)
             } yield response
         }
 
         for {
-            userProfile <- FastFuture.successful(changePropertyLabelRequest.userProfile)
+            userProfile <- FastFuture.successful(changePropertyLabelsOrCommentsRequest.userProfile)
 
-            externalOntologyIri = changePropertyLabelRequest.propertyIri.getOntologyFromEntity
+            externalOntologyIri = changePropertyLabelsOrCommentsRequest.propertyIri.getOntologyFromEntity
             _ <- checkExternalOntologyIriForUpdate(externalOntologyIri)
 
-            externalPropertyIri = changePropertyLabelRequest.propertyIri
+            externalPropertyIri = changePropertyLabelsOrCommentsRequest.propertyIri
             _ <- checkExternalEntityIriForUpdate(externalEntityIri = externalPropertyIri)
 
             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
@@ -1729,7 +1729,7 @@ class OntologyResponderV2 extends Responder {
 
             // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
             taskResult <- IriLocker.runWithIriLock(
-                apiRequestID = changePropertyLabelRequest.apiRequestID,
+                apiRequestID = changePropertyLabelsOrCommentsRequest.apiRequestID,
                 iri = internalOntologyIri.toString,
                 task = () => makeTaskFuture(
                     internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema),

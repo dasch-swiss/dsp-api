@@ -99,19 +99,31 @@ case class CreatePropertyRequestV2(propertyInfoContent: PropertyInfoContentV2,
                                    apiRequestID: UUID,
                                    userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
+case class PropertyUpdateInfo(propertyInfoContent: PropertyInfoContentV2,
+                              lastModificationDate: Instant)
+
 /**
-  * Constructs instances of [[CreatePropertyRequestV2]] based on JSON-LD requests.
+  * Assists in the processing of JSON-LD in ontology entity update requests.
   */
-object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreatePropertyRequestV2] {
+object OntologyUpdateHelper {
+    /**
+      * Gets the ontology's last modification date from the request.
+      *
+      * @param inputOntologyV2 an [[InputOntologyV2]] representing the ontology to be updated.
+      * @return the ontology's last modification date.
+      */
+    def getOntologyLastModificationDate(inputOntologyV2: InputOntologyV2): Instant = {
+        inputOntologyV2.ontologyMetadata.lastModificationDate.getOrElse(throw BadRequestException(s"An ontology update request must include the ontology's knora-api:lastModificationDate"))
+    }
 
-    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
-                            apiRequestID: UUID,
-                            userProfile: UserProfileV1): CreatePropertyRequestV2 = {
+    /**
+      * Gets a property definition from the request.
+      *
+      * @param inputOntologiesV2 an [[InputOntologiesV2]] that must contain a single ontology, containing a single property definition.
+      * @return a [[PropertyUpdateInfo]] containing the property definition and the ontology's last modification date.
+      */
+    def getPropertyDef(inputOntologiesV2: InputOntologiesV2): PropertyUpdateInfo = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-        // Use InputOntologiesV2 to process the JSON-LD.
-
-        val inputOntologiesV2 = InputOntologiesV2.fromJsonLD(jsonLDDocument)
 
         // The request must contain information about exactly one ontology.
 
@@ -130,25 +142,26 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
 
         // The ontology's lastModificationDate must be provided.
 
-        val lastModificationDate: Instant = inputOntologyV2.ontologyMetadata.lastModificationDate.getOrElse(throw BadRequestException(s"An ontology update request must include the ontology's knora-api:lastModificationDate"))
+        val lastModificationDate: Instant = getOntologyLastModificationDate(inputOntologyV2)
 
         // The request must contain exactly one property definition, and no class definitions.
 
         if (inputOntologyV2.classes.nonEmpty || inputOntologyV2.standoffClasses.nonEmpty) {
-            throw BadRequestException(s"A class definition cannot be submitted when creating a property")
+            throw BadRequestException(s"A class definition cannot be submitted when creating or modifying a property")
         }
 
         if (inputOntologyV2.standoffProperties.nonEmpty) {
-            throw NotImplementedException(s"Creation of standoff properties is not yet supported")
+            throw NotImplementedException(s"Standoff properties cannot yet be created or modified")
         }
 
         if (inputOntologyV2.properties.size != 1) {
-            throw BadRequestException(s"Only one property can be created per request")
+            throw BadRequestException(s"Only one property can be created or modified per request")
         }
+
+        val propertyInfoContent = inputOntologyV2.properties.values.head
 
         // Check that the property IRI is valid.
 
-        val propertyInfoContent = inputOntologyV2.properties.values.head
         val propertyIri = propertyInfoContent.propertyIri
 
         if (!(propertyIri.isKnoraApiV2EntityIri &&
@@ -173,6 +186,30 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
                     throw BadRequestException(s"Invalid predicate for request: $predIri")
                 }
         }
+
+        PropertyUpdateInfo(
+            propertyInfoContent = propertyInfoContent,
+            lastModificationDate = lastModificationDate
+        )
+    }
+}
+
+/**
+  * Constructs instances of [[CreatePropertyRequestV2]] based on JSON-LD requests.
+  */
+object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreatePropertyRequestV2] {
+
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            userProfile: UserProfileV1): CreatePropertyRequestV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        // Get the property definition and the ontology's last modification date from the JSON-LD.
+
+        val inputOntologiesV2 = InputOntologiesV2.fromJsonLD(jsonLDDocument)
+        val propertyUpdateInfo = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
+        val propertyInfoContent = propertyUpdateInfo.propertyInfoContent
+        val lastModificationDate = propertyUpdateInfo.lastModificationDate
 
         // Check that the knora-api:subjectType (if provided) and the knora-api:objectType point to valid entity IRIs.
 
@@ -211,26 +248,67 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
 }
 
 /**
-  * Requests that a property's labels are changed.
+  * Requests that a property's labels or comments are changed.
   *
   * @param propertyIri          the IRI of the property.
-  * @param labels                the property's new labels (a map of language codes to values).
+  * @param predicateToUpdate    `rdfs:label` or `rdfs:comment`.
+  * @param newObjects           the property's new labels or comments (a map of language codes to literals).
   * @param lastModificationDate the ontology's last modification date.
   * @param apiRequestID         the ID of the API request.
   * @param userProfile          the profile of the user making the request.
   */
-case class ChangePropertyLabelRequestV2(propertyIri: SmartIri,
-                                        labels: Map[String, String],
-                                        lastModificationDate: Instant,
-                                        apiRequestID: UUID,
-                                        userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class ChangePropertyLabelsOrCommentsRequestV2(propertyIri: SmartIri,
+                                                   predicateToUpdate: SmartIri,
+                                                   newObjects: Map[String, String],
+                                                   lastModificationDate: Instant,
+                                                   apiRequestID: UUID,
+                                                   userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 
-object ChangePropertyLabelRequestV2 extends KnoraJsonLDRequestReaderV2[ChangePropertyLabelRequestV2] {
-    override def fromJsonLD(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, userProfile: UserProfileV1): ChangePropertyLabelRequestV2 = {
-        // TODO
+object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[ChangePropertyLabelsOrCommentsRequestV2] {
+    private val AcceptedPredicatesToUpdate = Set(
+        OntologyConstants.Rdfs.Label,
+        OntologyConstants.Rdfs.Comment
+    )
 
-        ???
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            userProfile: UserProfileV1): ChangePropertyLabelsOrCommentsRequestV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val inputOntologiesV2 = InputOntologiesV2.fromJsonLD(jsonLDDocument)
+        val propertyUpdateInfo = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
+        val propertyInfoContent = propertyUpdateInfo.propertyInfoContent
+        val lastModificationDate = propertyUpdateInfo.lastModificationDate
+        val updatablePredicates = propertyInfoContent.predicates - OntologyConstants.Rdf.Type.toSmartIri
+
+        if (updatablePredicates.size != 1) {
+            throw BadRequestException(s"Either rdfs:label or rdfs:comment must be provided")
+        }
+
+        val predicateInfoToUpdate = updatablePredicates.values.head
+        val predicateToUpdate = predicateInfoToUpdate.predicateIri
+
+        if (!AcceptedPredicatesToUpdate(predicateToUpdate.toString)) {
+            throw BadRequestException(s"Invalid predicate: $predicateToUpdate")
+        }
+
+        if (predicateInfoToUpdate.objects.nonEmpty) {
+            throw BadRequestException(s"Missing language code in rdfs:label or rdfs:comment")
+        }
+
+        if (predicateInfoToUpdate.objectsWithLang.isEmpty) {
+            throw BadRequestException(s"An rdfs:label or rdfs:comment with at least one object is required")
+        }
+
+        ChangePropertyLabelsOrCommentsRequestV2(
+            propertyIri = propertyInfoContent.propertyIri,
+            predicateToUpdate = predicateToUpdate,
+            newObjects = predicateInfoToUpdate.objectsWithLang,
+            lastModificationDate = lastModificationDate,
+            apiRequestID = apiRequestID,
+            userProfile = userProfile
+        )
     }
 }
 
@@ -1218,7 +1296,7 @@ object EntityInfoContentV2 {
                     case JsonLDString(objStr) =>
                         PredicateInfoV2(
                             predicateIri = predicateIri,
-                            objects = Set(objStr.toString)
+                            objects = Set(stringFormatter.toSparqlEncodedString(objStr, throw BadRequestException(s"Invalid predicate object: $objStr")))
                         )
 
                     case objArray: JsonLDArray =>
@@ -1230,7 +1308,7 @@ object EntityInfoContentV2 {
                             PredicateInfoV2(
                                 predicateIri = predicateIri,
                                 objects = objArray.value.map {
-                                    case JsonLDString(objStr) => objStr
+                                    case JsonLDString(objStr) => stringFormatter.toSparqlEncodedString(objStr, throw BadRequestException(s"Invalid predicate object: $objStr"))
                                     case other => throw AssertionException(s"Invalid object for predicate $predicateIriStr: $other")
                                 }.toSet
                             )
