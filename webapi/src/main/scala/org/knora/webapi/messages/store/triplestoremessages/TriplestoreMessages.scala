@@ -258,9 +258,16 @@ case class StringLiteralV2(value: String, language: Option[String] = None) exten
 /**
   * Represents a boolean value.
   *
-  * @param value
+  * @param value the boolean value.
   */
 case class BooleanLiteralV2(value: Boolean) extends LiteralV2(value = value.toString)
+
+/**
+  * Represents an integer value.
+  *
+  * @param value the boolean value.
+  */
+case class IntLiteralV2(value: Int) extends LiteralV2(value = value.toString)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting

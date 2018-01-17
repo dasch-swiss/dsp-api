@@ -388,12 +388,16 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                     SharedTestDataADM.rootUser
                 )
                 val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
-                received.members should contain allElementsOf Seq(
+                val members = received.members
+
+                members.size should be (4)
+
+                members.map(_.id) should contain allElementsOf Seq(
                     SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.RESTRICTED),
                     SharedTestDataADM.imagesUser02.ofType(UserInformationTypeADM.RESTRICTED),
                     SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.RESTRICTED),
                     SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.RESTRICTED)
-                )
+                ).map(_.id)
             }
 
             "return all members of a project identified by shortname" in {
@@ -404,12 +408,16 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
-                received.members should contain allElementsOf Seq(
+                val members = received.members
+
+                members.size should be (4)
+
+                members.map(_.id) should contain allElementsOf Seq(
                     SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.SHORT),
                     SharedTestDataADM.imagesUser02.ofType(UserInformationTypeADM.SHORT),
                     SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.SHORT),
                     SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.SHORT)
-                )
+                ).map(_.id)
             }
 
             "return all members of a project identified by shortcode" in {
@@ -420,12 +428,16 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
-                received.members should contain allElementsOf Seq(
+                val members = received.members
+
+                members.size should be (4)
+
+                members.map(_.id) should contain allElementsOf Seq(
                     SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.SHORT),
                     SharedTestDataADM.imagesUser02.ofType(UserInformationTypeADM.SHORT),
                     SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.SHORT),
                     SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.SHORT)
-                )
+                ).map(_.id)
             }
 
             "return 'NotFound' when the project IRI is unknown (project membership)" in {
@@ -466,10 +478,14 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                     SharedTestDataADM.rootUser
                 )
                 val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
-                received.members should contain allElementsOf Seq(
+                val members = received.members
+
+                members.size should be (2)
+
+                members.map(_.id) should contain allElementsOf Seq(
                     SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.SHORT),
                     SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.SHORT)
-                )
+                ).map(_.id)
             }
 
             "return all project admin members of a project identified by shortname" in {
@@ -480,10 +496,14 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
-                received.members should contain allElementsOf Seq(
+                val members = received.members
+
+                members.size should be (2)
+
+                members.map(_.id) should contain allElementsOf Seq(
                     SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.SHORT),
                     SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.SHORT)
-                )
+                ).map(_.id)
             }
 
             "return all project admin members of a project identified by shortcode" in {
@@ -494,10 +514,14 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
-                received.members should contain allElementsOf Seq(
+                val members = received.members
+
+                members.size should be (2)
+
+                members.map(_.id) should contain allElementsOf Seq(
                     SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.SHORT),
                     SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.SHORT)
-                )
+                ).map(_.id)
             }
 
             "return 'NotFound' when the project IRI is unknown (project admin membership)" in {

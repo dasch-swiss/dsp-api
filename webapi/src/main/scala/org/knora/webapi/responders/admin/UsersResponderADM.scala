@@ -28,13 +28,12 @@ import akka.pattern._
 import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages
-import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
+import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM, GroupGetResponseADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserUpdatePayloadADM, _}
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.groupmessages.GroupInfoResponseV1
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
@@ -1062,8 +1061,8 @@ class UsersResponderADM extends Responder {
             _ = if (!projectExists) throw NotFoundException(s"The group $groupIri does not exist.")
 
             // get group's info. we need the project IRI.
-            groupInfo <- (responderManager ? groupsmessages.GroupGetRequestADM(groupIri, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[GroupInfoResponseV1]
-            projectIri = groupInfo.group_info.project
+            maybeGroupADM <- (responderManager ? GroupGetADM(groupIri, KnoraSystemInstances.Users.SystemUser)).mapTo[Option[GroupADM]]
+            projectIri = maybeGroupADM.getOrElse(throw webapi.InconsistentTriplestoreDataException(s"Group $groupIri does not exist")).project.id
 
             // check if the requesting user is allowed to perform updates
             _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {

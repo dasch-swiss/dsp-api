@@ -244,7 +244,7 @@ object SharedTestDataADM {
         description = Some("A demo project of a collection of images"),
         keywords = Some("images, collection"),
         logo = None,
-        institution = None,
+        institution = Some("http://rdfh.ch/institutions/dhlab-basel"),
         ontologies = Seq(OntologyInfoShortADM(
             ontologyIri = SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI,
             ontologyName = "images"

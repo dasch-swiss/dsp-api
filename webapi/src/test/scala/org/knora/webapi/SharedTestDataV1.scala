@@ -190,7 +190,7 @@ object SharedTestDataV1 {
         description = Some("A demo project of a collection of images"),
         keywords = Some("images, collection"),
         logo = None,
-        institution = None,
+        institution = Some("http://rdfh.ch/institutions/dhlab-basel"),
         ontologies = Seq(IMAGES_ONTOLOGY_IRI),
         status = true,
         selfjoin = false

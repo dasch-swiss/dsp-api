@@ -99,63 +99,65 @@
 
 <http://rdfh.ch/projects/00FF> rdf:type knora-base:knoraProject ;
 
-                                             knora-base:projectShortname "images"^^xsd:string ;
+                                knora-base:projectShortname "images"^^xsd:string ;
 
-                                             knora-base:projectShortcode "00FF"^^xsd:string ;
+                                knora-base:projectShortcode "00FF"^^xsd:string ;
 
-                                             knora-base:projectLongname "Image Collection Demo"^^xsd:string ;
+                                knora-base:projectLongname "Image Collection Demo"^^xsd:string ;
 
-                                             knora-base:projectDescription "A demo project of a collection of images"^^xsd:string ;
+                                knora-base:projectDescription "A demo project of a collection of images"^^xsd:string ;
 
-                                             knora-base:projectKeywords "images, collection"^^xsd:string ;
+                                knora-base:projectKeywords "images, collection"^^xsd:string ;
 
-                                             knora-base:projectOntology <http://www.knora.org/ontology/00FF/images> ;
+                                knora-base:belongsToInstitution <http://rdfh.ch/institutions/dhlab-basel> ;
 
-                                             knora-base:status "true"^^xsd:boolean ;
+                                knora-base:projectOntology <http://www.knora.org/ontology/00FF/images> ;
 
-                                             knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+                                knora-base:status "true"^^xsd:boolean ;
+
+                                knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
 ## Project Admin
 <http://rdfh.ch/users/c266a56709> rdf:type knora-base:User ;
 
-                                         knora-base:email "user01.user1@example.com"^^xsd:string ;
+                                   knora-base:email "user01.user1@example.com"^^xsd:string ;
 
-                                         knora-base:givenName "User01"^^xsd:string ;
+                                   knora-base:givenName "User01"^^xsd:string ;
 
-                                         knora-base:familyName "User"^^xsd:string ;
+                                   knora-base:familyName "User"^^xsd:string ;
 
-                                         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+                                   knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
 
-                                         knora-base:preferredLanguage "de"^^xsd:string ;
+                                   knora-base:preferredLanguage "de"^^xsd:string ;
 
-                                         knora-base:status "true"^^xsd:boolean ;
+                                   knora-base:status "true"^^xsd:boolean ;
 
-                                         knora-base:isInProject <http://rdfh.ch/projects/00FF> ;
+                                   knora-base:isInProject <http://rdfh.ch/projects/00FF> ;
 
-                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
+                                   knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
 
-                                         knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/00FF> .
+                                   knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/00FF> .
 
 
 ## Project Member
 <http://rdfh.ch/users/97cec4000f> rdf:type knora-base:User ;
 
-                                         knora-base:email "user02.user@example.com"^^xsd:string ;
+                                   knora-base:email "user02.user@example.com"^^xsd:string ;
 
-                                         knora-base:givenName "User02"^^xsd:string ;
+                                   knora-base:givenName "User02"^^xsd:string ;
 
-                                         knora-base:familyName "User"^^xsd:string ;
+                                   knora-base:familyName "User"^^xsd:string ;
 
-                                         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+                                   knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
 
-                                         knora-base:preferredLanguage "de"^^xsd:string ;
+                                   knora-base:preferredLanguage "de"^^xsd:string ;
 
-                                         knora-base:status "true"^^xsd:boolean ;
+                                   knora-base:status "true"^^xsd:boolean ;
 
-                                         knora-base:isInProject <http://rdfh.ch/projects/00FF> ;
+                                   knora-base:isInProject <http://rdfh.ch/projects/00FF> ;
 
-                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+                                   knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
 ## Images Reviewer
@@ -217,7 +219,8 @@
 
 
 <http://rdfh.ch/institutions/dhlab-basel> rdf:type knora-base:Institution ;
-                                                 knora-base:institutionName "Digital Humanities Lab, Basel" .
+
+                                          knora-base:institutionName "Digital Humanities Lab, Basel" .
 
 
 ##########################################################

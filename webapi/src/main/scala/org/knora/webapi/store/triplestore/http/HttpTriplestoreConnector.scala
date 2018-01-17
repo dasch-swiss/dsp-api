@@ -29,7 +29,6 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
-import arq.iri
 import org.apache.commons.lang3.StringUtils
 import org.eclipse.rdf4j.model.Statement
 import org.eclipse.rdf4j.model.impl.{SimpleIRI, SimpleLiteral}
@@ -40,9 +39,8 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, _}
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{FakeTriplestore, StringFormatter}
 import org.knora.webapi.util.SparqlResultProtocol._
-import org.openrdf.model.vocabulary.{RDF, XMLSchema}
+import org.knora.webapi.util.{FakeTriplestore, StringFormatter}
 import spray.json._
 
 import scala.collection.JavaConverters._
@@ -267,15 +265,20 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 val subjectIri = st.getSubject.stringValue
                 val predicateIri = st.getPredicate.stringValue
 
+                // log.debug("sparqlHttpExtendedConstruct - handleStatement - object: {}", st.getObject)
+
                 val objectLiteral: LiteralV2 = st.getObject match {
                     case iri: SimpleIRI => IriLiteralV2(value = iri.stringValue)
                     case lit: SimpleLiteral => lit.getDatatype.toString match {
                         case OntologyConstants.Rdf.LangString => StringLiteralV2(value = lit.stringValue, language = lit.getLanguage.asScala)
                         case OntologyConstants.Xsd.String => StringLiteralV2(value = lit.stringValue, language = None)
                         case OntologyConstants.Xsd.Boolean => BooleanLiteralV2(value = lit.booleanValue)
+                        case OntologyConstants.Xsd.Integer => IntLiteralV2(value = lit.intValue)
                         case unknown => throw NotImplementedException(s"The literal type '$unknown' is not implemented.")
                     }
                 }
+
+                // log.debug("sparqlHttpExtendedConstruct - handleStatement - objectLiteral: {}", objectLiteral)
 
                 val currentStatementsForSubject: Map[IRI, Seq[LiteralV2]] = statements.getOrElse(subjectIri, Map.empty[IRI, Seq[LiteralV2]])
                 val currentStatementsForPredicate: Seq[LiteralV2] = currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[LiteralV2])

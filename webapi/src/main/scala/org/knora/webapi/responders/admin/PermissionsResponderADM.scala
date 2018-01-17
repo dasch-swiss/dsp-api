@@ -110,40 +110,40 @@ class PermissionsResponderADM extends Responder {
             Seq.empty[Future[(IRI, IRI)]]
         }
 
-        val groupsFuture: Future[Vector[(IRI, IRI)]] = Future.sequence(groupFutures).map(_.toVector)
+        val groupsFuture: Future[Seq[(IRI, IRI)]] = Future.sequence(groupFutures).map(_.toSeq)
 
         for {
-            groups: Vector[(IRI, IRI)] <- groupsFuture
+            groups: Seq[(IRI, IRI)] <- groupsFuture
             //_ = log.debug(s"permissionsProfileGetV1 - groups: {}", MessageUtil.toSource(groups))
 
             /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectMember' group for each project */
-            projectMembers: Vector[(IRI, IRI)] = if (projectIris.nonEmpty) {
+            projectMembers: Seq[(IRI, IRI)] = if (projectIris.nonEmpty) {
                 for {
                     projectIri <- projectIris.toVector
                     res = (projectIri, OntologyConstants.KnoraBase.ProjectMember)
                 } yield res
             } else {
-                Vector.empty[(IRI, IRI)]
+                Seq.empty[(IRI, IRI)]
             }
             //_ = log.debug(s"permissionsProfileGetV1 - projectMembers: {}", MessageUtil.toSource(projectMembers))
 
 
             /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group for each project */
-            projectAdmins: Vector[(IRI, IRI)] = if (projectIris.nonEmpty) {
+            projectAdmins: Seq[(IRI, IRI)] = if (projectIris.nonEmpty) {
                 for {
-                    projectAdminForGroup <- isInProjectAdminGroups.toVector
+                    projectAdminForGroup <- isInProjectAdminGroups.toSeq
                     res = (projectAdminForGroup, OntologyConstants.KnoraBase.ProjectAdmin)
                 } yield res
             } else {
-                Vector.empty[(IRI, IRI)]
+                Seq.empty[(IRI, IRI)]
             }
             //_ = log.debug("permissionsProfileGetV1 - projectAdmins: {}", MessageUtil.toSource(projectAdmins))
 
             /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
-            systemAdmin: Vector[(IRI, IRI)] = if (isInSystemAdminGroup) {
-                Vector((OntologyConstants.KnoraBase.SystemProject, OntologyConstants.KnoraBase.SystemAdmin))
+            systemAdmin: Seq[(IRI, IRI)] = if (isInSystemAdminGroup) {
+                Seq((OntologyConstants.KnoraBase.SystemProject, OntologyConstants.KnoraBase.SystemAdmin))
             } else {
-                Vector.empty[(IRI, IRI)]
+                Seq.empty[(IRI, IRI)]
             }
             //_ = log.debug(s"permissionsProfileGetV1 - systemAdmin: {}", MessageUtil.toSource(systemAdmin))
 
