@@ -60,7 +60,7 @@ class OntologiesADME2ESpec extends E2ESpec(OntologiesADME2ESpec.config) with Tri
 
             val request = Get(baseApiUrl + s"/admin/ontologies")
             val response = singleAwaitingRequest(request, 1.seconds)
-            log.debug("==>> " + response.toString)
+            // log.debug("==>> " + response.toString)
             assert(response.status === StatusCodes.OK)
         }
     }

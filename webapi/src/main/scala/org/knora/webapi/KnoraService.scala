@@ -33,11 +33,7 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import org.knora.webapi.http.CORSSupport.CORS
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
-import org.knora.webapi.messages.admin.responder.{permissionsmessages, usersmessages}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
-import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders._
@@ -130,7 +126,6 @@ trait KnoraService {
             CkanRouteV1.knoraApiPath(system, settings, log) ~
             UsersRouteV1.knoraApiPath(system, settings, log) ~
             ProjectsRouteV1.knoraApiPath(system, settings, log) ~
-            GroupsRouteV1.knoraApiPath(system, settings, log) ~
             OntologiesRouteV2.knoraApiPath(system, settings, log) ~
             SearchRouteV2.knoraApiPath(system, settings, log) ~
             ResourcesRouteV2.knoraApiPath(system, settings, log) ~

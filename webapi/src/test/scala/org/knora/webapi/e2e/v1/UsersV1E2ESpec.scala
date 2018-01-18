@@ -24,7 +24,7 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
-import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
+import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.{E2ESpec, IRI, SharedTestDataV1}
 import spray.json._
 
@@ -79,9 +79,6 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
     val imagesProjectIri = SharedTestDataV1.imagesProjectInfo.id
     val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
 
-    val imagesReviewerGroupIri = SharedTestDataV1.imagesReviewerGroupInfo.id
-    val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
-
     /**
       * Convenience method returning the users project memberships.
       *
@@ -123,7 +120,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, 300.seconds)
     }
 

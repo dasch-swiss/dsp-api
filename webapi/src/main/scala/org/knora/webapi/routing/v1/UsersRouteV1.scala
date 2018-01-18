@@ -33,10 +33,6 @@ import org.knora.webapi.util.StringFormatter
   */
 object UsersRouteV1 extends Authenticator {
 
-    /* bring json protocol into scope */
-
-    import UserV1JsonProtocol._
-
     private val schemes = Array("http", "https")
     private val urlValidator = new UrlValidator(schemes)
 

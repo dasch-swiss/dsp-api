@@ -23,11 +23,10 @@ package org.knora.webapi.messages.admin.responder.groupsmessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.messages.admin.responder.KnoraRequestADM
+import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder._
-import org.knora.webapi.messages.v1.responder.groupmessages.GroupInfoV1
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.{BadRequestException, IRI}
 import spray.json.{DefaultJsonProtocol, JsonFormat, RootJsonFormat}
@@ -171,7 +170,7 @@ case class GroupPermissionUpdateRequestADM(requestingUser: UserADM,
   *
   * @param groups information about all existing groups.
   */
-case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseV1 with GroupsADMJsonProtocol {
+case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseADM with GroupsADMJsonProtocol {
     def toJsValue = groupsGetResponseADMFormat.write(this)
 }
 
@@ -180,7 +179,7 @@ case class GroupsGetResponseADM(groups: Seq[GroupADM]) extends KnoraResponseV1 w
   *
   * @param group all information about the group.
   */
-case class GroupGetResponseADM(group: GroupADM) extends KnoraResponseV1 with GroupsADMJsonProtocol {
+case class GroupGetResponseADM(group: GroupADM) extends KnoraResponseADM with GroupsADMJsonProtocol {
     def toJsValue = groupResponseADMFormat.write(this)
 }
 
@@ -189,7 +188,7 @@ case class GroupGetResponseADM(group: GroupADM) extends KnoraResponseV1 with Gro
   *
   * @param members the group's members.
   */
-case class GroupMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResponseV1 with GroupsADMJsonProtocol {
+case class GroupMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResponseADM with GroupsADMJsonProtocol {
     def toJsValue = groupMembersResponseADMFormat.write(this)
 }
 
@@ -198,7 +197,7 @@ case class GroupMembersGetResponseADM(members: Seq[UserADM]) extends KnoraRespon
   *
   * @param group the new group information of the created/modified group.
   */
-case class GroupOperationResponseADM(group: GroupADM) extends KnoraResponseV1 with GroupsADMJsonProtocol {
+case class GroupOperationResponseADM(group: GroupADM) extends KnoraResponseADM with GroupsADMJsonProtocol {
     def toJsValue = groupOperationResponseADMFormat.write(this)
 }
 
@@ -222,18 +221,6 @@ case class GroupADM(id: IRI,
                     project: ProjectADM,
                     status: Boolean,
                     selfjoin: Boolean) {
-
-    def asGroupInfoV1: GroupInfoV1 = {
-
-        GroupInfoV1(
-            id = id,
-            name = name,
-            description = Some(description),
-            project = project.id,
-            status = status,
-            selfjoin = selfjoin
-        )
-    }
 
     def asGroupShortADM: GroupShortADM = {
 

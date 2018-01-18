@@ -29,7 +29,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.{Permission
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
-import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages._
 import spray.json._
@@ -420,7 +419,7 @@ case class UserGroupMembershipsGetResponseADM(groups: Seq[GroupADM]) extends Kno
   *
   * @param user the new user profile of the created/modified user.
   */
-case class UserOperationResponseADM(user: UserADM) extends KnoraResponseV1 {
+case class UserOperationResponseADM(user: UserADM) extends KnoraResponseADM {
     def toJsValue: JsValue = UsersADMJsonProtocol.userOperationResponseADMFormat.write(this)
 }
 

@@ -64,7 +64,7 @@ class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with Tri
         "succeed with resetting if startup flag is set" in {
             /**
               * This test corresponds to the following curl call:
-              * curl -H "Content-Type: application/json" -X POST -d '[{"path":"../knora-ontologies/knora-base.ttl","name":"http://www.knora.org/ontology/knora-base"}]' http://localhost:3333/v1/store/ResetTriplestoreContent
+              * curl -H "Content-Type: application/json" -X POST -d '[{"path":"../knora-ontologies/knora-base.ttl","name":"http://www.knora.org/ontology/knora-base"}]' http://localhost:3333/admin/store/ResetTriplestoreContent
               */
 
 			StartupFlags.allowReloadOverHTTP send true

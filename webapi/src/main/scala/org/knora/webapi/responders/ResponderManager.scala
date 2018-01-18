@@ -31,7 +31,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersResponderRequestADM
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
-import org.knora.webapi.messages.v1.responder.groupmessages.GroupsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
@@ -337,8 +336,8 @@ class ResponderManager extends Actor with ActorLogging {
 
         // Knora Admin message
         case groupsResponderRequestADM: GroupsResponderRequestADM => groupsRouterADM.forward(groupsResponderRequestADM)
-        case listsAdminResponderRequest: ListsResponderRequestADM => listsAdminRouter forward listsAdminResponderRequest
-        case ontologiesAdminResponderRequest: OntologiesResponderRequestADM => ontologiesRouterADM forward ontologiesAdminResponderRequest
+        case listsResponderRequest: ListsResponderRequestADM => listsAdminRouter forward listsResponderRequest
+        case ontologiesResponderRequest: OntologiesResponderRequestADM => ontologiesRouterADM forward ontologiesResponderRequest
         case permissionsResponderRequestADM: PermissionsResponderRequestADM => permissionsRouterADM.forward(permissionsResponderRequestADM)
         case projectsResponderRequestADM: ProjectsResponderRequestADM => projectsRouterADM.forward(projectsResponderRequestADM)
         case usersResponderRequestADM: UsersResponderRequestADM => usersRouterADM.forward(usersResponderRequestADM)

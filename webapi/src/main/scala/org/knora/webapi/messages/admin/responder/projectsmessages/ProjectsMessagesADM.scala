@@ -415,7 +415,7 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologiesADMJsonProtocol._
     import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 
-    implicit val projectADMFormat: JsonFormat[ProjectADM] = jsonFormat11(ProjectADM)
+    implicit val projectADMFormat: JsonFormat[ProjectADM] = lazyFormat(jsonFormat11(ProjectADM))
     implicit val projectsResponseADMFormat: RootJsonFormat[ProjectsGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectsGetResponseADM, "projects")))
     implicit val projectResponseADMFormat: RootJsonFormat[ProjectGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectGetResponseADM, "project")))
 

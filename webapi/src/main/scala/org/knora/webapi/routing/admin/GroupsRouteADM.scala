@@ -145,7 +145,7 @@ object GroupsRouteADM extends Authenticator with GroupsADMJsonProtocol {
         } ~
         path("admin" / "groups" / "members" / Segment) { value =>
             get {
-                /* returns all members of the group identified through iri or name/project */
+                /* returns all members of the group identified through iri */
                 requestContext =>
 
                     val requestingUser = getUserADM(requestContext)

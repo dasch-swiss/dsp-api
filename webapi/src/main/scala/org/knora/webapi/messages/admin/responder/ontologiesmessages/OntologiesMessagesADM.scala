@@ -25,7 +25,7 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UsersADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import spray.json.{DefaultJsonProtocol, RootJsonFormat, _}
@@ -168,7 +168,13 @@ case class OntologyCreateResponseADM(ontology: OntologyDataADM) extends KnoraRes
   * @param project the [[ProjectInfoV1]] of the project to which this ontology belongs.
   * @param data the contents of the the ontology as an JSON-LD string.
   */
-case class OntologyDataADM(ontologyIri: IRI, ontologyName: String, project: ProjectADM, data: String)
+case class OntologyDataADM(ontologyIri: IRI,
+                           ontologyName: String,
+                           project: ProjectADM,
+                           data: String) {
+
+    def toJsValue: JsValue = OntologiesADMJsonProtocol.ontologyDataADMFormat.write(this)
+}
 
 /**
   * Represents basic information about an ontology (with project).
@@ -177,7 +183,11 @@ case class OntologyDataADM(ontologyIri: IRI, ontologyName: String, project: Proj
   * @param ontologyName the name of the ontology.
   * @param project the [[ProjectADM]] of the project to which this ontology belongs.
   */
-case class OntologyInfoADM(ontologyIri: IRI, ontologyName: String, project: ProjectADM) {
+case class OntologyInfoADM(ontologyIri: IRI,
+                           ontologyName: String,
+                           project: ProjectADM) {
+
+    def toJsValue: JsValue = OntologiesADMJsonProtocol.ontologyInfoADMFormat.write(this)
 
     def asOntologyInfoShortADM: OntologyInfoShortADM = {
         OntologyInfoShortADM(
@@ -193,7 +203,11 @@ case class OntologyInfoADM(ontologyIri: IRI, ontologyName: String, project: Proj
   * @param ontologyIri the IRI of the ontology.
   * @param ontologyName the name of the ontology.
   */
-case class OntologyInfoShortADM(ontologyIri: IRI, ontologyName: String)
+case class OntologyInfoShortADM(ontologyIri: IRI,
+                                ontologyName: String) {
+
+    def toJsValue: JsValue = OntologiesADMJsonProtocol.ontologyInfoShortADMFormat.write(this)
+}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -204,14 +218,14 @@ case class OntologyInfoShortADM(ontologyIri: IRI, ontologyName: String)
   */
 object OntologiesADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsADMJsonProtocol {
 
-    implicit val ontologyDataADMFormat: JsonFormat[OntologyDataADM] = lazyFormat(jsonFormat(OntologyDataADM, "ontologyIri", "ontologyName", "project", "data"))
-    implicit val ontologyInfoLongADMFormat: JsonFormat[OntologyInfoADM] = lazyFormat(jsonFormat(OntologyInfoADM, "ontologyIri", "ontologyName", "project"))
-    implicit val ontologyInfoShortADMFormat: JsonFormat[OntologyInfoShortADM] = lazyFormat(jsonFormat(OntologyInfoShortADM, "ontologyIri", "ontologyName"))
-    implicit val ontologyInfosGetResponseADMFormat: RootJsonFormat[OntologyInfosGetResponseADM] = jsonFormat(OntologyInfosGetResponseADM, "ontologies")
-    implicit val ontologyInfoGetResponseADMFormat: RootJsonFormat[OntologyInfoGetResponseADM] = jsonFormat(OntologyInfoGetResponseADM, "ontology")
-    implicit val ontologiesGetResponseADMFormat: RootJsonFormat[OntologiesGetResponseADM] = jsonFormat(OntologiesGetResponseADM, "ontologies")
-    implicit val ontologGetResponseADMFormat: RootJsonFormat[OntologyGetResponseADM] = jsonFormat(OntologyGetResponseADM, "ontology")
+    implicit val ontologyDataADMFormat: JsonFormat[OntologyDataADM] = lazyFormat(jsonFormat4(OntologyDataADM))
+    implicit val ontologyInfoADMFormat: JsonFormat[OntologyInfoADM] = lazyFormat(jsonFormat3(OntologyInfoADM))
+    implicit val ontologyInfoShortADMFormat: JsonFormat[OntologyInfoShortADM] = lazyFormat(jsonFormat2(OntologyInfoShortADM))
+    implicit val ontologyInfosGetResponseADMFormat: RootJsonFormat[OntologyInfosGetResponseADM] = rootFormat(lazyFormat(jsonFormat(OntologyInfosGetResponseADM, "ontologies")))
+    implicit val ontologyInfoGetResponseADMFormat: RootJsonFormat[OntologyInfoGetResponseADM] = jsonFormat1(OntologyInfoGetResponseADM)
+    implicit val ontologiesGetResponseADMFormat: RootJsonFormat[OntologiesGetResponseADM] = jsonFormat1(OntologiesGetResponseADM)
+    implicit val ontologGetResponseADMFormat: RootJsonFormat[OntologyGetResponseADM] = jsonFormat1(OntologyGetResponseADM)
     implicit val createOntologyPayloadADMFormat: RootJsonFormat[CreateOntologyPayloadADM] = jsonFormat2(CreateOntologyPayloadADM)
 
-    implicit val ontologyCreateResponseADMFormat: RootJsonFormat[OntologyCreateResponseADM] = jsonFormat(OntologyCreateResponseADM, "ontology")
+    implicit val ontologyCreateResponseADMFormat: RootJsonFormat[OntologyCreateResponseADM] = jsonFormat1(OntologyCreateResponseADM)
 }

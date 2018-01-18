@@ -25,12 +25,11 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
-import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1
-import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.knora.webapi.{E2ESpec, SharedTestDataADM}
 import spray.json._
@@ -64,12 +63,13 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
     private val projectIriEnc = java.net.URLEncoder.encode(projectIri, "utf-8")
     private val projectShortName = SharedTestDataADM.imagesProject.shortname
     private val projectShortnameEnc = java.net.URLEncoder.encode(projectShortName, "utf-8")
-    private val projectShortcode = SharedTestDataADM.imagesProject.shortcode
+    private val projectShortcode = SharedTestDataADM.imagesProject.shortcode.get
+    private val projectShortcodeEnc = java.net.URLEncoder.encode(projectShortcode, "utf-8")
 
 
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, 300.seconds)
     }
 
@@ -80,12 +80,12 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             "return all projects" in {
                 val request = Get(baseApiUrl + s"/admin/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: {}", response)
+                // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
 
                 // log.debug("projects as objects: {}", AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectInfoV1]])
 
-                val projects: Seq[ProjectInfoV1] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectInfoV1]]
+                val projects: Seq[ProjectADM] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
                 projects.size should be (7)
 
             }
@@ -105,7 +105,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             }
 
             "return the information for a single project identified by shortcode" in {
-                val request = Get(baseApiUrl + s"/admin/projects/$projectShortcode?identifier=shortcode") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/$projectShortcodeEnc?identifier=shortcode") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -137,17 +137,16 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
 
-                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("project_info").asJsObject.fields
-                jsonResult("shortname").convertTo[String] should be ("newproject")
-                jsonResult("longname").convertTo[String] should be ("project longname")
-                jsonResult("description").convertTo[String] should be ("project description")
-                jsonResult("keywords").convertTo[String] should be ("keywords")
-                jsonResult("logo").convertTo[String] should be ("/fu/bar/baz.jpg")
-                jsonResult("status").convertTo[Boolean] should be (true)
-                jsonResult("selfjoin").convertTo[Boolean] should be (false)
+                val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+                result.shortname should be ("newproject")
+                result.longname should be (Some("project longname"))
+                result.description should be (Some("project description"))
+                result.keywords should be (Some("keywords"))
+                result.logo should be (Some("/fu/bar/baz.jpg"))
+                result.status should be (true)
+                result.selfjoin should be (false)
 
-                val iri = jsonResult("id").convertTo[String]
-                newProjectIri.set(iri)
+                newProjectIri.set(result.id)
                 // log.debug("newProjectIri: {}", newProjectIri.get)
 
             }
@@ -215,14 +214,14 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
 
-                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("project_info").asJsObject.fields
-                jsonResult("shortname").convertTo[String] should be ("newproject")
-                jsonResult("longname").convertTo[String] should be ("updated project longname")
-                jsonResult("description").convertTo[String] should be ("updated project description")
-                jsonResult("keywords").convertTo[String] should be ("updated keywords")
-                jsonResult("logo").convertTo[String] should be ("/fu/bar/baz-updated.jpg")
-                jsonResult("status").convertTo[Boolean] should be (true)
-                jsonResult("selfjoin").convertTo[Boolean] should be (true)
+                val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+                result.shortname should be ("newproject")
+                result.longname should be (Some("updated project longname"))
+                result.description should be (Some("updated project description"))
+                result.keywords should be (Some("updated keywords"))
+                result.logo should be (Some("/fu/bar/baz-updated.jpg"))
+                result.status should be (true)
+                result.selfjoin should be (true)
             }
 
             "DELETE a project" in {
@@ -233,8 +232,8 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
 
-                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("project_info").asJsObject.fields
-                jsonResult("status").convertTo[Boolean] should be (false)
+                val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+                result.status should be (false)
             }
 
         }
@@ -247,7 +246,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
 
-                val members: Seq[UserDataV1] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserDataV1]]
+                val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
                 members.size should be (4)
             }
 
@@ -257,7 +256,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
 
-                val members: Seq[UserDataV1] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserDataV1]]
+                val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
                 members.size should be (4)
             }
 
@@ -267,7 +266,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
 
-                val members: Seq[UserDataV1] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserDataV1]]
+                val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
                 members.size should be (2)
             }
 
@@ -277,7 +276,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
 
-                val members: Seq[UserDataV1] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserDataV1]]
+                val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
                 members.size should be (2)
             }
         }

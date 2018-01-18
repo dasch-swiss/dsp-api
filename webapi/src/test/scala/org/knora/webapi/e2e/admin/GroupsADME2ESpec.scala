@@ -83,15 +83,8 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
                 assert(response.status === StatusCodes.OK)
             }
 
-            "return the group's information (identified by iri)" in {
+            "return the group's information" in {
                 val request = Get(baseApiUrl + s"/admin/groups/$groupIriEnc") ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-            }
-
-            "return the group's information (identified by project and groupname)" in {
-                val request = Get(baseApiUrl + s"/admin/groups/$groupNameEnc?projectIri=$projectIriEnc&identifier=groupname") ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -124,7 +117,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
                 val groupInfo: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]
 
                 groupInfo.name should be ("NewGroup")
-                groupInfo.description should be (Some("NewGroupDescription"))
+                groupInfo.description should be ("NewGroupDescription")
                 groupInfo.project should be (SharedTestDataADM.imagesProject)
                 groupInfo.status should be (true)
                 groupInfo.selfjoin should be (false)
@@ -153,7 +146,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
                 val groupInfo: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]
 
                 groupInfo.name should be ("UpdatedGroupName")
-                groupInfo.description should be (Some("UpdatedGroupDescription"))
+                groupInfo.description should be ("UpdatedGroupDescription")
                 groupInfo.project should be (SharedTestDataADM.imagesProject)
                 groupInfo.status should be (true)
                 groupInfo.selfjoin should be (false)
@@ -171,7 +164,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
                 val groupInfo: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]
 
                 groupInfo.name should be ("UpdatedGroupName")
-                groupInfo.description should be (Some("UpdatedGroupDescription"))
+                groupInfo.description should be ("UpdatedGroupDescription")
                 groupInfo.project should be (SharedTestDataADM.imagesProject)
                 groupInfo.status should be (false)
                 groupInfo.selfjoin should be (false)
@@ -181,15 +174,8 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
         "used to query members" should {
 
-            "return all members of a group identified by IRI" in {
+            "return all members of a group" in {
                 val request = Get(baseApiUrl + s"/admin/groups/members/$groupIriEnc") ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-            }
-
-            "return all members of a group identified by group name and project IRI" in {
-                val request = Get(baseApiUrl + s"/admin/groups/members/$groupNameEnc?projectIri=$projectIriEnc&identifier=groupname") ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)

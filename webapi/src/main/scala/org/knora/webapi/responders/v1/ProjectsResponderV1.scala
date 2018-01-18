@@ -128,7 +128,7 @@ class ProjectsResponderV1 extends Responder {
                         description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head),
                         keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords).map(_.head),
                         logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head),
-                        institution = propsMap.get(OntologyConstants.KnoraBase.BelongsToProject).map(_.head),
+                        institution = propsMap.get(OntologyConstants.KnoraBase.BelongsToInstitution).map(_.head),
                         ontologies = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, Seq.empty[IRI]),
                         status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.toBoolean,
                         selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).head.toBoolean

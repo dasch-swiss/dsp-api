@@ -27,8 +27,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.groupsmessages
-import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM, GroupGetResponseADM}
+import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM

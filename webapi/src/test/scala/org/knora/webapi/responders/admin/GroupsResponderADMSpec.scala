@@ -26,7 +26,6 @@ import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
@@ -78,6 +77,16 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
     }
 
     "The GroupsResponder " when {
+
+        "asked about all groups" should {
+            "return a list" in {
+                actorUnderTest ! GroupsGetRequestADM(SharedTestDataADM.rootUser)
+                val response = expectMsgType[GroupsGetResponseADM](timeout)
+                // println(response.users)
+                response.groups.nonEmpty should be (true)
+                response.groups.size should be (1)
+            }
+        }
 
         "asked about a group identified by 'iri' " should {
             "return group info if the group is known " in {

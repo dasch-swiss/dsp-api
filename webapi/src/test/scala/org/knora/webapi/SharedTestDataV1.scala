@@ -22,7 +22,6 @@ package org.knora.webapi
 
 import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionsDataADM}
-import org.knora.webapi.messages.v1.responder.groupmessages.GroupInfoV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 
@@ -192,36 +191,6 @@ object SharedTestDataV1 {
         logo = None,
         institution = Some("http://rdfh.ch/institutions/dhlab-basel"),
         ontologies = Seq(IMAGES_ONTOLOGY_IRI),
-        status = true,
-        selfjoin = false
-    )
-
-    /* represents the full GroupInfoV1 of the images ProjectAdmin group */
-    def imagesProjectAdminGroupInfo = GroupInfoV1(
-        id = "-",
-        name = "ProjectAdmin",
-        description = Some("Default Project Admin Group"),
-        project = IMAGES_PROJECT_IRI,
-        status = true,
-        selfjoin = false
-    )
-
-    /* represents the full GroupInfoV1 of the images ProjectMember group */
-    def imagesProjectMemberGroupInfo = GroupInfoV1(
-        id = "-",
-        name = "ProjectMember",
-        description = Some("Default Project Member Group"),
-        project = IMAGES_PROJECT_IRI,
-        status = true,
-        selfjoin = false
-    )
-
-    /* represents the full GroupInfoV1 of the images project reviewer group */
-    def imagesReviewerGroupInfo = GroupInfoV1(
-        id = "http://rdfh.ch/groups/00FF/images-reviewer",
-        name = "Image reviewer",
-        description = Some("A group for image reviewers."),
-        project = IMAGES_PROJECT_IRI,
         status = true,
         selfjoin = false
     )

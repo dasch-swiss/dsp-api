@@ -91,9 +91,12 @@ object ProjectsRouteADM extends Authenticator with ProjectsADMJsonProtocol {
 
                         val requestingUser = getUserADM(requestContext)
 
-                        val requestMessage = if (identifier != "iri") { // identify project by shortname.
+                        val requestMessage = if (identifier == "shortname") { // identify project by shortname.
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             ProjectGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
+                        } else if (identifier == "shortcode") {
+                            val shortcodeDec = java.net.URLDecoder.decode(value, "utf-8")
+                            ProjectGetRequestADM(maybeIri = None, maybeShortname = None, maybeShortcode = Some(shortcodeDec), requestingUser = requestingUser)
                         } else { // identify project by iri. this is the default case.
                             val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
                             ProjectGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)

@@ -29,7 +29,6 @@ import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserInformationTypeADM}
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.groupmessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
@@ -130,11 +129,11 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
 
 
     /**
-      * Gets the group with the given group IRI and returns the information as a [[GroupInfoV1]].
+      * Gets the group with the given group IRI and returns the information as a [[GroupADM]].
       *
       * @param groupIri    the IRI of the group requested.
       * @param requestingUser the user initiating the request.
-      * @return information about the group as a [[GroupInfoV1]]
+      * @return information about the group as a [[GroupADM]]
       */
     private def groupGetADM(groupIri: IRI, requestingUser: UserADM): Future[Option[GroupADM]] = {
 
@@ -441,11 +440,11 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
     ////////////////////
 
     /**
-      * Helper method that turns SPARQL result rows into a [[GroupInfoV1]].
+      * Helper method that turns SPARQL result rows into a [[GroupADM]].
       *
       * @param statements results from the SPARQL query representing information about the group.
       * @param requestingUser the user that is making the request.
-      * @return a [[GroupInfoV1]] representing information about the group.
+      * @return a [[GroupADM]] representing information about the group.
       */
     private def statements2GroupADM(statements: (IRI, Map[IRI, Seq[LiteralV2]]), requestingUser: UserADM): Future[Option[GroupADM]] = {
 

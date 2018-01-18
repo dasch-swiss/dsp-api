@@ -20,6 +20,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.ontologiesmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsGetADM}
@@ -44,7 +45,7 @@ class OntologiesResponderADM extends Responder {
 
 
     /**
-      * Gets all ontologies and returns them as a [[OntologiesGetResponseADM]].
+      * Gets all ontologies and returns them as a [[OntologyInfosGetResponseADM]].
       *
       * @param requestingUser the user making the request.
       * @return a [[OntologiesGetResponseADM]].
@@ -67,6 +68,8 @@ class OntologiesResponderADM extends Responder {
                     )
                 }
             }
+
+            // _ = log.debug("ontologieInfosGetRequestADM - ontologies: {}", ontologies)
 
         } yield OntologyInfosGetResponseADM(ontologies = ontologies)
     }

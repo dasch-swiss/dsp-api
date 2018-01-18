@@ -64,7 +64,6 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     private val incunabulaUserEmail = incunabulaUser.userData.email.get
 
     private val imagesProjectIri = SharedTestDataV1.imagesProjectInfo.id
-    private val imagesReviewerGroupIri = SharedTestDataV1.imagesReviewerGroupInfo.id
 
     private val actorUnderTest = TestActorRef[UsersResponderV1]
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)

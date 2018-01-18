@@ -41,7 +41,7 @@ object PermissionsRouteADM extends Authenticator {
         implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
 
-        path("v1" / "permissions" / Segment / Segment) { (projectIri, groupIri) =>
+        path("admin" / "permissions" / Segment / Segment) { (projectIri, groupIri) =>
             get {
                 requestContext =>
                     val requestingUser = getUserADM(requestContext)

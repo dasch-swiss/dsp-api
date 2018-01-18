@@ -59,7 +59,7 @@ object OntologiesRouteADM extends Authenticator {
                             case None => None
                         }
 
-                        val requestMessage = OntologiesGetRequestADM(requestingUser)
+                        val requestMessage = OntologyInfosGetRequestADM(requestingUser)
 
                         RouteUtilADM.runJsonRoute(
                             requestMessage,

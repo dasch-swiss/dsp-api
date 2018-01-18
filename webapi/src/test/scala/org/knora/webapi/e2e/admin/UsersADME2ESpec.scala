@@ -25,12 +25,15 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.e2e.v1.UsersV1E2ESpec
+import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, IRI, SharedTestDataV1}
+import org.knora.webapi.{E2ESpec, IRI, SharedTestDataADM, SharedTestDataV1}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -47,7 +50,7 @@ object UsersADME2ESpec {
 /**
   * End-to-End (E2E) test specification for testing users endpoint.
   */
-class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
+class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJsonProtocol with GroupsADMJsonProtocol with SessionJsonProtocol with TriplestoreJsonProtocol {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
@@ -82,10 +85,10 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with SessionJsonPr
     val testPass = java.net.URLEncoder.encode("test", "utf-8")
     val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
 
-    val imagesProjectIri = SharedTestDataV1.imagesProjectInfo.id
+    val imagesProjectIri = SharedTestDataADM.imagesProject.id
     val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
 
-    val imagesReviewerGroupIri = SharedTestDataV1.imagesReviewerGroupInfo.id
+    val imagesReviewerGroupIri = SharedTestDataADM.imagesReviewerGroup.id
     val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
 
     /**
@@ -94,11 +97,11 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with SessionJsonPr
       * @param userIri     the user's IRI.
       * @param credentials the credentials of the user making the request.
       */
-    private def getUserProjectMemberships(userIri: IRI, credentials: CredentialsV1): Seq[IRI] = {
+    private def getUserProjectMemberships(userIri: IRI, credentials: CredentialsV1): Seq[ProjectADM] = {
         val userIriEnc = java.net.URLEncoder.encode(userIri, "utf-8")
         val request = Get(baseApiUrl + "/admin/users/projects/" + userIriEnc) ~> addCredentials(BasicHttpCredentials(credentials.email, credentials.password))
         val response: HttpResponse = singleAwaitingRequest(request)
-        AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[IRI]]
+        AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
     }
 
     /**
@@ -107,11 +110,11 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with SessionJsonPr
       * @param userIri     the user's IRI.
       * @param credentials the credentials of the user making the request.
       */
-    private def getUserProjectAdminMemberships(userIri: IRI, credentials: CredentialsV1): Seq[IRI] = {
+    private def getUserProjectAdminMemberships(userIri: IRI, credentials: CredentialsV1): Seq[ProjectADM] = {
         val userIriEnc = java.net.URLEncoder.encode(userIri, "utf-8")
         val request = Get(baseApiUrl + "/admin/users/projects-admin/" + userIriEnc) ~> addCredentials(BasicHttpCredentials(credentials.email, credentials.password))
         val response: HttpResponse = singleAwaitingRequest(request)
-        AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[IRI]]
+        AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
     }
 
     /**
@@ -120,11 +123,11 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with SessionJsonPr
       * @param userIri     the user's IRI.
       * @param credentials the credentials of the user making the request.
       */
-    private def getUserGroupMemberships(userIri: IRI, credentials: CredentialsV1): Seq[IRI] = {
+    private def getUserGroupMemberships(userIri: IRI, credentials: CredentialsV1): Seq[GroupADM] = {
         val userIriEnc = java.net.URLEncoder.encode(userIri, "utf-8")
         val request = Get(baseApiUrl + "/admin/users/groups/" + userIriEnc) ~> addCredentials(BasicHttpCredentials(credentials.email, credentials.password))
         val response: HttpResponse = singleAwaitingRequest(request)
-        AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[Seq[IRI]]
+        AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[Seq[GroupADM]]
     }
 
     "Load test data" in {
@@ -183,19 +186,18 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with SessionJsonPr
 
                 val request = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, params))
                 val response: HttpResponse = singleAwaitingRequest(request)
+
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
 
-                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("userData").asJsObject.fields
-                jsonResult("email").convertTo[String] should be("donald.duck@example.org")
-                jsonResult("firstname").convertTo[String] should be("Donald")
-                jsonResult("lastname").convertTo[String] should be("Duck")
-                jsonResult("status").convertTo[Boolean] should be (true)
-                jsonResult("lang").convertTo[String] should be("en")
+                val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+                result.email should be("donald.duck@example.org")
+                result.givenName should be("Donald")
+                result.familyName should be("Duck")
+                result.status should be (true)
+                result.lang should be("en")
 
-
-                val iri = jsonResult("user_id").convertTo[String]
-                donaldIri.set(iri)
+                donaldIri.set(result.id)
                 // log.debug(s"iri: ${donaldIri.get}")
             }
 
@@ -217,11 +219,11 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with SessionJsonPr
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
 
-                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("userData").asJsObject.fields
-                jsonResult("email").convertTo[String] should be("donald.big.duck@example.org")
-                jsonResult("firstname").convertTo[String] should be("Big Donald")
-                jsonResult("lastname").convertTo[String] should be("Duckmann")
-                jsonResult("lang").convertTo[String] should be("de")
+                val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+                result.email should be("donald.big.duck@example.org")
+                result.givenName should be("Big Donald")
+                result.familyName should be("Duckmann")
+                result.lang should be("de")
             }
 
             "update the user's password" in {
@@ -267,11 +269,11 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with SessionJsonPr
 
                 val request = Put(baseApiUrl + s"/admin/users/" + donaldIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
 
-                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("userData").asJsObject.fields
-                jsonResult("status").convertTo[Boolean] should be(false)
+                val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+                result.status should be(false)
             }
 
             "update the user's system admin membership status" in {
@@ -287,11 +289,11 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with SessionJsonPr
 
                 val request = Put(baseApiUrl + s"/admin/users/" + donaldIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
 
-                val jsonResult: Map[String, JsValue] = AkkaHttpUtils.httpResponseToJson(response).fields("userProfile").asJsObject.fields("permissionData").asJsObject.fields("groupsPerProject").asJsObject.fields
-                jsonResult("http://www.knora.org/ontology/knora-base#SystemProject").convertTo[List[String]].head should equal("http://www.knora.org/ontology/knora-base#SystemAdmin")
+                val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+                result.permissions.groupsPerProject.get("http://www.knora.org/ontology/knora-base#SystemProject").head should equal(List("http://www.knora.org/ontology/knora-base#SystemAdmin"))
                 // log.debug(jsonResult)
 
             }
@@ -302,11 +304,11 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with SessionJsonPr
             "return all projects the user is a member of" in {
                 val request = Get(baseApiUrl + s"/admin/users/projects/$multiUserIriEnc") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                // log.debug(s"response: ${response.toString}")
                 assert(response.status === StatusCodes.OK)
 
-                val projects: Seq[IRI] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[IRI]]
-                projects should contain allElementsOf Seq(SharedTestDataV1.IMAGES_PROJECT_IRI, SharedTestDataV1.INCUNABULA_PROJECT_IRI, SharedTestDataV1.ANYTHING_PROJECT_IRI)
+                val projects: Seq[ProjectADM] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[ProjectADM]]
+                projects should contain allElementsOf Seq(SharedTestDataADM.imagesProject, SharedTestDataADM.incunabulaProject, SharedTestDataADM.anythingProject)
 
                 // testing getUserProjectMemberships method, which should return the same result
                 projects should contain allElementsOf getUserProjectMemberships(multiUserIri, rootCreds)
@@ -322,25 +324,25 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with SessionJsonPr
 
                 val request = Post(baseApiUrl + "/admin/users/projects/" + normalUserCreds.urlEncodedIri + "/" + imagesProjectIriEnc) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                // log.debug(s"response: ${response.toString}")
                 assert(response.status === StatusCodes.OK)
 
                 val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
-                membershipsAfterUpdate should equal(Seq(SharedTestDataV1.IMAGES_PROJECT_IRI))
+                membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesProject))
             }
 
             "remove user from project" in {
 
                 val membershipsBeforeUpdate = getUserProjectMemberships(normalUserCreds.userIri, rootCreds)
-                membershipsBeforeUpdate should equal(Seq(SharedTestDataV1.IMAGES_PROJECT_IRI))
+                membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProject))
 
                 val request = Delete(baseApiUrl + "/admin/users/projects/" + normalUserCreds.urlEncodedIri + "/" + imagesProjectIriEnc) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                // log.debug(s"response: ${response.toString}")
                 assert(response.status === StatusCodes.OK)
 
                 val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
-                membershipsAfterUpdate should equal(Seq())
+                membershipsAfterUpdate should equal(Seq.empty[ProjectADM])
             }
         }
 
@@ -349,11 +351,11 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with SessionJsonPr
             "return all projects the user is a member of the project admin group" in {
                 val request = Get(baseApiUrl + s"/admin/users/projects-admin/$multiUserIriEnc") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                // log.debug(s"response: ${response.toString}")
                 assert(response.status === StatusCodes.OK)
 
-                val projects: Seq[IRI] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[IRI]]
-                projects should contain allElementsOf Seq(SharedTestDataV1.IMAGES_PROJECT_IRI, SharedTestDataV1.INCUNABULA_PROJECT_IRI, SharedTestDataV1.ANYTHING_PROJECT_IRI)
+                val projects: Seq[ProjectADM] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
+                projects should contain allElementsOf Seq(SharedTestDataADM.imagesProject, SharedTestDataADM.incunabulaProject, SharedTestDataADM.anythingProject)
 
                 // explicitly testing 'getUserProjectsAdminMemberships' method, which should return the same result
                 projects should contain allElementsOf getUserProjectAdminMemberships(multiUserIri, rootCreds)
@@ -374,23 +376,23 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with SessionJsonPr
 
                 val membershipsAfterUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
                 //log.debug(s"membershipsAfterUpdate: $membershipsAfterUpdate")
-                membershipsAfterUpdate should equal(Seq(SharedTestDataV1.IMAGES_PROJECT_IRI))
+                membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesProject))
             }
 
             "remove user from project admin group" in {
 
                 val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
-                log.debug(s"membershipsBeforeUpdate: $membershipsBeforeUpdate")
-                membershipsBeforeUpdate should equal(Seq(SharedTestDataV1.IMAGES_PROJECT_IRI))
+                // log.debug(s"membershipsBeforeUpdate: $membershipsBeforeUpdate")
+                membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProject))
 
                 val request = Delete(baseApiUrl + "/admin/users/projects-admin/" + normalUserCreds.urlEncodedIri + "/" + imagesProjectIriEnc) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                //og.debug(s"response: ${response.toString}")
+                // log.debug(s"response: ${response.toString}")
                 assert(response.status === StatusCodes.OK)
 
                 val membershipsAfterUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
-                log.debug(s"membershipsAfterUpdate: $membershipsAfterUpdate")
-                membershipsAfterUpdate should equal(Seq())
+                // log.debug(s"membershipsAfterUpdate: $membershipsAfterUpdate")
+                membershipsAfterUpdate should equal(Seq.empty[ProjectADM])
             }
 
         }
@@ -400,11 +402,11 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with SessionJsonPr
             "return all groups the user is a member of" in {
                 val request = Get(baseApiUrl + s"/admin/users/groups/$multiUserIriEnc") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                //log.debug(s"response: ${response.toString}")
+                // log.debug(s"response: ${response.toString}")
                 assert(response.status === StatusCodes.OK)
 
-                val groups: Seq[IRI] = AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[List[IRI]]
-                groups should contain allElementsOf Seq("http://rdfh.ch/groups/00FF/images-reviewer")
+                val groups: Seq[GroupADM] = AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[List[GroupADM]]
+                groups should contain allElementsOf Seq(SharedTestDataADM.imagesReviewerGroup)
 
                 // testing getUserGroupMemberships method, which should return the same result
                 groups should contain allElementsOf getUserGroupMemberships(multiUserIri, rootCreds)
@@ -416,29 +418,29 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with SessionJsonPr
             "add user to group" in {
 
                 val membershipsBeforeUpdate = getUserGroupMemberships(normalUserCreds.userIri, rootCreds)
-                membershipsBeforeUpdate should equal(Seq())
+                membershipsBeforeUpdate should equal(Seq.empty[GroupADM])
 
                 val request = Post(baseApiUrl + "/admin/users/groups/" + normalUserCreds.urlEncodedIri + "/" + imagesReviewerGroupIriEnc) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                // log.debug(s"response: ${response.toString}")
                 assert(response.status === StatusCodes.OK)
 
                 val membershipsAfterUpdate = getUserGroupMemberships(normalUserIri, rootCreds)
-                membershipsAfterUpdate should equal(Seq(imagesReviewerGroupIri))
+                membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesReviewerGroup))
             }
 
             "remove user from group" in {
 
                 val membershipsBeforeUpdate = getUserGroupMemberships(normalUserCreds.userIri, rootCreds)
-                membershipsBeforeUpdate should equal(Seq(imagesReviewerGroupIri))
+                membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesReviewerGroup))
 
                 val request = Delete(baseApiUrl + "/admin/users/groups/" + normalUserCreds.urlEncodedIri + "/" + imagesReviewerGroupIriEnc) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                // log.debug(s"response: ${response.toString}")
                 assert(response.status === StatusCodes.OK)
 
                 val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
-                membershipsAfterUpdate should equal(Seq())
+                membershipsAfterUpdate should equal(Seq.empty[GroupADM])
             }
         }
     }
