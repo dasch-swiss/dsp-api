@@ -87,7 +87,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     private var fooLastModDate: Instant = Instant.now
 
     private val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/anything/v2".toSmartIri
-    private var anythingLastModDate: Instant = Instant.now
+    private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
@@ -386,20 +386,130 @@ class OntologyV2R2RSpec extends R2RSpec {
                   |}
                 """.stripMargin
 
-            // Convert the submitted JSON-LD to an InputOntologiesV2 so we can compare it to the response.
-            val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params))
+            // Convert the submitted JSON-LD to an InputOntologiesV2, without SPARQL-escaping, so we can compare it to the response.
+            val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
             Post("/v2/ontologies/properties", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
                 // Comvert the response to an InputOntologiesV2 and compare the relevant part of it to the request.
-                val responseAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true)
+                val responseAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
                 responseAsInput.ontologies.head.properties should ===(paramsAsInput.ontologies.head.properties)
 
                 // Check that the ontology's last modification date was updated.
-                assert(responseAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get.isAfter(paramsAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get))
+                val newAnythingLastModDate = responseAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get
+                assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                anythingLastModDate = newAnythingLastModDate
             }
+        }
+
+        "change the labels of a property" in {
+            val params =
+                s"""
+                  |{
+                  |  "knora-api:hasOntologies" : {
+                  |    "@id" : "$AnythingOntologyIri",
+                  |    "@type" : "owl:Ontology",
+                  |    "knora-api:hasProperties" : {
+                  |      "anything:hasName" : {
+                  |        "@id" : "anything:hasName",
+                  |        "@type" : "owl:ObjectProperty",
+                  |        "rdfs:label" : [ {
+                  |          "@language" : "en",
+                  |          "@value" : "has name"
+                  |        }, {
+                  |          "@language" : "fr",
+                  |          "@value" : "a nom"
+                  |        }, {
+                  |          "@language" : "de",
+                  |          "@value" : "hat Namen"
+                  |        } ]
+                  |      }
+                  |    },
+                  |    "knora-api:lastModificationDate" : "$anythingLastModDate"
+                  |  },
+                  |  "@context" : {
+                  |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                  |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                  |    "owl" : "http://www.w3.org/2002/07/owl#",
+                  |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                  |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                  |    "anything" : "$AnythingOntologyIri#"
+                  |  }
+                  |}
+                """.stripMargin
+
+            // Convert the submitted JSON-LD to an InputOntologiesV2, without SPARQL-escaping, so we can compare it to the response.
+            val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+
+            Put("/v2/ontologies/properties", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJsonDoc = responseToJsonLDDocument(response)
+
+                // Comvert the response to an InputOntologiesV2 and compare the relevant part of it to the request.
+                val responseAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                responseAsInput.ontologies.head.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objectsWithLang should ===(paramsAsInput.ontologies.head.properties.head._2.predicates.head._2.objectsWithLang)
+
+                // Check that the ontology's last modification date was updated.
+                val newAnythingLastModDate = responseAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get
+                assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                anythingLastModDate = newAnythingLastModDate
+            }
+        }
+    }
+
+    "change the comments of a property" in {
+        val params =
+            s"""
+               |{
+               |  "knora-api:hasOntologies" : {
+               |    "@id" : "$AnythingOntologyIri",
+               |    "@type" : "owl:Ontology",
+               |    "knora-api:hasProperties" : {
+               |      "anything:hasName" : {
+               |        "@id" : "anything:hasName",
+               |        "@type" : "owl:ObjectProperty",
+               |        "rdfs:comment" : [ {
+               |          "@language" : "en",
+               |          "@value" : "The name of a Thing"
+               |        }, {
+               |          "@language" : "fr",
+               |          "@value" : "Le nom d'une chose"
+               |        }, {
+               |          "@language" : "de",
+               |          "@value" : "Der Name eines Dinges"
+               |        } ]
+               |      }
+               |    },
+               |    "knora-api:lastModificationDate" : "$anythingLastModDate"
+               |  },
+               |  "@context" : {
+               |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+               |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+               |    "owl" : "http://www.w3.org/2002/07/owl#",
+               |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+               |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+               |    "anything" : "$AnythingOntologyIri#"
+               |  }
+               |}
+                """.stripMargin
+
+        // Convert the submitted JSON-LD to an InputOntologiesV2, without SPARQL-escaping, so we can compare it to the response.
+        val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+
+        Put("/v2/ontologies/properties", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+            assert(status == StatusCodes.OK, response.toString)
+            val responseJsonDoc = responseToJsonLDDocument(response)
+
+            // Comvert the response to an InputOntologiesV2 and compare the relevant part of it to the request.
+            val responseAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+            responseAsInput.ontologies.head.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objectsWithLang should ===(paramsAsInput.ontologies.head.properties.head._2.predicates.head._2.objectsWithLang)
+
+            // Check that the ontology's last modification date was updated.
+            val newAnythingLastModDate = responseAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get
+            assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+            anythingLastModDate = newAnythingLastModDate
         }
     }
 }

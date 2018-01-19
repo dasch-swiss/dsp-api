@@ -989,9 +989,14 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val newObjects = Map(
                 "en" -> "The name of a Thing",
-                "fr" -> "Le nom d'une chose",
+                "fr" -> "Le nom d\\'une chose", // This is SPARQL-escaped as it would be if it was taken from a JSON-LD request.
                 "de" -> "Der Name eines Dinges"
             )
+
+            // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
+            val newObjectsUnescaped = newObjects.map {
+                case (lang, obj) => lang -> stringFormatter.fromSparqlEncodedString(obj)
+            }
 
             actorUnderTest ! ChangePropertyLabelsOrCommentsRequestV2(
                 propertyIri = propertyIri,
@@ -1007,7 +1012,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
                     val ontology = externalMsg.ontologies.head
                     val readPropertyInfo = ontology.properties(propertyIri)
-                    readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objectsWithLang should ===(newObjects)
+                    readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objectsWithLang should ===(newObjectsUnescaped)
 
                     val metadata = ontology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))

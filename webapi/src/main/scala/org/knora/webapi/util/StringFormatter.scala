@@ -1307,10 +1307,9 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * Unescapes a string that has been escaped for SPARQL.
       *
       * @param s        the string to be unescaped.
-      * @param errorFun a function that throws an exception. It will be called if the string cannot be processed.
       * @return the unescaped string.
       */
-    def fromSparqlEncodedString(s: String, errorFun: => Nothing): String = {
+    def fromSparqlEncodedString(s: String): String = {
         StringUtils.replaceEach(
             s,
             SparqlEscapeOutput,

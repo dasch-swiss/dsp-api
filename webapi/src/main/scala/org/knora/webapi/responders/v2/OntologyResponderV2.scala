@@ -1238,37 +1238,35 @@ class OntologyResponderV2 extends Responder {
 
                 _ <- (storeManager ? SparqlUpdateRequest(createOntologySparql)).mapTo[SparqlUpdateResponse]
 
-                // Check that the update was successful.
+                // Check that the update was successful. To do this, we have to undo the SPARQL-escaping of the input.
 
-                maybeNewOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(internalOntologyIri)
+                unescapedNewMetadata = OntologyMetadataV2(
+                    ontologyIri = internalOntologyIri,
+                    label = Some(createOntologyRequest.label),
+                    lastModificationDate = Some(currentTime)
+                ).unescape
 
-                metadata = maybeNewOntologyMetadata match {
-                    case Some(newOntologyMetadata) =>
-                        if (!newOntologyMetadata.lastModificationDate.contains(currentTime)) {
+                maybeLoadedOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(internalOntologyIri)
+
+                _ = maybeLoadedOntologyMetadata match {
+                    case Some(loadedOntologyMetadata) =>
+                        if (loadedOntologyMetadata != unescapedNewMetadata) {
                             throw UpdateNotPerformedException()
-                        } else {
-                            newOntologyMetadata
                         }
 
                     case None => throw UpdateNotPerformedException()
                 }
 
-                // Update the ontology cache.
+                // Update the ontology cache with the unescaped metadata.
 
                 _ = storeCacheData(cacheData.copy(
-                    ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> metadata)
+                    ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> unescapedNewMetadata)
                 ))
 
                 // tell the projects responder that the ontology was created, so it can add it to the project's admin data.
                 _ <- (responderManager ? ProjectOntologyAddV1(createOntologyRequest.projectIri.toString, internalOntologyIri.toString, createOntologyRequest.apiRequestID)).mapTo[ProjectInfoV1]
 
-            } yield ReadOntologyMetadataV2(
-                ontologies = Set(OntologyMetadataV2(
-                    ontologyIri = internalOntologyIri,
-                    label = Some(createOntologyRequest.label),
-                    lastModificationDate = Some(currentTime)
-                ))
-            )
+            } yield ReadOntologyMetadataV2(ontologies = Set(unescapedNewMetadata))
         }
 
         for {
@@ -1333,33 +1331,32 @@ class OntologyResponderV2 extends Responder {
 
                 _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
 
-                // Check that the update was successful. This updates the ontology cache.
+                // Check that the update was successful. To do this, we have to undo the SPARQL-escaping of the input.
 
-                maybeNewOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(internalOntologyIri)
+                unescapedNewMetadata = OntologyMetadataV2(
+                    ontologyIri = internalOntologyIri,
+                    label = Some(changeOntologyMetadataRequest.label),
+                    lastModificationDate = Some(currentTime)
+                ).unescape
 
-                metadata: OntologyMetadataV2 = maybeNewOntologyMetadata match {
-                    case Some(newOntologyMetadata) =>
-                        if (newOntologyMetadata != OntologyMetadataV2(
-                            ontologyIri = internalOntologyIri,
-                            label = Some(changeOntologyMetadataRequest.label),
-                            lastModificationDate = Some(currentTime)
-                        )) {
+                maybeLoadedOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(internalOntologyIri)
+
+                _ = maybeLoadedOntologyMetadata match {
+                    case Some(loadedOntologyMetadata) =>
+                        if (loadedOntologyMetadata != unescapedNewMetadata) {
                             throw UpdateNotPerformedException()
-                        } else {
-                            newOntologyMetadata
                         }
 
-
-                    case None => throw NotFoundException(s"Ontology $internalOntologyIri (corresponding to ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)}) not found")
+                    case None => throw UpdateNotPerformedException()
                 }
 
-                // Update the ontology cache.
+                // Update the ontology cache with the unescaped metadata.
 
                 _ = storeCacheData(cacheData.copy(
-                    ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> metadata)
+                    ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> unescapedNewMetadata)
                 ))
 
-            } yield ReadOntologyMetadataV2(ontologies = Set(metadata))
+            } yield ReadOntologyMetadataV2(ontologies = Set(unescapedNewMetadata))
         }
 
         for {
@@ -1525,38 +1522,41 @@ class OntologyResponderV2 extends Responder {
 
                 _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
 
-                // Check that the data that was saved corresponds to the data that was submitted.
+                // Check that the data that was saved corresponds to the data that was submitted. To make this comparison,
+                // we have to undo the SPARQL-escaping of the input.
 
                 loadedPropertyDef <- loadPropertyDefinition(internalPropertyIri)
+                unescapedInputPropertyDef = internalPropertyDef.unescape
 
-                _ = if (loadedPropertyDef != internalPropertyDef) {
-                    throw InconsistentTriplestoreDataException(s"Attempted to save property definition $internalPropertyDef, but $loadedPropertyDef was saved")
+                _ = if (loadedPropertyDef != unescapedInputPropertyDef) {
+                    throw InconsistentTriplestoreDataException(s"Attempted to save property definition $unescapedInputPropertyDef, but $loadedPropertyDef was saved")
                 }
 
                 maybeLoadedLinkValuePropertyDefFuture: Option[Future[PropertyInfoContentV2]] = maybeLinkValuePropertyDef.map(linkValuePropertyDef => loadPropertyDefinition(linkValuePropertyDef.propertyIri))
                 maybeLoadedLinkValuePropertyDef: Option[PropertyInfoContentV2] <- ActorUtil.optionFuture2FutureOption(maybeLoadedLinkValuePropertyDefFuture)
+                maybeUnescapedNewLinkValuePropertyDef = maybeLinkValuePropertyDef.map(_.unescape)
 
-                _ = (maybeLoadedLinkValuePropertyDef, maybeLinkValuePropertyDef) match {
-                    case (Some(loadedLinkValuePropertyDef), Some(newLinkValuePropertyDef)) =>
-                        if (loadedLinkValuePropertyDef != maybeLinkValuePropertyDef.get) {
-                            throw InconsistentTriplestoreDataException(s"Attempted to save link value property definition $newLinkValuePropertyDef, but $loadedLinkValuePropertyDef was saved")
+                _ = (maybeLoadedLinkValuePropertyDef, maybeUnescapedNewLinkValuePropertyDef) match {
+                    case (Some(loadedLinkValuePropertyDef), Some(unescapedNewLinkPropertyDef)) =>
+                        if (loadedLinkValuePropertyDef != unescapedNewLinkPropertyDef) {
+                            throw InconsistentTriplestoreDataException(s"Attempted to save link value property definition $unescapedNewLinkPropertyDef, but $loadedLinkValuePropertyDef was saved")
                         }
 
                     case _ => ()
                 }
 
-                // Update the ontology cache.
+                // Update the ontology cache, using the unescaped definition(s).
 
                 readPropertyInfo = ReadPropertyInfoV2(
-                    entityInfoContent = internalPropertyDef,
+                    entityInfoContent = unescapedInputPropertyDef,
                     isEditable = true,
                     isLinkProp = isLinkProp
                 )
 
-                maybeLinkValuePropertyCacheEntry: Option[(SmartIri, ReadPropertyInfoV2)] = maybeLinkValuePropertyDef.map {
-                    linkValuePropertyDef =>
-                        linkValuePropertyDef.propertyIri -> ReadPropertyInfoV2(
-                            entityInfoContent = linkValuePropertyDef,
+                maybeLinkValuePropertyCacheEntry: Option[(SmartIri, ReadPropertyInfoV2)] = maybeUnescapedNewLinkValuePropertyDef.map {
+                    unescapedNewLinkPropertyDef =>
+                        unescapedNewLinkPropertyDef.propertyIri -> ReadPropertyInfoV2(
+                            entityInfoContent = unescapedNewLinkPropertyDef,
                             isLinkValueProp = true
                         )
                 }
@@ -1664,38 +1664,41 @@ class OntologyResponderV2 extends Responder {
 
                 _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
 
-                // Check that the data that was saved corresponds to the data that was submitted.
+                // Check that the data that was saved corresponds to the data that was submitted. To make this comparison,
+                // we have to undo the SPARQL-escaping of the input.
 
                 loadedPropertyDef <- loadPropertyDefinition(internalPropertyIri)
+                unescapedNewPropertyDef = newInternalPropertyDef.unescape
 
-                _ = if (loadedPropertyDef != newInternalPropertyDef) {
-                    throw InconsistentTriplestoreDataException(s"Attempted to save property definition $newInternalPropertyDef, but $loadedPropertyDef was saved")
+                _ = if (loadedPropertyDef != unescapedNewPropertyDef) {
+                    throw InconsistentTriplestoreDataException(s"Attempted to save property definition $unescapedNewPropertyDef, but $loadedPropertyDef was saved")
                 }
 
                 maybeLoadedLinkValuePropertyDefFuture: Option[Future[PropertyInfoContentV2]] = maybeNewLinkValuePropertyDef.map(linkValuePropertyDef => loadPropertyDefinition(linkValuePropertyDef.propertyIri))
                 maybeLoadedLinkValuePropertyDef: Option[PropertyInfoContentV2] <- ActorUtil.optionFuture2FutureOption(maybeLoadedLinkValuePropertyDefFuture)
+                maybeUnescapedNewLinkValuePropertyDef = maybeNewLinkValuePropertyDef.map(_.unescape)
 
-                _ = (maybeLoadedLinkValuePropertyDef, maybeNewLinkValuePropertyDef) match {
-                    case (Some(loadedLinkValuePropertyDef), Some(newLinkValuePropertyDef)) =>
-                        if (loadedLinkValuePropertyDef != maybeNewLinkValuePropertyDef.get) {
-                            throw InconsistentTriplestoreDataException(s"Attempted to save link value property definition $newLinkValuePropertyDef, but $loadedLinkValuePropertyDef was saved")
+                _ = (maybeLoadedLinkValuePropertyDef, maybeUnescapedNewLinkValuePropertyDef) match {
+                    case (Some(loadedLinkValuePropertyDef), Some(unescapedNewLinkPropertyDef)) =>
+                        if (loadedLinkValuePropertyDef != unescapedNewLinkPropertyDef) {
+                            throw InconsistentTriplestoreDataException(s"Attempted to save link value property definition $unescapedNewLinkPropertyDef, but $loadedLinkValuePropertyDef was saved")
                         }
 
                     case _ => ()
                 }
 
-                // Update the ontology cache.
+                // Update the ontology cache, using the unescaped definition(s).
 
                 readPropertyInfo = ReadPropertyInfoV2(
-                    entityInfoContent = newInternalPropertyDef,
+                    entityInfoContent = unescapedNewPropertyDef,
                     isEditable = true,
                     isLinkProp = currentPropertyDef.isLinkProp
                 )
 
-                maybeLinkValuePropertyCacheEntry: Option[(SmartIri, ReadPropertyInfoV2)] = maybeNewLinkValuePropertyDef.map {
-                    linkValuePropertyDef =>
-                        linkValuePropertyDef.propertyIri -> ReadPropertyInfoV2(
-                            entityInfoContent = linkValuePropertyDef,
+                maybeLinkValuePropertyCacheEntry: Option[(SmartIri, ReadPropertyInfoV2)] = maybeUnescapedNewLinkValuePropertyDef.map {
+                    unescapedNewLinkPropertyDef =>
+                        unescapedNewLinkPropertyDef.propertyIri -> ReadPropertyInfoV2(
+                            entityInfoContent = unescapedNewLinkPropertyDef,
                             isLinkValueProp = true
                         )
                 }

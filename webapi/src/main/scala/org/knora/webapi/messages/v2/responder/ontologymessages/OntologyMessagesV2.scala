@@ -658,6 +658,17 @@ case class InputOntologiesV2(ontologies: Seq[InputOntologyV2]) {
     def toOntologySchema(targetSchema: ApiV2Schema): InputOntologiesV2 = {
         InputOntologiesV2(ontologies.map(_.toOntologySchema(targetSchema)))
     }
+
+    /**
+      * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used in tests after an update, when the
+      * input (whose predicate objects have been escaped for use in SPARQL) needs to be compared with the updated data
+      * read back from the triplestore (in which predicate objects are not escaped).
+      *
+      * @return a copy of this [[InputOntologiesV2]] with all predicate objects unescaped.
+      */
+    def unescape: InputOntologiesV2 = {
+        InputOntologiesV2(ontologies = ontologies.map(_.unescape))
+    }
 }
 
 /**
@@ -727,6 +738,31 @@ case class InputOntologyV2(ontologyMetadata: OntologyMetadataV2,
             },
             standoffProperties = standoffProperties.map {
                 case (propertyIri, propertyInfoContent) => propertyIri.toOntologySchema(targetSchema) -> propertyInfoContent.toOntologySchema(targetSchema)
+            }
+        )
+    }
+
+    /**
+      * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used in tests after an update, when the
+      * input (whose predicate objects have been escaped for use in SPARQL) needs to be compared with the updated data
+      * read back from the triplestore (in which predicate objects are not escaped).
+      *
+      * @return a copy of this [[InputOntologyV2]] with all predicate objects unescaped.
+      */
+    def unescape: InputOntologyV2 = {
+        InputOntologyV2(
+            ontologyMetadata = ontologyMetadata.unescape,
+            classes = classes.map {
+                case (classIri, classDef) => classIri -> classDef.unescape
+            },
+            properties = properties.map {
+                case (propertyIri, propertyDef) => propertyIri -> propertyDef.unescape
+            },
+            standoffClasses = standoffClasses.map {
+                case (classIri, classDef) => classIri -> classDef.unescape
+            },
+            standoffProperties = standoffProperties.map {
+                case (propertyIri, propertyDef) => propertyIri -> propertyDef.unescape
             }
         )
     }
@@ -1138,6 +1174,27 @@ sealed trait EntityInfoContentV2 {
       * @return the entity's `rdf:type`.
       */
     def getRdfType: SmartIri
+
+    /**
+      * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used after an update, when the
+      * input (whose predicate objects have been escaped for use in SPARQL) needs to be compared with the updated data
+      * read back from the triplestore (in which predicate objects are not escaped).
+      *
+      * @return the predicates of this [[EntityInfoContentV2]], with their objects unescaped.
+      */
+    protected def unescapePredicateObjects: Map[SmartIri, PredicateInfoV2] = {
+        predicates.map {
+            case (predicateIri, predicateInfo) =>
+                val convertedPredicateInfo = predicateInfo.copy(
+                    objects = predicateInfo.objects.map(obj => stringFormatter.fromSparqlEncodedString(obj)),
+                    objectsWithLang = predicateInfo.objectsWithLang.map {
+                        case (lang, obj) => lang -> stringFormatter.fromSparqlEncodedString(obj)
+                    }
+                )
+
+                predicateIri -> convertedPredicateInfo
+        }
+    }
 
     /**
       * Converts this entity's predicates from one ontology schema to another. Each predicate's IRI is converted,
@@ -1680,6 +1737,17 @@ case class ClassInfoContentV2(classIri: SmartIri,
     override def getRdfType: SmartIri = {
         predicates.get(OntologyConstants.Rdf.Type.toSmartIri).flatMap(pred => pred.objects.headOption).getOrElse(throw InconsistentTriplestoreDataException(s"Class $classIri has no rdf:type")).toSmartIri
     }
+
+    /**
+      * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used after an update, when the
+      * input (whose predicate objects have been escaped for use in SPARQL) needs to be compared with the updated data
+      * read back from the triplestore (in which predicate objects are not escaped).
+      *
+      * @return a copy of this object with its predicate objects unescaped.
+      */
+    def unescape: ClassInfoContentV2 = {
+        copy(predicates = unescapePredicateObjects)
+    }
 }
 
 /**
@@ -1895,6 +1963,17 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
     override def getRdfType: SmartIri = {
         predicates.get(OntologyConstants.Rdf.Type.toSmartIri).flatMap(pred => pred.objects.headOption).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdf:type")).toSmartIri
     }
+
+    /**
+      * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used after an update, when the
+      * input (whose predicate objects have been escaped for use in SPARQL) needs to be compared with the updated data
+      * read back from the triplestore (in which predicate objects are not escaped).
+      *
+      * @return a copy of this object with its predicate objects unescaped.
+      */
+    def unescape: PropertyInfoContentV2 = {
+        copy(predicates = unescapePredicateObjects)
+    }
 }
 
 /**
@@ -2005,6 +2084,19 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
         copy(
             ontologyIri = ontologyIri.toOntologySchema(targetSchema)
         )
+    }
+
+    /**
+      * Undoes the SPARQL-escaping of the `rdfs:label` of this ontology. This method is meant to be used in tests after an update, when the
+      * input (which has been escaped for use in SPARQL) needs to be compared with the updated data
+      * read back from the triplestore (which is not escaped).
+      *
+      * @return a copy of this [[OntologyMetadataV2]] with the `rdfs:label` unescaped.
+      */
+    def unescape: OntologyMetadataV2 = {
+        val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        copy(label = label.map(stringFormatter.fromSparqlEncodedString))
     }
 
     def toJsonLD(targetSchema: ApiV2Schema): Map[String, JsonLDValue] = {
