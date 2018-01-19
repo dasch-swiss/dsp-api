@@ -391,8 +391,9 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 # DOKUBIB                         #
 ###################################
 
-<http://rdfh.ch/projects/b83b99ca01> a knora-base:knoraProject ;
+<http://rdfh.ch/projects/00FE> a knora-base:knoraProject ;
   knora-base:projectShortname "dokubib"^^xsd:string ;
+  knora-base:projectShortcode "00FE"^^xsd:string ;
   knora-base:projectLongname "Dokubib"^^xsd:string ;
   knora-base:projectDescription "Dokubib"^^xsd:string ;
   knora-base:projectOntology <http://www.knora.org/ontology/00FE/dokubib> ;

@@ -462,18 +462,18 @@ object SharedTestDataV1 {
     /** DOKUBIB                         **/
     /** **********************************/
 
-    val DOKUBIB_PROJECT_IRI = "http://rdfh.ch/projects/b83b99ca01"
+    val DOKUBIB_PROJECT_IRI = "http://rdfh.ch/projects/00FE"
 
     def dokubibProjectInfo = ProjectInfoV1(
         id = DOKUBIB_PROJECT_IRI,
         shortname = "dokubib",
-        shortcode = None,
+        shortcode = Some("00FE"),
         longname = Some("Dokubib"),
         description = Some("Dokubib"),
         keywords = None,
         logo = None,
         institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/dokubib"),
+        ontologies = Seq("http://www.knora.org/ontology/00FE/dokubib"),
         status = false,
         selfjoin = false
     )

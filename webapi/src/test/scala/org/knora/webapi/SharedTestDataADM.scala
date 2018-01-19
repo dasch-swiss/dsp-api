@@ -524,7 +524,7 @@ object SharedTestDataADM {
     /** DOKUBIB                        **/
     /************************************/
 
-    val DOKUBIB_PROJECT_IRI = "http://rdfh.ch/projects/b83b99ca01"
+    val DOKUBIB_PROJECT_IRI = "http://rdfh.ch/projects/00FE"
 
     def dokubibProject = ProjectADM(
         id = DOKUBIB_PROJECT_IRI,
