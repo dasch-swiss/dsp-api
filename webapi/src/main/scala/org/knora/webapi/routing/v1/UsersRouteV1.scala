@@ -22,11 +22,14 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.util.Timeout
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
+
+import scala.concurrent.ExecutionContextExecutor
 
 /**
   * Provides a spray-routing function for API routes that deal with lists.
@@ -40,8 +43,8 @@ object UsersRouteV1 extends Authenticator {
 
 
         implicit val system: ActorSystem = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = settings.defaultTimeout
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
         val stringFormatter = StringFormatter.getGeneralInstance
 
@@ -68,20 +71,20 @@ object UsersRouteV1 extends Authenticator {
                     requestContext =>
                         val userProfile: UserProfileV1 = getUserProfileV1(requestContext)
 
-                        /* check if email or iri was supplied */
-                        val requestMessage = if (identifier == "email") {
-                            UserProfileByEmailGetRequestV1(value, UserProfileTypeV1.RESTRICTED, userProfile)
-                        } else {
-                            val userIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid user IRI $value"))
-                            UserProfileByIRIGetRequestV1(userIri, UserProfileTypeV1.RESTRICTED, userProfile)
-                        }
-                        RouteUtilV1.runJsonRoute(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
-                        )
+                            /* check if email or iri was supplied */
+                            val requestMessage = if (identifier == "email") {
+                                UserProfileByEmailGetRequestV1(value, UserProfileTypeV1.RESTRICTED, userProfile)
+                            } else {
+                                val userIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid user IRI $value"))
+                                UserProfileByIRIGetRequestV1(userIri, UserProfileTypeV1.RESTRICTED, userProfile)
+                            }
+                            RouteUtilV1.runJsonRoute(
+                                requestMessage,
+                                requestContext,
+                                settings,
+                                responderManager,
+                                log
+                            )
                 }
             }
         } ~
@@ -91,7 +94,7 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
                     val userProfile: UserProfileV1 = getUserProfileV1(requestContext)
 
-                    val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                    val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
 
                     val requestMessage = UserProjectMembershipsGetRequestV1(
                         userIri = checkedUserIri,
@@ -114,7 +117,7 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
                     val userProfile: UserProfileV1 = getUserProfileV1(requestContext)
 
-                    val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                    val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
 
                     val requestMessage = UserProjectAdminMembershipsGetRequestV1(
                         userIri = checkedUserIri,
@@ -137,7 +140,7 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, () => throw BadRequestException(s"Invalid user IRI $userIri"))
+                    val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
 
                     val requestMessage = UserGroupMembershipsGetRequestV1(
                         userIri = checkedUserIri,

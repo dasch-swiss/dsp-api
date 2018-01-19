@@ -90,7 +90,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 actorUnderTest ! UsersGetRequestADM(requestingUser = rootUser)
                 val response = expectMsgType[UsersGetResponseADM](timeout)
                 response.users.nonEmpty should be (true)
-                response.users.size should be (18)
+                response.users.size should be (21)
             }
         }
 

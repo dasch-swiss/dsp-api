@@ -135,7 +135,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 actorUnderTest ! ProjectsNamedGraphGetV1(SharedTestDataV1.rootUser)
 
                 val received: Seq[NamedGraphV1] = expectMsgType[Seq[NamedGraphV1]]
-                received.size should be (7)
+                received.size should be (8)
             }
 
             /*
@@ -151,7 +151,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 actorUnderTest ! ProjectsNamedGraphGetV1(SharedTestDataV1.rootUser)
 
                 val received02: Seq[NamedGraphV1] = expectMsgType[Seq[NamedGraphV1]]
-                received02.size should be (8)
+                received02.size should be (9)
             }
             */
         }

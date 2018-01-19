@@ -20,13 +20,11 @@
 
 package org.knora.webapi.messages.v1.responder.projectmessages
 
-import java.util.UUID
-
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import spray.json.{DefaultJsonProtocol, JsonFormat, NullOptions, RootJsonFormat}
+import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, NullOptions, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -66,7 +64,7 @@ case class ProjectsGetV1(userProfile: Option[UserProfileV1]) extends ProjectsRes
 case class ProjectsNamedGraphGetV1(userProfile: UserProfileV1) extends ProjectsResponderRequestV1
 
 /**
-  * Get info about a single project identified through its IRI. The response is in form of [[ProjectInfoResponseV1]].
+  * Get info about a single project identified through its IRI. A successful response will be a [[ProjectInfoResponseV1]].
   *
   * @param iri           the IRI of the project.
   * @param userProfileV1 the profile of the user making the request (optional).
@@ -74,7 +72,7 @@ case class ProjectsNamedGraphGetV1(userProfile: UserProfileV1) extends ProjectsR
 case class ProjectInfoByIRIGetRequestV1(iri: IRI, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
-  * Get info about a single project identified through its IRI. The response is in form of [[ProjectInfoV1]].
+  * Get info about a single project identified through its IRI. A successful response will be an [[Option[ProjectInfoV1] ]].
   *
   * @param iri           the IRI of the project.
   * @param userProfileV1 the profile of the user making the request (optional).
@@ -88,6 +86,14 @@ case class ProjectInfoByIRIGetV1(iri: IRI, userProfileV1: Option[UserProfileV1])
   * @param userProfileV1 the profile of the user making the request.
   */
 case class ProjectInfoByShortnameGetRequestV1(shortname: String, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
+
+/**
+  * Gets info about a single project identified by an ontology that belongs to the project. A successful response will be a [[ProjectInfoResponseV1]].
+  *
+  * @param ontologyIri the ontology IRI.
+  * @param userProfileV1 the profile of the user making the request.
+  */
+case class ProjectInfoByOntologyGetRequestV1(ontologyIri: IRI, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
   * Returns all users belonging to a project.
@@ -128,7 +134,7 @@ case class ProjectAdminMembersByShortnameGetRequestV1(shortname: String, userPro
   * @param projects information about all existing projects.
   */
 case class ProjectsResponseV1(projects: Seq[ProjectInfoV1]) extends KnoraResponseV1 with ProjectV1JsonProtocol {
-    def toJsValue = projectsResponseV1Format.write(this)
+    def toJsValue: JsValue = projectsResponseV1Format.write(this)
 }
 
 /**
@@ -137,7 +143,7 @@ case class ProjectsResponseV1(projects: Seq[ProjectInfoV1]) extends KnoraRespons
   * @param project_info all information about the project.
   */
 case class ProjectInfoResponseV1(project_info: ProjectInfoV1) extends KnoraResponseV1 with ProjectV1JsonProtocol {
-    def toJsValue = projectInfoResponseV1Format.write(this)
+    def toJsValue: JsValue = projectInfoResponseV1Format.write(this)
 }
 
 /**
@@ -149,7 +155,7 @@ case class ProjectInfoResponseV1(project_info: ProjectInfoV1) extends KnoraRespo
 case class ProjectMembersGetResponseV1(members: Seq[UserDataV1],
                                        userDataV1: UserDataV1) extends KnoraResponseV1 with ProjectV1JsonProtocol {
 
-    def toJsValue = projectMembersGetRequestV1Format.write(this)
+    def toJsValue: JsValue = projectMembersGetRequestV1Format.write(this)
 }
 
 /**
@@ -161,7 +167,7 @@ case class ProjectMembersGetResponseV1(members: Seq[UserDataV1],
 case class ProjectAdminMembersGetResponseV1(members: Seq[UserDataV1],
                                             userDataV1: UserDataV1) extends KnoraResponseV1 with ProjectV1JsonProtocol {
 
-    def toJsValue = projectAdminMembersGetRequestV1Format.write(this)
+    def toJsValue: JsValue = projectAdminMembersGetRequestV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

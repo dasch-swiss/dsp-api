@@ -86,7 +86,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 // log.debug("projects as objects: {}", AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectInfoV1]])
 
                 val projects: Seq[ProjectADM] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
-                projects.size should be (7)
+                projects.size should be (8)
 
             }
 

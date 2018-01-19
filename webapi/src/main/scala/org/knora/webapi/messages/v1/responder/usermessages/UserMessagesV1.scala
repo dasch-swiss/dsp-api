@@ -151,7 +151,7 @@ case class UserGroupMembershipsGetRequestV1(userIri: IRI,
   * @param users a sequence of user profiles of the requested type.
   */
 case class UsersGetResponseV1(users: Seq[UserDataV1]) extends KnoraResponseV1 {
-    def toJsValue = UserV1JsonProtocol.usersGetResponseV1Format.write(this)
+    def toJsValue: JsValue = UserV1JsonProtocol.usersGetResponseV1Format.write(this)
 }
 
 /**
@@ -239,7 +239,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
     def ofType(userProfileType: UserProfileType): UserProfileV1 = {
 
         userProfileType match {
-            case UserProfileTypeV1.SHORT => {
+            case UserProfileTypeV1.SHORT =>
                 val oldUserData = userData
                 val newUserData = UserDataV1(
                     user_id = oldUserData.user_id,
@@ -259,8 +259,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     permissionData = PermissionsDataADM(), // remove permissions
                     sessionId = None // removed sessionId
                 )
-            }
-            case UserProfileTypeV1.RESTRICTED => {
+            case UserProfileTypeV1.RESTRICTED =>
                 val oldUserData = userData
                 val newUserData = UserDataV1(
                     lang = oldUserData.lang,
@@ -280,8 +279,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     permissionData = permissionData,
                     sessionId = None // removed sessionId
                 )
-            }
-            case UserProfileTypeV1.FULL => {
+            case UserProfileTypeV1.FULL =>
                 UserProfileV1(
                     userData = userData,
                     groups = groups,
@@ -289,7 +287,6 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
                     permissionData = permissionData,
                     sessionId = sessionId
                 )
-            }
             case _ => throw BadRequestException(s"The requested userProfileType: $userProfileType is invalid.")
         }
     }
@@ -372,9 +369,9 @@ object UserProfileTypeV1 extends Enumeration {
 
     type UserProfileType = Value
 
-    val SHORT = Value(0, "short") // only userdata
-    val RESTRICTED = Value(1, "restricted") // without sensitive information
-    val FULL = Value(2, "full") // everything, including sensitive information
+    val SHORT: UserProfileTypeV1.Value = Value(0, "short") // only userdata
+    val RESTRICTED: UserProfileTypeV1.Value = Value(1, "restricted") // without sensitive information
+    val FULL: UserProfileTypeV1.Value = Value(2, "full") // everything, including sensitive information
 
     val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 

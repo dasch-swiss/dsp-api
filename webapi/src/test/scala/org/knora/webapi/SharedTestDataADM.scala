@@ -33,9 +33,9 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
   */
 object SharedTestDataADM {
 
-    /*************************************/
-    /** System Admin Data               **/
-    /*************************************/
+    /** ***********************************/
+    /** System Admin Data                **/
+    /** ***********************************/
 
     val SYSTEM_PROJECT_IRI = OntologyConstants.KnoraBase.SystemProject // built-in project
 

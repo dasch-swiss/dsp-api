@@ -31,26 +31,26 @@ import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProf
   */
 object SharedTestDataV1 {
 
-    /*************************************/
-    /** System Admin Data               **/
-    /*************************************/
+    /** ***********************************/
+    /** System Admin Data                **/
+    /** ***********************************/
 
-    val SYSTEM_PROJECT_IRI = OntologyConstants.KnoraBase.SystemProject // built-in project
+    val SYSTEM_PROJECT_IRI: IRI = OntologyConstants.KnoraBase.SystemProject // built-in project
 
     /* represents the user profile of 'root' as found in admin-data.ttl */
-    def rootUser = SharedTestDataADM.rootUser.asUserProfileV1
+    def rootUser: UserProfileV1 = SharedTestDataADM.rootUser.asUserProfileV1
 
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
-    def superUser = SharedTestDataADM.superUser.asUserProfileV1
+    def superUser: UserProfileV1 = SharedTestDataADM.superUser.asUserProfileV1
 
     /* represents the user profile of 'normal user' as found in admin-data.ttl */
-    def normalUser = SharedTestDataADM.normalUser.asUserProfileV1
+    def normalUser: UserProfileV1 = SharedTestDataADM.normalUser.asUserProfileV1
 
     /* represents the user profile of 'inactive user' as found in admin-data.ttl */
-    def inactiveUser = SharedTestDataADM.inactiveUser.asUserProfileV1
+    def inactiveUser: UserProfileV1 = SharedTestDataADM.inactiveUser.asUserProfileV1
 
     /* represents an anonymous user */
-    def anonymousUser = SharedTestDataADM.anonymousUser.asUserProfileV1
+    def anonymousUser: UserProfileV1 = SharedTestDataADM.anonymousUser.asUserProfileV1
 
 
     /* represents the 'multiuser' as found in admin-data.ttl */
@@ -88,12 +88,12 @@ object SharedTestDataV1 {
     )
 
     /* represents the full project info of the Knora System project */
-    def systemProjectInfo = SharedTestDataADM.systemProject.asProjectInfoV1
+    def systemProjectInfo: ProjectInfoV1 = SharedTestDataADM.systemProject.asProjectInfoV1
 
 
-    /*************************************/
-    /** Images Demo Project Admin Data  **/
-    /*************************************/
+    /** ***********************************/
+    /** Images Demo Project Admin Data   **/
+    /** ***********************************/
 
     val IMAGES_PROJECT_IRI = "http://rdfh.ch/projects/00FF"
 
@@ -196,9 +196,9 @@ object SharedTestDataV1 {
     )
 
 
-    /*************************************/
-    /** Incunabula Project Admin Data   **/
-    /*************************************/
+    /** ***********************************/
+    /** Incunabula Project Admin Data    **/
+    /** ***********************************/
 
     val INCUNABULA_PROJECT_IRI = "http://rdfh.ch/projects/77275339"
 
@@ -299,11 +299,38 @@ object SharedTestDataV1 {
         selfjoin = false
     )
 
-    /************************************/
-    /** Anything Admin Data            **/
-    /************************************/
+    /** **********************************/
+    /** Anything Admin Data             **/
+    /** **********************************/
 
     val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/anything"
+
+    def anythingAdminUser = UserProfileV1(
+        userData = UserDataV1(
+            user_id = Some("http://rdfh.ch/users/AnythingAdminUser"),
+            firstname = Some("Anything"),
+            lastname = Some("Admin"),
+            email = Some("anything.admin@example.org"),
+            password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
+            token = None,
+            status = Some(true),
+            lang = "de"
+        ),
+        groups = Seq.empty[IRI],
+        projects_info = Map(ANYTHING_PROJECT_IRI -> anythingProjectInfo),
+        sessionId = None,
+        permissionData = PermissionsDataADM(
+            groupsPerProject = Map(
+                ANYTHING_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
+            ),
+            administrativePermissionsPerProject = Map(
+                ANYTHING_PROJECT_IRI -> Set(
+                    PermissionADM.ProjectAdminAllPermission,
+                    PermissionADM.ProjectResourceCreateAllPermission
+                )
+            )
+        )
+    )
 
     def anythingUser1 = UserProfileV1(
         userData = UserDataV1(
@@ -321,7 +348,7 @@ object SharedTestDataV1 {
         sessionId = None,
         permissionData = PermissionsDataADM(
             groupsPerProject = Map(
-                ANYTHING_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+                ANYTHING_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember)
             ),
             administrativePermissionsPerProject = Map(
                 ANYTHING_PROJECT_IRI -> Set(
@@ -329,7 +356,6 @@ object SharedTestDataV1 {
                 )
             )
         )
-
     )
 
     def anythingUser2 = UserProfileV1(
@@ -348,7 +374,7 @@ object SharedTestDataV1 {
         sessionId = None,
         permissionData = PermissionsDataADM(
             groupsPerProject = Map(
-                ANYTHING_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+                ANYTHING_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember)
             ),
             administrativePermissionsPerProject = Map(
                 ANYTHING_PROJECT_IRI -> Set(
@@ -373,9 +399,9 @@ object SharedTestDataV1 {
     )
 
 
-    /************************************/
-    /** BEOL                           **/
-    /************************************/
+    /** **********************************/
+    /** BEOL                            **/
+    /** **********************************/
 
     val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
 
@@ -394,9 +420,9 @@ object SharedTestDataV1 {
     )
 
 
-    /************************************/
-    /** BIBLIO                         **/
-    /************************************/
+    /** **********************************/
+    /** BIBLIO                          **/
+    /** **********************************/
 
     val BIBLIO_PROJECT_IRI = "http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ"
 
@@ -432,9 +458,9 @@ object SharedTestDataV1 {
         permissionData = PermissionsDataADM()
     )
 
-    /************************************/
-    /** DOKUBIB                        **/
-    /************************************/
+    /** **********************************/
+    /** DOKUBIB                         **/
+    /** **********************************/
 
     val DOKUBIB_PROJECT_IRI = "http://rdfh.ch/projects/b83b99ca01"
 
@@ -448,6 +474,26 @@ object SharedTestDataV1 {
         logo = None,
         institution = None,
         ontologies = Seq("http://www.knora.org/ontology/dokubib"),
+        status = false,
+        selfjoin = false
+    )
+
+    /** **********************************/
+    /** WEBERN                          **/
+    /** **********************************/
+
+    val WEBERN_PROJECT_IRI = "http://rdfh.ch/projects/08AE"
+
+    def webernProjectInfo = ProjectInfoV1(
+        id = WEBERN_PROJECT_IRI,
+        shortname = "webern",
+        shortcode = Some("08AE"),
+        longname = Some("Anton Webern Gesamtausgabe"),
+        description = Some("Historisch-kritische Edition des Gesamtschaffens von Anton Webern."),
+        keywords = None,
+        logo = None,
+        institution = None,
+        ontologies = Seq("http://www.knora.org/ontology/08AE/webern"),
         status = false,
         selfjoin = false
     )

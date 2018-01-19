@@ -63,9 +63,9 @@ object ValuesRouteV1 extends Authenticator {
 
             val Seq(resourceIriStr, propertyIriStr, currentValueIriStr) = iris
 
-            val resourceIri = stringFormatter.validateAndEscapeIri(resourceIriStr, () => throw BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
-            val propertyIri = stringFormatter.validateAndEscapeIri(propertyIriStr, () => throw BadRequestException(s"Invalid property IRI: $propertyIriStr"))
-            val currentValueIri = stringFormatter.validateAndEscapeIri(currentValueIriStr, () => throw BadRequestException(s"Invalid value IRI: $currentValueIriStr"))
+            val resourceIri = stringFormatter.validateAndEscapeIri(resourceIriStr, throw BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
+            val propertyIri = stringFormatter.validateAndEscapeIri(propertyIriStr, throw BadRequestException(s"Invalid property IRI: $propertyIriStr"))
+            val currentValueIri = stringFormatter.validateAndEscapeIri(currentValueIriStr, throw BadRequestException(s"Invalid value IRI: $currentValueIriStr"))
 
             ValueVersionHistoryGetRequestV1(
                 resourceIri = resourceIri,
@@ -80,9 +80,9 @@ object ValuesRouteV1 extends Authenticator {
 
             val Seq(subjectIriStr, predicateIriStr, objectIriStr) = iris
 
-            val subjectIri = stringFormatter.validateAndEscapeIri(subjectIriStr, () => throw BadRequestException(s"Invalid subject IRI: $subjectIriStr"))
-            val predicateIri = stringFormatter.validateAndEscapeIri(predicateIriStr, () => throw BadRequestException(s"Invalid predicate IRI: $predicateIriStr"))
-            val objectIri = stringFormatter.validateAndEscapeIri(objectIriStr, () => throw BadRequestException(s"Invalid object IRI: $objectIriStr"))
+            val subjectIri = stringFormatter.validateAndEscapeIri(subjectIriStr, throw BadRequestException(s"Invalid subject IRI: $subjectIriStr"))
+            val predicateIri = stringFormatter.validateAndEscapeIri(predicateIriStr, throw BadRequestException(s"Invalid predicate IRI: $predicateIriStr"))
+            val objectIri = stringFormatter.validateAndEscapeIri(objectIriStr, throw BadRequestException(s"Invalid object IRI: $objectIriStr"))
 
             LinkValueGetRequestV1(
                 subjectIri = subjectIri,
@@ -93,8 +93,8 @@ object ValuesRouteV1 extends Authenticator {
         }
 
         def makeCreateValueRequestMessage(apiRequest: CreateValueApiRequestV1, userProfile: UserProfileV1): Future[CreateValueRequestV1] = {
-            val resourceIri = stringFormatter.validateAndEscapeIri(apiRequest.res_id, () => throw BadRequestException(s"Invalid resource IRI ${apiRequest.res_id}"))
-            val propertyIri = stringFormatter.validateAndEscapeIri(apiRequest.prop, () => throw BadRequestException(s"Invalid property IRI ${apiRequest.prop}"))
+            val resourceIri = stringFormatter.validateAndEscapeIri(apiRequest.res_id, throw BadRequestException(s"Invalid resource IRI ${apiRequest.res_id}"))
+            val propertyIri = stringFormatter.validateAndEscapeIri(apiRequest.prop, throw BadRequestException(s"Invalid property IRI ${apiRequest.prop}"))
 
             for {
                 (value: UpdateValueV1, commentStr: Option[String]) <- apiRequest.getValueClassIri match {
@@ -105,12 +105,12 @@ object ValuesRouteV1 extends Authenticator {
                         // check if text has markup
                         if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
                             // simple text
-                            Future((TextValueSimpleV1(stringFormatter.toSparqlEncodedString(richtext.utf8str.get, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
+                            Future((TextValueSimpleV1(stringFormatter.toSparqlEncodedString(richtext.utf8str.get, throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
                                 apiRequest.comment))
                         } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
                             // XML: text with markup
 
-                            val mappingIri = stringFormatter.validateAndEscapeIri(richtext.mapping_id.get, () => throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid"))
+                            val mappingIri = stringFormatter.validateAndEscapeIri(richtext.mapping_id.get, throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid"))
 
                             for {
 
@@ -128,7 +128,7 @@ object ValuesRouteV1 extends Authenticator {
                                 resourceReferences: Set[IRI] = stringFormatter.getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV1)
 
                             } yield (TextValueWithStandoffV1(
-                                utf8str = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, () => throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
+                                utf8str = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
                                 resource_reference = resourceReferences,
                                 standoff = textWithStandoffTags.standoffTagV1,
                                 mappingIri = textWithStandoffTags.mapping.mappingIri,
@@ -141,7 +141,7 @@ object ValuesRouteV1 extends Authenticator {
                         }
 
                     case OntologyConstants.KnoraBase.LinkValue =>
-                        val resourceIRI = stringFormatter.validateAndEscapeIri(apiRequest.link_value.get, () => throw BadRequestException(s"Invalid resource IRI: ${apiRequest.link_value.get}"))
+                        val resourceIRI = stringFormatter.validateAndEscapeIri(apiRequest.link_value.get, throw BadRequestException(s"Invalid resource IRI: ${apiRequest.link_value.get}"))
                         Future(LinkUpdateV1(targetResourceIri = resourceIRI), apiRequest.comment)
 
                     case OntologyConstants.KnoraBase.IntValue =>
@@ -154,21 +154,21 @@ object ValuesRouteV1 extends Authenticator {
                         Future(BooleanValueV1(apiRequest.boolean_value.get), apiRequest.comment)
 
                     case OntologyConstants.KnoraBase.UriValue =>
-                        Future((UriValueV1(stringFormatter.validateAndEscapeIri(apiRequest.uri_value.get, () => throw BadRequestException(s"Invalid URI: ${apiRequest.uri_value.get}"))), apiRequest.comment))
+                        Future((UriValueV1(stringFormatter.validateAndEscapeIri(apiRequest.uri_value.get, throw BadRequestException(s"Invalid URI: ${apiRequest.uri_value.get}"))), apiRequest.comment))
 
                     case OntologyConstants.KnoraBase.DateValue =>
                         Future(DateUtilV1.createJDNValueV1FromDateString(apiRequest.date_value.get), apiRequest.comment)
 
                     case OntologyConstants.KnoraBase.ColorValue =>
-                        val colorValue = stringFormatter.validateColor(apiRequest.color_value.get, () => throw BadRequestException(s"Invalid color value: ${apiRequest.color_value.get}"))
+                        val colorValue = stringFormatter.validateColor(apiRequest.color_value.get, throw BadRequestException(s"Invalid color value: ${apiRequest.color_value.get}"))
                         Future(ColorValueV1(colorValue), apiRequest.comment)
 
                     case OntologyConstants.KnoraBase.GeomValue =>
-                        val geometryValue = stringFormatter.validateGeometryString(apiRequest.geom_value.get, () => throw BadRequestException(s"Invalid geometry value: ${apiRequest.geom_value.get}"))
+                        val geometryValue = stringFormatter.validateGeometryString(apiRequest.geom_value.get, throw BadRequestException(s"Invalid geometry value: ${apiRequest.geom_value.get}"))
                         Future(GeomValueV1(geometryValue), apiRequest.comment)
 
                     case OntologyConstants.KnoraBase.ListValue =>
-                        val listNodeIri = stringFormatter.validateAndEscapeIri(apiRequest.hlist_value.get, () => throw BadRequestException(s"Invalid value IRI: ${apiRequest.hlist_value.get}"))
+                        val listNodeIri = stringFormatter.validateAndEscapeIri(apiRequest.hlist_value.get, throw BadRequestException(s"Invalid value IRI: ${apiRequest.hlist_value.get}"))
                         Future(HierarchicalListValueV1(listNodeIri), apiRequest.comment)
 
                     case OntologyConstants.KnoraBase.IntervalValue =>
@@ -188,14 +188,14 @@ object ValuesRouteV1 extends Authenticator {
                     resourceIri = resourceIri,
                     propertyIri = propertyIri,
                     value = value,
-                    comment = commentStr.map(str => stringFormatter.toSparqlEncodedString(str, () => throw BadRequestException(s"Invalid comment: '$str'"))),
+                    comment = commentStr.map(str => stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid comment: '$str'"))),
                     userProfile = userProfile,
                     apiRequestID = UUID.randomUUID
                 )
         }
 
         def makeAddValueVersionRequestMessage(valueIriStr: IRI, apiRequest: ChangeValueApiRequestV1, userProfile: UserProfileV1): Future[ChangeValueRequestV1] = {
-            val valueIri = stringFormatter.validateAndEscapeIri(valueIriStr, () => throw BadRequestException(s"Invalid value IRI: $valueIriStr"))
+            val valueIri = stringFormatter.validateAndEscapeIri(valueIriStr, throw BadRequestException(s"Invalid value IRI: $valueIriStr"))
 
             for {
                 (value: UpdateValueV1, commentStr: Option[String]) <- apiRequest.getValueClassIri match {
@@ -206,12 +206,12 @@ object ValuesRouteV1 extends Authenticator {
                         // check if text has markup
                         if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
                             // simple text
-                            Future((TextValueSimpleV1(stringFormatter.toSparqlEncodedString(richtext.utf8str.get, () => throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
+                            Future((TextValueSimpleV1(stringFormatter.toSparqlEncodedString(richtext.utf8str.get, throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
                                 apiRequest.comment))
                         } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
                             // XML: text with markup
 
-                            val mappingIri = stringFormatter.validateAndEscapeIri(richtext.mapping_id.get, () => throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid"))
+                            val mappingIri = stringFormatter.validateAndEscapeIri(richtext.mapping_id.get, throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid"))
 
                             for {
 
@@ -229,7 +229,7 @@ object ValuesRouteV1 extends Authenticator {
                                 resourceReferences: Set[IRI] = stringFormatter.getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV1)
 
                             } yield (TextValueWithStandoffV1(
-                                utf8str = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, () => throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
+                                utf8str = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
                                 resource_reference = resourceReferences,
                                 standoff = textWithStandoffTags.standoffTagV1,
                                 mappingIri = textWithStandoffTags.mapping.mappingIri,
@@ -242,7 +242,7 @@ object ValuesRouteV1 extends Authenticator {
                         }
 
                     case OntologyConstants.KnoraBase.LinkValue =>
-                        val resourceIRI = stringFormatter.validateAndEscapeIri(apiRequest.link_value.get, () => throw BadRequestException(s"Invalid resource IRI: ${apiRequest.link_value.get}"))
+                        val resourceIRI = stringFormatter.validateAndEscapeIri(apiRequest.link_value.get, throw BadRequestException(s"Invalid resource IRI: ${apiRequest.link_value.get}"))
                         Future(LinkUpdateV1(targetResourceIri = resourceIRI), apiRequest.comment)
 
                     case OntologyConstants.KnoraBase.IntValue =>
@@ -255,21 +255,21 @@ object ValuesRouteV1 extends Authenticator {
                         Future(BooleanValueV1(apiRequest.boolean_value.get), apiRequest.comment)
 
                     case OntologyConstants.KnoraBase.UriValue =>
-                        Future((UriValueV1(stringFormatter.validateAndEscapeIri(apiRequest.uri_value.get, () => throw BadRequestException(s"Invalid URI: ${apiRequest.uri_value.get}"))), apiRequest.comment))
+                        Future((UriValueV1(stringFormatter.validateAndEscapeIri(apiRequest.uri_value.get, throw BadRequestException(s"Invalid URI: ${apiRequest.uri_value.get}"))), apiRequest.comment))
 
                     case OntologyConstants.KnoraBase.DateValue =>
                         Future(DateUtilV1.createJDNValueV1FromDateString(apiRequest.date_value.get), apiRequest.comment)
 
                     case OntologyConstants.KnoraBase.ColorValue =>
-                        val colorValue = stringFormatter.validateColor(apiRequest.color_value.get, () => throw BadRequestException(s"Invalid color value: ${apiRequest.color_value.get}"))
+                        val colorValue = stringFormatter.validateColor(apiRequest.color_value.get, throw BadRequestException(s"Invalid color value: ${apiRequest.color_value.get}"))
                         Future(ColorValueV1(colorValue), apiRequest.comment)
 
                     case OntologyConstants.KnoraBase.GeomValue =>
-                        val geometryValue = stringFormatter.validateGeometryString(apiRequest.geom_value.get, () => throw BadRequestException(s"Invalid geometry value: ${apiRequest.geom_value.get}"))
+                        val geometryValue = stringFormatter.validateGeometryString(apiRequest.geom_value.get, throw BadRequestException(s"Invalid geometry value: ${apiRequest.geom_value.get}"))
                         Future(GeomValueV1(geometryValue), apiRequest.comment)
 
                     case OntologyConstants.KnoraBase.ListValue =>
-                        val listNodeIri = stringFormatter.validateAndEscapeIri(apiRequest.hlist_value.get, () => throw BadRequestException(s"Invalid value IRI: ${apiRequest.hlist_value.get}"))
+                        val listNodeIri = stringFormatter.validateAndEscapeIri(apiRequest.hlist_value.get, throw BadRequestException(s"Invalid value IRI: ${apiRequest.hlist_value.get}"))
                         Future(HierarchicalListValueV1(listNodeIri), apiRequest.comment)
 
                     case OntologyConstants.KnoraBase.IntervalValue =>
@@ -287,7 +287,7 @@ object ValuesRouteV1 extends Authenticator {
             } yield ChangeValueRequestV1(
                 valueIri = valueIri,
                 value = value,
-                comment = commentStr.map(str => stringFormatter.toSparqlEncodedString(str, () => throw BadRequestException(s"Invalid comment: '$str'"))),
+                comment = commentStr.map(str => stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid comment: '$str'"))),
                 userProfile = userProfile,
                 apiRequestID = UUID.randomUUID
             )
@@ -295,8 +295,8 @@ object ValuesRouteV1 extends Authenticator {
 
         def makeChangeCommentRequestMessage(valueIriStr: IRI, comment: Option[String], userProfile: UserProfileV1): ChangeCommentRequestV1 = {
             ChangeCommentRequestV1(
-                valueIri = stringFormatter.validateAndEscapeIri(valueIriStr, () => throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
-                comment = comment.map(str => stringFormatter.toSparqlEncodedString(str, () => throw BadRequestException(s"Invalid comment: '$str'"))),
+                valueIri = stringFormatter.validateAndEscapeIri(valueIriStr, throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
+                comment = comment.map(str => stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid comment: '$str'"))),
                 userProfile = userProfile,
                 apiRequestID = UUID.randomUUID
             )
@@ -304,8 +304,8 @@ object ValuesRouteV1 extends Authenticator {
 
         def makeDeleteValueRequest(valueIriStr: IRI, deleteComment: Option[String], userProfile: UserProfileV1): DeleteValueRequestV1 = {
             DeleteValueRequestV1(
-                valueIri = stringFormatter.validateAndEscapeIri(valueIriStr, () => throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
-                deleteComment = deleteComment.map(comment => stringFormatter.toSparqlEncodedString(comment, () => throw BadRequestException(s"Invalid comment: '$comment'"))),
+                valueIri = stringFormatter.validateAndEscapeIri(valueIriStr, throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
+                deleteComment = deleteComment.map(comment => stringFormatter.toSparqlEncodedString(comment, throw BadRequestException(s"Invalid comment: '$comment'"))),
                 userProfile = userProfile,
                 apiRequestID = UUID.randomUUID
             )
@@ -313,7 +313,7 @@ object ValuesRouteV1 extends Authenticator {
 
         def makeGetValueRequest(valueIriStr: IRI, userProfile: UserProfileV1): ValueGetRequestV1 = {
             ValueGetRequestV1(
-                stringFormatter.validateAndEscapeIri(valueIriStr, () => throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
+                stringFormatter.validateAndEscapeIri(valueIriStr, throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
                 userProfile
             )
         }
@@ -321,14 +321,14 @@ object ValuesRouteV1 extends Authenticator {
         def makeChangeFileValueRequest(resIriStr: IRI, apiRequest: Option[ChangeFileValueApiRequestV1], multipartConversionRequest: Option[SipiResponderConversionPathRequestV1], userProfile: UserProfileV1) = {
             if (apiRequest.nonEmpty && multipartConversionRequest.nonEmpty) throw BadRequestException("File information is present twice, only one is allowed.")
 
-            val resourceIri = stringFormatter.validateAndEscapeIri(resIriStr, () => throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
+            val resourceIri = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
 
             if (apiRequest.nonEmpty) {
                 // GUI-case
                 val fileRequest = SipiResponderConversionFileRequestV1(
-                    originalFilename = stringFormatter.toSparqlEncodedString(apiRequest.get.file.originalFilename, () => throw BadRequestException(s"The original filename is invalid: '${apiRequest.get.file.originalFilename}'")),
-                    originalMimeType = stringFormatter.toSparqlEncodedString(apiRequest.get.file.originalMimeType, () => throw BadRequestException(s"The original MIME type is invalid: '${apiRequest.get.file.originalMimeType}'")),
-                    filename = stringFormatter.toSparqlEncodedString(apiRequest.get.file.filename, () => throw BadRequestException(s"Invalid filename: '${apiRequest.get.file.filename}'")),
+                    originalFilename = stringFormatter.toSparqlEncodedString(apiRequest.get.file.originalFilename, throw BadRequestException(s"The original filename is invalid: '${apiRequest.get.file.originalFilename}'")),
+                    originalMimeType = stringFormatter.toSparqlEncodedString(apiRequest.get.file.originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '${apiRequest.get.file.originalMimeType}'")),
+                    filename = stringFormatter.toSparqlEncodedString(apiRequest.get.file.filename, throw BadRequestException(s"Invalid filename: '${apiRequest.get.file.filename}'")),
                     userProfile = userProfile
                 )
                 ChangeFileValueRequestV1(
@@ -527,8 +527,8 @@ object ValuesRouteV1 extends Authenticator {
                             originalMimeType = fileInfo.contentType.toString
 
                             sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
-                                originalFilename = stringFormatter.toSparqlEncodedString(originalFilename, () => throw BadRequestException(s"The original filename is invalid: '$originalFilename'")),
-                                originalMimeType = stringFormatter.toSparqlEncodedString(originalMimeType, () => throw BadRequestException(s"The original MIME type is invalid: '$originalMimeType'")),
+                                originalFilename = stringFormatter.toSparqlEncodedString(originalFilename, throw BadRequestException(s"The original filename is invalid: '$originalFilename'")),
+                                originalMimeType = stringFormatter.toSparqlEncodedString(originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '$originalMimeType'")),
                                 source = sourcePath,
                                 userProfile = userProfile
                             )

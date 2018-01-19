@@ -85,10 +85,10 @@ object LegacyTextattrV1 extends Enumeration {
       * @param errorFun the function to be called in case of an error.
       * @return the requested value.
       */
-    def lookup(name: String, errorFun: () => Nothing): Value = {
+    def lookup(name: String, errorFun: => Nothing): Value = {
         valueMap.get(name) match {
             case Some(value) => value
-            case None => errorFun()
+            case None => errorFun
         }
     }
 
@@ -734,7 +734,7 @@ object TransformData extends App {
                                 oldToNewClassIris(oldTagClassIri)
                             } else {
                                 // Otherwise, generate the new class name from the tag name.
-                                LegacyTextattrV1.enumValueToIri(LegacyTextattrV1.lookup(tagName, () => throw InconsistentTriplestoreDataException(s"Unrecognised standoff tag name $tagName")))
+                                LegacyTextattrV1.enumValueToIri(LegacyTextattrV1.lookup(tagName, throw InconsistentTriplestoreDataException(s"Unrecognised standoff tag name $tagName")))
                             }
 
                         case None => oldTagClassIri

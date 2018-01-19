@@ -22,22 +22,21 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.apache.commons.validator.routines.UrlValidator
+import akka.util.Timeout
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 
-object GroupsRouteADM extends Authenticator with GroupsADMJsonProtocol {
+import scala.concurrent.ExecutionContextExecutor
 
-    private val schemes = Array("http", "https")
-    private val urlValidator = new UrlValidator(schemes)
+object GroupsRouteADM extends Authenticator with GroupsADMJsonProtocol {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
         implicit val system: ActorSystem = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = settings.defaultTimeout
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
         val stringFormatter = StringFormatter.getGeneralInstance
 
@@ -85,7 +84,7 @@ object GroupsRouteADM extends Authenticator with GroupsADMJsonProtocol {
                 requestContext =>
                     val requestingUser = getUserADM(requestContext)
 
-                    val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid group IRI $value"))
+                    val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
                     val requestMessage = GroupGetRequestADM(checkedGroupIri, requestingUser)
 
                     RouteUtilADM.runJsonRoute(
@@ -101,7 +100,7 @@ object GroupsRouteADM extends Authenticator with GroupsADMJsonProtocol {
                 entity(as[ChangeGroupApiRequestADM]) { apiRequest =>
                     requestContext =>
                         val requestingUser = getUserADM(requestContext)
-                        val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid group IRI $value"))
+                        val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
 
                         /* the api request is already checked at time of creation. see case class. */
 
@@ -125,7 +124,7 @@ object GroupsRouteADM extends Authenticator with GroupsADMJsonProtocol {
                 /* update group status to false */
                 requestContext =>
                     val requestingUser = getUserADM(requestContext)
-                    val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid group IRI $value"))
+                    val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
 
                     val requestMessage = GroupChangeRequestADM(
                         groupIri = checkedGroupIri,
@@ -149,7 +148,7 @@ object GroupsRouteADM extends Authenticator with GroupsADMJsonProtocol {
                 requestContext =>
 
                     val requestingUser = getUserADM(requestContext)
-                    val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid group IRI $value"))
+                    val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
 
                     val requestMessage = GroupMembersGetRequestADM(groupIri = checkedGroupIri, requestingUser = requestingUser)
 

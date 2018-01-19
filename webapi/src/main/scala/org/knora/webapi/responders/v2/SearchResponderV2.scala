@@ -31,12 +31,11 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetReque
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.ResponderWithStandoffV2
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util._
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.search.ApacheLuceneSupport.{CombineSearchTerms, MatchStringWhileTyping}
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.v2._
-import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, StringFormatter, SmartIri}
-import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, SmartIri, StringFormatter, _}
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -689,6 +688,35 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                             )
                                         )
 
+                                    case OntologyConstants.Xsd.Uri =>
+
+                                        // make sure that the right argument is a Uri literal
+                                        val uriLiteral: XsdLiteral = filterCompare.rightArg match {
+                                            case uriLiteral: XsdLiteral if uriLiteral.datatype.toString == OntologyConstants.Xsd.Uri => uriLiteral
+
+                                            case other => throw SparqlSearchException(s"right argument in CompareExpression for Uri property was expected to be a Uri literal, but $other is given.")
+                                        }
+
+                                        // create a variable representing the Uri literal
+                                        val uriValHasString = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasUri)
+
+                                        // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
+                                        valueVariablesCreatedInFilters.put(queryVar, uriValHasString)
+
+                                        // check if operator is supported for Uri operations
+                                        if (!(filterCompare.operator.equals(CompareExpressionOperator.EQUALS) || filterCompare.operator.equals(CompareExpressionOperator.NOT_EQUALS))) {
+                                            throw SparqlSearchException(s"Filter expressions for a Uri value supports the following operators: ${CompareExpressionOperator.EQUALS}, ${CompareExpressionOperator.NOT_EQUALS}, but ${filterCompare.operator} given")
+                                        }
+
+                                        TransformedFilterExpression(
+                                            CompareExpression(uriValHasString, filterCompare.operator, uriLiteral),
+                                            Seq(
+                                                // connects the value object with the value literal
+                                                StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasUri.toSmartIri), uriValHasString)
+                                            )
+                                        )
+
+
                                     case OntologyConstants.KnoraApiV2Simple.Date =>
 
                                         // make sure that the right argument is a string literal (dates are represented as knora date strings in knora-api simple)
@@ -699,7 +727,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                         }
 
                                         // validate Knora  date string
-                                        val dateStr: String = stringFormatter.validateDate(dateStringLiteral.value, () => throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"))
+                                        val dateStr: String = stringFormatter.validateDate(dateStringLiteral.value, throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"))
 
                                         val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
 
@@ -1913,8 +1941,19 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                         val dependentResIris: Set[IRI] = dependentResourceVariablesConcat.flatMap {
                             dependentResVar: QueryVariable =>
-                                // Iris are concatenated, split them
-                                resultRow.rowMap(dependentResVar.variableName).split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSeq
+
+                                // check if key exists (the variable could be contained in an OPTIONAL or a UNION)
+                                val dependentResIriOption: Option[IRI] = resultRow.rowMap.get(dependentResVar.variableName)
+
+                                dependentResIriOption match {
+                                    case Some(depResIri: IRI) =>
+
+                                        // Iris are concatenated, split them
+                                        depResIri.split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSeq
+
+                                    case None => Set.empty[IRI] // no value present
+                                }
+
                         }
 
                         acc + (mainResIri -> dependentResIris)
@@ -1926,14 +1965,16 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 }.toSet
 
                 // the user may have defined Iris of dependent resources in the input query (type annotations)
+                // only add them if they are mentioned in a positive context (not negated like in a FILTER NOT EXISTS or MINUS)
                 val dependentResourceIrisFromTypeInspection: Set[IRI] = typeInspectionResult.typedEntities.collect {
-                    case (iri: TypeableIri, _: NonPropertyTypeInfo) => iri.iri.toString
+                    case (iri: TypeableIri, _: NonPropertyTypeInfo) if whereClauseWithoutAnnotations.positiveEntities.contains(IriRef(iri.iri)) =>
+                        iri.iri.toString
                 }.toSet
 
                 // the Iris of all dependent resources for all main resources
                 val allDependentResourceIris: Set[IRI] = dependentResourceIrisPerMainResource.values.flatten.toSet ++ dependentResourceIrisFromTypeInspection
 
-                // value objects variables present in the preequery's WHERE clause
+                // value objects variables present in the prequery's WHERE clause
                 val valueObjectVariablesConcat = nonTriplestoreSpecificConstructToSelectTransformer.getValueObjectVarsGroupConcat
 
                 // for each main resource, create a Map of value object variables and their values
@@ -1944,7 +1985,22 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                         val valueObjVarToIris: Map[QueryVariable, Set[IRI]] = valueObjectVariablesConcat.map {
                             (valueObjVarConcat: QueryVariable) =>
-                                valueObjVarConcat -> resultRow.rowMap(valueObjVarConcat.variableName).split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSet
+
+                                // check if key exists (the variable could be contained in an OPTIONAL or a UNION)
+                                val valueObjIrisOption: Option[IRI] = resultRow.rowMap.get(valueObjVarConcat.variableName)
+
+                                val valueObjIris: Set[IRI] = valueObjIrisOption match {
+
+                                    case Some(valObjIris) =>
+
+                                        // Iris are concatenated, split them
+                                        valObjIris.split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSet
+
+                                    case None => Set.empty[IRI] // no value present
+
+                                }
+
+                                valueObjVarConcat -> valueObjIris
                         }.toMap
 
                         acc + (mainResIri -> valueObjVarToIris)

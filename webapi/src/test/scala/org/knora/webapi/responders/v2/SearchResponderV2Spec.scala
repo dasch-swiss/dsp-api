@@ -29,9 +29,9 @@ import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.v2.ResponseCheckerResponderV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.{CoreSpec, LiveActorMaker, SharedTestDataV1}
-import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.{CoreSpec, LiveActorMaker, SharedTestDataV1}
 
 import scala.concurrent.duration._
 
@@ -104,7 +104,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! ExtendedSearchGetRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein, SharedTestDataV1.anonymousUser)
 
-            // extended search sorty by resource Iri by default if no order criterion is indicated
+            // extended search sort by resource Iri by default if no order criterion is indicated
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
                     compareReadResourcesSequenceV2Response(expected = searchResponderV2SpecFullData.booksWithTitleZeitgloeckleinResponse, received = response)
@@ -116,7 +116,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! ExtendedSearchGetRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein, SharedTestDataV1.anonymousUser)
 
-            // extended search sorty by resource Iri by default if no order criterion is indicated
+            // extended search sort by resource Iri by default if no order criterion is indicated
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
                     // TODO: do better testing once JSON-LD can be converted back into case classes

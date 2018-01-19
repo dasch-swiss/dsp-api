@@ -25,11 +25,14 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.util.Timeout
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, SettingsImpl}
+
+import scala.concurrent.ExecutionContextExecutor
 
 object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
 
@@ -39,8 +42,8 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
         implicit val system: ActorSystem = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = settings.defaultTimeout
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
         val stringFormatter = StringFormatter.getGeneralInstance
 
@@ -70,7 +73,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             ProjectInfoByShortnameGetRequestV1(shortNameDec, Some(userProfile))
                         } else { // identify project by iri. this is the default case.
-                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
+                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
                             ProjectInfoByIRIGetRequestV1(checkedProjectIri, Some(userProfile))
                         }
 
@@ -96,7 +99,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             ProjectMembersByShortnameGetRequestV1(shortNameDec, userProfile)
                         } else {
-                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
+                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
                             ProjectMembersByIRIGetRequestV1(checkedProjectIri, userProfile)
                         }
 
@@ -122,7 +125,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             ProjectAdminMembersByShortnameGetRequestV1(shortNameDec, userProfile)
                         } else {
-                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
+                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
                             ProjectAdminMembersByIRIGetRequestV1(checkedProjectIri, userProfile)
                         }
 

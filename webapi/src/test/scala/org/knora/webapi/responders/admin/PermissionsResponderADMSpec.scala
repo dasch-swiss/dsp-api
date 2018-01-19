@@ -185,7 +185,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     requestingUser = rootUser
                 )
                 expectMsg(AdministrativePermissionsForProjectGetResponseADM(
-                    Seq(perm002_a3.p, perm002_a2.p, perm002_a1.p)
+                    Seq(perm002_a1.p, perm002_a3.p, perm002_a2.p)
                 ))
             }
 
@@ -256,7 +256,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     requestingUser = rootUser
                 )
                 expectMsg(DefaultObjectAccessPermissionsForProjectGetResponseADM(
-                    defaultObjectAccessPermissions = Seq(perm002_d2.p, perm002_d1.p)
+                    defaultObjectAccessPermissions = Seq(perm002_d1.p, perm002_d2.p)
                 ))
             }
 

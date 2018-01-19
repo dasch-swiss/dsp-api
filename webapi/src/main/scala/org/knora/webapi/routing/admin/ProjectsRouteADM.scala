@@ -98,7 +98,7 @@ object ProjectsRouteADM extends Authenticator with ProjectsADMJsonProtocol {
                             val shortcodeDec = java.net.URLDecoder.decode(value, "utf-8")
                             ProjectGetRequestADM(maybeIri = None, maybeShortname = None, maybeShortcode = Some(shortcodeDec), requestingUser = requestingUser)
                         } else { // identify project by iri. this is the default case.
-                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
+                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
                             ProjectGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
                         }
 
@@ -116,7 +116,7 @@ object ProjectsRouteADM extends Authenticator with ProjectsADMJsonProtocol {
                     entity(as[ChangeProjectApiRequestADM]) { apiRequest =>
                         requestContext =>
                             val requestingUser = getUserADM(requestContext)
-                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
+                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
                             /* the api request is already checked at time of creation. see case class. */
 
@@ -140,7 +140,7 @@ object ProjectsRouteADM extends Authenticator with ProjectsADMJsonProtocol {
                     /* update project status to false */
                     requestContext =>
                         val requestingUser = getUserADM(requestContext)
-                        val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
+                        val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
                         val requestMessage = ProjectChangeRequestADM(
                             projectIri = checkedProjectIri,
@@ -170,7 +170,7 @@ object ProjectsRouteADM extends Authenticator with ProjectsADMJsonProtocol {
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             ProjectMembersGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
                         } else {
-                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
+                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
                             ProjectMembersGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
                         }
 
@@ -196,7 +196,7 @@ object ProjectsRouteADM extends Authenticator with ProjectsADMJsonProtocol {
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             ProjectAdminMembersGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
                         } else {
-                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
+                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
                             ProjectAdminMembersGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
                         }
 

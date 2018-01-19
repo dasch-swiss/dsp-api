@@ -55,7 +55,7 @@ object OntologiesRouteADM extends Authenticator {
                         val requestingUser = getUserADM(requestContext)
 
                         val projectIri: Option[IRI] = maybeProjectIri match {
-                            case Some(potentialProjectIri) => Some(stringFormatter.validateAndEscapeIri(potentialProjectIri, () => throw BadRequestException(s"Invalid param project IRI: $potentialProjectIri")))
+                            case Some(potentialProjectIri) => Some(stringFormatter.validateAndEscapeIri(potentialProjectIri, throw BadRequestException(s"Invalid param project IRI: $potentialProjectIri")))
                             case None => None
                         }
 
@@ -98,7 +98,7 @@ object OntologiesRouteADM extends Authenticator {
                 /* get an existing ontology dump as JSON-LD */
                 requestContext =>
                     val requestingUser = getUserADM(requestContext)
-                    val ontologyIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param ontology IRI: $iri"))
+                    val ontologyIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param ontology IRI: $iri"))
 
                     val requestMessage = OntologyGetRequestADM(ontologyIri, requestingUser)
 
@@ -115,7 +115,7 @@ object OntologiesRouteADM extends Authenticator {
                 entity(as[String]) { updatePayload =>
                     requestContext =>
                         val requestingUser = getUserADM(requestContext)
-                        val ontologyIri = stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException(s"Invalid param ontology IRI: $iri"))
+                        val ontologyIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param ontology IRI: $iri"))
 
                         val requestMessage = OntologyUpdateRequestADM(
                             iri = ontologyIri,

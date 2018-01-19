@@ -1194,7 +1194,7 @@ class ValuesResponderV1 extends Responder {
             sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = sparqlSelectResponse.results.bindings
 
-            _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
+            _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
                 throw UpdateNotPerformedException(s"The request to mark value ${deleteValueRequest.valueIri} (or a new version of that value) as deleted did not succeed. Please report this as a possible bug.")
             }
         } yield DeleteValueResponseV1(id = deletedValueIri)
@@ -1282,7 +1282,7 @@ class ValuesResponderV1 extends Responder {
                     val valuePermissions = rowMap("valuePermissions")
 
                     // Permission-checking on LinkValues is special, because they can be system-created rather than user-created.
-                    val valuePermissionCode = if (stringFormatter.optionStringToBoolean(rowMap.get("isLinkValue"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${rowMap.get("isLinkValue")}"))) {
+                    val valuePermissionCode = if (stringFormatter.optionStringToBoolean(rowMap.get("isLinkValue"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${rowMap.get("isLinkValue")}"))) {
                         // It's a LinkValue.
                         PermissionUtilV1.getUserPermissionV1(
                             subjectIri = valueIri,

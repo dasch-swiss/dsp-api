@@ -208,8 +208,6 @@ class ProjectsResponderADM extends Responder {
         )
     }
 
-
-
     /**
       * Gets the members of a project with the given IRI, shortname, oder shortcode. Returns an empty list
       * if none are found.
@@ -352,7 +350,7 @@ class ProjectsResponderADM extends Responder {
             shortcodeExists <- if (createRequest.shortcode.isDefined) {
                 val shortcode = StringFormatter.getGeneralInstance.validateProjectShortcode(
                     createRequest.shortcode.get,
-                    errorFun = () => throw BadRequestException(s"The supplied short code: '${createRequest.shortcode.get}' is not valid.")
+                    errorFun = throw BadRequestException(s"The supplied short code: '${createRequest.shortcode.get}' is not valid.")
                 )
                 projectByShortcodeExists(shortcode)
             } else {

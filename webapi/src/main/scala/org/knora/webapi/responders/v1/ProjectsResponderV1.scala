@@ -20,19 +20,16 @@
 
 package org.knora.webapi.responders.v1
 
-import java.util.UUID
-
 import akka.actor.Status
-import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{KnoraIdUtil, StringFormatter}
+import org.knora.webapi.util.KnoraIdUtil
 
 import scala.concurrent.Future
 
@@ -52,13 +49,14 @@ class ProjectsResponderV1 extends Responder {
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
-    def receive = {
+    def receive: PartialFunction[Any, Unit] = {
         case ProjectsGetRequestV1(userProfile) => future2Message(sender(), projectsGetRequestV1(userProfile), log)
         case ProjectsGetV1(userProfile) => future2Message(sender(), projectsGetV1(userProfile), log)
         case ProjectsNamedGraphGetV1(userProfile) => future2Message(sender(), projectsNamedGraphGetV1(userProfile), log)
         case ProjectInfoByIRIGetRequestV1(iri, userProfile) => future2Message(sender(), projectInfoByIRIGetRequestV1(iri, userProfile), log)
         case ProjectInfoByIRIGetV1(iri, userProfile) => future2Message(sender(), projectInfoByIRIGetV1(iri, userProfile), log)
         case ProjectInfoByShortnameGetRequestV1(shortname, userProfile) => future2Message(sender(), projectInfoByShortnameGetRequestV1(shortname, userProfile), log)
+        case ProjectInfoByOntologyGetRequestV1(ontologyIri, userProfile) => future2Message(sender(), projectInfoByOntologyGetRequestV1(ontologyIri, userProfile), log)
         case ProjectMembersByIRIGetRequestV1(iri, userProfileV1) => future2Message(sender(), projectMembersByIRIGetRequestV1(iri, userProfileV1), log)
         case ProjectMembersByShortnameGetRequestV1(shortname, userProfileV1) => future2Message(sender(), projectMembersByShortnameGetRequestV1(shortname, userProfileV1), log)
         case ProjectAdminMembersByIRIGetRequestV1(iri, userProfileV1) => future2Message(sender(), projectAdminMembersByIRIGetRequestV1(iri, userProfileV1), log)
@@ -141,7 +139,7 @@ class ProjectsResponderV1 extends Responder {
     /**
       * Gets all the named graphs from all projects and returns them as a sequence of [[NamedGraphV1]]
       *
-      * @param userProfile
+      * @param userProfile the profile of the user making the request.
       * @return a sequence of [[NamedGraphV1]]
       * @throws InconsistentTriplestoreDataException whenever a expected/required peace of data is not found.
       */
@@ -170,7 +168,7 @@ class ProjectsResponderV1 extends Responder {
 
                     val maybeOntologies = propsMap.get(OntologyConstants.KnoraBase.ProjectOntology)
                     maybeOntologies match {
-                        case Some(ontologies) => ontologies.map( ontologyIri =>
+                        case Some(ontologies) => ontologies.map(ontologyIri =>
                             NamedGraphV1(
                                 id = ontologyIri,
                                 shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")).head,
@@ -269,6 +267,37 @@ class ProjectsResponderV1 extends Responder {
                 projectResponse.results.bindings.head.rowMap("s")
             } else {
                 throw NotFoundException(s"Project '$shortName' not found")
+            }
+
+            projectInfo = createProjectInfoV1(projectResponse = projectResponse.results.bindings, projectIri = projectIri, userProfile)
+
+        } yield ProjectInfoResponseV1(
+            project_info = projectInfo
+        )
+    }
+
+    /**
+      * Gets the project that contains the specified ontology, and returns its information as a [[ProjectInfoResponseV1]].
+      *
+      * @param ontologyIri the ontology IRI.
+      * @param userProfile the profile of user that is making the request.
+      * @return information about the project as a [[ProjectInfoResponseV1]].
+      * @throws NotFoundException in the case that no project for the given ontology can be found.
+      */
+    private def projectInfoByOntologyGetRequestV1(ontologyIri: IRI, userProfile: Option[UserProfileV1]): Future[ProjectInfoResponseV1] = {
+        for {
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectByOntology(
+                triplestore = settings.triplestoreType,
+                ontologyIri = ontologyIri
+            ).toString())
+
+            projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+
+            // get project IRI from results rows
+            projectIri: IRI = if (projectResponse.results.bindings.nonEmpty) {
+                projectResponse.results.bindings.head.rowMap("s")
+            } else {
+                throw NotFoundException(s"No project found with ontology $ontologyIri")
             }
 
             projectInfo = createProjectInfoV1(projectResponse = projectResponse.results.bindings, projectIri = projectIri, userProfile)
@@ -503,7 +532,7 @@ class ProjectsResponderV1 extends Responder {
 
         def getUserData(userIri: IRI): Future[UserDataV1] = {
             for {
-                userProfile <- (responderManager ? UserDataByIriGetV1(userIri, true)).mapTo[Option[UserDataV1]]
+                userProfile <- (responderManager ? UserDataByIriGetV1(userIri)).mapTo[Option[UserDataV1]]
 
                 result = userProfile match {
                     case Some(ud) => ud
@@ -535,7 +564,7 @@ class ProjectsResponderV1 extends Responder {
 
         def getUserData(userIri: IRI): Future[UserDataV1] = {
             for {
-                userProfile <- (responderManager ? UserDataByIriGetV1(userIri, true)).mapTo[Option[UserDataV1]]
+                userProfile <- (responderManager ? UserDataByIriGetV1(userIri)).mapTo[Option[UserDataV1]]
 
                 result = userProfile match {
                     case Some(ud) => ud
