@@ -249,12 +249,36 @@ object OntologiesRouteV2 extends Authenticator {
             }
         } ~ path("v2" / "ontologies" / "properties") {
             post {
+                // Create a new property.
                 entity(as[String]) { jsonRequest =>
                     requestContext => {
                         val userProfile = getUserProfileV1(requestContext)
                         val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
                         val requestMessage: CreatePropertyRequestV2 = CreatePropertyRequestV2.fromJsonLD(
+                            jsonLDDocument = requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            userProfile = userProfile
+                        )
+
+                        RouteUtilV2.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            responseSchema = ApiV2WithValueObjects
+                        )
+                    }
+                }
+            } ~ put {
+                // Change the labels or comments of a property.
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessage: ChangePropertyLabelsOrCommentsRequestV2 = ChangePropertyLabelsOrCommentsRequestV2.fromJsonLD(
                             jsonLDDocument = requestDoc,
                             apiRequestID = UUID.randomUUID,
                             userProfile = userProfile
@@ -319,6 +343,7 @@ object OntologiesRouteV2 extends Authenticator {
                 }
             }
         } ~ path("v2" / "ontologies") {
+            // Create a new, empty ontology.
             post {
                 entity(as[String]) { jsonRequest =>
                     requestContext => {

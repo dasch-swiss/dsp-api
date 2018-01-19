@@ -264,13 +264,23 @@ case class ChangePropertyLabelsOrCommentsRequestV2(propertyIri: SmartIri,
                                                    apiRequestID: UUID,
                                                    userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
-
+/**
+  * Can convert a JSON-LD request to a [[ChangePropertyLabelsOrCommentsRequestV2]].
+  */
 object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[ChangePropertyLabelsOrCommentsRequestV2] {
     private val AcceptedPredicatesToUpdate = Set(
         OntologyConstants.Rdfs.Label,
         OntologyConstants.Rdfs.Comment
     )
 
+    /**
+      * Converts a JSON-LD request to a [[ChangePropertyLabelsOrCommentsRequestV2]].
+      *
+      * @param jsonLDDocument the JSON-LD input.
+      * @param apiRequestID   the UUID of the API request.
+      * @param userProfile    the profile of the user making the request.
+      * @return a [[ChangePropertyLabelsOrCommentsRequestV2]] representing the input.
+      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
                             userProfile: UserProfileV1): ChangePropertyLabelsOrCommentsRequestV2 = {
@@ -280,13 +290,13 @@ object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV
         val propertyUpdateInfo = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
         val propertyInfoContent = propertyUpdateInfo.propertyInfoContent
         val lastModificationDate = propertyUpdateInfo.lastModificationDate
-        val updatablePredicates = propertyInfoContent.predicates - OntologyConstants.Rdf.Type.toSmartIri
+        val predicatesWithNewData = propertyInfoContent.predicates - OntologyConstants.Rdf.Type.toSmartIri
 
-        if (updatablePredicates.size != 1) {
+        if (predicatesWithNewData.size != 1) {
             throw BadRequestException(s"Either rdfs:label or rdfs:comment must be provided")
         }
 
-        val predicateInfoToUpdate = updatablePredicates.values.head
+        val predicateInfoToUpdate = predicatesWithNewData.values.head
         val predicateToUpdate = predicateInfoToUpdate.predicateIri
 
         if (!AcceptedPredicatesToUpdate(predicateToUpdate.toString)) {

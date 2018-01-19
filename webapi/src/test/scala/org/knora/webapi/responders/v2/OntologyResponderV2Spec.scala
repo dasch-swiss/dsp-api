@@ -8,11 +8,12 @@ import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{MutableTestIri, StringFormatter}
+import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}
 
 import scala.concurrent.duration._
 
@@ -949,6 +950,70 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
 
+        }
+
+        "change the labels of a property" in {
+            val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
+
+            val newObjects = Map(
+                "en" -> "has name",
+                "fr" -> "a nom",
+                "de" -> "hat Namen"
+            )
+
+            actorUnderTest ! ChangePropertyLabelsOrCommentsRequestV2(
+                propertyIri = propertyIri,
+                predicateToUpdate = OntologyConstants.Rdfs.Label.toSmartIri,
+                newObjects = newObjects,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readPropertyInfo = ontology.properties(propertyIri)
+                    readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objectsWithLang should ===(newObjects)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "change the comments of a property" in {
+            val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
+
+            val newObjects = Map(
+                "en" -> "The name of a Thing",
+                "fr" -> "Le nom d'une chose",
+                "de" -> "Der Name eines Dinges"
+            )
+
+            actorUnderTest ! ChangePropertyLabelsOrCommentsRequestV2(
+                propertyIri = propertyIri,
+                predicateToUpdate = OntologyConstants.Rdfs.Comment.toSmartIri,
+                newObjects = newObjects,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readPropertyInfo = ontology.properties(propertyIri)
+                    readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objectsWithLang should ===(newObjects)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
         }
     }
 }

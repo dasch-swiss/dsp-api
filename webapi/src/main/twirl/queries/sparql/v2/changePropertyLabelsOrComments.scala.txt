@@ -68,11 +68,11 @@ DELETE {
     }
 } INSERT {
     GRAPH ?ontologyNamedGraph {
-        ?ontology <@predicateToUpdate> knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+        ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
 
         @for((newObjLang, newObjText) <- newObjects) {
 
-            ?property """@newObjText"""@newObjLang .
+            ?property <@predicateToUpdate> """@newObjText"""@@@newObjLang .
 
         }
 
@@ -82,7 +82,7 @@ DELETE {
 
                 @for((newObjLang, newObjText) <- newObjects) {
 
-                    <@linkValuePropertyIri> <@predicateToUpdate> """@newObjText"""@newObjLang .
+                    <@linkValuePropertyIri> <@predicateToUpdate> """@newObjText"""@@@newObjLang .
 
                 }
 
