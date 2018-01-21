@@ -171,7 +171,7 @@ object SearchParserV2 {
         }
 
         private def makeIri(rdf4jIri: rdf4j.model.IRI): IriRef = {
-            val smartIri: SmartIri = rdf4jIri.stringValue.toSmartIriWithErr(() => throw SparqlSearchException(s"Invalid IRI: ${rdf4jIri.stringValue}"))
+            val smartIri: SmartIri = rdf4jIri.stringValue.toSmartIriWithErr(throw SparqlSearchException(s"Invalid IRI: ${rdf4jIri.stringValue}"))
             checkIriSchema(smartIri)
             IriRef(smartIri)
         }
@@ -202,7 +202,7 @@ object SearchParserV2 {
                     case iri: rdf4j.model.IRI => makeIri(iri)
 
                     case literal: rdf4j.model.Literal =>
-                        val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(() => throw SparqlSearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
+                        val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(throw SparqlSearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
                         checkIriSchema(datatype)
                         XsdLiteral(value = literal.stringValue, datatype = datatype)
 
@@ -600,7 +600,7 @@ object SearchParserV2 {
 
                         CompareExpression(
                             leftArg = leftArg,
-                            operator = CompareExpressionOperator.lookup(operator, () => throw SparqlSearchException(s"Operator $operator is not supported in a CompareExpression")),
+                            operator = CompareExpressionOperator.lookup(operator, throw SparqlSearchException(s"Operator $operator is not supported in a CompareExpression")),
                             rightArg = rightArg
                         )
 
@@ -627,7 +627,7 @@ object SearchParserV2 {
                             case iri: rdf4j.model.IRI => makeIri(iri)
 
                             case literal: rdf4j.model.Literal =>
-                                val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(() => throw SparqlSearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
+                                val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(throw SparqlSearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
                                 checkIriSchema(datatype)
                                 XsdLiteral(value = literal.stringValue, datatype = datatype)
                             case other => throw SparqlSearchException(s"Unsupported ValueConstant: $other with class ${other.getClass.getName}")

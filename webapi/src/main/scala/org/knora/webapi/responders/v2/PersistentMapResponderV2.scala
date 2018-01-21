@@ -23,13 +23,12 @@ package org.knora.webapi.responders.v2
 import java.time.Instant
 
 import akka.pattern._
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.messages.v2.responder.persistentmapmessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.KnoraIdUtil
-import org.knora.webapi._
+import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants, _}
 
 import scala.concurrent.Future
 

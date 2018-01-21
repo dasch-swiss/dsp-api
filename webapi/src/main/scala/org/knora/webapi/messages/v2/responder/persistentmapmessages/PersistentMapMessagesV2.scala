@@ -42,8 +42,8 @@ sealed trait PersistentMapResponderRequestV2
 case class PersistentMapEntryV2(key: String, value: String, lastModificationDate: Instant) {
     private val stringFormatter = StringFormatter.getGeneralInstance
 
-    stringFormatter.validateNCName(key, () => throw InconsistentTriplestoreDataException(s"Invalid map entry key: $key"))
-    stringFormatter.toSparqlEncodedString(value, () => throw InconsistentTriplestoreDataException(s"Invalid map entry value: $value"))
+    stringFormatter.validateNCName(key, throw InconsistentTriplestoreDataException(s"Invalid map entry key: $key"))
+    stringFormatter.toSparqlEncodedString(value, throw InconsistentTriplestoreDataException(s"Invalid map entry value: $value"))
 
 }
 
@@ -58,7 +58,7 @@ case class PersistentMapEntryV2(key: String, value: String, lastModificationDate
 case class PersistentMapV2(path: String, entries: Set[PersistentMapEntryV2], lastModificationDate: Instant) {
     private val stringFormatter = StringFormatter.getGeneralInstance
 
-    stringFormatter.validateMapPath(path, () => throw InconsistentTriplestoreDataException(s"Invalid map path: $path"))
+    stringFormatter.validateMapPath(path, throw InconsistentTriplestoreDataException(s"Invalid map path: $path"))
 }
 
 /**
@@ -72,8 +72,8 @@ case class PersistentMapV2(path: String, entries: Set[PersistentMapEntryV2], las
 case class PersistentMapEntryGetRequestV2(mapPath: String, mapEntryKey: String) extends PersistentMapResponderRequestV2 {
     private val stringFormatter = StringFormatter.getGeneralInstance
 
-    stringFormatter.validateMapPath(mapPath, () => throw BadRequestException(s"Invalid map path: $mapPath"))
-    stringFormatter.validateNCName(mapEntryKey, () => throw BadRequestException(s"Invalid map entry key: $mapEntryKey"))
+    stringFormatter.validateMapPath(mapPath, throw BadRequestException(s"Invalid map path: $mapPath"))
+    stringFormatter.validateNCName(mapEntryKey, throw BadRequestException(s"Invalid map entry key: $mapEntryKey"))
 }
 
 /**
@@ -85,7 +85,7 @@ case class PersistentMapEntryGetRequestV2(mapPath: String, mapEntryKey: String) 
 case class PersistentMapGetRequestV2(mapPath: String) extends PersistentMapResponderRequestV2 {
     private val stringFormatter = StringFormatter.getGeneralInstance
 
-    stringFormatter.validateMapPath(mapPath, () => throw BadRequestException(s"Invalid map path: $mapPath"))
+    stringFormatter.validateMapPath(mapPath, throw BadRequestException(s"Invalid map path: $mapPath"))
 }
 
 /**
@@ -101,9 +101,9 @@ case class PersistentMapGetRequestV2(mapPath: String) extends PersistentMapRespo
 case class PersistentMapEntryPutRequestV2(mapPath: String, mapEntryKey: String, mapEntryValue: String, apiRequestID: UUID) extends PersistentMapResponderRequestV2 {
     private val stringFormatter = StringFormatter.getGeneralInstance
 
-    stringFormatter.validateMapPath(mapPath, () => throw BadRequestException(s"Invalid map path: $mapPath"))
-    stringFormatter.validateNCName(mapEntryKey, () => throw BadRequestException(s"Invalid map entry key: $mapEntryKey"))
-    val sparqlEncodedMapEntryValue: String = stringFormatter.toSparqlEncodedString(mapEntryValue, () => throw BadRequestException(s"Invalid map entry value: $mapEntryValue"))
+    stringFormatter.validateMapPath(mapPath, throw BadRequestException(s"Invalid map path: $mapPath"))
+    stringFormatter.validateNCName(mapEntryKey, throw BadRequestException(s"Invalid map entry key: $mapEntryKey"))
+    val sparqlEncodedMapEntryValue: String = stringFormatter.toSparqlEncodedString(mapEntryValue, throw BadRequestException(s"Invalid map entry value: $mapEntryValue"))
 }
 
 /**
@@ -124,8 +124,8 @@ case class PersistentMapEntryPutResponseV2()
 case class PersistentMapEntryDeleteRequestV2(mapPath: String, mapEntryKey: String, apiRequestID: UUID) extends PersistentMapResponderRequestV2 {
     private val stringFormatter = StringFormatter.getGeneralInstance
 
-    stringFormatter.validateMapPath(mapPath, () => throw BadRequestException(s"Invalid map path: $mapPath"))
-    stringFormatter.validateNCName(mapEntryKey, () => throw BadRequestException(s"Invalid map entry key: $mapEntryKey"))
+    stringFormatter.validateMapPath(mapPath, throw BadRequestException(s"Invalid map path: $mapPath"))
+    stringFormatter.validateNCName(mapEntryKey, throw BadRequestException(s"Invalid map entry key: $mapEntryKey"))
 }
 
 /**
@@ -144,7 +144,7 @@ case class PersistentMapEntryDeleteResponseV2()
 case class PersistentMapDeleteRequestV2(mapPath: String, apiRequestID: UUID) extends PersistentMapResponderRequestV2 {
     private val stringFormatter = StringFormatter.getGeneralInstance
 
-    stringFormatter.validateMapPath(mapPath, () => throw BadRequestException(s"Invalid map path: $mapPath"))
+    stringFormatter.validateMapPath(mapPath, throw BadRequestException(s"Invalid map path: $mapPath"))
 }
 
 /**

@@ -494,7 +494,7 @@ class ResourcesResponderV1 extends Responder {
                         case (incomingIri: IRI, rows: Seq[VariableResultsRow]) =>
                             // Make a resource info for each referring resource, and check the permissions on the referring resource.
 
-                            val rowsForResInfo = rows.filterNot(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isLinkValue"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${row.rowMap.get("isLinkValue")}")))
+                            val rowsForResInfo = rows.filterNot(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isLinkValue"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${row.rowMap.get("isLinkValue")}")))
 
                             for {
                                 (incomingResPermission, incomingResInfo) <- makeResourceInfoV1(incomingIri, rowsForResInfo, userProfile, queryOntology = false)
@@ -505,7 +505,7 @@ class ResourcesResponderV1 extends Responder {
                                         // Yes. For each link from the referring resource, check whether the user has permission to see the link. If so, make an IncomingV1 for the link.
 
                                         // Filter to get only the rows representing LinkValues.
-                                        val rowsWithLinkValues = rows.filter(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isLinkValue"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${row.rowMap.get("isLinkValue")}")))
+                                        val rowsWithLinkValues = rows.filter(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isLinkValue"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${row.rowMap.get("isLinkValue")}")))
 
                                         // Group them by LinkValue IRI.
                                         val groupedByLinkValue: Map[String, Seq[VariableResultsRow]] = rowsWithLinkValues.groupBy(_.rowMap("obj"))
@@ -794,7 +794,7 @@ class ResourcesResponderV1 extends Responder {
                             dimX = row.rowMap("dimX").toInt,
                             dimY = row.rowMap("dimY").toInt,
                             qualityLevel = row.rowMap("qualityLevel").toInt,
-                            isPreview = stringFormatter.optionStringToBoolean(row.rowMap.get("isPreview"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isPreview: ${row.rowMap.get("isPreview")}"))
+                            isPreview = stringFormatter.optionStringToBoolean(row.rowMap.get("isPreview"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isPreview: ${row.rowMap.get("isPreview")}"))
                         ))
                     )
 
@@ -1917,7 +1917,7 @@ class ResourcesResponderV1 extends Responder {
                 sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
                 rows = sparqlSelectResponse.results.bindings
 
-                _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
+                _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
                     throw UpdateNotPerformedException(s"Resource ${resourceDeleteRequest.resourceIri} was not marked as deleted. Please report this as a possible bug.")
                 }
             } yield ResourceDeleteResponseV1(id = resourceDeleteRequest.resourceIri)
@@ -2195,7 +2195,7 @@ class ResourcesResponderV1 extends Responder {
                 resourceProject = maybeResourceProjectStatement.getOrElse(throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no knora-base:attachedToProject"))._2
 
                 // Get the rows describing file values from the query results, grouped by file value IRI.
-                fileValueGroupedRows: Seq[(IRI, Seq[VariableResultsRow])] = resInfoResponseRows.filter(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isFileValue"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isFileValue: ${row.rowMap.get("isFileValue")}"))).groupBy(row => row.rowMap("obj")).toVector
+                fileValueGroupedRows: Seq[(IRI, Seq[VariableResultsRow])] = resInfoResponseRows.filter(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isFileValue"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isFileValue: ${row.rowMap.get("isFileValue")}"))).groupBy(row => row.rowMap("obj")).toVector
 
                 // Convert the file value rows to ValueProps objects, and filter out the ones that the user doesn't have permission to see.
                 valuePropsForFileValues: Seq[(IRI, ValueProps)] = fileValueGroupedRows.map {

@@ -29,9 +29,9 @@ import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.v2.ResponseCheckerResponderV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.{CoreSpec, LiveActorMaker, SharedAdminTestData}
-import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.{CoreSpec, LiveActorMaker, SharedAdminTestData}
 
 import scala.concurrent.duration._
 

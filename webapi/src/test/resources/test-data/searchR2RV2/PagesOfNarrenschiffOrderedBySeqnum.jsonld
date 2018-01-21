@@ -15,7 +15,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/7bbb8e59b703/values/824db4b2da0e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 1
+      "knora-api:intValueAsInt" : 1
     },
     "schema:name" : "Vorsatzblatt, recto"
   }, {
@@ -33,7 +33,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/40c11d94b703/values/8ef40098db0e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 2
+      "knora-api:intValueAsInt" : 2
     },
     "schema:name" : "Vorsatzblatt, verso"
   }, {
@@ -51,7 +51,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/05c7acceb703/values/9a9b4d7ddc0e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 3
+      "knora-api:intValueAsInt" : 3
     },
     "schema:name" : "a1r; Titelblatt, recto"
   }, {
@@ -69,7 +69,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/cacc3b09b803/values/a6429a62dd0e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 4
+      "knora-api:intValueAsInt" : 4
     },
     "schema:name" : "a1v; Titelblatt, verso"
   }, {
@@ -87,7 +87,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/8fd2ca43b803/values/b2e9e647de0e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 5
+      "knora-api:intValueAsInt" : 5
     },
     "schema:name" : "a2r"
   }, {
@@ -105,7 +105,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/54d8597eb803/values/be90332ddf0e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 6
+      "knora-api:intValueAsInt" : 6
     },
     "schema:name" : "a2v"
   }, {
@@ -123,7 +123,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/19dee8b8b803/values/ca378012e00e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 7
+      "knora-api:intValueAsInt" : 7
     },
     "schema:name" : "a3r"
   }, {
@@ -141,7 +141,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/dee377f3b803/values/d6deccf7e00e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 8
+      "knora-api:intValueAsInt" : 8
     },
     "schema:name" : "a3v"
   }, {
@@ -159,7 +159,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/a3e9062eb903/values/e28519dde10e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 9
+      "knora-api:intValueAsInt" : 9
     },
     "schema:name" : "a4r"
   }, {
@@ -177,7 +177,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/68ef9568b903/values/ee2c66c2e20e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 10
+      "knora-api:intValueAsInt" : 10
     },
     "schema:name" : "a4v"
   }, {
@@ -195,7 +195,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/2df524a3b903/values/fad3b2a7e30e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 11
+      "knora-api:intValueAsInt" : 11
     },
     "schema:name" : "a5r"
   }, {
@@ -213,7 +213,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/f2fab3ddb903/values/067bff8ce40e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 12
+      "knora-api:intValueAsInt" : 12
     },
     "schema:name" : "a5v"
   }, {
@@ -231,7 +231,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/b7004318ba03/values/12224c72e50e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 13
+      "knora-api:intValueAsInt" : 13
     },
     "schema:name" : "a6r"
   }, {
@@ -249,7 +249,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/7c06d252ba03/values/1ec99857e60e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 14
+      "knora-api:intValueAsInt" : 14
     },
     "schema:name" : "a6v"
   }, {
@@ -267,7 +267,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/410c618dba03/values/2a70e53ce70e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 15
+      "knora-api:intValueAsInt" : 15
     },
     "schema:name" : "a7r"
   }, {
@@ -285,7 +285,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/0612f0c7ba03/values/36173222e80e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 16
+      "knora-api:intValueAsInt" : 16
     },
     "schema:name" : "a7v"
   }, {
@@ -303,7 +303,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/cb177f02bb03/values/42be7e07e90e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 17
+      "knora-api:intValueAsInt" : 17
     },
     "schema:name" : "a8r"
   }, {
@@ -321,7 +321,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/901d0e3dbb03/values/4e65cbece90e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 18
+      "knora-api:intValueAsInt" : 18
     },
     "schema:name" : "a8v"
   }, {
@@ -339,7 +339,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/55239d77bb03/values/5a0c18d2ea0e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 19
+      "knora-api:intValueAsInt" : 19
     },
     "schema:name" : "b1r"
   }, {
@@ -357,7 +357,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/1a292cb2bb03/values/66b364b7eb0e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 20
+      "knora-api:intValueAsInt" : 20
     },
     "schema:name" : "b1v"
   }, {
@@ -375,7 +375,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/df2ebbecbb03/values/725ab19cec0e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 21
+      "knora-api:intValueAsInt" : 21
     },
     "schema:name" : "b2r"
   }, {
@@ -393,7 +393,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/a4344a27bc03/values/7e01fe81ed0e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 22
+      "knora-api:intValueAsInt" : 22
     },
     "schema:name" : "b2v"
   }, {
@@ -411,7 +411,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/693ad961bc03/values/8aa84a67ee0e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 23
+      "knora-api:intValueAsInt" : 23
     },
     "schema:name" : "b3r"
   }, {
@@ -429,7 +429,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/2e40689cbc03/values/964f974cef0e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 24
+      "knora-api:intValueAsInt" : 24
     },
     "schema:name" : "b3v"
   }, {
@@ -447,7 +447,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/f345f7d6bc03/values/a2f6e331f00e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 25
+      "knora-api:intValueAsInt" : 25
     },
     "schema:name" : "b4r"
   } ],
