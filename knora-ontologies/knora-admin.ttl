@@ -737,6 +737,17 @@
             :preferredLanguage "en" ;
             :isInSystemAdminGroup "false"^^xsd:boolean .
 
+###  http://www.knora.org/ontology/knora-base#AnonymousUser
+:AnonymousUser rdf:type :User ;
+            rdfs:comment "A built-in anonymous user."@en ;
+            :email "anonymous@localhost" ;
+            :givenName "Knora" ;
+            :familyName "Anonymous" ;
+            :password "-" ;
+            :status "true"^^xsd:boolean ;
+            :preferredLanguage "en" ;
+            :isInSystemAdminGroup "false"^^xsd:boolean .
+
 ### http://www.knora.org/ontology/knora-base#SystemProject
 :SystemProject rdf:type :knoraProject ;
             rdfs:comment "A built-in project representing the Knora System."@en ;

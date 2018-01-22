@@ -25,8 +25,8 @@ import java.util.UUID
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.SharedOntologyTestData._
-import org.knora.webapi.SharedAdminTestData._
+import org.knora.webapi.SharedOntologyTestDataADM._
+import org.knora.webapi.SharedTestDataV1._
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
@@ -59,11 +59,11 @@ object ValuesResponderV1Spec {
     private val miscResourceIri = "http://data.knora.org/miscResource"
     private val aThingIri = "http://data.knora.org/a-thing"
 
-    private val incunabulaUser = SharedAdminTestData.incunabulaMemberUser
+    private val incunabulaUser = SharedTestDataV1.incunabulaMemberUser
 
-    private val imagesUser = SharedAdminTestData.imagesUser01
+    private val imagesUser = SharedTestDataV1.imagesUser01
 
-    private val anythingUser = SharedAdminTestData.anythingUser1
+    private val anythingUser = SharedTestDataV1.anythingUser1
 
     private val versionHistoryWithHiddenVersion = ValueVersionHistoryGetResponseV1(
         valueVersions = Vector(
@@ -260,7 +260,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedAdminTestData.rootUser)
+        responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
         expectMsg(30.seconds, LoadOntologiesResponse())
     }
 
@@ -1476,7 +1476,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         "change the partOf property of a page" in {
 
             // A test UserProfileV1.
-            val userProfile = SharedAdminTestData.incunabulaCreatorUser
+            val userProfile = SharedTestDataV1.incunabulaCreatorUser
 
             // A test UserDataV1.
             val userData = userProfile.userData
@@ -1508,7 +1508,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         "try to change the partOf property of a page, but submit the current target Iri" in {
 
             // A test UserProfileV1.
-            val userProfile = SharedAdminTestData.incunabulaProjectAdminUser
+            val userProfile = SharedTestDataV1.incunabulaProjectAdminUser
 
             // A test UserDataV1.
             val userData = userProfile.userData

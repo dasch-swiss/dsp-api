@@ -24,7 +24,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.eclipse.rdf4j.model.{Resource, Statement}
 import org.eclipse.rdf4j.rio.turtle._
 import org.eclipse.rdf4j.rio.{RDFHandler, RDFWriter}
-import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionType, PermissionV1}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 import org.rogach.scallop._
@@ -502,7 +502,7 @@ object TransformData extends App {
 
                     // Write the resource's permissions as a single statement.
                     if (subjectPermissions.nonEmpty) {
-                        val permissionLiteral = PermissionUtilV1.formatPermissions(subjectPermissions)
+                        val permissionLiteral = PermissionUtilADM.formatPermissions(subjectPermissions)
 
                         val permissionStatement = valueFactory.createStatement(
                             valueFactory.createIRI(subjectIri),
@@ -1236,22 +1236,22 @@ object TransformData extends App {
                             statement => turtleWriter.handleStatement(statement)
                         }
                     } else {
-                        val currentPermissions: Set[PermissionV1] = getObject(subjectStatements, OntologyConstants.KnoraBase.HasPermissions) match {
+                        val currentPermissions: Set[PermissionADM] = getObject(subjectStatements, OntologyConstants.KnoraBase.HasPermissions) match {
                             case Some(permissionsLiteral) =>
                                 /* parse literal */
-                                val parsedPermissions: Set[PermissionV1] = PermissionUtilV1.parsePermissionsWithType(Some(permissionsLiteral), PermissionType.OAP)
+                                val parsedPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(Some(permissionsLiteral), PermissionType.OAP)
 
                                 /* remove ony permissions referencing the creator */
                                 parsedPermissions.filter(perm => perm.additionalInformation.get != OntologyConstants.KnoraBase.Creator)
 
-                            case None => Set.empty[PermissionV1]
+                            case None => Set.empty[PermissionADM]
                         }
 
                         /* add CR for Creator */
-                        val permissionsWithCreator = Set(PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator)) ++ currentPermissions
+                        val permissionsWithCreator = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraBase.Creator)) ++ currentPermissions
 
                         /* transform back to literal */
-                        val changedPermissionsLiteral: String = PermissionUtilV1.formatPermissions(permissionsWithCreator, PermissionType.OAP)
+                        val changedPermissionsLiteral: String = PermissionUtilADM.formatPermissions(permissionsWithCreator, PermissionType.OAP)
 
                         /* create statement with new literal */
                         val newHasPermissionsStatement = valueFactory.createStatement(

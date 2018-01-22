@@ -49,11 +49,11 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter.XmlImportNamespaceInfoV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagsV1
-import org.knora.webapi.util.{DateUtilV1, FileUtil, StringFormatter}
+import org.knora.webapi.util.{DateUtilV1, FileUtil, SmartIri, StringFormatter}
 import org.knora.webapi.viewhandlers.ResourceHtmlView
 import org.slf4j.LoggerFactory
 import org.w3c.dom.ls.{LSInput, LSResourceResolver}
@@ -65,8 +65,6 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future, Promise}
 import scala.util.{Failure, Success, Try}
 import scala.xml._
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.SmartIri
 
 /**
   * Provides a spray-routing function for API routes that deal with resources.
