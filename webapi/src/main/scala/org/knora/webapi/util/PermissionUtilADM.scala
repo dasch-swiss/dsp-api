@@ -33,7 +33,7 @@ import scala.collection.immutable.Iterable
 /**
   * A utility that responder actors use to determine a user's permissions on an RDF subject in the triplestore.
   */
-object PermissionUtilV1 {
+object PermissionUtilADM {
 
     val log = Logger(LoggerFactory.getLogger(this.getClass))
 
@@ -533,7 +533,7 @@ object PermissionUtilV1 {
 
                     /* Sort permissions in descending order */
                     val sortedPermissions = groupedPermissions.toArray.sortWith {
-                        (left, right) => PermissionUtilV1.permissionsToV1PermissionCodes(left._1) > PermissionUtilV1.permissionsToV1PermissionCodes(right._1)
+                        (left, right) => PermissionUtilADM.permissionsToV1PermissionCodes(left._1) > PermissionUtilADM.permissionsToV1PermissionCodes(right._1)
                     }
 
                     /* create the permissions string */

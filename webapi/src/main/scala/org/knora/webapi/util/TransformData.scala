@@ -502,7 +502,7 @@ object TransformData extends App {
 
                     // Write the resource's permissions as a single statement.
                     if (subjectPermissions.nonEmpty) {
-                        val permissionLiteral = PermissionUtilV1.formatPermissions(subjectPermissions)
+                        val permissionLiteral = PermissionUtilADM.formatPermissions(subjectPermissions)
 
                         val permissionStatement = valueFactory.createStatement(
                             valueFactory.createIRI(subjectIri),
@@ -1239,7 +1239,7 @@ object TransformData extends App {
                         val currentPermissions: Set[PermissionADM] = getObject(subjectStatements, OntologyConstants.KnoraBase.HasPermissions) match {
                             case Some(permissionsLiteral) =>
                                 /* parse literal */
-                                val parsedPermissions: Set[PermissionADM] = PermissionUtilV1.parsePermissionsWithType(Some(permissionsLiteral), PermissionType.OAP)
+                                val parsedPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(Some(permissionsLiteral), PermissionType.OAP)
 
                                 /* remove ony permissions referencing the creator */
                                 parsedPermissions.filter(perm => perm.additionalInformation.get != OntologyConstants.KnoraBase.Creator)
@@ -1251,7 +1251,7 @@ object TransformData extends App {
                         val permissionsWithCreator = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraBase.Creator)) ++ currentPermissions
 
                         /* transform back to literal */
-                        val changedPermissionsLiteral: String = PermissionUtilV1.formatPermissions(permissionsWithCreator, PermissionType.OAP)
+                        val changedPermissionsLiteral: String = PermissionUtilADM.formatPermissions(permissionsWithCreator, PermissionType.OAP)
 
                         /* create statement with new literal */
                         val newHasPermissionsStatement = valueFactory.createStatement(

@@ -36,7 +36,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.{FileValueV1, StillI
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{StringFormatter, PermissionUtilV1}
+import org.knora.webapi.util.{StringFormatter, PermissionUtilADM}
 import spray.json._
 
 import scala.concurrent.Future
@@ -95,7 +95,7 @@ class SipiResponderV1 extends Responder {
 
             valueProps = valueUtilV1.createValueProps(filename, rows)
 
-            permissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1WithValueProps(
+            permissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1WithValueProps(
                 valueIri = filename,
                 valueProps = valueProps,
                 subjectProject = None, // no need to specify this here, because it's in valueProps

@@ -158,7 +158,7 @@ class ValuesResponderV1 extends Responder {
 
             resourcePermissionCode: Option[Int] = resourceFullResponse.resdata.flatMap(resdata => resdata.rights)
 
-            _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = resourcePermissionCode, userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
+            _ = if (!PermissionUtilADM.impliesV1(userHasPermissionCode = resourcePermissionCode, userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
                 throw ForbiddenException(s"User $userIri does not have permission to modify resource ${createValueRequest.resourceIri}")
             }
 
@@ -801,7 +801,7 @@ class ValuesResponderV1 extends Responder {
 
                 currentValueQueryResult = maybeCurrentValueQueryResult.getOrElse(throw NotFoundException(s"Value ${changeValueRequest.valueIri} not found (it may have been deleted)"))
 
-                _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = Some(currentValueQueryResult.permissionCode), userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
+                _ = if (!PermissionUtilADM.impliesV1(userHasPermissionCode = Some(currentValueQueryResult.permissionCode), userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
                     throw ForbiddenException(s"User $userIri does not have permission to add a new version to value ${changeValueRequest.valueIri}")
                 }
 
@@ -899,7 +899,7 @@ class ValuesResponderV1 extends Responder {
                         // We're updating a link. This means deleting an existing link and creating a new one, so
                         // check that the user has permission to modify the resource.
                         val resourcePermissionCode = resourceFullResponse.resdata.flatMap(resdata => resdata.rights)
-                        if (!PermissionUtilV1.impliesV1(userHasPermissionCode = resourcePermissionCode, userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
+                        if (!PermissionUtilADM.impliesV1(userHasPermissionCode = resourcePermissionCode, userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
                             throw ForbiddenException(s"User $userIri does not have permission to modify resource ${findResourceWithValueResult.resourceIri}")
                         }
 
@@ -976,7 +976,7 @@ class ValuesResponderV1 extends Responder {
 
                 currentValueQueryResult = maybeCurrentValueQueryResult.getOrElse(throw NotFoundException(s"Value ${changeCommentRequest.valueIri} not found (it may have been deleted)"))
 
-                _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = Some(currentValueQueryResult.permissionCode), userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
+                _ = if (!PermissionUtilADM.impliesV1(userHasPermissionCode = Some(currentValueQueryResult.permissionCode), userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
                     throw ForbiddenException(s"User $userIri does not have permission to add a new version to value ${changeCommentRequest.valueIri}")
                 }
 
@@ -1075,7 +1075,7 @@ class ValuesResponderV1 extends Responder {
             maybeCurrentValueQueryResult <- findValue(deleteValueRequest.valueIri, deleteValueRequest.userProfile)
             currentValueQueryResult = maybeCurrentValueQueryResult.getOrElse(throw NotFoundException(s"Value ${deleteValueRequest.valueIri} not found (it may have been deleted)"))
 
-            _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = Some(currentValueQueryResult.permissionCode), userNeedsPermission = OntologyConstants.KnoraBase.DeletePermission)) {
+            _ = if (!PermissionUtilADM.impliesV1(userHasPermissionCode = Some(currentValueQueryResult.permissionCode), userNeedsPermission = OntologyConstants.KnoraBase.DeletePermission)) {
                 throw ForbiddenException(s"User $userIri does not have permission to delete value ${deleteValueRequest.valueIri}")
             }
 
@@ -1284,7 +1284,7 @@ class ValuesResponderV1 extends Responder {
                     // Permission-checking on LinkValues is special, because they can be system-created rather than user-created.
                     val valuePermissionCode = if (stringFormatter.optionStringToBoolean(rowMap.get("isLinkValue"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${rowMap.get("isLinkValue")}"))) {
                         // It's a LinkValue.
-                        PermissionUtilV1.getUserPermissionV1(
+                        PermissionUtilADM.getUserPermissionV1(
                             subjectIri = valueIri,
                             subjectCreator = valueCreator,
                             subjectProject = project,
@@ -1293,7 +1293,7 @@ class ValuesResponderV1 extends Responder {
                         )
                     } else {
                         // It's not a LinkValue.
-                        PermissionUtilV1.getUserPermissionV1(subjectIri = valueIri, subjectCreator = valueCreator, subjectProject = project, subjectPermissionLiteral = valuePermissions, userProfile = versionHistoryRequest.userProfile)
+                        PermissionUtilADM.getUserPermissionV1(subjectIri = valueIri, subjectCreator = valueCreator, subjectProject = project, subjectPermissionLiteral = valuePermissions, userProfile = versionHistoryRequest.userProfile)
                     }
 
                     valuePermissionCode.nonEmpty
@@ -1491,7 +1491,7 @@ class ValuesResponderV1 extends Responder {
             rowMap = rows.head.rowMap
             userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
 
-            maybeSourcePermissionCode = PermissionUtilV1.getUserPermissionV1(
+            maybeSourcePermissionCode = PermissionUtilADM.getUserPermissionV1(
                 subjectIri = rowMap("source"),
                 subjectCreator = rowMap("sourceCreator"),
                 subjectProject = rowMap("sourceProject"),
@@ -1499,7 +1499,7 @@ class ValuesResponderV1 extends Responder {
                 userProfile = userProfile
             )
 
-            maybeTargetPermissionCode = PermissionUtilV1.getUserPermissionV1(
+            maybeTargetPermissionCode = PermissionUtilADM.getUserPermissionV1(
                 subjectIri = rowMap("target"),
                 subjectCreator = rowMap("targetCreator"),
                 subjectProject = rowMap("targetProject"),
@@ -1616,7 +1616,7 @@ class ValuesResponderV1 extends Responder {
                 comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
 
                 // Get the value's permission-relevant assertions.
-                assertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
+                assertions = PermissionUtilADM.filterPermissionRelevantAssertionsFromValueProps(valueProps)
 
                 // Get the permission code representing the user's permissions on the value.
                 //
@@ -1629,14 +1629,14 @@ class ValuesResponderV1 extends Responder {
                     case OntologyConstants.KnoraBase.LinkValue =>
                         val linkPredicateIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Predicate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Link value $valueIri has no rdf:predicate"))
 
-                        PermissionUtilV1.getUserPermissionV1WithValueProps(
+                        PermissionUtilADM.getUserPermissionV1WithValueProps(
                             valueIri = valueIri,
                             valueProps = valueProps,
                             subjectProject = None, // no need to specify this here, because it's in valueProps
                             userProfile = userProfile
                         )
 
-                    case _ => PermissionUtilV1.getUserPermissionV1FromAssertions(
+                    case _ => PermissionUtilADM.getUserPermissionV1FromAssertions(
                         subjectIri = valueIri,
                         assertions = assertions,
                         userProfile = userProfile
@@ -1700,10 +1700,10 @@ class ValuesResponderV1 extends Responder {
                 comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
 
                 // Get the value's permission-relevant assertions.
-                permissionRelevantAssertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
+                permissionRelevantAssertions = PermissionUtilADM.filterPermissionRelevantAssertionsFromValueProps(valueProps)
 
                 // Get the permission code representing the user's permissions on the value.
-                permissionCode = PermissionUtilV1.getUserPermissionV1WithValueProps(
+                permissionCode = PermissionUtilADM.getUserPermissionV1WithValueProps(
                     valueIri = linkValueIri,
                     valueProps = valueProps,
                     subjectProject = None, // no need to specify this here, because it's in valueProps
@@ -2622,6 +2622,6 @@ class ValuesResponderV1 extends Responder {
             OntologyConstants.KnoraBase.ViewPermission -> Set(OntologyConstants.KnoraBase.UnknownUser)
         )
 
-        PermissionUtilV1.formatPermissions(permissionMap)
+        PermissionUtilADM.formatPermissions(permissionMap)
     }
 }
