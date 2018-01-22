@@ -71,10 +71,10 @@ class UsersResponderADM extends Responder {
         case UserChangeSystemAdminMembershipStatusRequestADM(userIri, changeSystemAdminMembershipStatusRequest, requestingUser, apiRequestID) => future2Message(sender(), changeUserSystemAdminMembershipStatusADM(userIri, changeSystemAdminMembershipStatusRequest, requestingUser, apiRequestID), log)
         case UserProjectMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectMembershipsGetRequestADM(userIri, requestingUser, apiRequestID), log)
         case UserProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID), log)
-        case UserProjectMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectMembershipRemoveRequestV1(userIri, projectIri, requestingUser, apiRequestID), log)
+        case UserProjectMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID), log)
         case UserProjectAdminMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectAdminMembershipsGetRequestADM(userIri, requestingUser, apiRequestID), log)
-        case UserProjectAdminMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectAdminMembershipAddRequestV1(userIri, projectIri, requestingUser, apiRequestID), log)
-        case UserProjectAdminMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectAdminMembershipRemoveRequestV1(userIri, projectIri, requestingUser, apiRequestID), log)
+        case UserProjectAdminMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectAdminMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID), log)
+        case UserProjectAdminMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectAdminMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID), log)
         case UserGroupMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) => future2Message(sender(), userGroupMembershipsGetRequestADM(userIri, requestingUser, apiRequestID), log)
         case UserGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID), log)
         case UserGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID), log)
@@ -648,7 +648,7 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID  the unique api request ID.
       * @return
       */
-    def userProjectMembershipRemoveRequestV1(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
+    def userProjectMembershipRemoveRequestADM(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
         // log.debug(s"userProjectMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
@@ -785,7 +785,7 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID  the unique api request ID.
       * @return
       */
-    def userProjectAdminMembershipAddRequestV1(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
+    def userProjectAdminMembershipAddRequestADM(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
         // log.debug(s"userProjectAdminMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
@@ -857,7 +857,7 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID  the unique api request ID.
       * @return
       */
-    def userProjectAdminMembershipRemoveRequestV1(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
+    def userProjectAdminMembershipRemoveRequestADM(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
         // log.debug(s"userProjectAdminMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 

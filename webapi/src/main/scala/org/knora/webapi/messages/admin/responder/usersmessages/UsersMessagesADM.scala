@@ -583,6 +583,7 @@ case class UserADM(id: IRI,
 
 
     // ToDo: Refactor by using implicit conversions (when I manage to understand them)
+    // and probably value classes: https://docs.scala-lang.org/overviews/core/value-classes.html
     def asUserProfileV1: UserProfileV1 = {
 
         if (this.isAnonymousUser) {

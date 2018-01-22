@@ -37,7 +37,7 @@ import scala.concurrent.Future
 class OntologiesResponderADM extends Responder {
 
     def receive: PartialFunction[Any, Unit] = {
-        case OntologyInfosGetRequestADM(requestingUser) => future2Message(sender(), ontologieInfosGetRequestADM(requestingUser), log)
+        case OntologyInfosGetRequestADM(requestingUser) => future2Message(sender(), ontologyInfosGetRequestADM(requestingUser), log)
         case OntologyGetRequestADM(ontologyIri, requestingUser) => future2Message(sender(), ontologyGetRequestADM(ontologyIri, requestingUser), log)
         case OntologyCreateRequestADM(ontologyName, projectIri, apiRequestID, requestingUser) => future2Message(sender(), ontologyCreateRequestADM(ontologyName, projectIri, apiRequestID, requestingUser), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
@@ -50,7 +50,7 @@ class OntologiesResponderADM extends Responder {
       * @param requestingUser the user making the request.
       * @return a [[OntologiesGetResponseADM]].
       */
-    def ontologieInfosGetRequestADM(requestingUser: UserADM): Future[OntologyInfosGetResponseADM] = {
+    def ontologyInfosGetRequestADM(requestingUser: UserADM): Future[OntologyInfosGetResponseADM] = {
 
         // log.debug("ontologiesGetRequestADM")
 
