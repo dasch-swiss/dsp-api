@@ -867,6 +867,52 @@
                     rdfs:subPropertyOf knora-base:hasValue , bibo:isbn.
 
 
+###  http://www.knora.org/ontology/biblio#bookHasContent
+:bookHasContent rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Inhalt"@de ,
+                               "Content"@en ;
+
+                    rdfs:comment """Represents content of Book ."""@en ;
+
+                    knora-base:objectClassConstraint beol:writtenSource ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
+
+
+###  http://www.knora.org/ontology/biblio#bookHasContentValue
+
+:bookHasContentValue rdf:type owl:ObjectProperty ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
+
+###  http://www.knora.org/ontology/biblio#bookHasIntroduction
+:bookHasIntroduction rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Einleitung des Buches"@de ,
+                               "Introduction of Book"@en ;
+
+                    rdfs:comment """Represents introduction of Book ."""@en ;
+
+                    knora-base:objectClassConstraint beol:introduction;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
+
+
+###  http://www.knora.org/ontology/biblio#bookHasIntroductionValue
+
+:bookHasIntroductionValue rdf:type owl:ObjectProperty ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
+
 
 ###  http://www.knora.org/ontology/biblio#numPages
 
@@ -1661,6 +1707,22 @@
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :collectionNumber;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :bookHasContent ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :bookHasContentValue ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :bookHasIntroduction ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :bookHasIntroductionValue ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
                                         owl:onProperty beol:comment ;

@@ -37,7 +37,33 @@
        rdfs:comment """Titel"""@de ,
                     """Title"""@en;
 
-   knora-base:subjectClassConstraint :writtenSource ;
+       knora-base:subjectClassConstraint :writtenSource ;
+
+       knora-base:objectClassConstraint knora-base:TextValue ;
+
+       salsah-gui:guiOrder "1"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" .
+
+### ###########################################
+### beol:sectionHasTitle
+
+:sectionHasTitle rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf dc:title ;
+
+       rdfs:label "Titel"@de ,
+                  "Titre"@fr ,
+                  "Titolo"@it ,
+                  "Title"@en ;
+
+       rdfs:comment """Titel"""@de ,
+                    """Title"""@en;
+
+       knora-base:subjectClassConstraint :section ;
 
        knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -578,6 +604,34 @@
 
 
 ### ###########################################
+### beol:hasSection
+
+:hasSection rdf:type owl:ObjectProperty ;
+
+                      rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                      rdfs:label "hat Sektion"@de ,
+                                 "has section"@en ;
+
+                      rdfs:comment """Repräsentiert ein Sektion"""@de ;
+
+
+                      knora-base:objectClassConstraint :section ;
+
+                      salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### beol:hasSectionValue
+
+:hasSectionValue rdf:type owl:ObjectProperty ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue .
+
+
+### ###########################################
 ### beol:hasGivenName
 
 :hasGivenName rdf:type owl:ObjectProperty ;
@@ -1021,6 +1075,8 @@
         rdfs:comment "A resource representing a letter"@en .
 
 
+
+
 ### ###########################################
 ### beol:figure
 :figure rdf:type owl:Class ;
@@ -1068,6 +1124,65 @@
                    "Endnote"@en ;
 
         rdfs:comment "A resource representing an endnote"@en .
+
+
+### ###########################################
+### beol:introduction
+:introduction rdf:type owl:Class ;
+
+        rdfs:subClassOf knora-base:Resource ,
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasSection ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasSectionValue ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasText ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                        ];
+
+        rdfs:label "Einleitung"@de ,
+                   "Introduction"@en ;
+
+        rdfs:comment "A resource representing an introduction"@en .
+
+
+### ###########################################
+### beol:section
+:section rdf:type owl:Class ;
+
+        rdfs:subClassOf knora-base:Resource ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty :sectionHasTitle ;
+                           owl:minCardinality "1"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasSection ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasSectionValue ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasText ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                        ];
+
+        rdfs:label "Sektion"@de ,
+                   "Section"@en ;
+
+        rdfs:comment "A resource representing a section"@en .
 
 ### ###########################################
 ### beol:writtenSource
