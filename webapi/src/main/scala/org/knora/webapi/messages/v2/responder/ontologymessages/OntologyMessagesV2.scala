@@ -87,20 +87,24 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
 }
 
 /**
-  * Requests the addition of a property to an ontology. A successful response will be a [[ReadOntologiesV2]].
+  * Represents information taken from an [[InputOntologyV2]], representing a request to update a property
+  * definition.
   *
-  * @param propertyInfoContent  an [[PropertyInfoContentV2]] containing the property definition.
+  * @param propertyInfoContent  information to be updated in the property definition.
   * @param lastModificationDate the ontology's last modification date.
-  * @param apiRequestID         the ID of the API request.
-  * @param userProfile          the profile of the user making the request.
   */
-case class CreatePropertyRequestV2(propertyInfoContent: PropertyInfoContentV2,
-                                   lastModificationDate: Instant,
-                                   apiRequestID: UUID,
-                                   userProfile: UserProfileV1) extends OntologiesResponderRequestV2
-
 case class PropertyUpdateInfo(propertyInfoContent: PropertyInfoContentV2,
                               lastModificationDate: Instant)
+
+/**
+  * Represents information taken from an [[InputOntologyV2]], representing a request to update a class
+  * definition.
+  *
+  * @param classInfoContent     information to be updated in the class definition.
+  * @param lastModificationDate the ontology's last modification date.
+  */
+case class ClassUpdateInfo(classInfoContent: ClassInfoContentV2,
+                           lastModificationDate: Instant)
 
 /**
   * Assists in the processing of JSON-LD in ontology entity update requests.
@@ -117,16 +121,13 @@ object OntologyUpdateHelper {
     }
 
     /**
-      * Gets a property definition from the request.
+      * Checks that an [[InputOntologiesV2]] contains information about exactly one ontology to be updated, and returns
+      * that information.
       *
-      * @param inputOntologiesV2 an [[InputOntologiesV2]] that must contain a single ontology, containing a single property definition.
-      * @return a [[PropertyUpdateInfo]] containing the property definition and the ontology's last modification date.
+      * @param inputOntologiesV2 an [[InputOntologiesV2]] representing the request.
+      * @return an [[InputOntologyV2]] representing information about the ontology to be updated.
       */
-    def getPropertyDef(inputOntologiesV2: InputOntologiesV2): PropertyUpdateInfo = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-        // The request must contain information about exactly one ontology.
-
+    private def getOntology(inputOntologiesV2: InputOntologiesV2): InputOntologyV2 = {
         if (inputOntologiesV2.ontologies.lengthCompare(1) != 0) {
             throw BadRequestException(s"Only one definition can be submitted per request")
         }
@@ -139,6 +140,80 @@ object OntologyUpdateHelper {
         if (!(externalOntologyIri.isKnoraOntologyIri && externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
             throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIri")
         }
+
+        inputOntologyV2
+    }
+
+    def getClassDef(inputOntologiesV2: InputOntologiesV2): ClassUpdateInfo = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val inputOntologyV2 = getOntology(inputOntologiesV2)
+        val externalOntologyIri = inputOntologyV2.ontologyMetadata.ontologyIri
+
+        // The ontology's lastModificationDate must be provided.
+
+        val lastModificationDate: Instant = getOntologyLastModificationDate(inputOntologyV2)
+
+        // The request must contain exactly one property definition, and no class definitions.
+
+        if (inputOntologyV2.properties.nonEmpty || inputOntologyV2.standoffProperties.nonEmpty) {
+            throw BadRequestException(s"A property definition cannot be submitted when creating or modifying a class")
+        }
+
+        if (inputOntologyV2.standoffClasses.nonEmpty) {
+            throw NotImplementedException(s"Standoff classes cannot yet be created or modified")
+        }
+
+        if (inputOntologyV2.classes.size != 1) {
+            throw BadRequestException(s"Only one class can be created or modified per request")
+        }
+
+        val classInfoContent = inputOntologyV2.classes.values.head
+
+        // Check that the class IRI is valid.
+
+        val classIri = classInfoContent.classIri
+
+        if (!(classIri.isKnoraApiV2EntityIri &&
+            classIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            classIri.getOntologyFromEntity == externalOntologyIri)) {
+            throw BadRequestException(s"Invalid class IRI: $classIri")
+        }
+
+        // Check that the property type is valid.
+
+        val classType: SmartIri = classInfoContent.getRdfType
+
+        if (classType != OntologyConstants.Owl.Class.toSmartIri) {
+            throw BadRequestException(s"Property $classIri must be an owl:Class")
+        }
+
+        // Check that the IRIs of the property's predicates are valid.
+
+        classInfoContent.predicates.keySet.foreach {
+            predIri =>
+                if (predIri.isKnoraIri && !predIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+                    throw BadRequestException(s"Invalid predicate for request: $predIri")
+                }
+        }
+
+        ClassUpdateInfo(
+            classInfoContent = classInfoContent,
+            lastModificationDate = lastModificationDate
+        )
+    }
+
+    /**
+      * Gets a property definition from the request.
+      *
+      * @param inputOntologiesV2 an [[InputOntologiesV2]] that must contain a single ontology, containing a single property definition.
+      * @return a [[PropertyUpdateInfo]] containing the property definition and the ontology's last modification date.
+      */
+    def getPropertyDef(inputOntologiesV2: InputOntologiesV2): PropertyUpdateInfo = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val inputOntologyV2 = getOntology(inputOntologiesV2)
+        val externalOntologyIri = inputOntologyV2.ontologyMetadata.ontologyIri
 
         // The ontology's lastModificationDate must be provided.
 
@@ -195,10 +270,30 @@ object OntologyUpdateHelper {
 }
 
 /**
+  * Requests the addition of a property to an ontology. A successful response will be a [[ReadOntologiesV2]].
+  *
+  * @param propertyInfoContent  an [[PropertyInfoContentV2]] containing the property definition.
+  * @param lastModificationDate the ontology's last modification date.
+  * @param apiRequestID         the ID of the API request.
+  * @param userProfile          the profile of the user making the request.
+  */
+case class CreatePropertyRequestV2(propertyInfoContent: PropertyInfoContentV2,
+                                   lastModificationDate: Instant,
+                                   apiRequestID: UUID,
+                                   userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+
+/**
   * Constructs instances of [[CreatePropertyRequestV2]] based on JSON-LD requests.
   */
 object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreatePropertyRequestV2] {
-
+    /**
+      * Converts a JSON-LD request to a [[CreatePropertyRequestV2]].
+      *
+      * @param jsonLDDocument the JSON-LD input.
+      * @param apiRequestID   the UUID of the API request.
+      * @param userProfile    the profile of the user making the request.
+      * @return a [[CreatePropertyRequestV2]] representing the input.
+      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
                             userProfile: UserProfileV1): CreatePropertyRequestV2 = {
@@ -240,6 +335,60 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
 
         CreatePropertyRequestV2(
             propertyInfoContent = propertyInfoContent,
+            lastModificationDate = lastModificationDate,
+            apiRequestID = apiRequestID,
+            userProfile = userProfile
+        )
+    }
+}
+
+/**
+  * Requests the addition of a class to an ontology. A successful response will be a [[ReadOntologiesV2]].
+  *
+  * @param classInfoContent     an [[ClassInfoContentV2]] containing the class definition.
+  * @param lastModificationDate the ontology's last modification date.
+  * @param apiRequestID         the ID of the API request.
+  * @param userProfile          the profile of the user making the request.
+  */
+case class CreateClassRequestV2(classInfoContent: ClassInfoContentV2,
+                                lastModificationDate: Instant,
+                                apiRequestID: UUID,
+                                userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+
+/**
+  * Constructs instances of [[CreateClassRequestV2]] based on JSON-LD requests.
+  */
+object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassRequestV2] {
+    /**
+      * Converts a JSON-LD request to a [[CreateClassRequestV2]].
+      *
+      * @param jsonLDDocument the JSON-LD input.
+      * @param apiRequestID   the UUID of the API request.
+      * @param userProfile    the profile of the user making the request.
+      * @return a [[CreateClassRequestV2]] representing the input.
+      */
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, userProfile: UserProfileV1): CreateClassRequestV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        // Get the class definition and the ontology's last modification date from the JSON-LD.
+
+        val inputOntologiesV2 = InputOntologiesV2.fromJsonLD(jsonLDDocument)
+        val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+        val classInfoContent = classUpdateInfo.classInfoContent
+        val lastModificationDate = classUpdateInfo.lastModificationDate
+
+        // The request must provide an rdfs:label and an rdfs:comment.
+
+        if (!classInfoContent.predicates.contains(OntologyConstants.Rdfs.Label.toSmartIri)) {
+            throw BadRequestException("Missing rdfs:label")
+        }
+
+        if (!classInfoContent.predicates.contains(OntologyConstants.Rdfs.Comment.toSmartIri)) {
+            throw BadRequestException("Missing rdfs:comment")
+        }
+
+        CreateClassRequestV2(
+            classInfoContent = classInfoContent,
             lastModificationDate = lastModificationDate,
             apiRequestID = apiRequestID,
             userProfile = userProfile
@@ -1168,6 +1317,18 @@ sealed trait EntityInfoContentV2 {
     protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
+      * Checks that a predicate is present in this [[EntityInfoContentV2]] and that its object is an IRI, and
+      * returns the object as a [[SmartIri]].
+      *
+      * @param predicateIri the IRI of the predicate.
+      * @param errorFun a function that will be called if the predicate is absent or if its object is not an IRI.
+      * @return a [[SmartIri]] representing the predicate's object.
+      */
+    def requireIriPredicate(predicateIri: SmartIri, errorFun: => Nothing): SmartIri = {
+        predicates.get(predicateIri).flatMap(pred => pred.objects.headOption).getOrElse(errorFun).toSmartIri
+    }
+
+    /**
       * A convenience method that returns the `rdf:type` of this entity. Throws [[InconsistentTriplestoreDataException]]
       * if the entity's predicates do not include `rdf:type`.
       *
@@ -1891,10 +2052,6 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
                                  ontologySchema: OntologySchema) extends EntityInfoContentV2 with KnoraContentV2[PropertyInfoContentV2] {
 
     import PropertyInfoContentV2._
-
-    def requireIriPredicate(predicateIri: SmartIri, errorFun: => Nothing): SmartIri = {
-        predicates.get(predicateIri).flatMap(pred => pred.objects.headOption).getOrElse(errorFun).toSmartIri
-    }
 
     override def toOntologySchema(targetSchema: OntologySchema): PropertyInfoContentV2 = {
 

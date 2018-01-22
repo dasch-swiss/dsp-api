@@ -1378,6 +1378,105 @@ class OntologyResponderV2 extends Responder {
     }
 
     /**
+      * Creates a class in an existing ontology.
+      *
+      * @param createClassRequest the request to create the class.
+      * @return a [[ReadOntologiesV2]] in the internal schema, the containing the definition of the new class.
+      */
+    private def createClass(createClassRequest: CreateClassRequestV2): Future[ReadOntologiesV2] = {
+        def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologiesV2] = {
+            for {
+                cacheData <- getCacheData
+                internalClassDef = createClassRequest.classInfoContent.toOntologySchema(InternalSchema)
+
+                // Check that the ontology exists and has not been updated by another user since the client last read it.
+                _ <- checkOntologyLastModificationDateBeforeUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = createClassRequest.lastModificationDate
+                )
+
+                // Check that the class's rdf:type is owl:Class.
+
+                rdfType: SmartIri = internalClassDef.requireIriPredicate(OntologyConstants.Rdf.Type.toSmartIri, throw BadRequestException(s"No rdf:type specified"))
+
+                _ = if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
+                    throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
+                }
+
+                // Check that the class doesn't exist yet.
+                _ = if (cacheData.classDefs.contains(internalClassIri)) {
+                    throw BadRequestException(s"Class ${createClassRequest.classInfoContent.classIri} already exists")
+                }
+
+                // Check that the base classes that are Knora classes exist.
+
+                missingBaseClasses = internalClassDef.subClassOf.filter(_.isKnoraInternalEntityIri) -- cacheData.classDefs.keySet
+
+                _ = if (missingBaseClasses.nonEmpty) {
+                    throw BadRequestException(s"One or more specified Knora base classes do not exist: ${missingBaseClasses.mkString(", ")}")
+                }
+
+                // TODO: check that the class is a subclass of knora-base:Resource.
+
+                // TODO: if the class has cardinalities, check that the properties exist.
+
+                allBaseclassIris: Set[SmartIri] = internalClassDef.subClassOf.flatMap {
+                    superPropertyIri => cacheData.subPropertyOfRelations.getOrElse(superPropertyIri, Set.empty[SmartIri])
+                }
+
+                // TODO: Add the property (and the link value property if needed).
+
+                currentTime: Instant = Instant.now
+
+                updateSparql = ???
+
+                _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
+
+                // Check that the ontology's last modification date was updated.
+
+                _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
+
+                // TODO: check that the data that was saved corresponds to the data that was submitted. To make this comparison,
+                // we have to undo the SPARQL-escaping of the input.
+
+                // TODO: Update the ontology cache, using the unescaped definition(s).
+
+                // TODO: Read the data back from the cache.
+
+                response <- getClassDefinitionsV2(
+                    classIris = Set(internalClassIri),
+                    responseSchema = ApiV2WithValueObjects,
+                    allLanguages = true,
+                    userProfile = createClassRequest.userProfile
+                )
+            } yield response
+        }
+
+        for {
+            userProfile <- FastFuture.successful(createClassRequest.userProfile)
+
+            externalOntologyIri = createClassRequest.classInfoContent.classIri.getOntologyFromEntity
+            _ <- checkExternalOntologyIriForUpdate(externalOntologyIri)
+
+            externalPropertyIri = createClassRequest.classInfoContent.classIri
+            _ <- checkExternalEntityIriForUpdate(externalEntityIri = externalPropertyIri)
+
+            internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+            _ <- checkPermissionsForOntologyUpdate(internalOntologyIri = internalOntologyIri, userProfile = userProfile)
+
+            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID = createClassRequest.apiRequestID,
+                iri = internalOntologyIri.toString,
+                task = () => makeTaskFuture(
+                    internalClassIri = externalPropertyIri.toOntologySchema(InternalSchema),
+                    internalOntologyIri = internalOntologyIri
+                )
+            )
+        } yield taskResult
+    }
+
+    /**
       * Creates a property in an existing ontology.
       *
       * @param createPropertyRequest the request to create the property.
@@ -1601,6 +1700,12 @@ class OntologyResponderV2 extends Responder {
         } yield taskResult
     }
 
+    /**
+      * Changes the values of `rdfs:label` or `rdfs:comment` in a property definition.
+      *
+      * @param changePropertyLabelsOrCommentsRequest the request to change the property's labels or comments.
+      * @return a [[ReadOntologiesV2]] containing the modified property definition.
+      */
     private def changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2): Future[ReadOntologiesV2] = {
         def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologiesV2] = {
             for {
