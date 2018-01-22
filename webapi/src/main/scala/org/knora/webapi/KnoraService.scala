@@ -37,6 +37,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{Initialized, Initial
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders._
+import org.knora.webapi.routing.RejectingRoute
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
@@ -114,7 +115,8 @@ trait KnoraService {
       * All routes composed together and CORS activated.
       */
     private val apiRoutes: Route = CORS(
-        ResourcesRouteV1.knoraApiPath(system, settings, log) ~
+        RejectingRoute.knoraApiPath(system, settings, log) ~
+            ResourcesRouteV1.knoraApiPath(system, settings, log) ~
             ValuesRouteV1.knoraApiPath(system, settings, log) ~
             SipiRouteV1.knoraApiPath(system, settings, log) ~
             StandoffRouteV1.knoraApiPath(system, settings, log) ~
