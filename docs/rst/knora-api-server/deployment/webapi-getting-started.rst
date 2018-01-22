@@ -169,6 +169,14 @@ Transformations that are not needed have no effect, so it is safe to use ``-t al
 The program uses the Turtle parsing and formatting library from RDF4J_. Additional transformations can
 be implemented as subclasses of ``org.eclipse.rdf4j.rio.RDFHandler``.
 
+Selectively Disabling Routes
+-----------------------------
+
+In ``application.conf`` the setting ``app.routes-to-reject`` contains a list of strings, representing
+routes which should be rejected.
+
+For Example, the string ``"v1/users"`` would lead to rejection of any route which contains this string.
+
 .. _RDF: https://www.w3.org/TR/rdf11-primer/
 .. _free software: http://www.gnu.org/philosophy/free-sw.en.html
 .. _Ontotext GraphDB: http://ontotext.com/products/graphdb/
