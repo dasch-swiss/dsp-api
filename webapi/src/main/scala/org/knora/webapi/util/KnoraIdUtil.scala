@@ -168,7 +168,7 @@ class KnoraIdUtil {
     def makeProjectMappingIri(projectIri: IRI, mappingName: String): IRI = {
         val mappingIri = s"$projectIri/mappings/$mappingName"
         // check that the mapping IRI is valid (mappingName is user input)
-        stringFormatter.validateAndEscapeIri(mappingIri, () => throw BadRequestException(s"the created mapping IRI $mappingIri is invalid"))
+        stringFormatter.validateAndEscapeIri(mappingIri, throw BadRequestException(s"the created mapping IRI $mappingIri is invalid"))
     }
 
     /**

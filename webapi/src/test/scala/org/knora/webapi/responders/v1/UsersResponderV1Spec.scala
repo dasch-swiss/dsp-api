@@ -28,11 +28,11 @@ import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.groupmessages.{ChangeGroupApiRequestV1, GroupMembersByIRIGetRequestV1, GroupMembersResponseV1}
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.v1.responder.groupmessages.{GroupMembersByIRIGetRequestV1, GroupMembersResponseV1}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 
@@ -91,7 +91,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 actorUnderTest ! UsersGetRequestV1(rootUser)
                 val response = expectMsgType[UsersGetResponseV1](timeout)
                 response.users.nonEmpty should be (true)
-                response.users.size should be (17)
+                response.users.size should be (20)
             }
         }
 

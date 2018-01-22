@@ -15,7 +15,7 @@
     "incunabula:seqnum" : {
       "@id" : "http://data.knora.org/68ef9568b903/values/ee2c66c2e20e",
       "@type" : "knora-api:IntValue",
-      "knora-api:integerValueAsInteger" : 10
+      "knora-api:intValueAsInt" : 10
     },
     "schema:name" : "a4v"
   },

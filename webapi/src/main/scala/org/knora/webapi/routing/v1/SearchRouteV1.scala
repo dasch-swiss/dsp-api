@@ -61,26 +61,26 @@ object SearchRouteV1 extends Authenticator {
 
         // only one value is expected
         val restypeIri: Option[IRI] = params.get("filter_by_restype") match {
-            case Some(List(restype: IRI)) => Some(stringFormatter.validateAndEscapeIri(restype, () => throw BadRequestException(s"Value for param 'filter_by_restype' for extended search $restype is not a valid IRI. Please make sure that it was correctly URL encoded.")))
+            case Some(List(restype: IRI)) => Some(stringFormatter.validateAndEscapeIri(restype, throw BadRequestException(s"Value for param 'filter_by_restype' for extended search $restype is not a valid IRI. Please make sure that it was correctly URL encoded.")))
             case other => None
         }
 
         // only one value is expected
         val projectIri: Option[IRI] = params.get("filter_by_project") match {
-            case Some(List(project: IRI)) => Some(stringFormatter.validateAndEscapeIri(project, () => throw BadRequestException(s"Value for param 'filter_by_project' for extended search $project is not a valid IRI. Please make sure that it was correctly URL encoded.")))
+            case Some(List(project: IRI)) => Some(stringFormatter.validateAndEscapeIri(project, throw BadRequestException(s"Value for param 'filter_by_project' for extended search $project is not a valid IRI. Please make sure that it was correctly URL encoded.")))
             case other => None
         }
 
         // only one value is expected
         val ownerIri: Option[IRI] = params.get("filter_by_owner") match {
-            case Some(List(owner: IRI)) => Some(stringFormatter.validateAndEscapeIri(owner, () => throw BadRequestException(s"Value for param 'filter_by_owner' for extended search $owner is not a valid IRI. Please make sure that it was correctly URL encoded.")))
+            case Some(List(owner: IRI)) => Some(stringFormatter.validateAndEscapeIri(owner, throw BadRequestException(s"Value for param 'filter_by_owner' for extended search $owner is not a valid IRI. Please make sure that it was correctly URL encoded.")))
             case other => None
         }
 
         // here, also multiple values can be given
         val propertyIri: Seq[IRI] = params.get("property_id") match {
             case Some(propertyList: Seq[IRI]) => propertyList.map(
-                prop => stringFormatter.validateAndEscapeIri(prop, () => throw BadRequestException(s"Value for param 'property_id' for extended search $prop is not a valid IRI. Please make sure that it was correctly URL encoded."))
+                prop => stringFormatter.validateAndEscapeIri(prop, throw BadRequestException(s"Value for param 'property_id' for extended search $prop is not a valid IRI. Please make sure that it was correctly URL encoded."))
             )
             case other => Nil
         }
@@ -111,7 +111,7 @@ object SearchRouteV1 extends Authenticator {
 
         val showNRows: Int = params.get("show_nrows") match {
             case Some(showNRowsStrList: Seq[String]) =>
-                val showNRowsVal = stringFormatter.validateInt(showNRowsStrList.head, () => throw BadRequestException(s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStrList"))
+                val showNRowsVal = stringFormatter.validateInt(showNRowsStrList.head, throw BadRequestException(s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStrList"))
                 showNRowsVal match {
                     case -1 => defaultShowNRows
                     case _ => showNRowsVal
@@ -121,7 +121,7 @@ object SearchRouteV1 extends Authenticator {
 
         val startAt: Int = params.get("start_at") match {
             case Some(startAtStrList: Seq[String]) =>
-                stringFormatter.validateInt(startAtStrList.head, () => throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStrList"))
+                stringFormatter.validateInt(startAtStrList.head, throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStrList"))
             case None => 0
         }
 
@@ -147,19 +147,19 @@ object SearchRouteV1 extends Authenticator {
         }
 
         val restypeIri: Option[IRI] = params.get("filter_by_restype") match {
-            case Some(restype: IRI) => Some(stringFormatter.validateAndEscapeIri(restype, () => throw BadRequestException(s"Unexpected param 'filter_by_restype' for extended search: $restype")))
+            case Some(restype: IRI) => Some(stringFormatter.validateAndEscapeIri(restype, throw BadRequestException(s"Unexpected param 'filter_by_restype' for extended search: $restype")))
             case other => None
         }
         val projectIri: Option[IRI] = params.get("filter_by_project") match {
-            case Some(project: IRI) => Some(stringFormatter.validateAndEscapeIri(project, () => throw BadRequestException(s"Unexpected param 'filter_by_project' for extended search: $project")))
+            case Some(project: IRI) => Some(stringFormatter.validateAndEscapeIri(project, throw BadRequestException(s"Unexpected param 'filter_by_project' for extended search: $project")))
             case other => None
         }
 
-        val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+        val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
         val showNRows: Int = params.get("show_nrows") match {
             case Some(showNRowsStr) =>
-                val showNRowsVal = stringFormatter.validateInt(showNRowsStr, () => throw BadRequestException(s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStr"))
+                val showNRowsVal = stringFormatter.validateInt(showNRowsStr, throw BadRequestException(s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStr"))
                 showNRowsVal match {
                     case -1 => defaultShowNRows
                     case _ => showNRowsVal
@@ -169,7 +169,7 @@ object SearchRouteV1 extends Authenticator {
 
         val startAt: Int = params.get("start_at") match {
             case Some(startAtStr) =>
-                stringFormatter.validateInt(startAtStr, () => throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStr"))
+                stringFormatter.validateInt(startAtStr, throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStr"))
             case None => 0
         }
 

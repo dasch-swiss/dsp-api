@@ -676,6 +676,15 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 longname = SharedAdminTestData.dokubibProjectInfo.longname.get,
                 shortname = SharedAdminTestData.dokubibProjectInfo.shortname,
                 id = SharedAdminTestData.dokubibProjectInfo.ontologies.head
+            ),
+            NamedGraphV1( // Webern
+                active = true,
+                uri = SharedAdminTestData.webernProjectInfo.ontologies.head,
+                project_id = SharedAdminTestData.webernProjectInfo.id,
+                description = SharedAdminTestData.webernProjectInfo.description.get,
+                longname = SharedAdminTestData.webernProjectInfo.longname.get,
+                shortname = SharedAdminTestData.webernProjectInfo.shortname,
+                id = SharedAdminTestData.webernProjectInfo.ontologies.head
             )
         )
     )

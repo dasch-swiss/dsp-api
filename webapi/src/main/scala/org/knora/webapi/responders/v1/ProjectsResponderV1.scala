@@ -59,6 +59,7 @@ class ProjectsResponderV1 extends Responder {
         case ProjectInfoByIRIGetRequestV1(iri, userProfile) => future2Message(sender(), projectInfoByIRIGetRequestV1(iri, userProfile), log)
         case ProjectInfoByIRIGetV1(iri, userProfile) => future2Message(sender(), projectInfoByIRIGetV1(iri, userProfile), log)
         case ProjectInfoByShortnameGetRequestV1(shortname, userProfile) => future2Message(sender(), projectInfoByShortnameGetRequestV1(shortname, userProfile), log)
+        case ProjectInfoByOntologyGetRequestV1(ontologyIri, userProfile) => future2Message(sender(), projectInfoByOntologyGetRequestV1(ontologyIri, userProfile), log)
         case ProjectMembersByIRIGetRequestV1(iri, userProfileV1) => future2Message(sender(), projectMembersByIRIGetRequestV1(iri, userProfileV1), log)
         case ProjectMembersByShortnameGetRequestV1(shortname, userProfileV1) => future2Message(sender(), projectMembersByShortnameGetRequestV1(shortname, userProfileV1), log)
         case ProjectAdminMembersByIRIGetRequestV1(iri, userProfileV1) => future2Message(sender(), projectAdminMembersByIRIGetRequestV1(iri, userProfileV1), log)
@@ -174,7 +175,7 @@ class ProjectsResponderV1 extends Responder {
 
                     val maybeOntologies = propsMap.get(OntologyConstants.KnoraBase.ProjectOntology)
                     maybeOntologies match {
-                        case Some(ontologies) => ontologies.map( ontologyIri =>
+                        case Some(ontologies) => ontologies.map(ontologyIri =>
                             NamedGraphV1(
                                 id = ontologyIri,
                                 shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no basepath defined.")).head,
@@ -273,6 +274,37 @@ class ProjectsResponderV1 extends Responder {
                 projectResponse.results.bindings.head.rowMap("s")
             } else {
                 throw NotFoundException(s"Project '$shortName' not found")
+            }
+
+            projectInfo = createProjectInfoV1(projectResponse = projectResponse.results.bindings, projectIri = projectIri, userProfile)
+
+        } yield ProjectInfoResponseV1(
+            project_info = projectInfo
+        )
+    }
+
+    /**
+      * Gets the project that contains the specified ontology, and returns its information as a [[ProjectInfoResponseV1]].
+      *
+      * @param ontologyIri the ontology IRI.
+      * @param userProfile the profile of user that is making the request.
+      * @return information about the project as a [[ProjectInfoResponseV1]].
+      * @throws NotFoundException in the case that no project for the given ontology can be found.
+      */
+    private def projectInfoByOntologyGetRequestV1(ontologyIri: IRI, userProfile: Option[UserProfileV1]): Future[ProjectInfoResponseV1] = {
+        for {
+            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectByOntology(
+                triplestore = settings.triplestoreType,
+                ontologyIri = ontologyIri
+            ).toString())
+
+            projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+
+            // get project IRI from results rows
+            projectIri: IRI = if (projectResponse.results.bindings.nonEmpty) {
+                projectResponse.results.bindings.head.rowMap("s")
+            } else {
+                throw NotFoundException(s"No project found with ontology $ontologyIri")
             }
 
             projectInfo = createProjectInfoV1(projectResponse = projectResponse.results.bindings, projectIri = projectIri, userProfile)
@@ -454,12 +486,12 @@ class ProjectsResponderV1 extends Responder {
       * Creates a project.
       *
       * @param createRequest the new project's information.
-      * @param userProfile the profile of the user that is making the request.
-      * @param apiRequestID the unique api request ID.
+      * @param userProfile   the profile of the user that is making the request.
+      * @param apiRequestID  the unique api request ID.
       * @return a [[ProjectOperationResponseV1]].
-      * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
+      * @throws ForbiddenException      in the case that the user is not allowed to perform the operation.
       * @throws DuplicateValueException in the case when either the shortname or shortcode are not unique.
-      * @throws BadRequestException in the case when the shortcode is invalid.
+      * @throws BadRequestException     in the case when the shortcode is invalid.
       */
     private def projectCreateRequestV1(createRequest: CreateProjectApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[ProjectOperationResponseV1] = {
 
@@ -485,7 +517,7 @@ class ProjectsResponderV1 extends Responder {
             shortcodeExists <- if (createRequest.shortcode.isDefined) {
                 val shortcode = StringFormatter.getGeneralInstance.validateProjectShortcode(
                     createRequest.shortcode.get,
-                    errorFun = () => throw BadRequestException(s"The supplied short code: '${createRequest.shortcode.get}' is not valid.")
+                    errorFun = throw BadRequestException(s"The supplied short code: '${createRequest.shortcode.get}' is not valid.")
                 )
                 projectByShortcodeExists(shortcode)
             } else {
@@ -553,10 +585,10 @@ class ProjectsResponderV1 extends Responder {
     /**
       * Changes project's basic information.
       *
-      * @param projectIri the IRI of the project.
+      * @param projectIri           the IRI of the project.
       * @param changeProjectRequest the change payload.
-      * @param userProfileV1 the profile of the user making the request.
-      * @param apiRequestID the unique api request ID.
+      * @param userProfileV1        the profile of the user making the request.
+      * @param apiRequestID         the unique api request ID.
       * @return a [[ProjectOperationResponseV1]].
       * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
       */
@@ -609,8 +641,8 @@ class ProjectsResponderV1 extends Responder {
     /**
       * Add a ontology to the project.
       *
-      * @param projectIri the IRI of the project.
-      * @param ontologyIri the IRI of the ontology that is added to the project.
+      * @param projectIri   the IRI of the project.
+      * @param ontologyIri  the IRI of the ontology that is added to the project.
       * @param apiRequestID the unique api request ID.
       * @return a [[ProjectInfoV1]]
       * @throws NotFoundException in the case that the project's IRI is not found.
@@ -656,8 +688,8 @@ class ProjectsResponderV1 extends Responder {
     /**
       * Remove a ontology from the project.
       *
-      * @param projectIri the IRI of the project.
-      * @param ontologyIri the IRI of the ontology that is added to the project.
+      * @param projectIri   the IRI of the project.
+      * @param ontologyIri  the IRI of the ontology that is added to the project.
       * @param apiRequestID the unique api request ID.
       * @return a [[ProjectInfoV1]]
       * @throws NotFoundException in the case that the project's IRI is not found.
@@ -704,7 +736,7 @@ class ProjectsResponderV1 extends Responder {
     /**
       * Main project update method.
       *
-      * @param projectIri the IRI of the project.
+      * @param projectIri           the IRI of the project.
       * @param projectUpdatePayload the data to be updated. Update means exchanging what is in the triplestore with
       *                             this data. If only some parts of the data need to be changed, then this needs to
       *                             be prepared in the step before this one.

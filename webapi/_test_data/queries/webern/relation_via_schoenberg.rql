@@ -1,0 +1,21 @@
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX webern: <http://www.knora.org/ontology/08AE/webern#>
+
+SELECT (CONCAT(?first, ' ', ?last) AS ?fullname) ?string
+WHERE {
+    ?s a foaf:Person ;
+    	knora-base:attachedToProject ?project .
+    ?project knora-base:projectShortname "webern" .
+
+	?s webern:hasRelation ?relation ;
+    	webern:hasFamilyName ?familyName ;
+    	webern:hasGivenName ?givenName .
+
+    ?relation knora-base:valueHasString ?string .
+    FILTER regex(str(?string), "Schönberg") .
+
+    ?familyName knora-base:valueHasString ?last .
+    ?givenName knora-base:valueHasString ?first .
+
+} LIMIT 100

@@ -1,0 +1,621 @@
+{
+  "knora-api:hasOntologies" : {
+    "@id" : "http://0.0.0.0:3333/ontology/00FF/images/v2",
+    "@type" : "owl:Ontology",
+    "knora-api:hasClasses" : {
+      "p00FF-images:bild" : {
+        "@id" : "p00FF-images:bild",
+        "@type" : "owl:Class",
+        "knora-api:canBeInstantiated" : true,
+        "knora-api:resourceIcon" : "bild.png",
+        "rdfs:comment" : "An image of the demo image collection",
+        "rdfs:label" : "Image",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#StillImageRepresentation", {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bearbeiter"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildnr"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#copyright"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#copyrightValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#description"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#erfassungsdatum"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#hatBildformat"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#hatBildformatValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#jahr_exakt"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:minCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#jahreszeit"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#jahrzehnt"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#mutationsdatum"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#negativnummer"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#signatur"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#titel"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#urheber"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#urheberValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#lastModificationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://schema.org/name"
+        } ]
+      },
+      "p00FF-images:bildformat" : {
+        "@id" : "p00FF-images:bildformat",
+        "@type" : "owl:Class",
+        "knora-api:canBeInstantiated" : true,
+        "knora-api:resourceIcon" : "bildformat.png",
+        "rdfs:label" : "Image format",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Resource", {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildart"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#comment"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#eingangsdatum"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#erwerbsdatum"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#format"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#lieferant"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#lieferantValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#preis"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#zugangsart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#lastModificationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://schema.org/name"
+        } ]
+      },
+      "p00FF-images:person" : {
+        "@id" : "p00FF-images:person",
+        "@type" : "owl:Class",
+        "knora-api:canBeInstantiated" : true,
+        "knora-api:resourceIcon" : "person.png",
+        "rdfs:comment" : "Person",
+        "rdfs:label" : "Person",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Resource", {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#address"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#city"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#email"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#fax"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#firstname"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#institution"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#lastname"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#zipcode"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#lastModificationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://schema.org/name"
+        } ]
+      }
+    },
+    "knora-api:hasProperties" : {
+      "p00FF-images:address" : {
+        "@id" : "p00FF-images:address",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "rdfs:comment" : "Adresse (Strassenname, Nummer etc.)",
+        "rdfs:label" : "Address",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:bearbeiter" : {
+        "@id" : "p00FF-images:bearbeiter",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "rdfs:label" : "Editor",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:bildart" : {
+        "@id" : "p00FF-images:bildart",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#ListValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "rdfs:label" : "Image type",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:bildnr" : {
+        "@id" : "p00FF-images:bildnr",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "rdfs:label" : "Picture ID",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:city" : {
+        "@id" : "p00FF-images:city",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "rdfs:label" : "City",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:comment" : {
+        "@id" : "p00FF-images:comment",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "rdfs:comment" : "Unstrukturierte Bemerkungen zu einem Objekt",
+        "rdfs:label" : "Comment",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:copyright" : {
+        "@id" : "p00FF-images:copyright",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkProperty" : true,
+        "knora-api:objectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "rdfs:comment" : "Copyright",
+        "rdfs:label" : "Copyright",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"
+      },
+      "p00FF-images:copyrightValue" : {
+        "@id" : "p00FF-images:copyrightValue",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkValueProperty" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "rdfs:comment" : "Copyright",
+        "rdfs:label" : "Copyright",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue"
+      },
+      "p00FF-images:description" : {
+        "@id" : "p00FF-images:description",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "rdfs:label" : "Description",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#description"
+      },
+      "p00FF-images:eingangsdatum" : {
+        "@id" : "p00FF-images:eingangsdatum",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "rdfs:label" : "Date of receipt",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#date"
+      },
+      "p00FF-images:email" : {
+        "@id" : "p00FF-images:email",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "rdfs:label" : "Email",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:erfassungsdatum" : {
+        "@id" : "p00FF-images:erfassungsdatum",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "rdfs:label" : "Date of acquisition",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#date"
+      },
+      "p00FF-images:erwerbsdatum" : {
+        "@id" : "p00FF-images:erwerbsdatum",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "rdfs:label" : "Date of acquisition",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#date"
+      },
+      "p00FF-images:fax" : {
+        "@id" : "p00FF-images:fax",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "rdfs:comment" : "Fax",
+        "rdfs:label" : "Fax",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:firstname" : {
+        "@id" : "p00FF-images:firstname",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "rdfs:comment" : "First name of a person",
+        "rdfs:label" : "First name",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:format" : {
+        "@id" : "p00FF-images:format",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "rdfs:label" : "Format",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:hatBildformat" : {
+        "@id" : "p00FF-images:hatBildformat",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkProperty" : true,
+        "knora-api:objectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "rdfs:comment" : "Image format",
+        "rdfs:label" : "Bildformat",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"
+      },
+      "p00FF-images:hatBildformatValue" : {
+        "@id" : "p00FF-images:hatBildformatValue",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkValueProperty" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "rdfs:comment" : "Image format",
+        "rdfs:label" : "Bildformat",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue"
+      },
+      "p00FF-images:institution" : {
+        "@id" : "p00FF-images:institution",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "rdfs:comment" : "Institution",
+        "rdfs:label" : "Institution",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:jahr_exakt" : {
+        "@id" : "p00FF-images:jahr_exakt",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "rdfs:label" : "Year",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:jahreszeit" : {
+        "@id" : "p00FF-images:jahreszeit",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#ListValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "rdfs:label" : "Season",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:jahrzehnt" : {
+        "@id" : "p00FF-images:jahrzehnt",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "rdfs:label" : "Decade",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:lastname" : {
+        "@id" : "p00FF-images:lastname",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "rdfs:comment" : "Last name of a person",
+        "rdfs:label" : "Name",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:lieferant" : {
+        "@id" : "p00FF-images:lieferant",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkProperty" : true,
+        "knora-api:objectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "rdfs:label" : "Supplier",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"
+      },
+      "p00FF-images:lieferantValue" : {
+        "@id" : "p00FF-images:lieferantValue",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkValueProperty" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "rdfs:label" : "Supplier",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue"
+      },
+      "p00FF-images:mutationsdatum" : {
+        "@id" : "p00FF-images:mutationsdatum",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "rdfs:label" : "Mutation date",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#date"
+      },
+      "p00FF-images:negativnummer" : {
+        "@id" : "p00FF-images:negativnummer",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "rdfs:label" : "Number of negative",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:preis" : {
+        "@id" : "p00FF-images:preis",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "rdfs:label" : "Price",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:signatur" : {
+        "@id" : "p00FF-images:signatur",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "rdfs:comment" : "Die spezielle Signatur",
+        "rdfs:label" : "Signature",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:stueckzahl" : {
+        "@id" : "p00FF-images:stueckzahl",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#IntValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "rdfs:label" : "No. of items",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:titel" : {
+        "@id" : "p00FF-images:titel",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#ListValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "rdfs:label" : "Title",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:urheber" : {
+        "@id" : "p00FF-images:urheber",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkProperty" : true,
+        "knora-api:objectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "rdfs:comment" : "An entity primarily responsible for making the resource. Examples of a Creator include a person, an organization, or a service. Typically, the name of a Creator should be used to indicate the entity.",
+        "rdfs:label" : "Creator",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"
+      },
+      "p00FF-images:urheberValue" : {
+        "@id" : "p00FF-images:urheberValue",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkValueProperty" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "rdfs:comment" : "An entity primarily responsible for making the resource. Examples of a Creator include a person, an organization, or a service. Typically, the name of a Creator should be used to indicate the entity.",
+        "rdfs:label" : "Creator",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue"
+      },
+      "p00FF-images:zipcode" : {
+        "@id" : "p00FF-images:zipcode",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "rdfs:comment" : "Postleitzajl",
+        "rdfs:label" : "ZIP-Code",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:zugangsart" : {
+        "@id" : "p00FF-images:zugangsart",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#ListValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "rdfs:comment" : "Die Art und Weise, wie ein Objekt in den Besitz gelangt ist.",
+        "rdfs:label" : "Type of acquisition",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      }
+    },
+    "knora-api:hasStandoffClasses" : { },
+    "knora-api:hasStandoffProperties" : { },
+    "rdfs:label" : "The images demo ontology"
+  },
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "p00FF-images" : "http://0.0.0.0:3333/ontology/00FF/images/v2#",
+    "dc" : "http://api.knora.org/ontology/dc/v2#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "owl" : "http://www.w3.org/2002/07/owl#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+  }
+}

@@ -952,8 +952,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
 
                 thirdTextValueIri.set(ResponseUtils.getStringMemberFromResponse(response, "id"))
-
-
+                
             }
 
         }

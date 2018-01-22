@@ -1,0 +1,48 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Gets all information about a single project, given the the IRI of an ontology in the project.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param ontologyIri the ontology IRI.
+ *@
+@(triplestore: String,
+  ontologyIri: String)
+
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?s ?p ?o
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
+WHERE {
+
+    ?s rdf:type knora-base:knoraProject .
+    ?s knora-base:projectOntology <@ontologyIri> .
+    ?s ?p ?o .
+
+}

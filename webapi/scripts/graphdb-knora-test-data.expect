@@ -50,8 +50,12 @@ expect $prompt
 send "load ../_test_data/ontologies/example.ttl into http://www.knora.org/ontology/0001/example .\r"
 expect $prompt
 
-
 send "load ../_test_data/all_data/beol-data.ttl into http://www.knora.org/data/beol .\r"
+expect $prompt
+
+send "load ../_test_data/ontologies/webern-onto.ttl into http://www.knora.org/ontology/08AE/webern .\r"
+expect $prompt
+send "load ../_test_data/all_data/webern-data.ttl into http://www.knora.org/data/08AE/webern .\r"
 expect $prompt
 
 send "close .\r"
