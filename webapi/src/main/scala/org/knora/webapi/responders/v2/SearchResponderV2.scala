@@ -127,6 +127,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 case compareExpr: CompareExpression => CompareExpression(leftArg = preprocessFilterExpression(compareExpr.leftArg), operator = compareExpr.operator, rightArg = preprocessFilterExpression(compareExpr.rightArg))
                 case andExpr: AndExpression => AndExpression(leftArg = preprocessFilterExpression(andExpr.leftArg), rightArg = preprocessFilterExpression(andExpr.rightArg))
                 case orExpr: OrExpression => OrExpression(leftArg = preprocessFilterExpression(orExpr.leftArg), rightArg = preprocessFilterExpression(orExpr.rightArg))
+                case functionCallExpr: FunctionCallExpression => FunctionCallExpression(functionIri = functionCallExpr.functionIri, args = functionCallExpr.args.map(arg => preprocessEntity(arg)))
             }
         }
 

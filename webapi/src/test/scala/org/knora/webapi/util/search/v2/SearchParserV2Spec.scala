@@ -125,6 +125,10 @@ class SearchParserV2Spec extends CoreSpec() {
             parsed should ===(ParsedQueryWithOffset)
         }
 
+        "accept a custom 'match' function in a FILTER" in {
+            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithMatchFunction)
+            parsed should ===(ParsedQueryWithMatchFunction)
+        }
     }
 
     val Query: String =
@@ -796,30 +800,31 @@ class SearchParserV2Spec extends CoreSpec() {
 
     val ParsedQueryForAThingRelatingToAnotherThing = ConstructQuery(
         orderBy = Nil,
-        whereClause = WhereClause(patterns = Vector(
-            StatementPattern(
-                obj = IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#Thing".toSmartIri),
-                pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
-                subj = QueryVariable(variableName = "resource")
-            ),
-            StatementPattern(
-                obj = IriRef("http://data.knora.org/a-thing".toSmartIri),
-                pred = QueryVariable(variableName = "linkingProp"),
-                subj = QueryVariable(variableName = "resource")
-            ),
-            FilterPattern(expression = OrExpression(
-                rightArg = CompareExpression(
-                    rightArg = IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#hasOtherThing".toSmartIri),
-                    operator = CompareExpressionOperator.EQUALS,
-                    leftArg = QueryVariable(variableName = "linkingProp")
+        whereClause = WhereClause(
+            patterns = Vector(
+                StatementPattern(
+                    obj = IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#Thing".toSmartIri),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    subj = QueryVariable(variableName = "resource")
                 ),
-                leftArg = CompareExpression(
-                    rightArg = IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#isPartOfOtherThing".toSmartIri),
-                    operator = CompareExpressionOperator.EQUALS,
-                    leftArg = QueryVariable(variableName = "linkingProp")
-                )
-            ))
-        ),
+                StatementPattern(
+                    obj = IriRef("http://data.knora.org/a-thing".toSmartIri),
+                    pred = QueryVariable(variableName = "linkingProp"),
+                    subj = QueryVariable(variableName = "resource")
+                ),
+                FilterPattern(expression = OrExpression(
+                    rightArg = CompareExpression(
+                        rightArg = IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#hasOtherThing".toSmartIri),
+                        operator = CompareExpressionOperator.EQUALS,
+                        leftArg = QueryVariable(variableName = "linkingProp")
+                    ),
+                    leftArg = CompareExpression(
+                        rightArg = IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#isPartOfOtherThing".toSmartIri),
+                        operator = CompareExpressionOperator.EQUALS,
+                        leftArg = QueryVariable(variableName = "linkingProp")
+                    )
+                ))
+            ),
             positiveEntities = Set(
                 QueryVariable("linkingProp"),
                 QueryVariable("resource"),
@@ -878,4 +883,52 @@ class SearchParserV2Spec extends CoreSpec() {
           |    <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> a knora-api:Resource .
           |}
         """.stripMargin
+
+    val QueryWithMatchFunction: String =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?resource a anything:Thing .
+          |} WHERE {
+          |    ?resource a anything:Thing .
+          |    ?resource anything:hasText ?text .
+          |    FILTER(knora-api:match(?text, "foo"))
+          |}
+        """.stripMargin
+
+    val ParsedQueryWithMatchFunction: ConstructQuery = ConstructQuery(
+        orderBy = Nil,
+        whereClause = WhereClause(
+            patterns = Vector(
+                StatementPattern(
+                    obj = IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#Thing".toSmartIri),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    subj = QueryVariable(variableName = "resource")
+                ),
+                StatementPattern(
+                    obj = QueryVariable(variableName = "text"),
+                    pred = IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#hasText".toSmartIri),
+                    subj = QueryVariable(variableName = "resource")
+                ),
+                FilterPattern(expression = FunctionCallExpression(
+                    functionIri = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#match".toSmartIri),
+                    args = Seq(QueryVariable(variableName = "text"), XsdLiteral(value = "foo", datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri))
+                ))
+            ),
+            positiveEntities = Set(
+                QueryVariable("resource"),
+                QueryVariable("text"),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#hasText".toSmartIri),
+                IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#Thing".toSmartIri)
+            )
+        ),
+        constructClause = ConstructClause(statements = Vector(StatementPattern(
+            obj = IriRef("http://0.0.0.0:3333/ontology/anything/simple/v2#Thing".toSmartIri),
+            pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+            subj = QueryVariable(variableName = "resource")
+        )))
+    )
 }

@@ -264,6 +264,16 @@ case class OrExpression(leftArg: Expression, rightArg: Expression) extends Expre
 }
 
 /**
+  * Represents a function call in a filter.
+  *
+  * @param functionIri the IRI of the function.
+  * @param args the arguments passed to the function.
+  */
+case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extends Expression {
+    def toSparql: String = s"<$functionIri>(${args.map(_.toSparql).mkString(", ")})"
+}
+
+/**
   * Represents a FILTER pattern in a query.
   *
   * @param expression the expression in the FILTER.
