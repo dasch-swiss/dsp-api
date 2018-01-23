@@ -67,8 +67,6 @@
 
        knora-base:objectClassConstraint knora-base:TextValue ;
 
-       salsah-gui:guiOrder "1"^^xsd:integer ;
-
        salsah-gui:guiElement salsah-gui:SimpleText ;
 
        salsah-gui:guiAttribute "size=80" ,
@@ -1162,7 +1160,7 @@
                            rdf:type owl:Restriction ;
                            owl:onProperty :sectionHasTitle ;
                            owl:minCardinality "1"^^xsd:nonNegativeInteger
-                        ] ,
+                        ],
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasSection ;
@@ -1221,9 +1219,11 @@
                owl:maxCardinality "1"^^xsd:nonNegativeInteger
              ];
 
-    rdfs:comment "schriftliche Quelle"@de ;
+    rdfs:comment "schriftliche Quelle"@de ,
+                 "Written source"@en ;
 
-    rdfs:label "schriftliche Quelle"@de .
+    rdfs:label "schriftliche Quelle"@de ,
+                "Written source"@en .
 
 
 ### ###########################################
@@ -1265,8 +1265,8 @@
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
-                    owl:onProperty :hasFloruitDate;
-                    owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      owl:onProperty :hasFloruitDate;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasMarriageDate;
@@ -1283,7 +1283,7 @@
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasFloruitPlace ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                      ],
+                    ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasMarriagePlace ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger
