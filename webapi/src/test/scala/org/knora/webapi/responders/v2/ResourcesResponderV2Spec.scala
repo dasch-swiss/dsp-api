@@ -29,12 +29,12 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetReque
 import org.knora.webapi.responders.v2.ResponseCheckerResponderV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.{CoreSpec, LiveActorMaker, SharedAdminTestData}
+import org.knora.webapi.{CoreSpec, LiveActorMaker, SharedTestDataV1}
 
 import scala.concurrent.duration._
 
 object ResourcesResponderV2Spec {
-    private val userProfile = SharedAdminTestData.incunabulaProjectAdminUser
+    private val userProfile = SharedTestDataV1.incunabulaProjectAdminUser
 }
 
 /**

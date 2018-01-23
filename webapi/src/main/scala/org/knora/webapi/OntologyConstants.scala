@@ -34,6 +34,7 @@ object OntologyConstants {
         val Predicate: IRI = RdfPrefixExpansion + "predicate"
         val Object: IRI = RdfPrefixExpansion + "object"
         val Property: IRI = RdfPrefixExpansion + "Property"
+        val LangString: IRI = RdfPrefixExpansion + "langString"
     }
 
     object Rdfs {
@@ -435,6 +436,11 @@ object OntologyConstants {
           * such as link values for standoff resource references.
           */
         val SystemUser: IRI = KnoraBasePrefixExpansion + "SystemUser"
+
+        /**
+          * Every user not logged-in is per default an anonymous user.
+          */
+        val AnonymousUser: IRI = KnoraBasePrefixExpansion + "AnonymousUser"
 
         val CreationDate: IRI = KnoraBasePrefixExpansion + "creationDate"
         val ValueCreationDate: IRI = KnoraBasePrefixExpansion + "valueCreationDate"

@@ -21,11 +21,11 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    private val imagesUserProfile = SharedAdminTestData.imagesUser01
-    private val imagesProjectIri = SharedAdminTestData.IMAGES_PROJECT_IRI.toSmartIri
+    private val imagesUserProfile = SharedTestDataV1.imagesUser01
+    private val imagesProjectIri = SharedTestDataV1.IMAGES_PROJECT_IRI.toSmartIri
 
-    private val anythingUserProfile = SharedAdminTestData.anythingAdminUser
-    private val anythingProjectIri = SharedAdminTestData.ANYTHING_PROJECT_IRI.toSmartIri
+    private val anythingUserProfile = SharedTestDataV1.anythingAdminUser
+    private val anythingProjectIri = SharedTestDataV1.ANYTHING_PROJECT_IRI.toSmartIri
 
     private val actorUnderTest = TestActorRef[OntologyResponderV2]
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)

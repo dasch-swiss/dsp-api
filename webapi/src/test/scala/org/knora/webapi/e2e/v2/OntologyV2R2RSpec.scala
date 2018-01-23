@@ -26,13 +26,13 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
 object OntologyV2R2RSpec {
-    private val imagesUserProfile = SharedAdminTestData.imagesUser01
+    private val imagesUserProfile = SharedTestDataV1.imagesUser01
     private val imagesUsername = imagesUserProfile.userData.email.get
-    private val imagesProjectIri = SharedAdminTestData.IMAGES_PROJECT_IRI
+    private val imagesProjectIri = SharedTestDataV1.IMAGES_PROJECT_IRI
 
-    private val anythingUserProfile = SharedAdminTestData.anythingAdminUser
+    private val anythingUserProfile = SharedTestDataV1.anythingAdminUser
     private val anythingUsername = anythingUserProfile.userData.email.get
-    private val anythingProjectIri = SharedAdminTestData.ANYTHING_PROJECT_IRI
+    private val anythingProjectIri = SharedTestDataV1.ANYTHING_PROJECT_IRI
 
     private val password = "test"
 }
@@ -91,7 +91,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 30.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataV1.rootUser), 30.seconds)
     }
 
     "The Ontologies v2 Endpoint" should {
