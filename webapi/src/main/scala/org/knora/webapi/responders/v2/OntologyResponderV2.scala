@@ -1886,33 +1886,16 @@ class OntologyResponderV2 extends Responder {
     }
 
     /**
-      * Converts a SPARQL CONSTRUCT response to a [[PropertyInfoContentV2]].
+      * Given a map of predicate IRIs to predicate objects describing an entity, returns a map of smart IRIs to [[PredicateInfoV2]]
+      * objects that can be used to construct an [[EntityInfoContentV2]].
       *
-      * @param constructResponse the SPARQL CONSTRUCT response to be read.
-      * @return a [[PropertyInfoContentV2]] representing a property definition.
+      * @param entityDefMap a map of predicate IRIs to predicate objects.
+      * @return a map of smart IRIs to [[PredicateInfoV2]] objects.
       */
-    private def constructResponseToPropertyDefinition(constructResponse: SparqlExtendedConstructResponse): PropertyInfoContentV2 = {
-        val statements = constructResponse.statements
+    private def getEntityPredicatesFromConstructResponse(entityDefMap: Map[IRI, Seq[LiteralV2]]): Map[SmartIri, PredicateInfoV2] = {
+        // TODO: when refactoring PredicateInfoV2 to use LiteralV2, rewrite this method accordingly.
 
-        if (statements.size != 1) {
-            throw InconsistentTriplestoreDataException(s"Expected one subject, got ${statements.size}")
-        }
-
-        val propertyIri = statements.keySet.head.toSmartIri
-
-        if (!propertyIri.getOntologySchema.contains(InternalSchema)) {
-            throw InconsistentTriplestoreDataException(s"Expected an internal property schema, got ${propertyIri.getOntologySchema}")
-        }
-
-        val propertyDefMap: Map[IRI, Seq[LiteralV2]] = statements.values.head
-
-        val subPropertyOf: Set[SmartIri] = propertyDefMap.getOrElse(OntologyConstants.Rdfs.SubPropertyOf,
-            throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:subPropertyOf")).map {
-            case iriLiteral: IriLiteralV2 => iriLiteral.value.toSmartIri
-            case other => throw InconsistentTriplestoreDataException(s"Unexpected object for rdfs:subPropertyOf: $other")
-        }.toSet
-
-        val otherPreds: Map[SmartIri, PredicateInfoV2] = (propertyDefMap - OntologyConstants.Rdfs.SubPropertyOf).map {
+        entityDefMap.map {
             case (predIriStr: IRI, predObjs: Seq[LiteralV2]) =>
                 val predicateIri = predIriStr.toSmartIri
 
@@ -1942,12 +1925,131 @@ class OntologyResponderV2 extends Responder {
 
                 predicateIri -> predicateInfo
         }
+    }
+
+    /**
+      * Converts a SPARQL CONSTRUCT response to a [[PropertyInfoContentV2]].
+      *
+      * @param constructResponse the SPARQL CONSTRUCT response to be read.
+      * @return a [[PropertyInfoContentV2]] representing a property definition.
+      */
+    private def constructResponseToPropertyDefinition(constructResponse: SparqlExtendedConstructResponse): PropertyInfoContentV2 = {
+        val statements = constructResponse.statements
+
+        if (statements.size != 1) {
+            throw InconsistentTriplestoreDataException(s"Expected one property, got ${statements.size}")
+        }
+
+        val propertyIri = statements.keySet.head.toString.toSmartIri
+
+        if (!propertyIri.getOntologySchema.contains(InternalSchema)) {
+            throw InconsistentTriplestoreDataException(s"Expected an internal property schema, got ${propertyIri.getOntologySchema}")
+        }
+
+        val propertyDefMap: Map[IRI, Seq[LiteralV2]] = statements.values.head
+
+        val subPropertyOf: Set[SmartIri] = propertyDefMap.getOrElse(OntologyConstants.Rdfs.SubPropertyOf,
+            throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:subPropertyOf")).map {
+            case iriLiteral: IriLiteralV2 => iriLiteral.value.toSmartIri
+            case other => throw InconsistentTriplestoreDataException(s"Unexpected object for rdfs:subPropertyOf: $other")
+        }.toSet
+
+        val otherPreds: Map[SmartIri, PredicateInfoV2] = getEntityPredicatesFromConstructResponse(propertyDefMap - OntologyConstants.Rdfs.SubPropertyOf)
 
         PropertyInfoContentV2(
             propertyIri = propertyIri,
             subPropertyOf = subPropertyOf,
             predicates = otherPreds,
             ontologySchema = propertyIri.getOntologySchema.get
+        )
+    }
+
+    private def constructResponseToClassDefinition(constructResponse: SparqlExtendedConstructResponse): ClassInfoContentV2 = {
+        val statements = constructResponse.statements
+
+        // Some of the statements will have the class as their subject, and others may have blank nodes (representing
+        // cardinalities) as their subjects. Get just the ones referring to the class.
+
+        val entityStatements: Map[IriSubjectV2, Map[IRI, Seq[LiteralV2]]] = statements.collect {
+            case (subject: IriSubjectV2, predObjs: Map[IRI, Seq[LiteralV2]]) => subject -> predObjs
+        }
+
+        if (entityStatements.size != 1) {
+            throw InconsistentTriplestoreDataException(s"Expected one class, got ${entityStatements.size}")
+        }
+
+        val classIri = entityStatements.keySet.head.toString.toSmartIri
+
+        if (!classIri.getOntologySchema.contains(InternalSchema)) {
+            throw InconsistentTriplestoreDataException(s"Expected an internal class schema, got ${classIri.getOntologySchema}")
+        }
+
+        val classDefMap: Map[IRI, Seq[LiteralV2]] = entityStatements.values.head
+
+        // Get the IRIs of the class's base classes.
+
+        val subClassOfObjects: Seq[LiteralV2] = classDefMap.getOrElse(OntologyConstants.Rdfs.SubClassOf,
+            throw InconsistentTriplestoreDataException(s"Class $classIri has no rdfs:subClassOf"))
+
+        val subClassOf: Set[SmartIri] = subClassOfObjects.collect {
+            case iriLiteral: IriLiteralV2 => iriLiteral.value.toSmartIri
+        }.toSet
+
+        // Get the blank nodes representing cardinalities.
+
+        val restrictionBlankNodeIDs: Set[BlankNodeLiteralV2] = subClassOfObjects.collect {
+            case blankNodeLiteral: BlankNodeLiteralV2 => blankNodeLiteral
+        }.toSet
+
+        val directCardinalities: Map[SmartIri, Cardinality.Value] = restrictionBlankNodeIDs.map {
+            blankNodeID =>
+                val blankNode: Map[IRI, Seq[LiteralV2]] = statements.getOrElse(BlankNodeSubjectV2(blankNodeID.value), throw InconsistentTriplestoreDataException(s"Blank node '${blankNodeID.value}' not found in construct query result"))
+
+                val blankNodeTypeObjs: Seq[LiteralV2] = blankNode.getOrElse(OntologyConstants.Rdf.Type, throw InconsistentTriplestoreDataException(s"Blank node '${blankNodeID.value}' has no rdf:type"))
+
+                blankNodeTypeObjs match {
+                    case Seq(IriLiteralV2(OntologyConstants.Owl.Restriction)) => ()
+                    case _ => throw InconsistentTriplestoreDataException(s"Blank node '${blankNodeID.value}' is not an owl:Restriction")
+                }
+
+                val onPropertyObjs: Seq[LiteralV2] = blankNode.getOrElse(OntologyConstants.Owl.OnProperty, throw InconsistentTriplestoreDataException(s"Blank node '${blankNodeID.value}' has no owl:onProperty"))
+
+                val propertyIri: IRI = onPropertyObjs match {
+                    case Seq(propertyIri: IriLiteralV2) => propertyIri.value
+                    case other => throw InconsistentTriplestoreDataException(s"Invalid object for owl:onProperty: $other")
+                }
+
+                val owlCardinalityPreds: Set[IRI] = blankNode.keySet.filter {
+                    predicate => OntologyConstants.Owl.cardinalityOWLRestrictions(predicate)
+                }
+
+                if (owlCardinalityPreds.size != 1) {
+                    throw InconsistentTriplestoreDataException(s"Expected one cardinality predicate in blank node '${blankNodeID.value}', got ${owlCardinalityPreds.size}")
+                }
+
+                val owlCardinalityIri = owlCardinalityPreds.head
+
+                val owlCardinalityValue: Int = blankNode(owlCardinalityIri) match {
+                    case Seq(IntLiteralV2(intVal)) => intVal
+                    case other => throw InconsistentTriplestoreDataException(s"Expected one integer object for predicate $owlCardinalityIri in blank node '${blankNodeID.value}', got $other")
+                }
+
+                propertyIri.toSmartIri -> Cardinality.owlCardinality2KnoraCardinality(
+                    propertyIri = propertyIri,
+                    owlCardinality = Cardinality.OwlCardinalityInfo(owlCardinalityIri = owlCardinalityIri, owlCardinalityValue = owlCardinalityValue)
+                )
+        }.toMap
+
+        // Get any other predicates of the class.
+
+        val otherPreds: Map[SmartIri, PredicateInfoV2] = getEntityPredicatesFromConstructResponse(classDefMap - OntologyConstants.Rdfs.SubClassOf)
+
+        ClassInfoContentV2(
+            classIri = classIri,
+            subClassOf = subClassOf,
+            predicates = otherPreds,
+            directCardinalities = directCardinalities,
+            ontologySchema = classIri.getOntologySchema.get
         )
     }
 

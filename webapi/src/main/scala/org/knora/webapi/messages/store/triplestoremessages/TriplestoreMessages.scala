@@ -128,9 +128,9 @@ case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreReq
 /**
   * A response to a [[SparqlExtendedConstructRequest]].
   *
-  * @param statements a map of subject IRIs to statements about each subject.
+  * @param statements a map of subjects to statements about each subject.
   */
-case class SparqlExtendedConstructResponse(statements: Map[IRI, Map[IRI, Seq[LiteralV2]]])
+case class SparqlExtendedConstructResponse(statements: Map[SubjectV2, Map[IRI, Seq[LiteralV2]]])
 
 /**
   * Represents a SPARQL Update operation to be performed.
@@ -231,12 +231,28 @@ case class InitializedResponse(initFinished: Boolean)
   */
 case class RdfDataObject(path: String, name: String)
 
+/**
+  * Represents the subject of a statement read from the triplestore.
+  */
+sealed trait SubjectV2
+
+case class IriSubjectV2(value: IRI) extends SubjectV2 {
+    override def toString: IRI = value
+
+    override def hashCode(): Int = value.hashCode()
+}
+
+case class BlankNodeSubjectV2(value: String) extends SubjectV2 {
+    override def toString: String = value
+
+    override def hashCode(): Int = value.hashCode()
+}
 
 /**
   * Represents a literal read from the triplestore. There are different subclasses
   * representing literals with the extended type information stored in the triplestore.
   */
-trait LiteralV2
+sealed trait LiteralV2
 
 /**
   * Represents an object IRI.
@@ -245,6 +261,19 @@ trait LiteralV2
   */
 case class IriLiteralV2(value: IRI) extends LiteralV2 {
     override def toString: IRI = value
+
+    override def hashCode(): Int = value.hashCode()
+}
+
+/**
+  * Represents a blank node identifier.
+  *
+  * @param value the identifier of the blank node.
+  */
+case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
+    override def toString: String = value
+
+    override def hashCode(): Int = value.hashCode()
 }
 
 /**
@@ -254,7 +283,9 @@ case class IriLiteralV2(value: IRI) extends LiteralV2 {
   * @param language the optional language tag.
   */
 case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2 {
-    override def toString: IRI = value
+    override def toString: String = value
+
+    override def hashCode(): Int = value.hashCode()
 }
 
 /**
@@ -263,7 +294,9 @@ case class StringLiteralV2(value: String, language: Option[String] = None) exten
   * @param value the boolean value.
   */
 case class BooleanLiteralV2(value: Boolean) extends LiteralV2 {
-    override def toString: IRI = value.toString
+    override def toString: String = value.toString
+
+    override def hashCode(): Int = value.hashCode()
 }
 
 /**
@@ -272,7 +305,9 @@ case class BooleanLiteralV2(value: Boolean) extends LiteralV2 {
   * @param value the boolean value.
   */
 case class IntLiteralV2(value: Int) extends LiteralV2 {
-    override def toString: IRI = value.toString
+    override def toString: String = value.toString
+
+    override def hashCode(): Int = value.hashCode()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

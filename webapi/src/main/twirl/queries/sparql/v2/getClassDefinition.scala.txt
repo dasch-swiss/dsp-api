@@ -18,7 +18,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
-@import org.knora.webapi.IRI
+@import org.knora.webapi.util.SmartIri
 
 @*
  * Gets a resource class definition.
@@ -27,7 +27,7 @@
  * @param classIri the IRI of the class.
  *@
 @(triplestore: String,
-  classIri: IRI)
+  classIri: SmartIri)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -49,10 +49,11 @@ CONSTRUCT {
 WHERE {
     BIND(IRI("@classIri") AS ?class)
 
-    ?class rdf:type owl:Class ;
-        ?classPred ?classObj .
+    ?class rdf:type owl:Class .
 
-    OPTIONAL {
+    {
+        ?class ?classPred ?classObj .
+    } UNION {
         ?class rdfs:subClassOf [ rdf:type owl:Restriction ;
                                  owl:onProperty ?onProperty ;
                                  ?cardinalityPred ?cardinalityValue
