@@ -233,19 +233,19 @@ case class RdfDataObject(path: String, name: String)
 
 
 /**
-  * A case class for representing a literal coming from the triplestore. There are different subclasses
-  * representing literals with the extended type-information stored in the triplestore.
-  *
-  * @param value
+  * Represents a literal read from the triplestore. There are different subclasses
+  * representing literals with the extended type information stored in the triplestore.
   */
-abstract class LiteralV2(value: String)
+trait LiteralV2
 
 /**
   * Represents an object IRI.
   *
   * @param value the IRI.
   */
-case class IriLiteralV2(value: IRI) extends LiteralV2(value = value.toString)
+case class IriLiteralV2(value: IRI) extends LiteralV2 {
+    override def toString: IRI = value
+}
 
 /**
   * Represents a string with an optional language tag.
@@ -253,21 +253,27 @@ case class IriLiteralV2(value: IRI) extends LiteralV2(value = value.toString)
   * @param value    the string value.
   * @param language the optional language tag.
   */
-case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2(value = value)
+case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2 {
+    override def toString: IRI = value
+}
 
 /**
   * Represents a boolean value.
   *
   * @param value the boolean value.
   */
-case class BooleanLiteralV2(value: Boolean) extends LiteralV2(value = value.toString)
+case class BooleanLiteralV2(value: Boolean) extends LiteralV2 {
+    override def toString: IRI = value.toString
+}
 
 /**
   * Represents an integer value.
   *
   * @param value the boolean value.
   */
-case class IntLiteralV2(value: Int) extends LiteralV2(value = value.toString)
+case class IntLiteralV2(value: Int) extends LiteralV2 {
+    override def toString: IRI = value.toString
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting

@@ -1186,8 +1186,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2], includeKn
 case class PredicateInfoV2(predicateIri: SmartIri,
                            objects: Set[String] = Set.empty[String],
                            objectsWithLang: Map[String, String] = Map.empty[String, String]) {
-    // TODO: This class should really store its IRI objects as SmartIris. But this would need more help
-    // from OntologyResponderV2 and probably also from the store package (#668).
+    // TODO: Refactor this class to use org.knora.webapi.messages.store.triplestoremessages.LiteralV2.
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

@@ -1904,25 +1904,41 @@ class OntologyResponderV2 extends Responder {
             throw InconsistentTriplestoreDataException(s"Expected an internal property schema, got ${propertyIri.getOntologySchema}")
         }
 
-        val propertyDefMap: Map[IRI, Seq[StringV2]] = statements.values.head
+        val propertyDefMap: Map[IRI, Seq[LiteralV2]] = statements.values.head
+
         val subPropertyOf: Set[SmartIri] = propertyDefMap.getOrElse(OntologyConstants.Rdfs.SubPropertyOf,
-            throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:subPropertyOf")).map(_.value.toSmartIri).toSet
+            throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:subPropertyOf")).map {
+            case iriLiteral: IriLiteralV2 => iriLiteral.value.toSmartIri
+            case other => throw InconsistentTriplestoreDataException(s"Unexpected object for rdfs:subPropertyOf: $other")
+        }.toSet
 
         val otherPreds: Map[SmartIri, PredicateInfoV2] = (propertyDefMap - OntologyConstants.Rdfs.SubPropertyOf).map {
-            case (predIriStr: IRI, predObjs: Seq[StringV2]) =>
+            case (predIriStr: IRI, predObjs: Seq[LiteralV2]) =>
                 val predicateIri = predIriStr.toSmartIri
 
-                val predicateInfo = if (predObjs.exists(_.language.nonEmpty)) {
-                    PredicateInfoV2(
-                        predicateIri = predicateIri,
-                        objectsWithLang = predObjs.map(stringV2 => stringV2.language.getOrElse(throw InconsistentTriplestoreDataException(s"Missing language tag in predicate $predicateIri")) -> stringV2.value).toMap
-                    )
-                } else {
-                    PredicateInfoV2(
-                        predicateIri = predicateIri,
-                        objects = predObjs.map(_.value).toSet
-                    )
+                val objectsWithLang: Map[String, String] = predObjs.collect {
+                    case StringLiteralV2(value, Some(language)) => (language, value)
+                }.toMap
+
+                val objectsWithoutLang = predObjs.foldLeft(Set.empty[String]) {
+                    case (acc, obj) =>
+                        obj match {
+                            case stringLiteral: StringLiteralV2 =>
+                                if (stringLiteral.language.isEmpty) {
+                                    acc + stringLiteral.value
+                                } else {
+                                    acc
+                                }
+
+                            case otherLiteral => acc + otherLiteral.toString
+                        }
                 }
+
+                val predicateInfo = PredicateInfoV2(
+                    predicateIri = predicateIri,
+                    objects = objectsWithoutLang,
+                    objectsWithLang = objectsWithLang
+                )
 
                 predicateIri -> predicateInfo
         }
