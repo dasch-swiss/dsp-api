@@ -32,7 +32,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeC
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.OwlCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, _}
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.IriConversions._
@@ -1387,7 +1387,7 @@ class OntologyResponderV2 extends Responder {
         def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologiesV2] = {
             for {
                 cacheData <- getCacheData
-                internalClassDef = createClassRequest.classInfoContent.toOntologySchema(InternalSchema)
+                internalClassDef: ClassInfoContentV2 = createClassRequest.classInfoContent.toOntologySchema(InternalSchema)
 
                 // Check that the ontology exists and has not been updated by another user since the client last read it.
                 _ <- checkOntologyLastModificationDateBeforeUpdate(
@@ -1413,22 +1413,40 @@ class OntologyResponderV2 extends Responder {
                 missingBaseClasses = internalClassDef.subClassOf.filter(_.isKnoraInternalEntityIri) -- cacheData.classDefs.keySet
 
                 _ = if (missingBaseClasses.nonEmpty) {
-                    throw BadRequestException(s"One or more specified Knora base classes do not exist: ${missingBaseClasses.mkString(", ")}")
+                    throw NotFoundException(s"One or more specified Knora base classes do not exist: ${missingBaseClasses.mkString(", ")}")
                 }
 
-                // TODO: check that the class is a subclass of knora-base:Resource.
+                // Check that the class is a subclass of knora-base:Resource.
 
-                // TODO: if the class has cardinalities, check that the properties exist.
-
-                allBaseclassIris: Set[SmartIri] = internalClassDef.subClassOf.flatMap {
+                allBaseClassIris: Set[SmartIri] = internalClassDef.subClassOf.flatMap {
                     superPropertyIri => cacheData.subPropertyOfRelations.getOrElse(superPropertyIri, Set.empty[SmartIri])
                 }
 
-                // TODO: Add the property (and the link value property if needed).
+                _ = if (!allBaseClassIris.contains(OntologyConstants.KnoraBase.Resource.toSmartIri)) {
+                    throw BadRequestException(s"Submitted class definition would not be a subclass of knora-api:Resource")
+                }
+
+                // If the class has cardinalities, check that the properties are already defined as Knora properties.
+
+                _ = internalClassDef.directCardinalities.keySet.foreach {
+                    propertyIri =>
+                        if (!cacheData.propertyDefs.contains(propertyIri)) {
+                            throw NotFoundException(s"Property ${propertyIri.toOntologySchema(ApiV2WithValueObjects)} not found")
+                        }
+                }
+
+                // Add the class to the triplestore.
 
                 currentTime: Instant = Instant.now
 
-                updateSparql = ???
+                updateSparql = queries.sparql.v2.txt.createClass(
+                    triplestore = settings.triplestoreType,
+                    ontologyNamedGraphIri = internalOntologyIri,
+                    ontologyIri = internalOntologyIri,
+                    classDef = internalClassDef,
+                    lastModificationDate = createClassRequest.lastModificationDate,
+                    currentTime = currentTime
+                ).toString()
 
                 _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
 
@@ -1438,6 +1456,8 @@ class OntologyResponderV2 extends Responder {
 
                 // TODO: check that the data that was saved corresponds to the data that was submitted. To make this comparison,
                 // we have to undo the SPARQL-escaping of the input.
+
+                // Calculate the inherited cardinalities.
 
                 // TODO: Update the ontology cache, using the unescaped definition(s).
 
@@ -1541,7 +1561,7 @@ class OntologyResponderV2 extends Responder {
                 missingSuperProperties = internalPropertyDef.subPropertyOf.filter(_.isKnoraInternalEntityIri) -- cacheData.propertyDefs.keySet
 
                 _ = if (missingSuperProperties.nonEmpty) {
-                    throw BadRequestException(s"One or more specified Knora superproperties do not exist: ${missingSuperProperties.mkString(", ")}")
+                    throw NotFoundException(s"One or more specified Knora superproperties do not exist: ${missingSuperProperties.mkString(", ")}")
                 }
 
                 // Check that the subject class constraint, if provided, designates a Knora resource class that exists.
@@ -1601,7 +1621,7 @@ class OntologyResponderV2 extends Responder {
                     allSuperPropertyIris = allSuperPropertyIris
                 )
 
-                // Add the property (and the link value property if needed).
+                // Add the property (and the link value property if needed) to the triplestore.
 
                 currentTime: Instant = Instant.now
 
@@ -1710,7 +1730,7 @@ class OntologyResponderV2 extends Responder {
         def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologiesV2] = {
             for {
                 cacheData <- getCacheData
-                currentPropertyDef = cacheData.propertyDefs.getOrElse(internalPropertyIri, throw BadRequestException(s"Property ${changePropertyLabelsOrCommentsRequest.propertyIri} not found"))
+                currentPropertyDef = cacheData.propertyDefs.getOrElse(internalPropertyIri, throw NotFoundException(s"Property ${changePropertyLabelsOrCommentsRequest.propertyIri} not found"))
 
                 // Check that the ontology exists and has not been updated by another user since the client last read it.
                 _ <- checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = changePropertyLabelsOrCommentsRequest.lastModificationDate)

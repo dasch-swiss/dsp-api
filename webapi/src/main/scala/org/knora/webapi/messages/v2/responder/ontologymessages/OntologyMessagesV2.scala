@@ -170,7 +170,7 @@ object OntologyUpdateHelper {
 
         val classInfoContent = inputOntologyV2.classes.values.head
 
-        // Check that the class IRI is valid.
+        // Check that the class's IRI is valid.
 
         val classIri = classInfoContent.classIri
 
@@ -180,7 +180,7 @@ object OntologyUpdateHelper {
             throw BadRequestException(s"Invalid class IRI: $classIri")
         }
 
-        // Check that the property type is valid.
+        // Check that the class's rdf:type is valid.
 
         val classType: SmartIri = classInfoContent.getRdfType
 
@@ -188,7 +188,7 @@ object OntologyUpdateHelper {
             throw BadRequestException(s"Property $classIri must be an owl:Class")
         }
 
-        // Check that the IRIs of the property's predicates are valid.
+        // Check that the IRIs of the class's predicates are valid.
 
         classInfoContent.predicates.keySet.foreach {
             predIri =>
