@@ -37,10 +37,10 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 CONSTRUCT {
     ?class ?classPred ?classObj ;
-        rdfs:subClassOf [ rdf:type owl:Restriction ;
-                          owl:onProperty ?onProperty ;
-                          ?cardinalityPred ?cardinalityValue
-                        ] .
+        rdfs:subClassOf ?bnode .
+
+    ?bnode rdf:type owl:Restriction ;
+        ?cardinalityPred ?cardinalityValue .
 }
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
@@ -54,9 +54,8 @@ WHERE {
     {
         ?class ?classPred ?classObj .
     } UNION {
-        ?class rdfs:subClassOf [ rdf:type owl:Restriction ;
-                                 owl:onProperty ?onProperty ;
-                                 ?cardinalityPred ?cardinalityValue
-                               ] .
+        ?class rdfs:subClassOf ?bnode .
+        ?bnode rdf:type owl:Restriction ;
+            ?cardinalityPred ?cardinalityValue .
     }
 }

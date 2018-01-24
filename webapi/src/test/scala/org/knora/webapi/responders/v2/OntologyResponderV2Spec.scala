@@ -17,6 +17,9 @@ import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}
 
 import scala.concurrent.duration._
 
+/**
+  * Tests [[OntologyResponderV2]].
+  */
 class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -989,7 +992,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val newObjects = Map(
                 "en" -> "The name of a Thing",
-                "fr" -> "Le nom d\\'une chose", // This is SPARQL-escaped as it would be if it was taken from a JSON-LD request.
+                "fr" -> "Le nom d\\'une chose", // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
                 "de" -> "Der Name eines Dinges"
             )
 
@@ -1018,6 +1021,76 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "create a class anything:WildThing that is a subclass of anything:Thing, with a direct cardinality for anything:hasName" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("WildThing")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wild thing"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "A thing that is wild"
+                        )
+                    )
+                ),
+                directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasName") -> Cardinality.MayHaveOne),
+                subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            val expectedProperties: Set[SmartIri] = Set(
+                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherThingValue",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasBlueThing",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasThingPicture",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasDate",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasBoolean",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasThingPictureValue",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasText",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasColor",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasInterval",
+                "http://0.0.0.0:3333/ontology/anything/v2#isPartOfOtherThing",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasDecimal",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherThing",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasBlueThingValue",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasInteger",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasListItem",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasRichtext",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasUri",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasName",
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue",
+                "http://0.0.0.0:3333/ontology/anything/v2#isPartOfOtherThingValue",
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherListItem"
+            ).map(_.toSmartIri)
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readClassInfo = ontology.classes(classIri)
+                    readClassInfo.entityInfoContent should ===(classInfoContent)
+                    readClassInfo.allCardinalities.keySet should ===(expectedProperties)
             }
         }
     }

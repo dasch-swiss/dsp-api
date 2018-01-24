@@ -144,6 +144,12 @@ object OntologyUpdateHelper {
         inputOntologyV2
     }
 
+    /**
+      * Gets a class definition from the request.
+      *
+      * @param inputOntologiesV2 an [[InputOntologiesV2]] that must contain a single ontology, containing a single class definition.
+      * @return a [[ClassUpdateInfo]] containing the class definition and the ontology's last modification date.
+      */
     def getClassDef(inputOntologiesV2: InputOntologiesV2): ClassUpdateInfo = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -154,7 +160,7 @@ object OntologyUpdateHelper {
 
         val lastModificationDate: Instant = getOntologyLastModificationDate(inputOntologyV2)
 
-        // The request must contain exactly one property definition, and no class definitions.
+        // The request must contain exactly one class definition, and no property definitions.
 
         if (inputOntologyV2.properties.nonEmpty || inputOntologyV2.standoffProperties.nonEmpty) {
             throw BadRequestException(s"A property definition cannot be submitted when creating or modifying a class")

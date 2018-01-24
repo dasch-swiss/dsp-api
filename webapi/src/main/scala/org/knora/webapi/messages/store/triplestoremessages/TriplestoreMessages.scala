@@ -238,14 +238,10 @@ sealed trait SubjectV2
 
 case class IriSubjectV2(value: IRI) extends SubjectV2 {
     override def toString: IRI = value
-
-    override def hashCode(): Int = value.hashCode()
 }
 
 case class BlankNodeSubjectV2(value: String) extends SubjectV2 {
     override def toString: String = value
-
-    override def hashCode(): Int = value.hashCode()
 }
 
 /**
@@ -261,8 +257,6 @@ sealed trait LiteralV2
   */
 case class IriLiteralV2(value: IRI) extends LiteralV2 {
     override def toString: IRI = value
-
-    override def hashCode(): Int = value.hashCode()
 }
 
 /**
@@ -272,8 +266,6 @@ case class IriLiteralV2(value: IRI) extends LiteralV2 {
   */
 case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
     override def toString: String = value
-
-    override def hashCode(): Int = value.hashCode()
 }
 
 /**
@@ -284,8 +276,6 @@ case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
   */
 case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2 {
     override def toString: String = value
-
-    override def hashCode(): Int = value.hashCode()
 }
 
 /**
@@ -295,8 +285,6 @@ case class StringLiteralV2(value: String, language: Option[String] = None) exten
   */
 case class BooleanLiteralV2(value: Boolean) extends LiteralV2 {
     override def toString: String = value.toString
-
-    override def hashCode(): Int = value.hashCode()
 }
 
 /**
@@ -306,8 +294,6 @@ case class BooleanLiteralV2(value: Boolean) extends LiteralV2 {
   */
 case class IntLiteralV2(value: Int) extends LiteralV2 {
     override def toString: String = value.toString
-
-    override def hashCode(): Int = value.hashCode()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

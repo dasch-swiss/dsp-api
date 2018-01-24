@@ -75,25 +75,27 @@ class OntologyResponderV2 extends Responder {
     /**
       * A container for all the cached ontology data.
       *
-      * @param ontologyMetadata                    metadata about available ontologies.
-      * @param ontologyClasses                     a map of ontology IRIs to sets of non-standoff class IRIs defined in each ontology.
-      * @param ontologyProperties                  a map of property IRIs to sets of non-standoff property IRIs defined in each ontology.
-      * @param classDefs                           a map of class IRIs to definitions.
-      * @param resourceAndValueSubClassOfRelations a map of IRIs of resource and value classes to sets of the IRIs of their base classes.
-      * @param resourceSuperClassOfRelations       a map of IRIs of resource classes to sets of the IRIs of their subclasses.
-      * @param propertyDefs                        a map of property IRIs to property definitions.
-      * @param subPropertyOfRelations              a map of property IRIs to sets of the IRIs of their base properties.
-      * @param ontologyStandoffClasses             a map of ontology IRIs to sets of standoff class IRIs defined in each ontology.
-      * @param ontologyStandoffProperties          a map of property IRIs to sets of standoff property IRIs defined in each ontology.
-      * @param standoffClassDefs                   a map of standoff class IRIs to definitions.
-      * @param standoffPropertyDefs                a map of property IRIs to property definitions.
-      * @param standoffClassDefsWithDataType       a map of standoff class IRIs to class definitions, including only standoff datatype tags.
+      * @param ontologyMetadata              metadata about available ontologies.
+      * @param ontologyClasses               a map of ontology IRIs to sets of non-standoff class IRIs defined in each ontology.
+      * @param ontologyProperties            a map of property IRIs to sets of non-standoff property IRIs defined in each ontology.
+      * @param classDefs                     a map of class IRIs to definitions.
+      * @param resourceSubClassOfRelations   a map of IRIs of resource classes to sets of the IRIs of their base classes.
+      * @param valueSubClassOfRelations      a map of IRIs of value classes to sets of the IRIs of their base classes.
+      * @param resourceSuperClassOfRelations a map of IRIs of resource classes to sets of the IRIs of their subclasses.
+      * @param propertyDefs                  a map of property IRIs to property definitions.
+      * @param subPropertyOfRelations        a map of property IRIs to sets of the IRIs of their base properties.
+      * @param ontologyStandoffClasses       a map of ontology IRIs to sets of standoff class IRIs defined in each ontology.
+      * @param ontologyStandoffProperties    a map of property IRIs to sets of standoff property IRIs defined in each ontology.
+      * @param standoffClassDefs             a map of standoff class IRIs to definitions.
+      * @param standoffPropertyDefs          a map of property IRIs to property definitions.
+      * @param standoffClassDefsWithDataType a map of standoff class IRIs to class definitions, including only standoff datatype tags.
       */
     private case class OntologyCacheData(ontologyMetadata: Map[SmartIri, OntologyMetadataV2],
                                          ontologyClasses: Map[SmartIri, Set[SmartIri]],
                                          ontologyProperties: Map[SmartIri, Set[SmartIri]],
                                          classDefs: Map[SmartIri, ReadClassInfoV2],
-                                         resourceAndValueSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
+                                         resourceSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
+                                         valueSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                          resourceSuperClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                          propertyDefs: Map[SmartIri, ReadPropertyInfoV2],
                                          subPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
@@ -118,6 +120,7 @@ class OntologyResponderV2 extends Responder {
         case OntologyMetadataGetRequestV2(projectIris, userProfile) => future2Message(sender(), getOntologyMetadataForProjectsV2(projectIris, userProfile), log)
         case createOntologyRequest: CreateOntologyRequestV2 => future2Message(sender(), createOntology(createOntologyRequest), log)
         case changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2 => future2Message(sender(), changeOntologyMetadata(changeOntologyMetadataRequest), log)
+        case createClassRequest: CreateClassRequestV2 => future2Message(sender(), createClass(createClassRequest), log)
         case createPropertyRequest: CreatePropertyRequestV2 => future2Message(sender(), createProperty(createPropertyRequest), log)
         case changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2 => future2Message(sender(), changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
@@ -132,44 +135,6 @@ class OntologyResponderV2 extends Responder {
     private def loadOntologies(userProfile: UserProfileV1): Future[SuccessResponseV2] = {
         // TODO: determine whether the user is authorised to reload the ontologies (depends on pull request #168).
 
-        /**
-          * A temporary container for information about an OWL cardinality and the property it applies to.
-          *
-          * @param propertyIri      the IRI of the property that the cardinality applies to.
-          * @param cardinalityIri   the IRI of the cardinality (e.g. `http://www.w3.org/2002/07/owl#minCardinality`).
-          * @param cardinalityValue the value of the cardinality (in Knora, this is always 0 or 1).
-          * @param isLinkProp       `true` if the property is a subproperty of `knora-base:hasLinkTo`.
-          * @param isLinkValueProp  `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
-          * @param isFileValueProp  `true` if the property is a subproperty of `knora-base:hasFileValue`.
-          */
-        case class OwlCardinalityOnProperty(propertyIri: SmartIri,
-                                            cardinalityIri: SmartIri,
-                                            cardinalityValue: Int,
-                                            isLinkProp: Boolean = false,
-                                            isLinkValueProp: Boolean = false,
-                                            isFileValueProp: Boolean = false) {
-            if (!OntologyConstants.Owl.cardinalityOWLRestrictions.contains(cardinalityIri.toString)) {
-                throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality property: $cardinalityIri")
-            }
-
-            if (!(cardinalityValue == 0 || cardinalityValue == 1)) {
-                throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality value: $cardinalityValue")
-            }
-
-            /**
-              * Converts this [[OwlCardinalityOnProperty]] to a tuple containing the property IRI and
-              * a [[Cardinality.Value]].
-              */
-            def toClassDefCardinality: (SmartIri, Cardinality.Value) = {
-                propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
-                    propertyIri = propertyIri.toString,
-                    OwlCardinalityInfo(
-                        owlCardinalityIri = cardinalityIri.toString,
-                        owlCardinalityValue = cardinalityValue
-                    )
-                )
-            }
-        }
         /**
           * Recursively walks up an entity hierarchy, collecting the IRIs of all base entities.
           *
@@ -201,11 +166,11 @@ class OntologyResponderV2 extends Responder {
         def inheritCardinalities(resourceClassIri: SmartIri,
                                  directSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                  allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
-                                 directResourceClassCardinalities: Map[SmartIri, Map[SmartIri, OwlCardinalityOnProperty]]): Map[SmartIri, OwlCardinalityOnProperty] = {
+                                 directResourceClassCardinalities: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]]): Map[SmartIri, OwlCardinalityInfo] = {
             // Recursively get properties that are available to inherit from base classes. If we have no information about
             // a class, that could mean that it isn't a subclass of knora-base:Resource (e.g. it's something like
             // foaf:Person), in which case we assume that it has no base classes.
-            val cardinalitiesAvailableToInherit: Map[SmartIri, OwlCardinalityOnProperty] = directSubClassOfRelations.getOrElse(resourceClassIri, Set.empty[SmartIri]).foldLeft(Map.empty[SmartIri, OwlCardinalityOnProperty]) {
+            val cardinalitiesAvailableToInherit: Map[SmartIri, OwlCardinalityInfo] = directSubClassOfRelations.getOrElse(resourceClassIri, Set.empty[SmartIri]).foldLeft(Map.empty[SmartIri, OwlCardinalityInfo]) {
                 case (acc, baseClass) =>
                     acc ++ inheritCardinalities(
                         resourceClassIri = baseClass,
@@ -217,19 +182,15 @@ class OntologyResponderV2 extends Responder {
 
             // Get the properties that have cardinalities defined directly on this class. Again, if we have no information
             // about a class, we assume that it has no cardinalities.
-            val thisClassCardinalities: Map[SmartIri, OwlCardinalityOnProperty] = directResourceClassCardinalities.getOrElse(resourceClassIri, Map.empty[SmartIri, OwlCardinalityOnProperty])
+            val thisClassCardinalities: Map[SmartIri, OwlCardinalityInfo] = directResourceClassCardinalities.getOrElse(resourceClassIri, Map.empty[SmartIri, OwlCardinalityInfo])
 
             // From the properties that are available to inherit, filter out the ones that are overridden by properties
             // with cardinalities defined directly on this class.
-            val inheritedCardinalities: Map[SmartIri, OwlCardinalityOnProperty] = cardinalitiesAvailableToInherit.filterNot {
-                case (baseClassProp, baseClassCardinality) => thisClassCardinalities.exists {
-                    case (thisClassProp, cardinality) =>
-                        allSubPropertyOfRelations.get(thisClassProp) match {
-                            case Some(baseProps) => baseProps.contains(baseClassProp)
-                            case None => thisClassProp == baseClassProp
-                        }
-                }
-            }
+            val inheritedCardinalities: Map[SmartIri, OwlCardinalityInfo] = overrideCardinalities(
+                thisClassCardinalities = thisClassCardinalities,
+                cardinalitiesAvailableToInherit = cardinalitiesAvailableToInherit,
+                allSubPropertyOfRelations = allSubPropertyOfRelations
+            )
 
             // Add the inherited properties to the ones with directly defined cardinalities.
             thisClassCardinalities ++ inheritedCardinalities
@@ -322,15 +283,7 @@ class OntologyResponderV2 extends Responder {
 
             // Make a map in which each resource class IRI points to the full set of its subclasses. A class is also
             // a subclass of itself.
-            allResourceSuperClassOfRelations: Map[SmartIri, Set[SmartIri]] = allResourceSubClassOfRelations.toVector.flatMap {
-                case (subClass: SmartIri, baseClasses: Set[SmartIri]) =>
-                    baseClasses.toVector.map {
-                        baseClass => baseClass -> subClass
-                    }
-            }.groupBy(_._1).map {
-                case (baseClass: SmartIri, baseClassAndSubClasses: Vector[(SmartIri, SmartIri)]) =>
-                    baseClass -> baseClassAndSubClasses.map(_._2).toSet
-            }
+            allResourceSuperClassOfRelations: Map[SmartIri, Set[SmartIri]] = calculateResourceSuperClassOfRelations(allResourceSubClassOfRelations)
 
             // Make a map in which each property IRI points to the full set of its base properties. A property is also
             // a subproperty of itself.
@@ -349,47 +302,43 @@ class OntologyResponderV2 extends Responder {
             }
 
             // Make a set of all subproperties of knora-base:hasLinkTo.
-            linkProps: Set[SmartIri] = propertyIris.filter(prop => allSubPropertyOfRelations(prop).contains(OntologyConstants.KnoraBase.HasLinkTo.toKnoraInternalSmartIri))
+            allLinkProps: Set[SmartIri] = propertyIris.filter(prop => allSubPropertyOfRelations(prop).contains(OntologyConstants.KnoraBase.HasLinkTo.toKnoraInternalSmartIri))
 
             // Make a set of all subproperties of knora-base:hasLinkToValue.
-            linkValueProps: Set[SmartIri] = propertyIris.filter(prop => allSubPropertyOfRelations(prop).contains(OntologyConstants.KnoraBase.HasLinkToValue.toKnoraInternalSmartIri))
+            allLinkValueProps: Set[SmartIri] = propertyIris.filter(prop => allSubPropertyOfRelations(prop).contains(OntologyConstants.KnoraBase.HasLinkToValue.toKnoraInternalSmartIri))
 
             // Make a set of all subproperties of knora-base:hasFileValue.
-            fileValueProps: Set[SmartIri] = propertyIris.filter(prop => allSubPropertyOfRelations(prop).contains(OntologyConstants.KnoraBase.HasFileValue.toKnoraInternalSmartIri))
+            allFileValueProps: Set[SmartIri] = propertyIris.filter(prop => allSubPropertyOfRelations(prop).contains(OntologyConstants.KnoraBase.HasFileValue.toKnoraInternalSmartIri))
 
             // Make a map of the cardinalities defined directly on each resource class. Each resource class IRI points to a map of
-            // property IRIs to OwlCardinalityOnProperty objects.
-            directResourceClassCardinalities: Map[SmartIri, Map[SmartIri, OwlCardinalityOnProperty]] = resourceDefsGrouped.map {
+            // property IRIs to OwlCardinalityInfo objects.
+            directResourceClassCardinalities: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]] = resourceDefsGrouped.map {
                 case (resourceClassIri, rows) =>
-                    val resourceClassCardinalities: Map[SmartIri, OwlCardinalityOnProperty] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
+                    val resourceClassCardinalities: Map[SmartIri, OwlCardinalityInfo] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
                         cardinalityRow =>
                             val cardinalityRowMap = cardinalityRow.rowMap
                             val propertyIri = cardinalityRowMap("cardinalityProp").toKnoraInternalSmartIri
 
-                            val owlCardinality = OwlCardinalityOnProperty(
-                                propertyIri = propertyIri,
-                                cardinalityIri = cardinalityRowMap("cardinality").toSmartIri,
-                                cardinalityValue = cardinalityRowMap("cardinalityVal").toInt,
-                                isLinkProp = linkProps.contains(propertyIri),
-                                isLinkValueProp = linkValueProps.contains(propertyIri),
-                                isFileValueProp = fileValueProps.contains(propertyIri)
+                            val owlCardinalityInfo = OwlCardinalityInfo(
+                                owlCardinalityIri = cardinalityRowMap("cardinality"),
+                                owlCardinalityValue = cardinalityRowMap("cardinalityVal").toInt
                             )
 
-                            propertyIri -> owlCardinality
+                            propertyIri -> owlCardinalityInfo
                     }.toMap
 
                     resourceClassIri -> resourceClassCardinalities
             }
 
             // Allow each resource class to inherit cardinalities from its base classes.
-            resourceCardinalitiesWithInheritance: Map[SmartIri, Set[OwlCardinalityOnProperty]] = resourceClassIris.map {
+            resourceCardinalitiesWithInheritance: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]] = resourceClassIris.map {
                 resourceClassIri =>
-                    val resourceClassCardinalities: Set[OwlCardinalityOnProperty] = inheritCardinalities(
+                    val resourceClassCardinalities: Map[SmartIri, OwlCardinalityInfo] = inheritCardinalities(
                         resourceClassIri = resourceClassIri,
                         directSubClassOfRelations = directResourceSubClassOfRelations,
                         allSubPropertyOfRelations = allSubPropertyOfRelations,
                         directResourceClassCardinalities = directResourceClassCardinalities
-                    ).values.toSet
+                    )
 
                     resourceClassIri -> resourceClassCardinalities
             }.toMap
@@ -426,36 +375,41 @@ class OntologyResponderV2 extends Responder {
                     } + rdfType
 
                     // Get the OWL cardinalities for the class.
-                    val allOwlCardinalitiesForClass: Set[OwlCardinalityOnProperty] = resourceCardinalitiesWithInheritance(resourceClassIri)
+                    val allOwlCardinalitiesForClass: Map[SmartIri, OwlCardinalityInfo] = resourceCardinalitiesWithInheritance(resourceClassIri)
+                    val allPropertyIrisForCardinalitiesInClass: Set[SmartIri] = allOwlCardinalitiesForClass.keys.toSet
 
                     // Identify the link properties, like value properties, and file value properties in the cardinalities.
-                    val linkProps = allOwlCardinalitiesForClass.filter(_.isLinkProp).map(_.propertyIri)
-                    val linkValueProps = allOwlCardinalitiesForClass.filter(_.isLinkValueProp).map(_.propertyIri)
-                    val fileValueProps = allOwlCardinalitiesForClass.filter(_.isFileValueProp).map(_.propertyIri)
+                    val linkPropsInClass = allPropertyIrisForCardinalitiesInClass.filter(allLinkProps)
+                    val linkValuePropsInClass = allPropertyIrisForCardinalitiesInClass.filter(allLinkValueProps)
+                    val fileValuePropsInClass = allPropertyIrisForCardinalitiesInClass.filter(allFileValueProps)
 
                     // Make sure there is a link value property for each link property.
-                    val missingLinkValueProps = linkProps.map(_.fromLinkPropToLinkValueProp) -- linkValueProps
+                    val missingLinkValueProps = linkPropsInClass.map(_.fromLinkPropToLinkValueProp) -- linkValuePropsInClass
                     if (missingLinkValueProps.nonEmpty) {
                         throw InconsistentTriplestoreDataException(s"Resource class $resourceClassIri has cardinalities for one or more link properties without corresponding link value properties. The missing link value property or properties: ${missingLinkValueProps.mkString(", ")}")
                     }
 
                     // Make sure there is a link property for each link value property.
-                    val missingLinkProps = linkValueProps.map(_.fromLinkValuePropToLinkProp) -- linkProps
+                    val missingLinkProps = linkValuePropsInClass.map(_.fromLinkValuePropToLinkProp) -- linkPropsInClass
                     if (missingLinkProps.nonEmpty) {
                         throw InconsistentTriplestoreDataException(s"Resource class $resourceClassIri has cardinalities for one or more link value properties without corresponding link properties. The missing link property or properties: ${missingLinkProps.mkString(", ")}")
                     }
 
                     // Make maps of the class's direct and inherited cardinalities.
 
-                    val directCardinalities: Map[SmartIri, Cardinality.Value] = directResourceClassCardinalities(resourceClassIri).values.map {
-                        cardinalityOnProperty: OwlCardinalityOnProperty => cardinalityOnProperty.toClassDefCardinality
-                    }.toMap
+                    val directCardinalities: Map[SmartIri, Cardinality.Value] = directResourceClassCardinalities(resourceClassIri).map {
+                        case (propertyIri, owlCardinalityInfo) =>
+                            propertyIri -> Cardinality.owlCardinality2KnoraCardinality(propertyIri = propertyIri.toString, owlCardinality = owlCardinalityInfo)
+                    }
+
+                    val directCardinalityPropertyIris = directCardinalities.keySet
 
                     val inheritedCardinalities: Map[SmartIri, Cardinality.Value] = allOwlCardinalitiesForClass.filterNot {
-                        cardinalityOnProperty: OwlCardinalityOnProperty => directCardinalities.contains(cardinalityOnProperty.propertyIri)
+                        case (propertyIri, _) => directCardinalityPropertyIris.contains(propertyIri)
                     }.map {
-                        cardinalityOnProperty: OwlCardinalityOnProperty => cardinalityOnProperty.toClassDefCardinality
-                    }.toMap
+                        case (propertyIri, owlCardinalityInfo) =>
+                            propertyIri -> Cardinality.owlCardinality2KnoraCardinality(propertyIri = propertyIri.toString, owlCardinality = owlCardinalityInfo)
+                    }
 
                     val ontologyIri = resourceClassIri.getOntologyFromEntity
 
@@ -469,9 +423,9 @@ class OntologyResponderV2 extends Responder {
                         ),
                         canBeInstantiated = !ontologyIri.isKnoraBuiltInDefinitionIri, // Any resource class defined in a project-specific ontology can be instantiated.
                         inheritedCardinalities = inheritedCardinalities,
-                        linkProperties = linkProps,
-                        linkValueProperties = linkValueProps,
-                        fileValueProperties = fileValueProps
+                        linkProperties = linkPropsInClass,
+                        linkValueProperties = linkValuePropsInClass,
+                        fileValueProperties = fileValuePropsInClass
                     )
 
                     resourceClassIri -> resourceEntityInfo
@@ -508,9 +462,9 @@ class OntologyResponderV2 extends Responder {
                             ontologySchema = InternalSchema
                         ),
                         isEditable = !ontologyIri.isKnoraBuiltInDefinitionIri, // Any property defined in a project-specific ontology is editable.
-                        isLinkProp = linkProps.contains(propertyIri),
-                        isLinkValueProp = linkValueProps.contains(propertyIri),
-                        isFileValueProp = fileValueProps.contains(propertyIri)
+                        isLinkProp = allLinkProps.contains(propertyIri),
+                        isLinkValueProp = allLinkValueProps.contains(propertyIri),
+                        isFileValueProp = allFileValueProps.contains(propertyIri)
                     )
 
                     propertyIri -> propertyEntityInfo
@@ -594,17 +548,16 @@ class OntologyResponderV2 extends Responder {
 
             // Make a map of the cardinalities defined directly on each value base class. Each value base class IRI points to a map of
             // property IRIs to OwlCardinality objects.
-            valueBaseClassCardinalities: Map[SmartIri, Map[SmartIri, OwlCardinalityOnProperty]] = valueBaseClassesGrouped.map {
+            valueBaseClassCardinalities: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]] = valueBaseClassesGrouped.map {
                 case (valueBaseClassIri, rows) =>
-                    val valueBaseClassCardinalities: Map[SmartIri, OwlCardinalityOnProperty] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
+                    val valueBaseClassCardinalities: Map[SmartIri, OwlCardinalityInfo] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
                         cardinalityRow =>
                             val cardinalityRowMap = cardinalityRow.rowMap
                             val propertyIri = cardinalityRowMap("cardinalityProp").toKnoraInternalSmartIri
 
-                            val owlCardinality = OwlCardinalityOnProperty(
-                                propertyIri = propertyIri,
-                                cardinalityIri = cardinalityRowMap("cardinality").toSmartIri,
-                                cardinalityValue = cardinalityRowMap("cardinalityVal").toInt
+                            val owlCardinality = OwlCardinalityInfo(
+                                owlCardinalityIri = cardinalityRowMap("cardinality"),
+                                owlCardinalityValue = cardinalityRowMap("cardinalityVal").toInt
                             )
 
                             propertyIri -> owlCardinality
@@ -615,17 +568,16 @@ class OntologyResponderV2 extends Responder {
 
             // Make a map of the cardinalities defined directly on each standoff class. Each standoff class IRI points to a map of
             // property IRIs to OwlCardinality objects.
-            directStandoffClassCardinalities: Map[SmartIri, Map[SmartIri, OwlCardinalityOnProperty]] = standoffClassesGrouped.map {
+            directStandoffClassCardinalities: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]] = standoffClassesGrouped.map {
                 case (standoffClassIri, rows) =>
-                    val standoffClassCardinalities: Map[SmartIri, OwlCardinalityOnProperty] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
+                    val standoffClassCardinalities: Map[SmartIri, OwlCardinalityInfo] = rows.filter(_.rowMap.contains("cardinalityProp")).map {
                         cardinalityRow =>
                             val cardinalityRowMap = cardinalityRow.rowMap
                             val propertyIri = cardinalityRowMap("cardinalityProp").toKnoraInternalSmartIri
 
-                            val owlCardinality = OwlCardinalityOnProperty(
-                                propertyIri = propertyIri,
-                                cardinalityIri = cardinalityRowMap("cardinality").toSmartIri,
-                                cardinalityValue = cardinalityRowMap("cardinalityVal").toInt
+                            val owlCardinality = OwlCardinalityInfo(
+                                owlCardinalityIri = cardinalityRowMap("cardinality"),
+                                owlCardinalityValue = cardinalityRowMap("cardinalityVal").toInt
                             )
 
                             propertyIri -> owlCardinality
@@ -635,14 +587,14 @@ class OntologyResponderV2 extends Responder {
             }
 
             // Allow each standoff class to inherit cardinalities from its base classes.
-            standoffCardinalitiesWithInheritance: Map[SmartIri, Set[OwlCardinalityOnProperty]] = standoffClassIris.map {
+            standoffCardinalitiesWithInheritance: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]] = standoffClassIris.map {
                 standoffClassIri =>
-                    val standoffClassCardinalities: Set[OwlCardinalityOnProperty] = inheritCardinalities(
+                    val standoffClassCardinalities: Map[SmartIri, OwlCardinalityInfo] = inheritCardinalities(
                         resourceClassIri = standoffClassIri,
                         directSubClassOfRelations = directStandoffSubClassOfRelations,
                         allSubPropertyOfRelations = directStandoffSubPropertyOfRelations,
                         directResourceClassCardinalities = directStandoffClassCardinalities ++ valueBaseClassCardinalities
-                    ).values.toSet
+                    )
 
                     standoffClassIri -> standoffClassCardinalities
             }.toMap
@@ -672,19 +624,23 @@ class OntologyResponderV2 extends Responder {
                             )
                     } + rdfType
 
-                    val allOwlCardinalitiesForClass: Set[OwlCardinalityOnProperty] = standoffCardinalitiesWithInheritance(standoffClassIri)
+                    val allOwlCardinalitiesForClass: Map[SmartIri, OwlCardinalityInfo] = standoffCardinalitiesWithInheritance(standoffClassIri)
 
                     // Make maps of the class's direct and inherited cardinalities.
 
-                    val directCardinalities: Map[SmartIri, Cardinality.Value] = directStandoffClassCardinalities(standoffClassIri).values.map {
-                        cardinalityOnProperty: OwlCardinalityOnProperty => cardinalityOnProperty.toClassDefCardinality
-                    }.toMap
+                    val directCardinalities: Map[SmartIri, Cardinality.Value] = directStandoffClassCardinalities(standoffClassIri).map {
+                        case (propertyIri, owlCardinalityInfo) =>
+                            propertyIri -> Cardinality.owlCardinality2KnoraCardinality(propertyIri = propertyIri.toString, owlCardinality = owlCardinalityInfo)
+                    }
+
+                    val directCardinalityPropertyIris = directCardinalities.keySet
 
                     val inheritedCardinalities: Map[SmartIri, Cardinality.Value] = allOwlCardinalitiesForClass.filterNot {
-                        cardinalityOnProperty: OwlCardinalityOnProperty => directCardinalities.contains(cardinalityOnProperty.propertyIri)
+                        case (propertyIri, _) => directCardinalityPropertyIris.contains(propertyIri)
                     }.map {
-                        cardinalityOnProperty: OwlCardinalityOnProperty => cardinalityOnProperty.toClassDefCardinality
-                    }.toMap
+                        case (propertyIri, owlCardinalityInfo) =>
+                            propertyIri -> Cardinality.owlCardinality2KnoraCardinality(propertyIri = propertyIri.toString, owlCardinality = owlCardinalityInfo)
+                    }
 
                     // determine the data type of the given standoff class IRI
                     // if the resulting set is empty, it is not a typed standoff class
@@ -768,7 +724,8 @@ class OntologyResponderV2 extends Responder {
                 ontologyClasses = new ErrorHandlingMap[SmartIri, Set[SmartIri]](graphClassMap, { key => s"Ontology not found: $key" }),
                 ontologyProperties = new ErrorHandlingMap[SmartIri, Set[SmartIri]](graphPropMap, { key => s"Ontology not found: $key" }),
                 classDefs = new ErrorHandlingMap[SmartIri, ReadClassInfoV2](allClassDefs, { key => s"Class not found: $key" }),
-                resourceAndValueSubClassOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allResourceSubClassOfRelations ++ allValueSubClassOfRelations, { key => s"Class not found: $key" }),
+                resourceSubClassOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allResourceSubClassOfRelations, { key => s"Class not found: $key" }),
+                valueSubClassOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allValueSubClassOfRelations, { key => s"Class not found: $key" }),
                 resourceSuperClassOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allResourceSuperClassOfRelations, { key => s"Class not found: $key" }),
                 propertyDefs = new ErrorHandlingMap[SmartIri, ReadPropertyInfoV2](allPropertyDefs, { key => s"Property not found: $key" }),
                 subPropertyOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSubPropertyOfRelations, { key => s"Property not found: $key" }),
@@ -906,7 +863,7 @@ class OntologyResponderV2 extends Responder {
         for {
             cacheData <- getCacheData
             response = CheckSubClassResponseV2(
-                isSubClass = cacheData.resourceAndValueSubClassOfRelations(subClassIri).contains(superClassIri)
+                isSubClass = cacheData.resourceSubClassOfRelations(subClassIri).contains(superClassIri) || cacheData.valueSubClassOfRelations(subClassIri).contains(superClassIri)
             )
         } yield response
     }
@@ -1420,11 +1377,11 @@ class OntologyResponderV2 extends Responder {
                 // Check that the class is a subclass of knora-base:Resource.
 
                 allBaseClassIris: Set[SmartIri] = internalClassDef.subClassOf.flatMap {
-                    superPropertyIri => cacheData.subPropertyOfRelations.getOrElse(superPropertyIri, Set.empty[SmartIri])
+                    baseClassIri => cacheData.resourceSubClassOfRelations.getOrElse(baseClassIri, Set.empty[SmartIri])
                 }
 
                 _ = if (!allBaseClassIris.contains(OntologyConstants.KnoraBase.Resource.toSmartIri)) {
-                    throw BadRequestException(s"Submitted class definition would not be a subclass of knora-api:Resource")
+                    throw BadRequestException(s"Class ${createClassRequest.classInfoContent.classIri} would not be a subclass of knora-api:Resource")
                 }
 
                 // If the class has cardinalities, check that the properties are already defined as Knora properties.
@@ -1436,7 +1393,68 @@ class OntologyResponderV2 extends Responder {
                         }
                 }
 
-                // Add the class to the triplestore.
+                // Get the cardinalities that the class can inherit.
+
+                cardinalitiesAvailableToInherit: Map[SmartIri, Cardinality.Value] = internalClassDef.subClassOf.flatMap {
+                    baseClassIri => cacheData.classDefs(baseClassIri).allCardinalities
+                }.toMap
+
+                // Let directly-defined cardinalities override cardinalities in base classes.
+
+                cardinalitiesForClassWithInheritance: Map[SmartIri, Cardinality.Value] = overrideCardinalities(
+                    thisClassCardinalities = internalClassDef.directCardinalities.map {
+                        case (propertyIri, knoraCardinality) => propertyIri -> Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)
+                    },
+                    cardinalitiesAvailableToInherit = cardinalitiesAvailableToInherit.map {
+                        case (propertyIri, knoraCardinality) => propertyIri -> Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)
+                    },
+                    allSubPropertyOfRelations = cacheData.subPropertyOfRelations
+                ).map {
+                    case (propertyIri, owlCardinalityInfo) => propertyIri -> Cardinality.owlCardinality2KnoraCardinality(propertyIri = propertyIri.toString, owlCardinality = owlCardinalityInfo)
+                }
+
+                // Check that the class is a subclass of all the classes that are subject class constraints of the properties in its cardinalities.
+
+                inheritedCardinalities = cardinalitiesForClassWithInheritance.filterNot {
+                    case (propertyIri, _) => internalClassDef.directCardinalities.contains(propertyIri)
+                }
+
+                _ = cardinalitiesForClassWithInheritance.keySet.foreach {
+                    propertyIri =>
+                        cacheData.propertyDefs(propertyIri).entityInfoContent.predicates.get(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri) match {
+                            case Some(subjectClassConstraintPred) =>
+                                val subjectClassConstraint = subjectClassConstraintPred.objects.head.toSmartIri
+
+                                if (!(subjectClassConstraint == internalClassIri || allBaseClassIris.contains(subjectClassConstraint))) {
+                                    val hasOrWouldInherit = if (internalClassDef.directCardinalities.contains(propertyIri)) {
+                                        "has"
+                                    } else {
+                                        "would inherit"
+                                    }
+
+                                    throw BadRequestException(s"Class ${createClassRequest.classInfoContent.classIri} $hasOrWouldInherit a cardinality for property ${propertyIri.toOntologySchema(ApiV2WithValueObjects)}, but is not a subclass of that property's knora-api:subjectType, ${subjectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}")
+                                }
+
+                            case None => ()
+                        }
+                }
+
+                // Prepare to update the ontology cache, undoing the SPARQL-escaping of the input.
+
+                unescapedInputClassDef = internalClassDef.unescape
+
+                propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
+
+                readClassInfo = ReadClassInfoV2(
+                    entityInfoContent = unescapedInputClassDef,
+                    canBeInstantiated = true,
+                    inheritedCardinalities = inheritedCardinalities,
+                    linkProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri => cacheData.propertyDefs(propertyIri).isLinkProp),
+                    linkValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri => cacheData.propertyDefs(propertyIri).isLinkValueProp),
+                    fileValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri => cacheData.propertyDefs(propertyIri).isFileValueProp)
+                )
+
+                // Add the SPARQL-escaped class to the triplestore.
 
                 currentTime: Instant = Instant.now
 
@@ -1455,14 +1473,31 @@ class OntologyResponderV2 extends Responder {
 
                 _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
 
-                // TODO: check that the data that was saved corresponds to the data that was submitted. To make this comparison,
-                // we have to undo the SPARQL-escaping of the input.
+                // Check that the data that was saved corresponds to the data that was submitted.
 
-                // Calculate the inherited cardinalities.
+                loadedClassDef <- loadClassDefinition(internalClassIri)
 
-                // TODO: Update the ontology cache, using the unescaped definition(s).
+                _ = if (loadedClassDef != unescapedInputClassDef) {
+                    throw InconsistentTriplestoreDataException(s"Attempted to save class definition $unescapedInputClassDef, but $loadedClassDef was saved")
+                }
 
-                // TODO: Read the data back from the cache.
+                // Update the cache.
+
+                updatedResourceSubClassOfRelations = cacheData.resourceSubClassOfRelations + (internalClassIri -> (allBaseClassIris + internalClassIri))
+                updatedResourceSuperClassOfRelations = calculateResourceSuperClassOfRelations(updatedResourceSubClassOfRelations)
+
+                updatedOntologyMetadata = cacheData.ontologyMetadata(internalOntologyIri).copy(
+                    lastModificationDate = Some(currentTime)
+                )
+
+                _ = storeCacheData(cacheData.copy(
+                    ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> updatedOntologyMetadata),
+                    classDefs = cacheData.classDefs + (internalClassIri -> readClassInfo),
+                    resourceSubClassOfRelations = updatedResourceSubClassOfRelations,
+                    resourceSuperClassOfRelations = updatedResourceSuperClassOfRelations
+                ))
+
+                // Read the data back from the cache.
 
                 response <- getClassDefinitionsV2(
                     classIris = Set(internalClassIri),
@@ -1693,7 +1728,11 @@ class OntologyResponderV2 extends Responder {
 
                 // Read the data back from the cache.
 
-                response <- getPropertyDefinitionsV2(propertyIris = Set(internalPropertyIri), allLanguages = true, userProfile = createPropertyRequest.userProfile)
+                response <- getPropertyDefinitionsV2(
+                    propertyIris = Set(internalPropertyIri),
+                    allLanguages = true,
+                    userProfile = createPropertyRequest.userProfile
+                )
             } yield response
         }
 
@@ -1964,6 +2003,29 @@ class OntologyResponderV2 extends Responder {
         )
     }
 
+    /**
+      * Loads a class definition from the triplestore and converts it to a [[ClassInfoContentV2]].
+      *
+      * @param classIri the IRI of the class to be loaded.
+      * @return a [[ClassInfoContentV2]] representing the class definition.
+      */
+    private def loadClassDefinition(classIri: SmartIri): Future[ClassInfoContentV2] = {
+        for {
+            sparql <- Future(queries.sparql.v2.txt.getClassDefinition(
+                triplestore = settings.triplestoreType,
+                classIri = classIri
+            ).toString())
+
+            constructResponse <- (storeManager ? SparqlExtendedConstructRequest(sparql)).mapTo[SparqlExtendedConstructResponse]
+        } yield constructResponseToClassDefinition(constructResponse)
+    }
+
+    /**
+      * Converts a SPARQL CONSTRUCT response to a [[ClassInfoContentV2]].
+      *
+      * @param constructResponse the SPARQL CONSTRUCT response to be read.
+      * @return a [[PropertyInfoContentV2]] representing a class definition.
+      */
     private def constructResponseToClassDefinition(constructResponse: SparqlExtendedConstructResponse): ClassInfoContentV2 = {
         val statements = constructResponse.statements
 
@@ -2062,7 +2124,7 @@ class OntologyResponderV2 extends Responder {
     private def isKnoraInternalResourceClass(classIri: SmartIri, cacheData: OntologyCacheData): Boolean = {
         classIri.isKnoraInternalEntityIri &&
             cacheData.classDefs.contains(classIri) &&
-            cacheData.resourceAndValueSubClassOfRelations(classIri).contains(OntologyConstants.KnoraBase.Resource.toSmartIri)
+            cacheData.resourceSubClassOfRelations(classIri).contains(OntologyConstants.KnoraBase.Resource.toSmartIri)
     }
 
     /**
@@ -2094,7 +2156,10 @@ class OntologyResponderV2 extends Responder {
 
             // Check that the constraint value in the new property is a subclass of the constraint value in every superproperty.
 
-            superClassesOfConstraintValueInNewProperty = cacheData.resourceAndValueSubClassOfRelations(constraintValueInNewProperty)
+            superClassesOfConstraintValueInNewProperty: Set[SmartIri] = cacheData.resourceSubClassOfRelations.getOrElse(
+                constraintValueInNewProperty,
+                cacheData.valueSubClassOfRelations(constraintValueInNewProperty)
+            )
 
             _ = superPropertyConstraintValues.foreach {
                 case (superPropertyIri, superPropertyConstraintValue) =>
@@ -2306,5 +2371,48 @@ class OntologyResponderV2 extends Responder {
             predicates = newPredicates,
             subPropertyOf = Set(OntologyConstants.KnoraBase.HasLinkToValue.toSmartIri)
         )
+    }
+
+    /**
+      * Given the cardinalities directly defined on a given resource class, and the cardinalities that it could inherit (directly
+      * or indirectly) from its base classes, combines the two, filtering out the base class cardinalities ones that are overridden
+      * by cardinalities defined directly on the given class.
+      *
+      * @param thisClassCardinalities          the cardinalities directly defined on a given resource class.
+      * @param cardinalitiesAvailableToInherit the cardinalities that the given resource class could inherit from its base classes.
+      * @param allSubPropertyOfRelations       a map in which each property IRI points to the full set of its base properties.
+      * @return a map in which each key is the IRI of a property that has a cardinality in the resource class (or that it inherits
+      *         from its base classes), and each value is the cardinality on the property.
+      */
+    private def overrideCardinalities(thisClassCardinalities: Map[SmartIri, OwlCardinalityInfo],
+                                      cardinalitiesAvailableToInherit: Map[SmartIri, OwlCardinalityInfo],
+                                      allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]]): Map[SmartIri, OwlCardinalityInfo] = {
+        cardinalitiesAvailableToInherit.filterNot {
+            case (baseClassProp, baseClassCardinality) => thisClassCardinalities.exists {
+                case (thisClassProp, cardinality) =>
+                    allSubPropertyOfRelations.get(thisClassProp) match {
+                        case Some(baseProps) => baseProps.contains(baseClassProp)
+                        case None => thisClassProp == baseClassProp
+                    }
+            }
+        }
+    }
+
+    /**
+      * Given all the `rdfs:subClassOf` relations between classes, calculates all the inverse relations.
+      *
+      * @param allResourceSubClassOfRelations all the `rdfs:subClassOf` relations between classes.
+      * @return a map of IRIs of resource classes to sets of the IRIs of their subclasses.
+      */
+    private def calculateResourceSuperClassOfRelations(allResourceSubClassOfRelations: Map[SmartIri, Set[SmartIri]]) = {
+        allResourceSubClassOfRelations.toVector.flatMap {
+            case (subClass: SmartIri, baseClasses: Set[SmartIri]) =>
+                baseClasses.toVector.map {
+                    baseClass => baseClass -> subClass
+                }
+        }.groupBy(_._1).map {
+            case (baseClass: SmartIri, baseClassAndSubClasses: Vector[(SmartIri, SmartIri)]) =>
+                baseClass -> baseClassAndSubClasses.map(_._2).toSet
+        }
     }
 }
