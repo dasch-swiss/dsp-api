@@ -863,7 +863,15 @@ class OntologyResponderV2 extends Responder {
         for {
             cacheData <- getCacheData
             response = CheckSubClassResponseV2(
-                isSubClass = cacheData.resourceSubClassOfRelations(subClassIri).contains(superClassIri) || cacheData.valueSubClassOfRelations(subClassIri).contains(superClassIri)
+                isSubClass =
+                    cacheData.valueSubClassOfRelations.get(subClassIri) match {
+                        case Some(baseClasses) => baseClasses.contains(superClassIri)
+                        case None =>
+                            cacheData.resourceSubClassOfRelations.get(subClassIri) match {
+                                case Some(baseClasses) => baseClasses.contains(superClassIri)
+                                case None => throw BadRequestException(s"Class $subClassIri not found")
+                            }
+                    }
             )
         } yield response
     }
