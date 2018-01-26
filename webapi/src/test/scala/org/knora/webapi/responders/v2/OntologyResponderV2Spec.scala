@@ -1060,6 +1060,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val expectedProperties: Set[SmartIri] = Set(
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue",
                 "http://0.0.0.0:3333/ontology/anything/v2#hasOtherThingValue",
                 "http://0.0.0.0:3333/ontology/anything/v2#hasBlueThing",
                 "http://0.0.0.0:3333/ontology/anything/v2#hasThingPicture",
@@ -1078,9 +1080,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/anything/v2#hasRichtext",
                 "http://0.0.0.0:3333/ontology/anything/v2#hasUri",
                 "http://0.0.0.0:3333/ontology/anything/v2#hasName",
-                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue",
                 "http://0.0.0.0:3333/ontology/anything/v2#isPartOfOtherThingValue",
-                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
                 "http://0.0.0.0:3333/ontology/anything/v2#hasOtherListItem"
             ).map(_.toSmartIri)
 
@@ -1091,6 +1091,65 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     val readClassInfo = ontology.classes(classIri)
                     readClassInfo.entityInfoContent should ===(classInfoContent)
                     readClassInfo.allCardinalities.keySet should ===(expectedProperties)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "create a class anything:Nothing with no properties" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "nothing"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "Represents nothing"
+                        )
+                    )
+                ),
+                subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            val expectedProperties = Set(
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
+            ).map(_.toSmartIri)
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readClassInfo = ontology.classes(classIri)
+                    readClassInfo.entityInfoContent should ===(classInfoContent)
+                    readClassInfo.allCardinalities.keySet should ===(expectedProperties)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
             }
         }
     }

@@ -1532,6 +1532,12 @@ object EntityInfoContentV2 {
                             objects = Set(stringFormatter.toSparqlEncodedString(objStr, throw BadRequestException(s"Invalid predicate object: $objStr")))
                         )
 
+                    case objObj: JsonLDObject =>
+                        PredicateInfoV2(
+                            predicateIri = predicateIri,
+                            objectsWithLang = JsonLDArray(Seq(objObj)).toObjsWithLang
+                        )
+
                     case objArray: JsonLDArray =>
                         if (objArray.value.isEmpty) {
                             throw BadRequestException(s"No values provided for predicate $predicateIri")

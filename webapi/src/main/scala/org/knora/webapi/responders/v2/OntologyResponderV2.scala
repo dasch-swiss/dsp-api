@@ -233,29 +233,26 @@ class OntologyResponderV2 extends Responder {
             propertyDefsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(propertyDefsSparql)).mapTo[SparqlSelectResponse]
             propertyDefsRows: Seq[VariableResultsRow] = propertyDefsResponse.results.bindings
 
-            // Make a map of IRIs of ontologies to IRIs of resource classes defined in each one, excluding resource
-            // classes that can't be instantiated directly.
+            // Make a map of IRIs of ontologies to IRIs of resource classes defined in each one.
             graphClassMap: Map[SmartIri, Set[SmartIri]] = resourceDefsRows.groupBy(_.rowMap("graph").toKnoraInternalSmartIri).map {
                 case (graphIri: SmartIri, graphRows: Seq[VariableResultsRow]) =>
-                    graphIri -> (graphRows.map(_.rowMap("resourceClass")).toSet -- OntologyConstants.KnoraBase.AbstractResourceClasses).map(_.toKnoraInternalSmartIri)
+                    graphIri -> graphRows.map(_.rowMap("resourceClass")).toSet.map((classIri: IRI) => classIri.toKnoraInternalSmartIri)
             } + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2Simple.Classes.keySet) +
                 (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2WithValueObjects.Classes.keySet)
 
-            // Make a map of IRIs of ontologies to IRIs of properties defined in each one, excluding knora-base:resourceProperty,
-            // which is never used directly.
+            // Make a map of IRIs of ontologies to IRIs of properties defined in each one.
             graphPropMap: Map[SmartIri, Set[SmartIri]] = propertyDefsRows.groupBy(_.rowMap("graph").toKnoraInternalSmartIri).map {
                 case (graphIri, graphRows) =>
-                    graphIri -> (graphRows.map(_.rowMap("prop")).toSet - OntologyConstants.KnoraBase.ResourceProperty).map(_.toSmartIri)
+                    graphIri -> graphRows.map(_.rowMap("prop")).toSet.map((propertyIri: IRI) => propertyIri.toSmartIri)
             } + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2Simple.Properties.keySet) +
                 (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2WithValueObjects.Properties.keySet)
 
-            // Group the rows representing resource class definitions by resource class IRI. This needs to include abstract resource classes such as
-            // knora-base:Resource, so cardinalities can be inherited from them.
+            // Group the rows representing resource class definitions by resource class IRI.
             resourceDefsGrouped: Map[SmartIri, Seq[VariableResultsRow]] = resourceDefsRows.groupBy(_.rowMap("resourceClass").toKnoraInternalSmartIri)
             resourceClassIris = resourceDefsGrouped.keySet
 
-            // Group the rows representing property definitions by property IRI, excluding knora-base:resourceProperty, which is never used directly.
-            propertyDefsGrouped: Map[SmartIri, Seq[VariableResultsRow]] = propertyDefsRows.groupBy(_.rowMap("prop").toKnoraInternalSmartIri) - OntologyConstants.KnoraBase.ResourceProperty.toKnoraInternalSmartIri
+            // Group the rows representing property definitions by property IRI.
+            propertyDefsGrouped: Map[SmartIri, Seq[VariableResultsRow]] = propertyDefsRows.groupBy(_.rowMap("prop").toKnoraInternalSmartIri)
             propertyIris = propertyDefsGrouped.keySet
 
             // Group the rows representing value class relations by value class IRI.
@@ -343,12 +340,8 @@ class OntologyResponderV2 extends Responder {
                     resourceClassIri -> resourceClassCardinalities
             }.toMap
 
-            // Now that we've done cardinality inheritance, remove the resource class definitions that can't be
-            // instantiated directly.
-            concreteResourceDefsGrouped = resourceDefsGrouped -- OntologyConstants.KnoraBase.AbstractResourceClasses.map(_.toKnoraInternalSmartIri)
-
             // Construct a ReadClassInfoV2 for each resource class.
-            resourceEntityInfos: Map[SmartIri, ReadClassInfoV2] = concreteResourceDefsGrouped.map {
+            resourceEntityInfos: Map[SmartIri, ReadClassInfoV2] = resourceDefsGrouped.map {
                 case (resourceClassIri, resourceClassRows) =>
 
                     // Group the rows for each resource class by predicate IRI.
