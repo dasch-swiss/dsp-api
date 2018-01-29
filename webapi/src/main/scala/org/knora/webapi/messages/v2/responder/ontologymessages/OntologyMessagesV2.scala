@@ -351,7 +351,7 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
 /**
   * Requests the addition of a class to an ontology. A successful response will be a [[ReadOntologiesV2]].
   *
-  * @param classInfoContent     an [[ClassInfoContentV2]] containing the class definition.
+  * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
   * @param lastModificationDate the ontology's last modification date.
   * @param apiRequestID         the ID of the API request.
   * @param userProfile          the profile of the user making the request.
@@ -394,6 +394,53 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
         }
 
         CreateClassRequestV2(
+            classInfoContent = classInfoContent,
+            lastModificationDate = lastModificationDate,
+            apiRequestID = apiRequestID,
+            userProfile = userProfile
+        )
+    }
+}
+
+/**
+  * Requests the addition of cardinalities to a class. A successful response will be a [[ReadOntologiesV2]].
+  *
+  * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
+  * @param lastModificationDate the ontology's last modification date.
+  * @param apiRequestID         the ID of the API request.
+  * @param userProfile          the profile of the user making the request.
+  */
+case class AddCardinalitiesToClassRequestV2(classInfoContent: ClassInfoContentV2,
+                                            lastModificationDate: Instant,
+                                            apiRequestID: UUID,
+                                            userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+
+object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCardinalitiesToClassRequestV2] {
+    /**
+      * Converts JSON-LD input into an [[AddCardinalitiesToClassRequestV2]].
+      *
+      * @param jsonLDDocument the JSON-LD input.
+      * @param apiRequestID   the UUID of the API request.
+      * @param userProfile    the profile of the user making the request.
+      * @return an [[AddCardinalitiesToClassRequestV2]] representing the input.
+      */
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, userProfile: UserProfileV1): AddCardinalitiesToClassRequestV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        // Get the class definition and the ontology's last modification date from the JSON-LD.
+
+        val inputOntologiesV2 = InputOntologiesV2.fromJsonLD(jsonLDDocument)
+        val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+        val classInfoContent = classUpdateInfo.classInfoContent
+        val lastModificationDate = classUpdateInfo.lastModificationDate
+
+        // The request must provide cardinalities.
+
+        if (classInfoContent.directCardinalities.isEmpty) {
+            throw BadRequestException("No cardinalities specified")
+        }
+
+        AddCardinalitiesToClassRequestV2(
             classInfoContent = classInfoContent,
             lastModificationDate = lastModificationDate,
             apiRequestID = apiRequestID,
@@ -1307,6 +1354,28 @@ object Cardinality extends Enumeration {
       * @return an [[OwlCardinalityInfo]].
       */
     def knoraCardinality2OwlCardinality(knoraCardinality: Value): OwlCardinalityInfo = knoraCardinality2OwlCardinalityMap(knoraCardinality)
+
+    /**
+      * Checks whether a cardinality that is directly defined on a class is compatible with an inherited cardinality on the
+      * same property. This will be true only if the directly defined cardinality is at least as restrictive as the
+      * inherited one.
+      *
+      * @param directCardinality the directly defined cardinality.
+      * @param inheritableCardinality the inherited cardinality.
+      * @return `true` if the directly defined cardinality is compatible with the inherited one.
+      */
+    def isCompatible(directCardinality: Value, inheritableCardinality: Value): Boolean = {
+        if (directCardinality == inheritableCardinality) {
+            true
+        } else {
+            inheritableCardinality match {
+                case MayHaveOne => directCardinality == MustHaveOne
+                case MayHaveMany => true
+                case MustHaveOne => false
+                case MustHaveSome => directCardinality == MustHaveOne
+            }
+        }
+    }
 }
 
 

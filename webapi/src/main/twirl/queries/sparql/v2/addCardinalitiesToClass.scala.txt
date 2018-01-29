@@ -1,0 +1,86 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi._
+@import org.knora.webapi.util.SmartIri
+@import org.knora.webapi.messages.v2.responder.ontologymessages._
+@import java.time.Instant
+
+@*
+ * Adds cardinalities to an existing class.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param ontologyNamedGraphIri the IRI of the named graph where the ontology is stored.
+ * @param ontologyIri the IRI of the ontology containing the class.
+ * @param classIri the IRI of the class to be updated.
+ * @param cardinalitiesToAdd the cardinalities to be added.
+ * @param lastModificationDate the xsd:dateTimeStamp that was attached to the ontology when it was last modified.
+ * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
+ *@
+@(triplestore: String,
+  ontologyNamedGraphIri: SmartIri,
+  ontologyIri: SmartIri,
+  classIri: SmartIri,
+  cardinalitiesToAdd: Map[SmartIri, Cardinality.Value],
+  lastModificationDate: Instant,
+  currentTime: Instant)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+DELETE {
+    GRAPH ?ontologyNamedGraph {
+        ?ontology knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+    }
+} INSERT {
+    GRAPH ?ontologyNamedGraph {
+        ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+
+        @for((propertyIri, knoraCardinality) <- cardinalitiesToAdd) {
+
+            @defining(Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)) { owlCardinalityInfo =>
+
+                ?class rdfs:subClassOf [ rdf:type owl:Restriction ;
+                                         owl:onProperty <@propertyIri> ;
+                                         <@owlCardinalityInfo.owlCardinalityIri> "@owlCardinalityInfo.owlCardinalityValue"^^xsd:nonNegativeInteger ] .
+
+            }
+        }
+
+    }
+
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
+    BIND(IRI("@ontologyIri") AS ?ontology)
+    BIND(IRI("@classIri") AS ?class)
+
+    GRAPH ?ontologyNamedGraph {
+         ?ontology rdf:type owl:Ontology ;
+             knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+    }
+}

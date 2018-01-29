@@ -121,6 +121,7 @@ class OntologyResponderV2 extends Responder {
         case createOntologyRequest: CreateOntologyRequestV2 => future2Message(sender(), createOntology(createOntologyRequest), log)
         case changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2 => future2Message(sender(), changeOntologyMetadata(changeOntologyMetadataRequest), log)
         case createClassRequest: CreateClassRequestV2 => future2Message(sender(), createClass(createClassRequest), log)
+        case addCardinalitiesToClassRequest: AddCardinalitiesToClassRequestV2 => future2Message(sender(), addCardinalitiesToClass(addCardinalitiesToClassRequest), log)
         case createPropertyRequest: CreatePropertyRequestV2 => future2Message(sender(), createProperty(createPropertyRequest), log)
         case changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2 => future2Message(sender(), changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
@@ -187,7 +188,7 @@ class OntologyResponderV2 extends Responder {
             // Combine the cardinalities defined directly on this class with the ones that are available to inherit.
             overrideCardinalities(
                 thisClassCardinalities = thisClassCardinalities,
-                cardinalitiesAvailableToInherit = cardinalitiesAvailableToInherit,
+                inheritableCardinalities = cardinalitiesAvailableToInherit,
                 allSubPropertyOfRelations = allSubPropertyOfRelations
             )
         }
@@ -1375,62 +1376,17 @@ class OntologyResponderV2 extends Responder {
 
                 allBaseClassIris: Set[SmartIri] = internalClassDef.subClassOf.flatMap {
                     baseClassIri => cacheData.resourceSubClassOfRelations.getOrElse(baseClassIri, Set.empty[SmartIri])
-                }
+                } + internalClassIri
 
                 _ = if (!allBaseClassIris.contains(OntologyConstants.KnoraBase.Resource.toSmartIri)) {
                     throw BadRequestException(s"Class ${createClassRequest.classInfoContent.classIri} would not be a subclass of knora-api:Resource")
                 }
 
-                // If the class has cardinalities, check that the properties are already defined as Knora properties.
-
-                _ = internalClassDef.directCardinalities.keySet.foreach {
-                    propertyIri =>
-                        if (!cacheData.propertyDefs.contains(propertyIri)) {
-                            throw NotFoundException(s"Property ${propertyIri.toOntologySchema(ApiV2WithValueObjects)} not found")
-                        }
-                }
-
-                // Get the cardinalities that the class can inherit.
-
-                cardinalitiesAvailableToInherit: Map[SmartIri, Cardinality.Value] = internalClassDef.subClassOf.flatMap {
-                    baseClassIri => cacheData.classDefs(baseClassIri).allCardinalities
-                }.toMap
-
-                // Let directly-defined cardinalities override cardinalities in base classes.
-
-                cardinalitiesForClassWithInheritance: Map[SmartIri, Cardinality.Value] = overrideCardinalities(
-                    thisClassCardinalities = internalClassDef.directCardinalities.map {
-                        case (propertyIri, knoraCardinality) => propertyIri -> Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)
-                    },
-                    cardinalitiesAvailableToInherit = cardinalitiesAvailableToInherit.map {
-                        case (propertyIri, knoraCardinality) => propertyIri -> Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)
-                    },
-                    allSubPropertyOfRelations = cacheData.subPropertyOfRelations
-                ).map {
-                    case (propertyIri, owlCardinalityInfo) => propertyIri -> Cardinality.owlCardinality2KnoraCardinality(propertyIri = propertyIri.toString, owlCardinality = owlCardinalityInfo)
-                }
-
-                // Check that the class is a subclass of all the classes that are subject class constraints of the properties in its cardinalities.
-
-                _ = cardinalitiesForClassWithInheritance.keySet.foreach {
-                    propertyIri =>
-                        cacheData.propertyDefs(propertyIri).entityInfoContent.predicates.get(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri) match {
-                            case Some(subjectClassConstraintPred) =>
-                                val subjectClassConstraint = subjectClassConstraintPred.objects.head.toSmartIri
-
-                                if (!(subjectClassConstraint == internalClassIri || allBaseClassIris.contains(subjectClassConstraint))) {
-                                    val hasOrWouldInherit = if (internalClassDef.directCardinalities.contains(propertyIri)) {
-                                        "has"
-                                    } else {
-                                        "would inherit"
-                                    }
-
-                                    throw BadRequestException(s"Class ${createClassRequest.classInfoContent.classIri} $hasOrWouldInherit a cardinality for property ${propertyIri.toOntologySchema(ApiV2WithValueObjects)}, but is not a subclass of that property's knora-api:subjectType, ${subjectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}")
-                                }
-
-                            case None => ()
-                        }
-                }
+                cardinalitiesForClassWithInheritance = checkCardinalitiesBeforeAdding(
+                    internalClassDef = internalClassDef,
+                    allBaseClassIris = allBaseClassIris,
+                    cacheData = cacheData
+                )
 
                 // Prepare to update the ontology cache, undoing the SPARQL-escaping of the input.
 
@@ -1480,7 +1436,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Update the cache.
 
-                updatedResourceSubClassOfRelations = cacheData.resourceSubClassOfRelations + (internalClassIri -> (allBaseClassIris + internalClassIri))
+                updatedResourceSubClassOfRelations = cacheData.resourceSubClassOfRelations + (internalClassIri -> allBaseClassIris)
                 updatedResourceSuperClassOfRelations = calculateResourceSuperClassOfRelations(updatedResourceSubClassOfRelations)
 
                 updatedOntologyMetadata = cacheData.ontologyMetadata(internalOntologyIri).copy(
@@ -1508,25 +1464,266 @@ class OntologyResponderV2 extends Responder {
         for {
             userProfile <- FastFuture.successful(createClassRequest.userProfile)
 
-            externalOntologyIri = createClassRequest.classInfoContent.classIri.getOntologyFromEntity
-            _ <- checkExternalOntologyIriForUpdate(externalOntologyIri)
+            externalClassIri = createClassRequest.classInfoContent.classIri
+            externalOntologyIri = externalClassIri.getOntologyFromEntity
 
-            externalPropertyIri = createClassRequest.classInfoContent.classIri
-            _ <- checkExternalEntityIriForUpdate(externalEntityIri = externalPropertyIri)
+            _ <- checkOntologyAndEntityIrisForUpdate(
+                externalOntologyIri = externalOntologyIri,
+                externalEntityIri = externalClassIri,
+                userProfile = userProfile
+            )
 
+            internalClassIri = externalClassIri.toOntologySchema(InternalSchema)
             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
-            _ <- checkPermissionsForOntologyUpdate(internalOntologyIri = internalOntologyIri, userProfile = userProfile)
 
             // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID = createClassRequest.apiRequestID,
                 iri = internalOntologyIri.toString,
                 task = () => makeTaskFuture(
-                    internalClassIri = externalPropertyIri.toOntologySchema(InternalSchema),
+                    internalClassIri = internalClassIri,
                     internalOntologyIri = internalOntologyIri
                 )
             )
         } yield taskResult
+    }
+
+    /**
+      * Adds cardinalities to an existing class definition.
+      *
+      * @param addCardinalitiesRequest the request to add the cardinalities.
+      * @return a [[ReadOntologiesV2]] in the internal schema, containing the new class definition.
+      */
+    private def addCardinalitiesToClass(addCardinalitiesRequest: AddCardinalitiesToClassRequestV2): Future[ReadOntologiesV2] = {
+        def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologiesV2] = {
+            for {
+                cacheData <- getCacheData
+                internalClassDef: ClassInfoContentV2 = addCardinalitiesRequest.classInfoContent.toOntologySchema(InternalSchema)
+
+                // Check that the ontology exists and has not been updated by another user since the client last read it.
+                _ <- checkOntologyLastModificationDateBeforeUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = addCardinalitiesRequest.lastModificationDate
+                )
+
+                // Check that the class's rdf:type is owl:Class.
+
+                rdfType: SmartIri = internalClassDef.requireIriPredicate(OntologyConstants.Rdf.Type.toSmartIri, throw BadRequestException(s"No rdf:type specified"))
+
+                _ = if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
+                    throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
+                }
+
+                // Check that cardinalities were submitted.
+
+                _ = if (internalClassDef.directCardinalities.isEmpty) {
+                    throw BadRequestException("No cardinalities specified")
+                }
+
+                // Check that the submitted cardinalities aren't for properties that already have cardinalities
+                // directly defined on the class.
+
+                existingClassDef: ClassInfoContentV2 = cacheData.classDefs.getOrElse(internalClassIri,
+                    throw BadRequestException(s"Class ${addCardinalitiesRequest.classInfoContent.classIri} does not exist")).entityInfoContent
+
+                redundantCardinalities = existingClassDef.directCardinalities.keySet.intersect(internalClassDef.directCardinalities.keySet)
+
+                _ = if (redundantCardinalities.nonEmpty) {
+                    throw BadRequestException(s"The cardinalities of ${addCardinalitiesRequest.classInfoContent.classIri} already include the following property or properties: ${redundantCardinalities.mkString(", ")}")
+                }
+
+                // Make an updated class definition.
+
+                newInternalClassDef = existingClassDef.copy(
+                    directCardinalities = existingClassDef.directCardinalities ++ internalClassDef.directCardinalities
+                )
+
+                // Check that the new cardinalities are valid.
+
+                allBaseClassIris: Set[SmartIri] = internalClassDef.subClassOf.flatMap {
+                    baseClassIri => cacheData.resourceSubClassOfRelations.getOrElse(baseClassIri, Set.empty[SmartIri])
+                } + internalClassIri
+
+                cardinalitiesForClassWithInheritance = checkCardinalitiesBeforeAdding(
+                    internalClassDef = newInternalClassDef,
+                    allBaseClassIris = allBaseClassIris,
+                    cacheData = cacheData
+                )
+
+                // Prepare to update the ontology cache. (No need to deal with SPARQL-escaping here, because there
+                // isn't any text to escape in cardinalities.)
+
+                propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
+
+                inheritedCardinalities: Map[SmartIri, Cardinality.Value] = cardinalitiesForClassWithInheritance.filterNot {
+                    case (propertyIri, _) => newInternalClassDef.directCardinalities.contains(propertyIri)
+                }
+
+                readClassInfo = ReadClassInfoV2(
+                    entityInfoContent = newInternalClassDef,
+                    canBeInstantiated = true,
+                    inheritedCardinalities = inheritedCardinalities,
+                    linkProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri => cacheData.propertyDefs(propertyIri).isLinkProp),
+                    linkValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri => cacheData.propertyDefs(propertyIri).isLinkValueProp),
+                    fileValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri => cacheData.propertyDefs(propertyIri).isFileValueProp)
+                )
+
+                // Add the cardinalities to the class definition in the triplestore.
+
+                currentTime: Instant = Instant.now
+
+                updateSparql = queries.sparql.v2.txt.addCardinalitiesToClass(
+                    triplestore = settings.triplestoreType,
+                    ontologyNamedGraphIri = internalOntologyIri,
+                    ontologyIri = internalOntologyIri,
+                    classIri = internalClassDef.classIri,
+                    cardinalitiesToAdd = internalClassDef.directCardinalities,
+                    lastModificationDate = addCardinalitiesRequest.lastModificationDate,
+                    currentTime = currentTime
+                ).toString()
+
+                _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
+
+                // Check that the ontology's last modification date was updated.
+
+                _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
+
+                // Check that the data that was saved corresponds to the data that was submitted.
+
+                loadedClassDef <- loadClassDefinition(internalClassIri)
+
+                _ = if (loadedClassDef != newInternalClassDef) {
+                    throw InconsistentTriplestoreDataException(s"Attempted to save class definition $newInternalClassDef, but $loadedClassDef was saved")
+                }
+
+                // Update the cache.
+
+                updatedOntologyMetadata = cacheData.ontologyMetadata(internalOntologyIri).copy(
+                    lastModificationDate = Some(currentTime)
+                )
+
+                _ = storeCacheData(cacheData.copy(
+                    ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> updatedOntologyMetadata),
+                    classDefs = cacheData.classDefs + (internalClassIri -> readClassInfo)
+                ))
+
+                // Read the data back from the cache.
+
+                response <- getClassDefinitionsV2(
+                    classIris = Set(internalClassIri),
+                    responseSchema = ApiV2WithValueObjects,
+                    allLanguages = true,
+                    userProfile = addCardinalitiesRequest.userProfile
+                )
+            } yield response
+        }
+
+        for {
+            userProfile <- FastFuture.successful(addCardinalitiesRequest.userProfile)
+
+            externalClassIri = addCardinalitiesRequest.classInfoContent.classIri
+            externalOntologyIri = externalClassIri.getOntologyFromEntity
+
+            _ <- checkOntologyAndEntityIrisForUpdate(
+                externalOntologyIri = externalOntologyIri,
+                externalEntityIri = externalClassIri,
+                userProfile = userProfile
+            )
+
+            internalClassIri = externalClassIri.toOntologySchema(InternalSchema)
+            internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+
+            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID = addCardinalitiesRequest.apiRequestID,
+                iri = internalOntologyIri.toString,
+                task = () => makeTaskFuture(
+                    internalClassIri = internalClassIri,
+                    internalOntologyIri = internalOntologyIri
+                )
+            )
+        } yield taskResult
+
+    }
+
+    /**
+      * Before creating a new class or adding cardinalities to an existing class, checks the validity of the
+      * cardinalities directly defined on the class.
+      *
+      * @param internalClassDef the internal definition of the class.
+      * @param allBaseClassIris the IRIs of all the class's base classes, including the class itself.
+      * @param cacheData        the ontology cache.
+      * @return the result of combining the class's directly defined cardinalities with its inherited ones,
+      *         and letting directly defined cardinalities override inherited ones.
+      */
+    private def checkCardinalitiesBeforeAdding(internalClassDef: ClassInfoContentV2,
+                                               allBaseClassIris: Set[SmartIri],
+                                               cacheData: OntologyCacheData): Map[SmartIri, Cardinality.Value] = {
+        // If the class has cardinalities, check that the properties are already defined as Knora properties.
+
+        internalClassDef.directCardinalities.keySet.foreach {
+            propertyIri =>
+                if (!cacheData.propertyDefs.contains(propertyIri)) {
+                    throw NotFoundException(s"Property ${propertyIri.toOntologySchema(ApiV2WithValueObjects)} not found")
+                }
+        }
+
+        // Get the cardinalities that the class can inherit.
+
+        val cardinalitiesAvailableToInherit: Map[SmartIri, Cardinality.Value] = internalClassDef.subClassOf.flatMap {
+            baseClassIri => cacheData.classDefs(baseClassIri).allCardinalities
+        }.toMap
+
+        // Check that the cardinalities directly defined on the class are compatible with any inheritable
+        // cardinalities.
+
+        val thisClassKnoraCardinalities = internalClassDef.directCardinalities.map {
+            case (propertyIri, knoraCardinality) => propertyIri -> Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)
+        }
+
+        val inheritableKnoraCardinalities = cardinalitiesAvailableToInherit.map {
+            case (propertyIri, knoraCardinality) => propertyIri -> Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)
+        }
+
+        checkCardinalityCompatibility(
+            thisClassCardinalities = thisClassKnoraCardinalities,
+            inheritableCardinalities = inheritableKnoraCardinalities,
+            allSubPropertyOfRelations = cacheData.subPropertyOfRelations
+        )
+
+        // Let directly-defined cardinalities override cardinalities in base classes.
+
+        val cardinalitiesForClassWithInheritance: Map[SmartIri, Cardinality.Value] = overrideCardinalities(
+            thisClassCardinalities = thisClassKnoraCardinalities,
+            inheritableCardinalities = inheritableKnoraCardinalities,
+            allSubPropertyOfRelations = cacheData.subPropertyOfRelations
+        ).map {
+            case (propertyIri, owlCardinalityInfo) => propertyIri -> Cardinality.owlCardinality2KnoraCardinality(propertyIri = propertyIri.toString, owlCardinality = owlCardinalityInfo)
+        }
+
+        // Check that the class is a subclass of all the classes that are subject class constraints of the properties in its cardinalities.
+
+        cardinalitiesForClassWithInheritance.keySet.foreach {
+            propertyIri =>
+                cacheData.propertyDefs(propertyIri).entityInfoContent.predicates.get(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri) match {
+                    case Some(subjectClassConstraintPred) =>
+                        val subjectClassConstraint = subjectClassConstraintPred.objects.head.toSmartIri
+
+                        if (!allBaseClassIris.contains(subjectClassConstraint)) {
+                            val hasOrWouldInherit = if (internalClassDef.directCardinalities.contains(propertyIri)) {
+                                "has"
+                            } else {
+                                "would inherit"
+                            }
+
+                            throw BadRequestException(s"Class ${internalClassDef.classIri.toOntologySchema(ApiV2WithValueObjects)} $hasOrWouldInherit a cardinality for property ${propertyIri.toOntologySchema(ApiV2WithValueObjects)}, but is not a subclass of that property's knora-api:subjectType, ${subjectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}")
+                        }
+
+                    case None => ()
+                }
+        }
+
+        cardinalitiesForClassWithInheritance
     }
 
     /**
@@ -1745,21 +1942,24 @@ class OntologyResponderV2 extends Responder {
         for {
             userProfile <- FastFuture.successful(createPropertyRequest.userProfile)
 
-            externalOntologyIri = createPropertyRequest.propertyInfoContent.propertyIri.getOntologyFromEntity
-            _ <- checkExternalOntologyIriForUpdate(externalOntologyIri)
-
             externalPropertyIri = createPropertyRequest.propertyInfoContent.propertyIri
-            _ <- checkExternalEntityIriForUpdate(externalEntityIri = externalPropertyIri)
+            externalOntologyIri = externalPropertyIri.getOntologyFromEntity
 
+            _ <- checkOntologyAndEntityIrisForUpdate(
+                externalOntologyIri = externalOntologyIri,
+                externalEntityIri = externalPropertyIri,
+                userProfile = userProfile
+            )
+
+            internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema)
             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
-            _ <- checkPermissionsForOntologyUpdate(internalOntologyIri = internalOntologyIri, userProfile = userProfile)
 
             // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID = createPropertyRequest.apiRequestID,
                 iri = internalOntologyIri.toString,
                 task = () => makeTaskFuture(
-                    internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema),
+                    internalPropertyIri = internalPropertyIri,
                     internalOntologyIri = internalOntologyIri
                 )
             )
@@ -1892,25 +2092,49 @@ class OntologyResponderV2 extends Responder {
         for {
             userProfile <- FastFuture.successful(changePropertyLabelsOrCommentsRequest.userProfile)
 
-            externalOntologyIri = changePropertyLabelsOrCommentsRequest.propertyIri.getOntologyFromEntity
-            _ <- checkExternalOntologyIriForUpdate(externalOntologyIri)
-
             externalPropertyIri = changePropertyLabelsOrCommentsRequest.propertyIri
-            _ <- checkExternalEntityIriForUpdate(externalEntityIri = externalPropertyIri)
+            externalOntologyIri = externalPropertyIri.getOntologyFromEntity
 
+            _ <- checkOntologyAndEntityIrisForUpdate(
+                externalOntologyIri = externalOntologyIri,
+                externalEntityIri = externalPropertyIri,
+                userProfile = userProfile
+            )
+
+            internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema)
             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
-            _ <- checkPermissionsForOntologyUpdate(internalOntologyIri = internalOntologyIri, userProfile = userProfile)
 
             // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID = changePropertyLabelsOrCommentsRequest.apiRequestID,
                 iri = internalOntologyIri.toString,
                 task = () => makeTaskFuture(
-                    internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema),
+                    internalPropertyIri = internalPropertyIri,
                     internalOntologyIri = internalOntologyIri
                 )
             )
         } yield taskResult
+    }
+
+    /**
+      * Before an update of an ontology entity, checks that the entity's external IRI, and that of its ontology,
+      * are valid, and checks that the user has permission to update the ontology.
+      *
+      * @param externalOntologyIri the external IRI of the ontology.
+      * @param externalEntityIri   the external IRI of the entity.
+      * @param userProfile         the profile of the user making the request.
+      */
+    private def checkOntologyAndEntityIrisForUpdate(externalOntologyIri: SmartIri,
+                                                    externalEntityIri: SmartIri,
+                                                    userProfile: UserProfileV1): Future[Unit] = {
+        for {
+            _ <- checkExternalOntologyIriForUpdate(externalOntologyIri)
+            _ <- checkExternalEntityIriForUpdate(externalEntityIri = externalEntityIri)
+            _ <- checkPermissionsForOntologyUpdate(
+                internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema),
+                userProfile = userProfile
+            )
+        } yield ()
     }
 
     /**
@@ -2340,20 +2564,67 @@ class OntologyResponderV2 extends Responder {
     }
 
     /**
+      * Checks that if a directly defined cardinality overrides an inheritable one, the directly defined one is at least as restrictive.
+      * Otherwise, throws [[BadRequestException]].
+      *
+      * @param thisClassCardinalities    the cardinalities directly defined on a given resource class.
+      * @param inheritableCardinalities  the cardinalities that the given resource class could inherit from its base classes.
+      * @param allSubPropertyOfRelations a map in which each property IRI points to the full set of its base properties.
+      * @return a map in which each key is the IRI of a property that has a cardinality in the resource class (or that it inherits
+      *         from its base classes), and each value is the cardinality on the property.
+      */
+    private def checkCardinalityCompatibility(thisClassCardinalities: Map[SmartIri, OwlCardinalityInfo],
+                                              inheritableCardinalities: Map[SmartIri, OwlCardinalityInfo],
+                                              allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]]): Unit = {
+        // For each property that has a directly defined cardinality, get its base properties.
+        for ((thisClassProp, thisClassCardinality) <- thisClassCardinalities) {
+            allSubPropertyOfRelations.get(thisClassProp) match {
+                case Some(baseProps: Set[SmartIri]) =>
+                    for (baseProp: SmartIri <- baseProps) {
+                        // Get the inheritable cardinality, if any, on each base property.
+                        inheritableCardinalities.get(baseProp) match {
+                            case Some(basePropCardinality: OwlCardinalityInfo) =>
+                                val thisClassKnoraCardinality: Cardinality.Value = Cardinality.owlCardinality2KnoraCardinality(
+                                    propertyIri = thisClassProp.toString,
+                                    owlCardinality = thisClassCardinality
+                                )
+
+                                val inheritableKnoraCardinality: Cardinality.Value = Cardinality.owlCardinality2KnoraCardinality(
+                                    propertyIri = baseProp.toString,
+                                    owlCardinality = basePropCardinality
+                                )
+
+                                // Check that the directly defined cardinality is at least as restrictive as the inheritable one.
+                                if (!Cardinality.isCompatible(directCardinality = thisClassKnoraCardinality, inheritableCardinality = inheritableKnoraCardinality)) {
+                                    throw BadRequestException(s"The directly defined cardinality $thisClassKnoraCardinality on $thisClassProp is not compatible with the inherited cardinality $inheritableKnoraCardinality on $baseProp, because it is less restrictive")
+                                } /* else {
+                                    println(s"The directly defined cardinality $thisClassKnoraCardinality on $thisClassProp is compatible with the inherited cardinality $inheritableKnoraCardinality on $baseProp, because it is at least as restrictive")
+                                }*/
+
+                            case None => ()
+                        }
+                    }
+
+                case None => ()
+            }
+        }
+    }
+
+    /**
       * Given the cardinalities directly defined on a given resource class, and the cardinalities that it could inherit (directly
       * or indirectly) from its base classes, combines the two, filtering out the base class cardinalities ones that are overridden
       * by cardinalities defined directly on the given class.
       *
-      * @param thisClassCardinalities          the cardinalities directly defined on a given resource class.
-      * @param cardinalitiesAvailableToInherit the cardinalities that the given resource class could inherit from its base classes.
-      * @param allSubPropertyOfRelations       a map in which each property IRI points to the full set of its base properties.
+      * @param thisClassCardinalities    the cardinalities directly defined on a given resource class.
+      * @param inheritableCardinalities  the cardinalities that the given resource class could inherit from its base classes.
+      * @param allSubPropertyOfRelations a map in which each property IRI points to the full set of its base properties.
       * @return a map in which each key is the IRI of a property that has a cardinality in the resource class (or that it inherits
       *         from its base classes), and each value is the cardinality on the property.
       */
     private def overrideCardinalities(thisClassCardinalities: Map[SmartIri, OwlCardinalityInfo],
-                                      cardinalitiesAvailableToInherit: Map[SmartIri, OwlCardinalityInfo],
+                                      inheritableCardinalities: Map[SmartIri, OwlCardinalityInfo],
                                       allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]]): Map[SmartIri, OwlCardinalityInfo] = {
-        cardinalitiesAvailableToInherit.filterNot {
+        thisClassCardinalities ++ inheritableCardinalities.filterNot {
             case (baseClassProp, baseClassCardinality) => thisClassCardinalities.exists {
                 case (thisClassProp, cardinality) =>
                     allSubPropertyOfRelations.get(thisClassProp) match {
@@ -2361,8 +2632,9 @@ class OntologyResponderV2 extends Responder {
                         case None => thisClassProp == baseClassProp
                     }
             }
-        } ++ thisClassCardinalities
+        }
     }
+
 
     /**
       * Given all the `rdfs:subClassOf` relations between classes, calculates all the inverse relations.
