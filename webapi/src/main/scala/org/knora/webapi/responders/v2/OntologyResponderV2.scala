@@ -184,16 +184,12 @@ class OntologyResponderV2 extends Responder {
             // about a class, we assume that it has no cardinalities.
             val thisClassCardinalities: Map[SmartIri, OwlCardinalityInfo] = directResourceClassCardinalities.getOrElse(resourceClassIri, Map.empty[SmartIri, OwlCardinalityInfo])
 
-            // From the properties that are available to inherit, filter out the ones that are overridden by properties
-            // with cardinalities defined directly on this class.
-            val inheritedCardinalities: Map[SmartIri, OwlCardinalityInfo] = overrideCardinalities(
+            // Combine the cardinalities defined directly on this class with the ones that are available to inherit.
+            overrideCardinalities(
                 thisClassCardinalities = thisClassCardinalities,
                 cardinalitiesAvailableToInherit = cardinalitiesAvailableToInherit,
                 allSubPropertyOfRelations = allSubPropertyOfRelations
             )
-
-            // Add the inherited properties to the ones with directly defined cardinalities.
-            thisClassCardinalities ++ inheritedCardinalities
         }
 
         for {
@@ -1372,7 +1368,7 @@ class OntologyResponderV2 extends Responder {
                 missingBaseClasses = internalClassDef.subClassOf.filter(_.isKnoraInternalEntityIri) -- cacheData.classDefs.keySet
 
                 _ = if (missingBaseClasses.nonEmpty) {
-                    throw NotFoundException(s"One or more specified Knora base classes do not exist: ${missingBaseClasses.mkString(", ")}")
+                    throw NotFoundException(s"One or more specified Knora superclasses do not exist: ${missingBaseClasses.mkString(", ")}")
                 }
 
                 // Check that the class is a subclass of knora-base:Resource.
@@ -1416,10 +1412,6 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the class is a subclass of all the classes that are subject class constraints of the properties in its cardinalities.
 
-                inheritedCardinalities = cardinalitiesForClassWithInheritance.filterNot {
-                    case (propertyIri, _) => internalClassDef.directCardinalities.contains(propertyIri)
-                }
-
                 _ = cardinalitiesForClassWithInheritance.keySet.foreach {
                     propertyIri =>
                         cacheData.propertyDefs(propertyIri).entityInfoContent.predicates.get(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri) match {
@@ -1445,6 +1437,10 @@ class OntologyResponderV2 extends Responder {
                 unescapedInputClassDef = internalClassDef.unescape
 
                 propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
+
+                inheritedCardinalities: Map[SmartIri, Cardinality.Value] = cardinalitiesForClassWithInheritance.filterNot {
+                    case (propertyIri, _) => internalClassDef.directCardinalities.contains(propertyIri)
+                }
 
                 readClassInfo = ReadClassInfoV2(
                     entityInfoContent = unescapedInputClassDef,
@@ -1556,17 +1552,41 @@ class OntologyResponderV2 extends Responder {
                     throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
                 }
 
-                // Don't allow new file value properties to be created.
+                // Check that the superproperties that are Knora properties exist.
 
-                isFileValueProp <- propertyDefIsFileValueProp(internalPropertyDef)
+                knoraSuperProperties = internalPropertyDef.subPropertyOf.filter(_.isKnoraInternalEntityIri)
+                missingSuperProperties = knoraSuperProperties -- cacheData.propertyDefs.keySet
+
+                _ = if (missingSuperProperties.nonEmpty) {
+                    throw NotFoundException(s"One or more specified Knora superproperties do not exist: ${missingSuperProperties.mkString(", ")}")
+                }
+
+                // Check the property is a subproperty of knora-base:hasValue or knora-base:hasLinkTo, but not both.
+
+                allKnoraSuperPropertyIris: Set[SmartIri] = knoraSuperProperties.flatMap {
+                    superPropertyIri => cacheData.subPropertyOfRelations.getOrElse(superPropertyIri, Set.empty[SmartIri])
+                }
+
+                isValueProp = allKnoraSuperPropertyIris.contains(OntologyConstants.KnoraBase.HasValue.toSmartIri)
+                isLinkProp = allKnoraSuperPropertyIris.contains(OntologyConstants.KnoraBase.HasLinkTo.toSmartIri)
+                isLinkValueProp = allKnoraSuperPropertyIris.contains(OntologyConstants.KnoraBase.HasLinkToValue.toSmartIri)
+                isFileValueProp = allKnoraSuperPropertyIris.contains(OntologyConstants.KnoraBase.HasFileValue.toSmartIri)
+
+                _ = if (!(isValueProp || isLinkProp)) {
+                    throw BadRequestException(s"Property ${createPropertyRequest.propertyInfoContent.propertyIri} would not be a subproperty of knora-api:hasValue or knora-api:hasLinkTo")
+                }
+
+                _ = if (isValueProp && isLinkProp) {
+                    throw BadRequestException(s"Property ${createPropertyRequest.propertyInfoContent.propertyIri} would be a subproperty of both knora-api:hasValue and knora-api:hasLinkTo")
+                }
+
+                // Don't allow new file value properties to be created.
 
                 _ = if (isFileValueProp) {
                     throw BadRequestException("New file value properties cannot be created")
                 }
 
                 // Don't allow new link value properties to be created directly, because we do that automatically when creating a link property.
-
-                isLinkValueProp <- propertyDefIsLinkValueProp(internalPropertyDef)
 
                 _ = if (isLinkValueProp) {
                     throw BadRequestException("New link value properties cannot be created directly. Create a link property instead.")
@@ -1576,9 +1596,6 @@ class OntologyResponderV2 extends Responder {
                 _ = if (cacheData.propertyDefs.contains(internalPropertyIri)) {
                     throw BadRequestException(s"Property ${createPropertyRequest.propertyInfoContent.propertyIri} already exists")
                 }
-
-                // Find out whether this property is a link property.
-                isLinkProp <- propertyDefIsLinkProp(internalPropertyDef)
 
                 // If we're creating a link property, make the definition of the corresponding link value property.
                 maybeLinkValuePropertyDef: Option[PropertyInfoContentV2] = if (isLinkProp) {
@@ -1591,14 +1608,6 @@ class OntologyResponderV2 extends Responder {
                     Some(linkValuePropertyDef)
                 } else {
                     None
-                }
-
-                // Check that the superproperties that are Knora properties exist.
-
-                missingSuperProperties = internalPropertyDef.subPropertyOf.filter(_.isKnoraInternalEntityIri) -- cacheData.propertyDefs.keySet
-
-                _ = if (missingSuperProperties.nonEmpty) {
-                    throw NotFoundException(s"One or more specified Knora superproperties do not exist: ${missingSuperProperties.mkString(", ")}")
                 }
 
                 // Check that the subject class constraint, if provided, designates a Knora resource class that exists.
@@ -1631,10 +1640,6 @@ class OntologyResponderV2 extends Responder {
                     }
                 }
 
-                allSuperPropertyIris: Set[SmartIri] = internalPropertyDef.subPropertyOf.flatMap {
-                    superPropertyIri => cacheData.subPropertyOfRelations.getOrElse(superPropertyIri, Set.empty[SmartIri])
-                }
-
                 // Check that the subject class, if provided, is a subclass of the subject classes of the base properties.
 
                 _ <- maybeSubjectClassConstraint match {
@@ -1643,7 +1648,7 @@ class OntologyResponderV2 extends Responder {
                             newInternalPropertyIri = internalPropertyIri,
                             constraintPredicateIri = OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri,
                             constraintValueInNewProperty = subjectClassConstraint,
-                            allSuperPropertyIris = allSuperPropertyIris
+                            allSuperPropertyIris = allKnoraSuperPropertyIris
                         )
 
                     case None => FastFuture.successful(())
@@ -1655,7 +1660,7 @@ class OntologyResponderV2 extends Responder {
                     newInternalPropertyIri = internalPropertyIri,
                     constraintPredicateIri = OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
                     constraintValueInNewProperty = objectClassConstraint,
-                    allSuperPropertyIris = allSuperPropertyIris
+                    allSuperPropertyIris = allKnoraSuperPropertyIris
                 )
 
                 // Add the property (and the link value property if needed) to the triplestore.
@@ -1724,7 +1729,7 @@ class OntologyResponderV2 extends Responder {
                 _ = storeCacheData(cacheData.copy(
                     ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> updatedOntologyMetadata),
                     propertyDefs = cacheData.propertyDefs ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> readPropertyInfo),
-                    subPropertyOfRelations = cacheData.subPropertyOfRelations + (internalPropertyIri -> (allSuperPropertyIris + internalPropertyIri))
+                    subPropertyOfRelations = cacheData.subPropertyOfRelations + (internalPropertyIri -> (allKnoraSuperPropertyIris + internalPropertyIri))
                 ))
 
                 // Read the data back from the cache.
@@ -2293,46 +2298,6 @@ class OntologyResponderV2 extends Responder {
     }
 
     /**
-      * Checks whether a property definition represents a link property, according to its rdfs:subPropertyOf.
-      *
-      * @param internalPropertyDef the property definition, in the internal schema.
-      * @return `true` if the definition represents a link property.
-      */
-    private def propertyDefIsLinkProp(internalPropertyDef: PropertyInfoContentV2): Future[Boolean] = {
-        for {
-            cacheData <- getCacheData
-
-            isLinkProp = internalPropertyDef.subPropertyOf.exists {
-                superPropIri =>
-                    cacheData.propertyDefs.get(superPropIri) match {
-                        case Some(superPropertyDef) => superPropertyDef.isLinkProp
-                        case None => false
-                    }
-            }
-        } yield isLinkProp
-    }
-
-    /**
-      * Checks whether a property definition represents a link value property, according to its rdfs:subPropertyOf.
-      *
-      * @param internalPropertyDef the property definition, in the internal schema.
-      * @return `true` if the definition represents a link value property.
-      */
-    private def propertyDefIsLinkValueProp(internalPropertyDef: PropertyInfoContentV2): Future[Boolean] = {
-        for {
-            cacheData <- getCacheData
-
-            isLinkProp = internalPropertyDef.subPropertyOf.exists {
-                superPropIri =>
-                    cacheData.propertyDefs.get(superPropIri) match {
-                        case Some(superPropertyDef) => superPropertyDef.isLinkValueProp
-                        case None => false
-                    }
-            }
-        } yield isLinkProp
-    }
-
-    /**
       * Checks whether a property definition represents a file value property, according to its rdfs:subPropertyOf.
       *
       * @param internalPropertyDef the property definition, in the internal schema.
@@ -2396,7 +2361,7 @@ class OntologyResponderV2 extends Responder {
                         case None => thisClassProp == baseClassProp
                     }
             }
-        }
+        } ++ thisClassCardinalities
     }
 
     /**
