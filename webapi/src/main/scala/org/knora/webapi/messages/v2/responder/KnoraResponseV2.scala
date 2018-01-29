@@ -140,12 +140,21 @@ case class DateValueContentV2(valueHasString: String,
       * @return a Map of knora-api value properties to numbers (year, month, day) representing the date value.
       */
     def toKnoraApiDateValueAssertions: Map[IRI, JsonLDValue] = {
-        val startDateAssertions = DateUtilV2.convertJDNToDate(valueHasStartJDN, valueHasStartPrecision, valueHasCalendar).toStartDateAssertions().map {
+        val startDateConversion = DateUtilV2.convertJDNToDate(valueHasStartJDN, valueHasStartPrecision, valueHasCalendar)
+        val startDateAssertions = startDateConversion.toStartDateAssertions().map {
             case (k: IRI, v: Int) => (k, JsonLDInt(v))
-        }
 
-        val endDateAssertions = DateUtilV2.convertJDNToDate(valueHasEndJDN, valueHasEndPrecision, valueHasCalendar).toEndDateAssertions().map {
+        } ++ startDateConversion.toStartEraAssertion().map {
+
+            case (k: IRI, v: String) => (k, JsonLDString(v))
+        }
+        val endDateConversion = DateUtilV2.convertJDNToDate(valueHasEndJDN, valueHasEndPrecision, valueHasCalendar)
+        val endDateAssertions = endDateConversion .toEndDateAssertions().map {
             case (k: IRI, v: Int) => (k, JsonLDInt(v))
+
+        } ++ endDateConversion .toEndEraAssertion().map {
+
+            case (k: IRI, v: String) => (k, JsonLDString(v))
         }
 
         startDateAssertions ++ endDateAssertions
