@@ -1112,7 +1112,7 @@ class OntologyResponderV2 extends Responder {
 
             getOntologyInfoSparql = queries.sparql.v2.txt.getOntologyInfo(
                 triplestore = settings.triplestoreType,
-                ontologyIri = internalOntologyIri.toString
+                ontologyIri = internalOntologyIri
             ).toString()
 
             getOntologyInfoResponse <- (storeManager ? SparqlConstructRequest(getOntologyInfoSparql)).mapTo[SparqlConstructResponse]
@@ -1521,7 +1521,7 @@ class OntologyResponderV2 extends Responder {
                     throw BadRequestException("No cardinalities specified")
                 }
 
-                // Check that the submitted cardinalities aren't for properties that already have cardinalities
+                // Check that the class exists, and that the submitted cardinalities aren't for properties that already have cardinalities
                 // directly defined on the class.
 
                 existingClassDef: ClassInfoContentV2 = cacheData.classDefs.getOrElse(internalClassIri,
@@ -1531,6 +1531,20 @@ class OntologyResponderV2 extends Responder {
 
                 _ = if (redundantCardinalities.nonEmpty) {
                     throw BadRequestException(s"The cardinalities of ${addCardinalitiesRequest.classInfoContent.classIri} already include the following property or properties: ${redundantCardinalities.mkString(", ")}")
+                }
+
+                // Check that the class isn't used in data.
+
+                isUsedInDataSparql = queries.sparql.v2.txt.isEntityUsed(
+                    triplestore = settings.triplestoreType,
+                    entityIri = internalClassIri,
+                    checkDataOnly = true
+                ).toString()
+
+                isUsedInDataResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isUsedInDataSparql)).mapTo[SparqlSelectResponse]
+
+                _ = if (isUsedInDataResponse.results.bindings.nonEmpty) {
+                    throw BadRequestException(s"Cardinalities cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data")
                 }
 
                 // Make an updated class definition.

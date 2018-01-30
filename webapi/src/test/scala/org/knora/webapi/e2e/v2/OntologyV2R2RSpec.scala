@@ -823,7 +823,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
     }
 
-    "add the property anything:hasNothingness to the class anything:Nothing" in {
+    "add a cardinality for the property anything:hasNothingness to the class anything:Nothing" in {
         val params =
             s"""
                |{
