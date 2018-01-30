@@ -305,7 +305,6 @@ object OntologiesRouteV2 extends Authenticator {
 
                     val requestMessage = ClassesGetRequestV2(
                         resourceClassIris = classesForResponder,
-                        responseSchema = responseSchema,
                         allLanguages = allLanguages,
                         userProfile = userProfile
                     )

@@ -115,7 +115,7 @@ class OntologyResponderV2 extends Responder {
         case SubClassesGetRequestV2(resourceClassIri, userProfile) => future2Message(sender(), getSubClassesV2(resourceClassIri, userProfile), log)
         case OntologyEntityIrisGetRequestV2(namedGraphIri, userProfile) => future2Message(sender(), getNamedGraphEntityInfoV2ForNamedGraphV2(namedGraphIri, userProfile), log)
         case OntologyEntitiesGetRequestV2(namedGraphIris, responseSchema, allLanguages, userProfile) => future2Message(sender(), getOntologyEntitiesV2(namedGraphIris, responseSchema, allLanguages, userProfile), log)
-        case ClassesGetRequestV2(resourceClassIris, responseSchema, allLanguages, userProfile) => future2Message(sender(), getClassDefinitionsV2(resourceClassIris, responseSchema, allLanguages, userProfile), log)
+        case ClassesGetRequestV2(resourceClassIris, allLanguages, userProfile) => future2Message(sender(), getClassDefinitionsV2(resourceClassIris, allLanguages, userProfile), log)
         case PropertiesGetRequestV2(propertyIris, allLanguages, userProfile) => future2Message(sender(), getPropertyDefinitionsV2(propertyIris, allLanguages, userProfile), log)
         case OntologyMetadataGetRequestV2(projectIris, userProfile) => future2Message(sender(), getOntologyMetadataForProjectsV2(projectIris, userProfile), log)
         case createOntologyRequest: CreateOntologyRequestV2 => future2Message(sender(), createOntology(createOntologyRequest), log)
@@ -1021,7 +1021,7 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[ReadOntologiesV2]].
       */
-    private def getClassDefinitionsV2(classIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadOntologiesV2] = {
+    private def getClassDefinitionsV2(classIris: Set[SmartIri], allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadOntologiesV2] = {
         for {
             cacheData <- getCacheData
 
@@ -1455,7 +1455,6 @@ class OntologyResponderV2 extends Responder {
 
                 response <- getClassDefinitionsV2(
                     classIris = Set(internalClassIri),
-                    responseSchema = ApiV2WithValueObjects,
                     allLanguages = true,
                     userProfile = createClassRequest.userProfile
                 )
@@ -1626,7 +1625,6 @@ class OntologyResponderV2 extends Responder {
 
                 response <- getClassDefinitionsV2(
                     classIris = Set(internalClassIri),
-                    responseSchema = ApiV2WithValueObjects,
                     allLanguages = true,
                     userProfile = addCardinalitiesRequest.userProfile
                 )
@@ -2213,8 +2211,7 @@ class OntologyResponderV2 extends Responder {
                 response <- getClassDefinitionsV2(
                     classIris = Set(internalClassIri),
                     allLanguages = true,
-                    userProfile = changeClassLabelsOrCommentsRequest.userProfile,
-                    responseSchema = ApiV2WithValueObjects
+                    userProfile = changeClassLabelsOrCommentsRequest.userProfile
                 )
             } yield response
         }
