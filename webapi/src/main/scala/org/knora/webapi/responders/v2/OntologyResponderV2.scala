@@ -1976,39 +1976,24 @@ class OntologyResponderV2 extends Responder {
         def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologiesV2] = {
             for {
                 cacheData <- getCacheData
-                currentPropertyDef = cacheData.propertyDefs.getOrElse(internalPropertyIri, throw NotFoundException(s"Property ${changePropertyLabelsOrCommentsRequest.propertyIri} not found"))
+                currentReadPropertyInfo: ReadPropertyInfoV2 = cacheData.propertyDefs.getOrElse(internalPropertyIri, throw NotFoundException(s"Property ${changePropertyLabelsOrCommentsRequest.propertyIri} not found"))
 
                 // Check that the ontology exists and has not been updated by another user since the client last read it.
                 _ <- checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = changePropertyLabelsOrCommentsRequest.lastModificationDate)
 
                 // Check that the new labels/comments are different from the current ones.
 
-                currentLabelsOrComments = currentPropertyDef.entityInfoContent.predicates.getOrElse(changePropertyLabelsOrCommentsRequest.predicateToUpdate, throw InconsistentTriplestoreDataException(s"Property $internalPropertyIri has no ${changePropertyLabelsOrCommentsRequest.predicateToUpdate}")).objectsWithLang
+                currentLabelsOrComments: Map[String, String] = currentReadPropertyInfo.entityInfoContent.predicates.getOrElse(changePropertyLabelsOrCommentsRequest.predicateToUpdate, throw InconsistentTriplestoreDataException(s"Property $internalPropertyIri has no ${changePropertyLabelsOrCommentsRequest.predicateToUpdate}")).objectsWithLang
 
                 _ = if (currentLabelsOrComments == changePropertyLabelsOrCommentsRequest.newObjects) {
                     throw BadRequestException(s"The submitted objects of ${changePropertyLabelsOrCommentsRequest.propertyIri} are the same as the current ones in property ${changePropertyLabelsOrCommentsRequest.propertyIri}")
                 }
 
-                // Make a definition of the property with the new labels/comments.
+                // If this is a link property, also change the labels/comments of the corresponding link value property.
 
-                newLabelOrCommentPredicate = PredicateInfoV2(
-                    predicateIri = changePropertyLabelsOrCommentsRequest.predicateToUpdate,
-                    objectsWithLang = changePropertyLabelsOrCommentsRequest.newObjects
-                )
-
-                newInternalPropertyDef = currentPropertyDef.entityInfoContent.copy(
-                    predicates = currentPropertyDef.entityInfoContent.predicates + (changePropertyLabelsOrCommentsRequest.predicateToUpdate -> newLabelOrCommentPredicate)
-                )
-
-                // If this is a link property, make a definition of the corresponding link value property with the new labels/comments.
-
-                maybeNewLinkValuePropertyDef = if (currentPropertyDef.isLinkProp) {
+                maybeCurrentLinkValueReadPropertyInfo: Option[ReadPropertyInfoV2] = if (currentReadPropertyInfo.isLinkProp) {
                     val linkValuePropertyIri = internalPropertyIri.fromLinkPropToLinkValueProp
-                    val currentLinkValuePropertyDef = cacheData.propertyDefs.getOrElse(linkValuePropertyIri, throw InconsistentTriplestoreDataException(s"Link value property $linkValuePropertyIri not found"))
-
-                    Some(currentLinkValuePropertyDef.entityInfoContent.copy(
-                        predicates = currentPropertyDef.entityInfoContent.predicates + (changePropertyLabelsOrCommentsRequest.predicateToUpdate -> newLabelOrCommentPredicate)
-                    ))
+                    Some(cacheData.propertyDefs.getOrElse(linkValuePropertyIri, throw InconsistentTriplestoreDataException(s"Link value property $linkValuePropertyIri not found")))
                 } else {
                     None
                 }
@@ -2022,7 +2007,7 @@ class OntologyResponderV2 extends Responder {
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
                     propertyIri = internalPropertyIri,
-                    maybeLinkValuePropertyIri = maybeNewLinkValuePropertyDef.map(_.propertyIri),
+                    maybeLinkValuePropertyIri = maybeCurrentLinkValueReadPropertyInfo.map(_.entityInfoContent.propertyIri),
                     predicateToUpdate = changePropertyLabelsOrCommentsRequest.predicateToUpdate,
                     newObjects = changePropertyLabelsOrCommentsRequest.newObjects,
                     lastModificationDate = changePropertyLabelsOrCommentsRequest.lastModificationDate,
@@ -2039,31 +2024,45 @@ class OntologyResponderV2 extends Responder {
                 // we have to undo the SPARQL-escaping of the input.
 
                 loadedPropertyDef <- loadPropertyDefinition(internalPropertyIri)
-                unescapedNewPropertyDef = newInternalPropertyDef.unescape
+
+                unescapedNewLabelOrCommentPredicate: PredicateInfoV2 = PredicateInfoV2(
+                    predicateIri = changePropertyLabelsOrCommentsRequest.predicateToUpdate,
+                    objectsWithLang = changePropertyLabelsOrCommentsRequest.newObjects
+                ).unescape
+
+                unescapedNewPropertyDef: PropertyInfoContentV2 = currentReadPropertyInfo.entityInfoContent.copy(
+                    predicates = currentReadPropertyInfo.entityInfoContent.predicates + (changePropertyLabelsOrCommentsRequest.predicateToUpdate -> unescapedNewLabelOrCommentPredicate)
+                )
 
                 _ = if (loadedPropertyDef != unescapedNewPropertyDef) {
                     throw InconsistentTriplestoreDataException(s"Attempted to save property definition $unescapedNewPropertyDef, but $loadedPropertyDef was saved")
                 }
 
-                maybeLoadedLinkValuePropertyDefFuture: Option[Future[PropertyInfoContentV2]] = maybeNewLinkValuePropertyDef.map(linkValuePropertyDef => loadPropertyDefinition(linkValuePropertyDef.propertyIri))
-                maybeLoadedLinkValuePropertyDef: Option[PropertyInfoContentV2] <- ActorUtil.optionFuture2FutureOption(maybeLoadedLinkValuePropertyDefFuture)
-                maybeUnescapedNewLinkValuePropertyDef = maybeNewLinkValuePropertyDef.map(_.unescape)
+                maybeLoadedLinkValuePropertyDefFuture: Option[Future[PropertyInfoContentV2]] = maybeCurrentLinkValueReadPropertyInfo.map {
+                    linkValueReadPropertyInfo => loadPropertyDefinition(linkValueReadPropertyInfo.entityInfoContent.propertyIri)
+                }
 
-                _ = (maybeLoadedLinkValuePropertyDef, maybeUnescapedNewLinkValuePropertyDef) match {
-                    case (Some(loadedLinkValuePropertyDef), Some(unescapedNewLinkPropertyDef)) =>
+                maybeLoadedLinkValuePropertyDef: Option[PropertyInfoContentV2] <- ActorUtil.optionFuture2FutureOption(maybeLoadedLinkValuePropertyDefFuture)
+
+                maybeUnescapedNewLinkValuePropertyDef: Option[PropertyInfoContentV2] = maybeLoadedLinkValuePropertyDef.map {
+                    loadedLinkValuePropertyDef =>
+                        val unescapedNewLinkPropertyDef = maybeCurrentLinkValueReadPropertyInfo.get.entityInfoContent.copy(
+                                predicates = currentReadPropertyInfo.entityInfoContent.predicates + (changePropertyLabelsOrCommentsRequest.predicateToUpdate -> unescapedNewLabelOrCommentPredicate)
+                            )
+
                         if (loadedLinkValuePropertyDef != unescapedNewLinkPropertyDef) {
                             throw InconsistentTriplestoreDataException(s"Attempted to save link value property definition $unescapedNewLinkPropertyDef, but $loadedLinkValuePropertyDef was saved")
                         }
 
-                    case _ => ()
+                        unescapedNewLinkPropertyDef
                 }
 
                 // Update the ontology cache, using the unescaped definition(s).
 
-                readPropertyInfo = ReadPropertyInfoV2(
+                newReadPropertyInfo = ReadPropertyInfoV2(
                     entityInfoContent = unescapedNewPropertyDef,
                     isEditable = true,
-                    isLinkProp = currentPropertyDef.isLinkProp
+                    isLinkProp = currentReadPropertyInfo.isLinkProp
                 )
 
                 maybeLinkValuePropertyCacheEntry: Option[(SmartIri, ReadPropertyInfoV2)] = maybeUnescapedNewLinkValuePropertyDef.map {
@@ -2080,7 +2079,7 @@ class OntologyResponderV2 extends Responder {
 
                 _ = storeCacheData(cacheData.copy(
                     ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> updatedOntologyMetadata),
-                    propertyDefs = cacheData.propertyDefs ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> readPropertyInfo)
+                    propertyDefs = cacheData.propertyDefs ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> newReadPropertyInfo)
                 ))
 
                 // Read the data back from the cache.
@@ -2110,6 +2109,122 @@ class OntologyResponderV2 extends Responder {
                 iri = internalOntologyIri.toString,
                 task = () => makeTaskFuture(
                     internalPropertyIri = internalPropertyIri,
+                    internalOntologyIri = internalOntologyIri
+                )
+            )
+        } yield taskResult
+    }
+
+
+    /**
+      * Changes the values of `rdfs:label` or `rdfs:comment` in a class definition.
+      *
+      * @param changeClassLabelsOrCommentsRequest the request to change the class's labels or comments.
+      * @return a [[ReadOntologiesV2]] containing the modified class definition.
+      */
+    private def changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest: ChangeClassLabelsOrCommentsRequestV2): Future[ReadOntologiesV2] = {
+        def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologiesV2] = {
+            for {
+                cacheData <- getCacheData
+                currentReadClassInfo: ReadClassInfoV2 = cacheData.classDefs.getOrElse(internalClassIri, throw NotFoundException(s"Class ${changeClassLabelsOrCommentsRequest.classIri} not found"))
+
+                // Check that the ontology exists and has not been updated by another user since the client last read it.
+                _ <- checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = changeClassLabelsOrCommentsRequest.lastModificationDate)
+
+                // Check that the new labels/comments are different from the current ones.
+
+                currentLabelsOrComments = currentReadClassInfo.entityInfoContent.predicates.getOrElse(changeClassLabelsOrCommentsRequest.predicateToUpdate, throw InconsistentTriplestoreDataException(s"Class $internalClassIri has no ${changeClassLabelsOrCommentsRequest.predicateToUpdate}")).objectsWithLang
+
+                _ = if (currentLabelsOrComments == changeClassLabelsOrCommentsRequest.newObjects) {
+                    throw BadRequestException(s"The submitted objects of ${changeClassLabelsOrCommentsRequest.predicateToUpdate} are the same as the current ones in class ${changeClassLabelsOrCommentsRequest.classIri}")
+                }
+
+                // Do the update.
+
+                currentTime: Instant = Instant.now
+
+                updateSparql = queries.sparql.v2.txt.changeClassLabelsOrComments(
+                    triplestore = settings.triplestoreType,
+                    ontologyNamedGraphIri = internalOntologyIri,
+                    ontologyIri = internalOntologyIri,
+                    classIri = internalClassIri,
+                    predicateToUpdate = changeClassLabelsOrCommentsRequest.predicateToUpdate,
+                    newObjects = changeClassLabelsOrCommentsRequest.newObjects,
+                    lastModificationDate = changeClassLabelsOrCommentsRequest.lastModificationDate,
+                    currentTime = currentTime
+                ).toString()
+
+                _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
+
+                // Check that the ontology's last modification date was updated.
+
+                _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
+
+                // Check that the data that was saved corresponds to the data that was submitted. To make this comparison,
+                // we have to undo the SPARQL-escaping of the input.
+
+                loadedClassDef: ClassInfoContentV2 <- loadClassDefinition(internalClassIri)
+
+                unescapedNewLabelOrCommentPredicate = PredicateInfoV2(
+                    predicateIri = changeClassLabelsOrCommentsRequest.predicateToUpdate,
+                    objectsWithLang = changeClassLabelsOrCommentsRequest.newObjects
+                ).unescape
+
+                unescapedNewClassDef: ClassInfoContentV2 = currentReadClassInfo.entityInfoContent.copy(
+                    predicates = currentReadClassInfo.entityInfoContent.predicates + (changeClassLabelsOrCommentsRequest.predicateToUpdate -> unescapedNewLabelOrCommentPredicate)
+                )
+
+                _ = if (loadedClassDef != unescapedNewClassDef) {
+                    throw InconsistentTriplestoreDataException(s"Attempted to save class definition $unescapedNewClassDef, but $loadedClassDef was saved")
+                }
+
+                // Update the ontology cache, using the unescaped definition(s).
+
+                newReadClassInfo = currentReadClassInfo.copy(
+                    entityInfoContent = unescapedNewClassDef
+                )
+                
+                updatedOntologyMetadata = cacheData.ontologyMetadata(internalOntologyIri).copy(
+                    lastModificationDate = Some(currentTime)
+                )
+
+                _ = storeCacheData(cacheData.copy(
+                    ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> updatedOntologyMetadata),
+                    classDefs = cacheData.classDefs + (internalClassIri -> newReadClassInfo)
+                ))
+
+                // Read the data back from the cache.
+
+                response <- getClassDefinitionsV2(
+                    classIris = Set(internalClassIri),
+                    allLanguages = true,
+                    userProfile = changeClassLabelsOrCommentsRequest.userProfile,
+                    responseSchema = ApiV2WithValueObjects
+                )
+            } yield response
+        }
+
+        for {
+            userProfile <- FastFuture.successful(changeClassLabelsOrCommentsRequest.userProfile)
+
+            externalClassIri = changeClassLabelsOrCommentsRequest.classIri
+            externalOntologyIri = externalClassIri.getOntologyFromEntity
+
+            _ <- checkOntologyAndEntityIrisForUpdate(
+                externalOntologyIri = externalOntologyIri,
+                externalEntityIri = externalClassIri,
+                userProfile = userProfile
+            )
+
+            internalClassIri = externalClassIri.toOntologySchema(InternalSchema)
+            internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+
+            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID = changeClassLabelsOrCommentsRequest.apiRequestID,
+                iri = internalOntologyIri.toString,
+                task = () => makeTaskFuture(
+                    internalClassIri = internalClassIri,
                     internalOntologyIri = internalOntologyIri
                 )
             )

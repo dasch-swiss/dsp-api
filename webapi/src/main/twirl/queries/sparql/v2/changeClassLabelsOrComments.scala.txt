@@ -22,23 +22,21 @@
 @import java.time.Instant
 
 @*
- * Changes the labels or comments of a property.
+ * Changes the labels or comments of a class.
  *
  * @param triplestore the name of the triplestore being used.
  * @param ontologyNamedGraphIri the IRI of the named graph where the ontology is stored.
  * @param ontologyIri the IRI of the ontology to be modified.
- * @param propertyIri the IRI of the property to be modified.
- * @param maybeLinkValuePropertyIri the IRI of the corresponding link value property, if any, to be updated.
+ * @param classIri the IRI of the class to be modified.
  * @param predicateToUpdate rdfs:label or rdfs:comment.
- * @param newObjects the property's new labels or comments (a map of language codes to values).
+ * @param newObjects the class's new labels or comments (a map of language codes to values).
  * @param lastModificationDate the xsd:dateTimeStamp that was attached to the ontology when it was last modified.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
  *@
 @(triplestore: String,
   ontologyNamedGraphIri: SmartIri,
   ontologyIri: SmartIri,
-  propertyIri: SmartIri,
-  maybeLinkValuePropertyIri: Option[SmartIri],
+  classIri: SmartIri,
   predicateToUpdate: SmartIri,
   newObjects: Map[String, String],
   lastModificationDate: Instant,
@@ -53,19 +51,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 DELETE {
     GRAPH ?ontologyNamedGraph {
         ?ontology knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
-        ?property <@predicateToUpdate> ?oldObj .
-
-        @maybeLinkValuePropertyIri match {
-
-            case Some(linkValuePropertyIri) => {
-
-                <@linkValuePropertyIri> <@predicateToUpdate> ?oldLinkValuePropertyObj .
-
-            }
-
-            case None => {}
-
-        }
+        ?class <@predicateToUpdate> ?oldObj .
     }
 } INSERT {
     GRAPH ?ontologyNamedGraph {
@@ -73,23 +59,7 @@ DELETE {
 
         @for((newObjLang, newObjText) <- newObjects) {
 
-            ?property <@predicateToUpdate> """@newObjText"""@@@newObjLang .
-
-        }
-
-        @maybeLinkValuePropertyIri match {
-
-            case Some(linkValuePropertyIri) => {
-
-                @for((newObjLang, newObjText) <- newObjects) {
-
-                    <@linkValuePropertyIri> <@predicateToUpdate> """@newObjText"""@@@newObjLang .
-
-                }
-
-            }
-
-            case None => {}
+            ?class <@predicateToUpdate> """@newObjText"""@@@newObjLang .
 
         }
     }
@@ -101,24 +71,12 @@ DELETE {
 WHERE {
     BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
     BIND(IRI("@ontologyIri") AS ?ontology)
-    BIND(IRI("@propertyIri") AS ?property)
+    BIND(IRI("@classIri") AS ?class)
 
     GRAPH ?ontologyNamedGraph {
         ?ontology rdf:type owl:Ontology ;
             knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
 
-        ?property <@predicateToUpdate> ?oldObj .
-
-        @maybeLinkValuePropertyIri match {
-
-            case Some(linkValuePropertyIri) => {
-
-                <@linkValuePropertyIri> <@predicateToUpdate> ?oldLinkValuePropertyObj .
-
-            }
-
-            case None => {}
-
-        }
+        ?class <@predicateToUpdate> ?oldObj .
     }
 }
