@@ -1423,7 +1423,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
                         objectsWithLang = Map(
                             "en" -> "Represents nothing",
-                            "de" -> "Stellt Nichts dar"
+                            "de" -> "Stellt nichts dar"
                         )
                     )
                 ),
@@ -1450,6 +1450,73 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     val readClassInfo = ontology.classes(classIri)
                     readClassInfo.entityInfoContent should ===(classInfoContent)
                     readClassInfo.allCardinalities.keySet should ===(expectedProperties)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "change the labels of a class" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+            val newObjects = Map(
+                "en" -> "nothing",
+                "fr" -> "rien"
+            )
+
+            actorUnderTest ! ChangeClassLabelsOrCommentsRequestV2(
+                classIri = classIri,
+                predicateToUpdate = OntologyConstants.Rdfs.Label.toSmartIri,
+                newObjects = newObjects,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readClassInfo = ontology.classes(classIri)
+                    readClassInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objectsWithLang should ===(newObjects)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "change the comments of a class" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+            val newObjects = Map(
+                "en" -> "Represents nothing",
+                "fr" -> "ne représente rien"
+            )
+
+            // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
+            val newObjectsUnescaped = newObjects.map {
+                case (lang, obj) => lang -> stringFormatter.fromSparqlEncodedString(obj)
+            }
+
+            actorUnderTest ! ChangeClassLabelsOrCommentsRequestV2(
+                classIri = classIri,
+                predicateToUpdate = OntologyConstants.Rdfs.Comment.toSmartIri,
+                newObjects = newObjects,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readClassInfo = ontology.classes(classIri)
+                    readClassInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objectsWithLang should ===(newObjectsUnescaped)
 
                     val metadata = ontology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))

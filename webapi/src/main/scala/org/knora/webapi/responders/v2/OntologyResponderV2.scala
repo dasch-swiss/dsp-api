@@ -121,6 +121,7 @@ class OntologyResponderV2 extends Responder {
         case createOntologyRequest: CreateOntologyRequestV2 => future2Message(sender(), createOntology(createOntologyRequest), log)
         case changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2 => future2Message(sender(), changeOntologyMetadata(changeOntologyMetadataRequest), log)
         case createClassRequest: CreateClassRequestV2 => future2Message(sender(), createClass(createClassRequest), log)
+        case changeClassLabelsOrCommentsRequest: ChangeClassLabelsOrCommentsRequestV2 => future2Message(sender(), changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest), log)
         case addCardinalitiesToClassRequest: AddCardinalitiesToClassRequestV2 => future2Message(sender(), addCardinalitiesToClass(addCardinalitiesToClassRequest), log)
         case createPropertyRequest: CreatePropertyRequestV2 => future2Message(sender(), createProperty(createPropertyRequest), log)
         case changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2 => future2Message(sender(), changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest), log)
@@ -2183,7 +2184,7 @@ class OntologyResponderV2 extends Responder {
                 newReadClassInfo = currentReadClassInfo.copy(
                     entityInfoContent = unescapedNewClassDef
                 )
-                
+
                 updatedOntologyMetadata = cacheData.ontologyMetadata(internalOntologyIri).copy(
                     lastModificationDate = Some(currentTime)
                 )
