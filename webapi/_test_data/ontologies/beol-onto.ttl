@@ -1558,7 +1558,7 @@
 ###  http://www.knora.org/ontology/beol#StandoffFigureTag
 :StandoffFigureTag  rdf:type owl:Class ;
 
-             rdfs:subClassOf knora-base:StandoffUriTag ;
+             rdfs:subClassOf knora-base:StandoffLinkTag ;
 
              rdfs:comment "represents a figure in text"@en .
 
