@@ -20,10 +20,7 @@ object KnoraExceptionHandler {
 
         /* TODO: Find out which response format should be generated, by looking at what the client is requesting / accepting (issue #292) */
 
-        case rre: RequestRejectedException => {
-            log.info("client request rejected: ", rre)
-            complete(exceptionToJsonHttpResponse(rre, settingsImpl))
-        }
+        case rre: RequestRejectedException => complete(exceptionToJsonHttpResponse(rre, settingsImpl))
 
         case other =>
             extractUri { uri =>
