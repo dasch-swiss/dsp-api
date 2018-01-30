@@ -352,7 +352,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             }
         }
 
-        "create an ordinary property in the 'anything' ontology as a subproperty of knora-api:hasValue and schema:name" in {
+        "create a property anything:hasName as a subproperty of knora-api:hasValue and schema:name" in {
             val params =
                 """
                   |{
@@ -363,8 +363,8 @@ class OntologyV2R2RSpec extends R2RSpec {
                   |      "anything:hasName" : {
                   |        "@id" : "anything:hasName",
                   |        "@type" : "owl:ObjectProperty",
-                  |        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
                   |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/anything/v2#Thing",
+                  |        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
                   |        "rdfs:comment" : [ {
                   |          "@language" : "en",
                   |          "@value" : "The name of a Thing"
@@ -608,7 +608,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
     }
 
-
     "create a class anything:Nothing with no properties" in {
         val params =
             s"""
@@ -656,6 +655,118 @@ class OntologyV2R2RSpec extends R2RSpec {
             // Convert the response to an InputOntologiesV2 and compare the relevant part of it to the request.
             val responseAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
             responseAsInput.ontologies.head.classes should ===(paramsAsInput.ontologies.head.classes)
+
+            // Check that cardinalities were inherited from knora-api:Resource.
+            getPropertyIrisFromResourceClassResponse(responseJsonDoc) should ===(expectedProperties)
+
+            // Check that the ontology's last modification date was updated.
+            val newAnythingLastModDate = responseAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get
+            assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+            anythingLastModDate = newAnythingLastModDate
+        }
+    }
+
+    "create a property anything:hasNothingness with knora-api:subjectType anything:Nothing" in {
+        val params =
+            s"""
+              |{
+              |  "knora-api:hasOntologies" : {
+              |    "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+              |    "@type" : "owl:Ontology",
+              |    "knora-api:hasProperties" : {
+              |      "anything:hasNothingness" : {
+              |        "@id" : "anything:hasNothingness",
+              |        "@type" : "owl:ObjectProperty",
+              |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/anything/v2#Nothing",
+              |        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#BooleanValue",
+              |        "rdfs:comment" : {
+              |          "@language" : "en",
+              |          "@value" : "Indicates whether a Nothing has nothingness"
+              |        },
+              |        "rdfs:label" : {
+              |          "@language" : "en",
+              |          "@value" : "has nothingness"
+              |        },
+              |        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+              |      }
+              |    },
+              |    "knora-api:lastModificationDate" : "$anythingLastModDate"
+              |  },
+              |  "@context" : {
+              |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+              |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+              |    "owl" : "http://www.w3.org/2002/07/owl#",
+              |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+              |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+              |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+              |  }
+              |}
+            """.stripMargin
+
+        // Convert the submitted JSON-LD to an InputOntologiesV2, without SPARQL-escaping, so we can compare it to the response.
+        val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+
+        Post("/v2/ontologies/properties", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+            assert(status == StatusCodes.OK, response.toString)
+            val responseJsonDoc = responseToJsonLDDocument(response)
+
+            // Comvert the response to an InputOntologiesV2 and compare the relevant part of it to the request.
+            val responseAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+            responseAsInput.ontologies.head.properties should ===(paramsAsInput.ontologies.head.properties)
+
+            // Check that the ontology's last modification date was updated.
+            val newAnythingLastModDate = responseAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get
+            assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+            anythingLastModDate = newAnythingLastModDate
+        }
+    }
+
+    "add the property anything:hasNothingness to the class anything:Nothing" in {
+        val params =
+            s"""
+               |{
+               |  "knora-api:hasOntologies" : {
+               |    "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+               |    "@type" : "owl:Ontology",
+               |    "knora-api:hasClasses" : {
+               |      "anything:Nothing" : {
+               |        "@id" : "anything:Nothing",
+               |        "@type" : "owl:Class",
+               |        "rdfs:subClassOf" : [
+               |            {
+               |                "@type": "http://www.w3.org/2002/07/owl#Restriction",
+               |                "owl:maxCardinality": 1,
+               |                "owl:onProperty": "http://0.0.0.0:3333/ontology/anything/v2#hasNothingness"
+               |            }
+               |        ]
+               |      }
+               |    },
+               |    "knora-api:lastModificationDate" : "$anythingLastModDate"
+               |  },
+               |  "@context" : {
+               |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+               |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+               |    "owl" : "http://www.w3.org/2002/07/owl#",
+               |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+               |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+               |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+               |  }
+               |}
+            """.stripMargin
+
+        val expectedProperties: Set[SmartIri] = KnoraApiV2WithValueObjects.Resource.allCardinalities.keySet +
+            "http://0.0.0.0:3333/ontology/anything/v2#hasNothingness".toSmartIri
+
+        // Convert the submitted JSON-LD to an InputOntologiesV2, without SPARQL-escaping, so we can compare it to the response.
+        val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+
+        Post("/v2/ontologies/cardinalities", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+            assert(status == StatusCodes.OK, response.toString)
+            val responseJsonDoc = responseToJsonLDDocument(response)
+
+            // Convert the response to an InputOntologiesV2 and compare the relevant part of it to the request.
+            val responseAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+            responseAsInput.ontologies.head.classes.head._2.directCardinalities should ===(paramsAsInput.ontologies.head.classes.head._2.directCardinalities)
 
             // Check that cardinalities were inherited from knora-api:Resource.
             getPropertyIrisFromResourceClassResponse(responseJsonDoc) should ===(expectedProperties)

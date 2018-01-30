@@ -1540,7 +1540,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the new cardinalities are valid.
 
-                allBaseClassIris: Set[SmartIri] = internalClassDef.subClassOf.flatMap {
+                allBaseClassIris: Set[SmartIri] = newInternalClassDef.subClassOf.flatMap {
                     baseClassIri => cacheData.resourceSubClassOfRelations.getOrElse(baseClassIri, Set.empty[SmartIri])
                 } + internalClassIri
 

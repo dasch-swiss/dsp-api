@@ -201,7 +201,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        "create an ordinary property in the 'anything' ontology as a subproperty of knora-api:hasValue and schema:name" in {
+        "create a property anything:hasName as a subproperty of knora-api:hasValue and schema:name" in {
 
             actorUnderTest ! OntologyMetadataGetRequestV2(
                 projectIris = Set(anythingProjectIri),
@@ -1415,13 +1415,15 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
                         objectsWithLang = Map(
-                            "en" -> "nothing"
+                            "en" -> "nothing",
+                            "de" -> "Nichts"
                         )
                     ),
                     OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
                         objectsWithLang = Map(
-                            "en" -> "Represents nothing"
+                            "en" -> "Represents nothing",
+                            "de" -> "Stellt Nichts dar"
                         )
                     )
                 ),
@@ -1794,6 +1796,108 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case msg: akka.actor.Status.Failure =>
                     if (printErrorMessages) println(msg.cause.getMessage)
                     msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "create a property anything:hasNothingness with knora-api:subjectType anything:Nothing" in {
+            val propertyIri = AnythingOntologyIri.makeEntityIri("hasNothingness")
+
+            val propertyInfoContent = PropertyInfoContentV2(
+                propertyIri = propertyIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.ObjectProperty)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                        objects = Set(AnythingOntologyIri.makeEntityIri("Nothing").toString)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                        objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "has nothingness",
+                            "de" -> "hat Nichtsein"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "Indicates whether a Nothing has nothingness",
+                            "de" -> "Anzeigt, ob ein Nichts Nichtsein hat"
+                        )
+                    )
+                ),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreatePropertyRequestV2(
+                propertyInfoContent = propertyInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val property = ontology.properties(propertyIri)
+                    property.entityInfoContent should ===(propertyInfoContent)
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "add the property anything:hasNothingness to the class anything:Nothing" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    )
+                ),
+                directCardinalities = Map(
+                    AnythingOntologyIri.makeEntityIri("hasNothingness") -> Cardinality.MayHaveOne
+                ),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! AddCardinalitiesToClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            val expectedProperties = Set(
+                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri,
+                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri,
+                AnythingOntologyIri.makeEntityIri("hasNothingness")
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readClassInfo = ontology.classes(classIri)
+                    readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
+                    readClassInfo.allCardinalities.keySet should ===(expectedProperties)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
             }
         }
     }
