@@ -1,0 +1,54 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Gets all information about a single or all user.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param maybeIri the users's IRI.
+ * @param maybeEmail the users's email.
+ *@
+@(triplestore: String,
+  maybeIri: Option[IRI],
+  maybeEmail: Option[String])
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+CONSTRUCT { ?s ?p ?o . }
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
+WHERE {
+
+    @if(maybeIri.nonEmpty) {
+        BIND(IRI("@maybeIri") as ?s)
+    }
+
+    @if(maybeEmail.nonEmpty) {
+        ?s knora-base:email "@maybeEmail.get"^^xsd:string .
+    }
+
+    ?s rdf:type knora-base:User .
+    ?s ?p ?o .
+}

@@ -12,7 +12,8 @@
 @prefix images: <http://www.knora.org/ontology/00FF/images#> .
 @prefix : <http://www.knora.org/ontology/00FF/images#> .
 
-<http://www.knora.org/ontology/00FF/images> rdf:type owl:Ontology .
+<http://www.knora.org/ontology/00FF/images> rdf:type owl:Ontology ;
+    rdfs:label "The images demo ontology" .
 
 ##########################################################
 #

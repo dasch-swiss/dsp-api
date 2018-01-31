@@ -21,7 +21,8 @@
 package org.knora.webapi.messages.store.triplestoremessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.util.ErrorHandlingMap
+import arq.iri
+import org.knora.webapi.util.{ErrorHandlingMap, SmartIri}
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, TriplestoreResponseException}
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsObject, JsString, JsValue, JsonFormat, NullOptions, RootJsonFormat, _}
 
@@ -129,7 +130,7 @@ case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreReq
   *
   * @param statements a map of subject IRIs to statements about each subject.
   */
-case class SparqlExtendedConstructResponse(statements: Map[IRI, Map[IRI, Seq[StringV2]]])
+case class SparqlExtendedConstructResponse(statements: Map[IRI, Map[IRI, Seq[LiteralV2]]])
 
 /**
   * Represents a SPARQL Update operation to be performed.
@@ -232,12 +233,41 @@ case class RdfDataObject(path: String, name: String)
 
 
 /**
+  * A case class for representing a literal coming from the triplestore. There are different subclasses
+  * representing literals with the extended type-information stored in the triplestore.
+  *
+  * @param value
+  */
+abstract class LiteralV2(value: String)
+
+/**
+  * Represents an object IRI.
+  *
+  * @param value the IRI.
+  */
+case class IriLiteralV2(value: IRI) extends LiteralV2(value = value.toString)
+
+/**
   * Represents a string with an optional language tag.
   *
   * @param value    the string value.
   * @param language the optional language tag.
   */
-case class StringV2(value: String, language: Option[String] = None)
+case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2(value = value)
+
+/**
+  * Represents a boolean value.
+  *
+  * @param value the boolean value.
+  */
+case class BooleanLiteralV2(value: Boolean) extends LiteralV2(value = value.toString)
+
+/**
+  * Represents an integer value.
+  *
+  * @param value the boolean value.
+  */
+case class IntLiteralV2(value: Int) extends LiteralV2(value = value.toString)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
@@ -247,14 +277,14 @@ case class StringV2(value: String, language: Option[String] = None)
   */
 trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    implicit object StringV2Format extends JsonFormat[StringV2] {
+    implicit object LiteralV2Format extends JsonFormat[StringLiteralV2] {
         /**
-          * Converts a [[StringV2]] to a [[JsValue]].
+          * Converts a [[StringLiteralV2]] to a [[JsValue]].
           *
-          * @param string a [[StringV2]].
+          * @param string a [[StringLiteralV2]].
           * @return a [[JsValue]].
           */
-        def write(string: StringV2): JsValue = {
+        def write(string: StringLiteralV2): JsValue = {
 
             if (string.language.isDefined) {
                 // have language tag
@@ -275,24 +305,24 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         }
 
         /**
-          * Converts a [[JsValue]] to a [[StringV2]].
+          * Converts a [[JsValue]] to a [[StringLiteralV2]].
           *
           * @param json a [[JsValue]].
-          * @return a [[StringV2]].
+          * @return a [[StringLiteralV2]].
           */
-        def read(json: JsValue): StringV2 = json match {
+        def read(json: JsValue): StringLiteralV2 = json match {
             case stringWithLang: JsObject => stringWithLang.getFields("value", "language") match {
-                case Seq(JsString(value), JsString(language)) => StringV2(
+                case Seq(JsString(value), JsString(language)) => StringLiteralV2(
                     value = value,
                     language = Some(language)
                 )
-                case Seq(JsString(value)) => StringV2(
+                case Seq(JsString(value)) => StringLiteralV2(
                     value = value,
                     language = None
                 )
                 case _ => throw DeserializationException("JSON object with 'value', or 'value' and 'language' fields expected.")
             }
-            case JsString(value) => StringV2(value, None)
+            case JsString(value) => StringLiteralV2(value, None)
             case _ => throw DeserializationException("JSON object with 'value', or 'value' and 'language' expected. ")
         }
     }

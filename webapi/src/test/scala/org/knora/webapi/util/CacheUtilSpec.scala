@@ -23,7 +23,7 @@ package org.knora.webapi.util
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.{CoreSpec, SharedAdminTestData}
+import org.knora.webapi.{CoreSpec, SharedTestDataV1}
 
 object CacheUtilSpec {
     val config = ConfigFactory.parseString(
@@ -44,8 +44,8 @@ class CacheUtilSpec extends CoreSpec("CachingTestSystem") with ImplicitSender wi
     "Caching" should {
 
         "allow to set and get the value " in {
-            CacheUtil.put(cacheName, sessionId, SharedAdminTestData.rootUser)
-            CacheUtil.get(cacheName, sessionId) should be(Some(SharedAdminTestData.rootUser))
+            CacheUtil.put(cacheName, sessionId, SharedTestDataV1.rootUser)
+            CacheUtil.get(cacheName, sessionId) should be(Some(SharedTestDataV1.rootUser))
         }
 
         "return none if key is not found " in {

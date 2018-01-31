@@ -1,20 +1,23 @@
 {
-  "knora-api:hasClasses" : { },
-  "knora-api:hasOntologiesWithClasses" : { },
-  "knora-api:hasProperties" : {
-    "incunabula:pubdate" : {
-      "@id" : "incunabula:pubdate",
-      "@type" : "owl:DatatypeProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/simple/v2",
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Date",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/simple/v2#book",
-      "rdfs:comment" : "Datum der Herausgabe",
-      "rdfs:label" : "Datum der Herausgabe",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/simple/v2#date"
-    }
+  "knora-api:hasOntologies" : {
+    "@id" : "http://0.0.0.0:3333/ontology/incunabula/simple/v2",
+    "@type" : "owl:Ontology",
+    "knora-api:hasClasses" : { },
+    "knora-api:hasProperties" : {
+      "incunabula:pubdate" : {
+        "@id" : "incunabula:pubdate",
+        "@type" : "owl:DatatypeProperty",
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Date",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/simple/v2#book",
+        "rdfs:comment" : "Datum der Herausgabe",
+        "rdfs:label" : "Datum der Herausgabe",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/simple/v2#date"
+      }
+    },
+    "knora-api:hasStandoffClasses" : { },
+    "knora-api:hasStandoffProperties" : { },
+    "rdfs:label" : "The incunabula ontology"
   },
-  "knora-api:hasStandoffClasses" : { },
-  "knora-api:hasStandoffProperties" : { },
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "dc" : "http://api.knora.org/ontology/dc/simple/v2#",

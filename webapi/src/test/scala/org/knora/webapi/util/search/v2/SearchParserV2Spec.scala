@@ -125,6 +125,10 @@ class SearchParserV2Spec extends CoreSpec() {
             parsed should ===(ParsedQueryWithOffset)
         }
 
+        "parse an extended search query with a FILTER containing a regex function" in {
+            val parsed = SearchParserV2.parseSearchQuery(queryWithFilterContainingRegex)
+            parsed should ===(ParsedqueryWithFilterContainingRegex)
+        }
     }
 
     val Query: String =
@@ -878,4 +882,86 @@ class SearchParserV2Spec extends CoreSpec() {
           |    <http://rdfh.ch/beol/6edJwtTSR8yjAWnYmt6AtA> a knora-api:Resource .
           |}
         """.stripMargin
+
+    val queryWithFilterContainingRegex =
+        """
+          |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |    CONSTRUCT {
+          |
+          |        ?mainRes knora-api:isMainResource true .
+          |
+          |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
+          |
+          |     } WHERE {
+          |
+          |        ?mainRes a knora-api:Resource .
+          |
+          |        ?mainRes a <http://0.0.0.0:3333/ontology/incunabula/simple/v2#book> .
+          |
+          |
+          |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
+          |        <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
+          |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
+          |
+          |        FILTER regex(?propVal0, "Zeit", "i")
+          |
+          |     }
+        """.stripMargin
+
+    val ParsedqueryWithFilterContainingRegex = ConstructQuery(
+        ConstructClause(
+            statements = Vector(
+                StatementPattern(
+                    subj = QueryVariable("mainRes"),
+                    pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri,None),
+                    obj = XsdLiteral("true","http://www.w3.org/2001/XMLSchema#boolean".toSmartIri)
+                ),
+                StatementPattern(
+                    subj = QueryVariable("mainRes"),
+                    pred = IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri, None),
+                    obj = QueryVariable("propVal0")
+                )
+            )
+        ),
+        WhereClause(
+            patterns = Vector(
+                StatementPattern(
+                    subj = QueryVariable("mainRes"),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,None),
+                    obj = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,None),None),
+                StatementPattern(
+                    subj = QueryVariable("mainRes"),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,None),
+                    obj = IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#book".toSmartIri,None)
+                ),
+                StatementPattern(
+                    subj = QueryVariable("mainRes"),
+                    pred = IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri,None),
+                    obj = QueryVariable("propVal0")
+                ),
+                StatementPattern(
+                    subj = IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri,None),
+                    pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri,None),
+                    obj = IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri,None)
+                ),
+                StatementPattern(
+                    subj = QueryVariable("propVal0"),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,None),
+                    obj = IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri,None)
+                ),
+                FilterPattern(RegexFunction(QueryVariable("propVal0"),"Zeit","i"))
+            ),
+            positiveEntities = Set(
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri,None),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri,None),
+                IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#book".toSmartIri,None),
+                IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri,None),
+                IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri,None),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,None),
+                QueryVariable("propVal0"),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,None),
+                QueryVariable("mainRes")
+            )
+        )
+    )
 }

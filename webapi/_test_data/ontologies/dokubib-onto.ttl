@@ -9,10 +9,11 @@
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @base <http://www.knora.org/ontology/dokubib> .
 
-@prefix dokubib: <http://www.knora.org/ontology/dokubib#> .
-@prefix : <http://www.knora.org/ontology/dokubib#> .
+@prefix dokubib: <http://www.knora.org/ontology/00FE/dokubib#> .
+@prefix : <http://www.knora.org/ontology/00FE/dokubib#> .
 
-<http://www.knora.org/ontology/dokubib> rdf:type owl:Ontology .
+<http://www.knora.org/ontology/00FE/dokubib> rdf:type owl:Ontology ;
+    rdfs:label "The dokubib ontology" .
 
 ##########################################################
 #
