@@ -29,6 +29,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderReq
 import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologiesResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsResponderRequestADM
+import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersResponderRequestADM
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
 import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
@@ -38,7 +39,6 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponde
 import org.knora.webapi.messages.v1.responder.searchmessages.SearchResponderRequestV1
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderRequestV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffResponderRequestV1
-import org.knora.webapi.messages.v1.responder.storemessages.StoreResponderRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1
 import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesResponderRequestV2
@@ -182,17 +182,6 @@ class ResponderManager extends Actor with ActorLogging {
       */
     protected val ckanRouterV1: ActorRef = makeDefaultCkanRouterV1
 
-    /**
-      * Constructs the default Akka routing actor that routes messages to [[StoreResponderADM]].
-      */
-    protected final def makeDefaultStoreRouterV1: ActorRef = makeActor(FromConfig.props(Props[StoreResponderADM]), STORE_ROUTER_V1_ACTOR_NAME)
-
-    /**
-      * The Akka routing actor that should receive messages addressed to the Store responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default Store responder.
-      */
-    protected val storeRouterV1: ActorRef = makeDefaultStoreRouterV1
-
 
     //
     // V2 responders
@@ -303,6 +292,17 @@ class ResponderManager extends Actor with ActorLogging {
     protected val projectsRouterADM: ActorRef = makeDefaultProjectsRouterADM
 
     /**
+      * Constructs the default Akka routing actor that routes messages to [[StoresResponderADM]].
+      */
+    protected final def makeDefaultStoreRouterADM: ActorRef = makeActor(FromConfig.props(Props[StoresResponderADM]), STORE_ROUTER_ADM_ACTOR_NAME)
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the Store responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default Store responder.
+      */
+    protected val storeRouterV1: ActorRef = makeDefaultStoreRouterADM
+
+    /**
       * Constructs the default Akka routing actor that routes messages to [[UsersResponderADM]].
       */
     protected final def makeDefaultUsersRouterADM: ActorRef = makeActor(FromConfig.props(Props[UsersResponderADM]), USERS_ROUTER_ADM_ACTOR_NAME)
@@ -323,7 +323,6 @@ class ResponderManager extends Actor with ActorLogging {
         case searchResponderRequestV1: SearchResponderRequestV1 => searchRouterV1.forward(searchResponderRequestV1)
         case ontologyResponderRequestV1: OntologyResponderRequestV1 => ontologyRouterV1.forward(ontologyResponderRequestV1)
         case ckanResponderRequestV1: CkanResponderRequestV1 => ckanRouterV1.forward(ckanResponderRequestV1)
-        case storeResponderRequestV1: StoreResponderRequestV1 => storeRouterV1.forward(storeResponderRequestV1)
         case standoffResponderRequestV1: StandoffResponderRequestV1 => standoffRouterV1.forward(standoffResponderRequestV1)
         case usersResponderRequestV1: UsersResponderRequestV1 => usersRouterV1.forward(usersResponderRequestV1)
         case projectsResponderRequestV1: ProjectsResponderRequestV1 => projectsRouterV1.forward(projectsResponderRequestV1)
@@ -340,6 +339,7 @@ class ResponderManager extends Actor with ActorLogging {
         case ontologiesResponderRequest: OntologiesResponderRequestADM => ontologiesRouterADM forward ontologiesResponderRequest
         case permissionsResponderRequestADM: PermissionsResponderRequestADM => permissionsRouterADM.forward(permissionsResponderRequestADM)
         case projectsResponderRequestADM: ProjectsResponderRequestADM => projectsRouterADM.forward(projectsResponderRequestADM)
+        case storeResponderRequestADM: StoreResponderRequestADM => storeRouterV1.forward(storeResponderRequestADM)
         case usersResponderRequestADM: UsersResponderRequestADM => usersRouterADM.forward(usersResponderRequestADM)
 
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
