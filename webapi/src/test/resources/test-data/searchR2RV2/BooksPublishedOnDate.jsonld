@@ -9,6 +9,8 @@
       "knora-api:dateValueHasCalendar" : "JULIAN",
       "knora-api:dateValueHasEndYear" : 1499,
       "knora-api:dateValueHasStartYear" : 1475,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1475-01-01 - 1499-12-31"
     },
     "incunabula:title" : {
@@ -30,6 +32,8 @@
       "knora-api:dateValueHasStartDay" : 1,
       "knora-api:dateValueHasStartMonth" : 3,
       "knora-api:dateValueHasStartYear" : 1497,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1497-03-01"
     },
     "incunabula:title" : [ {
