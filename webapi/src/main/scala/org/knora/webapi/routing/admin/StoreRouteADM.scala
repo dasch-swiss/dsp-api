@@ -26,16 +26,16 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi.SettingsImpl
+import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, StoresADMJsonProtocol}
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.v1.responder.storemessages.{ResetTriplestoreContentRequestV1, StoreV1JsonProtocol}
-import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.routing.{Authenticator, RouteUtilADM, RouteUtilV1}
 
 import scala.concurrent.duration._
 
 /**
   * A route used to send requests which can directly affect the data stored inside the triplestore.
   */
-object StoreRouteADM extends Authenticator with StoreV1JsonProtocol {
+object StoreRouteADM extends Authenticator with StoresADMJsonProtocol {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) = Route {
 
@@ -59,9 +59,9 @@ object StoreRouteADM extends Authenticator with StoreV1JsonProtocol {
                 /* ResetTriplestoreContent */
                 entity(as[Seq[RdfDataObject]]) { apiRequest =>
                     requestContext =>
-                        val requestMessage = ResetTriplestoreContentRequestV1(apiRequest)
+                        val requestMessage = ResetTriplestoreContentRequestADM(apiRequest)
 
-                        RouteUtilV1.runJsonRoute(
+                        RouteUtilADM.runJsonRoute(
                             requestMessage,
                             requestContext,
                             settings,
