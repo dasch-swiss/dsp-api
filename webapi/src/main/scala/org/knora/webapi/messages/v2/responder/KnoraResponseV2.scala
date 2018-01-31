@@ -37,8 +37,7 @@ import org.knora.webapi.util.IriConversions._
   *
   * @tparam C the type of the content class that extends this trait.
   */
-trait KnoraContentV2[C <: KnoraContentV2[C]] {
-    this: C =>
+trait KnoraContentV2[C <: KnoraContentV2[C]] { this: C =>
     def toOntologySchema(targetSchema: OntologySchema): C
 }
 
@@ -76,8 +75,7 @@ case class UpdateValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IO
 /**
   * The content of the value of a Knora property.
   */
-sealed trait ValueContentV2 {
-    // TODO: have this extend KnoraContentV2[ValueContentV2].
+sealed trait ValueContentV2 { // TODO: have this extend KnoraContentV2[ValueContentV2].
 
     /**
       * The IRI of the internal Knora value type (defined in the `knora-base` ontology) corresponding to the type of this `ValueContentV2`.
