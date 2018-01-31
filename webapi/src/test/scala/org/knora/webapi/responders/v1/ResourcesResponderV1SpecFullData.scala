@@ -27,7 +27,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
-import org.knora.webapi.{OntologyConstants, Settings, SharedAdminTestData}
+import org.knora.webapi.{OntologyConstants, Settings, SharedTestDataV1}
 
 
 object ResourcesResponderV1SpecFullData {

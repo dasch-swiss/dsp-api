@@ -38,7 +38,7 @@ import scala.concurrent.duration._
 object OntologyResponderV1Spec {
 
     // A test user that prefers responses in German.
-    private val userProfileWithGerman = SharedAdminTestData.incunabulaProjectAdminUser
+    private val userProfileWithGerman = SharedTestDataV1.incunabulaProjectAdminUser
 
     // A test user that prefers responses in French.
     private val userProfileWithFrench = userProfileWithGerman.copy(userData = userProfileWithGerman.userData.copy(lang = "fr"))
@@ -616,75 +616,75 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         vocabularies = Vector(
             NamedGraphV1( // SystemProject
                 active = true,
-                uri = SharedAdminTestData.systemProjectInfo.ontologies.head,
-                project_id = SharedAdminTestData.systemProjectInfo.id,
-                description = SharedAdminTestData.systemProjectInfo.description.get,
-                longname = SharedAdminTestData.systemProjectInfo.longname.get,
-                shortname = SharedAdminTestData.systemProjectInfo.shortname,
-                id = SharedAdminTestData.systemProjectInfo.ontologies.head
+                uri = SharedTestDataV1.systemProjectInfo.ontologies.head,
+                project_id = SharedTestDataV1.systemProjectInfo.id,
+                description = SharedTestDataV1.systemProjectInfo.description.get,
+                longname = SharedTestDataV1.systemProjectInfo.longname.get,
+                shortname = SharedTestDataV1.systemProjectInfo.shortname,
+                id = SharedTestDataV1.systemProjectInfo.ontologies.head
             ),
             NamedGraphV1( // Incunabula
                 active = true,
-                uri = SharedAdminTestData.incunabulaProjectInfo.ontologies.head,
-                project_id = SharedAdminTestData.incunabulaProjectInfo.id,
-                description = SharedAdminTestData.incunabulaProjectInfo.description.get,
-                longname = SharedAdminTestData.incunabulaProjectInfo.longname.get,
-                shortname = SharedAdminTestData.incunabulaProjectInfo.shortname,
-                id = SharedAdminTestData.incunabulaProjectInfo.ontologies.head
+                uri = SharedTestDataV1.incunabulaProjectInfo.ontologies.head,
+                project_id = SharedTestDataV1.incunabulaProjectInfo.id,
+                description = SharedTestDataV1.incunabulaProjectInfo.description.get,
+                longname = SharedTestDataV1.incunabulaProjectInfo.longname.get,
+                shortname = SharedTestDataV1.incunabulaProjectInfo.shortname,
+                id = SharedTestDataV1.incunabulaProjectInfo.ontologies.head
             ),
             NamedGraphV1( // BEOL
                 active = true,
-                uri = SharedAdminTestData.beolProjectInfo.ontologies.head,
-                project_id = SharedAdminTestData.beolProjectInfo.id,
-                description = SharedAdminTestData.beolProjectInfo.description.get,
-                longname = SharedAdminTestData.beolProjectInfo.longname.get,
-                shortname = SharedAdminTestData.beolProjectInfo.shortname,
-                id = SharedAdminTestData.beolProjectInfo.ontologies.head
+                uri = SharedTestDataV1.beolProjectInfo.ontologies.head,
+                project_id = SharedTestDataV1.beolProjectInfo.id,
+                description = SharedTestDataV1.beolProjectInfo.description.get,
+                longname = SharedTestDataV1.beolProjectInfo.longname.get,
+                shortname = SharedTestDataV1.beolProjectInfo.shortname,
+                id = SharedTestDataV1.beolProjectInfo.ontologies.head
             ),
             NamedGraphV1( // BIBLIO
                 active = true,
-                uri = SharedAdminTestData.biblioProjectInfo.ontologies.head,
-                project_id = SharedAdminTestData.biblioProjectInfo.id,
-                description = SharedAdminTestData.biblioProjectInfo.description.get,
-                longname = SharedAdminTestData.biblioProjectInfo.longname.get,
-                shortname = SharedAdminTestData.biblioProjectInfo.shortname,
-                id = SharedAdminTestData.biblioProjectInfo.ontologies.head
+                uri = SharedTestDataV1.biblioProjectInfo.ontologies.head,
+                project_id = SharedTestDataV1.biblioProjectInfo.id,
+                description = SharedTestDataV1.biblioProjectInfo.description.get,
+                longname = SharedTestDataV1.biblioProjectInfo.longname.get,
+                shortname = SharedTestDataV1.biblioProjectInfo.shortname,
+                id = SharedTestDataV1.biblioProjectInfo.ontologies.head
             ),
             NamedGraphV1( // Images
                 active = true,
-                uri = SharedAdminTestData.imagesProjectInfo.ontologies.head,
-                project_id = SharedAdminTestData.imagesProjectInfo.id,
-                description = SharedAdminTestData.imagesProjectInfo.description.get,
-                longname = SharedAdminTestData.imagesProjectInfo.longname.get,
-                shortname = SharedAdminTestData.imagesProjectInfo.shortname,
-                id = SharedAdminTestData.imagesProjectInfo.ontologies.head
+                uri = SharedTestDataV1.imagesProjectInfo.ontologies.head,
+                project_id = SharedTestDataV1.imagesProjectInfo.id,
+                description = SharedTestDataV1.imagesProjectInfo.description.get,
+                longname = SharedTestDataV1.imagesProjectInfo.longname.get,
+                shortname = SharedTestDataV1.imagesProjectInfo.shortname,
+                id = SharedTestDataV1.imagesProjectInfo.ontologies.head
             ),
             NamedGraphV1( // Anything
                 active = true,
-                uri = SharedAdminTestData.anythingProjectInfo.ontologies.head,
-                project_id = SharedAdminTestData.anythingProjectInfo.id,
-                description = SharedAdminTestData.anythingProjectInfo.description.get,
-                longname = SharedAdminTestData.anythingProjectInfo.longname.get,
-                shortname = SharedAdminTestData.anythingProjectInfo.shortname,
-                id = SharedAdminTestData.anythingProjectInfo.ontologies.head
+                uri = SharedTestDataV1.anythingProjectInfo.ontologies.head,
+                project_id = SharedTestDataV1.anythingProjectInfo.id,
+                description = SharedTestDataV1.anythingProjectInfo.description.get,
+                longname = SharedTestDataV1.anythingProjectInfo.longname.get,
+                shortname = SharedTestDataV1.anythingProjectInfo.shortname,
+                id = SharedTestDataV1.anythingProjectInfo.ontologies.head
             ),
             NamedGraphV1( // Dokubib
                 active = false,
-                uri = SharedAdminTestData.dokubibProjectInfo.ontologies.head,
-                project_id = SharedAdminTestData.dokubibProjectInfo.id,
-                description = SharedAdminTestData.dokubibProjectInfo.description.get,
-                longname = SharedAdminTestData.dokubibProjectInfo.longname.get,
-                shortname = SharedAdminTestData.dokubibProjectInfo.shortname,
-                id = SharedAdminTestData.dokubibProjectInfo.ontologies.head
+                uri = SharedTestDataV1.dokubibProjectInfo.ontologies.head,
+                project_id = SharedTestDataV1.dokubibProjectInfo.id,
+                description = SharedTestDataV1.dokubibProjectInfo.description.get,
+                longname = SharedTestDataV1.dokubibProjectInfo.longname.get,
+                shortname = SharedTestDataV1.dokubibProjectInfo.shortname,
+                id = SharedTestDataV1.dokubibProjectInfo.ontologies.head
             ),
             NamedGraphV1( // Webern
                 active = true,
-                uri = SharedAdminTestData.webernProjectInfo.ontologies.head,
-                project_id = SharedAdminTestData.webernProjectInfo.id,
-                description = SharedAdminTestData.webernProjectInfo.description.get,
-                longname = SharedAdminTestData.webernProjectInfo.longname.get,
-                shortname = SharedAdminTestData.webernProjectInfo.shortname,
-                id = SharedAdminTestData.webernProjectInfo.ontologies.head
+                uri = SharedTestDataV1.webernProjectInfo.ontologies.head,
+                project_id = SharedTestDataV1.webernProjectInfo.id,
+                description = SharedTestDataV1.webernProjectInfo.description.get,
+                longname = SharedTestDataV1.webernProjectInfo.longname.get,
+                shortname = SharedTestDataV1.webernProjectInfo.shortname,
+                id = SharedTestDataV1.webernProjectInfo.ontologies.head
             )
         )
     )

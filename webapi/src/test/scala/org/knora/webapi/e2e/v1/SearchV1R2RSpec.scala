@@ -30,7 +30,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesReq
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.routing.v1.SearchRouteV1
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.{InvalidApiJsonException, LiveActorMaker, R2RSpec, SharedAdminTestData}
+import org.knora.webapi.{InvalidApiJsonException, LiveActorMaker, R2RSpec, SharedTestDataV1}
 import spray.json.{JsNumber, JsValue, _}
 
 import scala.concurrent.duration.DurationInt
@@ -69,7 +69,7 @@ class SearchV1R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 30.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataV1.rootUser), 30.seconds)
     }
 
     /**
