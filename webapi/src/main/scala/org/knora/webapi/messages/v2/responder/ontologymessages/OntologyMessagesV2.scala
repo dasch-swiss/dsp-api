@@ -486,7 +486,7 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
 }
 
 /**
-  * Requests the replacement of a class's cardinalities with new ones.
+  * Requests the replacement of a class's cardinalities with new ones. A successful response will be a [[ReadOntologiesV2]].
   *
   * @param classInfoContent     a [[ClassInfoContentV2]] containing the new cardinalities.
   * @param lastModificationDate the ontology's last modification date.
@@ -523,6 +523,32 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
 }
 
 /**
+  * Requests the deletion of a class. A successful response will be a [[ReadOntologyMetadataV2]].
+  *
+  * @param classIri             the IRI of the class to be deleted.
+  * @param lastModificationDate the ontology's last modification date.
+  * @param apiRequestID         the ID of the API request.
+  * @param userProfile          the profile of the user making the request.
+  */
+case class DeleteClassRequestV2(classIri: SmartIri,
+                                lastModificationDate: Instant,
+                                apiRequestID: UUID,
+                                userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+
+/**
+  * Requests the deletion of a property. A successful response will be a [[ReadOntologyMetadataV2]].
+  *
+  * @param propertyIri          the IRI of the property to be deleted.
+  * @param lastModificationDate the ontology's last modification date.
+  * @param apiRequestID         the ID of the API request.
+  * @param userProfile          the profile of the user making the request.
+  */
+case class DeletePropertyRequestV2(propertyIri: SmartIri,
+                                   lastModificationDate: Instant,
+                                   apiRequestID: UUID,
+                                   userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+
+/**
   * A trait for requests to change entity labels or comments.
   */
 sealed trait ChangeLabelsOrCommentsRequest {
@@ -538,7 +564,7 @@ sealed trait ChangeLabelsOrCommentsRequest {
 }
 
 /**
-  * Requests that a property's labels or comments are changed.
+  * Requests that a property's labels or comments are changed. A successful response will be a [[ReadOntologiesV2]].
   *
   * @param propertyIri          the IRI of the property.
   * @param predicateToUpdate    `rdfs:label` or `rdfs:comment`.
@@ -589,7 +615,7 @@ object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV
 }
 
 /**
-  * Requests that a class's labels or comments are changed.
+  * Requests that a class's labels or comments are changed. A successful response will be a [[ReadOntologiesV2]].
   *
   * @param classIri             the IRI of the property.
   * @param predicateToUpdate    `rdfs:label` or `rdfs:comment`.

@@ -68,9 +68,7 @@ DELETE {
 
             }
         }
-
     }
-
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
 @if(triplestore.startsWith("graphdb")) {
@@ -87,6 +85,7 @@ WHERE {
 
          ?class rdfs:subClassOf ?restriction .
          FILTER isBlank(?restriction)
-         ?restriction rdf:type owl:Restriction .
+         ?restriction rdf:type owl:Restriction ;
+             ?restrictionPred ?restrictionObj .
     }
 }

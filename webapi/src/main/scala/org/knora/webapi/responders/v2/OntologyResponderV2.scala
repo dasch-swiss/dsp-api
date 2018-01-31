@@ -124,8 +124,10 @@ class OntologyResponderV2 extends Responder {
         case changeClassLabelsOrCommentsRequest: ChangeClassLabelsOrCommentsRequestV2 => future2Message(sender(), changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest), log)
         case addCardinalitiesToClassRequest: AddCardinalitiesToClassRequestV2 => future2Message(sender(), addCardinalitiesToClass(addCardinalitiesToClassRequest), log)
         case changeCardinalitiesRequest: ChangeCardinalitiesRequestV2 => future2Message(sender(), changeClassCardinalities(changeCardinalitiesRequest), log)
+        case deleteClassRequest: DeleteClassRequestV2 => future2Message(sender(), deleteClass(deleteClassRequest), log)
         case createPropertyRequest: CreatePropertyRequestV2 => future2Message(sender(), createProperty(createPropertyRequest), log)
         case changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2 => future2Message(sender(), changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest), log)
+        case deletePropertyRequest: DeletePropertyRequestV2 => future2Message(sender(), deleteProperty(deletePropertyRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -943,14 +945,14 @@ class OntologyResponderV2 extends Responder {
                 filteredNamedGraphInfos.filter(namedGraphInfo => projectIriStrs.contains(namedGraphInfo.project_id))
             }
 
-            ontologyInfoV2s = namedGraphsToReturn.map {
+            ontologyMetadata: Set[OntologyMetadataV2] = namedGraphsToReturn.map {
                 namedGraphInfo =>
                     val ontologyIri = namedGraphInfo.id.toSmartIri
                     cacheData.ontologyMetadata.getOrElse(ontologyIri, throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri has no metadata"))
             }.toSet
 
             response = ReadOntologyMetadataV2(
-                ontologies = ontologyInfoV2s,
+                ontologies = ontologyMetadata,
                 includeKnoraApi = returnAllOntologies
             )
         } yield response
@@ -1591,7 +1593,7 @@ class OntologyResponderV2 extends Responder {
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
-                    classIri = internalClassDef.classIri,
+                    classIri = internalClassIri,
                     cardinalitiesToAdd = internalClassDef.directCardinalities,
                     lastModificationDate = addCardinalitiesRequest.lastModificationDate,
                     currentTime = currentTime
@@ -1617,9 +1619,11 @@ class OntologyResponderV2 extends Responder {
                     lastModificationDate = Some(currentTime)
                 )
 
+                updatedClassDefs = cacheData.classDefs + (internalClassIri -> readClassInfo)
+
                 _ = storeCacheData(cacheData.copy(
                     ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> updatedOntologyMetadata),
-                    classDefs = cacheData.classDefs + (internalClassIri -> readClassInfo)
+                    classDefs = updatedClassDefs
                 ))
 
                 // Read the data back from the cache.
@@ -1748,7 +1752,7 @@ class OntologyResponderV2 extends Responder {
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
-                    classIri = internalClassDef.classIri,
+                    classIri = internalClassIri,
                     newCardinalities = internalClassDef.directCardinalities,
                     lastModificationDate = changeCardinalitiesRequest.lastModificationDate,
                     currentTime = currentTime
@@ -1774,9 +1778,11 @@ class OntologyResponderV2 extends Responder {
                     lastModificationDate = Some(currentTime)
                 )
 
+                updatedClassDefs = cacheData.classDefs + (internalClassIri -> readClassInfo)
+
                 _ = storeCacheData(cacheData.copy(
                     ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> updatedOntologyMetadata),
-                    classDefs = cacheData.classDefs + (internalClassIri -> readClassInfo)
+                    classDefs = updatedClassDefs
                 ))
 
                 // Read the data back from the cache.
@@ -1810,6 +1816,208 @@ class OntologyResponderV2 extends Responder {
                 iri = internalOntologyIri.toString,
                 task = () => makeTaskFuture(
                     internalClassIri = internalClassIri,
+                    internalOntologyIri = internalOntologyIri
+                )
+            )
+        } yield taskResult
+    }
+
+    /**
+      * Deletes a class.
+      *
+      * @param deleteClassRequest the request to delete the class.
+      * @return a [[SuccessResponseV2]].
+      */
+    private def deleteClass(deleteClassRequest: DeleteClassRequestV2): Future[ReadOntologyMetadataV2] = {
+        def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyMetadataV2] = {
+            for {
+                cacheData <- getCacheData
+
+                // Check that the ontology exists and has not been updated by another user since the client last read it.
+                _ <- checkOntologyLastModificationDateBeforeUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = deleteClassRequest.lastModificationDate
+                )
+
+                // Check that the class exists.
+
+                _ = if (!cacheData.classDefs.contains(internalClassIri)) {
+                    throw BadRequestException(s"Class ${deleteClassRequest.classIri} does not exist")
+                }
+
+                // Check that the class isn't used in data or ontologies.
+
+                isClassUsedSparql = queries.sparql.v2.txt.isEntityUsed(
+                    triplestore = settings.triplestoreType,
+                    entityIri = internalClassIri,
+                    checkDataOnly = false
+                ).toString()
+
+                isClassUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isClassUsedSparql)).mapTo[SparqlSelectResponse]
+
+                _ = if (isClassUsedResponse.results.bindings.nonEmpty) {
+                    throw BadRequestException(s"Class ${deleteClassRequest.classIri} cannot be deleted, because it is used in data or ontologies")
+                }
+
+                // Delete the class from the triplestore.
+
+                currentTime: Instant = Instant.now
+
+                updateSparql = queries.sparql.v2.txt.deleteClass(
+                    triplestore = settings.triplestoreType,
+                    ontologyNamedGraphIri = internalOntologyIri,
+                    ontologyIri = internalOntologyIri,
+                    classIri = internalClassIri,
+                    lastModificationDate = deleteClassRequest.lastModificationDate,
+                    currentTime = currentTime
+                ).toString()
+
+                _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
+
+                // Check that the ontology's last modification date was updated.
+
+                _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
+
+                // Update the cache.
+
+                updatedClassDefs = cacheData.classDefs - internalClassIri
+                updatedResourceSubClassOfRelations = cacheData.resourceSubClassOfRelations - internalClassIri
+                updatedResourceSuperClassOfRelations = calculateResourceSuperClassOfRelations(updatedResourceSubClassOfRelations)
+
+                updatedOntologyMetadata = cacheData.ontologyMetadata(internalOntologyIri).copy(
+                    lastModificationDate = Some(currentTime)
+                )
+
+                _ = storeCacheData(cacheData.copy(
+                    ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> updatedOntologyMetadata),
+                    classDefs = updatedClassDefs,
+                    resourceSubClassOfRelations = updatedResourceSubClassOfRelations,
+                    resourceSuperClassOfRelations = updatedResourceSuperClassOfRelations
+                ))
+            } yield ReadOntologyMetadataV2(Set(updatedOntologyMetadata))
+        }
+
+        for {
+            userProfile <- FastFuture.successful(deleteClassRequest.userProfile)
+
+            externalClassIri = deleteClassRequest.classIri
+            externalOntologyIri = externalClassIri.getOntologyFromEntity
+
+            _ <- checkOntologyAndEntityIrisForUpdate(
+                externalOntologyIri = externalOntologyIri,
+                externalEntityIri = externalClassIri,
+                userProfile = userProfile
+            )
+
+            internalClassIri = externalClassIri.toOntologySchema(InternalSchema)
+            internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+
+            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID = deleteClassRequest.apiRequestID,
+                iri = internalOntologyIri.toString,
+                task = () => makeTaskFuture(
+                    internalClassIri = internalClassIri,
+                    internalOntologyIri = internalOntologyIri
+                )
+            )
+        } yield taskResult
+    }
+
+    /**
+      * Deletes a property.
+      *
+      * @param deletePropertyRequest the request to delete the property.
+      * @return a [[ReadOntologyMetadataV2]].
+      */
+    private def deleteProperty(deletePropertyRequest: DeletePropertyRequestV2): Future[ReadOntologyMetadataV2] = {
+        def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyMetadataV2] = {
+            for {
+                cacheData <- getCacheData
+
+                // Check that the ontology exists and has not been updated by another user since the client last read it.
+                _ <- checkOntologyLastModificationDateBeforeUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = deletePropertyRequest.lastModificationDate
+                )
+
+                // Check that the property exists.
+
+                _ = if (!cacheData.propertyDefs.contains(internalPropertyIri)) {
+                    throw BadRequestException(s"Property ${deletePropertyRequest.propertyIri} does not exist")
+                }
+
+                // Check that the property isn't used in data or ontologies.
+
+                isPropertyUsedSparql = queries.sparql.v2.txt.isEntityUsed(
+                    triplestore = settings.triplestoreType,
+                    entityIri = internalPropertyIri,
+                    checkDataOnly = false
+                ).toString()
+
+                isPropertyUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isPropertyUsedSparql)).mapTo[SparqlSelectResponse]
+
+                _ = if (isPropertyUsedResponse.results.bindings.nonEmpty) {
+                    throw BadRequestException(s"Property ${deletePropertyRequest.propertyIri} cannot be deleted, because it is used in data or ontologies")
+                }
+
+                // Delete the class from the triplestore.
+
+                currentTime: Instant = Instant.now
+
+                updateSparql = queries.sparql.v2.txt.deleteProperty(
+                    triplestore = settings.triplestoreType,
+                    ontologyNamedGraphIri = internalOntologyIri,
+                    ontologyIri = internalOntologyIri,
+                    propertyIri = internalPropertyIri,
+                    lastModificationDate = deletePropertyRequest.lastModificationDate,
+                    currentTime = currentTime
+                ).toString()
+
+                _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
+
+                // Check that the ontology's last modification date was updated.
+
+                _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
+
+                // Update the cache.
+
+                updatedPropertyDefs = cacheData.propertyDefs - internalPropertyIri
+                updatedSubPropertyOfRelations = cacheData.subPropertyOfRelations - internalPropertyIri
+
+                updatedOntologyMetadata = cacheData.ontologyMetadata(internalOntologyIri).copy(
+                    lastModificationDate = Some(currentTime)
+                )
+
+                _ = storeCacheData(cacheData.copy(
+                    ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> updatedOntologyMetadata),
+                    propertyDefs = updatedPropertyDefs,
+                    subPropertyOfRelations = updatedSubPropertyOfRelations
+                ))
+            } yield ReadOntologyMetadataV2(Set(updatedOntologyMetadata))
+        }
+
+        for {
+            userProfile <- FastFuture.successful(deletePropertyRequest.userProfile)
+
+            externalPropertyIri = deletePropertyRequest.propertyIri
+            externalOntologyIri = externalPropertyIri.getOntologyFromEntity
+
+            _ <- checkOntologyAndEntityIrisForUpdate(
+                externalOntologyIri = externalOntologyIri,
+                externalEntityIri = externalPropertyIri,
+                userProfile = userProfile
+            )
+
+            internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema)
+            internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+
+            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID = deletePropertyRequest.apiRequestID,
+                iri = internalOntologyIri.toString,
+                task = () => makeTaskFuture(
+                    internalPropertyIri = internalPropertyIri,
                     internalOntologyIri = internalOntologyIri
                 )
             )

@@ -37,17 +37,18 @@ import org.knora.webapi._
 import scala.concurrent.ExecutionContextExecutor
 
 /**
-  * Provides a spray-routing function for API routes that deal with search.
+  * Provides a routing function for API v2 routes that deal with ontologies.
   */
 object OntologiesRouteV2 extends Authenticator {
-    val ALL_LANGUAGES = "allLanguages"
+    private val ALL_LANGUAGES = "allLanguages"
+    private val LAST_MODIFICATION_DATE = "lastModificationDate"
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
         implicit val timeout: Timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        val responderManager = system.actorSelection("/user/responderManager")
 
         path("ontology" / Segments) { (_: List[String]) =>
             get {
@@ -341,6 +342,40 @@ object OntologiesRouteV2 extends Authenticator {
                         responseSchema
                     )
                 }
+            } ~ delete {
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val classIriStr = externalResourceClassIris match {
+                        case List(str) => str
+                        case _ => throw BadRequestException(s"Only one class can be deleted at a time")
+                    }
+
+                    val classIri = classIriStr.toSmartIri
+
+                    if (!classIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+                        throw BadRequestException(s"Invalid class IRI for request: $classIriStr")
+                    }
+
+                    val lastModificationDateStr = requestContext.request.uri.query().toMap.getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
+                    val lastModificationDate = stringFormatter.toInstant(lastModificationDateStr, throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
+
+                    val requestMessage = DeleteClassRequestV2(
+                        classIri = classIri,
+                        lastModificationDate = lastModificationDate,
+                        apiRequestID = UUID.randomUUID,
+                        userProfile = userProfile
+                    )
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log,
+                        responseSchema = ApiV2WithValueObjects
+                    )
+                }
             }
         } ~ path("v2" / "ontologies" / "properties") {
             post {
@@ -434,6 +469,40 @@ object OntologiesRouteV2 extends Authenticator {
                         responderManager,
                         log,
                         responseSchema = responseSchema
+                    )
+                }
+            } ~ delete {
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val propertyIriStr = externalPropertyIris match {
+                        case List(str) => str
+                        case _ => throw BadRequestException(s"Only one property can be deleted at a time")
+                    }
+
+                    val propertyIri = propertyIriStr.toSmartIri
+
+                    if (!propertyIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+                        throw BadRequestException(s"Invalid property IRI for request: $propertyIri")
+                    }
+
+                    val lastModificationDateStr = requestContext.request.uri.query().toMap.getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
+                    val lastModificationDate = stringFormatter.toInstant(lastModificationDateStr, throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
+
+                    val requestMessage = DeletePropertyRequestV2(
+                        propertyIri = propertyIri,
+                        lastModificationDate = lastModificationDate,
+                        apiRequestID = UUID.randomUUID,
+                        userProfile = userProfile
+                    )
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log,
+                        responseSchema = ApiV2WithValueObjects
                     )
                 }
             }

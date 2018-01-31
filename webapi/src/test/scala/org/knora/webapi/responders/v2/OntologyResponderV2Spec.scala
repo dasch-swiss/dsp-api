@@ -46,7 +46,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/anything/v2".toSmartIri
     private var anythingLastModDate: Instant = Instant.now
 
-    private val printErrorMessages = true
+    private val printErrorMessages = false
 
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
@@ -1969,7 +1969,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "not add a cardinality to a class that is used in data" in {
+        "not add a cardinality for property anything:hasName to class anything:Thing, because the class is used in data" in {
             val classIri = AnythingOntologyIri.makeEntityIri("Thing")
 
             val classInfoContent = ClassInfoContentV2(
@@ -2057,7 +2057,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "change the cardinalities of the class anything:Nothing" in {
+        "change the cardinalities of the class anything:Nothing, replacing anything:hasNothingness with anything:hasEmptiness" in {
             val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
 
             val classInfoContent = ClassInfoContentV2(
@@ -2096,6 +2096,138 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     readClassInfo.allCardinalities.keySet should ===(expectedProperties)
 
                     val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "not delete the class anything:Nothing, because the property anything:hasEmptiness refers to it" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+            actorUnderTest ! DeleteClassRequestV2(
+                classIri = classIri,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "delete the property anything:hasNothingness" in {
+            val hasNothingness = AnythingOntologyIri.makeEntityIri("hasNothingness")
+
+            actorUnderTest ! DeletePropertyRequestV2(
+                propertyIri = hasNothingness,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologyMetadataV2 =>
+                    val metadata = msg.ontologies.head
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "not delete the property anything:hasEmptiness, because the class anything:Nothing refers to it" in {
+            val hasNothingness = AnythingOntologyIri.makeEntityIri("hasEmptiness")
+
+            actorUnderTest ! DeletePropertyRequestV2(
+                propertyIri = hasNothingness,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "remove all cardinalities from the class anything:Nothing" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    )
+                ),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! ChangeCardinalitiesRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            val expectedProperties = Set(
+                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri,
+                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readClassInfo = ontology.classes(classIri)
+                    readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
+                    readClassInfo.allCardinalities.keySet should ===(expectedProperties)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "delete the property anything:hasEmptiness" in {
+            val hasEmptiness = AnythingOntologyIri.makeEntityIri("hasEmptiness")
+
+            actorUnderTest ! DeletePropertyRequestV2(
+                propertyIri = hasEmptiness,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologyMetadataV2 =>
+                    val metadata = msg.ontologies.head
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "delete the class anything:Nothing" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+            actorUnderTest ! DeleteClassRequestV2(
+                classIri = classIri,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologyMetadataV2 =>
+                    val metadata = msg.ontologies.head
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate

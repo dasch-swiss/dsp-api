@@ -24,13 +24,12 @@
 @import java.time.Instant
 
 @*
- * Adds cardinalities to an existing class.
+ * Deletes a class.
  *
  * @param triplestore the name of the triplestore being used.
  * @param ontologyNamedGraphIri the IRI of the named graph where the ontology is stored.
  * @param ontologyIri the IRI of the ontology containing the class.
- * @param classIri the IRI of the class to be updated.
- * @param cardinalitiesToAdd the cardinalities to be added.
+ * @param classIri the IRI of the class to be deleted.
  * @param lastModificationDate the xsd:dateTimeStamp that was attached to the ontology when it was last modified.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
  *@
@@ -38,7 +37,6 @@
   ontologyNamedGraphIri: SmartIri,
   ontologyIri: SmartIri,
   classIri: SmartIri,
-  cardinalitiesToAdd: Map[SmartIri, Cardinality.Value],
   lastModificationDate: Instant,
   currentTime: Instant)
 
@@ -51,21 +49,12 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 DELETE {
     GRAPH ?ontologyNamedGraph {
         ?ontology knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+        ?class ?classPred ?classObj .
+        ?restriction ?restrictionPred ?restrictionObj .
     }
 } INSERT {
     GRAPH ?ontologyNamedGraph {
         ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
-
-        @for((propertyIri, knoraCardinality) <- cardinalitiesToAdd) {
-
-            @defining(Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)) { owlCardinalityInfo =>
-
-                ?class rdfs:subClassOf [ rdf:type owl:Restriction ;
-                                         owl:onProperty <@propertyIri> ;
-                                         <@owlCardinalityInfo.owlCardinalityIri> "@owlCardinalityInfo.owlCardinalityValue"^^xsd:nonNegativeInteger ] .
-
-            }
-        }
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
@@ -78,7 +67,22 @@ WHERE {
     BIND(IRI("@classIri") AS ?class)
 
     GRAPH ?ontologyNamedGraph {
-         ?ontology rdf:type owl:Ontology ;
-             knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+        ?ontology rdf:type owl:Ontology ;
+            knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+
+        ?class rdf:type owl:Class .
+
+        {
+            ?class ?classPred ?classObj .
+        } UNION {
+             ?class rdfs:subClassOf ?restriction .
+             FILTER isBlank(?restriction)
+             ?restriction rdf:type owl:Restriction ;
+                 ?restrictionPred ?restrictionObj .
+        }
+
+        FILTER NOT EXISTS {
+            ?s ?p ?class .
+        }
     }
 }
