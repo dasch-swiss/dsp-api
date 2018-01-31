@@ -27,7 +27,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
-import org.knora.webapi.{OntologyConstants, Settings, SharedAdminTestData}
+import org.knora.webapi.{OntologyConstants, Settings, SharedTestDataV1}
 
 
 object ResourcesResponderV1SpecFullData {
@@ -56,8 +56,8 @@ object ResourcesResponderV1SpecFullData {
                     restype_label = Some("Verkn\u00FCpfungsobjekt"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
                     restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
-                    person_id = "http://data.knora.org/users/91e19f1e01",
-                    project_id = "http://data.knora.org/projects/77275339"
+                    person_id = "http://rdfh.ch/users/91e19f1e01",
+                    project_id = "http://rdfh.ch/projects/77275339"
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
@@ -80,8 +80,8 @@ object ResourcesResponderV1SpecFullData {
                     restype_label = Some("Verkn\u00FCpfungsobjekt"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
                     restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
-                    person_id = "http://data.knora.org/users/b83acc5f05",
-                    project_id = "http://data.knora.org/projects/77275339"
+                    person_id = "http://rdfh.ch/users/b83acc5f05",
+                    project_id = "http://rdfh.ch/projects/77275339"
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
@@ -414,8 +414,8 @@ object ResourcesResponderV1SpecFullData {
             restype_label = Some("Buch"),
             restype_name = Some("http://www.knora.org/ontology/incunabula#book"),
             restype_id = "http://www.knora.org/ontology/incunabula#book",
-            person_id = "http://data.knora.org/users/91e19f1e01",
-            project_id = "http://data.knora.org/projects/77275339"
+            person_id = "http://rdfh.ch/users/91e19f1e01",
+            project_id = "http://rdfh.ch/projects/77275339"
         ))
     )
 
@@ -848,8 +848,8 @@ object ResourcesResponderV1SpecFullData {
             restype_label = Some("Seite"),
             restype_name = Some("http://www.knora.org/ontology/incunabula#page"),
             restype_id = "http://www.knora.org/ontology/incunabula#page",
-            person_id = "http://data.knora.org/users/91e19f1e01",
-            project_id = "http://data.knora.org/projects/77275339"
+            person_id = "http://rdfh.ch/users/91e19f1e01",
+            project_id = "http://rdfh.ch/projects/77275339"
         ))
     )
 
@@ -877,8 +877,8 @@ object ResourcesResponderV1SpecFullData {
                     restype_label = Some("Verknüpfungsobjekt"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
                     restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
-                    person_id = "http://data.knora.org/users/91e19f1e01",
-                    project_id = "http://data.knora.org/projects/77275339"
+                    person_id = "http://rdfh.ch/users/91e19f1e01",
+                    project_id = "http://rdfh.ch/projects/77275339"
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
@@ -901,8 +901,8 @@ object ResourcesResponderV1SpecFullData {
                     restype_label = Some("Region"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),
                     restype_id = "http://www.knora.org/ontology/knora-base#Region",
-                    person_id = "http://data.knora.org/users/91e19f1e01",
-                    project_id = "http://data.knora.org/projects/77275339"
+                    person_id = "http://rdfh.ch/users/91e19f1e01",
+                    project_id = "http://rdfh.ch/projects/77275339"
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
@@ -925,8 +925,8 @@ object ResourcesResponderV1SpecFullData {
                     restype_label = Some("Region"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),
                     restype_id = "http://www.knora.org/ontology/knora-base#Region",
-                    person_id = "http://data.knora.org/users/1458b20f08",
-                    project_id = "http://data.knora.org/projects/77275339"
+                    person_id = "http://rdfh.ch/users/1458b20f08",
+                    project_id = "http://rdfh.ch/projects/77275339"
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
@@ -949,8 +949,8 @@ object ResourcesResponderV1SpecFullData {
                     restype_label = Some("Verknüpfungsobjekt"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
                     restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
-                    person_id = "http://data.knora.org/users/1458b20f08",
-                    project_id = "http://data.knora.org/projects/77275339"
+                    person_id = "http://rdfh.ch/users/1458b20f08",
+                    project_id = "http://rdfh.ch/projects/77275339"
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
@@ -991,7 +991,7 @@ object ResourcesResponderV1SpecFullData {
                         ),
                     utf8str = "Derselbe Holzschnitt wird auf Seite c7r der lateinischen Ausgabe des Narrenschiffs verwendet.\r",
                     mapping = dummyMapping,
-                    mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+                    mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
                 )),
                 occurrence = Some("1-n"),
                 attributes = "",
@@ -1113,8 +1113,8 @@ object ResourcesResponderV1SpecFullData {
             restype_label = Some("Region"),
             restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),
             restype_id = "http://www.knora.org/ontology/knora-base#Region",
-            person_id = "http://data.knora.org/users/1458b20f08",
-            project_id = "http://data.knora.org/projects/77275339"
+            person_id = "http://rdfh.ch/users/1458b20f08",
+            project_id = "http://rdfh.ch/projects/77275339"
         ))
     )
 }

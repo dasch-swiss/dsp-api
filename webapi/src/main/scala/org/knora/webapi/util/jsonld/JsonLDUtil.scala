@@ -22,7 +22,7 @@ package org.knora.webapi.util.jsonld
 
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
-import org.knora.webapi.util.JavaUtil
+import org.knora.webapi.util.{JavaUtil, SmartIri, StringFormatter}
 import org.knora.webapi.{BadRequestException, IRI}
 
 /**
@@ -69,9 +69,163 @@ case class JsonLDBoolean(value: Boolean) extends JsonLDValue {
   *
   * @param value a map of keys to JSON-LD values.
   */
-case class JsonLDObject(value: Map[IRI, JsonLDValue]) extends JsonLDValue {
-    override def toAny: Map[IRI, Any] = value.map {
+case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
+    override def toAny: Map[String, Any] = value.map {
         case (k, v) => (k, v.toAny)
+    }
+
+    /**
+      * Gets a required string value of a property of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property is not found or if its value is not a string.
+      * Then parses the value with the specified validation function (see [[org.knora.webapi.util.StringFormatter]]
+      * for examples of such functions), throwing [[BadRequestException]] if the validation fails.
+      *
+      * @param key the key of the required value.
+      * @param validationFun a validation function that takes two arguments: the string to be validated, and a function
+      *                      that throws an exception if the string is invalid. The function's return value is the
+      *                      validated string, possibly converted to another type T.
+      * @tparam T the type of the validation function's return value.
+      * @return the return value of the validation function.
+      */
+    def requireString[T](key: String, validationFun: (String, => Nothing) => T): T = {
+        value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
+            case JsonLDString(str) => validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
+            case other => throw BadRequestException(s"Invalid $key: $other (string expected)")
+        }
+    }
+
+    /**
+      * Gets an optional string value of a property of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property's value is not a string. Parses the value with the specified validation
+      * function (see [[org.knora.webapi.util.StringFormatter]] for examples of such functions), throwing
+      * [[BadRequestException]] if the validation fails.
+      *
+      * @param key the key of the optional value.
+      * @param validationFun a validation function that takes two arguments: the string to be validated, and a function
+      *                      that throws an exception if the string is invalid. The function's return value is the
+      *                      validated string, possibly converted to another type T.
+      * @tparam T the type of the validation function's return value.
+      * @return the return value of the validation function, or `None` if the value was not present.
+      */
+    def maybeString[T](key: String, validationFun: (String, => Nothing) => T): Option[T] = {
+        value.get(key).map {
+            case JsonLDString(str) => validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
+            case other => throw BadRequestException(s"Invalid $key: $other (string expected)")
+        }
+    }
+
+    /**
+      * Gets the required object value of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property is not found or if its value is not an object.
+      *
+      * @param key the key of the required value.
+      * @return the required value.
+      */
+    def requireObject(key: String): JsonLDObject = {
+        value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
+            case obj: JsonLDObject => obj
+            case other => throw BadRequestException(s"Invalid $key: $other (object expected)")
+        }
+    }
+
+    /**
+      * Gets the optional object value of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property's value is not an object.
+      *
+      * @param key the key of the optional value.
+      * @return the optional value.
+      */
+    def maybeObject(key: String): Option[JsonLDObject] = {
+        value.get(key).map {
+            case obj: JsonLDObject => obj
+            case other => throw BadRequestException(s"Invalid $key: $other (object expected)")
+        }
+    }
+
+    /**
+      * Gets the required array value of this JSON-LD object. If the value is not an array,
+      * returns a one-element array containing the value. Throws
+      * [[BadRequestException]] if the property is not found.
+      *
+      * @param key the key of the required value.
+      * @return the required value.
+      */
+    def requireArray(key: String): JsonLDArray = {
+        value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
+            case obj: JsonLDArray => obj
+            case other => JsonLDArray(Seq(other))
+        }
+    }
+
+
+    /**
+      * Gets the optional array value of this JSON-LD object. If the value is not an array,
+      * returns a one-element array containing the value.
+      *
+      * @param key the key of the optional value.
+      * @return the optional value.
+      */
+    def maybeArray(key: String): Option[JsonLDArray] = {
+        value.get(key).map {
+            case obj: JsonLDArray => obj
+            case other => JsonLDArray(Seq(other))
+        }
+    }
+
+    /**
+      * Gets the required integer value of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property is not found or if its value is not an integer.
+      *
+      * @param key the key of the required value.
+      * @return the required value.
+      */
+    def requireInt(key: String): JsonLDInt = {
+        value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
+            case obj: JsonLDInt => obj
+            case other => throw BadRequestException(s"Invalid $key: $other (integer expected)")
+        }
+    }
+
+    /**
+      * Gets the optional integer value of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property's value is not an integer.
+      *
+      * @param key the key of the optional value.
+      * @return the optional value.
+      */
+    def maybeInt(key: String): Option[JsonLDInt] = {
+        value.get(key).map {
+            case obj: JsonLDInt => obj
+            case other => throw BadRequestException(s"Invalid $key: $other (integer expected)")
+        }
+    }
+
+    /**
+      * Gets the required boolean value of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property is not found or if its value is not a boolean.
+      *
+      * @param key the key of the required value.
+      * @return the required value.
+      */
+    def requireBoolean(key: String): JsonLDBoolean = {
+        value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
+            case obj: JsonLDBoolean => obj
+            case other => throw BadRequestException(s"Invalid $key: $other (boolean expected)")
+        }
+    }
+
+    /**
+      * Gets the optional boolean value of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property's value is not a boolean.
+      *
+      * @param key the key of the optional value.
+      * @return the optional value.
+      */
+    def maybeBoolean(key: String): Option[JsonLDBoolean] = {
+        value.get(key).map {
+            case obj: JsonLDBoolean => obj
+            case other => throw BadRequestException(s"Invalid $key: $other (boolean expected)")
+        }
     }
 }
 
@@ -81,7 +235,27 @@ case class JsonLDObject(value: Map[IRI, JsonLDValue]) extends JsonLDValue {
   * @param value a sequence of JSON-LD values.
   */
 case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
+    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
     override def toAny: Seq[Any] = value.map(_.toAny)
+
+    /**
+      * Tries to interpret the elements of this array as JSON-LD objects containing `@language` and `@value`,
+      * and returns the results as a map of language codes to values. Throws [[BadRequestException]]
+      * if the array can't be interpreted in this way.
+      *
+      * @return a map of language keys to values.
+      */
+    def toObjsWithLang: Map[String, String] = {
+        value.map {
+            case obj: JsonLDObject =>
+                val lang = obj.requireString("@language", stringFormatter.toSparqlEncodedString)
+                val text = obj.requireString("@value", stringFormatter.toSparqlEncodedString)
+                lang -> text
+
+            case other => throw BadRequestException(s"Expected JSON-LD object: $other")
+        }
+    }.toMap
 }
 
 /**
@@ -90,8 +264,69 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
   * @param body    the body of the JSON-LD document.
   * @param context the context of the JSON-LD document.
   */
-case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject)
+case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject) {
+    /**
+      * A convenience function that calls `body.requireString`.
+      */
+    def requireString[T](key: String, validationFun: (String, => Nothing) => T): T = body.requireString(key, validationFun)
 
+    /**
+      * A convenience function that calls `body.maybeString`.
+      */
+    def maybeString[T](key: String, validationFun: (String, => Nothing) => T): Option[T] = body.maybeString(key, validationFun)
+
+    /**
+      * A convenience function that calls `body.requireObject`.
+      */
+    def requireObject(key: String): JsonLDObject = body.requireObject(key)
+
+    /**
+      * A convenience function that calls `body.maybeObject`.
+      */
+    def maybeObject(key: String): Option[JsonLDObject] = body.maybeObject(key)
+
+    /**
+      * A convenience function that calls `body.requireArray`.
+      */
+    def requireArray(key: String): JsonLDArray = body.requireArray(key)
+
+    /**
+      * A convenience function that calls `body.maybeArray`.
+      */
+    def maybeArray(key: String): Option[JsonLDArray] = body.maybeArray(key)
+
+    /**
+      * A convenience function that calls `body.requireInt`.
+      */
+    def requireInt(key: String): JsonLDInt = body.requireInt(key)
+
+    /**
+      * A convenience function that calls `body.maybeInt`.
+      */
+    def maybeInt(key: String): Option[JsonLDInt] = body.maybeInt(key)
+
+    /**
+      * A convenience function that calls `body.requireBoolean`.
+      */
+    def requireBoolean(key: String): JsonLDBoolean = body.requireBoolean(key)
+
+    /**
+      * A convenience function that calls `body.maybeBoolean`.
+      */
+    def maybeBoolean(key: String): Option[JsonLDBoolean] = body.maybeBoolean(key)
+
+    /**
+      * Converts this [[JsonLDDocument]] to a pretty-printed JSON-LD string.
+      *
+      * @return the formatted document.
+      */
+    def toPrettyString: String = {
+        val contextAsJava = JavaUtil.deepScalaToJava(context.toAny)
+        val jsonAsJava = JavaUtil.deepScalaToJava(body.toAny)
+        val compacted = JsonLdProcessor.compact(jsonAsJava, contextAsJava, new JsonLdOptions())
+        JsonUtils.toPrettyString(compacted)
+    }
+}
 
 /**
   * Utility functions for working with JSON-LD.

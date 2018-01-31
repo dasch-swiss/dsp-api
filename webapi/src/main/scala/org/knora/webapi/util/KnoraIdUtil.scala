@@ -24,16 +24,17 @@ import java.nio.ByteBuffer
 import java.util.{Base64, UUID}
 
 import org.knora.webapi._
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
+import org.knora.webapi.util.IriConversions._
 
 object KnoraIdUtil {
     private val CanonicalUuidLength = 36
     private val Base64UuidLength = 22
 
     /**
-      * The domain name used to construct Knora IRIs. If the project ID has been registered with
-      * the Data and Service Center for the Humanities, the IRI will be dereferenceable.
+      * The domain name used to construct Knora IRIs.
       */
-    private val IriDomain = "rdfh.ch"
+    val IriDomain = "rdfh.ch"
 }
 
 /**
@@ -46,7 +47,7 @@ class KnoraIdUtil {
 
     private val base64Encoder = Base64.getUrlEncoder.withoutPadding
     private val base64Decoder = Base64.getUrlDecoder
-    private val stringFormatter = StringFormatter.getInstance
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
       * Generates a type 4 UUID using [[java.util.UUID]], and Base64-encodes it using a URL and filename safe
@@ -135,12 +136,16 @@ class KnoraIdUtil {
     /**
       * Creates a new resource IRI based on a UUID.
       *
-      * @param projectShortname the project's unique, short identifier.
+      * @param projectInfo the project's info.
       * @return a new resource IRI.
       */
-    def makeRandomResourceIri(projectShortname: String): IRI = {
+    def makeRandomResourceIri(projectInfo: ProjectInfoV1): IRI = {
         val knoraResourceID = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/$projectShortname/$knoraResourceID"
+        if (projectInfo.shortcode.isDefined) {
+            s"http://$IriDomain/${projectInfo.shortcode.get}/${projectInfo.shortname}/$knoraResourceID"
+        } else {
+            s"http://$IriDomain/${projectInfo.shortname}/$knoraResourceID"
+        }
     }
 
     /**
@@ -150,8 +155,8 @@ class KnoraIdUtil {
       * @return a new value IRI.
       */
     def makeRandomValueIri(resourceIri: IRI): IRI = {
-        val knoraValueID = makeRandomBase64EncodedUuid
-        s"$resourceIri/values/$knoraValueID"
+        val knoraValueUuid = makeRandomBase64EncodedUuid
+        s"$resourceIri/values/$knoraValueUuid"
     }
 
     /**
@@ -163,18 +168,18 @@ class KnoraIdUtil {
     def makeProjectMappingIri(projectIri: IRI, mappingName: String): IRI = {
         val mappingIri = s"$projectIri/mappings/$mappingName"
         // check that the mapping IRI is valid (mappingName is user input)
-        stringFormatter.toIri(mappingIri, () => throw BadRequestException(s"the created mapping IRI $mappingIri is invalid"))
+        stringFormatter.validateAndEscapeIri(mappingIri, throw BadRequestException(s"the created mapping IRI $mappingIri is invalid"))
     }
 
     /**
-      * Creates a random ID for an element of a mapping based on a mapping IRI.
+      * Creates a random IRI for an element of a mapping based on a mapping IRI.
       *
       * @param mappingIri the IRI of the mapping the element belongs to.
       * @return a new mapping element IRI.
       */
     def makeRandomMappingElementIri(mappingIri: IRI): IRI = {
-        val knoraMappingElementID = makeRandomBase64EncodedUuid
-        s"$mappingIri/elements/$knoraMappingElementID"
+        val knoraMappingElementUuid = makeRandomBase64EncodedUuid
+        s"$mappingIri/elements/$knoraMappingElementUuid"
     }
 
     /**
@@ -189,44 +194,35 @@ class KnoraIdUtil {
     }
 
     /**
-      * Creates a new representation IRI based on a UUID.
+      * Creates a new project IRI based on a UUID or project shortcode.
       *
-      * @param resourceIri the IRI of the resource that will have the representation.
-      * @return a new representation IRI.
-      */
-    def makeRandomFileValueIri(resourceIri: IRI): IRI = {
-        val knoraValueID = makeRandomBase64EncodedUuid
-        s"$resourceIri/reps/$knoraValueID"
-    }
-
-    /**
-      * Creates a new institution IRI based on a UUID.
-      *
-      * @return a new institution IRI.
-      */
-    def makeRandomInstitutionIri: IRI = {
-        val knoraInstitutionID = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/institutions/$knoraInstitutionID"
-    }
-
-    /**
-      * Creates a new project IRI based on a UUID.
-      *
+      * @param maybeShortcode the optional project shortcode.
       * @return a new project IRI.
       */
-    def makeRandomProjectIri: IRI = {
-        val knoraProjectID = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/projects/$knoraProjectID"
+    def makeRandomProjectIri(maybeShortcode: Option[String]): IRI = {
+
+        if (maybeShortcode.isDefined) {
+            s"http://$IriDomain/projects/${maybeShortcode.get}"
+        } else {
+            val knoraProjectID = makeRandomBase64EncodedUuid
+            s"http://$IriDomain/projects/$knoraProjectID"
+        }
     }
 
     /**
       * Creates a new group IRI based on a UUID.
       *
+      * @param maybeShortcode the optional project shortcode.
       * @return a new group IRI.
       */
-    def makeRandomGroupIri: String = {
-        val knoraGroupID = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/groups/$knoraGroupID"
+    def makeRandomGroupIri(maybeShortcode: Option[String]): String = {
+        val knoraGroupUuid = makeRandomBase64EncodedUuid
+
+        if (maybeShortcode.isDefined) {
+            s"http://$IriDomain/groups/${maybeShortcode.get}/$knoraGroupUuid"
+        } else {
+            s"http://$IriDomain/groups/$knoraGroupUuid"
+        }
     }
 
     /**
@@ -235,18 +231,8 @@ class KnoraIdUtil {
       * @return a new person IRI.
       */
     def makeRandomPersonIri: IRI = {
-        val knoraPersonID = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/users/$knoraPersonID"
-    }
-
-    /**
-      * Creates a new hierarchical list IRI based on a UUID.
-      *
-      * @return a new hierarchical list IRI.
-      */
-    def makeRandomHListIri: IRI = {
-        val knoraHListID = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/lists/$knoraHListID"
+        val knoraPersonUuid = makeRandomBase64EncodedUuid
+        s"http://$IriDomain/users/$knoraPersonUuid"
     }
 
     /**
@@ -256,8 +242,8 @@ class KnoraIdUtil {
       * @return a standoff tag IRI.
       */
     def makeRandomStandoffTagIri(valueIri: IRI): IRI = {
-        val standoffTagID = makeRandomBase64EncodedUuid
-        s"$valueIri/standoff/$standoffTagID"
+        val standoffTagUuid = makeRandomBase64EncodedUuid
+        s"$valueIri/standoff/$standoffTagUuid"
     }
 
     /**
@@ -266,7 +252,7 @@ class KnoraIdUtil {
       * @param linkPropertyIri the IRI of the property that points to a resource.
       * @return the IRI of the corresponding link value property.
       */
-    def linkPropertyIriToLinkValuePropertyIri(linkPropertyIri: IRI): IRI = linkPropertyIri + "Value"
+    def linkPropertyIriToLinkValuePropertyIri(linkPropertyIri: IRI): IRI = linkPropertyIri.toSmartIri.fromLinkPropToLinkValueProp.toString
 
     /**
       * Converts the IRI of a property that points to a `knora-base:LinkValue` into the IRI of the corresponding link property.
@@ -274,13 +260,7 @@ class KnoraIdUtil {
       * @param linkValuePropertyIri the IRI of the property that points to the `LinkValue`.
       * @return the IRI of the corresponding link property.
       */
-    def linkValuePropertyIri2LinkPropertyIri(linkValuePropertyIri: IRI): IRI = {
-        if (linkValuePropertyIri.endsWith("Value")) {
-            linkValuePropertyIri.substring(0, linkValuePropertyIri.length - "Value".length)
-        } else {
-            throw InconsistentTriplestoreDataException(s"Link value predicate IRI $linkValuePropertyIri does not end with 'Value'")
-        }
-    }
+    def linkValuePropertyIri2LinkPropertyIri(linkValuePropertyIri: IRI): IRI = linkValuePropertyIri.toSmartIri.fromLinkValuePropToLinkProp.toString
 
     /**
       * Creates a new permission IRI based on a UUID.
@@ -288,8 +268,8 @@ class KnoraIdUtil {
       * @return the IRI of the permission object.
       */
     def makeRandomPermissionIri: IRI = {
-        val knoraPermissionID = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/permissions/$knoraPermissionID"
+        val knoraPermissionUuid = makeRandomBase64EncodedUuid
+        s"http://$IriDomain/permissions/$knoraPermissionUuid"
     }
 
     /**
@@ -317,7 +297,7 @@ class KnoraIdUtil {
       * Creates a random IRI for a `knora-base:MapEntry`.
       */
     def makeRandomMapEntryIri: IRI = {
-        val mapEntryID = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/map-entries/$mapEntryID"
+        val mapEntryUuid = makeRandomBase64EncodedUuid
+        s"http://$IriDomain/map-entries/$mapEntryUuid"
     }
 }

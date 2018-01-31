@@ -550,17 +550,17 @@ export module resourceResponseFormats {
      */
     interface vocabularyItem {
         /**
-         * The vocabulay's short name
+         * The vocabulary's project's short name
          */
         shortname: string;
 
         /**
-         * Description of the vocbulary
+         * Description of the vocabulary's project
          */
         description: string;
 
         /**
-         * The vocabulay's IRI
+         * The vocabulary's IRI
          */
         uri: basicMessageComponents.KnoraIRI;
 
@@ -575,7 +575,7 @@ export module resourceResponseFormats {
         project_id:basicMessageComponents.KnoraIRI;
 
         /**
-         * The vocabulay's long name
+         * The vocabulary's project's long name
          */
         longname: string;
 

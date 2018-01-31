@@ -30,7 +30,7 @@ import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.store._
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{IRI, LiveActorMaker, R2RSpec, SharedAdminTestData}
+import org.knora.webapi.{IRI, LiveActorMaker, R2RSpec, SharedTestDataV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import spray.json._
 
@@ -53,7 +53,7 @@ class ValuesV1R2RSpec extends R2RSpec {
 
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
-    private val incunabulaUser = SharedAdminTestData.incunabulaProjectAdminUser
+    private val incunabulaUser = SharedTestDataV1.incunabulaProjectAdminUser
 
     implicit val timeout: Timeout = settings.defaultRestoreTimeout
 
@@ -69,11 +69,11 @@ class ValuesV1R2RSpec extends R2RSpec {
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
 
-    private val anythingUser = SharedAdminTestData.anythingUser1
+    private val anythingUser = SharedTestDataV1.anythingUser1
     private val anythingUserEmail = anythingUser.userData.email.get
     private val testPass = "test"
 
-    private val mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping"
+    private val mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)

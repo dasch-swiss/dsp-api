@@ -51,8 +51,8 @@ object CoreSpec {
 abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with WordSpecLike with Matchers with BeforeAndAfterAll with ImplicitSender {
 
     val settings = Settings(_system)
-    StringFormatter.init(settings)
-    val logger = akka.event.Logging(_system, this.getClass())
+    val logger = akka.event.Logging(_system, this.getClass)
+    StringFormatter.initForTest()
 
     final override def beforeAll() {
         atStartup()

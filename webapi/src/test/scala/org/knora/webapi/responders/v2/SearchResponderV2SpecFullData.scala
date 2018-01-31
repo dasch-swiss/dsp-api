@@ -1,19 +1,21 @@
 package org.knora.webapi.responders.v2
 
 import akka.actor.ActorSystem
-import org.apache.jena.sparql.function.library.uuid
 import org.knora.webapi.Settings
 import org.knora.webapi.messages.v1.responder.standoffmessages._
-import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.search._
 
-object SearchResponderV2SpecFullData {
 
-    implicit lazy val system = ActorSystem("webapi")
+class SearchResponderV2SpecFullData {
+
+    implicit lazy val system: ActorSystem = ActorSystem("webapi")
 
     val settings = Settings(system)
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     val fulltextSearchForNarr = ReadResourcesSequenceV2(
         resources = Vector(
@@ -655,7 +657,7 @@ object SearchResponderV2SpecFullData {
                                     ))
                                 ))
                             ),
-                            mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping",
+                            mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
                             standoff = Vector(
                                 StandoffTagV1(
                                     attributes = Vector(StandoffTagIriAttributeV1(
@@ -971,7 +973,7 @@ object SearchResponderV2SpecFullData {
                                     ))
                                 ))
                             ),
-                            mappingIri = "http://data.knora.org/projects/standoff/mappings/StandardMapping",
+                            mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
                             standoff = Vector(
                                 StandoffTagV1(
                                     attributes = Vector(StandoffTagIriAttributeV1(
@@ -1016,87 +1018,33 @@ object SearchResponderV2SpecFullData {
         numberOfResources = 1
     )
 
+    // Dear Ben: I am aware of the fact that this code is not formatted properly and I know that this deeply disturbs you. But please leave it like this since otherwise I cannot possibly read and understand this query.
     val constructQueryForBooksWithTitleZeitgloecklein = ConstructQuery(
-        whereClause = WhereClause(patterns = Vector(
-            StatementPattern(
-                namedGraph = None,
-                obj = IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#book"
-                ),
-                pred = IriRef(
-                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                ),
-                subj = QueryVariable(variableName = "book")
+        constructClause = ConstructClause(
+            Vector(
+                StatementPattern(QueryVariable("book"), IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None), XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri), None),
+                StatementPattern(QueryVariable("book"), IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri, None), QueryVariable("title"), None))
+        ),
+        whereClause = WhereClause(
+            patterns = Vector(
+                StatementPattern(QueryVariable("book"), IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None), IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#book".toSmartIri, None), None),
+                StatementPattern(QueryVariable("book"), IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None), IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None), None),
+                StatementPattern(QueryVariable("book"), IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri, None), QueryVariable("title"), None),
+                StatementPattern(IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri, None), IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri, None), IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None), None),
+                StatementPattern(QueryVariable("title"), IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None), IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None), None),
+                FilterPattern(CompareExpression(QueryVariable("title"), CompareExpressionOperator.EQUALS, XsdLiteral("Zeitglöcklein des Lebens und Leidens Christi", "http://www.w3.org/2001/XMLSchema#string".toSmartIri)))
             ),
-            StatementPattern(
-                namedGraph = None,
-                obj = IriRef(
-                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource"
-                ),
-                pred = IriRef(
-                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                ),
-                subj = QueryVariable(variableName = "book")
-            ),
-            StatementPattern(
-                namedGraph = None,
-                obj = QueryVariable(variableName = "title"),
-                pred = IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
-                ),
-                subj = QueryVariable(variableName = "book")
-            ),
-            StatementPattern(
-                namedGraph = None,
-                obj = IriRef(
-                    iri = "http://www.w3.org/2001/XMLSchema#string"
-                ),
-                pred = IriRef(
-                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#objectType"
-                ),
-                subj = IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
-                )
-            ),
-            StatementPattern(
-                namedGraph = None,
-                obj = IriRef(
-                    iri = "http://www.w3.org/2001/XMLSchema#string"
-                ),
-                pred = IriRef(
-                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                ),
-                subj = QueryVariable(variableName = "title")
-            ),
-            FilterPattern(expression = CompareExpression(
-                rightArg = XsdLiteral(
-                    datatype = "http://www.w3.org/2001/XMLSchema#string",
-                    value = "Zeitgl\u00F6cklein des Lebens und Leidens Christi"
-                ),
-                operator = CompareExpressionOperator.EQUALS,
-                leftArg = QueryVariable(variableName = "title")
-            ))
-        )), constructClause = ConstructClause(statements = Vector(
-            StatementPattern(
-                namedGraph = None,
-                obj = XsdLiteral(
-                    datatype = "http://www.w3.org/2001/XMLSchema#boolean",
-                    value = "true"
-                ),
-                pred = IriRef(
-                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#isMainResource"
-                ),
-                subj = QueryVariable(variableName = "book")
-            ),
-            StatementPattern(
-                namedGraph = None,
-                obj = QueryVariable(variableName = "title"),
-                pred = IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
-                ),
-                subj = QueryVariable(variableName = "book")
+            positiveEntities = Set(IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri, None),
+                IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#book".toSmartIri, None),
+                IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri, None),
+                IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+                QueryVariable("book"),
+                QueryVariable("title")
             )
-        ))
+        )
     )
 
     val booksWithTitleZeitgloeckleinResponse = ReadResourcesSequenceV2(
@@ -1133,88 +1081,32 @@ object SearchResponderV2SpecFullData {
         numberOfResources = 2
     )
 
+    // Dear Ben: please see my comment above
     val constructQueryForBooksWithoutTitleZeitgloecklein = ConstructQuery(
-        whereClause = WhereClause(patterns = Vector(
-            StatementPattern(
-                namedGraph = None,
-                obj = IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#book"
-                ),
-                pred = IriRef(
-                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                ),
-                subj = QueryVariable(variableName = "book")
+        constructClause = ConstructClause(
+            Vector(
+                StatementPattern(QueryVariable("book"), IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None), XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri), None),
+                StatementPattern(QueryVariable("book"), IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri, None), QueryVariable("title"), None))
+        ),
+        whereClause = WhereClause(
+            patterns = Vector(
+                StatementPattern(QueryVariable("book"), IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None), IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#book".toSmartIri, None), None),
+                StatementPattern(QueryVariable("book"), IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None), IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None), None),
+                StatementPattern(QueryVariable("book"), IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri, None), QueryVariable("title"), None),
+                StatementPattern(IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri, None), IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri, None), IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None), None),
+                StatementPattern(QueryVariable("title"), IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None), IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None), None),
+                FilterPattern(CompareExpression(QueryVariable("title"), CompareExpressionOperator.NOT_EQUALS, XsdLiteral("Zeitglöcklein des Lebens und Leidens Christi", "http://www.w3.org/2001/XMLSchema#string".toSmartIri)))
             ),
-            StatementPattern(
-                namedGraph = None,
-                obj = IriRef(
-                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource"
-                ),
-                pred = IriRef(
-                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                ),
-                subj = QueryVariable(variableName = "book")
-            ),
-            StatementPattern(
-                namedGraph = None,
-                obj = QueryVariable(variableName = "title"),
-                pred = IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
-                ),
-                subj = QueryVariable(variableName = "book")
-            ),
-            StatementPattern(
-                namedGraph = None,
-                obj = IriRef(
-                    iri = "http://www.w3.org/2001/XMLSchema#string"
-                ),
-                pred = IriRef(
-                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#objectType"
-                ),
-                subj = IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
-                )
-            ),
-            StatementPattern(
-                namedGraph = None,
-                obj = IriRef(
-                    iri = "http://www.w3.org/2001/XMLSchema#string"
-                ),
-                pred = IriRef(
-                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                ),
-                subj = QueryVariable(variableName = "title")
-            ),
-            FilterPattern(expression = CompareExpression(
-                rightArg = XsdLiteral(
-                    datatype = "http://www.w3.org/2001/XMLSchema#string",
-                    value = "Zeitgl\u00F6cklein des Lebens und Leidens Christi"
-                ),
-                operator = CompareExpressionOperator.NOT_EQUALS,
-                leftArg = QueryVariable(variableName = "title")
-            ))
-        )),
-        constructClause = ConstructClause(statements = Vector(
-            StatementPattern(
-                namedGraph = None,
-                obj = XsdLiteral(
-                    datatype = "http://www.w3.org/2001/XMLSchema#boolean",
-                    value = "true"
-                ),
-                pred = IriRef(
-                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#isMainResource"
-                ),
-                subj = QueryVariable(variableName = "book")
-            ),
-            StatementPattern(
-                namedGraph = None,
-                obj = QueryVariable(variableName = "title"),
-                pred = IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/incunabula/simple/v2#title"
-                ),
-                subj = QueryVariable(variableName = "book")
+            positiveEntities = Set(IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri, None),
+                IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#book".toSmartIri, None),
+                IriRef("http://0.0.0.0:3333/ontology/incunabula/simple/v2#title".toSmartIri, None),
+                IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+                QueryVariable("book"),
+                QueryVariable("title")
             )
-        )
         )
     )
 }

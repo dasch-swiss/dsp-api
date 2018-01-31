@@ -23,13 +23,12 @@ package org.knora.webapi.responders.v2
 import java.time.Instant
 
 import akka.pattern._
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.messages.v2.responder.persistentmapmessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.KnoraIdUtil
-import org.knora.webapi._
+import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants, _}
 
 import scala.concurrent.Future
 
@@ -105,7 +104,7 @@ class PersistentMapResponderV2 extends Responder {
             val currentTime = Instant.now.toString
 
             val updateFuture = for {
-            // Create the persistent map if it doesn't exist already.
+                // Create the persistent map if it doesn't exist already.
 
                 createMapSparql <- Future(queries.sparql.v2.txt.createMap(
                     mapNamedGraphIri = OntologyConstants.NamedGraphs.PersistentMapNamedGraph,
@@ -145,7 +144,7 @@ class PersistentMapResponderV2 extends Responder {
         val mapIri = knoraIdUtil.makeMapIri(request.mapPath)
 
         for {
-        // Run the update while holding an update lock on the map.
+            // Run the update while holding an update lock on the map.
             taskResult <- IriLocker.runWithIriLock(
                 request.apiRequestID,
                 mapIri,
@@ -185,7 +184,7 @@ class PersistentMapResponderV2 extends Responder {
         val mapIri = knoraIdUtil.makeMapIri(request.mapPath)
 
         for {
-        // Run the update while holding an update lock on the map.
+            // Run the update while holding an update lock on the map.
             taskResult <- IriLocker.runWithIriLock(
                 request.apiRequestID,
                 mapIri,
@@ -224,7 +223,7 @@ class PersistentMapResponderV2 extends Responder {
         val mapIri = knoraIdUtil.makeMapIri(request.mapPath)
 
         for {
-        // Run the update while holding an update lock on the map.
+            // Run the update while holding an update lock on the map.
             taskResult <- IriLocker.runWithIriLock(
                 request.apiRequestID,
                 mapIri,

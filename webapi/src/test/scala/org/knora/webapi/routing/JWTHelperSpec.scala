@@ -25,7 +25,7 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import io.igl.jwt._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.{CoreSpec, SharedAdminTestData}
+import org.knora.webapi.{CoreSpec, SharedTestDataV1}
 
 import scala.concurrent.duration._
 import scala.util.Try
@@ -44,7 +44,7 @@ class JWTHelperSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSe
     implicit val executionContext = system.dispatcher
     implicit val timeout: Timeout = Duration(5, SECONDS)
 
-    val rootUserProfileV1: UserProfileV1 = SharedAdminTestData.rootUser
+    val rootUserProfileV1: UserProfileV1 = SharedTestDataV1.rootUser
     val rootUserEmail: String = rootUserProfileV1.userData.email.get
     val rootUserPassword: String = "test"
 

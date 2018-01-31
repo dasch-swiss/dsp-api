@@ -20,12 +20,21 @@
 
 package org.knora.webapi.util
 
-import java.util.function.BiFunction
+import java.util.function.{Function, BiFunction}
 
 /**
   * Utility functions for working with Java libraries.
   */
 object JavaUtil {
+
+    /**
+      * Converts a 1-argument Scala function into a Java [[Function]].
+      *
+      * @param f the Scala function.
+      * @return a [[Function]] that calls the Scala function.
+      */
+    def function[A, B](f: A => B): Function[A, B] =
+        (a: A) => f(a)
 
     /**
       * Converts a 2-argument Scala function into a Java [[BiFunction]].
@@ -71,5 +80,13 @@ object JavaUtil {
             case x: collection.Map[_, _] => x.mapValues(deepScalaToJava).asJava
             case _ => scalaCollection
         }
+    }
+
+    /**
+      * Helps turn matches for optional regular expression groups, which can be null, into Scala Option objects. See
+      * [[https://stackoverflow.com/a/18794646]].
+      */
+    object Optional {
+        def unapply[T](a: T) = if (null == a) Some(None) else Some(Some(a))
     }
 }

@@ -31,7 +31,8 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util._
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.SmartIri
 
 import scala.concurrent.Future
 
@@ -43,7 +44,6 @@ import scala.concurrent.Future
   */
 class OntologyResponderV1 extends Responder {
 
-    private val knoraIdUtil = new KnoraIdUtil
     private val valueUtilV1 = new ValueUtilV1(settings)
 
     /**
@@ -63,7 +63,7 @@ class OntologyResponderV1 extends Responder {
         case PropertyTypesForResourceTypeGetRequestV1(restypeId, userProfile) => future2Message(sender(), getPropertyTypesForResourceType(restypeId, userProfile), log)
         case StandoffEntityInfoGetRequestV1(standoffClassIris, standoffPropertyIris, userProfile) => future2Message(sender(), getStandoffEntityInfoResponseV1(standoffClassIris, standoffPropertyIris, userProfile), log)
         case StandoffClassesWithDataTypeGetRequestV1(userProfile) => future2Message(sender(), getStandoffStandoffClassesWithDataTypeV1(userProfile), log)
-        case StandoffAllPropertyEntitiesGetRequestV1(userProfile) => future2Message(sender(), getAllStandoffPropertyEntities(userProfile), log)
+        case StandoffAllPropertiesGetRequestV1(userProfile) => future2Message(sender(), getAllStandoffPropertyEntities(userProfile), log)
         case NamedGraphEntityInfoRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
@@ -84,17 +84,35 @@ class OntologyResponderV1 extends Responder {
     }
 
     /**
+      * Wraps OWL class information from `OntologyResponderV2` for use in API v1.
+      */
+    private def classInfoMapV2ToV1(classInfoMap: Map[SmartIri, ReadClassInfoV2]): Map[IRI, ClassInfoV1] = {
+        classInfoMap.map {
+            case (smartIri, classInfoV2) => smartIri.toString -> new ClassInfoV1(classInfoV2)
+        }
+    }
+
+    /**
+      * Wraps OWL property information from `OntologyResponderV2` for use in API v1.
+      */
+    private def propertyInfoMapV2ToV1(propertyInfoMap: Map[SmartIri, ReadPropertyInfoV2]): Map[IRI, PropertyInfoV1] = {
+        propertyInfoMap.map {
+            case (smartIri, propertyInfoV2) => smartIri.toString -> new PropertyInfoV1(propertyInfoV2)
+        }
+    }
+
+    /**
       * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV1]] describing both resource and property entities.
       *
       * @param resourceClassIris the IRIs of the resource entities to be queried.
-      * @param propertyIris the IRIs of the property entities to be queried.
-      * @param userProfile  the profile of the user making the request.
+      * @param propertyIris      the IRIs of the property entities to be queried.
+      * @param userProfile       the profile of the user making the request.
       * @return an [[EntityInfoGetResponseV1]].
       */
     private def getEntityInfoResponseV1(resourceClassIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[EntityInfoGetResponseV1] = {
         for {
-            response: EntityInfoGetResponseV2 <- (responderManager ? EntityInfoGetRequestV2(resourceClassIris, propertyIris, userProfile)).mapTo[EntityInfoGetResponseV2]
-        } yield EntityInfoGetResponseV1(resourceEntityInfoMap = response.classEntityInfoMap, propertyEntityInfoMap = response.propertyEntityInfoMap) // TODO: use V2 directly
+            response: EntityInfoGetResponseV2 <- (responderManager ? EntityInfoGetRequestV2(resourceClassIris.map(_.toSmartIri), propertyIris.map(_.toSmartIri), userProfile)).mapTo[EntityInfoGetResponseV2]
+        } yield EntityInfoGetResponseV1(resourceClassInfoMap = classInfoMapV2ToV1(response.classInfoMap), propertyInfoMap = propertyInfoMapV2ToV1(response.propertyInfoMap))
     }
 
 
@@ -108,8 +126,10 @@ class OntologyResponderV1 extends Responder {
       */
     private def getStandoffEntityInfoResponseV1(standoffClassIris: Set[IRI] = Set.empty[IRI], standoffPropertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1): Future[StandoffEntityInfoGetResponseV1] = {
         for {
-            response: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, userProfile)).mapTo[StandoffEntityInfoGetResponseV2]
-        } yield StandoffEntityInfoGetResponseV1(standoffClassEntityInfoMap = response.standoffClassEntityInfoMap, standoffPropertyEntityInfoMap = response.standoffPropertyEntityInfoMap) // TODO: use V2 directly
+            response: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(standoffClassIris.map(_.toSmartIri), standoffPropertyIris.map(_.toSmartIri), userProfile)).mapTo[StandoffEntityInfoGetResponseV2]
+
+
+        } yield StandoffEntityInfoGetResponseV1(standoffClassInfoMap = classInfoMapV2ToV1(response.standoffClassInfoMap), standoffPropertyInfoMap = propertyInfoMapV2ToV1(response.standoffPropertyInfoMap))
     }
 
     /**
@@ -121,19 +141,19 @@ class OntologyResponderV1 extends Responder {
     private def getStandoffStandoffClassesWithDataTypeV1(userProfile: UserProfileV1): Future[StandoffClassesWithDataTypeGetResponseV1] = {
         for {
             response: StandoffClassesWithDataTypeGetResponseV2 <- (responderManager ? StandoffClassesWithDataTypeGetRequestV2(userProfile)).mapTo[StandoffClassesWithDataTypeGetResponseV2]
-        } yield StandoffClassesWithDataTypeGetResponseV1(standoffClassEntityInfoMap = response.standoffClassEntityInfoMap) // TODO: use V2 directly
+        } yield StandoffClassesWithDataTypeGetResponseV1(standoffClassInfoMap = classInfoMapV2ToV1(response.standoffClassInfoMap))
     }
 
     /**
       * Gets all standoff property entities.
       *
       * @param userProfile the profile of the user making the request.
-      * @return a [[StandoffAllPropertyEntitiesGetResponseV1]].
+      * @return a [[StandoffAllPropertiesGetResponseV1]].
       */
-    private def getAllStandoffPropertyEntities(userProfile: UserProfileV1): Future[StandoffAllPropertyEntitiesGetResponseV1] = {
+    private def getAllStandoffPropertyEntities(userProfile: UserProfileV1): Future[StandoffAllPropertiesGetResponseV1] = {
         for {
             response: StandoffAllPropertyEntitiesGetResponseV2 <- (responderManager ? StandoffAllPropertyEntitiesGetRequestV2(userProfile)).mapTo[StandoffAllPropertyEntitiesGetResponseV2]
-        } yield StandoffAllPropertyEntitiesGetResponseV1(standoffAllPropertiesEntityInfoMap = response.standoffAllPropertiesEntityInfoMap) // TODO: use V2 directly
+        } yield StandoffAllPropertiesGetResponseV1(standoffAllPropertiesInfoMap = propertyInfoMapV2ToV1(response.standoffAllPropertiesEntityInfoMap))
     }
 
     /**
@@ -147,9 +167,9 @@ class OntologyResponderV1 extends Responder {
     private def getResourceTypeResponseV1(resourceTypeIri: String, userProfile: UserProfileV1): Future[ResourceTypeResponseV1] = {
 
         for {
-        // Get all information about the resource type, including its property cardinalities.
+            // Get all information about the resource type, including its property cardinalities.
             resourceClassInfoResponse: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(resourceClassIris = Set(resourceTypeIri), userProfile = userProfile)
-            resourceClassInfo: ClassEntityInfoV2 = resourceClassInfoResponse.resourceEntityInfoMap.getOrElse(resourceTypeIri, throw NotFoundException(s"Resource class $resourceTypeIri not found"))
+            resourceClassInfo: ClassInfoV1 = resourceClassInfoResponse.resourceClassInfoMap.getOrElse(resourceTypeIri, throw NotFoundException(s"Resource class $resourceTypeIri not found"))
 
             // Get all information about those properties.
             propertyInfo: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = resourceClassInfo.cardinalities.keySet, userProfile = userProfile)
@@ -161,8 +181,8 @@ class OntologyResponderV1 extends Responder {
                     resourceClassInfo.linkValueProperties(propertyIri) || propertyIri == OntologyConstants.KnoraBase.HasStandoffLinkTo
             }.map {
                 case (propertyIri: IRI, cardinality: Cardinality.Value) =>
-                    propertyInfo.propertyEntityInfoMap.get(propertyIri) match {
-                        case Some(entityInfo: PropertyEntityInfoV2) =>
+                    propertyInfo.propertyInfoMap.get(propertyIri) match {
+                        case Some(entityInfo: PropertyInfoV1) =>
 
                             if (entityInfo.isLinkProp) {
                                 // It is a linking prop: its valuetype_id is knora-base:LinkValue.
@@ -223,9 +243,9 @@ class OntologyResponderV1 extends Responder {
       */
     private def checkSubClass(checkSubClassRequest: CheckSubClassRequestV1): Future[CheckSubClassResponseV1] = {
         for {
-            response: CheckSubClassResponseV2 <- (responderManager ? CheckSubClassRequestV2(subClassIri = checkSubClassRequest.subClassIri, superClassIri = checkSubClassRequest.superClassIri, checkSubClassRequest.userProfile)).mapTo[CheckSubClassResponseV2]
+            response: CheckSubClassResponseV2 <- (responderManager ? CheckSubClassRequestV2(subClassIri = checkSubClassRequest.subClassIri.toSmartIri, superClassIri = checkSubClassRequest.superClassIri.toSmartIri, checkSubClassRequest.userProfile)).mapTo[CheckSubClassResponseV2]
 
-        } yield CheckSubClassResponseV1(response.isSubClass) // TODO: use V2 directly
+        } yield CheckSubClassResponseV1(response.isSubClass)
     }
 
     /**
@@ -236,10 +256,16 @@ class OntologyResponderV1 extends Responder {
       */
     private def getSubClasses(getSubClassesRequest: SubClassesGetRequestV1): Future[SubClassesGetResponseV1] = {
         for {
+            response: SubClassesGetResponseV2 <- (responderManager ? SubClassesGetRequestV2(getSubClassesRequest.resourceClassIri.toSmartIri, getSubClassesRequest.userProfile)).mapTo[SubClassesGetResponseV2]
 
-            response: SubClassesGetResponseV2 <- (responderManager ? SubClassesGetRequestV2(getSubClassesRequest.resourceClassIri, getSubClassesRequest.userProfile)).mapTo[SubClassesGetResponseV2]
+            subClasses = response.subClasses.map {
+                subClassInfoV2 => SubClassInfoV1(
+                    id = subClassInfoV2.id.toString,
+                    label = subClassInfoV2.label
+                )
+            }
 
-        } yield SubClassesGetResponseV1(response.subClasses) // TODO: use V2 directly
+        } yield SubClassesGetResponseV1(subClasses)
     }
 
     /**
@@ -268,8 +294,8 @@ class OntologyResponderV1 extends Responder {
       */
     def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV1] = {
         for {
-            response: NamedGraphEntityInfoV2 <- (responderManager ? NamedGraphEntitiesRequestV2(namedGraphIri, userProfile)).mapTo[NamedGraphEntityInfoV2]
-        } yield NamedGraphEntityInfoV1(namedGraphIri = response.namedGraphIri, resourceClasses = response.classIris, propertyIris = response.propertyIris) // TODO: use V2 directly
+            response: OntologyEntitiesIriInfoV2 <- (responderManager ? OntologyEntityIrisGetRequestV2(namedGraphIri.toSmartIri, userProfile)).mapTo[OntologyEntitiesIriInfoV2]
+        } yield NamedGraphEntityInfoV1(namedGraphIri = response.ontologyIri.toString, resourceClasses = response.classIris.map(_.toString), propertyIris = response.propertyIris.map(_.toString))
     }
 
     /**
@@ -285,7 +311,7 @@ class OntologyResponderV1 extends Responder {
         def getResourceTypes(namedGraphIri: IRI): Future[Seq[ResourceTypeV1]] = {
             for {
 
-            // get NamedGraphEntityInfoV1 for the given named graph
+                // get NamedGraphEntityInfoV1 for the given named graph
                 namedGraphEntityInfo: NamedGraphEntityInfoV1 <- getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
 
                 // get resinfo for each resource class in namedGraphEntityInfo
@@ -302,10 +328,11 @@ class OntologyResponderV1 extends Responder {
                     case (resClassIri, resInfo) =>
 
                         val properties = resInfo.restype_info.properties.map {
-                            (prop) => PropertyTypeV1(
-                                id = prop.id,
-                                label = prop.label.getOrElse(throw InconsistentTriplestoreDataException(s"No label given for ${prop.id}"))
-                            )
+                            (prop) =>
+                                PropertyTypeV1(
+                                    id = prop.id,
+                                    label = prop.label.getOrElse(throw InconsistentTriplestoreDataException(s"No label given for ${prop.id}"))
+                                )
                         }.toVector
 
                         ResourceTypeV1(
@@ -349,12 +376,12 @@ class OntologyResponderV1 extends Responder {
                 namedGraphEntityInfo <- getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
                 propertyIris: Set[IRI] = namedGraphEntityInfo.propertyIris
                 entities: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = propertyIris, userProfile = userProfile)
-                propertyEntityInfoMap: Map[IRI, PropertyEntityInfoV2] = entities.propertyEntityInfoMap.filterNot {
+                propertyInfoMap: Map[IRI, PropertyInfoV1] = entities.propertyInfoMap.filterNot {
                     case (propertyIri, propertyEntityInfo) => propertyEntityInfo.isLinkValueProp
                 }
 
-                propertyDefinitions: Vector[PropertyDefinitionInNamedGraphV1] = propertyEntityInfoMap.map {
-                    case (propertyIri: IRI, entityInfo: PropertyEntityInfoV2) =>
+                propertyDefinitions: Vector[PropertyDefinitionInNamedGraphV1] = propertyInfoMap.map {
+                    case (propertyIri: IRI, entityInfo: PropertyInfoV1) =>
 
                         if (entityInfo.isLinkProp) {
                             // It is a linking prop: its valuetype_id is knora-base:LinkValue.

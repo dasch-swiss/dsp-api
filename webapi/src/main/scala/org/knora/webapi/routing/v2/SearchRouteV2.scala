@@ -24,13 +24,15 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.util.Timeout
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.search.v2.SearchParserV2
-import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
+import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.{BadRequestException, IRI, InternalSchema, SettingsImpl}
 
-import scala.language.postfixOps
+import scala.concurrent.ExecutionContextExecutor
 
 /**
   * Provides a spray-routing function for API routes that deal with search.
@@ -39,7 +41,6 @@ object SearchRouteV2 extends Authenticator {
     val LIMIT_TO_PROJECT = "limitToProject"
     val LIMIT_TO_RESOURCE_CLASS = "limitToResourceClass"
     val OFFSET = "offset"
-    val stringFormatter = StringFormatter.getInstance
 
     /**
       * Gets the requested offset. Returns zero if no offset is indicated.
@@ -48,12 +49,13 @@ object SearchRouteV2 extends Authenticator {
       * @return the offset to be used for paging.
       */
     private def getOffsetFromParams(params: Map[String, String]): Int = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val offsetStr = params.get(OFFSET)
 
         offsetStr match {
             case Some(offset: String) =>
 
-                val offsetInt: Int = stringFormatter.toInt(offset, () => throw BadRequestException(s"offset is expected to be an Integer, but $offset given"))
+                val offsetInt: Int = stringFormatter.validateInt(offset, throw BadRequestException(s"offset is expected to be an Integer, but $offset given"))
 
                 if (offsetInt < 0) throw BadRequestException(s"offset must be an Integer >= 0, but $offsetInt given.")
 
@@ -71,12 +73,13 @@ object SearchRouteV2 extends Authenticator {
       * @return the project Iri, if any.
       */
     private def getProjectFromParams(params: Map[String, String]): Option[IRI] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val limitToProjectIriStr = params.get(LIMIT_TO_PROJECT)
 
         val limitToProjectIri: Option[IRI] = limitToProjectIriStr match {
 
             case Some(projectIriStr: String) =>
-                val projectIri = stringFormatter.toIri(projectIriStr, () => throw BadRequestException(s"$projectIriStr is not a valid Iri"))
+                val projectIri = stringFormatter.validateAndEscapeIri(projectIriStr, throw BadRequestException(s"$projectIriStr is not a valid Iri"))
 
                 Some(projectIri)
 
@@ -94,29 +97,29 @@ object SearchRouteV2 extends Authenticator {
       * @param params the GET parameters.
       * @return the internal resource class, if any.
       */
-    private def getResourceClassFromParams(params: Map[String, String]): Option[IRI] = {
-
+    private def getResourceClassFromParams(params: Map[String, String]): Option[SmartIri] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val limitToResourceClassIriStr = params.get(LIMIT_TO_RESOURCE_CLASS)
 
-        val limitToResourceClassIri: Option[IRI] = limitToResourceClassIriStr match {
-
+        limitToResourceClassIriStr match {
             case Some(resourceClassIriStr: String) =>
+                val externalResourceClassIri = resourceClassIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid resource class IRI: $resourceClassIriStr"))
 
-                val externalResourceClassIri = stringFormatter.toIri(resourceClassIriStr, () => throw BadRequestException(s"$resourceClassIriStr is not a valid Iri"))
+                if (!externalResourceClassIri.isKnoraApiV2EntityIri) {
+                    throw BadRequestException(s"$resourceClassIriStr is not a valid knora-api resource class IRI")
+                }
 
-                Some(stringFormatter.externalToInternalEntityIri(externalResourceClassIri, () => throw BadRequestException(s"$externalResourceClassIri is not a valid knora-api resource class Iri")))
+                Some(externalResourceClassIri.toOntologySchema(InternalSchema))
 
             case None => None
-
         }
-
-        limitToResourceClassIri
     }
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-        implicit val system = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = settings.defaultTimeout
+        implicit val system: ActorSystem = _system
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = settings.defaultTimeout
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val responderManager = system.actorSelection("/user/responderManager")
 
         path("v2" / "search" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
@@ -125,7 +128,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+                    val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
                     if (searchString.length < settings.searchValueMinLength) {
                         throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
@@ -135,7 +138,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToProject: Option[IRI] = getProjectFromParams(params)
 
-                    val limitToResourceClass: Option[IRI] = getResourceClassFromParams(params)
+                    val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
                     val requestMessage = FullTextSearchCountGetRequestV2(searchValue = searchString, limitToProject = limitToProject, limitToResourceClass = limitToResourceClass, userProfile = userProfile)
 
@@ -152,7 +155,7 @@ object SearchRouteV2 extends Authenticator {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+                    val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
                     if (searchString.length < settings.searchValueMinLength) {
                         throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
@@ -164,7 +167,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToProject: Option[IRI] = getProjectFromParams(params)
 
-                    val limitToResourceClass: Option[IRI] = getResourceClassFromParams(params)
+                    val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
                     val requestMessage = FulltextSearchGetRequestV2(searchValue = searchString, offset = offset, limitToProject = limitToProject, limitToResourceClass = limitToResourceClass, userProfile = userProfile)
 
@@ -223,7 +226,7 @@ object SearchRouteV2 extends Authenticator {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+                    val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
                     if (searchString.length < settings.searchValueMinLength) {
                         throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
@@ -233,7 +236,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToProject: Option[IRI] = getProjectFromParams(params)
 
-                    val limitToResourceClass: Option[IRI] = getResourceClassFromParams(params)
+                    val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
                     val requestMessage = SearchResourceByLabelCountGetRequestV2(
                         searchValue = searchString,
@@ -257,7 +260,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+                    val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
                     if (searchString.length < settings.searchValueMinLength) {
                         throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
@@ -269,7 +272,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToProject: Option[IRI] = getProjectFromParams(params)
 
-                    val limitToResourceClass: Option[IRI] = getResourceClassFromParams(params)
+                    val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
                     val requestMessage = SearchResourceByLabelGetRequestV2(
                         searchValue = searchString,

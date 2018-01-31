@@ -26,16 +26,14 @@ import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.groupmessages.{GroupInfoByIRIGetRequest, GroupInfoResponseV1}
-import org.knora.webapi.messages.v1.responder.permissionmessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
-import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, MessageUtil}
 
 import scala.concurrent.Future
 
@@ -48,7 +46,7 @@ class UsersResponderV1 extends Responder {
     val knoraIdUtil = new KnoraIdUtil
 
     // The IRI used to lock user creation and update
-    val USERS_GLOBAL_LOCK_IRI = "http://data.knora.org/users"
+    val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
 
     val USER_PROFILE_CACHE_NAME = "userProfileCache"
 
@@ -65,20 +63,9 @@ class UsersResponderV1 extends Responder {
         case UserProfileByIRIGetRequestV1(userIri, profileType, userProfile) => future2Message(sender(), userProfileByIRIGetRequestV1(userIri, profileType, userProfile), log)
         case UserProfileByEmailGetV1(email, profileType) => future2Message(sender(), userProfileByEmailGetV1(email, profileType), log)
         case UserProfileByEmailGetRequestV1(email, profileType, userProfile) => future2Message(sender(), userProfileByEmailGetRequestV1(email, profileType, userProfile), log)
-        case UserCreateRequestV1(createRequest, userProfile, apiRequestID) => future2Message(sender(), createNewUserV1(createRequest, userProfile, apiRequestID), log)
-        case UserChangeBasicUserDataRequestV1(userIri, changeUserRequest, userProfile, apiRequestID) => future2Message(sender(), changeBasicUserDataV1(userIri, changeUserRequest, userProfile, apiRequestID), log)
-        case UserChangePasswordRequestV1(userIri, changeUserRequest, userProfile, apiRequestID) => future2Message(sender(), changePasswordV1(userIri, changeUserRequest, userProfile, apiRequestID), log)
-        case UserChangeStatusRequestV1(userIri, changeUserRequest, userProfile, apiRequestID) => future2Message(sender(), changeUserStatusV1(userIri, changeUserRequest, userProfile, apiRequestID), log)
-        case UserChangeSystemAdminMembershipStatusRequestV1(userIri, changeSystemAdminMembershipStatusRequest, userProfile, apiRequestID) => future2Message(sender(), changeUserSystemAdminMembershipStatusV1(userIri, changeSystemAdminMembershipStatusRequest, userProfile, apiRequestID), log)
         case UserProjectMembershipsGetRequestV1(userIri, userProfile, apiRequestID) => future2Message(sender(), userProjectMembershipsGetRequestV1(userIri, userProfile, apiRequestID), log)
-        case UserProjectMembershipAddRequestV1(userIri, projectIri, userProfile, apiRequestID) => future2Message(sender(), userProjectMembershipAddRequestV1(userIri, projectIri, userProfile, apiRequestID), log)
-        case UserProjectMembershipRemoveRequestV1(userIri, projectIri, userProfile, apiRequestID) => future2Message(sender(), userProjectMembershipRemoveRequestV1(userIri, projectIri, userProfile, apiRequestID), log)
         case UserProjectAdminMembershipsGetRequestV1(userIri, userProfile, apiRequestID) => future2Message(sender(), userProjectAdminMembershipsGetRequestV1(userIri, userProfile, apiRequestID), log)
-        case UserProjectAdminMembershipAddRequestV1(userIri, projectIri, userProfile, apiRequestID) => future2Message(sender(), userProjectAdminMembershipAddRequestV1(userIri, projectIri, userProfile, apiRequestID), log)
-        case UserProjectAdminMembershipRemoveRequestV1(userIri, projectIri, userProfile, apiRequestID) => future2Message(sender(), userProjectAdminMembershipRemoveRequestV1(userIri, projectIri, userProfile, apiRequestID), log)
         case UserGroupMembershipsGetRequestV1(userIri, userProfile, apiRequestID) => future2Message(sender(), userGroupMembershipsGetRequestV1(userIri, userProfile, apiRequestID), log)
-        case UserGroupMembershipAddRequestV1(userIri, projectIri, userProfile, apiRequestID) => future2Message(sender(), userGroupMembershipAddRequestV1(userIri, projectIri, userProfile, apiRequestID), log)
-        case UserGroupMembershipRemoveRequestV1(userIri, projectIri, userProfile, apiRequestID) => future2Message(sender(), userGroupMembershipRemoveRequestV1(userIri, projectIri, userProfile, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -159,7 +146,7 @@ class UsersResponderV1 extends Responder {
 
             userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
-            maybeUserDataV1 <- userDataQueryResponse2UserData(userDataQueryResponse, short)
+            maybeUserDataV1 <- userDataQueryResponse2UserDataV1(userDataQueryResponse, short)
 
             // _ = log.debug("userDataByIriGetV1 - maybeUserDataV1: {}", maybeUserDataV1)
 
@@ -194,7 +181,7 @@ class UsersResponderV1 extends Responder {
 
                     userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
-                    maybeUserProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse)
+                    maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(userDataQueryResponse)
 
                     _ = if (maybeUserProfileV1.nonEmpty) {
                         writeUserProfileV1ToCache(maybeUserProfileV1.get)
@@ -253,7 +240,7 @@ class UsersResponderV1 extends Responder {
                     userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
 
                     //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
-                    maybeUserProfileV1 <- userDataQueryResponse2UserProfile(userDataQueryResponse)
+                    maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(userDataQueryResponse)
 
                     _ = if (maybeUserProfileV1.nonEmpty) {
                         writeUserProfileV1ToCache(maybeUserProfileV1.get)
@@ -290,312 +277,6 @@ class UsersResponderV1 extends Responder {
     }
 
     /**
-      * Creates a new user. Self-registration is allowed, so even the default user, i.e. with no credentials supplied,
-      * is allowed to create a new user.
-      *
-      * Referenced Websites:
-      *                     - https://crackstation.net/hashing-security.htm
-      *                     - http://blog.ircmaxell.com/2012/12/seven-ways-to-screw-up-bcrypt.html
-      *
-      * @param createRequest a [[CreateUserApiRequestV1]] object containing information about the new user to be created.
-      * @param userProfile   a [[UserProfileV1]] object containing information about the requesting user.
-      * @return a future containing the [[UserOperationResponseV1]].
-      */
-    private def createNewUserV1(createRequest: CreateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
-
-        def createNewUserTask(createRequest: CreateUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID) = for {
-        // check if required information is supplied
-            _ <- Future(if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty"))
-            _ = if (createRequest.password.isEmpty) throw BadRequestException("Password cannot be empty")
-            _ = if (createRequest.givenName.isEmpty) throw BadRequestException("Given name cannot be empty")
-            _ = if (createRequest.familyName.isEmpty) throw BadRequestException("Family name cannot be empty")
-
-            // check if the supplied email for the new user is unique, i.e. not already registered
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByEmail(
-                triplestore = settings.triplestoreType,
-                email = createRequest.email
-            ).toString())
-            //_ = log.debug(s"createNewUser - check duplicate email: $sparqlQueryString")
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-
-            //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
-
-            _ = if (userDataQueryResponse.results.bindings.nonEmpty) {
-                throw DuplicateValueException(s"User with the email: '${createRequest.email}' already exists")
-            }
-
-            userIri = knoraIdUtil.makeRandomPersonIri
-
-            encoder = new SCryptPasswordEncoder
-            hashedPassword = encoder.encode(createRequest.password)
-
-            // Create the new user.
-            createNewUserSparqlString = queries.sparql.v1.txt.createNewUser(
-                adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
-                triplestore = settings.triplestoreType,
-                userIri = userIri,
-                userClassIri = OntologyConstants.KnoraBase.User,
-                email = createRequest.email,
-                password = hashedPassword,
-                givenName = createRequest.givenName,
-                familyName = createRequest.familyName,
-                status = createRequest.status,
-                preferredLanguage = createRequest.lang,
-                systemAdmin = createRequest.systemAdmin
-            ).toString
-            //_ = log.debug(s"createNewUser: $createNewUserSparqlString")
-            createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparqlString)).mapTo[SparqlUpdateResponse]
-
-
-            // Verify that the user was created.
-            sparqlQuery = queries.sparql.v1.txt.getUserByIri(
-                triplestore = settings.triplestoreType,
-                userIri = userIri
-            ).toString()
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-
-            // create the user profile
-            maybeNewUserProfile <- userDataQueryResponse2UserProfile(userDataQueryResponse)
-
-            newUserProfile = maybeNewUserProfile.getOrElse(throw UpdateNotPerformedException(s"User $userIri was not created. Please report this as a possible bug."))
-
-            // write the newly created user profile to cache
-            _ = writeUserProfileV1ToCache(newUserProfile)
-
-            // create the user operation response
-            userOperationResponseV1 = UserOperationResponseV1(newUserProfile.ofType(UserProfileTypeV1.RESTRICTED))
-
-        } yield userOperationResponseV1
-
-        for {
-        // run user creation with an global IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                USERS_GLOBAL_LOCK_IRI,
-                () => createNewUserTask(createRequest, userProfile, apiRequestID)
-            )
-        } yield taskResult
-    }
-
-    /**
-      * Updates an existing user. Only basic user data information (email, givenName, familyName, lang)
-      * can be changed. For changing the password or user status, use the separate methods.
-      *
-      * @param userIri           the IRI of the existing user that we want to update.
-      * @param changeUserRequest the updated information.
-      * @param userProfile       the user profile of the requesting user.
-      * @param apiRequestID      the unique api request ID.
-      * @return a future containing a [[UserOperationResponseV1]].
-      * @throws BadRequestException if the necessary parameters are not supplied.
-      * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
-      */
-    private def changeBasicUserDataV1(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
-
-        //log.debug(s"changeBasicUserDataV1: changeUserRequest: {}", changeUserRequest)
-
-        /**
-          * The actual change basic user data task run with an IRI lock.
-          */
-        def changeBasicUserDataTask(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
-
-        // check if the requesting user is allowed to perform updates
-            _ <- Future(
-                if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionData.isSystemAdmin) {
-                    // not the user or a system admin
-                    //log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
-                    throw ForbiddenException("User information can only be changed by the user itself or a system administrator")
-                }
-            )
-
-            // check if necessary information is present
-            _ = if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-
-            parametersCount = List(changeUserRequest.email, changeUserRequest.givenName, changeUserRequest.familyName, changeUserRequest.lang).flatten.size
-            _ = if (parametersCount == 0) throw BadRequestException("At least one parameter needs to be supplied. No data would be changed. Aborting request for changing of basic user data.")
-
-            userUpdatePayload = UserUpdatePayloadV1(
-                email = changeUserRequest.email,
-                givenName = changeUserRequest.givenName,
-                familyName = changeUserRequest.familyName,
-                lang = changeUserRequest.lang
-            )
-
-            result <- updateUserV1(userIri, userUpdatePayload, userProfile, apiRequestID)
-        } yield result
-
-        for {
-        // run the user update with an global IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                userIri,
-                () => changeBasicUserDataTask(userIri, changeUserRequest, userProfile, apiRequestID)
-            )
-        } yield taskResult
-    }
-
-
-    /**
-      * Change the users password. The old password needs to be supplied for security purposes.
-      *
-      * @param userIri           the IRI of the existing user that we want to update.
-      * @param changeUserRequest the old and new password.
-      * @param userProfile       the user profile of the requesting user.
-      * @param apiRequestID      the unique api request ID.
-      * @return a future containing a [[UserOperationResponseV1]].
-      * @throws BadRequestException if necessary parameters are not supplied.
-      * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
-      * @throws ForbiddenException  if the supplied old password doesn't match with the user's current password.
-      * @throws NotFoundException   if the user is not found.
-      */
-    private def changePasswordV1(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
-
-        //log.debug(s"changePasswordV1: changePasswordRequest: {}", changeUserRequest)
-
-        /**
-          * The actual change password task run with an IRI lock.
-          */
-        def changePasswordTask(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
-
-        // check if necessary information is present
-            _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
-            _ = if (changeUserRequest.oldPassword.isEmpty || changeUserRequest.newPassword.isEmpty) throw BadRequestException("The user's old and new password need to be both supplied")
-
-            // check if the requesting user is allowed to perform updates
-            _ = if (!userProfile.userData.user_id.contains(userIri)) {
-                // not the user
-                //log.debug("same user: {}", userProfile.userData.user_id.contains(userIri))
-                throw ForbiddenException("User's password can only be changed by the user itself")
-            }
-
-            // check if old password matches current user password
-            maybeUserProfile <- userProfileByIRIGetV1(userIri, UserProfileTypeV1.FULL)
-            userProfile = maybeUserProfile.getOrElse(throw NotFoundException(s"User '$userIri' not found"))
-            _ = if (!userProfile.passwordMatch(changeUserRequest.oldPassword.get)) {
-                log.debug("supplied oldPassword: {}, current hash: {}", changeUserRequest.oldPassword.get, userProfile.userData.password.get)
-                throw ForbiddenException("The supplied old password does not match the current users password.")
-            }
-
-            // create the update request
-            encoder = new SCryptPasswordEncoder
-            newHashedPassword = encoder.encode(changeUserRequest.newPassword.get)
-            userUpdatePayload = UserUpdatePayloadV1(password = Some(newHashedPassword))
-
-            // update the users password
-            result <- updateUserV1(userIri, userUpdatePayload, userProfile, apiRequestID)
-
-        } yield result
-
-        for {
-        // run the change password task with an IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                userIri,
-                () => changePasswordTask(userIri, changeUserRequest, userProfile, apiRequestID)
-            )
-        } yield taskResult
-    }
-
-    /**
-      * Change the user's status (active / inactive).
-      *
-      * @param userIri           the IRI of the existing user that we want to update.
-      * @param changeUserRequest the new status.
-      * @param userProfile       the user profile of the requesting user.
-      * @param apiRequestID      the unique api request ID.
-      * @return a future containing a [[UserOperationResponseV1]].
-      * @throws BadRequestException if necessary parameters are not supplied.
-      * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
-      */
-    private def changeUserStatusV1(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
-
-        //log.debug(s"changeUserStatusV1: changeUserRequest: {}", changeUserRequest)
-
-        /**
-          * The actual change user status task run with an IRI lock.
-          */
-        def changeUserStatusTask(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
-
-            _ <- Future(
-                // check if necessary information is present
-                if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-            )
-            _ = if (changeUserRequest.status.isEmpty) throw BadRequestException("New user status cannot be empty")
-
-            // check if the requesting user is allowed to perform updates
-            _ = if (!userProfile.userData.user_id.contains(userIri) && !userProfile.permissionData.isSystemAdmin) {
-                // not the user or a system admin
-                // log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
-                throw ForbiddenException("User's status can only be changed by the user itself or a system administrator")
-            }
-
-            // create the update request
-            userUpdatePayload = UserUpdatePayloadV1(status = changeUserRequest.status)
-
-            result <- updateUserV1(userIri, userUpdatePayload, userProfile, apiRequestID)
-
-        } yield result
-
-        for {
-        // run the change status task with an IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                userIri,
-                () => changeUserStatusTask(userIri, changeUserRequest, userProfile, apiRequestID)
-            )
-        } yield taskResult
-    }
-
-    /**
-      * Change the user's system admin membership status (active / inactive).
-      *
-      * @param userIri           the IRI of the existing user that we want to update.
-      * @param changeUserRequest the new status.
-      * @param userProfile       the user profile of the requesting user.
-      * @param apiRequestID      the unique api request ID.
-      * @return a future containing a [[UserOperationResponseV1]].
-      * @throws BadRequestException if necessary parameters are not supplied.
-      * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
-      */
-    private def changeUserSystemAdminMembershipStatusV1(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
-
-        //log.debug(s"changeUserSystemAdminMembershipStatusV1: changeUserRequest: {}", changeUserRequest)
-
-        /**
-          * The actual change user status task run with an IRI lock.
-          */
-        def changeUserSystemAdminMembershipStatusTask(userIri: IRI, changeUserRequest: ChangeUserApiRequestV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
-
-        // check if necessary information is present
-            _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
-            _ = if (changeUserRequest.systemAdmin.isEmpty) throw BadRequestException("New user system admin membership status cannot be empty")
-
-            // check if the requesting user is allowed to perform updates
-            _ = if (!userProfile.permissionData.isSystemAdmin) {
-                // not a system admin
-                // log.debug("system admin: {}", userProfile.permissionData.isSystemAdmin)
-                throw ForbiddenException("User's system admin membership can only be changed by a system administrator")
-            }
-
-            // create the update request
-            userUpdatePayload = UserUpdatePayloadV1(systemAdmin = changeUserRequest.systemAdmin)
-
-            result <- updateUserV1(userIri, userUpdatePayload, userProfile, apiRequestID)
-
-        } yield result
-
-
-        for {
-        // run the change status task with an IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                userIri,
-                () => changeUserSystemAdminMembershipStatusTask(userIri, changeUserRequest, userProfile, apiRequestID)
-            )
-        } yield taskResult
-    }
-
-
-    /**
       * Returns the user's project memberships, where the result contains the IRIs of the projects the user is member of.
       *
       * @param userIri       the user's IRI.
@@ -626,149 +307,6 @@ class UsersResponderV1 extends Responder {
 
             // _ = log.debug("userProjectMembershipsGetRequestV1 - userIri: {}, projectIris: {}", userIri, projectIris)
         } yield UserProjectMembershipsGetResponseV1(projects = projectIris)
-    }
-
-    /**
-      * Adds a user to a project.
-      *
-      * @param userIri       the user's IRI.
-      * @param projectIri    the project's IRI.
-      * @param userProfileV1 the user profile of the requesting user.
-      * @param apiRequestID  the unique api request ID.
-      * @return
-      */
-    def userProjectMembershipAddRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
-
-        // log.debug(s"userProjectMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
-
-        /**
-          * The actual task run with an IRI lock.
-          */
-        def userProjectMembershipAddRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
-
-        // check if necessary information is present
-            _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-            _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-
-            // check if the requesting user is allowed to perform updates
-            _ = if (!userProfileV1.permissionData.isProjectAdmin(projectIri) && !userProfileV1.permissionData.isSystemAdmin) {
-                // not a project or system admin
-                // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-                throw ForbiddenException("User's project membership can only be changed by a project or system administrator")
-            }
-
-            // check if user exists
-            userExists <- userExists(userIri)
-            _ = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
-
-            // check if project exists
-            projectExists <- projectExists(projectIri)
-            _ = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
-
-            // get users current project membership list
-            currentProjectMemberships <- userProjectMembershipsGetRequestV1(
-                userIri = userIri,
-                userProfileV1 = userProfileV1,
-                apiRequestID = apiRequestID
-            )
-
-            currentProjectMembershipIris: Seq[IRI] = currentProjectMemberships.projects
-
-            // check if user is already member and if not then append to list
-            updatedProjectMembershipIris = if (!currentProjectMembershipIris.contains(projectIri)) {
-                currentProjectMembershipIris :+ projectIri
-            } else {
-                throw BadRequestException(s"User $userIri is already member of project $projectIri.")
-            }
-
-            // create the update request
-            userUpdatePayload = UserUpdatePayloadV1(projects = Some(updatedProjectMembershipIris))
-
-            result <- updateUserV1(userIri, userUpdatePayload, userProfileV1, apiRequestID)
-
-        } yield result
-
-
-        for {
-        // run the task with an IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                userIri,
-                () => userProjectMembershipAddRequestTask(userIri, projectIri, userProfileV1, apiRequestID)
-            )
-        } yield taskResult
-
-    }
-
-    /**
-      * Removes a user from a project.
-      *
-      * @param userIri       the user's IRI.
-      * @param projectIri    the project's IRI.
-      * @param userProfileV1 the user profile of the requesting user.
-      * @param apiRequestID  the unique api request ID.
-      * @return
-      */
-    def userProjectMembershipRemoveRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
-
-        // log.debug(s"userProjectMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
-
-        /**
-          * The actual task run with an IRI lock.
-          */
-        def userProjectMembershipRemoveRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
-
-        // check if necessary information is present
-            _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-            _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-
-            // check if the requesting user is allowed to perform updates
-            _ = if (!userProfileV1.permissionData.isProjectAdmin(projectIri) && !userProfileV1.permissionData.isSystemAdmin) {
-                // not a project or system admin
-                // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-                throw ForbiddenException("User's project membership can only be changed by a project or system administrator")
-            }
-
-            // check if user exists
-            userExists <- userExists(userIri)
-            _ = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
-
-            // check if project exists
-            projectExists <- projectExists(projectIri)
-            _ = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
-
-            // get users current project membership list
-            currentProjectMemberships <- userProjectMembershipsGetRequestV1(
-                userIri = userIri,
-                userProfileV1 = userProfileV1,
-                apiRequestID = apiRequestID
-            )
-
-            currentProjectMembershipIris: Seq[IRI] = currentProjectMemberships.projects
-
-            // check if user is not already a member and if he is then remove the project from to list
-            updatedProjectMembershipIris = if (currentProjectMembershipIris.contains(projectIri)) {
-                currentProjectMembershipIris diff Seq(projectIri)
-            } else {
-                throw BadRequestException(s"User $userIri is not member of project $projectIri.")
-            }
-
-            // create the update request
-            userUpdatePayload = UserUpdatePayloadV1(projects = Some(updatedProjectMembershipIris))
-
-            result <- updateUserV1(userIri, userUpdatePayload, userProfileV1, apiRequestID)
-
-        } yield result
-
-
-        for {
-        // run the task with an IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                userIri,
-                () => userProjectMembershipRemoveRequestTask(userIri, projectIri, userProfileV1, apiRequestID)
-            )
-        } yield taskResult
     }
 
     /**
@@ -806,148 +344,13 @@ class UsersResponderV1 extends Responder {
     }
 
     /**
-      * Adds a user to the project admin group of a project.
+      * Returns the user's custom (without ProjectMember and ProjectAdmin) group memberships
       *
       * @param userIri       the user's IRI.
-      * @param projectIri    the project's IRI.
       * @param userProfileV1 the user profile of the requesting user.
       * @param apiRequestID  the unique api request ID.
-      * @return
+      * @return a [[UserGroupMembershipsGetResponseV1]]
       */
-    def userProjectAdminMembershipAddRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
-
-        // log.debug(s"userProjectAdminMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
-
-        /**
-          * The actual task run with an IRI lock.
-          */
-        def userProjectAdminMembershipAddRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
-
-        // check if necessary information is present
-            _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-            _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-
-            // check if the requesting user is allowed to perform updates
-            _ = if (!userProfileV1.permissionData.isProjectAdmin(projectIri) && !userProfileV1.permissionData.isSystemAdmin) {
-                // not a project or system admin
-                // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-                throw ForbiddenException("User's project admin membership can only be changed by a project or system administrator")
-            }
-
-            // check if user exists
-            userExists <- userExists(userIri)
-            _ = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
-
-            // check if project exists
-            projectExists <- projectExists(projectIri)
-            _ = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
-
-            // get users current project membership list
-            currentProjectAdminMemberships <- userProjectAdminMembershipsGetRequestV1(
-                userIri = userIri,
-                userProfileV1 = userProfileV1,
-                apiRequestID = apiRequestID
-            )
-
-            currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.projects
-
-            // check if user is already member and if not then append to list
-            updatedProjectAdminMembershipIris = if (!currentProjectAdminMembershipIris.contains(projectIri)) {
-                currentProjectAdminMembershipIris :+ projectIri
-            } else {
-                throw BadRequestException(s"User $userIri is already a project admin for project $projectIri.")
-            }
-
-            // create the update request
-            userUpdatePayload = UserUpdatePayloadV1(projectsAdmin = Some(updatedProjectAdminMembershipIris))
-
-            result <- updateUserV1(userIri, userUpdatePayload, userProfileV1, apiRequestID)
-
-        } yield result
-
-
-        for {
-        // run the task with an IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                userIri,
-                () => userProjectAdminMembershipAddRequestTask(userIri, projectIri, userProfileV1, apiRequestID)
-            )
-        } yield taskResult
-
-    }
-
-    /**
-      * Removes a user from project admin group of a project.
-      *
-      * @param userIri       the user's IRI.
-      * @param projectIri    the project's IRI.
-      * @param userProfileV1 the user profile of the requesting user.
-      * @param apiRequestID  the unique api request ID.
-      * @return
-      */
-    def userProjectAdminMembershipRemoveRequestV1(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
-
-        // log.debug(s"userProjectAdminMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
-
-        /**
-          * The actual task run with an IRI lock.
-          */
-        def userProjectAdminMembershipRemoveRequestTask(userIri: IRI, projectIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
-
-        // check if necessary information is present
-            _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-            _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-
-            // check if the requesting user is allowed to perform updates
-            _ = if (!userProfileV1.permissionData.isProjectAdmin(projectIri) && !userProfileV1.permissionData.isSystemAdmin) {
-                // not a project or system admin
-                // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-                throw ForbiddenException("User's project admin membership can only be changed by a project or system administrator")
-            }
-
-            // check if user exists
-            userExists <- userExists(userIri)
-            _ = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
-
-            // check if project exists
-            projectExists <- projectExists(projectIri)
-            _ = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
-
-            // get users current project membership list
-            currentProjectAdminMemberships <- userProjectAdminMembershipsGetRequestV1(
-                userIri = userIri,
-                userProfileV1 = userProfileV1,
-                apiRequestID = apiRequestID
-            )
-
-            currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.projects
-
-            // check if user is not already a member and if he is then remove the project from to list
-            updatedProjectAdminMembershipIris = if (currentProjectAdminMembershipIris.contains(projectIri)) {
-                currentProjectAdminMembershipIris diff Seq(projectIri)
-            } else {
-                throw BadRequestException(s"User $userIri is not a project admin of project $projectIri.")
-            }
-
-            // create the update request
-            userUpdatePayload = UserUpdatePayloadV1(projectsAdmin = Some(updatedProjectAdminMembershipIris))
-
-            result <- updateUserV1(userIri, userUpdatePayload, userProfileV1, apiRequestID)
-
-        } yield result
-
-
-        for {
-        // run the task with an IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                userIri,
-                () => userProjectAdminMembershipRemoveRequestTask(userIri, projectIri, userProfileV1, apiRequestID)
-            )
-        } yield taskResult
-    }
-
     def userGroupMembershipsGetRequestV1(userIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserGroupMembershipsGetResponseV1] = {
 
         for {
@@ -969,232 +372,11 @@ class UsersResponderV1 extends Responder {
                 case Some(projects) => projects
                 case None => Seq.empty[IRI]
             }
-        //_ = log.debug("userDataByIriGetV1 - maybeUserDataV1: {}", maybeUserDataV1)
+            //_ = log.debug("userDataByIriGetV1 - maybeUserDataV1: {}", maybeUserDataV1)
 
         } yield UserGroupMembershipsGetResponseV1(groups = groupIris)
 
     }
-
-    def userGroupMembershipAddRequestV1(userIri: IRI, groupIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
-
-        // log.debug(s"userGroupMembershipAddRequestV1: userIri: {}, groupIri: {}", userIri, groupIri)
-
-        /**
-          * The actual task run with an IRI lock.
-          */
-        def userGroupMembershipAddRequestTask(userIri: IRI, groupIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
-
-        // check if necessary information is present
-            _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-            _ = if (groupIri.isEmpty) throw BadRequestException("Group IRI cannot be empty")
-
-            // check if user exists
-            userExists <- userExists(userIri)
-            _ = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
-
-            // check if group exists
-            groupExists <- groupExists(groupIri)
-            _ = if (!groupExists) throw NotFoundException(s"The group $groupIri does not exist.")
-
-            // get group's info. we need the project IRI.
-            groupInfo <- (responderManager ? GroupInfoByIRIGetRequest(groupIri, None)).mapTo[GroupInfoResponseV1]
-            projectIri = groupInfo.group_info.project
-
-            // check if the requesting user is allowed to perform updates
-            _ = if (!userProfileV1.permissionData.isProjectAdmin(projectIri) && !userProfileV1.permissionData.isSystemAdmin) {
-                // not a project or system admin
-                // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-                throw ForbiddenException("User's group membership can only be changed by a project or system administrator")
-            }
-
-            // get users current group membership list
-            currentGroupMemberships <- userGroupMembershipsGetRequestV1(
-                userIri = userIri,
-                userProfileV1 = userProfileV1,
-                apiRequestID = apiRequestID
-            )
-
-            currentGroupMembershipIris: Seq[IRI] = currentGroupMemberships.groups
-
-            // check if user is already member and if not then append to list
-            updatedGroupMembershipIris = if (!currentGroupMembershipIris.contains(groupIri)) {
-                currentGroupMembershipIris :+ groupIri
-            } else {
-                throw BadRequestException(s"User $userIri is already member of group $groupIri.")
-            }
-
-            // create the update request
-            userUpdatePayload = UserUpdatePayloadV1(groups = Some(updatedGroupMembershipIris))
-
-            result <- updateUserV1(userIri, userUpdatePayload, userProfileV1, apiRequestID)
-
-        } yield result
-
-
-        for {
-        // run the task with an IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                userIri,
-                () => userGroupMembershipAddRequestTask(userIri, groupIri, userProfileV1, apiRequestID)
-            )
-        } yield taskResult
-
-    }
-
-    def userGroupMembershipRemoveRequestV1(userIri: IRI, groupIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
-
-        // log.debug(s"userGroupMembershipRemoveRequestV1: userIri: {}, groupIri: {}", userIri, groupIri)
-
-        /**
-          * The actual task run with an IRI lock.
-          */
-        def userGroupMembershipRemoveRequestTask(userIri: IRI, groupIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = for {
-
-        // check if necessary information is present
-            _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-            _ = if (groupIri.isEmpty) throw BadRequestException("Group IRI cannot be empty")
-
-            // check if user exists
-            userExists <- userExists(userIri)
-            _ = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
-
-            // check if group exists
-            projectExists <- groupExists(groupIri)
-            _ = if (!projectExists) throw NotFoundException(s"The group $groupIri does not exist.")
-
-            // get group's info. we need the project IRI.
-            groupInfo <- (responderManager ? GroupInfoByIRIGetRequest(groupIri, None)).mapTo[GroupInfoResponseV1]
-            projectIri = groupInfo.group_info.project
-
-            // check if the requesting user is allowed to perform updates
-            _ = if (!userProfileV1.permissionData.isProjectAdmin(projectIri) && !userProfileV1.permissionData.isSystemAdmin) {
-                // not a project or system admin
-                //log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-                throw ForbiddenException("User's group membership can only be changed by a project or system administrator")
-            }
-
-            // get users current project membership list
-            currentGroupMemberships <- userGroupMembershipsGetRequestV1(
-                userIri = userIri,
-                userProfileV1 = userProfileV1,
-                apiRequestID = apiRequestID
-            )
-
-            currentGroupMembershipIris: Seq[IRI] = currentGroupMemberships.groups
-
-            // check if user is not already a member and if he is then remove the project from to list
-            updatedGroupMembershipIris = if (currentGroupMembershipIris.contains(groupIri)) {
-                currentGroupMembershipIris diff Seq(groupIri)
-            } else {
-                throw BadRequestException(s"User $userIri is not member of group $groupIri.")
-            }
-
-            // create the update request
-            userUpdatePayload = UserUpdatePayloadV1(groups = Some(updatedGroupMembershipIris))
-
-            result <- updateUserV1(userIri, userUpdatePayload, userProfileV1, apiRequestID)
-
-        } yield result
-
-
-        for {
-            // run the task with an IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                userIri,
-                () => userGroupMembershipRemoveRequestTask(userIri, groupIri, userProfileV1, apiRequestID)
-            )
-        } yield taskResult
-    }
-
-
-    /**
-      * Updates an existing user. Should not be directly used from the receive method.
-      *
-      * @param userIri           the IRI of the existing user that we want to update.
-      * @param userUpdatePayload the updated information.
-      * @param userProfile       the user profile of the requesting user.
-      * @param apiRequestID      the unique api request ID.
-      * @return a future containing a [[UserOperationResponseV1]].
-      * @throws BadRequestException         if necessary parameters are not supplied.
-      * @throws UpdateNotPerformedException if the update was not performed.
-      */
-    private def updateUserV1(userIri: IRI, userUpdatePayload: UserUpdatePayloadV1, userProfile: UserProfileV1, apiRequestID: UUID): Future[UserOperationResponseV1] = {
-
-        // log.debug("updateUserV1 - userUpdatePayload: {}", userUpdatePayload)
-
-        /* Remember: some checks on UserUpdatePayloadV1 are implemented in the case class */
-
-        if (userUpdatePayload.email.nonEmpty) {
-            // changing email address, so we need to invalidate the cached profile under this email
-            invalidateCachedUserProfileV1(email = userUpdatePayload.email)
-        }
-
-        for {
-            /* Update the user */
-            updateUserSparqlString <- Future(queries.sparql.v1.txt.updateUser(
-                adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
-                triplestore = settings.triplestoreType,
-                userIri = userIri,
-                maybeEmail = userUpdatePayload.email,
-                maybeGivenName = userUpdatePayload.givenName,
-                maybeFamilyName = userUpdatePayload.familyName,
-                maybePassword = userUpdatePayload.password,
-                maybeStatus = userUpdatePayload.status,
-                maybeLang = userUpdatePayload.lang,
-                maybeProjects = userUpdatePayload.projects,
-                maybeProjectsAdmin = userUpdatePayload.projectsAdmin,
-                maybeGroups = userUpdatePayload.groups,
-                maybeSystemAdmin = userUpdatePayload.systemAdmin
-            ).toString)
-            //_ = log.debug(s"updateUserV1 - query: $updateUserSparqlString")
-            createResourceResponse <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
-
-            // need to invalidate cached user profile
-            _ = invalidateCachedUserProfileV1(Some(userIri), userUpdatePayload.email)
-
-            /* Verify that the user was updated. */
-            maybeUpdatedUserProfile <- userProfileByIRIGetV1(userIri, UserProfileTypeV1.FULL)
-            updatedUserProfile = maybeUpdatedUserProfile.getOrElse(throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
-            updatedUserData = updatedUserProfile.userData
-
-            //_ = log.debug(s"apiUpdateRequest: $apiUpdateRequest /  updatedUserdata: $updatedUserData")
-
-            _ = if (userUpdatePayload.email.isDefined) {
-                if (updatedUserData.email != userUpdatePayload.email) throw UpdateNotPerformedException("User's 'email' was not updated. Please report this as a possible bug.")
-            }
-
-            _ = if (userUpdatePayload.givenName.isDefined) {
-                if (updatedUserData.firstname != userUpdatePayload.givenName) throw UpdateNotPerformedException("User's 'givenName' was not updated. Please report this as a possible bug.")
-            }
-
-            _ = if (userUpdatePayload.familyName.isDefined) {
-                if (updatedUserData.lastname != userUpdatePayload.familyName) throw UpdateNotPerformedException("User's 'familyName' was not updated. Please report this as a possible bug.")
-            }
-
-            _ = if (userUpdatePayload.password.isDefined) {
-                if (updatedUserData.password != userUpdatePayload.password) throw UpdateNotPerformedException("User's 'password' was not updated. Please report this as a possible bug.")
-            }
-
-            _ = if (userUpdatePayload.status.isDefined) {
-                if (updatedUserData.status != userUpdatePayload.status) throw UpdateNotPerformedException("User's 'status' was not updated. Please report this as a possible bug.")
-            }
-
-            _ = if (userUpdatePayload.lang.isDefined) {
-                if (updatedUserData.lang != userUpdatePayload.lang.get) throw UpdateNotPerformedException("User's 'lang' was not updated. Please report this as a possible bug.")
-            }
-
-            _ = if (userUpdatePayload.systemAdmin.isDefined) {
-                if (updatedUserProfile.permissionData.isSystemAdmin != userUpdatePayload.systemAdmin.get) throw UpdateNotPerformedException("User's 'isInSystemAdminGroup' status was not updated. Please report this as a possible bug.")
-            }
-
-            // create the user operation response
-            userOperationResponseV1 = UserOperationResponseV1(updatedUserProfile.ofType(UserProfileTypeV1.RESTRICTED))
-
-        } yield userOperationResponseV1
-    }
-
 
     ////////////////////
     // Helper Methods //
@@ -1207,9 +389,9 @@ class UsersResponderV1 extends Responder {
       * @param short                 denotes if all information should be returned. If short == true, then no token and password should be returned.
       * @return a [[UserDataV1]] containing the user's basic data.
       */
-    private def userDataQueryResponse2UserData(userDataQueryResponse: SparqlSelectResponse, short: Boolean): Future[Option[UserDataV1]] = {
+    private def userDataQueryResponse2UserDataV1(userDataQueryResponse: SparqlSelectResponse, short: Boolean): Future[Option[UserDataV1]] = {
 
-        // log.debug("userDataQueryResponse2UserData - " + MessageUtil.toSource(userDataQueryResponse))
+        // log.debug("userDataQueryResponse2UserDataV1 - " + MessageUtil.toSource(userDataQueryResponse))
 
         if (userDataQueryResponse.results.bindings.nonEmpty) {
             val returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
@@ -1218,7 +400,7 @@ class UsersResponderV1 extends Responder {
                 case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
             }
 
-            // _ = log.debug(s"userDataQueryResponse2UserProfile - groupedUserData: ${MessageUtil.toSource(groupedUserData)}")
+            // _ = log.debug(s"userDataQueryResponse2UserProfileV1 - groupedUserData: ${MessageUtil.toSource(groupedUserData)}")
 
             val userDataV1 = UserDataV1(
                 lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
@@ -1247,9 +429,9 @@ class UsersResponderV1 extends Responder {
       * @param userDataQueryResponse a [[SparqlSelectResponse]] containing user data.
       * @return a [[UserProfileV1]] containing the user's data.
       */
-    private def userDataQueryResponse2UserProfile(userDataQueryResponse: SparqlSelectResponse): Future[Option[UserProfileV1]] = {
+    private def userDataQueryResponse2UserProfileV1(userDataQueryResponse: SparqlSelectResponse): Future[Option[UserProfileV1]] = {
 
-        // log.debug("userDataQueryResponse2UserProfile - userDataQueryResponse: {}", MessageUtil.toSource(userDataQueryResponse))
+        // log.debug("userDataQueryResponse2UserProfileV1 - userDataQueryResponse: {}", MessageUtil.toSource(userDataQueryResponse))
 
         if (userDataQueryResponse.results.bindings.nonEmpty) {
             val returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
@@ -1258,7 +440,7 @@ class UsersResponderV1 extends Responder {
                 case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
             }
 
-            // log.debug("userDataQueryResponse2UserProfile - groupedUserData: {}", MessageUtil.toSource(groupedUserData))
+            // log.debug("userDataQueryResponse2UserProfileV1 - groupedUserData: {}", MessageUtil.toSource(groupedUserData))
 
             val userDataV1 = UserDataV1(
                 lang = groupedUserData.get(OntologyConstants.KnoraBase.PreferredLanguage) match {
@@ -1272,7 +454,8 @@ class UsersResponderV1 extends Responder {
                 password = groupedUserData.get(OntologyConstants.KnoraBase.Password).map(_.head),
                 status = groupedUserData.get(OntologyConstants.KnoraBase.Status).map(_.head.toBoolean)
             )
-            // log.debug("userDataQueryResponse2UserProfile - userDataV1: {}", MessageUtil.toSource(userDataV1)")
+
+            // log.debug("userDataQueryResponse2UserProfileV1 - userDataV1: {}", MessageUtil.toSource(userDataV1))
 
 
             /* the projects the user is member of */
@@ -1281,13 +464,15 @@ class UsersResponderV1 extends Responder {
                 case None => Seq.empty[IRI]
             }
 
+            // log.debug(s"userDataQueryResponse2UserProfileV1 - projectIris: ${MessageUtil.toSource(projectIris)}")
+
             /* the groups the user is member of (only explicit groups) */
             val groupIris = groupedUserData.get(OntologyConstants.KnoraBase.IsInGroup) match {
                 case Some(groups) => groups
-                case None => Vector.empty[IRI]
+                case None => Seq.empty[IRI]
             }
 
-            // log.debug(s"userDataQueryResponse2UserProfile - groupIris: ${MessageUtil.toSource(groupIris)}")
+            // log.debug(s"userDataQueryResponse2UserProfileV1 - groupIris: ${MessageUtil.toSource(groupIris)}")
 
             /* the projects for which the user is implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group */
             val isInProjectAdminGroups = groupedUserData.getOrElse(OntologyConstants.KnoraBase.IsInProjectAdminGroup, Vector.empty[IRI])
@@ -1296,8 +481,14 @@ class UsersResponderV1 extends Responder {
             val isInSystemAdminGroup = groupedUserData.get(OntologyConstants.KnoraBase.IsInSystemAdminGroup).exists(p => p.head.toBoolean)
 
             for {
-            /* get the user's permission profile from the permissions responder */
-                permissionData <- (responderManager ? PermissionDataGetV1(projectIris = projectIris, groupIris = groupIris, isInProjectAdminGroups = isInProjectAdminGroups, isInSystemAdminGroup = isInSystemAdminGroup)).mapTo[PermissionDataV1]
+                /* get the user's permission profile from the permissions responder */
+                permissionData <- (responderManager ? PermissionDataGetADM(
+                    projectIris = projectIris,
+                    groupIris = groupIris,
+                    isInProjectAdminGroups = isInProjectAdminGroups,
+                    isInSystemAdminGroup = isInSystemAdminGroup,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )).mapTo[PermissionsDataADM]
 
                 maybeProjectInfoFutures: Seq[Future[Option[ProjectInfoV1]]] = projectIris.map {
                     projectIri => (responderManager ? ProjectInfoByIRIGetV1(iri = projectIri, userProfileV1 = None)).mapTo[Option[ProjectInfoV1]]
@@ -1315,7 +506,7 @@ class UsersResponderV1 extends Responder {
                     sessionId = None,
                     permissionData = permissionData
                 )
-                // _ = log.debug(s"Retrieved UserProfileV1: ${up.toString}")
+                // _ = log.debug("Retrieved UserProfileV1: {}", up.toString)
 
                 result: Option[UserProfileV1] = Some(up)
             } yield result
@@ -1350,7 +541,7 @@ class UsersResponderV1 extends Responder {
       */
     def projectExists(projectIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.v1.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
+            askString <- Future(queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
             // _ = log.debug("projectExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -1367,7 +558,7 @@ class UsersResponderV1 extends Responder {
       */
     def groupExists(groupIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.v1.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
+            askString <- Future(queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
             // _ = log.debug("groupExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -1415,7 +606,7 @@ class UsersResponderV1 extends Responder {
       * Removes the user profile from cache.
       *
       * @param userIri the user's IRI und which a profile could be cached.
-      * @param email the user's email under which a profile could be cached.
+      * @param email   the user's email under which a profile could be cached.
       */
     private def invalidateCachedUserProfileV1(userIri: Option[IRI] = None, email: Option[String] = None): Unit = {
 

@@ -82,9 +82,10 @@ trait KnoraException extends Serializable {
   * An abstract base class for exceptions indicating that something about a request made it impossible to fulfil (e.g.
   * it was malformed or referred to nonexistent data).
   *
-  * @param message a description of the error.
+  * @param msg a description of the error.
+  * @param cause the cause of the error.
   */
-abstract class RequestRejectedException(message: String) extends Exception(message) with KnoraException
+abstract class RequestRejectedException(msg: String, cause: Throwable = null) extends Exception(msg, cause) with KnoraException
 
 object RequestRejectedException {
     // So we can match instances of RequestRejectedException, even though it's an abstract class
@@ -136,21 +137,31 @@ case class OntologyConstraintException(message: String) extends RequestRejectedE
 
 /**
   * An exception indicating that the submitted standoff is not valid.
+  *
   * @param message a description of the error.
   */
 case class InvalidStandoffException(message: String) extends RequestRejectedException(message)
 
 /**
   * An exception indicating that an error occurred when converting standoff markup to or from another format.
+  *
   * @param message a description of the error.
   */
 case class StandoffConversionException(message: String) extends RequestRejectedException(message)
 
 /**
   * An exception indicating that the SPARQL submitted to the API v2 search route was invalid.
+  *
   * @param message a description of the error.
   */
 case class SparqlSearchException(message: String) extends RequestRejectedException(message)
+
+/**
+  * An exception indication that the JSON-LD submitted to the API v2 was invalid.
+  * @param msg a description of the error.
+  * @param cause the cause for the error
+  */
+case class InvalidJsonLDException(msg: String, cause: Throwable = null) extends RequestRejectedException(msg, cause)
 
 
 /**
@@ -172,6 +183,15 @@ object InternalServerException {
   * @param message a description of the error.
   */
 case class AuthenticationException(message: String = "Error during authentication. Please report this as a possible bug.") extends InternalServerException(message)
+
+/**
+  * Indicates that data could not be converted from one format to another. This exception should not be thrown when
+  * validating user input, but rather when processing input that has already been validated, or data that has been
+  * loaded from the triplestore.
+  *
+  * @param message a description of the error.
+  */
+case class DataConversionException(message: String) extends InternalServerException(message)
 
 /**
   * An exception indicating that during file upload there was an error.

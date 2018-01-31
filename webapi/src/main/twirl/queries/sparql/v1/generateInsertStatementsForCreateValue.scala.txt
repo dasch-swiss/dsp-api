@@ -138,7 +138,7 @@
 
             case uriValue: UriValueV1 => {
 
-                <@newValueIri> knora-base:valueHasUri """@uriValue.uri""" .
+                <@newValueIri> knora-base:valueHasUri """@uriValue.uri"""^^xsd:anyURI .
 
             }
 

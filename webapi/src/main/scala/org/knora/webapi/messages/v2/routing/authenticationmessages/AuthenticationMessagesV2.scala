@@ -22,7 +22,6 @@ package org.knora.webapi.messages.v2.routing.authenticationmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.BadRequestException
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -57,7 +56,7 @@ case class KnoraPasswordCredentialsV2(email: String, password: String) extends K
 /**
   * Represents token credentials that a user can supply withing the authorization header or as URL parameters.
   *
-  * @param token    the supplied json web token.
+  * @param token the supplied json web token.
   */
 case class KnoraTokenCredentialsV2(token: String) extends KnoraCredentialsV2
 
@@ -68,7 +67,6 @@ case class KnoraTokenCredentialsV2(token: String) extends KnoraCredentialsV2
   * @param token the supplied session token.
   */
 case class KnoraSessionCredentialsV2(token: String) extends KnoraCredentialsV2
-
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

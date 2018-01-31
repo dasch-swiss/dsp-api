@@ -26,11 +26,8 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
-import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
-import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
-import org.knora.webapi.util.JavaUtil
 import org.knora.webapi.util.jsonld.JsonLDDocument
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -66,7 +63,7 @@ object RouteUtilV2 {
         }
 
         val httpResponse: Future[HttpResponse] = for {
-        // Make sure the responder sent a reply of type KnoraResponseV2.
+            // Make sure the responder sent a reply of type KnoraResponseV2.
             knoraResponse <- (responderManager ? requestMessage).map {
                 case replyMessage: KnoraResponseV2 => replyMessage
 
@@ -85,10 +82,7 @@ object RouteUtilV2 {
 
             // The request was successful
             jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(responseSchema, settings)
-            contextAsJava = JavaUtil.deepScalaToJava(jsonLDDocument.context.toAny)
-            jsonAsJava = JavaUtil.deepScalaToJava(jsonLDDocument.body.toAny)
-            compacted = JsonLdProcessor.compact(jsonAsJava, contextAsJava, new JsonLdOptions())
-            jsonLDString = JsonUtils.toPrettyString(compacted)
+            jsonLDString = jsonLDDocument.toPrettyString
         } yield HttpResponse(
             status = StatusCodes.OK,
             entity = HttpEntity(

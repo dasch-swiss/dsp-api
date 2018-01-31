@@ -60,7 +60,7 @@ var searchresult_window_title = "searchresult";
 var extendedsearch_window_title = "Erweiterte Suche";
 var addresource_window_title = "addresource";
 
-var STANDARD_MAPPING = "http://data.knora.org/projects/standoff/mappings/StandardMapping"; // the standard mapping used for text editing in the GUI
+var STANDARD_MAPPING = "http://rdfh.ch/standoff/mappings/StandardMapping"; // the standard mapping used for text editing in the GUI
 
 var VALTYPE_TEXT = "-"; // obsolete, there is only richtext now
 var VALTYPE_INTEGER = "http://www.knora.org/ontology/knora-base#IntValue";
@@ -313,3 +313,11 @@ var SALSAH_API_LEGACY = {
 
 };
 
+/*
+ * work out an ontology's short name out of its URI
+ * arg id : ontology's URI, for example: `http://www.knora.org/ontology/0103/theatre-societe`
+ * return: the very last part of the URI, in this example: `theatre-societe`
+ */
+SALSAH.vocabularyId2shortName = function(ontologyid) {
+	return ontologyid.substr(ontologyid.lastIndexOf('/') + 1)
+}

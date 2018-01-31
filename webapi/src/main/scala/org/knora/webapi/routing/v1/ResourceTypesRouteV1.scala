@@ -25,12 +25,9 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, SettingsImpl}
-
-import scala.concurrent.Future
 
 /**
   * Provides a spray-routing function for API routes that deal with resource types.
@@ -41,7 +38,7 @@ object ResourceTypesRouteV1 extends Authenticator {
         implicit val executionContext = system.dispatcher
         implicit val timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
-        val stringFormatter = StringFormatter.getInstance
+        val stringFormatter = StringFormatter.getGeneralInstance
 
         path("v1" / "resourcetypes" / Segment) { iri =>
             get {
@@ -49,7 +46,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                     val userProfile = getUserProfileV1(requestContext)
 
                     // TODO: Check that this is the IRI of a resource type and not just any IRI
-                    val resourceTypeIri = stringFormatter.toIri(iri, () => throw BadRequestException(s"Invalid resource class IRI: $iri"))
+                    val resourceTypeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid resource class IRI: $iri"))
 
                     val requestMessage = ResourceTypeGetRequestV1(resourceTypeIri, userProfile)
 
@@ -71,7 +68,7 @@ object ResourceTypesRouteV1 extends Authenticator {
 
                     val namedGraphIri = vocabularyId match {
                         case "0" => None // if param vocabulary is set to 0, query all named graphs
-                        case other => Some(stringFormatter.toIri(vocabularyId, () => throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId")))
+                        case other => Some(stringFormatter.validateAndEscapeIri(vocabularyId, throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId")))
                     }
 
                     val requestMessage = ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile)
@@ -101,12 +98,12 @@ object ResourceTypesRouteV1 extends Authenticator {
                         case Some("0") => // 0 means that all named graphs should be queried
                             PropertyTypesForNamedGraphGetRequestV1(namedGraph = None, userProfile = userProfile)
                         case Some(vocId) =>
-                            val namedGraphIri = stringFormatter.toIri(vocId, () => throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId"))
+                            val namedGraphIri = stringFormatter.validateAndEscapeIri(vocId, throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId"))
                             PropertyTypesForNamedGraphGetRequestV1(namedGraph = Some(namedGraphIri), userProfile = userProfile)
                         case None => // no vocabulary id given, check for restype
                             resourcetypeId match {
                                 case Some(restypeId) => // get property types for given resource type
-                                    val resourceClassIri = stringFormatter.toIri(restypeId, () => throw BadRequestException(s"Invalid vocabulary IRI: $restypeId"))
+                                    val resourceClassIri = stringFormatter.validateAndEscapeIri(restypeId, throw BadRequestException(s"Invalid vocabulary IRI: $restypeId"))
                                     PropertyTypesForResourceTypeGetRequestV1(restypeId, userProfile)
                                 case None => // no params given, get all property types (behaves like vocbulary=0)
                                     PropertyTypesForNamedGraphGetRequestV1(namedGraph = None, userProfile = userProfile)
@@ -158,7 +155,7 @@ object ResourceTypesRouteV1 extends Authenticator {
                         val userProfile = getUserProfileV1(requestContext)
 
                         // TODO: Check that this is the IRI of a resource type and not just any IRI
-                        val resourceClassIri = stringFormatter.toIri(iri, () => throw BadRequestException(s"Invalid resource class IRI: $iri"))
+                        val resourceClassIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid resource class IRI: $iri"))
 
                         val requestMessage = SubClassesGetRequestV1(resourceClassIri, userProfile)
 

@@ -263,7 +263,7 @@ class JenaTDBActor extends Actor with ActorLogging {
 
         val resetTriplestoreResult = for {
 
-        // drop old content
+            // drop old content
             dropResult <- Future(dropAllTriplestoreContent())
 
             // insert new content

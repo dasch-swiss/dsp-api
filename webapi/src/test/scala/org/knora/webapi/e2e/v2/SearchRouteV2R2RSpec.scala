@@ -36,7 +36,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesReq
 import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.store._
-import org.knora.webapi.util.{FileUtil}
+import org.knora.webapi.util.FileUtil
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}
@@ -65,7 +65,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    private val anythingUser = SharedAdminTestData.anythingUser1
+    private val anythingUser = SharedTestDataV1.anythingUser1
     private val anythingUserEmail = anythingUser.userData.email.get
 
     private val password = "test"
@@ -73,14 +73,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     private val rdfDataObjects = List(
 
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
 
     )
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataV1.rootUser), 10.seconds)
     }
 
     "The Search v2 Endpoint" should {
@@ -485,7 +485,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?seqnum a xsd:integer .
                   |
-                  |    }
+                  |    } ORDER BY ?seqnum
                 """.stripMargin
 
             // TODO: find a better way to submit spaces as %20
@@ -493,7 +493,96 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountQuery(responseAs[String], 10)
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform an extended search for the pages of a book and return them ordered by their seqnum" in {
+
+            val sparqlSimplified =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?page knora-api:isMainResource true .
+                  |
+                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |    } WHERE {
+                  |
+                  |        ?page a incunabula:page .
+                  |        ?page a knora-api:Resource .
+                  |
+                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
+                  |
+                  |        <http://data.knora.org/b6b5ff1eb703> a knora-api:Resource .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |        incunabula:seqnum knora-api:objectType xsd:integer .
+                  |
+                  |        ?seqnum a xsd:integer .
+                  |
+                  |    } ORDER BY ?seqnum
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnum.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform an extended search for the pages of a book and return them ordered by their seqnum and get the next OFFSET" in {
+
+            val sparqlSimplified =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?page knora-api:isMainResource true .
+                  |
+                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |    } WHERE {
+                  |
+                  |        ?page a incunabula:page .
+                  |        ?page a knora-api:Resource .
+                  |
+                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
+                  |
+                  |        <http://data.knora.org/b6b5ff1eb703> a knora-api:Resource .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |        incunabula:seqnum knora-api:objectType xsd:integer .
+                  |
+                  |        ?seqnum a xsd:integer .
+                  |
+                  |    } ORDER BY ?seqnum
+                  |    OFFSET 1
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
 
@@ -570,7 +659,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        FILTER(?pubdate = "JULIAN:1497-03-01")
                   |
-                  |    }
+                  |    } ORDER BY ?pubdate
                 """.stripMargin
 
             // TODO: find a better way to submit spaces as %20
@@ -578,7 +667,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountQuery(responseAs[String], 2)
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksPublishedOnDate.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
 
@@ -615,13 +706,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        FILTER(?pubdate != "JULIAN:1497-03-01")
                   |
-                  |    }
+                  |    } ORDER BY ?pubdate
                 """.stripMargin
 
             // TODO: find a better way to submit spaces as %20
             Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksNotPublishedOnDate.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
                 checkCountQuery(responseAs[String], 17)
@@ -660,13 +755,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |         FILTER(?pubdate < "JULIAN:1497-03-01" || ?pubdate > "JULIAN:1497-03-01")
                   |
-                  |    }
+                  |    } ORDER BY ?pubdate
                 """.stripMargin
 
             // TODO: find a better way to submit spaces as %20
             Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksNotPublishedOnDate.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
                 checkCountQuery(responseAs[String], 17)
@@ -704,13 +803,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?pubdate a knora-api:Date .
                   |        FILTER(?pubdate < "JULIAN:1497")
                   |
-                  |    }
+                  |    } ORDER BY ?pubdate
                 """.stripMargin
 
             // TODO: find a better way to submit spaces as %20
             Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksPublishedBeforeDate.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 4 (number of results from query below)
                 checkCountQuery(responseAs[String], 15)
@@ -748,13 +851,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?pubdate a knora-api:Date .
                   |        FILTER(?pubdate >= "JULIAN:1497")
                   |
-                  |    }
+                  |    } ORDER BY ?pubdate
                 """.stripMargin
 
             // TODO: find a better way to submit spaces as %20
             Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksPublishedAfterOrOnDate.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 15 (number of results from query above)
                 checkCountQuery(responseAs[String], 4)
@@ -792,13 +899,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?pubdate a knora-api:Date .
                   |        FILTER(?pubdate > "JULIAN:1497")
                   |
-                  |    }
+                  |    } ORDER BY ?pubdate
                 """.stripMargin
 
             // TODO: find a better way to submit spaces as %20
             Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksPublishedAfterDate.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 18 (number of results from query above)
                 checkCountQuery(responseAs[String], 1)
@@ -836,13 +947,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?pubdate a knora-api:Date .
                   |        FILTER(?pubdate <= "JULIAN:1497")
                   |
-                  |    }
+                  |    } ORDER BY ?pubdate
                 """.stripMargin
 
             // TODO: find a better way to submit spaces as %20
             Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksPublishedBeforeOrOnDate.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 1 (number of results from query above)
                 checkCountQuery(responseAs[String], 18)
@@ -881,13 +996,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        FILTER(?pubdate > "JULIAN:1486" && ?pubdate < "JULIAN:1491")
                   |
-                  |    }
+                  |    } ORDER BY ?pubdate
                 """.stripMargin
 
             // TODO: find a better way to submit spaces as %20
             Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksPublishedBetweenDates.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 checkCountQuery(responseAs[String], 5)
 
@@ -945,7 +1064,173 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/RegionsForPage.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
                 checkCountQuery(responseAs[String], 2)
+
+            }
+
+        }
+
+        "get a book a page points to and include the page in the results (all properties present in WHERE clause)" in {
+            val sparqlSimplified =
+                """
+            PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+
+            CONSTRUCT {
+
+                ?book knora-api:isMainResource true .
+
+                ?book incunabula:title ?title .
+
+                <http://data.knora.org/50e7460a7203> knora-api:isPartOf ?book .
+
+                <http://data.knora.org/50e7460a7203> knora-api:seqnum ?seqnum .
+
+                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFileValue ?file .
+
+            } WHERE {
+
+                ?book a knora-api:Resource .
+
+                ?book incunabula:title ?title .
+
+                incunabula:title knora-api:objectType xsd:string .
+
+                ?title a xsd:string .
+
+                <http://data.knora.org/50e7460a7203> knora-api:isPartOf ?book .
+                knora-api:isPartOf knora-api:objectType knora-api:Resource .
+
+                <http://data.knora.org/50e7460a7203> a knora-api:Resource .
+
+                <http://data.knora.org/50e7460a7203> knora-api:seqnum ?seqnum .
+                knora-api:seqnum knora-api:objectType xsd:integer .
+
+                ?seqnum a xsd:integer .
+
+                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFileValue ?file .
+                knora-api:hasStillImageFileValue knora-api:objectType knora-api:StillImageFile .
+
+                ?file a knora-api:StillImageFile .
+
+            } OFFSET 0
+            """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/bookWithIncomingPagesWithAllRequestedProps.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "get a book a page points to and only include the page's partOf link in the results (none of the other properties)" in {
+            val sparqlSimplified =
+                """
+            PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+            PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+
+            CONSTRUCT {
+
+                ?book knora-api:isMainResource true .
+
+                ?book incunabula:title ?title .
+
+                <http://data.knora.org/50e7460a7203> knora-api:isPartOf ?book .
+
+            } WHERE {
+
+                ?book a knora-api:Resource .
+
+                ?book incunabula:title ?title .
+
+                incunabula:title knora-api:objectType xsd:string .
+
+                ?title a xsd:string .
+
+                <http://data.knora.org/50e7460a7203> knora-api:isPartOf ?book .
+                knora-api:isPartOf knora-api:objectType knora-api:Resource .
+
+                <http://data.knora.org/50e7460a7203> a knora-api:Resource .
+
+                <http://data.knora.org/50e7460a7203> knora-api:seqnum ?seqnum .
+                knora-api:seqnum knora-api:objectType xsd:integer .
+
+                ?seqnum a xsd:integer .
+
+                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFileValue ?file .
+                knora-api:hasStillImageFileValue knora-api:objectType knora-api:StillImageFile .
+
+                ?file a knora-api:StillImageFile .
+
+            } OFFSET 0
+            """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/bookWithIncomingPagesOnlyLink.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "get incoming links pointing to an incunbaula:book, excluding isPartOf and isRegionOf" in {
+            var sparqlSimplified =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |
+                  |     ?incomingRes knora-api:isMainResource true .
+                  |
+                  |     ?incomingRes ?incomingProp <http://data.knora.org/8be1b7cf7103> .
+                  |
+                  |} WHERE {
+                  |
+                  |     ?incomingRes a knora-api:Resource .
+                  |
+                  |     ?incomingRes ?incomingProp <http://data.knora.org/8be1b7cf7103> .
+                  |
+                  |     <http://data.knora.org/8be1b7cf7103> a knora-api:Resource .
+                  |
+                  |     ?incomingProp knora-api:objectType knora-api:Resource .
+                  |
+                  |     knora-api:isRegionOf knora-api:objectType knora-api:Resource .
+                  |     knora-api:isPartOf knora-api:objectType knora-api:Resource .
+                  |
+                  |     FILTER NOT EXISTS {
+                  |         ?incomingRes  knora-api:isRegionOf <http://data.knora.org/8be1b7cf7103> .
+                  |     }
+                  |
+                  |     FILTER NOT EXISTS {
+                  |         ?incomingRes  knora-api:isPartOf <http://data.knora.org/8be1b7cf7103> .
+                  |     }
+                  |
+                  |} OFFSET 0
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/IncomingLinksForBook.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
 
@@ -1018,6 +1303,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingEqualsDecimal.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
                 checkCountQuery(responseAs[String], 1)
 
             }
@@ -1056,6 +1345,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingBiggerThanDecimal.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
                 checkCountQuery(responseAs[String], 1)
 
             }
@@ -1093,6 +1386,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingSmallerThanDecimal.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 checkCountQuery(responseAs[String], 1)
 
@@ -1167,6 +1464,112 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithBoolean.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkCountQuery(responseAs[String], 1)
+
+            }
+
+        }
+
+        "search for an anything:Thing that may have a Boolean value that is true" in {
+            // set OFFSET to 1 to get "Testding for extended search"
+            val sparqlSimplified =
+                """
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasBoolean ?boolean .
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     OPTIONAL {
+                  |
+                  |         ?thing anything:hasBoolean ?boolean .
+                  |         anything:hasBoolean knora-api:objectType xsd:boolean .
+                  |
+                  |         ?boolean a xsd:boolean .
+                  |
+                  |         FILTER(?boolean = true)
+                  |     }
+                  |} OFFSET 1
+                  |
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOptional.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                // this is the second page of results
+                checkCountQuery(responseAs[String], 7)
+
+            }
+
+        }
+
+        "search for an anything:Thing that either has a Boolean value that is true or a decimal value that equals 2.1 (or both)" in {
+
+            val sparqlSimplified =
+                """
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasBoolean ?boolean .
+                  |
+                  |     ?thing anything:hasDecimal ?decimal .
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     {
+                  |         ?thing anything:hasBoolean ?boolean .
+                  |         anything:hasBoolean knora-api:objectType xsd:boolean .
+                  |
+                  |         ?boolean a xsd:boolean .
+                  |
+                  |         FILTER(?boolean = true)
+                  |     } UNION {
+                  |         ?thing anything:hasDecimal ?decimal .
+                  |         anything:hasDecimal knora-api:objectType xsd:decimal .
+                  |
+                  |         ?decimal a xsd:decimal .
+                  |
+                  |         FILTER(?decimal = 2.1)
+                  |     }
+                  |
+                  |} OFFSET 0
+                  |
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOrDecimal.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 checkCountQuery(responseAs[String], 1)
 

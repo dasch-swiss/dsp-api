@@ -21,17 +21,18 @@
 
 package org.knora.webapi.routing.v1
 
-import java.util.UUID
-
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.util.Timeout
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, SettingsImpl}
+
+import scala.concurrent.ExecutionContextExecutor
 
 object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
 
@@ -41,10 +42,10 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
         implicit val system: ActorSystem = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = settings.defaultTimeout
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
-        val stringFormatter = StringFormatter.getInstance
+        val stringFormatter = StringFormatter.getGeneralInstance
 
         path("v1" / "projects") {
             get {
@@ -59,94 +60,31 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                         responderManager,
                         log
                     )
-            } ~
-            post {
-                /* create a new project */
-                entity(as[CreateProjectApiRequestV1]) { apiRequest => requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-                    val requestMessage = ProjectCreateRequestV1(
-                        createRequest = apiRequest,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-                }
             }
-        } ~ path("v1" / "projects"/ Segment) { value =>
+        } ~ path("v1" / "projects" / Segment) { value =>
             get {
                 /* returns a single project identified either through iri or shortname */
-                parameters("identifier" ? "iri") { identifier: String => requestContext =>
+                parameters("identifier" ? "iri") { identifier: String =>
+                    requestContext =>
 
-                    val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserProfileV1(requestContext)
 
-                    val requestMessage = if (identifier != "iri") { // identify project by shortname.
-                        val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
-                        ProjectInfoByShortnameGetRequestV1(shortNameDec, Some(userProfile))
-                    } else { // identify project by iri. this is the default case.
-                        val checkedProjectIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
-                        ProjectInfoByIRIGetRequestV1(checkedProjectIri, Some(userProfile))
-                    }
+                        val requestMessage = if (identifier != "iri") { // identify project by shortname.
+                            val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
+                            ProjectInfoByShortnameGetRequestV1(shortNameDec, Some(userProfile))
+                        } else { // identify project by iri. this is the default case.
+                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+                            ProjectInfoByIRIGetRequestV1(checkedProjectIri, Some(userProfile))
+                        }
 
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
+                        RouteUtilV1.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
                 }
-            } ~
-            put {
-                /* update a project identified by iri */
-                entity(as[ChangeProjectApiRequestV1]) { apiRequest => requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-                    val checkedProjectIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
-
-                    /* the api request is already checked at time of creation. see case class. */
-
-                    val requestMessage = ProjectChangeRequestV1(
-                        projectIri = checkedProjectIri,
-                        changeProjectRequest = apiRequest,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-                }
-            } ~
-            delete {
-                /* update project status to false */
-                requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-                    val checkedProjectIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
-
-                    val requestMessage = ProjectChangeRequestV1(
-                        projectIri = checkedProjectIri,
-                        changeProjectRequest = ChangeProjectApiRequestV1(status = Some(false)),
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
             }
         } ~ path("v1" / "projects" / "members" / Segment) { value =>
             get {
@@ -156,11 +94,12 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
 
                         val userProfile = getUserProfileV1(requestContext)
 
-                        val requestMessage = if (identifier != "iri") {// identify project by shortname.
+                        val requestMessage = if (identifier != "iri") {
+                            // identify project by shortname.
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             ProjectMembersByShortnameGetRequestV1(shortNameDec, userProfile)
                         } else {
-                            val checkedProjectIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
+                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
                             ProjectMembersByIRIGetRequestV1(checkedProjectIri, userProfile)
                         }
 
@@ -181,11 +120,12 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
 
                         val userProfile = getUserProfileV1(requestContext)
 
-                        val requestMessage = if (identifier != "iri") {// identify project by shortname.
-                        val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
+                        val requestMessage = if (identifier != "iri") {
+                            // identify project by shortname.
+                            val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             ProjectAdminMembersByShortnameGetRequestV1(shortNameDec, userProfile)
                         } else {
-                            val checkedProjectIri = stringFormatter.toIri(value, () => throw BadRequestException(s"Invalid project IRI $value"))
+                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
                             ProjectAdminMembersByIRIGetRequestV1(checkedProjectIri, userProfile)
                         }
 

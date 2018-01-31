@@ -77,15 +77,15 @@ case class GetMappingResponseV1(mappingIri: IRI, mapping: MappingXMLtoStandoff, 
 /**
   * Represents a request that gets an XSL Transformation represented by a `knora-base:XSLTransformation`.
   *
-  * @param xsltTextRepresentationIri    the IRI of the `knora-base:XSLTransformation`.
-  * @param userProfile                  the profile of the user making the request.
+  * @param xsltTextRepresentationIri the IRI of the `knora-base:XSLTransformation`.
+  * @param userProfile               the profile of the user making the request.
   */
 case class GetXSLTransformationRequestV1(xsltTextRepresentationIri: IRI, userProfile: UserProfileV1) extends StandoffResponderRequestV1
 
 /**
   * Represents a response to a [[GetXSLTransformationRequestV1]].
   *
-  * @param xslt      the XSLT to be applied to the XML created from standoff.
+  * @param xslt the XSLT to be applied to the XML created from standoff.
   */
 case class GetXSLTransformationResponseV1(xslt: String)
 
@@ -98,7 +98,7 @@ case class GetXSLTransformationResponseV1(xslt: String)
   *
   * The class names allow for the ruse of the same tag name. This is important when using HTML since the tag set is very limited.
   *
-  * @param namespace a Map of XML namespaces and a Map of tag names and [[XMLTag]].
+  * @param namespace                a Map of XML namespaces and a Map of tag names and [[XMLTag]].
   * @param defaultXSLTransformation the IRI of the default XSL transformation for the resulting XML, if any.
   */
 case class MappingXMLtoStandoff(namespace: Map[String, Map[String, Map[String, XMLTag]]], defaultXSLTransformation: Option[IRI])
@@ -152,38 +152,38 @@ case class CreateMappingApiRequestV1(project_id: IRI, label: String, mappingName
   */
 object StandoffDataTypeClasses extends Enumeration {
 
-    val StandoffLinkTag = Value(OntologyConstants.KnoraBase.StandoffLinkTag)
+    val StandoffLinkTag: Value = Value(OntologyConstants.KnoraBase.StandoffLinkTag)
 
-    val StandoffDateTag = Value(OntologyConstants.KnoraBase.StandoffDateTag)
+    val StandoffDateTag: Value = Value(OntologyConstants.KnoraBase.StandoffDateTag)
 
-    val StandoffUriTag = Value(OntologyConstants.KnoraBase.StandoffUriTag)
+    val StandoffUriTag: Value = Value(OntologyConstants.KnoraBase.StandoffUriTag)
 
-    val StandoffColorTag = Value(OntologyConstants.KnoraBase.StandoffColorTag)
+    val StandoffColorTag: Value = Value(OntologyConstants.KnoraBase.StandoffColorTag)
 
-    val StandoffIntegerTag = Value(OntologyConstants.KnoraBase.StandoffIntegerTag)
+    val StandoffIntegerTag: Value = Value(OntologyConstants.KnoraBase.StandoffIntegerTag)
 
-    val StandoffDecimalTag = Value(OntologyConstants.KnoraBase.StandoffDecimalTag)
+    val StandoffDecimalTag: Value = Value(OntologyConstants.KnoraBase.StandoffDecimalTag)
 
-    val StandoffIntervalTag = Value(OntologyConstants.KnoraBase.StandoffIntervalTag)
+    val StandoffIntervalTag: Value = Value(OntologyConstants.KnoraBase.StandoffIntervalTag)
 
-    val StandoffBooleanTag = Value(OntologyConstants.KnoraBase.StandoffBooleanTag)
+    val StandoffBooleanTag: Value = Value(OntologyConstants.KnoraBase.StandoffBooleanTag)
 
-    val StandoffInternalReferenceTag = Value(OntologyConstants.KnoraBase.StandoffInternalReferenceTag)
+    val StandoffInternalReferenceTag: Value = Value(OntologyConstants.KnoraBase.StandoffInternalReferenceTag)
 
     val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
     /**
       * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-      * [[org.knora.webapi.BadRequestException]].
+      * exception.
       *
       * @param name     the name of the value.
       * @param errorFun the function to be called in case of an error.
       * @return the requested value.
       */
-    def lookup(name: String, errorFun: () => Nothing): Value = {
+    def lookup(name: String, errorFun: => Nothing): Value = {
         valueMap.get(name) match {
             case Some(value) => value
-            case None => errorFun()
+            case None => errorFun
         }
     }
 

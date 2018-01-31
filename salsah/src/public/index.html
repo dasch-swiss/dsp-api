@@ -203,7 +203,7 @@
 				salsah_username: $('#user_id').val(),
 				salsah_password: $('#password').val()
 			};
-			$('#password').val('')
+			$('#password').val('');
             SALSAH.ApiPost('session', {username: credentials.salsah_username, password: credentials.salsah_password}, function(data) {
 
 				if (data.status == ApiErrors.OK) {
@@ -320,6 +320,9 @@
 				RESVIEW.AddResourceWindow(RESVIEW.winclass);
 			})
 		);
+
+		// add a hidden span to hold the pending modal `simpledialog`
+       		$('#addresctrl').append($('<span>').attr({id: 'hiddenaddrespending'}).simpledialog('processpendingbox', {width: 84, positioning: 'middle'}));
 	
 		$('#addlinkctrl')
 			.append($('<img>').attr({title: s_('_addlink'), src: 'app/icons/24x24/add_link.png'}).addClass('link').css({cursor: 'pointer'}).on('click', function(event) {
@@ -440,17 +443,22 @@
 			</p>
 			<input id="logout_settings" type="hidden" name="settings">
 		</div>
-		
+
 		<div id="addresctrl" class="workwin_header_element">
 		</div>
-		
+
 		<div id="addlinkctrl" class="workwin_header_element">
 		</div>
 
 		<div id="searchctrl" class="workwin_header_element">
 		</div>
-		
-		
+
+		<div id="processpendingbox" style="display: none;">
+			<p class="center" style="text-align: center">
+				<img src="app/icons/busy.gif">
+			</p>
+		</div>
+
 	</div>
 	
 	<div class="workwin_content">

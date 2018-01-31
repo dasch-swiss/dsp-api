@@ -21,9 +21,10 @@
 package org.knora.webapi.messages.store.triplestoremessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.util.ErrorHandlingMap
+import arq.iri
+import org.knora.webapi.util.{ErrorHandlingMap, SmartIri}
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, TriplestoreResponseException}
-import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
+import spray.json.{DefaultJsonProtocol, DeserializationException, JsObject, JsString, JsValue, JsonFormat, NullOptions, RootJsonFormat, _}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -43,7 +44,7 @@ case object CheckConnection extends TriplestoreRequest
 /**
   * Represents a SPARQL SELECT query to be sent to the triplestore. A successful response will be a [[SparqlSelectResponse]].
   *
-  * @param sparql       the SPARQL string.
+  * @param sparql the SPARQL string.
   */
 case class SparqlSelectRequest(sparql: String) extends TriplestoreRequest
 
@@ -105,7 +106,7 @@ case class VariableResultsRow(rowMap: ErrorHandlingMap[String, String]) {
   * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
   * [[SparqlConstructResponse]].
   *
-  * @param sparql       the SPARQL string.
+  * @param sparql the SPARQL string.
   */
 case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
 
@@ -115,6 +116,21 @@ case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
   * @param statements a map of subject IRIs to statements about each subject.
   */
 case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
+
+/**
+  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
+  * [[SparqlExtendedConstructResponse]].
+  *
+  * @param sparql       the SPARQL string.
+  */
+case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreRequest
+
+/**
+  * A response to a [[SparqlExtendedConstructRequest]].
+  *
+  * @param statements a map of subject IRIs to statements about each subject.
+  */
+case class SparqlExtendedConstructResponse(statements: Map[IRI, Map[IRI, Seq[LiteralV2]]])
 
 /**
   * Represents a SPARQL Update operation to be performed.
@@ -215,6 +231,44 @@ case class InitializedResponse(initFinished: Boolean)
   */
 case class RdfDataObject(path: String, name: String)
 
+
+/**
+  * A case class for representing a literal coming from the triplestore. There are different subclasses
+  * representing literals with the extended type-information stored in the triplestore.
+  *
+  * @param value
+  */
+abstract class LiteralV2(value: String)
+
+/**
+  * Represents an object IRI.
+  *
+  * @param value the IRI.
+  */
+case class IriLiteralV2(value: IRI) extends LiteralV2(value = value.toString)
+
+/**
+  * Represents a string with an optional language tag.
+  *
+  * @param value    the string value.
+  * @param language the optional language tag.
+  */
+case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2(value = value)
+
+/**
+  * Represents a boolean value.
+  *
+  * @param value the boolean value.
+  */
+case class BooleanLiteralV2(value: Boolean) extends LiteralV2(value = value.toString)
+
+/**
+  * Represents an integer value.
+  *
+  * @param value the boolean value.
+  */
+case class IntLiteralV2(value: Int) extends LiteralV2(value = value.toString)
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
@@ -222,6 +276,56 @@ case class RdfDataObject(path: String, name: String)
   * A spray-json protocol for generating Knora API v1 JSON providing data about resources and their properties.
   */
 trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+
+    implicit object LiteralV2Format extends JsonFormat[StringLiteralV2] {
+        /**
+          * Converts a [[StringLiteralV2]] to a [[JsValue]].
+          *
+          * @param string a [[StringLiteralV2]].
+          * @return a [[JsValue]].
+          */
+        def write(string: StringLiteralV2): JsValue = {
+
+            if (string.language.isDefined) {
+                // have language tag
+                JsObject(
+                    Map(
+                        "value" -> string.value.toJson,
+                        "language" -> string.language.toJson
+                    )
+                )
+            } else {
+                // no language tag
+                JsObject(
+                    Map(
+                        "value" -> string.value.toJson
+                    )
+                )
+            }
+        }
+
+        /**
+          * Converts a [[JsValue]] to a [[StringLiteralV2]].
+          *
+          * @param json a [[JsValue]].
+          * @return a [[StringLiteralV2]].
+          */
+        def read(json: JsValue): StringLiteralV2 = json match {
+            case stringWithLang: JsObject => stringWithLang.getFields("value", "language") match {
+                case Seq(JsString(value), JsString(language)) => StringLiteralV2(
+                    value = value,
+                    language = Some(language)
+                )
+                case Seq(JsString(value)) => StringLiteralV2(
+                    value = value,
+                    language = None
+                )
+                case _ => throw DeserializationException("JSON object with 'value', or 'value' and 'language' fields expected.")
+            }
+            case JsString(value) => StringLiteralV2(value, None)
+            case _ => throw DeserializationException("JSON object with 'value', or 'value' and 'language' expected. ")
+        }
+    }
 
     implicit val rdfDataObjectFormat: RootJsonFormat[RdfDataObject] = jsonFormat2(RdfDataObject)
     implicit val resetTriplestoreContentFormat: RootJsonFormat[ResetTriplestoreContent] = jsonFormat1(ResetTriplestoreContent)

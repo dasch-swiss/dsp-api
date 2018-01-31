@@ -8,26 +8,25 @@
 
 
 ### parole-religieuse project
-<http://data.knora.org/projects/parole-religieuse> rdf:type knora-base:knoraProject ;
-        knora-base:projectShortname "drawings-of-gods"^^xsd:string ;
-        knora-base:projectLongname "Drawings of Gods"^^xsd:string ;
-        knora-base:projectDescription "Drawings of Gods"^^xsd:string ;
+<http://rdfh.ch/projects/0106> rdf:type knora-base:knoraProject ;
+        knora-base:projectShortname "parole-religieuse"^^xsd:string ;
+        knora-base:projectShortcode "0106"^^xsd:string ;
+        knora-base:projectLongname "parole-religieuse"^^xsd:string ;
+        knora-base:projectDescription "parole-religieuse"^^xsd:string ;
         knora-base:projectKeywords "gods, collection"^^xsd:string ;
-        knora-base:projectOntologyGraph "http://www.knora.org/ontology/anything"^^xsd:string ;
-        knora-base:projectDataGraph "http://www.knora.org/data/parole-religieuse"^^xsd:string ;
-        knora-base:projectBasepath "-"^^xsd:string ;
+        knora-base:projectOntology <http://www.knora.org/ontology/0106/parole-religieuse> ;
         knora-base:status "true"^^xsd:boolean ;
         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 ### parole-religieuse user
-<http://data.knora.org/users/parole-religieuse-test-user1> a knora-base:User ;
+<http://rdfh.ch/users/parole-religieuse-test-user1> a knora-base:User ;
         knora-base:email "parole@unil.ch"^^xsd:string ;
         knora-base:givenName "parole"^^xsd:string ;
         knora-base:familyName "parole"^^xsd:string ;
         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
         knora-base:preferredLanguage "fr"^^xsd:string ;
         knora-base:status "true"^^xsd:boolean ;
-        knora-base:isInProject <http://data.knora.org/projects/parole-religieuse> ;
-        knora-base:isInProjectAdminGroup <http://data.knora.org/projects/parole-religieuse> ;
+        knora-base:isInProject <http://rdfh.ch/projects/0106> ;
+        knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/0106> ;
         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 

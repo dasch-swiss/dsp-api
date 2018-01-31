@@ -41,11 +41,14 @@ object ConstructResponseUtilV2 {
     /**
       * Represents the RDF data about a value, possibly including standoff.
       *
-      * @param valueObjectIri the value object's IRI.
-      * @param assertions     the value objects assertions.
-      * @param standoff       standoff assertions, if any.
+      * @param valueObjectIri   the value object's IRI.
+      * @param valueObjectClass the type (class) of the value object.
+      * @param nestedResource   the nested resource in case of a link value (either the source or the target of a link value, depending on [[incomingLink]]).
+      * @param incomingLink     indicates if it is an incoming or outgoing link in case of a link value.
+      * @param assertions       the value objects assertions.
+      * @param standoff         standoff assertions, if any.
       */
-    case class ValueRdfData(valueObjectIri: IRI, valueObjectClass: IRI, targetResource: Option[ResourceWithValueRdfData] = None, assertions: Map[IRI, String], standoff: Map[IRI, Map[IRI, String]])
+    case class ValueRdfData(valueObjectIri: IRI, valueObjectClass: IRI, nestedResource: Option[ResourceWithValueRdfData] = None, incomingLink: Boolean = false, assertions: Map[IRI, String], standoff: Map[IRI, Map[IRI, String]])
 
     /**
       * Represents a resource and its values.
@@ -84,7 +87,6 @@ object ConstructResponseUtilV2 {
 
                 // check if the subject is a Knora resource
                 assertions.contains((OntologyConstants.Rdf.Type, OntologyConstants.KnoraBase.Resource))
-
         }
 
         // filter out the resources the user does not have permissions to see
@@ -92,7 +94,7 @@ object ConstructResponseUtilV2 {
             case (resIri: IRI, assertions: Seq[(IRI, String)]) =>
                 // filter out those resources that the user has not sufficient permissions to see
                 // please note that this also applies to referred resources
-                PermissionUtilV1.getUserPermissionV1FromAssertions(resIri, assertions, userProfile).isEmpty
+                PermissionUtilADM.getUserPermissionV1FromAssertions(resIri, assertions, userProfile).isEmpty
         }
 
         val flatResourcesWithValues: Map[IRI, ResourceWithValueRdfData] = resourceStatementsVisible.map {
@@ -159,7 +161,7 @@ object ConstructResponseUtilV2 {
                                 val resourceProject: String = predicateMap(OntologyConstants.KnoraBase.AttachedToProject)
 
                                 // prepend the resource's project to the value's assertions
-                                PermissionUtilV1.getUserPermissionV1FromAssertions(valObjIri, (OntologyConstants.KnoraBase.AttachedToProject, resourceProject) +: valueObjAssertions, userProfile).nonEmpty
+                                PermissionUtilADM.getUserPermissionV1FromAssertions(valObjIri, (OntologyConstants.KnoraBase.AttachedToProject, resourceProject) +: valueObjAssertions, userProfile).nonEmpty
                         }.flatMap {
                             valObjIri: IRI =>
 
@@ -233,6 +235,51 @@ object ConstructResponseUtilV2 {
                 (resourceIri, ResourceWithValueRdfData(resourceAssertions = assertionsExplicit, isMainResource = isMainResource, valuePropertyAssertions = valuePropertyToValueObject))
         }
 
+        // get incoming links for each resource
+        val incomingLinksForResource: Map[IRI, Map[IRI, ResourceWithValueRdfData]] = flatResourcesWithValues.map {
+            case (resourceIri: IRI, values: ResourceWithValueRdfData) =>
+
+                // get all incoming links for resourceIri
+                val incomingLinksForRes: Map[IRI, ResourceWithValueRdfData] = flatResourcesWithValues.foldLeft(Map.empty[IRI, ResourceWithValueRdfData]) {
+                    case (acc: Map[IRI, ResourceWithValueRdfData], (incomingResIri: IRI, values: ResourceWithValueRdfData)) =>
+
+                        val incomingLinkPropertyAssertions: Map[IRI, Seq[ValueRdfData]] = values.valuePropertyAssertions.foldLeft(Map.empty[IRI, Seq[ValueRdfData]]) {
+                            case (acc: Map[IRI, Seq[ValueRdfData]], (valObjIri: IRI, values: Seq[ValueRdfData])) =>
+
+                                // collect all link values that point to resourceIri
+                                val incomingLinkValues: Seq[ValueRdfData] = values.foldLeft(Seq.empty[ValueRdfData]) {
+                                    (acc, value: ValueRdfData) =>
+
+                                        // check if it is a link value and points to this resource
+                                        if (value.valueObjectClass == OntologyConstants.KnoraBase.LinkValue && value.assertions(OntologyConstants.Rdf.Object) == resourceIri) {
+                                            // add incoming link value
+                                            acc :+ value
+                                        } else {
+                                            acc
+                                        }
+                                }
+
+                                if (incomingLinkValues.nonEmpty) {
+                                    acc + (valObjIri -> incomingLinkValues)
+                                } else {
+                                    acc
+                                }
+                        }
+
+                        if (incomingLinkPropertyAssertions.nonEmpty) {
+                            acc + (incomingResIri -> values.copy(
+                                valuePropertyAssertions = incomingLinkPropertyAssertions
+                            ))
+                        } else {
+                            acc
+                        }
+
+                }
+
+                // create an entry using the resource's Iri as a key and its incoming links as the value
+                resourceIri -> incomingLinksForRes
+        }
+
         /**
           * Given a resource IRI, finds any link values in the resource, and recursively embeds the target resource in each link value.
           *
@@ -244,7 +291,7 @@ object ConstructResponseUtilV2 {
         def nestResources(resourceIri: IRI, alreadyTraversed: Set[IRI] = Set.empty[IRI]): ResourceWithValueRdfData = {
             val resource = flatResourcesWithValues(resourceIri)
 
-            val transformedValuePropertyAssertions = resource.valuePropertyAssertions.map {
+            val transformedValuePropertyAssertions: Map[IRI, Seq[ValueRdfData]] = resource.valuePropertyAssertions.map {
                 case (propIri, values) =>
                     val transformedValues = values.map {
                         value =>
@@ -254,10 +301,10 @@ object ConstructResponseUtilV2 {
                                 if (alreadyTraversed(dependentResourceIri)) {
                                     value
                                 } else {
-                                    val dependentResource = nestResources(dependentResourceIri, alreadyTraversed + resourceIri)
+                                    val dependentResource: ResourceWithValueRdfData = nestResources(dependentResourceIri, alreadyTraversed + resourceIri)
 
                                     value.copy(
-                                        targetResource = Some(dependentResource)
+                                        nestedResource = Some(dependentResource)
                                     )
                                 }
                             } else {
@@ -268,9 +315,45 @@ object ConstructResponseUtilV2 {
                     propIri -> transformedValues
             }
 
-            resource.copy(
-                valuePropertyAssertions = transformedValuePropertyAssertions
-            )
+            if (incomingLinksForResource(resourceIri).nonEmpty) {
+                // incomingResourcesWithLinkValueProps contains resources that have incoming link values
+                // flatResourcesWithValues contains the complete information
+
+                // filter out those resources that already have been processed
+                // and the main resources (they are already present on the top level of the response)
+                //
+                // the main resources point to dependent resources and would be treated as incoming links of dependent resources
+                // this would create circular dependencies
+                val incomingValueProps: Map[IRI, Seq[ValueRdfData]] = incomingLinksForResource(resourceIri).filterNot {
+                    case (incomingResIri: IRI, assertions: ResourceWithValueRdfData) =>
+                        alreadyTraversed(incomingResIri) || flatResourcesWithValues(incomingResIri).isMainResource
+                }.flatMap {
+                    case (incomingResIri: IRI, assertions: ResourceWithValueRdfData) =>
+                        assertions.valuePropertyAssertions
+                }
+
+                // create a virtual property representing an incoming link
+                val incomingProps: (IRI, Seq[ValueRdfData]) = OntologyConstants.KnoraBase.HasIncomingLinks -> incomingValueProps.values.toSeq.flatten.map {
+                    (linkValue: ValueRdfData) =>
+
+                        // get the source of the link value (it points to the resource that is currently processed)
+                        val source = Some(nestResources(linkValue.assertions(OntologyConstants.Rdf.Subject), alreadyTraversed + resourceIri))
+
+                        linkValue.copy(
+                            nestedResource = source,
+                            incomingLink = true
+                        )
+                }
+
+                resource.copy(
+                    valuePropertyAssertions = transformedValuePropertyAssertions + incomingProps
+                )
+            } else {
+                resource.copy(
+                    valuePropertyAssertions = transformedValuePropertyAssertions
+                )
+            }
+
         }
 
         val mainResourceIris: Set[IRI] = flatResourcesWithValues.filter {
@@ -315,7 +398,7 @@ object ConstructResponseUtilV2 {
       * @return a [[ValueContentV2]] representing a value.
       */
     def createValueContentV2FromValueRdfData(valueObject: ValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation]): ValueContentV2 = {
-        val stringFormatter = StringFormatter.getInstance
+        val stringFormatter = StringFormatter.getGeneralInstance
 
         // every knora-base:Value (any of its subclasses) has a string representation
         val valueObjectValueHasString: String = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasString)
@@ -383,24 +466,33 @@ object ConstructResponseUtilV2 {
                 IntervalValueContentV2(valueHasString = valueObjectValueHasString, valueHasIntervalStart = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalStart)), valueHasIntervalEnd = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalEnd)), comment = valueCommentOption)
 
             case OntologyConstants.KnoraBase.LinkValue =>
-                val referredResourceIri = valueObject.assertions(OntologyConstants.Rdf.Object)
+
+                val sourceResourceIri = valueObject.assertions(OntologyConstants.Rdf.Subject)
+                val targetResourceIri = valueObject.assertions(OntologyConstants.Rdf.Object)
 
                 val linkValue = LinkValueContentV2(
                     valueHasString = valueObjectValueHasString,
-                    subject = valueObject.assertions(OntologyConstants.Rdf.Subject),
+                    subject = sourceResourceIri,
                     predicate = valueObject.assertions(OntologyConstants.Rdf.Predicate),
-                    referredResourceIri = referredResourceIri,
+                    target = targetResourceIri,
                     comment = valueCommentOption,
-                    referredResource = None
+                    incomingLink = valueObject.incomingLink,
+                    nestedResource = None
                 )
 
-                valueObject.targetResource match {
+                valueObject.nestedResource match {
 
-                    case Some(referredResourceAssertions: ResourceWithValueRdfData) =>
+                    case Some(nestedResourceAssertions: ResourceWithValueRdfData) =>
+
+                        val nestedResourceIri = if (!valueObject.incomingLink) {
+                            targetResourceIri
+                        } else {
+                            sourceResourceIri
+                        }
 
                         // add information about the referred resource
                         linkValue.copy(
-                            referredResource = Some(constructReadResourceV2(referredResourceIri, referredResourceAssertions, mappings)) // construct a `ReadResourceV2`
+                            nestedResource = Some(constructReadResourceV2(nestedResourceIri, nestedResourceAssertions, mappings)) // construct a `ReadResourceV2`
                         )
 
                     case None => linkValue // do not include information about the referred resource
@@ -411,7 +503,7 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.StillImageFileValue =>
 
                 val isPreviewStr = valueObject.assertions.get(OntologyConstants.KnoraBase.IsPreview)
-                val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, () => throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
+                val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
 
                 StillImageFileValueContentV2(
                     internalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.InternalMimeType),

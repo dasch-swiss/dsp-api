@@ -29,6 +29,8 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Reset
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
 
+import org.knora.webapi.SharedOntologyTestDataADM._
+
 import scala.concurrent.duration._
 
 /**
@@ -36,11 +38,11 @@ import scala.concurrent.duration._
   */
 object SearchResponderV1Spec {
 
-    private val incunabulaUser = SharedAdminTestData.incunabulaMemberUser
+    private val incunabulaUser = SharedTestDataV1.incunabulaMemberUser
 
-    private val anythingUser1 = SharedAdminTestData.anythingUser1
+    private val anythingUser1 = SharedTestDataV1.anythingUser1
 
-    private val anythingUser2 = SharedAdminTestData.anythingUser2
+    private val anythingUser2 = SharedTestDataV1.anythingUser2
 
     private val fulltextThingResultsForUser1 = Vector(SearchResultRowV1(
         rights = Some(8),
@@ -191,7 +193,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/images"),
+        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
 
@@ -296,7 +298,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedAdminTestData.rootUser)
+        responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
@@ -736,10 +738,10 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Fdata.knora.org%2Flists%2F71a1543cce&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
-                searchValue = Vector("http://data.knora.org/lists/71a1543cce"), // list node SPORT
+                searchValue = Vector("http://rdfh.ch/lists/00FF/71a1543cce"), // list node SPORT
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
-                propertyIri = Vector("http://www.knora.org/ontology/images#titel"),
-                filterByRestype = Some("http://www.knora.org/ontology/images#bild"),
+                propertyIri = Vector(IMAGES_TITEL_PROPERTY),
+                filterByRestype = Some(IMAGES_BILD_RESOURCE_CLASS),
                 startAt = 0,
                 showNRows = 25
             )
@@ -754,10 +756,10 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Fdata.knora.org%2Flists%2F38c73482e3&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
-                searchValue = Vector("http://data.knora.org/lists/38c73482e3"), // list node SPAZIEREN
+                searchValue = Vector("http://rdfh.ch/lists/00FF/38c73482e3"), // list node SPAZIEREN
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
-                propertyIri = Vector("http://www.knora.org/ontology/images#titel"),
-                filterByRestype = Some("http://www.knora.org/ontology/images#bild"),
+                propertyIri = Vector(IMAGES_TITEL_PROPERTY),
+                filterByRestype = Some(IMAGES_BILD_RESOURCE_CLASS),
                 startAt = 0,
                 showNRows = 25
             )
@@ -772,10 +774,10 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Fdata.knora.org%2Flists%2F3bc59463e2&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
-                searchValue = Vector("http://data.knora.org/lists/3bc59463e2"), // list node ALPINISMUS
+                searchValue = Vector("http://rdfh.ch/lists/00FF/3bc59463e2"), // list node ALPINISMUS
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
-                propertyIri = Vector("http://www.knora.org/ontology/images#titel"),
-                filterByRestype = Some("http://www.knora.org/ontology/images#bild"),
+                propertyIri = Vector(IMAGES_TITEL_PROPERTY),
+                filterByRestype = Some(IMAGES_BILD_RESOURCE_CLASS),
                 startAt = 0,
                 showNRows = 25
             )

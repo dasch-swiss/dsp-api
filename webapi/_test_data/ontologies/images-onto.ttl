@@ -7,12 +7,13 @@
 @prefix dc: <http://www.knora.org/ontology/dc#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
-@base <http://www.knora.org/ontology/images> .
+@base <http://www.knora.org/ontology/00FF/images> .
 
-@prefix images: <http://www.knora.org/ontology/images#> .
-@prefix : <http://www.knora.org/ontology/images#> .
+@prefix images: <http://www.knora.org/ontology/00FF/images#> .
+@prefix : <http://www.knora.org/ontology/00FF/images#> .
 
-<http://www.knora.org/ontology/images> rdf:type owl:Ontology .
+<http://www.knora.org/ontology/00FF/images> rdf:type owl:Ontology ;
+    rdfs:label "The images demo ontology" .
 
 ##########################################################
 #
@@ -634,9 +635,9 @@
 
 
 ### ###########################################
-### images:bildformatValue
+### images:hatBildformatValue
 
-:bildformatValue rdf:type owl:ObjectProperty ;
+:hatBildformatValue rdf:type owl:ObjectProperty ;
 
                  rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
@@ -662,7 +663,7 @@
 ### ###########################################
 ### images:bildformat
 
-:bildformat rdf:type owl:ObjectProperty ;
+:hatBildformat rdf:type owl:ObjectProperty ;
 
             rdfs:subPropertyOf knora-base:hasLinkTo ;
 
@@ -1029,11 +1030,11 @@
                          owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
-                         owl:onProperty :bildformatValue ;
+                         owl:onProperty :hatBildformatValue ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
-                         owl:onProperty :bildformat ;
+                         owl:onProperty :hatBildformat ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
                       [
                          rdf:type owl:Restriction ;
@@ -1076,4 +1077,3 @@
                  "Image"@en ;
 
       rdfs:comment """An image of the demo image collection"""@de .
-

@@ -24,9 +24,9 @@ import akka.actor.ActorSelection
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.OntologyConstants
+import org.knora.webapi.{KnoraSystemInstances, OntologyConstants}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceFullResponseV1
 import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
@@ -47,11 +47,7 @@ object ResourceHtmlView {
     /**
       * A user representing the Knora API server, used in those cases where a user is required.
       */
-    private val systemUser = UserProfileV1(
-        userData = UserDataV1(lang = "en"),
-        isSystemUser = true,
-        permissionData = PermissionDataV1(anonymousUser = false)
-    )
+    private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
 
     def propertiesHtmlView(response: ResourceFullResponseV1, responderManager: ActorSelection): String = {
 
@@ -104,9 +100,9 @@ object ResourceHtmlView {
     private def dateValue2String(date: DateValueV1): String = {
 
         if (date.dateval1 == date.dateval2) {
-            date.dateval1.toString+ " " + date.era1 + ", " + date.calendar.toString + " " + date.era2
+            date.dateval1.toString + " " + date.era1 + ", " + date.calendar.toString + " " + date.era2
         } else {
-            date.dateval1.toString + " " + date.era1+ ", " + date.dateval2 + ", " + date.calendar.toString + " " + date.era2
+            date.dateval1.toString + " " + date.era1 + ", " + date.dateval2 + ", " + date.calendar.toString + " " + date.era2
         }
     }
 

@@ -1,0 +1,54 @@
+{
+  "@type" : "schema:ItemList",
+  "schema:itemListElement" : [ {
+    "@id" : "http://data.knora.org/de6d83112e04",
+    "@type" : "incunabula:book",
+    "incunabula:pubdate" : {
+      "@id" : "http://data.knora.org/de6d83112e04/values/99206ecaab10",
+      "@type" : "knora-api:DateValue",
+      "knora-api:dateValueHasCalendar" : "JULIAN",
+      "knora-api:dateValueHasEndYear" : 1499,
+      "knora-api:dateValueHasStartYear" : 1475,
+      "knora-api:valueAsString" : "1475-01-01 - 1499-12-31"
+    },
+    "incunabula:title" : {
+      "@id" : "http://data.knora.org/de6d83112e04/values/d6f61a91ab10",
+      "@type" : "knora-api:TextValue",
+      "knora-api:valueAsString" : "Itinerarius seu peregrinatio beatae virginis Mariae"
+    },
+    "schema:name" : "Itinerarius seu peregrinatio beatae virginis Mariae"
+  }, {
+    "@id" : "http://data.knora.org/8be1b7cf7103",
+    "@type" : "incunabula:book",
+    "incunabula:pubdate" : {
+      "@id" : "http://data.knora.org/8be1b7cf7103/values/150c04b7b80d",
+      "@type" : "knora-api:DateValue",
+      "knora-api:dateValueHasCalendar" : "JULIAN",
+      "knora-api:dateValueHasEndDay" : 1,
+      "knora-api:dateValueHasEndMonth" : 3,
+      "knora-api:dateValueHasEndYear" : 1497,
+      "knora-api:dateValueHasStartDay" : 1,
+      "knora-api:dateValueHasStartMonth" : 3,
+      "knora-api:dateValueHasStartYear" : 1497,
+      "knora-api:valueAsString" : "1497-03-01"
+    },
+    "incunabula:title" : [ {
+      "@id" : "http://data.knora.org/8be1b7cf7103/values/463b6498b70d",
+      "@type" : "knora-api:TextValue",
+      "knora-api:valueAsString" : "[Das] Narrenschiff (lat.)"
+    }, {
+      "@id" : "http://data.knora.org/8be1b7cf7103/values/0965b7d1b70d",
+      "@type" : "knora-api:TextValue",
+      "knora-api:valueAsString" : "Stultifera navis (...)"
+    } ],
+    "schema:name" : "[Das] Narrenschiff (lat.)"
+  } ],
+  "schema:numberOfItems" : 2,
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "schema" : "http://schema.org/",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "incunabula" : "http://0.0.0.0:3333/ontology/incunabula/v2#"
+  }
+}

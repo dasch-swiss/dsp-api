@@ -355,20 +355,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#projectDataGraph
-
-:projectDataGraph rdf:type owl:DatatypeProperty ;
-
-            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-            rdfs:comment "The name of the named graph where the project data is stored"@en ;
-
-            :subjectClassConstraint :knoraProject ;
-
-            :objectDatatypeConstraint xsd:string .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#projectDescription
 
 :projectDescription rdf:type owl:DatatypeProperty ;
@@ -429,17 +415,50 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#projectOntologyGraph
+###  http://www.knora.org/ontology/knora-base#projectOntology
 
-:projectOntologyGraph rdf:type owl:DatatypeProperty ;
+:projectOntology rdf:type owl:DatatypeProperty ;
 
             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-            rdfs:comment "The name of the named graph where the project specific ontology is stored"@en ;
+            rdfs:comment "The IRI of the project specific ontology"@en ;
 
             :subjectClassConstraint :knoraProject ;
 
-            :objectDatatypeConstraint xsd:string .
+            :objectDatatypeConstraint xsd:anyURI .
+
+
+
+###  http://www.knora.org/ontology/knora-base#projectShortname
+
+:projectShortname rdf:type owl:DatatypeProperty ;
+
+             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+             rdfs:comment "The unique shortname of a Knora project."@en ;
+
+             rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> ;
+
+             :subjectClassConstraint :knoraProject ;
+
+             :objectDatatypeConstraint xsd:string .
+
+
+
+###  http://www.knora.org/ontology/knora-base#projectShortcode
+
+:projectShortcode rdf:type owl:DatatypeProperty ;
+
+             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+             rdfs:comment "The unique short code of a Knora project."@en ;
+
+             rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> ;
+
+             :subjectClassConstraint :knoraProject ;
+
+             :objectDatatypeConstraint xsd:string .
+
 
 
 
@@ -594,6 +613,10 @@
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
+                                owl:onProperty :projectShortcode ;
+                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                              ] ,
+                              [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectLongname ;
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
@@ -614,12 +637,8 @@
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
-                                owl:onProperty :projectOntologyGraph ;
-                                owl:cardinality "1"^^xsd:nonNegativeInteger
-                              ] ,
-                              [ rdf:type owl:Restriction ;
-                                owl:onProperty :projectDataGraph ;
-                                owl:cardinality "1"^^xsd:nonNegativeInteger
+                                owl:onProperty :projectOntology ;
+                                owl:minCardinality "0"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :status ;
@@ -667,7 +686,7 @@
     rdfs:comment "Represents a key-value pair in a Map"@en .
 
 
-    
+
 
 #################################################################
 #
@@ -718,14 +737,25 @@
             :preferredLanguage "en" ;
             :isInSystemAdminGroup "false"^^xsd:boolean .
 
+###  http://www.knora.org/ontology/knora-base#AnonymousUser
+:AnonymousUser rdf:type :User ;
+            rdfs:comment "A built-in anonymous user."@en ;
+            :email "anonymous@localhost" ;
+            :givenName "Knora" ;
+            :familyName "Anonymous" ;
+            :password "-" ;
+            :status "true"^^xsd:boolean ;
+            :preferredLanguage "en" ;
+            :isInSystemAdminGroup "false"^^xsd:boolean .
+
 ### http://www.knora.org/ontology/knora-base#SystemProject
 :SystemProject rdf:type :knoraProject ;
             rdfs:comment "A built-in project representing the Knora System."@en ;
             :projectShortname "SystemProject" ;
+            :projectShortcode "FFFF" ;
             :projectLongname "Knora System Project" ;
             :projectDescription "Knora System Project" ;
-            :projectOntologyGraph "http://www.knora.org/ontology/knora-base" ;
-            :projectDataGraph "-" ;
+            :projectOntology <http://www.knora.org/ontology/knora-base> ;
             :status "true"^^xsd:boolean ;
             :hasSelfJoinEnabled "false"^^xsd:boolean .
 

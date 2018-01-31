@@ -43,7 +43,7 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 class ValueUtilV1(private val settings: SettingsImpl) {
 
-    private val stringFormatter = StringFormatter.getInstance
+    private val stringFormatter = StringFormatter.getGeneralInstance
 
     /**
       * Given a [[ValueProps]] containing details of a `knora-base:Value` object, creates a [[ApiValueV1]].
@@ -469,7 +469,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
         for {
 
-        // get the mapping and the related standoff entities
+            // get the mapping and the related standoff entities
             mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV1]
 
             standoffTags: Seq[StandoffTagV1] = StandoffTagUtilV1.createStandoffTagsV1FromSparqlResults(mappingResponse.standoffEntities, valueProps.standoff)
@@ -564,7 +564,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         val predicates = valueProps.literalData
 
         val isPreviewStr = predicates.get(OntologyConstants.KnoraBase.IsPreview).flatMap(_.literals.headOption)
-        val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, () => throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
+        val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
 
         Future(StillImageFileValueV1(
             internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,

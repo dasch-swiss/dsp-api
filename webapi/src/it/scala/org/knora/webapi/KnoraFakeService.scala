@@ -30,7 +30,7 @@ trait KnoraFakeService {
     this: Core =>
 
     // Initialise StringFormatter with the system settings.
-    StringFormatter.init(settings)
+    StringFormatter.initForTest()
 
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)

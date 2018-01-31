@@ -651,7 +651,7 @@ case class TextValueWithStandoffV1(utf8str: String,
                                    mapping: MappingXMLtoStandoff) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
 
     private val knoraIdUtil = new KnoraIdUtil
-    private val stringFormatter = StringFormatter.getInstance
+    private val stringFormatter = StringFormatter.getGeneralInstance
 
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
 
@@ -747,7 +747,7 @@ case class TextValueWithStandoffV1(utf8str: String,
             case otherText: TextValueV1 =>
 
                 // unescape utf8str since it contains escaped sequences while the string returned by the triplestore does not
-                otherText.utf8str == stringFormatter.toSparqlEncodedString(utf8str, () => throw InvalidStandoffException(s"Could not unescape utf8str $utf8str"), true)
+                otherText.utf8str == stringFormatter.fromSparqlEncodedString(utf8str, throw InvalidStandoffException(s"Could not unescape utf8str $utf8str"))
             case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
@@ -767,7 +767,7 @@ case class TextValueWithStandoffV1(utf8str: String,
             case textValueWithStandoffV1: TextValueWithStandoffV1 =>
 
                 // compare utf8str (unescape utf8str since it contains escaped sequences while the string returned by the triplestore does not)
-                val utf8strIdentical: Boolean = textValueWithStandoffV1.utf8str == stringFormatter.toSparqlEncodedString(utf8str, () => throw InvalidStandoffException(s"Could not unescape utf8str $utf8str"), true)
+                val utf8strIdentical: Boolean = textValueWithStandoffV1.utf8str == stringFormatter.fromSparqlEncodedString(utf8str, throw InvalidStandoffException(s"Could not unescape utf8str $utf8str"))
 
                 // compare standoff nodes (sort them first, since the order does not make any difference )
                 val standoffIdentical: Boolean = textValueWithStandoffV1.standoff.sortBy(standoffNode => (standoffNode.standoffTagClassIri, standoffNode.startPosition)) == this.standoff.sortBy(standoffNode => (standoffNode.standoffTagClassIri, standoffNode.startPosition))
@@ -1229,8 +1229,8 @@ case class JulianDayNumberValueV1(dateval1: Int,
   */
 case class DateValueV1(dateval1: String,
                        dateval2: String,
-                       era1:String,
-                       era2:String,
+                       era1: String,
+                       era2: String,
                        calendar: KnoraCalendarV1.Value) extends ApiValueV1 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.DateValue
@@ -1244,7 +1244,7 @@ case class DateValueV1(dateval1: String,
             dateval1 + " " + era1
         } else {
             // period: from to
-            dateval1 + " " + era1+ " - " + dateval2+ " " + era2
+            dateval1 + " " + era1 + " - " + dateval2 + " " + era2
         }
 
     }

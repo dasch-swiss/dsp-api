@@ -67,7 +67,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     }
 
     "Load test data" in {
-        val request = Post(baseApiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, 300.seconds)
     }
 
@@ -81,7 +81,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                    |{
                    |     "restype_id": "http://www.knora.org/ontology/incunabula#page",
                    |     "label": "test",
-                   |     "project_id": "http://data.knora.org/projects/77275339",
+                   |     "project_id": "http://rdfh.ch/projects/77275339",
                    |     "properties": {
                    |         "http://www.knora.org/ontology/incunabula#pagenum": [
                    |             {
@@ -235,7 +235,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                    |    },
                    |    "file": ${fileParams.compactPrint},
                    |    "label": "test page",
-                   |    "project_id": "http://data.knora.org/projects/77275339"
+                   |    "project_id": "http://rdfh.ch/projects/77275339"
                    |}
                 """.stripMargin
 
@@ -306,7 +306,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                 Map(
                     "restype_id" -> JsString("http://www.knora.org/ontology/anything#Thing"),
                     "label" -> JsString("Wild thing"),
-                    "project_id" -> JsString("http://data.knora.org/projects/anything"),
+                    "project_id" -> JsString("http://rdfh.ch/projects/anything"),
                     "properties" -> JsObject(
                         Map(
                             "http://www.knora.org/ontology/anything#hasText" -> JsArray(
@@ -314,7 +314,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                                     Map(
                                         "richtext_value" -> JsObject(
                                             "xml" -> JsString(standoffXml),
-                                            "mapping_id" -> JsString("http://data.knora.org/projects/standoff/mappings/StandardMapping")
+                                            "mapping_id" -> JsString("http://rdfh.ch/standoff/mappings/StandardMapping")
                                         )
                                     )
                                 )
@@ -364,7 +364,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                    |    </incunabula:page>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://data.knora.org/projects/77275339", "UTF-8")
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/77275339", "UTF-8")
 
             // Send the JSON in a POST request to the Knora API server.
             val knoraPostRequest = Post(baseApiUrl + s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), knoraParams)) ~> addCredentials(BasicHttpCredentials(username, password))

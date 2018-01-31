@@ -25,15 +25,15 @@ import java.time.Instant
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM}
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1}
-import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagIriAttributeV1, StandoffTagV1}
@@ -126,14 +126,14 @@ class ValuesResponderV1 extends Responder {
           * @return a [[Future]] that does pre-update checks and performs the update.
           */
         def makeTaskFuture(userIri: IRI): Future[CreateValueResponseV1] = for {
-        // Check that the submitted value has the correct type for the property.
+            // Check that the submitted value has the correct type for the property.
 
             entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
                 propertyIris = Set(createValueRequest.propertyIri),
                 userProfile = createValueRequest.userProfile
             )).mapTo[EntityInfoGetResponseV1]
 
-            propertyInfo = entityInfoResponse.propertyEntityInfoMap(createValueRequest.propertyIri)
+            propertyInfo = entityInfoResponse.propertyInfoMap(createValueRequest.propertyIri)
             propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
                 throw InconsistentTriplestoreDataException(s"Property ${createValueRequest.propertyIri} has no knora-base:objectClassConstraint")
             }
@@ -158,7 +158,7 @@ class ValuesResponderV1 extends Responder {
 
             resourcePermissionCode: Option[Int] = resourceFullResponse.resdata.flatMap(resdata => resdata.rights)
 
-            _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = resourcePermissionCode, userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
+            _ = if (!PermissionUtilADM.impliesV1(userHasPermissionCode = resourcePermissionCode, userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
                 throw ForbiddenException(s"User $userIri does not have permission to modify resource ${createValueRequest.resourceIri}")
             }
 
@@ -193,13 +193,14 @@ class ValuesResponderV1 extends Responder {
             resourceClassIri: IRI = resourceFullResponse.resinfo.getOrElse(throw InconsistentTriplestoreDataException(s"Did not find resource info for resource ${createValueRequest.resourceIri}")).restype_id
 
             defaultObjectAccessPermissions <- {
-                responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
                     projectIri = projectIri,
                     resourceClassIri = resourceClassIri,
                     propertyIri = createValueRequest.propertyIri,
-                    createValueRequest.userProfile.permissionData
+                    targetUser = createValueRequest.userProfile,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
-            }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+            }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
             _ = log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
             // Get project info
@@ -218,7 +219,7 @@ class ValuesResponderV1 extends Responder {
             // Everything seems OK, so create the value.
 
             unverifiedValue <- createValueV1AfterChecks(
-                dataNamedGraph = projectInfo.dataNamedGraph,
+                dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                 projectIri = resourceFullResponse.resinfo.get.project_id,
                 resourceIri = createValueRequest.resourceIri,
                 propertyIri = createValueRequest.propertyIri,
@@ -239,7 +240,7 @@ class ValuesResponderV1 extends Responder {
         } yield apiResponse
 
         for {
-        // Don't allow anonymous users to create values.
+            // Don't allow anonymous users to create values.
             userIri <- createValueRequest.userProfile.userData.user_id match {
                 case Some(iri) => Future(iri)
                 case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to create values"))
@@ -304,14 +305,14 @@ class ValuesResponderV1 extends Responder {
 
 
             for {
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            // Generate SPARQL to create links and LinkValues for standoff resource references in text values
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // Generate SPARQL to create links and LinkValues for standoff resource references in text values
 
-            // To create LinkValues for the standoff resource references in the values to be created, we need to compute
-            // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
-            // that have standoff references to a particular target resource.
+                // To create LinkValues for the standoff resource references in the values to be created, we need to compute
+                // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
+                // that have standoff references to a particular target resource.
 
-            // First, make a single list of all the values to be created.
+                // First, make a single list of all the values to be created.
                 valuesToCreatePerProperty: Map[IRI, Seq[CreateValueV1WithComment]] <- Future(createMultipleValuesRequest.values)
                 valuesToCreateForAllProperties: Iterable[Seq[CreateValueV1WithComment]] = valuesToCreatePerProperty.values
                 allValuesToCreate: Iterable[CreateValueV1WithComment] = valuesToCreateForAllProperties.flatten
@@ -543,7 +544,7 @@ class ValuesResponderV1 extends Responder {
         }
 
         for {
-        // Don't allow anonymous users to create resources.
+            // Don't allow anonymous users to create resources.
             userIri <- createMultipleValuesRequest.userProfile.userData.user_id match {
                 case Some(iri) => Future(iri)
                 case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to create resources"))
@@ -725,7 +726,7 @@ class ValuesResponderV1 extends Responder {
                 case _ => changeFileValueRequest.file match {
                     case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
                         // a tmp file has been created by the resources route (non GUI-case), delete it
-                        stringFormatter.deleteFileFromTmpLocation(conversionPathRequest.source, log)
+                        FileUtil.deleteFileFromTmpLocation(conversionPathRequest.source, log)
                     case _ => ()
                 }
 
@@ -735,11 +736,11 @@ class ValuesResponderV1 extends Responder {
 
         for {
 
-        // Do the preparations of a file value change while already holding an update lock on the resource.
-        // This is necessary because in `makeTaskFuture` the current file value Iris for the given resource IRI have to been retrieved.
-        // Using the lock, we make sure that these are still up to date when `changeValueV1` is being called.
-        //
-        // The method `changeValueV1` will be called using the same lock.
+            // Do the preparations of a file value change while already holding an update lock on the resource.
+            // This is necessary because in `makeTaskFuture` the current file value Iris for the given resource IRI have to been retrieved.
+            // Using the lock, we make sure that these are still up to date when `changeValueV1` is being called.
+            //
+            // The method `changeValueV1` will be called using the same lock.
             taskResult <- IriLocker.runWithIriLock(
                 changeFileValueRequest.apiRequestID,
                 changeFileValueRequest.resourceIri,
@@ -778,7 +779,7 @@ class ValuesResponderV1 extends Responder {
             }
 
             for {
-            // Ensure that the user has permission to modify the value.
+                // Ensure that the user has permission to modify the value.
 
                 maybeCurrentValueQueryResult: Option[ValueQueryResult] <- changeValueRequest.value match {
                     case linkUpdateV1: LinkUpdateV1 =>
@@ -800,7 +801,7 @@ class ValuesResponderV1 extends Responder {
 
                 currentValueQueryResult = maybeCurrentValueQueryResult.getOrElse(throw NotFoundException(s"Value ${changeValueRequest.valueIri} not found (it may have been deleted)"))
 
-                _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = Some(currentValueQueryResult.permissionCode), userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
+                _ = if (!PermissionUtilADM.impliesV1(userHasPermissionCode = Some(currentValueQueryResult.permissionCode), userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
                     throw ForbiddenException(s"User $userIri does not have permission to add a new version to value ${changeValueRequest.valueIri}")
                 }
 
@@ -811,7 +812,7 @@ class ValuesResponderV1 extends Responder {
                     userProfile = changeValueRequest.userProfile
                 )).mapTo[EntityInfoGetResponseV1]
 
-                propertyInfo = entityInfoResponse.propertyEntityInfoMap(propertyIri)
+                propertyInfo = entityInfoResponse.propertyInfoMap(propertyIri)
                 propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
                     throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
                 }
@@ -870,12 +871,13 @@ class ValuesResponderV1 extends Responder {
 
                 _ = log.debug(s"changeValueV1 - DefaultObjectAccessPermissionsStringForPropertyGetV1 - projectIri ${findResourceWithValueResult.projectIri}, propertyIri: ${findResourceWithValueResult.propertyIri}, permissionData: ${changeValueRequest.userProfile.permissionData} ")
                 defaultObjectAccessPermissions <- {
-                    responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                    responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
                         projectIri = findResourceWithValueResult.projectIri,
                         resourceClassIri = resourceClassIri,
                         propertyIri = findResourceWithValueResult.propertyIri,
-                        permissionData = changeValueRequest.userProfile.permissionData)
-                }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+                        targetUser = changeValueRequest.userProfile,
+                        requestingUser = KnoraSystemInstances.Users.SystemUser)
+                }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                 _ = log.debug(s"changeValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
                 // Get project info
@@ -897,14 +899,14 @@ class ValuesResponderV1 extends Responder {
                         // We're updating a link. This means deleting an existing link and creating a new one, so
                         // check that the user has permission to modify the resource.
                         val resourcePermissionCode = resourceFullResponse.resdata.flatMap(resdata => resdata.rights)
-                        if (!PermissionUtilV1.impliesV1(userHasPermissionCode = resourcePermissionCode, userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
+                        if (!PermissionUtilADM.impliesV1(userHasPermissionCode = resourcePermissionCode, userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
                             throw ForbiddenException(s"User $userIri does not have permission to modify resource ${findResourceWithValueResult.resourceIri}")
                         }
 
                         // We'll need to create a new LinkValue.
 
                         changeLinkValueV1AfterChecks(projectIri = currentValueQueryResult.projectIri,
-                            dataNamedGraph = projectInfo.dataNamedGraph,
+                            dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                             resourceIri = findResourceWithValueResult.resourceIri,
                             propertyIri = propertyIri,
                             currentLinkValueV1 = currentLinkValueQueryResult.value,
@@ -940,7 +942,7 @@ class ValuesResponderV1 extends Responder {
         }
 
         for {
-        // Don't allow anonymous users to update values.
+            // Don't allow anonymous users to update values.
             userIri <- changeValueRequest.userProfile.userData.user_id match {
                 case Some(iri) => Future(iri)
                 case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to update values"))
@@ -968,13 +970,13 @@ class ValuesResponderV1 extends Responder {
           */
         def makeTaskFuture(userIri: IRI, findResourceWithValueResult: FindResourceWithValueResult): Future[ChangeValueResponseV1] = {
             for {
-            // Ensure that the user has permission to modify the value.
+                // Ensure that the user has permission to modify the value.
 
                 maybeCurrentValueQueryResult: Option[ValueQueryResult] <- findValue(changeCommentRequest.valueIri, changeCommentRequest.userProfile)
 
                 currentValueQueryResult = maybeCurrentValueQueryResult.getOrElse(throw NotFoundException(s"Value ${changeCommentRequest.valueIri} not found (it may have been deleted)"))
 
-                _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = Some(currentValueQueryResult.permissionCode), userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
+                _ = if (!PermissionUtilADM.impliesV1(userHasPermissionCode = Some(currentValueQueryResult.permissionCode), userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
                     throw ForbiddenException(s"User $userIri does not have permission to add a new version to value ${changeCommentRequest.valueIri}")
                 }
 
@@ -1004,7 +1006,7 @@ class ValuesResponderV1 extends Responder {
 
                 // Generate a SPARQL update.
                 sparqlUpdate = queries.sparql.v1.txt.changeComment(
-                    dataNamedGraph = projectInfo.dataNamedGraph,
+                    dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                     triplestore = settings.triplestoreType,
                     resourceIri = findResourceWithValueResult.resourceIri,
                     propertyIri = findResourceWithValueResult.propertyIri,
@@ -1033,7 +1035,7 @@ class ValuesResponderV1 extends Responder {
         }
 
         for {
-        // Don't allow anonymous users to update values.
+            // Don't allow anonymous users to update values.
             userIri <- changeCommentRequest.userProfile.userData.user_id match {
                 case Some(iri) => Future(iri)
                 case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to update values"))
@@ -1069,11 +1071,11 @@ class ValuesResponderV1 extends Responder {
           * @return a [[Future]] that does pre-update checks and performs the update.
           */
         def makeTaskFuture(userIri: IRI, findResourceWithValueResult: FindResourceWithValueResult): Future[DeleteValueResponseV1] = for {
-        // Ensure that the user has permission to mark the value as deleted.
+            // Ensure that the user has permission to mark the value as deleted.
             maybeCurrentValueQueryResult <- findValue(deleteValueRequest.valueIri, deleteValueRequest.userProfile)
             currentValueQueryResult = maybeCurrentValueQueryResult.getOrElse(throw NotFoundException(s"Value ${deleteValueRequest.valueIri} not found (it may have been deleted)"))
 
-            _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = Some(currentValueQueryResult.permissionCode), userNeedsPermission = OntologyConstants.KnoraBase.DeletePermission)) {
+            _ = if (!PermissionUtilADM.impliesV1(userHasPermissionCode = Some(currentValueQueryResult.permissionCode), userNeedsPermission = OntologyConstants.KnoraBase.DeletePermission)) {
                 throw ForbiddenException(s"User $userIri does not have permission to delete value ${deleteValueRequest.valueIri}")
             }
 
@@ -1096,7 +1098,7 @@ class ValuesResponderV1 extends Responder {
                     val linkPropertyIri = knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
 
                     for {
-                    // Get project info
+                        // Get project info
                         maybeProjectInfo <- {
                             responderManager ? ProjectInfoByIRIGetV1(
                                 findResourceWithValueResult.projectIri,
@@ -1119,7 +1121,7 @@ class ValuesResponderV1 extends Responder {
                         )
 
                         sparqlUpdate = queries.sparql.v1.txt.deleteLink(
-                            dataNamedGraph = projectInfo.dataNamedGraph,
+                            dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                             triplestore = settings.triplestoreType,
                             linkSourceIri = findResourceWithValueResult.resourceIri,
                             linkUpdate = sparqlTemplateLinkUpdate,
@@ -1169,7 +1171,7 @@ class ValuesResponderV1 extends Responder {
                         }
 
                         sparqlUpdate = queries.sparql.v1.txt.deleteValue(
-                            dataNamedGraph = projectInfo.dataNamedGraph,
+                            dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                             triplestore = settings.triplestoreType,
                             resourceIri = findResourceWithValueResult.resourceIri,
                             propertyIri = findResourceWithValueResult.propertyIri,
@@ -1192,13 +1194,13 @@ class ValuesResponderV1 extends Responder {
             sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
             rows = sparqlSelectResponse.results.bindings
 
-            _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
+            _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
                 throw UpdateNotPerformedException(s"The request to mark value ${deleteValueRequest.valueIri} (or a new version of that value) as deleted did not succeed. Please report this as a possible bug.")
             }
         } yield DeleteValueResponseV1(id = deletedValueIri)
 
         for {
-        // Don't allow anonymous users to update values.
+            // Don't allow anonymous users to update values.
             userIri <- deleteValueRequest.userProfile.userData.user_id match {
                 case Some(iri) => Future(iri)
                 case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to mark values as deleted"))
@@ -1245,7 +1247,7 @@ class ValuesResponderV1 extends Responder {
 
 
         for {
-        // Do a SPARQL query to get the versions of the value.
+            // Do a SPARQL query to get the versions of the value.
             sparqlQuery <- Future {
                 queries.sparql.v1.txt.getVersionHistory(
                     triplestore = settings.triplestoreType,
@@ -1280,9 +1282,9 @@ class ValuesResponderV1 extends Responder {
                     val valuePermissions = rowMap("valuePermissions")
 
                     // Permission-checking on LinkValues is special, because they can be system-created rather than user-created.
-                    val valuePermissionCode = if (stringFormatter.optionStringToBoolean(rowMap.get("isLinkValue"), () => throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${rowMap.get("isLinkValue")}"))) {
+                    val valuePermissionCode = if (stringFormatter.optionStringToBoolean(rowMap.get("isLinkValue"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${rowMap.get("isLinkValue")}"))) {
                         // It's a LinkValue.
-                        PermissionUtilV1.getUserPermissionV1(
+                        PermissionUtilADM.getUserPermissionV1(
                             subjectIri = valueIri,
                             subjectCreator = valueCreator,
                             subjectProject = project,
@@ -1291,7 +1293,7 @@ class ValuesResponderV1 extends Responder {
                         )
                     } else {
                         // It's not a LinkValue.
-                        PermissionUtilV1.getUserPermissionV1(subjectIri = valueIri, subjectCreator = valueCreator, subjectProject = project, subjectPermissionLiteral = valuePermissions, userProfile = versionHistoryRequest.userProfile)
+                        PermissionUtilADM.getUserPermissionV1(subjectIri = valueIri, subjectCreator = valueCreator, subjectProject = project, subjectPermissionLiteral = valuePermissions, userProfile = versionHistoryRequest.userProfile)
                     }
 
                     valuePermissionCode.nonEmpty
@@ -1489,7 +1491,7 @@ class ValuesResponderV1 extends Responder {
             rowMap = rows.head.rowMap
             userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
 
-            maybeSourcePermissionCode = PermissionUtilV1.getUserPermissionV1(
+            maybeSourcePermissionCode = PermissionUtilADM.getUserPermissionV1(
                 subjectIri = rowMap("source"),
                 subjectCreator = rowMap("sourceCreator"),
                 subjectProject = rowMap("sourceProject"),
@@ -1497,7 +1499,7 @@ class ValuesResponderV1 extends Responder {
                 userProfile = userProfile
             )
 
-            maybeTargetPermissionCode = PermissionUtilV1.getUserPermissionV1(
+            maybeTargetPermissionCode = PermissionUtilADM.getUserPermissionV1(
                 subjectIri = rowMap("target"),
                 subjectCreator = rowMap("targetCreator"),
                 subjectProject = rowMap("targetProject"),
@@ -1614,7 +1616,7 @@ class ValuesResponderV1 extends Responder {
                 comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
 
                 // Get the value's permission-relevant assertions.
-                assertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
+                assertions = PermissionUtilADM.filterPermissionRelevantAssertionsFromValueProps(valueProps)
 
                 // Get the permission code representing the user's permissions on the value.
                 //
@@ -1627,14 +1629,14 @@ class ValuesResponderV1 extends Responder {
                     case OntologyConstants.KnoraBase.LinkValue =>
                         val linkPredicateIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Predicate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Link value $valueIri has no rdf:predicate"))
 
-                        PermissionUtilV1.getUserPermissionV1WithValueProps(
+                        PermissionUtilADM.getUserPermissionV1WithValueProps(
                             valueIri = valueIri,
                             valueProps = valueProps,
                             subjectProject = None, // no need to specify this here, because it's in valueProps
                             userProfile = userProfile
                         )
 
-                    case _ => PermissionUtilV1.getUserPermissionV1FromAssertions(
+                    case _ => PermissionUtilADM.getUserPermissionV1FromAssertions(
                         subjectIri = valueIri,
                         assertions = assertions,
                         userProfile = userProfile
@@ -1698,10 +1700,10 @@ class ValuesResponderV1 extends Responder {
                 comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
 
                 // Get the value's permission-relevant assertions.
-                permissionRelevantAssertions = PermissionUtilV1.filterPermissionRelevantAssertionsFromValueProps(valueProps)
+                permissionRelevantAssertions = PermissionUtilADM.filterPermissionRelevantAssertionsFromValueProps(valueProps)
 
                 // Get the permission code representing the user's permissions on the value.
-                permissionCode = PermissionUtilV1.getUserPermissionV1WithValueProps(
+                permissionCode = PermissionUtilADM.getUserPermissionV1WithValueProps(
                     valueIri = linkValueIri,
                     valueProps = valueProps,
                     subjectProject = None, // no need to specify this here, because it's in valueProps
@@ -1801,7 +1803,7 @@ class ValuesResponderV1 extends Responder {
     @throws(classOf[ForbiddenException])
     private def verifyOrdinaryValueUpdate(resourceIri: IRI, propertyIri: IRI, searchValueIri: IRI, userProfile: UserProfileV1): Future[ValueQueryResult] = {
         for {
-        // Do a SPARQL query to look for the value in the resource's version history.
+            // Do a SPARQL query to look for the value in the resource's version history.
             sparqlQuery <- Future {
                 // Run the template function in a Future to handle exceptions (see http://git.iml.unibas.ch/salsah-suite/knora/wikis/futures-with-akka#handling-errors-with-futures)
                 queries.sparql.v1.txt.findValueInVersions(
@@ -2049,7 +2051,7 @@ class ValuesResponderV1 extends Responder {
         val currentTime: String = Instant.now.toString
 
         for {
-        // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
+            // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
             standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- value match {
                 case textValueV1: TextValueWithStandoffV1 =>
                     // Make sure the text value's list of resource references is correct.
@@ -2131,7 +2133,7 @@ class ValuesResponderV1 extends Responder {
                                              valuePermissions: String,
                                              userProfile: UserProfileV1): Future[ChangeValueResponseV1] = {
         for {
-        // Delete the existing link and decrement its LinkValue's reference count.
+            // Delete the existing link and decrement its LinkValue's reference count.
             sparqlTemplateLinkUpdateForCurrentLink <- decrementLinkValue(
                 sourceResourceIri = resourceIri,
                 linkPropertyIri = propertyIri,
@@ -2169,7 +2171,7 @@ class ValuesResponderV1 extends Responder {
 
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.changeLink(
-                dataNamedGraph = projectInfo.dataNamedGraph,
+                dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                 triplestore = settings.triplestoreType,
                 linkSourceIri = resourceIri,
                 linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
@@ -2237,7 +2239,7 @@ class ValuesResponderV1 extends Responder {
                                                  valuePermissions: String,
                                                  userProfile: UserProfileV1): Future[ChangeValueResponseV1] = {
         for {
-        // If we're adding a text value, update direct links and LinkValues for any resource references in Standoff.
+            // If we're adding a text value, update direct links and LinkValues for any resource references in Standoff.
             standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- (currentValueV1, updateValueV1) match {
                 case (currentTextValue: TextValueV1, newTextValue: TextValueV1) =>
                     // Make sure the new text value's list of resource references is correct.
@@ -2314,7 +2316,7 @@ class ValuesResponderV1 extends Responder {
 
             // Generate a SPARQL update.
             sparqlUpdate = queries.sparql.v1.txt.addValueVersion(
-                dataNamedGraph = projectInfo.dataNamedGraph,
+                dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
@@ -2382,7 +2384,7 @@ class ValuesResponderV1 extends Responder {
                                    valuePermissions: String,
                                    userProfile: UserProfileV1): Future[SparqlTemplateLinkUpdate] = {
         for {
-        // Check whether a LinkValue already exists for this link.
+            // Check whether a LinkValue already exists for this link.
             maybeLinkValueQueryResult <- findLinkValueByLinkTriple(
                 subjectIri = sourceResourceIri,
                 predicateIri = linkPropertyIri,
@@ -2467,7 +2469,7 @@ class ValuesResponderV1 extends Responder {
                                    valuePermissions: String,
                                    userProfile: UserProfileV1): Future[SparqlTemplateLinkUpdate] = {
         for {
-        // Query the LinkValue to ensure that it exists and to get its contents.
+            // Query the LinkValue to ensure that it exists and to get its contents.
             maybeLinkValueQueryResult <- findLinkValueByLinkTriple(
                 subjectIri = sourceResourceIri,
                 predicateIri = linkPropertyIri,
@@ -2620,6 +2622,6 @@ class ValuesResponderV1 extends Responder {
             OntologyConstants.KnoraBase.ViewPermission -> Set(OntologyConstants.KnoraBase.UnknownUser)
         )
 
-        PermissionUtilV1.formatPermissions(permissionMap)
+        PermissionUtilADM.formatPermissions(permissionMap)
     }
 }

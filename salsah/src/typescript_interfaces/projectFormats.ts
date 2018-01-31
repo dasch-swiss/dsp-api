@@ -37,6 +37,11 @@ export module projectFormats {
         shortname: string;
 
         /**
+         * The shortcode of the project to be created (unique).
+         */
+        shortcode?: string;
+
+        /**
          * The longname of the project to be created.
          */
         longname?: string;
@@ -109,16 +114,6 @@ export module projectFormats {
          * The new project's institution.
          */
         institution?: string;
-
-        /**
-         * The new project's ontology graph.
-         */
-        ontologygraph?: string;
-
-        /**
-         * The new project's data graph.
-         */
-        datagraph?: string;
 
         /**
          * The new project's status.
@@ -219,6 +214,11 @@ export module projectFormats {
         shortname: string;
 
         /**
+         * The project's short code.
+         */
+        shortcode?: string;
+
+        /**
          * A description of the project.
          */
         description: string;
@@ -234,14 +234,9 @@ export module projectFormats {
         logo: string | null;
 
         /**
-         * The name of the RDF graph containing the project's ontology.
+         * The IRIs of the project ontologies.
          */
-        ontologyNamedGraph: string;
-
-        /**
-         * The name of the RDF graph containing the project's data.
-         */
-        dataNamedGraph: string;
+        ontologies: Array<string>;
 
         /**
          * True if the project is active.
