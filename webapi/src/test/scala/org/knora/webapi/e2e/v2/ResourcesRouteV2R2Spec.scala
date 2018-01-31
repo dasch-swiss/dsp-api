@@ -97,12 +97,25 @@ class ResourcesRouteV2R2Spec extends R2RSpec {
 
         "perform a full resource request for a resource with a BCE date property" in {
 
-
             Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/anything/thing_with_BCE_date", "UTF-8")}") ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
                 val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/ThingWithBCEDate.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform a full resource request for a resource with a date property that represents a period going from BCE to CE" in {
+
+            Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/anything/thing_with_BCE_date2", "UTF-8")}") ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/ThingWithBCEDate2.jsonld"))
 
                 compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
