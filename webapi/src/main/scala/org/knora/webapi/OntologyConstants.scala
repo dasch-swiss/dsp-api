@@ -156,6 +156,7 @@ object OntologyConstants {
         val mappingHasDefaultXSLTransformation: IRI = KnoraBasePrefixExpansion + "mappingHasDefaultXSLTransformation"
 
         val IsMainResource: IRI = KnoraBasePrefixExpansion + "isMainResource"
+        val MatchesTextIndex = KnoraBasePrefixExpansion + "matchesTextIndex" // virtual property to be repleced by a triplestore-specific one
 
         val AbstractResourceClasses = Set(
             Resource,
@@ -515,6 +516,14 @@ object OntologyConstants {
         val DcOntologyLabel: String = "dc"
     }
 
+    object Ontotext {
+        val LuceneFulltext = "http://www.ontotext.com/owlim/lucene#fullTextSearchIndex"
+    }
+
+    object XPathFunctions {
+        val Contains = "http://www.w3.org/2005/xpath-functions#contains"
+    }
+
     object KnoraXmlImportV1 {
 
         object ProjectSpecificXmlImportNamespace {
@@ -644,6 +653,8 @@ object OntologyConstants {
         val DateValueHasEndMonth: IRI = KnoraApiV2PrefixExpansion + "dateValueHasEndMonth"
         val DateValueHasStartDay: IRI = KnoraApiV2PrefixExpansion + "dateValueHasStartDay"
         val DateValueHasEndDay: IRI = KnoraApiV2PrefixExpansion + "dateValueHasEndDay"
+        val DateValueHasStartEra: IRI = KnoraApiV2PrefixExpansion + "dateValueHasStartEra"
+        val DateValueHasEndEra: IRI = KnoraApiV2PrefixExpansion + "dateValueHasEndEra"
         val DateValueHasCalendar: IRI = KnoraApiV2PrefixExpansion + "dateValueHasCalendar"
 
         val TextValueAsHtml: IRI = KnoraApiV2PrefixExpansion + "textValueAsHtml"

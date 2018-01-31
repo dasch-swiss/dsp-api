@@ -1,3 +1,4 @@
+
 {
   "knora-api:hasOntologies" : {
     "@id" : "http://api.knora.org/ontology/knora-api/v2",
@@ -230,6 +231,10 @@
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay"
         }, {
           "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra"
+        }, {
+          "@type" : "owl:Restriction",
           "owl:maxCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth"
         }, {
@@ -240,6 +245,10 @@
           "@type" : "owl:Restriction",
           "owl:maxCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra"
         }, {
           "@type" : "owl:Restriction",
           "owl:maxCardinality" : 1,
@@ -1201,6 +1210,15 @@
         "rdfs:label" : "Date value has end day",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#valueHas"
       },
+      "knora-api:dateValueHasEndEra" : {
+        "@id" : "knora-api:dateValueHasEndEra",
+        "@type" : "owl:DatatypeProperty",
+        "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
+        "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
+        "rdfs:comment" : "Represents the end era of a date value.",
+        "rdfs:label" : "Date value has end era",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#valueHas"
+      },
       "knora-api:dateValueHasEndMonth" : {
         "@id" : "knora-api:dateValueHasEndMonth",
         "@type" : "owl:DatatypeProperty",
@@ -1226,6 +1244,15 @@
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
         "rdfs:comment" : "Represents the start day of a date value.",
         "rdfs:label" : "Date value has start day",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#valueHas"
+      },
+      "knora-api:dateValueHasStartEra" : {
+        "@id" : "knora-api:dateValueHasStartEra",
+        "@type" : "owl:DatatypeProperty",
+        "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
+        "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
+        "rdfs:comment" : "Represents the start era of a date value.",
+        "rdfs:label" : "Date value has start era",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#valueHas"
       },
       "knora-api:dateValueHasStartMonth" : {
