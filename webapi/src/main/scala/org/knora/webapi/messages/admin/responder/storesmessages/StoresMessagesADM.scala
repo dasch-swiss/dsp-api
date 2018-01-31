@@ -18,10 +18,10 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v1.responder.storemessages
+package org.knora.webapi.messages.admin.responder.storesmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import spray.json._
 
@@ -29,7 +29,7 @@ import spray.json._
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
-sealed trait StoreResponderRequestV1 extends KnoraRequestV1
+sealed trait StoreResponderRequestADM extends KnoraRequestADM
 
 /**
   * Requests to load the triplestore with data referenced inside [[RdfDataObject]]. Any data contained inside the
@@ -38,10 +38,10 @@ sealed trait StoreResponderRequestV1 extends KnoraRequestV1
   * @param rdfDataObjects a sequence of [[RdfDataObject]] objects containing the path to the data and the name of
   *                       the named graph into which the data should be loaded.
   */
-case class ResetTriplestoreContentRequestV1(rdfDataObjects: Seq[RdfDataObject]) extends StoreResponderRequestV1
+case class ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject]) extends StoreResponderRequestADM
 
-case class ResetTriplestoreContentResponseV1(message: String) extends KnoraResponseV1 with StoreV1JsonProtocol {
-    def toJsValue = resetTriplestoreContentResponseV1Format.write(this)
+case class ResetTriplestoreContentResponseADM(message: String) extends KnoraResponseADM with StoresADMJsonProtocol {
+    def toJsValue = resetTriplestoreContentResponseADMFormat.write(this)
 }
 
 
@@ -49,10 +49,10 @@ case class ResetTriplestoreContentResponseV1(message: String) extends KnoraRespo
 // JSON formatting
 
 /**
-  * A spray-json protocol for generating Knora API v1 JSON for property values.
+  * A spray-json protocol for generating Knora API ADM JSON for property values.
   */
-trait StoreV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with TriplestoreJsonProtocol {
+trait StoresADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with TriplestoreJsonProtocol {
 
     /* Very strange construct at the end is needed, but I don't really understand why and what it means */
-    implicit val resetTriplestoreContentResponseV1Format: RootJsonFormat[ResetTriplestoreContentResponseV1] = jsonFormat[String, ResetTriplestoreContentResponseV1](ResetTriplestoreContentResponseV1, "message")
+    implicit val resetTriplestoreContentResponseADMFormat: RootJsonFormat[ResetTriplestoreContentResponseADM] = jsonFormat[String, ResetTriplestoreContentResponseADM](ResetTriplestoreContentResponseADM, "message")
 }
