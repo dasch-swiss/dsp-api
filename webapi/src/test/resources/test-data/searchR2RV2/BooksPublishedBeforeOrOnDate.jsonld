@@ -13,6 +13,8 @@
       "knora-api:dateValueHasStartDay" : 21,
       "knora-api:dateValueHasStartMonth" : 3,
       "knora-api:dateValueHasStartYear" : 1471,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1471-03-21"
     },
     "incunabula:title" : {
@@ -30,6 +32,8 @@
       "knora-api:dateValueHasCalendar" : "JULIAN",
       "knora-api:dateValueHasEndYear" : 1499,
       "knora-api:dateValueHasStartYear" : 1475,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1475-01-01 - 1499-12-31"
     },
     "incunabula:title" : {
@@ -47,6 +51,8 @@
       "knora-api:dateValueHasCalendar" : "JULIAN",
       "knora-api:dateValueHasEndYear" : 1481,
       "knora-api:dateValueHasStartYear" : 1481,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1481-01-01 - 1481-12-31"
     },
     "incunabula:title" : [ {
@@ -72,6 +78,8 @@
       "knora-api:dateValueHasCalendar" : "JULIAN",
       "knora-api:dateValueHasEndYear" : 1490,
       "knora-api:dateValueHasStartYear" : 1487,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1487-01-01 - 1490-12-31"
     },
     "incunabula:title" : [ {
@@ -93,6 +101,8 @@
       "knora-api:dateValueHasCalendar" : "GREGORIAN",
       "knora-api:dateValueHasEndYear" : 1489,
       "knora-api:dateValueHasStartYear" : 1489,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1489-01-01 - 1489-12-31"
     },
     "incunabula:title" : {
@@ -110,6 +120,8 @@
       "knora-api:dateValueHasCalendar" : "JULIAN",
       "knora-api:dateValueHasEndYear" : 1489,
       "knora-api:dateValueHasStartYear" : 1489,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1489-01-01 - 1489-12-31"
     },
     "incunabula:title" : {
@@ -127,6 +139,8 @@
       "knora-api:dateValueHasCalendar" : "JULIAN",
       "knora-api:dateValueHasEndYear" : 1489,
       "knora-api:dateValueHasStartYear" : 1489,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1489-01-01 - 1489-12-31"
     },
     "incunabula:title" : {
@@ -144,6 +158,8 @@
       "knora-api:dateValueHasCalendar" : "JULIAN",
       "knora-api:dateValueHasEndYear" : 1490,
       "knora-api:dateValueHasStartYear" : 1490,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1490-01-01 - 1490-12-31"
     },
     "incunabula:title" : [ {
@@ -169,6 +185,8 @@
       "knora-api:dateValueHasStartDay" : 19,
       "knora-api:dateValueHasStartMonth" : 2,
       "knora-api:dateValueHasStartYear" : 1491,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1491-02-19"
     },
     "incunabula:title" : {
@@ -190,6 +208,8 @@
       "knora-api:dateValueHasStartDay" : 28,
       "knora-api:dateValueHasStartMonth" : 7,
       "knora-api:dateValueHasStartYear" : 1491,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1491-07-28"
     },
     "incunabula:title" : {
@@ -207,6 +227,8 @@
       "knora-api:dateValueHasCalendar" : "GREGORIAN",
       "knora-api:dateValueHasEndYear" : 1492,
       "knora-api:dateValueHasStartYear" : 1492,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1492-01-01 - 1492-12-31"
     },
     "incunabula:title" : {
@@ -224,6 +246,8 @@
       "knora-api:dateValueHasCalendar" : "JULIAN",
       "knora-api:dateValueHasEndYear" : 1492,
       "knora-api:dateValueHasStartYear" : 1492,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1492-01-01 - 1492-12-31"
     },
     "incunabula:title" : {
@@ -241,6 +265,8 @@
       "knora-api:dateValueHasCalendar" : "JULIAN",
       "knora-api:dateValueHasEndYear" : 1492,
       "knora-api:dateValueHasStartYear" : 1492,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1492-01-01 - 1492-12-31"
     },
     "incunabula:title" : [ {
@@ -262,6 +288,8 @@
       "knora-api:dateValueHasCalendar" : "JULIAN",
       "knora-api:dateValueHasEndYear" : 1495,
       "knora-api:dateValueHasStartYear" : 1495,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1495-01-01 - 1495-12-31"
     },
     "incunabula:title" : {
@@ -283,6 +311,8 @@
       "knora-api:dateValueHasStartDay" : 3,
       "knora-api:dateValueHasStartMonth" : 3,
       "knora-api:dateValueHasStartYear" : 1495,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1495-03-03"
     },
     "incunabula:title" : {
@@ -304,6 +334,8 @@
       "knora-api:dateValueHasStartDay" : 20,
       "knora-api:dateValueHasStartMonth" : 9,
       "knora-api:dateValueHasStartYear" : 1496,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1496-09-20"
     },
     "incunabula:title" : {
@@ -325,6 +357,8 @@
       "knora-api:dateValueHasStartDay" : 1,
       "knora-api:dateValueHasStartMonth" : 3,
       "knora-api:dateValueHasStartYear" : 1497,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1497-03-01"
     },
     "incunabula:title" : [ {
@@ -350,6 +384,8 @@
       "knora-api:dateValueHasStartDay" : 1,
       "knora-api:dateValueHasStartMonth" : 8,
       "knora-api:dateValueHasStartYear" : 1497,
+      "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:valueAsString" : "1497-08-01"
     },
     "incunabula:title" : [ {
