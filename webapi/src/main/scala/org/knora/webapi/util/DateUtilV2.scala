@@ -22,10 +22,8 @@ package org.knora.webapi.util
 
 import java.util.{Calendar, GregorianCalendar}
 
-import org.knora.webapi.{IRI, OntologyConstants}
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
-import org.knora.webapi.messages.v2.responder.DateValueContentV2
-import org.knora.webapi.{BadRequestException, _}
+import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 
 /**
   * Utility functions for converting dates.
@@ -36,8 +34,8 @@ object DateUtilV2 {
       * Enumeration for era.
       */
     object KnoraEraV2 extends Enumeration {
-        val BCE = Value(0, "BCE")
-        val CE = Value(1, "CE")
+        val BCE: KnoraEraV2.Value = Value(0, "BCE")
+        val CE: KnoraEraV2.Value = Value(1, "CE")
 
         val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
@@ -71,7 +69,7 @@ object DateUtilV2 {
           *
           * @return a Map of knora-api value properties to numbers (year, month, day) taking into account the given precision.
           */
-        def toStartDateAssertions(): Map[IRI, Int] = {
+        def toStartDateAssertions: Map[IRI, Int] = {
 
             precision match {
 
@@ -103,12 +101,12 @@ object DateUtilV2 {
           *
           * @return a map of knora-api value StartEra property to era
           */
-        def toStartEraAssertion(): Map[IRI, String] = {
+        def toStartEraAssertion: Map[IRI, String] = {
             Map(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra -> era.toString)
 
         }
 
-        def toEndDateAssertions(): Map[IRI, Int] = {
+        def toEndDateAssertions: Map[IRI, Int] = {
 
             /**
               * Converts the [[DateYearMonthDay]] to knora-api assertions representing an end date.
@@ -144,8 +142,7 @@ object DateUtilV2 {
           *
           * @return a map of knora-api value EndEra property to era
           */
-        def toEndEraAssertion(): Map[IRI, String] = {
-
+        def toEndEraAssertion: Map[IRI, String] = {
 
             Map(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra -> era.toString)
 

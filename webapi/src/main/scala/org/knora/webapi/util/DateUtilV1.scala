@@ -214,8 +214,8 @@ object DateUtilV1 {
     /**
       * Converts era property of java.calendar to a string format.
       *
-      * @param era java.calandar era property
-      * @return String format of Era
+      * @param era java.calendar era property.
+      * @return string format of era.
       */
     def eraToString(era: Int) : String = {
 
@@ -223,6 +223,7 @@ object DateUtilV1 {
 
             case 1 => StringFormatter.Era_CE
             case 0 => StringFormatter.Era_BCE
+            case other => throw AssertionException(s"A valid era should be 0 or 1, but $other given")
 
         }
     }

@@ -143,19 +143,19 @@ case class DateValueContentV2(valueHasString: String,
 
         val startDateConversion = DateUtilV2.convertJDNToDate(valueHasStartJDN, valueHasStartPrecision, valueHasCalendar)
 
-        val startDateAssertions = startDateConversion.toStartDateAssertions().map {
+        val startDateAssertions = startDateConversion.toStartDateAssertions.map {
             case (k: IRI, v: Int) => (k, JsonLDInt(v))
 
-        } ++ startDateConversion.toStartEraAssertion().map {
+        } ++ startDateConversion.toStartEraAssertion.map {
 
             case (k: IRI, v: String) => (k, JsonLDString(v))
         }
         val endDateConversion = DateUtilV2.convertJDNToDate(valueHasEndJDN, valueHasEndPrecision, valueHasCalendar)
 
-        val endDateAssertions = endDateConversion.toEndDateAssertions().map {
+        val endDateAssertions = endDateConversion.toEndDateAssertions.map {
             case (k: IRI, v: Int) => (k, JsonLDInt(v))
 
-        } ++ endDateConversion.toEndEraAssertion().map {
+        } ++ endDateConversion.toEndEraAssertion.map {
 
             case (k: IRI, v: String) => (k, JsonLDString(v))
         }
