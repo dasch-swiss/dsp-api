@@ -123,6 +123,7 @@ class OntologyResponderV2 extends Responder {
         case createClassRequest: CreateClassRequestV2 => future2Message(sender(), createClass(createClassRequest), log)
         case changeClassLabelsOrCommentsRequest: ChangeClassLabelsOrCommentsRequestV2 => future2Message(sender(), changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest), log)
         case addCardinalitiesToClassRequest: AddCardinalitiesToClassRequestV2 => future2Message(sender(), addCardinalitiesToClass(addCardinalitiesToClassRequest), log)
+        case changeCardinalitiesRequest: ChangeCardinalitiesRequestV2 => future2Message(sender(), changeClassCardinalities(changeCardinalitiesRequest), log)
         case createPropertyRequest: CreatePropertyRequestV2 => future2Message(sender(), createProperty(createPropertyRequest), log)
         case changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2 => future2Message(sender(), changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
@@ -1656,7 +1657,163 @@ class OntologyResponderV2 extends Responder {
                 )
             )
         } yield taskResult
+    }
 
+    /**
+      * Replaces a class's cardinalities with new ones.
+      *
+      * @param changeCardinalitiesRequest the request to add the cardinalities.
+      * @return a [[ReadOntologiesV2]] in the internal schema, containing the new class definition.
+      */
+    private def changeClassCardinalities(changeCardinalitiesRequest: ChangeCardinalitiesRequestV2): Future[ReadOntologiesV2] = {
+        def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologiesV2] = {
+            for {
+                cacheData <- getCacheData
+                internalClassDef: ClassInfoContentV2 = changeCardinalitiesRequest.classInfoContent.toOntologySchema(InternalSchema)
+
+                // Check that the ontology exists and has not been updated by another user since the client last read it.
+                _ <- checkOntologyLastModificationDateBeforeUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = changeCardinalitiesRequest.lastModificationDate
+                )
+
+                // Check that the class's rdf:type is owl:Class.
+
+                rdfType: SmartIri = internalClassDef.requireIriPredicate(OntologyConstants.Rdf.Type.toSmartIri, throw BadRequestException(s"No rdf:type specified"))
+
+                _ = if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
+                    throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
+                }
+
+                // Check that the class exists.
+
+                existingClassDef: ClassInfoContentV2 = cacheData.classDefs.getOrElse(internalClassIri,
+                    throw BadRequestException(s"Class ${changeCardinalitiesRequest.classInfoContent.classIri} does not exist")).entityInfoContent
+
+                // Check that the class isn't used in data.
+
+                isUsedInDataSparql = queries.sparql.v2.txt.isEntityUsed(
+                    triplestore = settings.triplestoreType,
+                    entityIri = internalClassIri,
+                    checkDataOnly = true
+                ).toString()
+
+                isUsedInDataResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isUsedInDataSparql)).mapTo[SparqlSelectResponse]
+
+                _ = if (isUsedInDataResponse.results.bindings.nonEmpty) {
+                    throw BadRequestException(s"Cardinalities cannot be added to class ${changeCardinalitiesRequest.classInfoContent.classIri}, because it is used in data")
+                }
+
+                // Make an updated class definition.
+
+                newInternalClassDef = existingClassDef.copy(
+                    directCardinalities = internalClassDef.directCardinalities
+                )
+
+                // Check that the new cardinalities are valid.
+
+                allBaseClassIris: Set[SmartIri] = newInternalClassDef.subClassOf.flatMap {
+                    baseClassIri => cacheData.resourceSubClassOfRelations.getOrElse(baseClassIri, Set.empty[SmartIri])
+                } + internalClassIri
+
+                cardinalitiesForClassWithInheritance = checkCardinalitiesBeforeAdding(
+                    internalClassDef = newInternalClassDef,
+                    allBaseClassIris = allBaseClassIris,
+                    cacheData = cacheData
+                )
+
+                // Prepare to update the ontology cache. (No need to deal with SPARQL-escaping here, because there
+                // isn't any text to escape in cardinalities.)
+
+                propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
+
+                inheritedCardinalities: Map[SmartIri, Cardinality.Value] = cardinalitiesForClassWithInheritance.filterNot {
+                    case (propertyIri, _) => newInternalClassDef.directCardinalities.contains(propertyIri)
+                }
+
+                readClassInfo = ReadClassInfoV2(
+                    entityInfoContent = newInternalClassDef,
+                    canBeInstantiated = true,
+                    inheritedCardinalities = inheritedCardinalities,
+                    linkProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri => cacheData.propertyDefs(propertyIri).isLinkProp),
+                    linkValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri => cacheData.propertyDefs(propertyIri).isLinkValueProp),
+                    fileValueProperties = propertyIrisOfAllCardinalitiesForClass.filter(propertyIri => cacheData.propertyDefs(propertyIri).isFileValueProp)
+                )
+
+                // Add the cardinalities to the class definition in the triplestore.
+
+                currentTime: Instant = Instant.now
+
+                updateSparql = queries.sparql.v2.txt.replaceClassCardinalities(
+                    triplestore = settings.triplestoreType,
+                    ontologyNamedGraphIri = internalOntologyIri,
+                    ontologyIri = internalOntologyIri,
+                    classIri = internalClassDef.classIri,
+                    newCardinalities = internalClassDef.directCardinalities,
+                    lastModificationDate = changeCardinalitiesRequest.lastModificationDate,
+                    currentTime = currentTime
+                ).toString()
+
+                _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
+
+                // Check that the ontology's last modification date was updated.
+
+                _ <- checkOntologyLastModificationDateAfterUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = currentTime)
+
+                // Check that the data that was saved corresponds to the data that was submitted.
+
+                loadedClassDef <- loadClassDefinition(internalClassIri)
+
+                _ = if (loadedClassDef != newInternalClassDef) {
+                    throw InconsistentTriplestoreDataException(s"Attempted to save class definition $newInternalClassDef, but $loadedClassDef was saved")
+                }
+
+                // Update the cache.
+
+                updatedOntologyMetadata = cacheData.ontologyMetadata(internalOntologyIri).copy(
+                    lastModificationDate = Some(currentTime)
+                )
+
+                _ = storeCacheData(cacheData.copy(
+                    ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> updatedOntologyMetadata),
+                    classDefs = cacheData.classDefs + (internalClassIri -> readClassInfo)
+                ))
+
+                // Read the data back from the cache.
+
+                response <- getClassDefinitionsV2(
+                    classIris = Set(internalClassIri),
+                    allLanguages = true,
+                    userProfile = changeCardinalitiesRequest.userProfile
+                )
+            } yield response
+        }
+
+        for {
+            userProfile <- FastFuture.successful(changeCardinalitiesRequest.userProfile)
+
+            externalClassIri = changeCardinalitiesRequest.classInfoContent.classIri
+            externalOntologyIri = externalClassIri.getOntologyFromEntity
+
+            _ <- checkOntologyAndEntityIrisForUpdate(
+                externalOntologyIri = externalOntologyIri,
+                externalEntityIri = externalClassIri,
+                userProfile = userProfile
+            )
+
+            internalClassIri = externalClassIri.toOntologySchema(InternalSchema)
+            internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+
+            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID = changeCardinalitiesRequest.apiRequestID,
+                iri = internalOntologyIri.toString,
+                task = () => makeTaskFuture(
+                    internalClassIri = internalClassIri,
+                    internalOntologyIri = internalOntologyIri
+                )
+            )
+        } yield taskResult
     }
 
     /**

@@ -27,12 +27,12 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi._
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -249,13 +249,36 @@ object OntologiesRouteV2 extends Authenticator {
             }
         } ~ path("v2" / "ontologies" / "cardinalities") {
             post {
-                // Add cardinalities to an existing class.
+                // Add cardinalities to a class.
                 entity(as[String]) { jsonRequest =>
                     requestContext => {
                         val userProfile = getUserProfileV1(requestContext)
                         val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
                         val requestMessage: AddCardinalitiesToClassRequestV2 = AddCardinalitiesToClassRequestV2.fromJsonLD(
+                            jsonLDDocument = requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            userProfile = userProfile
+                        )
+
+                        RouteUtilV2.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            responseSchema = ApiV2WithValueObjects
+                        )
+                    }
+                }
+            } ~ put {
+                // Change a class's cardinalities.
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessage: ChangeCardinalitiesRequestV2 = ChangeCardinalitiesRequestV2.fromJsonLD(
                             jsonLDDocument = requestDoc,
                             apiRequestID = UUID.randomUUID,
                             userProfile = userProfile

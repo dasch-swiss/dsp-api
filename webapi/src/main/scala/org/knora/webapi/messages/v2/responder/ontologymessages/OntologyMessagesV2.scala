@@ -486,6 +486,43 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
 }
 
 /**
+  * Requests the replacement of a class's cardinalities with new ones.
+  *
+  * @param classInfoContent     a [[ClassInfoContentV2]] containing the new cardinalities.
+  * @param lastModificationDate the ontology's last modification date.
+  * @param apiRequestID         the ID of the API request.
+  * @param userProfile          the profile of the user making the request.
+  */
+case class ChangeCardinalitiesRequestV2(classInfoContent: ClassInfoContentV2,
+                                        lastModificationDate: Instant,
+                                        apiRequestID: UUID,
+                                        userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+
+object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCardinalitiesRequestV2] {
+    /**
+      * Converts JSON-LD input into a [[ChangeCardinalitiesRequestV2]].
+      *
+      * @param jsonLDDocument the JSON-LD input.
+      * @param apiRequestID   the UUID of the API request.
+      * @param userProfile    the profile of the user making the request.
+      * @return a [[ChangeCardinalitiesRequestV2]] representing the input.
+      */
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, userProfile: UserProfileV1): ChangeCardinalitiesRequestV2 = {
+        val inputOntologiesV2 = InputOntologiesV2.fromJsonLD(jsonLDDocument)
+        val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+        val classInfoContent = classUpdateInfo.classInfoContent
+        val lastModificationDate = classUpdateInfo.lastModificationDate
+
+        ChangeCardinalitiesRequestV2(
+            classInfoContent = classInfoContent,
+            lastModificationDate = lastModificationDate,
+            apiRequestID = apiRequestID,
+            userProfile = userProfile
+        )
+    }
+}
+
+/**
   * A trait for requests to change entity labels or comments.
   */
 sealed trait ChangeLabelsOrCommentsRequest {
