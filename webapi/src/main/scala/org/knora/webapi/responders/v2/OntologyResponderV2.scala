@@ -141,6 +141,18 @@ class OntologyResponderV2 extends Responder {
         // TODO: determine whether the user is authorised to reload the ontologies (depends on pull request #168).
 
         /**
+          * Finds the duplicate IRIs in a vector.
+          *
+          * @param iris the IRIs to check for duplicates.
+          * @return the IRIs that have duplicates.
+          */
+        def findDuplicateIris(iris: Vector[SmartIri]): Set[SmartIri] = {
+            iris.groupBy(identity).collect {
+                case (x, Vector(_, _, _*)) => x
+            }.toSet
+        }
+
+        /**
           * Recursively walks up an entity hierarchy, collecting the IRIs of all base entities.
           *
           * @param iri             the IRI of an entity.
@@ -148,12 +160,23 @@ class OntologyResponderV2 extends Responder {
           * @return all the base entities of the specified entity.
           */
         def getAllBaseDefs(iri: SmartIri, directRelations: Map[SmartIri, Set[SmartIri]]): Set[SmartIri] = {
-            directRelations.get(iri) match {
-                case Some(baseDefs) =>
-                    baseDefs ++ baseDefs.flatMap(baseDef => getAllBaseDefs(baseDef, directRelations))
+            def getAllBaseDefsRec(initialIri: SmartIri, currentIri: SmartIri): Set[SmartIri] = {
+                directRelations.get(currentIri) match {
+                    case Some(baseDefs) =>
+                        baseDefs ++ baseDefs.flatMap {
+                            baseDef =>
+                                if (baseDef == initialIri) {
+                                    throw InconsistentTriplestoreDataException(s"Entity $initialIri has an inheritance cycle with entity $baseDef")
+                                } else {
+                                    getAllBaseDefsRec(initialIri, baseDef)
+                                }
+                        }
 
-                case None => Set.empty[SmartIri]
+                    case None => Set.empty[SmartIri]
+                }
             }
+
+            getAllBaseDefsRec(initialIri = iri, currentIri = iri)
         }
 
         /**
@@ -275,6 +298,7 @@ class OntologyResponderV2 extends Responder {
 
             // Make a map in which each resource class IRI points to the full set of its base classes. A class is also
             // a subclass of itself.
+
             allResourceSubClassOfRelations: Map[SmartIri, Set[SmartIri]] = resourceClassIris.map {
                 resourceClassIri => (resourceClassIri, getAllBaseDefs(resourceClassIri, directResourceSubClassOfRelations) + resourceClassIri)
             }.toMap
@@ -670,7 +694,6 @@ class OntologyResponderV2 extends Responder {
                 propertyIri => (propertyIri, getAllBaseDefs(propertyIri, directStandoffSubPropertyOfRelations) + propertyIri)
             }.toMap
 
-
             // Construct a PropertyEntityInfoV2 for each property definition, not taking inheritance into account.
             standoffPropertyEntityInfos: Map[SmartIri, ReadPropertyInfoV2] = standoffPropertyDefsGrouped.map {
                 case (standoffPropertyIri, propertyRows) =>
@@ -713,6 +736,17 @@ class OntologyResponderV2 extends Responder {
 
             allClassDefs = resourceEntityInfos ++ KnoraApiV2Simple.Classes ++ KnoraApiV2WithValueObjects.Classes
             allPropertyDefs = propertyEntityInfos ++ KnoraApiV2Simple.Properties ++ KnoraApiV2WithValueObjects.Properties
+
+            // Make sure that no IRIs are used for more than one entity.
+
+            allEntityIris: Vector[SmartIri] = allClassDefs.keySet.toVector ++ allPropertyDefs.keySet.toVector ++
+                standoffClassEntityInfos.keySet.toVector ++ standoffPropertyEntityInfos.keySet.toVector
+
+            duplicateEntityIris: Set[SmartIri] = findDuplicateIris(allEntityIris)
+
+            _ = if (duplicateEntityIris.nonEmpty) {
+                throw InconsistentTriplestoreDataException(s"One or more IRIs are used for multiple entities: ${duplicateEntityIris.mkString(", ")}")
+            }
 
             // Cache all the data.
 
@@ -1371,6 +1405,11 @@ class OntologyResponderV2 extends Responder {
                     throw BadRequestException(s"Class ${createClassRequest.classInfoContent.classIri} already exists")
                 }
 
+                // Check that the class's IRI isn't already used for something else.
+                _ = if (cacheData.propertyDefs.contains(internalClassIri) || cacheData.standoffClassDefs.contains(internalClassIri)) {
+                    throw BadRequestException(s"IRI ${createClassRequest.classInfoContent.classIri} is already used")
+                }
+
                 // Check that the base classes that are Knora classes exist.
 
                 missingBaseClasses = internalClassDef.subClassOf.filter(_.isKnoraInternalEntityIri) -- cacheData.classDefs.keySet
@@ -1379,11 +1418,19 @@ class OntologyResponderV2 extends Responder {
                     throw NotFoundException(s"One or more specified Knora superclasses do not exist: ${missingBaseClasses.mkString(", ")}")
                 }
 
+                // Check for rdfs:subClassOf cycles. This could happen if someone created an ontology without using the API.
+
+                allBaseClassIrisWithoutSelf: Set[SmartIri] = internalClassDef.subClassOf.flatMap {
+                    baseClassIri => cacheData.resourceSubClassOfRelations.getOrElse(baseClassIri, Set.empty[SmartIri])
+                }
+
+                _ = if (allBaseClassIrisWithoutSelf.contains(internalClassIri)) {
+                    throw BadRequestException(s"Class ${createClassRequest.classInfoContent.classIri} would have a cyclical rdfs:subClassOf")
+                }
+
                 // Check that the class is a subclass of knora-base:Resource.
 
-                allBaseClassIris: Set[SmartIri] = internalClassDef.subClassOf.flatMap {
-                    baseClassIri => cacheData.resourceSubClassOfRelations.getOrElse(baseClassIri, Set.empty[SmartIri])
-                } + internalClassIri
+                allBaseClassIris: Set[SmartIri] = allBaseClassIrisWithoutSelf + internalClassIri
 
                 _ = if (!allBaseClassIris.contains(OntologyConstants.KnoraBase.Resource.toSmartIri)) {
                     throw BadRequestException(s"Class ${createClassRequest.classInfoContent.classIri} would not be a subclass of knora-api:Resource")
@@ -2130,7 +2177,17 @@ class OntologyResponderV2 extends Responder {
                     throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
                 }
 
-                // Check that the superproperties that are Knora properties exist.
+                // Check that the property doesn't exist yet.
+                _ = if (cacheData.propertyDefs.contains(internalPropertyIri)) {
+                    throw BadRequestException(s"Property ${createPropertyRequest.propertyInfoContent.propertyIri} already exists")
+                }
+
+                // Check that the property's IRI isn't already used for something else.
+                _ = if (cacheData.classDefs.contains(internalPropertyIri) || cacheData.standoffClassDefs.contains(internalPropertyIri)) {
+                    throw BadRequestException(s"IRI ${createPropertyRequest.propertyInfoContent.propertyIri} is already used")
+                }
+
+                // Check that the base properties that are Knora properties exist.
 
                 knoraSuperProperties = internalPropertyDef.subPropertyOf.filter(_.isKnoraInternalEntityIri)
                 missingSuperProperties = knoraSuperProperties -- cacheData.propertyDefs.keySet
@@ -2139,11 +2196,19 @@ class OntologyResponderV2 extends Responder {
                     throw NotFoundException(s"One or more specified Knora superproperties do not exist: ${missingSuperProperties.mkString(", ")}")
                 }
 
-                // Check the property is a subproperty of knora-base:hasValue or knora-base:hasLinkTo, but not both.
+                // Check for rdfs:subPropertyOf cycles. This could happen if someone created an ontology without using the API.
 
-                allKnoraSuperPropertyIris: Set[SmartIri] = knoraSuperProperties.flatMap {
+                allKnoraSuperPropertyIrisWithoutSelf: Set[SmartIri] = knoraSuperProperties.flatMap {
                     superPropertyIri => cacheData.subPropertyOfRelations.getOrElse(superPropertyIri, Set.empty[SmartIri])
                 }
+
+                _ = if (allKnoraSuperPropertyIrisWithoutSelf.contains(internalPropertyIri)) {
+                    throw BadRequestException(s"Property ${createPropertyRequest.propertyInfoContent.propertyIri} would have a cyclical rdfs:subPropertyOf")
+                }
+
+                // Check the property is a subproperty of knora-base:hasValue or knora-base:hasLinkTo, but not both.
+
+                allKnoraSuperPropertyIris: Set[SmartIri] = allKnoraSuperPropertyIrisWithoutSelf + internalPropertyIri
 
                 isValueProp = allKnoraSuperPropertyIris.contains(OntologyConstants.KnoraBase.HasValue.toSmartIri)
                 isLinkProp = allKnoraSuperPropertyIris.contains(OntologyConstants.KnoraBase.HasLinkTo.toSmartIri)
@@ -2168,11 +2233,6 @@ class OntologyResponderV2 extends Responder {
 
                 _ = if (isLinkValueProp) {
                     throw BadRequestException("New link value properties cannot be created directly. Create a link property instead.")
-                }
-
-                // Check that the property doesn't exist yet.
-                _ = if (cacheData.propertyDefs.contains(internalPropertyIri)) {
-                    throw BadRequestException(s"Property ${createPropertyRequest.propertyInfoContent.propertyIri} already exists")
                 }
 
                 // If we're creating a link property, make the definition of the corresponding link value property.
@@ -2307,7 +2367,7 @@ class OntologyResponderV2 extends Responder {
                 _ = storeCacheData(cacheData.copy(
                     ontologyMetadata = cacheData.ontologyMetadata + (internalOntologyIri -> updatedOntologyMetadata),
                     propertyDefs = cacheData.propertyDefs ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> readPropertyInfo),
-                    subPropertyOfRelations = cacheData.subPropertyOfRelations + (internalPropertyIri -> (allKnoraSuperPropertyIris + internalPropertyIri))
+                    subPropertyOfRelations = cacheData.subPropertyOfRelations + (internalPropertyIri -> allKnoraSuperPropertyIris)
                 ))
 
                 // Read the data back from the cache.
@@ -2428,8 +2488,8 @@ class OntologyResponderV2 extends Responder {
                 maybeUnescapedNewLinkValuePropertyDef: Option[PropertyInfoContentV2] = maybeLoadedLinkValuePropertyDef.map {
                     loadedLinkValuePropertyDef =>
                         val unescapedNewLinkPropertyDef = maybeCurrentLinkValueReadPropertyInfo.get.entityInfoContent.copy(
-                                predicates = currentReadPropertyInfo.entityInfoContent.predicates + (changePropertyLabelsOrCommentsRequest.predicateToUpdate -> unescapedNewLabelOrCommentPredicate)
-                            )
+                            predicates = currentReadPropertyInfo.entityInfoContent.predicates + (changePropertyLabelsOrCommentsRequest.predicateToUpdate -> unescapedNewLabelOrCommentPredicate)
+                        )
 
                         if (loadedLinkValuePropertyDef != unescapedNewLinkPropertyDef) {
                             throw InconsistentTriplestoreDataException(s"Attempted to save link value property definition $unescapedNewLinkPropertyDef, but $loadedLinkValuePropertyDef was saved")
@@ -3017,26 +3077,6 @@ class OntologyResponderV2 extends Responder {
     }
 
     /**
-      * Checks whether a property definition represents a file value property, according to its rdfs:subPropertyOf.
-      *
-      * @param internalPropertyDef the property definition, in the internal schema.
-      * @return `true` if the definition represents a file value property.
-      */
-    private def propertyDefIsFileValueProp(internalPropertyDef: PropertyInfoContentV2): Future[Boolean] = {
-        for {
-            cacheData <- getCacheData
-
-            isFileValueProp = internalPropertyDef.subPropertyOf.exists {
-                superPropIri =>
-                    cacheData.propertyDefs.get(superPropIri) match {
-                        case Some(superPropertyDef) => superPropertyDef.isFileValueProp
-                        case None => false
-                    }
-            }
-        } yield isFileValueProp
-    }
-
-    /**
       * Given the definition of a link property, returns the definition of the corresponding link value property.
       *
       * @param internalPropertyDef the definition of the the link property, in the internal schema.
@@ -3129,7 +3169,6 @@ class OntologyResponderV2 extends Responder {
             }
         }
     }
-
 
     /**
       * Given all the `rdfs:subClassOf` relations between classes, calculates all the inverse relations.
