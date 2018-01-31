@@ -1318,6 +1318,21 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     }
 
     /**
+      * Validates an OWL cardinality value, which must be 0 or 1 in Knora, and returns the corresponding integer.
+      *
+      * @param s the string to be validated.
+      * @param errorFun a function that throws an exception. It will be called if the string is invalid.
+      * @return the corresponding integer value.
+      */
+    def validateCardinalityValue(s: String, errorFun: => Nothing): Int = {
+        s match {
+            case "0" => 0
+            case "1" => 1
+            case _ => errorFun
+        }
+    }
+
+    /**
       * Parses an ISO-8601 instant and returns an instance of [[Instant]].
       *
       * @param s        the string to be parsed.

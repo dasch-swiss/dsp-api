@@ -316,10 +316,11 @@ class OntologyResponderV2 extends Responder {
                         cardinalityRow =>
                             val cardinalityRowMap = cardinalityRow.rowMap
                             val propertyIri = cardinalityRowMap("cardinalityProp").toKnoraInternalSmartIri
+                            val owlCardinalityValueStr = cardinalityRowMap("cardinalityVal")
 
                             val owlCardinalityInfo = OwlCardinalityInfo(
                                 owlCardinalityIri = cardinalityRowMap("cardinality"),
-                                owlCardinalityValue = cardinalityRowMap("cardinalityVal").toInt
+                                owlCardinalityValue = stringFormatter.validateCardinalityValue(owlCardinalityValueStr, throw InconsistentTriplestoreDataException(s"Resource class $resourceClassIri has an invalid cardinality value on property $propertyIri: $owlCardinalityValueStr"))
                             )
 
                             propertyIri -> owlCardinalityInfo
@@ -548,10 +549,11 @@ class OntologyResponderV2 extends Responder {
                         cardinalityRow =>
                             val cardinalityRowMap = cardinalityRow.rowMap
                             val propertyIri = cardinalityRowMap("cardinalityProp").toKnoraInternalSmartIri
+                            val owlCardinalityValueStr = cardinalityRowMap("cardinalityVal")
 
                             val owlCardinality = OwlCardinalityInfo(
                                 owlCardinalityIri = cardinalityRowMap("cardinality"),
-                                owlCardinalityValue = cardinalityRowMap("cardinalityVal").toInt
+                                owlCardinalityValue = stringFormatter.validateCardinalityValue(owlCardinalityValueStr, throw InconsistentTriplestoreDataException(s"Value base class $valueBaseClassIri has an invalid cardinality value on property $propertyIri: $owlCardinalityValueStr"))
                             )
 
                             propertyIri -> owlCardinality
@@ -568,10 +570,11 @@ class OntologyResponderV2 extends Responder {
                         cardinalityRow =>
                             val cardinalityRowMap = cardinalityRow.rowMap
                             val propertyIri = cardinalityRowMap("cardinalityProp").toKnoraInternalSmartIri
+                            val owlCardinalityValueStr = cardinalityRowMap("cardinalityVal")
 
                             val owlCardinality = OwlCardinalityInfo(
                                 owlCardinalityIri = cardinalityRowMap("cardinality"),
-                                owlCardinalityValue = cardinalityRowMap("cardinalityVal").toInt
+                                owlCardinalityValue = stringFormatter.validateCardinalityValue(owlCardinalityValueStr, throw InconsistentTriplestoreDataException(s"Standoff class $standoffClassIri has an invalid cardinality value on property $propertyIri: $owlCardinalityValueStr"))
                             )
 
                             propertyIri -> owlCardinality
