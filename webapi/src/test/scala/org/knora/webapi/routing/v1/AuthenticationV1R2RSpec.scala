@@ -35,7 +35,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileResponseV1
 import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
 import org.knora.webapi.store._
-import org.knora.webapi.{LiveActorMaker, R2RSpec, SharedAdminTestData}
+import org.knora.webapi.{LiveActorMaker, R2RSpec, SharedTestDataV1}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -69,11 +69,11 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
     private val rdfDataObjects = List.empty[RdfDataObject]
 
-    private val rootIri = SharedAdminTestData.rootUser.userData.user_id.get
+    private val rootIri = SharedTestDataV1.rootUser.userData.user_id.get
     private val rootIriEnc = java.net.URLEncoder.encode(rootIri, "utf-8")
-    private val rootEmail = SharedAdminTestData.rootUser.userData.email.get
+    private val rootEmail = SharedTestDataV1.rootUser.userData.email.get
     private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
-    private val inactiveUser = java.net.URLEncoder.encode(SharedAdminTestData.inactiveUser.userData.email.get, "utf-8")
+    private val inactiveUser = java.net.URLEncoder.encode(SharedTestDataV1.inactiveUser.userData.email.get, "utf-8")
     private val wrongEmail = "wrong@example.com"
     private val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
     private val testPass = java.net.URLEncoder.encode("test", "utf-8")
@@ -81,7 +81,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataV1.rootUser), 10.seconds)
     }
     "The Authentication Route ('v1/authenticate') when accessed with credentials supplied via URL parameters " should {
 

@@ -219,10 +219,10 @@ object CompareExpressionOperator extends Enumeration {
       * @param errorFun the function to be called in case of an error.
       * @return the requested value.
       */
-    def lookup(name: String, errorFun: () => Nothing): Value = {
+    def lookup(name: String, errorFun: => Nothing): Value = {
         valueMap.get(name) match {
             case Some(value) => value
-            case None => errorFun()
+            case None => errorFun
         }
     }
 }
@@ -270,6 +270,29 @@ case class OrExpression(leftArg: Expression, rightArg: Expression) extends Expre
   */
 case class FilterPattern(expression: Expression) extends QueryPattern {
     def toSparql: String = s"FILTER(${expression.toSparql})\n"
+}
+
+/**
+  * Represents a regex function in a query (in a FILTER).
+  *
+  * @param textValueVar the variable representing the text value to be checked against the provided pattern.
+  * @param pattern the REGEX pattern to be used.
+  * @param modifier the modifier to be used.
+  */
+case class RegexFunction(textValueVar: QueryVariable, pattern: String, modifier: String) extends Expression {
+    def toSparql: String = s"""regex(${textValueVar.toSparql}, "$pattern", "$modifier")"""
+}
+
+/**
+  * Represents a match function in a query (in a FILTER).
+  *
+  * This function has to be rewritten using a special property which is supported by Lucene.
+  *
+  * @param textValueVar the variable representing the text value to be checked against the provided pattern.
+  * @param searchTerm the term to search for.
+  */
+case class MatchFunction(textValueVar: QueryVariable, searchTerm: String) extends Expression {
+    def toSparql = s"""""" // additional statements will be generated, this expression won't end up in generated SPARQL as a FILTER
 }
 
 /**
@@ -350,7 +373,7 @@ case class ConstructClause(statements: Seq[StatementPattern]) extends SparqlGene
   *
   * @param patterns the patterns in the WHERE clause.
   */
-case class WhereClause(patterns: Seq[QueryPattern]) extends SparqlGenerator {
+case class WhereClause(patterns: Seq[QueryPattern], positiveEntities: Set[Entity] = Set.empty[Entity]) extends SparqlGenerator {
     def toSparql: String = "WHERE {\n" + patterns.map(_.toSparql).mkString + "}\n"
 }
 

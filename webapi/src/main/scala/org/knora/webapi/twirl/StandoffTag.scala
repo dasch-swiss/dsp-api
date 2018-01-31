@@ -62,6 +62,20 @@ case class StandoffTagIriAttributeV1(standoffPropertyIri: IRI, value: IRI) exten
 }
 
 /**
+  * Represents a standoff tag attribute of type URI.
+  *
+  * @param standoffPropertyIri the IRI of the standoff property
+  * @param value               the value of the standoff property.
+  */
+case class StandoffTagUriAttributeV1(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV1 {
+
+    def stringValue = value
+
+    def rdfValue = s""""${stringValue.toString}"^^xsd:anyURI"""
+
+}
+
+/**
   * Represents a standoff tag attribute that refers to another standoff node.
   *
   * @param standoffPropertyIri the IRI of the standoff property

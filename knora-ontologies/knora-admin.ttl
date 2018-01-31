@@ -425,7 +425,7 @@
 
             :subjectClassConstraint :knoraProject ;
 
-            :objectDatatypeConstraint xsd:string .
+            :objectDatatypeConstraint xsd:anyURI .
 
 
 
@@ -686,7 +686,7 @@
     rdfs:comment "Represents a key-value pair in a Map"@en .
 
 
-    
+
 
 #################################################################
 #
@@ -732,6 +732,17 @@
             :email "system@localhost" ;
             :givenName "Knora" ;
             :familyName "System" ;
+            :password "-" ;
+            :status "true"^^xsd:boolean ;
+            :preferredLanguage "en" ;
+            :isInSystemAdminGroup "false"^^xsd:boolean .
+
+###  http://www.knora.org/ontology/knora-base#AnonymousUser
+:AnonymousUser rdf:type :User ;
+            rdfs:comment "A built-in anonymous user."@en ;
+            :email "anonymous@localhost" ;
+            :givenName "Knora" ;
+            :familyName "Anonymous" ;
             :password "-" ;
             :status "true"^^xsd:boolean ;
             :preferredLanguage "en" ;

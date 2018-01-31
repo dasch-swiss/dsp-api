@@ -36,110 +36,110 @@ class StringFormatterSpec extends CoreSpec() {
         "not accept 2017-05-10" in {
             val dateString = "2017-05-10"
             assertThrows[BadRequestException] {
-                stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+                stringFormatter.validateDate(dateString, throw BadRequestException(s"Not accepted $dateString"))
             }
         }
 
         "accept GREGORIAN:2017" in {
             val dateString = "GREGORIAN:2017"
-            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept GREGORIAN:2017-05" in {
             val dateString = "GREGORIAN:2017-05"
-            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept GREGORIAN:2017-05-10" in {
             val dateString = "GREGORIAN:2017-05-10"
-            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept GREGORIAN:2017-05-10:2017-05-12" in {
             val dateString = "GREGORIAN:2017-05-10:2017-05-12"
-            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept GREGORIAN:500-05-10 BC" in {
             val dateString = "GREGORIAN:500-05-10 BC"
-            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept GREGORIAN:500-05-10 AD" in {
             val dateString = "GREGORIAN:500-05-10 AD"
-            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept GREGORIAN:500-05-10 BC:5200-05-10 AD" in {
             val dateString = "GREGORIAN:500-05-10 BC:5200-05-10 AD"
-            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept JULIAN:50 BCE" in {
             val dateString = "JULIAN:50 BCE"
-            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept JULIAN:1560-05 CE" in {
             val dateString = "JULIAN:1560-05 CE"
-            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept JULIAN:217-05-10 BCE" in {
             val dateString = "JULIAN:217-05-10 BCE"
-            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept JULIAN:2017-05-10:2017-05-12" in {
             val dateString = "JULIAN:2017-05-10:2017-05-12"
-            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept JULIAN:2017:2017-5-12" in {
             val dateString = "JULIAN:2017:2017-5-12"
-            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept JULIAN:500 BCE:400 BCE" in {
             val dateString = "JULIAN:500 BCE:400 BCE"
-            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "accept GREGORIAN:10 BC:1 AD" in {
             val dateString = "GREGORIAN:10 BC:1 AD"
-            stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Not accepted $dateString"))
+            stringFormatter.validateDate(dateString, throw BadRequestException(s"Not accepted $dateString"))
         }
 
         "not accept month 00" in {
             val dateString = "GREGORIAN:2017-00:2017-02"
             assertThrows[BadRequestException] {
-                stringFormatter.validateDate(dateString, () => throw BadRequestException(s"month 00 in $dateString Not accepted"))
+                stringFormatter.validateDate(dateString, throw BadRequestException(s"month 00 in $dateString Not accepted"))
             }
         }
 
         "not accept day 00" in {
             val dateString = "GREGORIAN:2017-01-00"
             assertThrows[BadRequestException] {
-                stringFormatter.validateDate(dateString, () => throw BadRequestException(s"day 00 in $dateString Not accepted"))
+                stringFormatter.validateDate(dateString, throw BadRequestException(s"day 00 in $dateString Not accepted"))
             }
         }
 
         "not accept year 0" in {
             val dateString = "GREGORIAN:0 BC"
             assertThrows[BadRequestException] {
-                stringFormatter.validateDate(dateString, () => throw BadRequestException(s"Year 0 is Not accepted $dateString"))
+                stringFormatter.validateDate(dateString, throw BadRequestException(s"Year 0 is Not accepted $dateString"))
             }
         }
 
         "recognize the url of the dhlab site as a valid IRI" in {
             val testUrl: String = "http://dhlab.unibas.ch/"
-            val validIri = stringFormatter.validateAndEscapeIri(testUrl, () => throw BadRequestException(s"Invalid IRI $testUrl"))
+            val validIri = stringFormatter.validateAndEscapeIri(testUrl, throw BadRequestException(s"Invalid IRI $testUrl"))
             validIri should be(testUrl)
         }
 
         "recognize the url of the DaSCH site as a valid IRI" in {
             val testUrl = "http://dasch.swiss"
-            val validIri = stringFormatter.validateAndEscapeIri(testUrl, () => throw BadRequestException(s"Invalid IRI $testUrl"))
+            val validIri = stringFormatter.validateAndEscapeIri(testUrl, throw BadRequestException(s"Invalid IRI $testUrl"))
             validIri should be(testUrl)
         }
 
@@ -552,97 +552,97 @@ class StringFormatterSpec extends CoreSpec() {
 
         "reject an empty IRI string" in {
             assertThrows[BadRequestException] {
-                "".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject the IRI 'foo'" in {
             assertThrows[BadRequestException] {
-                "foo".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "foo".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject http://" in {
             assertThrows[BadRequestException] {
-                "http://".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "http://".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject ftp://www.knora.org/ontology/incunabula (wrong URL scheme)" in {
             assertThrows[BadRequestException] {
-                "ftp://www.knora.org/ontology/incunabula".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "ftp://www.knora.org/ontology/incunabula".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject https://www.knora.org/ontology/incunabula (wrong URL scheme)" in {
             assertThrows[BadRequestException] {
-                "https://www.knora.org/ontology/incunabula".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "https://www.knora.org/ontology/incunabula".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject http://www.knora.org/" in {
             assertThrows[BadRequestException] {
-                "http://www.knora.org/".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "http://www.knora.org/".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject http://api.knora.org/" in {
             assertThrows[BadRequestException] {
-                "http://api.knora.org/".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "http://api.knora.org/".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject http://0.0.0.0:3333/" in {
             assertThrows[BadRequestException] {
-                "http://api.knora.org/".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "http://api.knora.org/".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject http://www.knora.org/ontology" in {
             assertThrows[BadRequestException] {
-                "http://www.knora.org/ontology".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "http://www.knora.org/ontology".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject http://api.knora.org/ontology" in {
             assertThrows[BadRequestException] {
-                "http://api.knora.org/".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "http://api.knora.org/".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject http://0.0.0.0:3333/ontology" in {
             assertThrows[BadRequestException] {
-                "http://api.knora.org/ontology".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "http://api.knora.org/ontology".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject http://www.knora.org/ontology/incunabula/v2 (wrong hostname)" in {
             assertThrows[BadRequestException] {
-                "http://www.knora.org/ontology/incunabula/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "http://www.knora.org/ontology/incunabula/v2".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject http://www.knora.org/ontology/incunabula/simple/v2 (wrong hostname)" in {
             assertThrows[BadRequestException] {
-                "http://www.knora.org/ontology/incunabula/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "http://www.knora.org/ontology/incunabula/v2".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject http://api.knora.org/ontology/incunabula/v2 (wrong hostname)" in {
             assertThrows[BadRequestException] {
-                "http://api.knora.org/ontology/incunabula/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "http://api.knora.org/ontology/incunabula/v2".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject http://api.knora.org/ontology/incunabula/simple/v2 (wrong hostname)" in {
             assertThrows[BadRequestException] {
-                "http://api.knora.org/ontology/incunabula/simple/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "http://api.knora.org/ontology/incunabula/simple/v2".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject http://0.0.0.0:3333/ontology/v2 (invalid ontology name)" in {
             assertThrows[BadRequestException] {
-                "http://0.0.0.0:3333/ontology/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "http://0.0.0.0:3333/ontology/v2".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
@@ -650,25 +650,25 @@ class StringFormatterSpec extends CoreSpec() {
             // TODO: Re-enable when #667 is resolved.
 
             assertThrows[BadRequestException] {
-                "http://0.0.0.0:3333/ontology/0000/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "http://0.0.0.0:3333/ontology/0000/v2".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject http://0.0.0.0:3333/ontology/ontology (invalid ontology name)" in {
             assertThrows[BadRequestException] {
-                "http://0.0.0.0:3333/ontology/ontology".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "http://0.0.0.0:3333/ontology/ontology".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject http://0.0.0.0:3333/ontology/0000/ontology (invalid ontology name)" in {
             assertThrows[BadRequestException] {
-                "http://0.0.0.0:3333/ontology/0000/ontology".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "http://0.0.0.0:3333/ontology/0000/ontology".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
         "reject http://0.0.0.0:3333/ontology/0000/simple/simple/v2 (invalid ontology name)" in {
             assertThrows[BadRequestException] {
-                "http://0.0.0.0:3333/ontology/0000/simple/simple/v2".toSmartIriWithErr(() => throw BadRequestException(s"Invalid IRI"))
+                "http://0.0.0.0:3333/ontology/0000/simple/simple/v2".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
             }
         }
 
@@ -713,35 +713,35 @@ class StringFormatterSpec extends CoreSpec() {
         }
 
         "return the data named graph of a project without short code" in {
-            val shortname = SharedAdminTestData.incunabulaProjectInfo.shortname
+            val shortname = SharedTestDataV1.incunabulaProjectInfo.shortname
             val expected = s"http://www.knora.org/data/$shortname"
-            val result = stringFormatter.projectDataNamedGraph(SharedAdminTestData.incunabulaProjectInfo)
+            val result = stringFormatter.projectDataNamedGraph(SharedTestDataV1.incunabulaProjectInfo)
             result should be(expected)
         }
 
         "return the data named graph of a project with short code" in {
-            val shortcode = SharedAdminTestData.imagesProjectInfo.shortcode.get
-            val shortname = SharedAdminTestData.imagesProjectInfo.shortname
+            val shortcode = SharedTestDataV1.imagesProjectInfo.shortcode.get
+            val shortname = SharedTestDataV1.imagesProjectInfo.shortname
             val expected = s"http://www.knora.org/data/$shortcode/$shortname"
-            val result = stringFormatter.projectDataNamedGraph(SharedAdminTestData.imagesProjectInfo)
+            val result = stringFormatter.projectDataNamedGraph(SharedTestDataV1.imagesProjectInfo)
             result should be(expected)
         }
 
         "validate project shortcode" in {
-            stringFormatter.validateProjectShortcode("00FF", () => throw AssertionException("not valid")) should be("00FF")
-            stringFormatter.validateProjectShortcode("00ff", () => throw AssertionException("not valid")) should be("00FF")
-            stringFormatter.validateProjectShortcode("12aF", () => throw AssertionException("not valid")) should be("12AF")
+            stringFormatter.validateProjectShortcode("00FF", throw AssertionException("not valid")) should be("00FF")
+            stringFormatter.validateProjectShortcode("00ff", throw AssertionException("not valid")) should be("00FF")
+            stringFormatter.validateProjectShortcode("12aF", throw AssertionException("not valid")) should be("12AF")
 
             an[AssertionException] should be thrownBy {
-                stringFormatter.validateProjectShortcode("000", () => throw AssertionException("not valid"))
+                stringFormatter.validateProjectShortcode("000", throw AssertionException("not valid"))
             }
 
             an[AssertionException] should be thrownBy {
-                stringFormatter.validateProjectShortcode("00000", () => throw AssertionException("not valid"))
+                stringFormatter.validateProjectShortcode("00000", throw AssertionException("not valid"))
             }
 
             an[AssertionException] should be thrownBy {
-                stringFormatter.validateProjectShortcode("wxyz", () => throw AssertionException("not valid"))
+                stringFormatter.validateProjectShortcode("wxyz", throw AssertionException("not valid"))
             }
         }
 

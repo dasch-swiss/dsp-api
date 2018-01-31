@@ -55,7 +55,7 @@ object SearchRouteV2 extends Authenticator {
         offsetStr match {
             case Some(offset: String) =>
 
-                val offsetInt: Int = stringFormatter.validateInt(offset, () => throw BadRequestException(s"offset is expected to be an Integer, but $offset given"))
+                val offsetInt: Int = stringFormatter.validateInt(offset, throw BadRequestException(s"offset is expected to be an Integer, but $offset given"))
 
                 if (offsetInt < 0) throw BadRequestException(s"offset must be an Integer >= 0, but $offsetInt given.")
 
@@ -79,7 +79,7 @@ object SearchRouteV2 extends Authenticator {
         val limitToProjectIri: Option[IRI] = limitToProjectIriStr match {
 
             case Some(projectIriStr: String) =>
-                val projectIri = stringFormatter.validateAndEscapeIri(projectIriStr, () => throw BadRequestException(s"$projectIriStr is not a valid Iri"))
+                val projectIri = stringFormatter.validateAndEscapeIri(projectIriStr, throw BadRequestException(s"$projectIriStr is not a valid Iri"))
 
                 Some(projectIri)
 
@@ -103,7 +103,7 @@ object SearchRouteV2 extends Authenticator {
 
         limitToResourceClassIriStr match {
             case Some(resourceClassIriStr: String) =>
-                val externalResourceClassIri = resourceClassIriStr.toSmartIriWithErr(() => throw BadRequestException(s"Invalid resource class IRI: $resourceClassIriStr"))
+                val externalResourceClassIri = resourceClassIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid resource class IRI: $resourceClassIriStr"))
 
                 if (!externalResourceClassIri.isKnoraApiV2EntityIri) {
                     throw BadRequestException(s"$resourceClassIriStr is not a valid knora-api resource class IRI")
@@ -128,7 +128,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+                    val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
                     if (searchString.length < settings.searchValueMinLength) {
                         throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
@@ -155,7 +155,7 @@ object SearchRouteV2 extends Authenticator {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+                    val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
                     if (searchString.length < settings.searchValueMinLength) {
                         throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
@@ -226,7 +226,7 @@ object SearchRouteV2 extends Authenticator {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+                    val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
                     if (searchString.length < settings.searchValueMinLength) {
                         throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
@@ -260,7 +260,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val userProfile = getUserProfileV1(requestContext)
 
-                    val searchString = stringFormatter.toSparqlEncodedString(searchval, () => throw BadRequestException(s"Invalid search string: '$searchval'"))
+                    val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
                     if (searchString.length < settings.searchValueMinLength) {
                         throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
