@@ -1,6 +1,4 @@
 import sbt._
-import sbt.Keys._
-import spray.revolver.RevolverPlugin._
 import NativePackagerHelper._
 
 lazy val salsah = (project in file(".")).
@@ -49,7 +47,7 @@ lazy val salsahCommonSettings = Seq(
     organization := "org.knora",
     name := "salsah",
     version := "0.1.0",
-    scalaVersion := "2.11.7"
+    scalaVersion := "2.12.4"
 )
 
 lazy val javaRunOptions = Seq(
@@ -77,8 +75,8 @@ lazy val javaHeadlessTestOptions = Seq(
     "-Dconfig.resource=headless-testing.conf"
 ) ++ javaTestOptions
 
-lazy val akkaVersion = "2.4.19"
-lazy val akkaHttpVersion = "10.0.7"
+lazy val akkaVersion = "2.5.9"
+lazy val akkaHttpVersion = "10.0.11"
 
 lazy val salsahLibs = Seq(
     // akka

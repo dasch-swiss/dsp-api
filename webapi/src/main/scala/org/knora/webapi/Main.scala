@@ -20,6 +20,8 @@
 
 package org.knora.webapi
 
+import org.knora.webapi.messages.app.appmessages.{SetAllowReloadOverHTTPState, SetLoadDemoDataState}
+
 /**
   * Starts Knora by bringing everything into scope by using the cake pattern. The [[LiveCore]] trait provides
   * an actor system, which is used by methods defined in the [[KnoraService]] trait, which itself provides
@@ -33,8 +35,8 @@ object Main extends App with LiveCore with KnoraService {
 
     val arglist = args.toList
 
-    if (arglist.contains("loadDemoData")) StartupFlags.loadDemoData send true
-    if (arglist.contains("allowReloadOverHTTP")) StartupFlags.allowReloadOverHTTP send true
+    if (arglist.contains("loadDemoData")) applicationStateActor ! SetLoadDemoDataState(true)
+    if (arglist.contains("allowReloadOverHTTP")) applicationStateActor ! SetAllowReloadOverHTTPState(true)
 
     /* Start the HTTP layer, allowing access */
     startService()

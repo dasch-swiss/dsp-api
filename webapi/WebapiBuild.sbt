@@ -118,8 +118,7 @@ lazy val webApiCommonSettings = Seq(
     organization := "org.knora",
     name := "webapi",
     version := "0.1.0-beta",
-    ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
-    scalaVersion := "2.12.1"
+    scalaVersion := "2.12.4"
 )
 
 lazy val webApiLibs = Seq(
@@ -169,9 +168,9 @@ lazy val webApiLibs = Seq(
 lazy val library =
     new {
         object Version {
-            val akkaBase = "2.4.19"
-            val akkaHttp = "10.0.9"
-            val jena = "3.0.0"
+            val akkaBase = "2.5.9"
+            val akkaHttp = "10.0.11"
+            val jena = "3.4.0"
             val aspectj = "1.8.7"
             val kamon = "0.5.2"
         }
@@ -188,26 +187,26 @@ lazy val library =
         val akkaTestkit            = "com.typesafe.akka"            %% "akka-testkit"             % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
         val akkaHttpTestkit        = "com.typesafe.akka"            %% "akka-http-testkit"        % Version.akkaHttp    % "test, fuseki, graphdb, tdb, it, fuseki-it"
         val akkaStreamTestkit      = "com.typesafe.akka"            %% "akka-stream-testkit"      % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
-        val scalaTest              = "org.scalatest"                %% "scalatest"                % "3.0.0"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val scalaTest              = "org.scalatest"                %% "scalatest"                % "3.0.4"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
 
         //CORS support
         val akkaHttpCors           = "ch.megard"                    %% "akka-http-cors"           % "0.1.10"
 
         // jena
-        val jenaLibs               = "org.apache.jena"               % "apache-jena-libs"         % Version.jena exclude("org.slf4j", "slf4j-log4j12")
-        val jenaTest               = "org.apache.jena"               % "jena-text"                % Version.jena exclude("org.slf4j", "slf4j-log4j12")
+        val jenaLibs               = "org.apache.jena"               % "apache-jena-libs"         % Version.jena exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec")
+        val jenaTest               = "org.apache.jena"               % "jena-text"                % Version.jena exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec")
 
         // logging
         val scalaLogging           = "com.typesafe.scala-logging"   %% "scala-logging"            % "3.5.0"
         val logbackClassic         = "ch.qos.logback"                % "logback-classic"          % "1.1.7"
 
         // input validation
-        val commonsValidator       = "commons-validator"             % "commons-validator"        % "1.6"
+        val commonsValidator       = "commons-validator"             % "commons-validator"        % "1.6" exclude("commons-logging", "commons-logging")
 
         // authentication
         val bcprov                 = "org.bouncycastle"              % "bcprov-jdk15on"           % "1.56"
-        val springSecurityCore     = "org.springframework.security"  % "spring-security-core"     % "4.2.1.RELEASE"
-        val jwt                    = "io.igl"                       %% "jwt"                      % "1.2.2"
+        val springSecurityCore     = "org.springframework.security"  % "spring-security-core"     % "4.2.3.RELEASE" exclude("commons-logging", "commons-logging") exclude("org.springframework", "spring-aop")
+        val jwt                    = "io.igl"                       %% "jwt"                      % "1.2.2" exclude("commons-codec", "commons-codec")
 
         // caching
         val ehcache                = "net.sf.ehcache"                % "ehcache"                  % "2.10.0"
@@ -226,7 +225,7 @@ lazy val library =
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",
         val commonsLang3           = "org.apache.commons"            % "commons-lang3"            % "3.4"
         val commonsIo              = "commons-io"                    % "commons-io"               % "2.4"
-        val commonsBeanUtil        = "commons-beanutils"             % "commons-beanutils"        % "1.9.2" // not used by us, but need newest version to prevent this problem: http://stackoverflow.com/questions/14402745/duplicate-classes-in-commons-collections-and-commons-beanutils
+        val commonsBeanUtil        = "commons-beanutils"             % "commons-beanutils"        % "1.9.2" exclude("commons-logging", "commons-logging") // not used by us, but need newest version to prevent this problem: http://stackoverflow.com/questions/14402745/duplicate-classes-in-commons-collections-and-commons-beanutils
         val jodd                   = "org.jodd"                      % "jodd"                     % "3.2.6"
         val jodaTime               = "joda-time"                     % "joda-time"                % "2.9.1"
         val jodaConvert            = "org.joda"                      % "joda-convert"             % "1.8"
