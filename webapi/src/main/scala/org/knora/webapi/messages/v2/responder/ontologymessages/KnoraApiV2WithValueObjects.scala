@@ -1483,7 +1483,7 @@ object KnoraApiV2WithValueObjects {
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "Date value has end er"
+                    LanguageCodes.EN -> "Date value has end era"
                 )
             ),
             makePredicate(
