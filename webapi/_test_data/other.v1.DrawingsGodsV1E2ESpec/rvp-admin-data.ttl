@@ -10,7 +10,7 @@
 ### parole-religieuse project
 <http://rdfh.ch/projects/0106> rdf:type knora-base:knoraProject ;
         knora-base:projectShortname "parole-religieuse"^^xsd:string ;
-        knora-base:projectShortcode "0106"^^sd:string ;
+        knora-base:projectShortcode "0106"^^xsd:string ;
         knora-base:projectLongname "parole-religieuse"^^xsd:string ;
         knora-base:projectDescription "parole-religieuse"^^xsd:string ;
         knora-base:projectKeywords "gods, collection"^^xsd:string ;

@@ -27,15 +27,15 @@ import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.permissionmessages.{DefaultObjectAccessPermissionsStringForPropertyGetV1, DefaultObjectAccessPermissionsStringForResourceClassGetV1, DefaultObjectAccessPermissionsStringResponseV1, ResourceCreateOperation}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{MultipleResourceCreateResponseV1, _}
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, ReadClassInfoV2, PredicateInfoV2, ReadPropertyInfoV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
@@ -192,7 +192,7 @@ class ResourcesResponderV1 extends Responder {
                     }.filter {
                         node =>
                             // Filter out the nodes that the user doesn't have permission to see.
-                            PermissionUtilV1.getUserPermissionV1(
+                            PermissionUtilADM.getUserPermissionV1(
                                 subjectIri = node.nodeIri,
                                 subjectCreator = node.nodeCreator,
                                 subjectProject = node.nodeProject,
@@ -233,7 +233,7 @@ class ResourcesResponderV1 extends Responder {
                             // the user must have some permission on the link value and on the source and target
                             // nodes.
                             val hasPermission = visibleNodeIris.contains(edge.sourceNodeIri) && visibleNodeIris.contains(edge.targetNodeIri) &&
-                                PermissionUtilV1.getUserPermissionV1(
+                                PermissionUtilADM.getUserPermissionV1(
                                     subjectIri = edge.linkValueIri,
                                     subjectCreator = edge.linkValueCreator,
                                     subjectProject = edge.sourceNodeProject,
@@ -321,7 +321,7 @@ class ResourcesResponderV1 extends Responder {
             )
 
             // Make sure the user has permission to see the start node.
-            _ = if (PermissionUtilV1.getUserPermissionV1(
+            _ = if (PermissionUtilADM.getUserPermissionV1(
                 subjectIri = startNode.nodeIri,
                 subjectCreator = startNode.nodeCreator,
                 subjectProject = startNode.nodeProject,
@@ -527,7 +527,7 @@ class ResourcesResponderV1 extends Responder {
                                                     }
 
                                                     // Check the permissions on the LinkValue.
-                                                    linkValuePermission = PermissionUtilV1.getUserPermissionV1WithValueProps(
+                                                    linkValuePermission = PermissionUtilADM.getUserPermissionV1WithValueProps(
                                                         valueIri = linkValueIri,
                                                         valueProps = linkValueProps,
                                                         subjectProject = Some(incomingResInfo.project_id),
@@ -782,7 +782,7 @@ class ResourcesResponderV1 extends Responder {
             // The row may or may not contain a file value IRI.
             row.rowMap.get("fileValue") match {
                 case Some(fileValueIri) =>
-                    val fileValuePermission = PermissionUtilV1.getUserPermissionV1(subjectIri = fileValueIri, subjectCreator = row.rowMap("fileValueAttachedToUser"), subjectProject = fileValueProject, subjectPermissionLiteral = row.rowMap("fileValuePermissions"), userProfile = userProfile)
+                    val fileValuePermission = PermissionUtilADM.getUserPermissionV1(subjectIri = fileValueIri, subjectCreator = row.rowMap("fileValueAttachedToUser"), subjectProject = fileValueProject, subjectPermissionLiteral = row.rowMap("fileValuePermissions"), userProfile = userProfile)
 
                     Some(StillImageFileValue(
                         id = fileValueIri,
@@ -814,12 +814,12 @@ class ResourcesResponderV1 extends Responder {
             val sourceObjectProject = row.rowMap("sourceObjectAttachedToProject")
             val sourceObjectLiteral = row.rowMap("sourceObjectPermissions")
 
-            val sourceObjectPermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = sourceObjectIri, subjectCreator = sourceObjectOwner, subjectProject = sourceObjectProject, subjectPermissionLiteral = sourceObjectLiteral, userProfile = userProfile)
+            val sourceObjectPermissionCode = PermissionUtilADM.getUserPermissionV1(subjectIri = sourceObjectIri, subjectCreator = sourceObjectOwner, subjectProject = sourceObjectProject, subjectPermissionLiteral = sourceObjectLiteral, userProfile = userProfile)
 
             val linkValueIri = row.rowMap("linkValue")
             val linkValueCreator = row.rowMap("linkValueCreator")
             val linkValuePermissions = row.rowMap("linkValuePermissions")
-            val linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = linkValueIri, subjectCreator = linkValueCreator, subjectProject = sourceObjectProject, subjectPermissionLiteral = linkValuePermissions, userProfile = userProfile)
+            val linkValuePermissionCode = PermissionUtilADM.getUserPermissionV1(subjectIri = linkValueIri, subjectCreator = linkValueCreator, subjectProject = sourceObjectProject, subjectPermissionLiteral = linkValuePermissions, userProfile = userProfile)
 
             // Allow the user to see the link only if they have permission to see both the source object and the link value.
             val permissionCode = Seq(sourceObjectPermissionCode, linkValuePermissionCode).min
@@ -869,7 +869,7 @@ class ResourcesResponderV1 extends Responder {
                         linkValueIri = rowMap("linkValue")
                         linkValueCreator = rowMap("linkValueCreator")
                         linkValuePermissions = rowMap("linkValuePermissions")
-                        linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = linkValueIri, subjectCreator = linkValueCreator, subjectProject = containingResourceProject, subjectPermissionLiteral = linkValuePermissions, userProfile = userProfile)
+                        linkValuePermissionCode = PermissionUtilADM.getUserPermissionV1(subjectIri = linkValueIri, subjectCreator = linkValueCreator, subjectProject = containingResourceProject, subjectPermissionLiteral = linkValuePermissions, userProfile = userProfile)
 
                         // Allow the user to see the link only if they have permission to see both the containing resource and the link value.
                         permissionCode = Seq(containingResourcePermissionCode, linkValuePermissionCode).min
@@ -970,7 +970,7 @@ class ResourcesResponderV1 extends Responder {
 
                     regionPropertiesSequencedFutures: Seq[Future[PropsGetForRegionV1]] = regionRows.filter {
                         regionRow =>
-                            val permissionCodeForRegion = PermissionUtilV1.getUserPermissionV1(subjectIri = regionRow.rowMap("region"), subjectCreator = regionRow.rowMap("owner"), subjectProject = regionRow.rowMap("project"), subjectPermissionLiteral = regionRow.rowMap("regionObjectPermissions"), userProfile = userProfile)
+                            val permissionCodeForRegion = PermissionUtilADM.getUserPermissionV1(subjectIri = regionRow.rowMap("region"), subjectCreator = regionRow.rowMap("owner"), subjectProject = regionRow.rowMap("project"), subjectPermissionLiteral = regionRow.rowMap("regionObjectPermissions"), userProfile = userProfile)
 
                             // ignore regions the user has no permissions on
                             permissionCodeForRegion.nonEmpty
@@ -1136,7 +1136,7 @@ class ResourcesResponderV1 extends Responder {
                     val attachedToProject = row.rowMap("attachedToProject")
                     val resourcePermissions = row.rowMap("resourcePermissions")
 
-                    val permissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = resourceIri, subjectCreator = attachedToUser, subjectProject = attachedToProject, subjectPermissionLiteral = resourcePermissions, userProfile = userProfile)
+                    val permissionCode = PermissionUtilADM.getUserPermissionV1(subjectIri = resourceIri, subjectCreator = attachedToUser, subjectProject = attachedToProject, subjectPermissionLiteral = resourcePermissions, userProfile = userProfile)
 
                     if (numberOfProps > 1) {
                         // The client requested more than one property per resource that was found.
@@ -1264,8 +1264,8 @@ class ResourcesResponderV1 extends Responder {
                 resourceClassIri =>
                     for {
                         defaultObjectAccessPermissions <- {
-                            responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
-                        }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+                            responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri = projectIri, resourceClassIri = resourceClassIri, targetUser = userProfile, requestingUser = KnoraSystemInstances.Users.SystemUser)
+                        }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                     } yield (resourceClassIri, defaultObjectAccessPermissions.permissionLiteral)
             }
 
@@ -1278,12 +1278,13 @@ class ResourcesResponderV1 extends Responder {
                         propertyIri =>
                             for {
                                 defaultObjectAccessPermissions <- {
-                                    responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                                    responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
                                         projectIri = projectIri,
                                         resourceClassIri = resourceClassIri,
                                         propertyIri = propertyIri,
-                                        userProfile.permissionData)
-                                }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+                                        targetUser = userProfile,
+                                        requestingUser = KnoraSystemInstances.Users.SystemUser)
+                                }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                             } yield (propertyIri, defaultObjectAccessPermissions.permissionLiteral)
                     }
 
@@ -1712,9 +1713,9 @@ class ResourcesResponderV1 extends Responder {
 
             // Get the default object access permissions of the resource class and its properties.
 
-            defaultResourceClassAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseV1 <- {
-                responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetV1(projectIri = projectIri, resourceClassIri = resourceClassIri, userProfile.permissionData)
-            }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+            defaultResourceClassAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseADM <- {
+                responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri = projectIri, resourceClassIri = resourceClassIri, targetUser = userProfile, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
 
             defaultResourceClassAccessPermissions = defaultResourceClassAccessPermissionsResponse.permissionLiteral
 
@@ -1722,12 +1723,13 @@ class ResourcesResponderV1 extends Responder {
                 propertyIri =>
                     for {
                         defaultObjectAccessPermissions <- {
-                            responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetV1(
+                            responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
                                 projectIri = projectIri,
                                 resourceClassIri = resourceClassIri,
                                 propertyIri = propertyIri,
-                                userProfile.permissionData)
-                        }.mapTo[DefaultObjectAccessPermissionsStringResponseV1]
+                                targetUser = userProfile,
+                                requestingUser = KnoraSystemInstances.Users.SystemUser)
+                        }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                     } yield (propertyIri, defaultObjectAccessPermissions.permissionLiteral)
             }
 
@@ -1878,7 +1880,7 @@ class ResourcesResponderV1 extends Responder {
                 // Check that the user has permission to delete the resource.
                 (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceDeleteRequest.resourceIri, userProfile = resourceDeleteRequest.userProfile, queryOntology = false)
 
-                _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.DeletePermission)) {
+                _ = if (!PermissionUtilADM.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.DeletePermission)) {
                     throw ForbiddenException(s"User $userIri does not have permission to mark resource ${resourceDeleteRequest.resourceIri} as deleted")
                 }
 
@@ -1953,7 +1955,7 @@ class ResourcesResponderV1 extends Responder {
             // Check that the user has permission to view the resource.
             (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceIri, userProfile = userProfile, queryOntology = false)
 
-            _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission)) {
+            _ = if (!PermissionUtilADM.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission)) {
                 val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
                 throw ForbiddenException(s"User $userIri does not have permission to view resource $resourceIri")
             }
@@ -1987,7 +1989,7 @@ class ResourcesResponderV1 extends Responder {
                 (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceIri, userProfile = userProfile, queryOntology = false)
 
                 // check if the given user may change its label
-                _ = if (!PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
+                _ = if (!PermissionUtilADM.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
                     throw ForbiddenException(s"User $userIri does not have permission to change the label of resource $resourceIri")
                 }
 
@@ -2186,7 +2188,7 @@ class ResourcesResponderV1 extends Responder {
             for {
 
                 // Extract the permission-relevant assertions from the query results.
-                permissionRelevantAssertions: Seq[(IRI, IRI)] <- Future(PermissionUtilV1.filterPermissionRelevantAssertions(resInfoResponseRows.map(row => (row.rowMap("prop"), row.rowMap("obj")))))
+                permissionRelevantAssertions: Seq[(IRI, IRI)] <- Future(PermissionUtilADM.filterPermissionRelevantAssertions(resInfoResponseRows.map(row => (row.rowMap("prop"), row.rowMap("obj")))))
 
                 maybeResourceProjectStatement: Option[(IRI, IRI)] = permissionRelevantAssertions.find {
                     case (subject, predicate) => subject == OntologyConstants.KnoraBase.AttachedToProject
@@ -2202,13 +2204,13 @@ class ResourcesResponderV1 extends Responder {
                     case (fileValueIri, fileValueRows) => (fileValueIri, valueUtilV1.createValueProps(fileValueIri, fileValueRows))
                 }.filter {
                     case (fileValueIri, fileValueProps) =>
-                        val permissionCode = PermissionUtilV1.getUserPermissionV1WithValueProps(
+                        val permissionCode = PermissionUtilADM.getUserPermissionV1WithValueProps(
                             valueIri = fileValueIri,
                             valueProps = fileValueProps,
                             subjectProject = Some(resourceProject),
                             userProfile = userProfile
                         )
-                        PermissionUtilV1.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission)
+                        PermissionUtilADM.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission)
                 }
 
                 // Convert the ValueProps objects into FileValueV1 objects
@@ -2239,7 +2241,7 @@ class ResourcesResponderV1 extends Responder {
                 }
 
                 // Get the user's permission on the resource.
-                userPermission = PermissionUtilV1.getUserPermissionV1FromAssertions(
+                userPermission = PermissionUtilADM.getUserPermissionV1FromAssertions(
                     subjectIri = resourceIri,
                     assertions = permissionRelevantAssertions,
                     userProfile = userProfile
@@ -2409,7 +2411,7 @@ class ResourcesResponderV1 extends Responder {
                             // Convert the SPARQL query results to a ValueV1.
                             valueV1 <- valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
 
-                            valPermission = PermissionUtilV1.getUserPermissionV1WithValueProps(
+                            valPermission = PermissionUtilADM.getUserPermissionV1WithValueProps(
                                 valueIri = valObjIri,
                                 valueProps = valueProps,
                                 subjectProject = None, // We don't need to specify this here, because it's in valueProps
@@ -2528,7 +2530,7 @@ class ResourcesResponderV1 extends Responder {
                                 }
 
                                 // Check the permissions on the LinkValue.
-                                linkValuePermission = PermissionUtilV1.getUserPermissionV1WithValueProps(
+                                linkValuePermission = PermissionUtilADM.getUserPermissionV1WithValueProps(
                                     valueIri = linkValueIri,
                                     valueProps = linkValueProps,
                                     subjectProject = None, // We don't need to specify this here, because it's in linkValueProps
@@ -2538,7 +2540,7 @@ class ResourcesResponderV1 extends Responder {
                                 // We only allow the user to see information about the link if they have at least view permission on both the link value
                                 // and on the target resource.
 
-                                targetResourcePermission = PermissionUtilV1.getUserPermissionV1WithValueProps(
+                                targetResourcePermission = PermissionUtilADM.getUserPermissionV1WithValueProps(
                                     valueIri = targetResourceIri,
                                     valueProps = valueProps,
                                     subjectProject = None, // We don't need to specify this here, because it's in valueProps

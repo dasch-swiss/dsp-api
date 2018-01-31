@@ -24,12 +24,15 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import org.knora.webapi.ActorMaker
-import org.knora.webapi.messages.admin.responder.listsadminmessages.ListsAdminResponderRequest
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
+import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologiesResponderRequestADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsResponderRequestADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UsersResponderRequestADM
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
-import org.knora.webapi.messages.v1.responder.groupmessages.GroupsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
 import org.knora.webapi.messages.v1.responder.searchmessages.SearchResponderRequestV1
@@ -42,7 +45,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesRespond
 import org.knora.webapi.messages.v2.responder.persistentmapmessages.PersistentMapResponderRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponderRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
-import org.knora.webapi.responders.admin.ListsAdminResponder
+import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
 import org.knora.webapi.util.ActorUtil.handleUnexpectedMessage
@@ -180,9 +183,9 @@ class ResponderManager extends Actor with ActorLogging {
     protected val ckanRouterV1: ActorRef = makeDefaultCkanRouterV1
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[StoreResponderV1]].
+      * Constructs the default Akka routing actor that routes messages to [[StoreResponderADM]].
       */
-    protected final def makeDefaultStoreRouterV1: ActorRef = makeActor(FromConfig.props(Props[StoreResponderV1]), STORE_ROUTER_V1_ACTOR_NAME)
+    protected final def makeDefaultStoreRouterV1: ActorRef = makeActor(FromConfig.props(Props[StoreResponderADM]), STORE_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Store responder. Subclasses can override this
@@ -190,27 +193,6 @@ class ResponderManager extends Actor with ActorLogging {
       */
     protected val storeRouterV1: ActorRef = makeDefaultStoreRouterV1
 
-    /**
-      * Constructs the default Akka routing actor that routes messages to [[PermissionsResponderV1]].
-      */
-    protected final def makeDefaultPermissionsRouterV1: ActorRef = makeActor(FromConfig.props(Props[PermissionsResponderV1]), PERMISSIONS_ROUTER_V1_ACTOR_NAME)
-
-    /**
-      * The Akka routing actor that should receive messages addressed to the Permissions responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default Permissions responder.
-      */
-    protected val permissionsRouterV1: ActorRef = makeDefaultPermissionsRouterV1
-
-    /**
-      * Constructs the default Akka routing actor that routes messages to [[GroupsResponderV1]].
-      */
-    protected final def makeDefaultGroupsRouterV1: ActorRef = makeActor(FromConfig.props(Props[GroupsResponderV1]), GROUPS_ROUTER_V1_ACTOR_NAME)
-
-    /**
-      * The Akka routing actor that should receive messages addressed to the groups responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default groups responder.
-      */
-    protected val groupsRouterV1: ActorRef = makeDefaultGroupsRouterV1
 
     //
     // V2 responders
@@ -266,9 +248,20 @@ class ResponderManager extends Actor with ActorLogging {
     //
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[ListsAdminResponder]].
+      * Constructs the default Akka routing actor that routes messages to [[GroupsResponderADM]].
       */
-    protected final def makeDefaultListsAdminRouter: ActorRef = makeActor(FromConfig.props(Props[ListsAdminResponder]), LISTS_ADMIN_ROUTER_ACTOR_NAME)
+    protected final def makeDefaultGroupsRouterADM: ActorRef = makeActor(FromConfig.props(Props[GroupsResponderADM]), GROUPS_ROUTER_ADM_ACTOR_NAME)
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the groups responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default groups responder.
+      */
+    protected val groupsRouterADM: ActorRef = makeDefaultGroupsRouterADM
+
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[ListsResponderADM]].
+      */
+    protected final def makeDefaultListsAdminRouter: ActorRef = makeActor(FromConfig.props(Props[ListsResponderADM]), LISTS_ROUTER_ADM_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the lists responder. Subclasses can override this
@@ -276,6 +269,49 @@ class ResponderManager extends Actor with ActorLogging {
       */
     protected val listsAdminRouter: ActorRef = makeDefaultListsAdminRouter
 
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[OntologiesResponderADM]].
+      */
+    protected final def makeDefaultOntologiesRouterADM: ActorRef = makeActor(FromConfig.props(Props[OntologiesResponderADM]), ONTOLOGIES_ROUTER_ADM_ACTOR_NAME)
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the lists responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default lists responder.
+      */
+    protected val ontologiesRouterADM: ActorRef = makeDefaultOntologiesRouterADM
+
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[PermissionsResponderADM]].
+      */
+    protected final def makeDefaultPermissionsRouterADM: ActorRef = makeActor(FromConfig.props(Props[PermissionsResponderADM]), PERMISSIONS_ROUTER_ADM_ACTOR_NAME)
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the Permissions responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default Permissions responder.
+      */
+    protected val permissionsRouterADM: ActorRef = makeDefaultPermissionsRouterADM
+
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[ProjectsResponderADM]].
+      */
+    protected final def makeDefaultProjectsRouterADM: ActorRef = makeActor(FromConfig.props(Props[ProjectsResponderADM]), PROJECTS_ROUTER_ADM_ACTOR_NAME)
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the projects responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default projects responder.
+      */
+    protected val projectsRouterADM: ActorRef = makeDefaultProjectsRouterADM
+
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[UsersResponderADM]].
+      */
+    protected final def makeDefaultUsersRouterADM: ActorRef = makeActor(FromConfig.props(Props[UsersResponderADM]), USERS_ROUTER_ADM_ACTOR_NAME)
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the users responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default users responder.
+      */
+    protected val usersRouterADM: ActorRef = makeDefaultUsersRouterADM
 
 
     def receive = LoggingReceive {
@@ -289,10 +325,8 @@ class ResponderManager extends Actor with ActorLogging {
         case ckanResponderRequestV1: CkanResponderRequestV1 => ckanRouterV1.forward(ckanResponderRequestV1)
         case storeResponderRequestV1: StoreResponderRequestV1 => storeRouterV1.forward(storeResponderRequestV1)
         case standoffResponderRequestV1: StandoffResponderRequestV1 => standoffRouterV1.forward(standoffResponderRequestV1)
-        case permissionsResponderRequestV1: PermissionsResponderRequestV1 => permissionsRouterV1.forward(permissionsResponderRequestV1)
         case usersResponderRequestV1: UsersResponderRequestV1 => usersRouterV1.forward(usersResponderRequestV1)
         case projectsResponderRequestV1: ProjectsResponderRequestV1 => projectsRouterV1.forward(projectsResponderRequestV1)
-        case groupsResponderRequestV1: GroupsResponderRequestV1 => groupsRouterV1.forward(groupsResponderRequestV1)
 
         // Knora API V2 messages
         case ontologiesResponderRequestV2: OntologiesResponderRequestV2 => ontologiesRouterV2.forward(ontologiesResponderRequestV2)
@@ -301,7 +335,12 @@ class ResponderManager extends Actor with ActorLogging {
         case persistentMapResponderRequestV2: PersistentMapResponderRequestV2 => persistentMapRouterV2.forward(persistentMapResponderRequestV2)
 
         // Knora Admin message
-        case listsAdminResponderRequest: ListsAdminResponderRequest => listsAdminRouter forward listsAdminResponderRequest
+        case groupsResponderRequestADM: GroupsResponderRequestADM => groupsRouterADM.forward(groupsResponderRequestADM)
+        case listsResponderRequest: ListsResponderRequestADM => listsAdminRouter forward listsResponderRequest
+        case ontologiesResponderRequest: OntologiesResponderRequestADM => ontologiesRouterADM forward ontologiesResponderRequest
+        case permissionsResponderRequestADM: PermissionsResponderRequestADM => permissionsRouterADM.forward(permissionsResponderRequestADM)
+        case projectsResponderRequestADM: ProjectsResponderRequestADM => projectsRouterADM.forward(projectsResponderRequestADM)
+        case usersResponderRequestADM: UsersResponderRequestADM => usersRouterADM.forward(usersResponderRequestADM)
 
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }

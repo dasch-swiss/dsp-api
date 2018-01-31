@@ -1,0 +1,54 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi._
+
+@**
+ * Gets information about a single or all projects.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param maybeIri the IRI of the group.
+ *@
+@(triplestore: String,
+  maybeIri: Option[IRI])
+
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+CONSTRUCT { ?s ?p ?o }
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
+WHERE {
+
+    @if(maybeIri.nonEmpty) {
+      BIND(IRI("@maybeIri") as ?s)
+    }
+
+    ?s rdf:type knora-base:UserGroup .
+    ?s ?p ?o .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#UnknownUser>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#KnownUser>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#Creator>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#ProjectMember>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#ProjectAdmin>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#SystemAdmin>) .
+}

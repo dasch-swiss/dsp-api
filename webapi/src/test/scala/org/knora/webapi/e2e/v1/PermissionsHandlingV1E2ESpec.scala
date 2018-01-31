@@ -42,13 +42,13 @@ object PermissionsHandlingV1E2ESpec {
   */
 class PermissionsHandlingV1E2ESpec extends E2ESpec(PermissionsHandlingV1E2ESpec.config) with TriplestoreJsonProtocol {
 
-    private val rootUser = SharedAdminTestData.rootUser
+    private val rootUser = SharedTestDataV1.rootUser
     private val rootUserEmail = rootUser.userData.email.get
 
-    private val imagesUser = SharedAdminTestData.imagesUser01
+    private val imagesUser = SharedTestDataV1.imagesUser01
     private val imagesUserEmail = imagesUser.userData.email.get
 
-    private val incunabulaUser = SharedAdminTestData.incunabulaProjectAdminUser
+    private val incunabulaUser = SharedTestDataV1.incunabulaProjectAdminUser
     private val incunabulaUserEmail = incunabulaUser.userData.email.get
 
     private val password = "test"
@@ -60,7 +60,7 @@ class PermissionsHandlingV1E2ESpec extends E2ESpec(PermissionsHandlingV1E2ESpec.
     )
 
     "Load test data" in {
-        val request = Post(baseApiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, 300.seconds)
     }
 

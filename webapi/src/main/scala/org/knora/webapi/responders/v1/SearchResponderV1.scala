@@ -30,7 +30,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.twirl.SearchCriterion
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{DateUtilV1, PermissionUtilV1}
+import org.knora.webapi.util.{DateUtilV1, PermissionUtilADM}
 
 import scala.concurrent.Future
 
@@ -185,7 +185,7 @@ class SearchResponderV1 extends Responder {
                     val resourceProject = firstRowMap("resourceProject")
                     val resourcePermissions = firstRowMap("resourcePermissions")
 
-                    val resourcePermissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1(subjectIri = resourceIri, subjectCreator = resourceCreator, subjectProject = resourceProject, subjectPermissionLiteral = resourcePermissions, userProfile = searchGetRequest.userProfile)
+                    val resourcePermissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1(subjectIri = resourceIri, subjectCreator = resourceCreator, subjectProject = resourceProject, subjectPermissionLiteral = resourcePermissions, userProfile = searchGetRequest.userProfile)
 
                     if (resourcePermissionCode.nonEmpty) {
                         // Yes. Get more information about the resource.
@@ -204,7 +204,7 @@ class SearchResponderV1 extends Responder {
                                 val literal = row.rowMap("literal")
                                 val valueCreator = row.rowMap("valueCreator")
                                 val valuePermissionsLiteral = row.rowMap("valuePermissions")
-                                val valuePermissionCode = PermissionUtilV1.getUserPermissionV1(
+                                val valuePermissionCode = PermissionUtilADM.getUserPermissionV1(
                                     subjectIri = valueIri, subjectCreator = valueCreator,
                                     subjectProject = resourceProject,
                                     subjectPermissionLiteral = valuePermissionsLiteral,
@@ -502,7 +502,7 @@ class SearchResponderV1 extends Responder {
                     val resourceProject = firstRowMap("resourceProject")
                     val resourcePermissions = firstRowMap("resourcePermissions")
 
-                    val resourcePermissionCode: Option[Int] = PermissionUtilV1.getUserPermissionV1(subjectIri = resourceIri, subjectCreator = resourceCreator, subjectProject = resourceProject, subjectPermissionLiteral = resourcePermissions, userProfile = searchGetRequest.userProfile)
+                    val resourcePermissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1(subjectIri = resourceIri, subjectCreator = resourceCreator, subjectProject = resourceProject, subjectPermissionLiteral = resourcePermissions, userProfile = searchGetRequest.userProfile)
 
                     if (resourcePermissionCode.nonEmpty) {
                         // Yes. Get more information about the resource.
@@ -529,7 +529,7 @@ class SearchResponderV1 extends Responder {
                                             // Is the matching value object a LinkValue?
                                             val valuePermissionCode = if (searchCriterion.valueType == OntologyConstants.KnoraBase.Resource) {
                                                 // Yes.
-                                                val linkValuePermissionCode = PermissionUtilV1.getUserPermissionV1(
+                                                val linkValuePermissionCode = PermissionUtilADM.getUserPermissionV1(
                                                     subjectIri = valueIri,
                                                     subjectCreator = valueCreator,
                                                     subjectProject = resourceProject,
@@ -543,13 +543,13 @@ class SearchResponderV1 extends Responder {
                                                 val targetResourceProject = row.rowMap(s"targetResourceProject$index")
                                                 val targetResourcePermissionLiteral = row.rowMap(s"targetResourcePermissions$index")
 
-                                                val targetResourcePermissionCode = PermissionUtilV1.getUserPermissionV1(subjectIri = targetResourceIri, subjectCreator = targetResourceCreator, subjectProject = targetResourceProject, subjectPermissionLiteral = targetResourcePermissionLiteral, userProfile = searchGetRequest.userProfile)
+                                                val targetResourcePermissionCode = PermissionUtilADM.getUserPermissionV1(subjectIri = targetResourceIri, subjectCreator = targetResourceCreator, subjectProject = targetResourceProject, subjectPermissionLiteral = targetResourcePermissionLiteral, userProfile = searchGetRequest.userProfile)
 
                                                 // Only allow the user to see the match if they have view permission on both the link value and the target resource.
                                                 Seq(linkValuePermissionCode, targetResourcePermissionCode).min
                                             } else {
                                                 // The matching object is an ordinary value, not a LinkValue.
-                                                PermissionUtilV1.getUserPermissionV1(
+                                                PermissionUtilADM.getUserPermissionV1(
                                                     subjectIri = valueIri,
                                                     subjectCreator = valueCreator,
                                                     subjectProject = resourceProject,

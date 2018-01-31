@@ -713,17 +713,17 @@ class StringFormatterSpec extends CoreSpec() {
         }
 
         "return the data named graph of a project without short code" in {
-            val shortname = SharedAdminTestData.incunabulaProjectInfo.shortname
+            val shortname = SharedTestDataV1.incunabulaProjectInfo.shortname
             val expected = s"http://www.knora.org/data/$shortname"
-            val result = stringFormatter.projectDataNamedGraph(SharedAdminTestData.incunabulaProjectInfo)
+            val result = stringFormatter.projectDataNamedGraph(SharedTestDataV1.incunabulaProjectInfo)
             result should be(expected)
         }
 
         "return the data named graph of a project with short code" in {
-            val shortcode = SharedAdminTestData.imagesProjectInfo.shortcode.get
-            val shortname = SharedAdminTestData.imagesProjectInfo.shortname
+            val shortcode = SharedTestDataV1.imagesProjectInfo.shortcode.get
+            val shortname = SharedTestDataV1.imagesProjectInfo.shortname
             val expected = s"http://www.knora.org/data/$shortcode/$shortname"
-            val result = stringFormatter.projectDataNamedGraph(SharedAdminTestData.imagesProjectInfo)
+            val result = stringFormatter.projectDataNamedGraph(SharedTestDataV1.imagesProjectInfo)
             result should be(expected)
         }
 
