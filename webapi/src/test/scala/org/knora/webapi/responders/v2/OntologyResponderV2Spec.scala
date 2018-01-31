@@ -46,7 +46,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/anything/v2".toSmartIri
     private var anythingLastModDate: Instant = Instant.now
 
-    private val printErrorMessages = true
+    private val printErrorMessages = false
 
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
