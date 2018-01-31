@@ -58,9 +58,6 @@ package object responders {
     val CKAN_ROUTER_V1_ACTOR_NAME = "ckanRouterV1"
     val CKAN_ROUTER_V1_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + CKAN_ROUTER_V1_ACTOR_NAME
 
-    val STORE_ROUTER_V1_ACTOR_NAME = "storeRouterV1"
-    val STORE_ROUTER_V1_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + STORE_ROUTER_V1_ACTOR_NAME
-
 
 
     // ------------------------------------------------------------------------------------------
@@ -99,6 +96,9 @@ package object responders {
 
     val PROJECTS_ROUTER_ADM_ACTOR_NAME = "projectsRouterADM"
     val PROJECTS_ROUTER_ADM_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + PROJECTS_ROUTER_ADM_ACTOR_NAME
+
+    val STORE_ROUTER_ADM_ACTOR_NAME = "storeRouterADM"
+    val STORE_ROUTER_ADM_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + STORE_ROUTER_ADM_ACTOR_NAME
 
     val USERS_ROUTER_ADM_ACTOR_NAME = "usersRouterADM"
     val USERS_ROUTER_ADM_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + USERS_ROUTER_ADM_ACTOR_NAME
