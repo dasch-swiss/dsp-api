@@ -31,6 +31,10 @@ import org.knora.webapi.{BadRequestException, _}
   * Utility functions for converting dates.
   */
 object DateUtilV2 {
+
+    /**
+      * Enumeration for era.
+      */
     object KnoraEraV2 extends Enumeration {
         val BCE = Value(0, "BCE")
         val CE = Value(1, "CE")
@@ -51,6 +55,7 @@ object DateUtilV2 {
             }
         }
     }
+
     /**
       * Represents a date as year, month, day including the given precision.
       *
@@ -59,7 +64,7 @@ object DateUtilV2 {
       * @param day       the date's day.
       * @param precision the given date's precision.
       */
-    case class DateYearMonthDay(year: Int, month: Int, day: Int, era:KnoraEraV2.Value, precision: KnoraPrecisionV1.Value) {
+    case class DateYearMonthDay(year: Int, month: Int, day: Int, era: KnoraEraV2.Value, precision: KnoraPrecisionV1.Value) {
 
         /**
           * Converts the [[DateYearMonthDay]] to knora-api assertions representing a start date.
@@ -92,8 +97,10 @@ object DateUtilV2 {
 
 
         }
+
         /**
-          * Converts the Era to knora-api assertions representing a start era.
+          * Converts the era to knora-api assertions representing a start era.
+          *
           * @return a map of knora-api value StartEra property to era
           */
         def toStartEraAssertion(): Map[IRI, String] = {
@@ -133,7 +140,8 @@ object DateUtilV2 {
         }
 
         /**
-          * Converts the Era to knora-api assertions representing an end era.
+          * Converts the era to knora-api assertions representing an end era.
+          *
           * @return a map of knora-api value EndEra property to era
           */
         def toEndEraAssertion(): Map[IRI, String] = {
@@ -163,7 +171,7 @@ object DateUtilV2 {
         val era: String = DateUtilV1.eraToString(javaGregorianCalendarDate.get(Calendar.ERA))
 
 
-        DateYearMonthDay(year = year, month = month, day = day, era = KnoraEraV2.lookup(era),  precision = precision)
+        DateYearMonthDay(year = year, month = month, day = day, era = KnoraEraV2.lookup(era), precision = precision)
 
     }
 

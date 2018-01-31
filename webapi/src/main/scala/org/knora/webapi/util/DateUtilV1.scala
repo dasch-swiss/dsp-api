@@ -212,7 +212,8 @@ object DateUtilV1 {
     }
 
     /**
-      * converts era property pf java.calandar to a string format
+      * Converts era property of java.calendar to a string format.
+      *
       * @param era java.calandar era property
       * @return String format of Era
       */

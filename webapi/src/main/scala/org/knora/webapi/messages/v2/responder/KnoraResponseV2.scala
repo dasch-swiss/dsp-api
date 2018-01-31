@@ -37,7 +37,8 @@ import org.knora.webapi.util.IriConversions._
   *
   * @tparam C the type of the content class that extends this trait.
   */
-trait KnoraContentV2[C <: KnoraContentV2[C]] { this: C =>
+trait KnoraContentV2[C <: KnoraContentV2[C]] {
+    this: C =>
     def toOntologySchema(targetSchema: OntologySchema): C
 }
 
@@ -75,7 +76,8 @@ case class UpdateValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IO
 /**
   * The content of the value of a Knora property.
   */
-sealed trait ValueContentV2 { // TODO: have this extend KnoraContentV2[ValueContentV2].
+sealed trait ValueContentV2 {
+    // TODO: have this extend KnoraContentV2[ValueContentV2].
 
     /**
       * The IRI of the internal Knora value type (defined in the `knora-base` ontology) corresponding to the type of this `ValueContentV2`.
@@ -140,7 +142,9 @@ case class DateValueContentV2(valueHasString: String,
       * @return a Map of knora-api value properties to numbers (year, month, day) representing the date value.
       */
     def toKnoraApiDateValueAssertions: Map[IRI, JsonLDValue] = {
+
         val startDateConversion = DateUtilV2.convertJDNToDate(valueHasStartJDN, valueHasStartPrecision, valueHasCalendar)
+
         val startDateAssertions = startDateConversion.toStartDateAssertions().map {
             case (k: IRI, v: Int) => (k, JsonLDInt(v))
 
@@ -149,10 +153,11 @@ case class DateValueContentV2(valueHasString: String,
             case (k: IRI, v: String) => (k, JsonLDString(v))
         }
         val endDateConversion = DateUtilV2.convertJDNToDate(valueHasEndJDN, valueHasEndPrecision, valueHasCalendar)
-        val endDateAssertions = endDateConversion .toEndDateAssertions().map {
+
+        val endDateAssertions = endDateConversion.toEndDateAssertions().map {
             case (k: IRI, v: Int) => (k, JsonLDInt(v))
 
-        } ++ endDateConversion .toEndEraAssertion().map {
+        } ++ endDateConversion.toEndEraAssertion().map {
 
             case (k: IRI, v: String) => (k, JsonLDString(v))
         }
@@ -525,13 +530,13 @@ case class TextFileValueContentV2(valueHasString: String, internalMimeType: Stri
 /**
   * Represents a Knora link value.
   *
-  * @param valueHasString      the string representation of the referred resource.
-  * @param subject             the Iri of the link's source resource.
-  * @param predicate           the link's predicate.
-  * @param target              the Iri of the link's target resource.
-  * @param comment             a comment on the link.
-  * @param incomingLink        indicates if it is an incoming link.
-  * @param nestedResource      information about the nested resource, if given.
+  * @param valueHasString the string representation of the referred resource.
+  * @param subject        the Iri of the link's source resource.
+  * @param predicate      the link's predicate.
+  * @param target         the Iri of the link's target resource.
+  * @param comment        a comment on the link.
+  * @param incomingLink   indicates if it is an incoming link.
+  * @param nestedResource information about the nested resource, if given.
   */
 case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: IRI, target: IRI, comment: Option[String], incomingLink: Boolean, nestedResource: Option[ReadResourceV2]) extends ValueContentV2 {
 
