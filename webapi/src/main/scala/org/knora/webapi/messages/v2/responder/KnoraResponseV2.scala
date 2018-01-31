@@ -140,12 +140,24 @@ case class DateValueContentV2(valueHasString: String,
       * @return a Map of knora-api value properties to numbers (year, month, day) representing the date value.
       */
     def toKnoraApiDateValueAssertions: Map[IRI, JsonLDValue] = {
-        val startDateAssertions = DateUtilV2.convertJDNToDate(valueHasStartJDN, valueHasStartPrecision, valueHasCalendar).toStartDateAssertions().map {
-            case (k: IRI, v: Int) => (k, JsonLDInt(v))
-        }
 
-        val endDateAssertions = DateUtilV2.convertJDNToDate(valueHasEndJDN, valueHasEndPrecision, valueHasCalendar).toEndDateAssertions().map {
+        val startDateConversion = DateUtilV2.convertJDNToDate(valueHasStartJDN, valueHasStartPrecision, valueHasCalendar)
+
+        val startDateAssertions = startDateConversion.toStartDateAssertions.map {
             case (k: IRI, v: Int) => (k, JsonLDInt(v))
+
+        } ++ startDateConversion.toStartEraAssertion.map {
+
+            case (k: IRI, v: String) => (k, JsonLDString(v))
+        }
+        val endDateConversion = DateUtilV2.convertJDNToDate(valueHasEndJDN, valueHasEndPrecision, valueHasCalendar)
+
+        val endDateAssertions = endDateConversion.toEndDateAssertions.map {
+            case (k: IRI, v: Int) => (k, JsonLDInt(v))
+
+        } ++ endDateConversion.toEndEraAssertion.map {
+
+            case (k: IRI, v: String) => (k, JsonLDString(v))
         }
 
         startDateAssertions ++ endDateAssertions
@@ -516,13 +528,13 @@ case class TextFileValueContentV2(valueHasString: String, internalMimeType: Stri
 /**
   * Represents a Knora link value.
   *
-  * @param valueHasString      the string representation of the referred resource.
-  * @param subject             the Iri of the link's source resource.
-  * @param predicate           the link's predicate.
-  * @param target              the Iri of the link's target resource.
-  * @param comment             a comment on the link.
-  * @param incomingLink        indicates if it is an incoming link.
-  * @param nestedResource      information about the nested resource, if given.
+  * @param valueHasString the string representation of the referred resource.
+  * @param subject        the Iri of the link's source resource.
+  * @param predicate      the link's predicate.
+  * @param target         the Iri of the link's target resource.
+  * @param comment        a comment on the link.
+  * @param incomingLink   indicates if it is an incoming link.
+  * @param nestedResource information about the nested resource, if given.
   */
 case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: IRI, target: IRI, comment: Option[String], incomingLink: Boolean, nestedResource: Option[ReadResourceV2]) extends ValueContentV2 {
 
