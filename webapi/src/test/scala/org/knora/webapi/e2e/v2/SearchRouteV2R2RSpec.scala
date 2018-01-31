@@ -1516,7 +1516,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkCountQuery(responseAs[String], 7)
+                checkCountQuery(responseAs[String], 9)
 
             }
 
@@ -1576,6 +1576,92 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
 
         }
+
+        "search for a book whose title contains 'Zeit' using the regex function" in {
+
+            val sparqlSimplified =
+                """
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |    CONSTRUCT {
+                  |
+                  |        ?mainRes knora-api:isMainResource true .
+                  |
+                  |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
+                  |
+                  |     } WHERE {
+                  |
+                  |        ?mainRes a knora-api:Resource .
+                  |
+                  |        ?mainRes a <http://0.0.0.0:3333/ontology/incunabula/simple/v2#book> .
+                  |
+                  |
+                  |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
+                  |        <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
+                  |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
+                  |
+                  |        FILTER regex(?propVal0, "Zeit", "i")
+                  |
+                  |     }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeit.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkCountQuery(responseAs[String], 2)
+
+            }
+
+        }
+
+        "search for a book whose title contains 'Zeitglöcklein' using the contains function" in {
+
+            val sparqlSimplified =
+                """
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |    CONSTRUCT {
+                  |
+                  |        ?mainRes knora-api:isMainResource true .
+                  |
+                  |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
+                  |
+                  |     } WHERE {
+                  |
+                  |        ?mainRes a knora-api:Resource .
+                  |
+                  |        ?mainRes a <http://0.0.0.0:3333/ontology/incunabula/simple/v2#book> .
+                  |
+                  |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
+                  |        <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
+                  |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
+                  |
+                  |        FILTER contains(?propVal0, "Zeitglöcklein")
+                  |
+                  |     }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkCountQuery(responseAs[String], 2)
+
+            }
+
+
+        }
+
+
 
     }
 }

@@ -273,6 +273,29 @@ case class FilterPattern(expression: Expression) extends QueryPattern {
 }
 
 /**
+  * Represents a regex function in a query (in a FILTER).
+  *
+  * @param textValueVar the variable representing the text value to be checked against the provided pattern.
+  * @param pattern the REGEX pattern to be used.
+  * @param modifier the modifier to be used.
+  */
+case class RegexFunction(textValueVar: QueryVariable, pattern: String, modifier: String) extends Expression {
+    def toSparql: String = s"""regex(${textValueVar.toSparql}, "$pattern", "$modifier")"""
+}
+
+/**
+  * Represents a match function in a query (in a FILTER).
+  *
+  * This function has to be rewritten using a special property which is supported by Lucene.
+  *
+  * @param textValueVar the variable representing the text value to be checked against the provided pattern.
+  * @param searchTerm the term to search for.
+  */
+case class MatchFunction(textValueVar: QueryVariable, searchTerm: String) extends Expression {
+    def toSparql = s"""""" // additional statements will be generated, this expression won't end up in generated SPARQL as a FILTER
+}
+
+/**
   * Represents VALUES in a query.
   *
   * @param variable the variable that the values will be assigned to.
