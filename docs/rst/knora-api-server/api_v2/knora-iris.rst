@@ -36,7 +36,7 @@ possible future naming conflicts.
 The range of project IDs from ``0001`` to ``00FF`` inclusive is reserved for local testing, and also the ID ``0000`` is
 reserved for future use by the system. Thus, the first useful project will be ``0100``.
 
-In the beginning, Unil will use the IDs ``0100`` to ``07FF``, and Unibas ``0800`` to ``08FF`.
+In the beginning, Unil will use the IDs ``0100`` to ``07FF``, and Unibas ``0800`` to ``08FF``.
 
 IRIs for Ontologies and Ontology Entities
 -----------------------------------------
@@ -79,6 +79,8 @@ reserved words:
 - ``ontology``
 - ``simple``
 
+.. _external-ontology-iris-v2:
+
 External Ontology IRIs
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -93,8 +95,8 @@ The IRI of an external Knora ontology has the form:
    http://HOST[:PORT]/ontology/PROJECT_SHORTCODE/ONTOLOGY_NAME/API_VERSION
 
 For built-in ontologies, the host is always ``api.knora.org``. Otherwise, the hostname and port
-configured in ``application.conf`` under ``app.http.knora-api.host`` and ``app.http.knora-api.http-
-port`` are used (the port is omitted if it is 80).
+configured in ``application.conf`` under ``app.http.knora-api.host`` and ``app.http.knora-api.http-port``
+are used (the port is omitted if it is 80).
 
 This means that when a built-in external ontology IRI is dereferenced, the ontology can be served by
 a Knora API server running at ``api.knora.org``. When a project-specific external ontology IRI is

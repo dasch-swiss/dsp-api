@@ -2971,7 +2971,7 @@ class OntologyResponderV2 extends Responder {
         checkOntologyLastModificationDate(
             internalOntologyIri = internalOntologyIri,
             expectedLastModificationDate = expectedLastModificationDate,
-            errorFun = throw BadRequestException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} has been modified by another user, please reload it and try again.")
+            errorFun = throw EditConflictException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} has been modified by another user, please reload it and try again.")
         )
     }
 
