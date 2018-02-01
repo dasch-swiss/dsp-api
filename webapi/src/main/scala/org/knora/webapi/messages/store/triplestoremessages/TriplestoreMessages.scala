@@ -21,8 +21,7 @@
 package org.knora.webapi.messages.store.triplestoremessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import arq.iri
-import org.knora.webapi.util.{ErrorHandlingMap, SmartIri}
+import org.knora.webapi.util.ErrorHandlingMap
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, TriplestoreResponseException}
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsObject, JsString, JsValue, JsonFormat, NullOptions, RootJsonFormat, _}
 

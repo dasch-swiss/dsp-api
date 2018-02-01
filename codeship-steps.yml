@@ -1,0 +1,12 @@
+# Webapi standard tests. Needs graphdb (knora-test-unit).
+- service: webapi
+  command: cd /knora/webapi/scripts ; ./graphdb-se-docker-init-knora-test-unit.sh
+
+- service: webapi
+  command: cd /knora/webapi ; java -jar assembly-webapi-test-0.1.0-beta.jar -o
+
+# Webapi integration tests. Needs graphdb (knora-test-unit) and sipi (with production config)
+
+
+# Browser tests. Needs webapi (running with restore enabled), graphdb (knora-test), sipi (with test config), and salsah (running)
+

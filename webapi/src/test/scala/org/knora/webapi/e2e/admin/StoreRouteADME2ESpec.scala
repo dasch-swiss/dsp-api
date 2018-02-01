@@ -22,8 +22,9 @@ package org.knora.webapi.e2e.admin
 
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.{E2ESpec, StartupFlags}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -67,22 +68,21 @@ class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with Tri
               * curl -H "Content-Type: application/json" -X POST -d '[{"path":"../knora-ontologies/knora-base.ttl","name":"http://www.knora.org/ontology/knora-base"}]' http://localhost:3333/admin/store/ResetTriplestoreContent
               */
 
-			StartupFlags.allowReloadOverHTTP send true
-			log.debug(s"StartupFlags.allowReloadOverHTTP = ${StartupFlags.allowReloadOverHTTP.get}")
-
+            log.debug("==>>")
+			applicationStateActor ! SetAllowReloadOverHTTPState(true)
+            log.debug("==>>")
             val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
             val response = singleAwaitingRequest(request, 300.seconds)
-            log.debug("==>> " + response.toString)
+            // log.debug("==>> " + response.toString)
             assert(response.status === StatusCodes.OK)
         }
 
 
         "fail with resetting if startup flag is not set" in {
-            StartupFlags.allowReloadOverHTTP send false
-            //log.debug("==>> before")
+            applicationStateActor ! SetAllowReloadOverHTTPState(false)
             val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
             val response = singleAwaitingRequest(request, 300.seconds)
-            //log.debug("==>> " + response.toString)
+            // log.debug("==>> " + response.toString)
             assert(response.status === StatusCodes.Forbidden)
         }
     }
