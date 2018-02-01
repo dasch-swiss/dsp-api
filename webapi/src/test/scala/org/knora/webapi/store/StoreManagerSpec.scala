@@ -18,6 +18,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
 package org.knora.webapi.store
 
 /*
@@ -34,7 +35,6 @@ package org.knora.webapi.store
  * to execute, type 'test' in sbt
  */
 
-/*
 class StoreManagerSpec extends CoreSpec("StoreManagerTestSystem") with ImplicitSender {
 
     // here we start the actor under test with the TestProbeMaker trait

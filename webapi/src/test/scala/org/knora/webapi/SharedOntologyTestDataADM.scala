@@ -24,6 +24,7 @@ import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfo
 
 object SharedOntologyTestDataADM {
 
+    // images
     val IMAGES_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "00FF/images"
     val IMAGES_TITEL_PROPERTY: IRI = IMAGES_ONTOLOGY_IRI + "#" + "titel"
     val IMAGES_BILD_RESOURCE_CLASS: IRI = IMAGES_ONTOLOGY_IRI + "#" + "bild"
@@ -34,6 +35,7 @@ object SharedOntologyTestDataADM {
         project = SharedTestDataADM.imagesProject
     )
 
+    // incunabula
     val INCUNABULA_ONTOLOGY_IRI: IRI =  OntologyConstants.KnoraInternal.InternalOntologyStart + "incunabula"
     val INCUNABULA_BOOK_RESOURCE_CLASS: IRI = INCUNABULA_ONTOLOGY_IRI + "#" + "book"
     val INCUNABULA_PAGE_RESOURCE_CLASS: IRI = INCUNABULA_ONTOLOGY_IRI + "#" + "page"
@@ -44,6 +46,7 @@ object SharedOntologyTestDataADM {
         project = SharedTestDataADM.incunabulaProject
     )
 
+    // anything
     val ANYTHING_ONTOLOGY_IRI: IRI =  OntologyConstants.KnoraInternal.InternalOntologyStart + "anything"
 
     val anythingOntologyInfo = OntologyInfoADM(
