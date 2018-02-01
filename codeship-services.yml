@@ -1,0 +1,28 @@
+webapi-ci:
+  build:
+    image: dhlabbasel/webapi-ci
+    dockerfile: Dockerfile.ci
+
+webapi:
+  build:
+    image: dhlabbasel/webapi
+    context: webapi
+    dockerfile: Dockerfile
+
+graphdb:
+  image: dhlabbasel/graphdb-free
+
+sipi:
+  image: dhlabbasel/sipi
+
+salsah-ci:
+  build:
+    image: dhlabbasel/salsah1-ci
+    context: salsah
+    dockerfile: Dockerfile.ci
+
+salsah:
+  build:
+    image: dhlabbasel/salsah1
+    context: salsah
+    dockerfile: Dockerfile

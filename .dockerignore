@@ -1,0 +1,12 @@
+.git
+.gitignore
+.idea
+docs
+private
+project
+salsah
+target
+triplestores
+!knora-ontologies
+!webapi
+webapi/target
