@@ -43,7 +43,7 @@
   maybeShortname: Option[String],
   maybeLongname: Option[String],
   maybeDescription: Option[String],
-  maybeKeywords: Option[String],
+  maybeKeywords: Option[Seq[String]],
   maybeLogo: Option[String],
   maybeInstitution: Option[IRI],
   maybeOntologies: Option[Seq[IRI]],
@@ -73,7 +73,7 @@ DELETE {
     }
 
     @if(maybeKeywords.nonEmpty) {
-        ?project knora-base:projectKeywords ?currentKeywords .
+        ?project knora-base:projectKeyword ?currentKeywords .
     }
 
     @if(maybeLogo.nonEmpty) {
@@ -115,7 +115,9 @@ DELETE {
     }
 
     @if(maybeKeywords.nonEmpty) {
-        ?project knora-base:projectKeywords "@maybeKeywords.get"^^xsd:string .
+        @for(keyword <- maybeKeywords.get) {
+          ?project knora-base:projectKeyword "@keyword"^^xsd:string .
+        }
     }
 
     @if(maybeLogo.nonEmpty) {

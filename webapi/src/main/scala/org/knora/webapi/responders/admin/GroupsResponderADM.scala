@@ -85,7 +85,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
             statements = groupsResponse.statements
 
             groups: Seq[Future[GroupADM]] = statements.map {
-                case (groupIri: IRI, propsMap: Map[String, LiteralV2]) =>
+                case (groupIri: IRI, propsMap: Map[String, Seq[LiteralV2]]) =>
 
                     val projectIri: IRI = propsMap.getOrElse(OntologyConstants.KnoraBase.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")).head.asInstanceOf[IriLiteralV2].value
 

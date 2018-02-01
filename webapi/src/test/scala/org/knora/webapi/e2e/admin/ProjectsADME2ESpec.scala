@@ -122,9 +122,10 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                     s"""
                        |{
                        |    "shortname": "newproject",
+                       |    "shortcode": "1111",
                        |    "longname": "project longname",
                        |    "description": "project description",
-                       |    "keywords": "keywords",
+                       |    "keywords": ["keywords"],
                        |    "logo": "/fu/bar/baz.jpg",
                        |    "status": true,
                        |    "selfjoin": false
@@ -139,9 +140,10 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
                 val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
                 result.shortname should be ("newproject")
+                result.shortcode should be (Some("1111"))
                 result.longname should be (Some("project longname"))
                 result.description should be (Some("project description"))
-                result.keywords should be (Some("keywords"))
+                result.keywords should be (Seq("keywords"))
                 result.logo should be (Some("/fu/bar/baz.jpg"))
                 result.status should be (true)
                 result.selfjoin should be (false)
@@ -156,9 +158,10 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                     s"""
                        |{
                        |    "shortname": "newproject",
+                       |    "shortcode"; "1112",
                        |    "longname": "project longname",
                        |    "description": "project description",
-                       |    "keywords": "keywords",
+                       |    "keywords": ["keywords"],
                        |    "logo": "/fu/bar/baz.jpg",
                        |    "status": true,
                        |    "selfjoin": false
@@ -176,9 +179,31 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 val params =
                     s"""
                        |{
+                       |    "shortcode"; "1112",
                        |    "longname": "project longname",
                        |    "description": "project description",
-                       |    "keywords": "keywords",
+                       |    "keywords": ["keywords"],
+                       |    "logo": "/fu/bar/baz.jpg",
+                       |    "status": true,
+                       |    "selfjoin": false
+                       |}
+                """.stripMargin
+
+
+                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                response.status should be (StatusCodes.BadRequest)
+            }
+
+            "return 'BadRequest' if 'shortcode' during creation is missing" in {
+                val params =
+                    s"""
+                       |{
+                       |    "shortname"; "newproject2",
+                       |    "longname": "project longname",
+                       |    "description": "project description",
+                       |    "keywords": ["keywords"],
                        |    "logo": "/fu/bar/baz.jpg",
                        |    "status": true,
                        |    "selfjoin": false
@@ -200,7 +225,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |    "shortname": "newproject",
                        |    "longname": "updated project longname",
                        |    "description": "updated project description",
-                       |    "keywords": "updated keywords",
+                       |    "keywords": ["updated", "keywords"],
                        |    "logo": "/fu/bar/baz-updated.jpg",
                        |    "institution": "http://rdfh.ch/institutions/dhlab-basel",
                        |    "status": true,
@@ -216,9 +241,10 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
                 val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
                 result.shortname should be ("newproject")
+                result.shortcode should be ("1111")
                 result.longname should be (Some("updated project longname"))
                 result.description should be (Some("updated project description"))
-                result.keywords should be (Some("updated keywords"))
+                result.keywords should be (Seq("updated keywords"))
                 result.logo should be (Some("/fu/bar/baz-updated.jpg"))
                 result.status should be (true)
                 result.selfjoin should be (true)

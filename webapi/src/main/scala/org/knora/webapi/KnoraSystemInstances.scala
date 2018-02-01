@@ -81,7 +81,7 @@ object KnoraSystemInstances {
             shortcode = Some("FFFF"),
             longname = Some("Knora System Project"),
             description = Some("Knora System Project"),
-            keywords = None,
+            keywords = Seq.empty[String],
             logo = None,
             institution = None,
             ontologies = Seq(OntologyInfoShortADM(

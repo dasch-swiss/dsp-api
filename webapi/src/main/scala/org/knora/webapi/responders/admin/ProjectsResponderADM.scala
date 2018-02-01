@@ -108,7 +108,7 @@ class ProjectsResponderADM extends Responder {
                         shortcode = propsMap.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head.asInstanceOf[StringLiteralV2].value),
                         longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head.asInstanceOf[StringLiteralV2].value),
                         description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head.asInstanceOf[StringLiteralV2].value),
-                        keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords).map(_.head.asInstanceOf[StringLiteralV2].value),
+                        keywords = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectKeyword, Seq.empty[String]).map(_.asInstanceOf[StringLiteralV2].value).sorted,
                         logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head.asInstanceOf[StringLiteralV2].value),
                         institution = propsMap.get(OntologyConstants.KnoraBase.BelongsToInstitution).map(_.head.asInstanceOf[IriLiteralV2].value),
                         ontologies = ontologyInfos,
@@ -347,20 +347,18 @@ class ProjectsResponderADM extends Responder {
             }
 
             // check if the optionally supplied shortcode is valid and unique
-            shortcodeExists <- if (createRequest.shortcode.isDefined) {
+            shortcodeExists <- {
                 val shortcode = StringFormatter.getGeneralInstance.validateProjectShortcode(
-                    createRequest.shortcode.get,
-                    errorFun = throw BadRequestException(s"The supplied short code: '${createRequest.shortcode.get}' is not valid.")
+                    createRequest.shortcode,
+                    errorFun = throw BadRequestException(s"The supplied short code: '${createRequest.shortcode}' is not valid.")
                 )
                 projectByShortcodeExists(shortcode)
-            } else {
-                FastFuture.successful(false)
             }
             _ = if (shortcodeExists) {
-                throw DuplicateValueException(s"Project with the shortcode: '${createRequest.shortcode.get}' already exists")
+                throw DuplicateValueException(s"Project with the shortcode: '${createRequest.shortcode}' already exists")
             }
 
-            newProjectIRI = knoraIdUtil.makeRandomProjectIri(createRequest.shortcode)
+            newProjectIRI = knoraIdUtil.makeRandomProjectIri(Some(createRequest.shortcode))
             projectOntologyGraphString = "http://www.knora.org/ontology/" + createRequest.shortname
             projectDataGraphString = "http://www.knora.org/data/" + createRequest.shortname
 
@@ -371,10 +369,10 @@ class ProjectsResponderADM extends Responder {
                 projectIri = newProjectIRI,
                 projectClassIri = OntologyConstants.KnoraBase.KnoraProject,
                 shortname = createRequest.shortname,
-                maybeShortcode = createRequest.shortcode,
+                shortcode = createRequest.shortcode,
                 maybeLongname = createRequest.longname,
                 maybeDescription = createRequest.description,
-                maybeKeywords = createRequest.keywords,
+                maybeKeywords = if (createRequest.keywords.nonEmpty) {Some(createRequest.keywords)} else None,
                 maybeLogo = createRequest.logo,
                 status = createRequest.status,
                 hasSelfJoinEnabled = createRequest.selfjoin
@@ -698,7 +696,7 @@ class ProjectsResponderADM extends Responder {
             shortcode = propsMap.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head.asInstanceOf[StringLiteralV2].value),
             longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head.asInstanceOf[StringLiteralV2].value),
             description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head.asInstanceOf[StringLiteralV2].value),
-            keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords).map(_.head.asInstanceOf[StringLiteralV2].value),
+            keywords = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectKeyword, Seq.empty[String]).map(_.asInstanceOf[StringLiteralV2].value).sorted,
             logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head.asInstanceOf[StringLiteralV2].value),
             institution = propsMap.get(OntologyConstants.KnoraBase.BelongsToInstitution).map(_.head.asInstanceOf[IriLiteralV2].value),
             ontologies = ontologyInfos,

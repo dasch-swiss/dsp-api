@@ -372,7 +372,7 @@ case class ProjectADM(id: IRI,
             longname = longname,
             description = description,
             keywords = if (keywords.nonEmpty) {
-                Some(keywords.mkString(","))
+                Some(keywords.mkString(", "))
             } else {
                 None
             },

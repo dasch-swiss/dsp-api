@@ -170,10 +170,10 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectCreateRequestADM(
                     CreateProjectApiRequestADM(
                         shortname = "newproject",
-                        shortcode = None,
+                        shortcode = "1111",
                         longname = Some("project longname"),
                         description = Some("project description"),
-                        keywords = Some("keywords"),
+                        keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
                         selfjoin = false
@@ -184,6 +184,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
 
                 received.project.shortname should be("newproject")
+                received.project.shortcode should be("1111")
                 received.project.longname should contain("project longname")
                 received.project.description should contain("project description")
                 received.project.ontologies.isEmpty should be (true)
@@ -196,10 +197,10 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectCreateRequestADM(
                     CreateProjectApiRequestADM(
                         shortname = "newproject2",
-                        shortcode = Some("1111"),
+                        shortcode = "1112",
                         longname = Some("project longname"),
                         description = Some("project description"),
-                        keywords = Some("keywords"),
+                        keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
                         selfjoin = false
@@ -210,7 +211,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
 
                 received.project.shortname should be("newproject2")
-                received.project.shortcode should be(Some("1111"))
+                received.project.shortcode should be("1112")
                 received.project.longname should contain("project longname")
                 received.project.description should contain("project description")
                 received.project.ontologies.isEmpty should be (true)
@@ -223,10 +224,10 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectCreateRequestADM(
                     CreateProjectApiRequestADM(
                         shortname = "newproject",
-                        shortcode = None,
+                        shortcode = "1113",
                         longname = Some("project longname"),
                         description = Some("project description"),
-                        keywords = Some("keywords"),
+                        keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
                         selfjoin = false
@@ -241,10 +242,10 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectCreateRequestADM(
                     CreateProjectApiRequestADM(
                         shortname = "newproject3",
-                        shortcode = Some("1111"),
+                        shortcode = "1111",
                         longname = Some("project longname"),
                         description = Some("project description"),
-                        keywords = Some("keywords"),
+                        keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
                         selfjoin = false
@@ -260,10 +261,29 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectCreateRequestADM(
                     CreateProjectApiRequestADM(
                         shortname = "",
-                        shortcode = None,
+                        shortcode = "1114",
                         longname = Some("project longname"),
                         description = Some("project description"),
-                        keywords = Some("keywords"),
+                        keywords = Seq("keywords"),
+                        logo = Some("/fu/bar/baz.jpg"),
+                        status = true,
+                        selfjoin = false
+                    ),
+                    SharedTestDataADM.rootUser,
+                    UUID.randomUUID()
+                )
+                expectMsg(Failure(BadRequestException("'Shortname' cannot be empty")))
+            }
+
+            "return 'BadRequestException' if project 'shortcode' during creation is missing" in {
+
+                actorUnderTest ! ProjectCreateRequestADM(
+                    CreateProjectApiRequestADM(
+                        shortname = "newproject4",
+                        shortcode = "",
+                        longname = Some("project longname"),
+                        description = Some("project description"),
+                        keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
                         selfjoin = false
@@ -281,7 +301,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                         shortname = None,
                         longname = Some("updated project longname"),
                         description = Some("""updated project description with "quotes" and <html tags>"""),
-                        keywords = Some("updated keywords"),
+                        keywords = Some(Seq("updated", "keywords")),
                         logo = Some("/fu/bar/baz-updated.jpg"),
                         institution = Some("http://rdfh.ch/institutions/dhlab-basel"),
                         status = Some(false),
@@ -293,7 +313,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
                 received.project.longname should be (Some("updated project longname"))
                 received.project.description should be (Some("""updated project description with "quotes" and <html tags>"""))
-                received.project.keywords should be (Some("updated keywords"))
+                received.project.keywords should be (Seq("updated", "keywords"))
                 received.project.logo should be (Some("/fu/bar/baz-updated.jpg"))
                 received.project.institution should be (Some("http://rdfh.ch/institutions/dhlab-basel"))
                 received.project.ontologies.isEmpty should be (true)
