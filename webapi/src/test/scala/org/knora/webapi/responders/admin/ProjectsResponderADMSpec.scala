@@ -184,7 +184,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
 
                 received.project.shortname should be("newproject")
-                received.project.shortcode should be("1111")
+                received.project.shortcode should be(Some("1111"))
                 received.project.longname should contain("project longname")
                 received.project.description should contain("project description")
                 received.project.ontologies.isEmpty should be (true)
@@ -211,12 +211,11 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
 
                 received.project.shortname should be("newproject2")
-                received.project.shortcode should be("1112")
+                received.project.shortcode should be(Some("1112"))
                 received.project.longname should contain("project longname")
                 received.project.description should contain("project description")
                 received.project.ontologies.isEmpty should be (true)
 
-                newProjectIri.set(received.project.id)
                 //println(s"newProjectIri: ${newProjectIri.get}")
             }
 
@@ -291,7 +290,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                     SharedTestDataADM.rootUser,
                     UUID.randomUUID()
                 )
-                expectMsg(Failure(BadRequestException("'Shortname' cannot be empty")))
+                expectMsg(Failure(BadRequestException("The supplied short code: '' is not valid.")))
             }
 
             "UPDATE a project" in {
@@ -311,9 +310,11 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                     UUID.randomUUID()
                 )
                 val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
+                received.project.shortname should be("newproject")
+                received.project.shortcode should be(Some("1111"))
                 received.project.longname should be (Some("updated project longname"))
                 received.project.description should be (Some("""updated project description with "quotes" and <html tags>"""))
-                received.project.keywords should be (Seq("updated", "keywords"))
+                received.project.keywords.sorted should be (Seq("updated", "keywords").sorted)
                 received.project.logo should be (Some("/fu/bar/baz-updated.jpg"))
                 received.project.institution should be (Some("http://rdfh.ch/institutions/dhlab-basel"))
                 received.project.ontologies.isEmpty should be (true)

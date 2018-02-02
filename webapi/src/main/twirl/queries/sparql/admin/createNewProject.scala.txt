@@ -76,7 +76,7 @@ INSERT {
 
             @if(maybeKeywords.nonEmpty) {
                 @for(keyword <- maybeKeywords.get) {
-                  ?projectIri knora-base:projectKeyword "@keyword"^^xsd:string .
+                  knora-base:projectKeyword "@keyword"^^xsd:string ;
                 }
             }
 

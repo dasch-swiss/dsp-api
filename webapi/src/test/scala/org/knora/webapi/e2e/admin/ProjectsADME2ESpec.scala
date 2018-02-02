@@ -241,10 +241,10 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
                 val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
                 result.shortname should be ("newproject")
-                result.shortcode should be ("1111")
+                result.shortcode should be (Some("1111"))
                 result.longname should be (Some("updated project longname"))
                 result.description should be (Some("updated project description"))
-                result.keywords should be (Seq("updated keywords"))
+                result.keywords.sorted should be (Seq("updated", "keywords").sorted)
                 result.logo should be (Some("/fu/bar/baz-updated.jpg"))
                 result.status should be (true)
                 result.selfjoin should be (true)

@@ -170,7 +170,7 @@ WHERE {
 
     optional {?project knora-base:projectDescription ?currentDescription .}
 
-    optional {?project knora-base:projectKeywords ?currentKeywords .}
+    optional {?project knora-base:projectKeyword ?currentKeywords .}
 
     optional {?project knora-base:projectLogo ?currentLogo .}
 

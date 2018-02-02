@@ -60,7 +60,7 @@ class ProjectsResponderADM extends Responder {
         case ProjectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => future2Message(sender(), projectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser), log)
         case ProjectMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => future2Message(sender(), projectMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser), log)
         case ProjectAdminMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => future2Message(sender(), projectAdminMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser), log)
-        case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) => future2Message(sender(), projectCreateRequestV1(createRequest, requestingUser, apiRequestID), log)
+        case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) => future2Message(sender(), projectCreateRequestADM(createRequest, requestingUser, apiRequestID), log)
         case ProjectChangeRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID) => future2Message(sender(), changeBasicInformationRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID), log)
         case ProjectOntologyAddADM(projectIri, ontologyIri, requestingUser, apiRequestID) => future2Message(sender(), projectOntologyAddADM(projectIri, ontologyIri, requestingUser, apiRequestID), log)
         case ProjectOntologyRemoveADM(projectIri, ontologyIri, requestingUser, apiRequestID) => future2Message(sender(), projectOntologyRemoveADM(projectIri, ontologyIri, requestingUser, apiRequestID), log)
@@ -326,7 +326,7 @@ class ProjectsResponderADM extends Responder {
       * @throws DuplicateValueException in the case when either the shortname or shortcode are not unique.
       * @throws BadRequestException in the case when the shortcode is invalid.
       */
-    private def projectCreateRequestV1(createRequest: CreateProjectApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ProjectOperationResponseADM] = {
+    private def projectCreateRequestADM(createRequest: CreateProjectApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ProjectOperationResponseADM] = {
 
         // log.debug("projectCreateRequestV1 - createRequest: {}", createRequest)
 
@@ -377,7 +377,7 @@ class ProjectsResponderADM extends Responder {
                 status = createRequest.status,
                 hasSelfJoinEnabled = createRequest.selfjoin
             ).toString
-            //_ = log.debug("createNewProjectV1 - update query: {}", createNewProjectSparqlString)
+            // _ = log.debug("projectCreateRequestADM - create query: {}", createNewProjectSparqlString)
 
             createProjectResponse <- (storeManager ? SparqlUpdateRequest(createNewProjectSparqlString)).mapTo[SparqlUpdateResponse]
 
@@ -610,7 +610,7 @@ class ProjectsResponderADM extends Responder {
                 maybeSelfjoin = projectUpdatePayload.selfjoin
             ).toString)
 
-            // _ = log.debug(s"updateProjectADM - query: {}", updateProjectSparqlString)
+            // _ = log.debug(s"updateProjectADM - update query: {}", updateProjectSparqlString)
 
             updateProjectResponse <- (storeManager ? SparqlUpdateRequest(updateProjectSparqlString)).mapTo[SparqlUpdateResponse]
 
@@ -633,7 +633,7 @@ class ProjectsResponderADM extends Responder {
             }
 
             _ = if (projectUpdatePayload.keywords.isDefined) {
-                if (updatedProject.keywords != projectUpdatePayload.keywords) throw UpdateNotPerformedException("Project's 'keywords' was not updated. Please report this as a possible bug.")
+                if (updatedProject.keywords.sorted != projectUpdatePayload.keywords.get.sorted) throw UpdateNotPerformedException("Project's 'keywords' was not updated. Please report this as a possible bug.")
             }
 
             _ = if (projectUpdatePayload.logo.isDefined) {
