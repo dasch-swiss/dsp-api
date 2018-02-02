@@ -3,6 +3,9 @@ FROM dhlabbasel/sbt-ivy2-cache as build-stage
 
 MAINTAINER Ivan Subotic "ivan.subotic@unibas.ch"
 
+ENV LANG="en_US.UTF-8"
+ENV JAVA_OPTS="-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8"
+
 # copy source code
 RUN mkdir /src
 COPY . /src
