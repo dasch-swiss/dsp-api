@@ -25,6 +25,8 @@ import java.util.UUID
 import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import org.knora
+import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoShortADM
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -60,6 +62,8 @@ class ProjectsResponderADM extends Responder {
         case ProjectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => future2Message(sender(), projectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser), log)
         case ProjectMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => future2Message(sender(), projectMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser), log)
         case ProjectAdminMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => future2Message(sender(), projectAdminMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser), log)
+        case ProjectsKeywordsGetRequestADM(requestingUser) => future2Message(sender(), projectsKeywordsGetRequestADM(requestingUser), log)
+        case ProjectKeywordsGetRequestADM(projectIri, requestingUser) => future2Message(sender(), projectKeywordsGetRequestADM(projectIri, requestingUser), log)
         case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) => future2Message(sender(), projectCreateRequestADM(createRequest, requestingUser, apiRequestID), log)
         case ProjectChangeRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID) => future2Message(sender(), changeBasicInformationRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID), log)
         case ProjectOntologyAddADM(projectIri, ontologyIri, requestingUser, apiRequestID) => future2Message(sender(), projectOntologyAddADM(projectIri, ontologyIri, requestingUser, apiRequestID), log)
@@ -313,6 +317,42 @@ class ProjectsResponderADM extends Responder {
             //_ = log.debug(s"projectMembersGetRequestADM - users: $users")
 
         } yield ProjectAdminMembersGetResponseADM(members = users)
+    }
+
+    /**
+      * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
+      *
+      * @param requestingUser the user making the request.
+      * @return all keywords for all projects as [[ProjectsKeywordsGetResponseADM]]
+      */
+    private def projectsKeywordsGetRequestADM(requestingUser: UserADM): Future[ProjectsKeywordsGetResponseADM] = {
+
+        for {
+            projects <- projectsGetADM(KnoraSystemInstances.Users.SystemUser)
+
+            keywords: Seq[String] = projects.flatMap(_.keywords).distinct.sorted
+
+        } yield ProjectsKeywordsGetResponseADM(keywords = keywords)
+    }
+
+    /**
+      * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
+      *
+      * @param projectIri the IRI of the project.
+      * @param requestingUser the user making the request.
+      * @return keywords for a projects as [[ProjectKeywordsGetResponseADM]]
+      */
+    private def projectKeywordsGetRequestADM(projectIri: IRI, requestingUser: UserADM): Future[ProjectKeywordsGetResponseADM] = {
+
+        for {
+            maybeProject <- projectGetADM(maybeIri = Some(projectIri), maybeShortcode = None, maybeShortname = None, requestingUser = KnoraSystemInstances.Users.SystemUser)
+
+            keywords: Seq[String] = maybeProject match {
+                case Some(p) => p.keywords
+                case None => throw NotFoundException(s"Project '$projectIri' not found.")
+            }
+
+        } yield ProjectKeywordsGetResponseADM(keywords = keywords)
     }
 
     /**

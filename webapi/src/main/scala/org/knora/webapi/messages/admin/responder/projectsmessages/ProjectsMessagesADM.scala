@@ -29,7 +29,7 @@ import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponse
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.{BadRequestException, IRI}
-import spray.json.{DefaultJsonProtocol, JsonFormat, RootJsonFormat}
+import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -199,7 +199,7 @@ case class ProjectMembersGetRequestADM(maybeIri: Option[IRI],
 /**
   * Returns all admin users of a project identified either through its IRI, shortname or shortcode.
   *
-  * @param maybeIri           the IRI of the project.
+  * @param maybeIri       the IRI of the project.
   * @param maybeShortname the project's short name.
   * @param maybeShortcode the project's shortcode.
   * @param requestingUser the user making the request.
@@ -218,6 +218,23 @@ case class ProjectAdminMembersGetRequestADM(maybeIri: Option[IRI],
     // Only one is allowed
     if (parametersCount == 0 || parametersCount > 1) throw BadRequestException("Need to provide either project IRI, shortname, or shortcode.")
 }
+
+/**
+  * Returns all unique keywords for all projects.
+  *
+  * @param requestingUser the user making the request.
+  */
+case class ProjectsKeywordsGetRequestADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
+
+/**
+  * Returns all keywords for a project identified through IRI.
+  *
+  * @param projectIri the IRI of the project.
+  * @param requestingUser the user making the request.
+  */
+case class ProjectKeywordsGetRequestADM(projectIri: IRI,
+                                        requestingUser: UserADM) extends ProjectsResponderRequestADM
+
 
 /**
   * Requests the creation of a new project.
@@ -286,7 +303,7 @@ case class ProjectOntologyRemoveADM(projectIri: IRI,
 
 // Responses
 /**
-  * Represents the Knora API v1 JSON response to a request for information about all projects.
+  * Represents the Knora API ADM JSON response to a request for information about all projects.
   *
   * @param projects information about all existing projects.
   */
@@ -295,7 +312,7 @@ case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraRespon
 }
 
 /**
-  * Represents the Knora API v1 JSON response to a request for information about a single project.
+  * Represents the Knora API ADM JSON response to a request for information about a single project.
   *
   * @param project all information about the project.
   */
@@ -304,7 +321,7 @@ case class ProjectGetResponseADM(project: ProjectADM) extends KnoraResponseADM w
 }
 
 /**
-  * Represents the Knora API v1 JSON response to a request for a list of members inside a single project.
+  * Represents the Knora API ADM JSON response to a request for a list of members inside a single project.
   *
   * @param members    a list of members.
   */
@@ -314,13 +331,31 @@ case class ProjectMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResp
 }
 
 /**
-  * Represents the Knora API v1 JSON response to a request for a list of admin members inside a single project.
+  * Represents the Knora API ADM JSON response to a request for a list of admin members inside a single project.
   *
   * @param members    a list of admin members.
   */
 case class ProjectAdminMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
 
     def toJsValue = projectAdminMembersGetResponseADMFormat.write(this)
+}
+
+/**
+  * Represents a response to a request for all keywords of all projects.
+  *
+  * @param keywords a list of keywords.
+  */
+case class ProjectsKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
+    def toJsValue: JsValue = projectsKeywordsGetResponseADMFormat.write(this)
+}
+
+/**
+  * Represents a response to a request for all keywords of a single project.
+  *
+  * @param keywords a list of keywords.
+  */
+case class ProjectKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
+    def toJsValue: JsValue = projectKeywordsGetResponseADMFormat.write(this)
 }
 
 /**
@@ -427,6 +462,8 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val projectMembersGetResponseADMFormat: RootJsonFormat[ProjectMembersGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectMembersGetResponseADM, "members")))
     implicit val createProjectApiRequestADMFormat: RootJsonFormat[CreateProjectApiRequestADM] = rootFormat(lazyFormat(jsonFormat(CreateProjectApiRequestADM, "shortname", "shortcode", "longname", "description", "keywords", "logo", "status", "selfjoin")))
     implicit val changeProjectApiRequestADMFormat: RootJsonFormat[ChangeProjectApiRequestADM] = rootFormat(lazyFormat(jsonFormat(ChangeProjectApiRequestADM, "shortname", "longname", "description", "keywords", "logo", "institution", "status", "selfjoin")))
+    implicit val projectsKeywordsGetResponseADMFormat: RootJsonFormat[ProjectsKeywordsGetResponseADM] = jsonFormat(ProjectsKeywordsGetResponseADM, "keywords")
+    implicit val projectKeywordsGetResponseADMFormat: RootJsonFormat[ProjectKeywordsGetResponseADM] = jsonFormat(ProjectKeywordsGetResponseADM, "keywords")
     implicit val projectOperationResponseADMFormat: RootJsonFormat[ProjectOperationResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectOperationResponseADM, "project")))
 
 }

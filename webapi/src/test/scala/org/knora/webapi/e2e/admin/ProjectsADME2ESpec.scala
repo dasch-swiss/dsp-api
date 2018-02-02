@@ -25,13 +25,13 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
+import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, SharedTestDataADM}
+import org.knora.webapi.{E2ESpec, NotFoundException, SharedTestDataADM}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -304,6 +304,49 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
                 val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
                 members.size should be (2)
+            }
+        }
+
+        "used to query keywords" should {
+
+            "return all unique keywords for all projects" in {
+                val request = Get(baseApiUrl + s"/admin/projects/keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                assert(response.status === StatusCodes.OK)
+
+                val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
+                keywords.size should be (18)
+            }
+
+            "return all keywords for a single project" in {
+                val incunabulaIriEnc = java.net.URLEncoder.encode(SharedTestDataADM.incunabulaProject.id, "utf-8")
+                val request = Get(baseApiUrl + s"/admin/projects/keywords/$incunabulaIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                assert(response.status === StatusCodes.OK)
+
+                val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
+                keywords should be (SharedTestDataADM.incunabulaProject.keywords)
+            }
+
+            "return empty list for a project without keywords" in {
+                val anythingIriEnc = java.net.URLEncoder.encode(SharedTestDataADM.anythingProject.id, "utf-8")
+                val request = Get(baseApiUrl + s"/admin/projects/keywords/$anythingIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                assert(response.status === StatusCodes.OK)
+
+                val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
+                keywords should be (Seq.empty[String])
+            }
+
+            "return 'NotFound' when the project IRI is unknown" in {
+                val notexistingIriEnc = java.net.URLEncoder.encode("http://rdfh.ch/projects/notexisting", "utf-8")
+                val request = Get(baseApiUrl + s"/admin/projects/keywords/$notexistingIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                assert(response.status === StatusCodes.NotFound)
             }
         }
     }

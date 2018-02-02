@@ -26,6 +26,7 @@ import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoShortADM
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -573,6 +574,42 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Failure(NotFoundException(s"Project 'wrongshortcode' not found.")))
+            }
+        }
+
+        "used to query keywords" should {
+
+            "return all unique keywords for all projects" in {
+                actorUnderTest ! ProjectsKeywordsGetRequestADM(SharedTestDataADM.rootUser)
+                val received: ProjectsKeywordsGetResponseADM = expectMsgType[ProjectsKeywordsGetResponseADM](timeout)
+                received.keywords.size should be (18)
+            }
+
+            "return all keywords for a single project" in {
+                actorUnderTest ! ProjectKeywordsGetRequestADM(
+                    projectIri = SharedTestDataADM.incunabulaProject.id,
+                    requestingUser = SharedTestDataADM.rootUser
+                )
+                val received: ProjectKeywordsGetResponseADM = expectMsgType[ProjectKeywordsGetResponseADM](timeout)
+                received.keywords should be (SharedTestDataADM.incunabulaProject.keywords)
+            }
+
+            "return empty list for a project without keywords" in {
+                actorUnderTest ! ProjectKeywordsGetRequestADM(
+                    projectIri = SharedTestDataADM.anythingProject.id,
+                    requestingUser = SharedTestDataADM.rootUser
+                )
+                val received: ProjectKeywordsGetResponseADM = expectMsgType[ProjectKeywordsGetResponseADM](timeout)
+                received.keywords should be (Seq.empty[String])
+            }
+
+            "return 'NotFound' when the project IRI is unknown" in {
+                actorUnderTest ! ProjectKeywordsGetRequestADM(
+                    projectIri = "http://rdfh.ch/projects/notexisting",
+                    SharedTestDataADM.rootUser
+                )
+
+                expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
             }
         }
     }
