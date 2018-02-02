@@ -553,7 +553,31 @@ that updates links will need the IRIs of their link values.
 Ontology Updates
 ----------------
 
-Only a project or system administrator can update ontologies. Ontology updates always use the default schema.
+The ontology update API must ensure that the ontologies it creates are valid and consistent, and that existing
+data is not invalidated by a change to an ontology. To make this easier to enforce, the ontology update API
+allows only one entity to be created or modified at a time. It is not possible to submit an entire ontology all
+at once. In most cases, an update request is a JSON-LD document containing ``knora-api:hasOntologies``,
+providing only the information that is relevant to the update.
+
+Moreover, the API enforces the following rules:
+
+- An entity (i.e. a class or property) cannot be referred to until it has been created.
+
+- An entity cannot be modified or deleted if it is used in data, except for changes to its
+  ``rdfs:label`` or ``rdfs:comment``.
+
+- An entity cannot be modified if another entity refers to it, with one exception: a ``knora-api:subjectType`` or
+  ``knora-api:objectType`` that refers to a class will not prevent the class's cardinalities from being modified.
+
+Because of these rules, some operations have to be done in a specific order:
+
+- Properties have to be defined before they can be used in the cardinalities of a class,
+  but a property's ``knora-api:subjectType`` cannot refer to a class that does not yet exist. The recommended
+  approach is to first create a class with no cardinalities, then create the properties that it needs,
+  then add cardinalities for those properties to the class.
+
+- To delete a class along with its properties, the client must first remove the cardinalities
+  from the class, then delete the property definitions, then delete the class definition.
 
 When changing an existing ontology, the client must always supply the ontology's ``knora-api:lastModificationDate``,
 which is returned in the response to each update. If user A attempts to update an ontology, but user B
@@ -561,27 +585,10 @@ has already updated it since the last time user A received the ontology's ``knor
 user A's update will be rejected with an HTTP 409 Conflict error. This means that it is possible for two different
 users to work concurrently on the same ontology, but this is discouraged since it is likely to lead to confusion.
 
-To make it easier for the Knora API server to ensure that ontologies are valid and consistent, the ontology update
-API allows only one entity to be created or modified at a time. It is not possible to submit an entire
-ontology all at once. In most cases, an update request is a JSON-LD document containing ``knora-api:hasOntologies``,
-specifying only the information that is relevant to the update.
+An ontology can be created or updated only by a system administrator, or by a project administrator in the
+ontology's project.
 
-An entity cannot be referred to until it has been created, and it cannot be deleted if another entity refers to it.
-This means that some operations have to be done in a specific order.
-
-For example, properties have to be defined before they can be used in the cardinalities of a class,
-but a property's ``knora-api:subjectType`` cannot refer to a class that does not yet exist. The recommended
-approach is to first create a class with no cardinalities, then create the properties that it needs,
-then add cardinalities for those properties to the class.
-
-Similarly, to delete a class along with its properties, the client must first remove the cardinalities
-from the class, then delete the property definitions, then delete the class definition.
-
-One of the main goals of the ontology update API is to ensure that the ontologies it creates are valid
-and consistent, and that existing data is not invalidated by a change to an ontology. Currently the API does not
-allow ontology entities to be modified if they are used in data, except for changes to their
-``rdfs:label`` and ``rdfs:comment``. Other changes to ontology entities used in data may be
-supported in future.
+Ontology updates always use the default schema.
 
 Creating a New Ontology
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -958,7 +965,8 @@ or as an array of objects.
 Adding Cardinalities to a Class
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This operation is not permitted if the class is used in data.
+This operation is not permitted if the class is used in data, or if it has
+a subclass.
 
 ::
 
@@ -1010,7 +1018,8 @@ This removes all the cardinalities from the class and replaces them with the
 submitted cardinalities. If no cardinalities are submitted (i.e. the request
 contains no ``rdfs:subClassOf``), the class is left with no cardinalities.
 
-This operation is not permitted if the class is used in data.
+This operation is not permitted if the class is used in data, or if it has
+a subclass.
 
 ::
 

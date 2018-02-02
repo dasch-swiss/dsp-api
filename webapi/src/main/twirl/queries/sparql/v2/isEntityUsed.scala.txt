@@ -26,11 +26,12 @@
  *
  * @param triplestore the name of the triplestore being used.
  * @param entityIri the IRI of the ontology.
- * @param checkDataOnly if true, only data (not ontology entities) will be checked.
+ * @param ignoreKnoraConstraints if true, knora-base:subjectClassConstraint and knora-base:objectClassConstraint will be ignored.
+ * This is necessary when modifying the cardinalities of a class.
  *@
 @(triplestore: String,
   entityIri: SmartIri,
-  checkDataOnly: Boolean)
+  ignoreKnoraConstraints: Boolean = false)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -49,11 +50,9 @@ WHERE {
 
     ?s ?p ?entity .
 
-    @if(checkDataOnly) {
+    @if(ignoreKnoraConstraints) {
 
-        ?s rdf:type ?sType .
-
-        FILTER(!(?sType = owl:Class || ?sType = owl:Restriction || ?sType = owl:ObjectProperty || ?sType = owl:DatatypeProperty || ?sType = owl:AnnotationProperty || ?sType = rdf:Property))
+        FILTER(!(?p = knora-base:subjectClassConstraint || ?p = knora-base:objectClassConstraint))
 
     }
 }

@@ -1585,18 +1585,18 @@ class OntologyResponderV2 extends Responder {
                     throw BadRequestException(s"The cardinalities of ${addCardinalitiesRequest.classInfoContent.classIri} already include the following property or properties: ${redundantCardinalities.mkString(", ")}")
                 }
 
-                // Check that the class isn't used in data.
+                // Check that the class isn't used in data, and that it has no subclasses.
 
-                isUsedInDataSparql = queries.sparql.v2.txt.isEntityUsed(
+                isClassUsedSparql = queries.sparql.v2.txt.isEntityUsed(
                     triplestore = settings.triplestoreType,
                     entityIri = internalClassIri,
-                    checkDataOnly = true
+                    ignoreKnoraConstraints = true // It's OK if a property refers to the class via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
                 ).toString()
 
-                isUsedInDataResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isUsedInDataSparql)).mapTo[SparqlSelectResponse]
+                isClassUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isClassUsedSparql)).mapTo[SparqlSelectResponse]
 
-                _ = if (isUsedInDataResponse.results.bindings.nonEmpty) {
-                    throw BadRequestException(s"Cardinalities cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data")
+                _ = if (isClassUsedResponse.results.bindings.nonEmpty) {
+                    throw BadRequestException(s"Cardinalities cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data or has a subclass")
                 }
 
                 // Make an updated class definition.
@@ -1744,18 +1744,18 @@ class OntologyResponderV2 extends Responder {
                 existingClassDef: ClassInfoContentV2 = cacheData.classDefs.getOrElse(internalClassIri,
                     throw BadRequestException(s"Class ${changeCardinalitiesRequest.classInfoContent.classIri} does not exist")).entityInfoContent
 
-                // Check that the class isn't used in data.
+                // Check that the class isn't used in data, and that it has no subclasses.
 
-                isUsedInDataSparql = queries.sparql.v2.txt.isEntityUsed(
+                isClassUsedSparql = queries.sparql.v2.txt.isEntityUsed(
                     triplestore = settings.triplestoreType,
                     entityIri = internalClassIri,
-                    checkDataOnly = true
+                    ignoreKnoraConstraints = true // It's OK if a property refers to the class via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
                 ).toString()
 
-                isUsedInDataResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isUsedInDataSparql)).mapTo[SparqlSelectResponse]
+                isClassUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isClassUsedSparql)).mapTo[SparqlSelectResponse]
 
-                _ = if (isUsedInDataResponse.results.bindings.nonEmpty) {
-                    throw BadRequestException(s"Cardinalities cannot be added to class ${changeCardinalitiesRequest.classInfoContent.classIri}, because it is used in data")
+                _ = if (isClassUsedResponse.results.bindings.nonEmpty) {
+                    throw BadRequestException(s"The cardinalities of class ${changeCardinalitiesRequest.classInfoContent.classIri} cannot be changed, because it is used in data or has a subclass")
                 }
 
                 // Make an updated class definition.
@@ -1899,8 +1899,7 @@ class OntologyResponderV2 extends Responder {
 
                 isClassUsedSparql = queries.sparql.v2.txt.isEntityUsed(
                     triplestore = settings.triplestoreType,
-                    entityIri = internalClassIri,
-                    checkDataOnly = false
+                    entityIri = internalClassIri
                 ).toString()
 
                 isClassUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isClassUsedSparql)).mapTo[SparqlSelectResponse]
@@ -2001,8 +2000,7 @@ class OntologyResponderV2 extends Responder {
 
                 isPropertyUsedSparql = queries.sparql.v2.txt.isEntityUsed(
                     triplestore = settings.triplestoreType,
-                    entityIri = internalPropertyIri,
-                    checkDataOnly = false
+                    entityIri = internalPropertyIri
                 ).toString()
 
                 isPropertyUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isPropertyUsedSparql)).mapTo[SparqlSelectResponse]
