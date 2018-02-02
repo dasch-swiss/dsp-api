@@ -23,7 +23,7 @@ package org.knora.webapi.messages.admin.responder.projectsmessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.messages.admin.responder.ontologiesmessages.{OntologyInfoADM, OntologyInfoShortADM}
+import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoShortADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
@@ -65,7 +65,6 @@ case class CreateProjectApiRequestADM(shortname: String,
   * @param description   the new project's description.
   * @param keywords      the new project's keywords.
   * @param logo          the new project's logo.
-  * @param institution   the new project's institution.
   * @param status        the new project's status.
   * @param selfjoin      the new project's self-join status.
   */
@@ -74,7 +73,6 @@ case class ChangeProjectApiRequestADM(shortname: Option[String] = None,
                                      description: Option[String] = None,
                                      keywords: Option[Seq[String]] = None,
                                      logo: Option[String] = None,
-                                     institution: Option[IRI] = None,
                                      status: Option[Boolean] = None,
                                      selfjoin: Option[Boolean] = None) extends ProjectsADMJsonProtocol {
 
@@ -84,7 +82,6 @@ case class ChangeProjectApiRequestADM(shortname: Option[String] = None,
         description,
         keywords,
         logo,
-        institution,
         status,
         selfjoin
     ).flatten.size
@@ -380,7 +377,6 @@ case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraRespons
   * @param description        The project's description.
   * @param keywords           The project's keywords.
   * @param logo               The project's logo.
-  * @param institution        The project's institution.
   * @param ontologies         The project's ontologies.
   * @param status             The project's status.
   * @param selfjoin           The project's self-join status.
@@ -392,7 +388,6 @@ case class ProjectADM(id: IRI,
                       description: Option[String],
                       keywords: Seq[String],
                       logo: Option[String],
-                      institution: Option[IRI],
                       ontologies: Seq[OntologyInfoShortADM],
                       status: Boolean,
                       selfjoin: Boolean) {
@@ -412,7 +407,7 @@ case class ProjectADM(id: IRI,
                 None
             },
             logo = logo,
-            institution = institution,
+            institution = None,
             ontologies = this.ontologies.map(_.ontologyIri.toString),
             status = status,
             selfjoin = selfjoin
@@ -428,7 +423,6 @@ case class ProjectADM(id: IRI,
   * @param description        The project's description.
   * @param keywords           The project's keywords.
   * @param logo               The project's logo.
-  * @param institution        The project's institution.
   * @param ontologies         The project's ontologies.
   * @param status             The project's status.
   * @param selfjoin           The project's self-join status.
@@ -438,7 +432,6 @@ case class ProjectUpdatePayloadADM(shortname: Option[String] = None,
                                    description: Option[String] = None,
                                    keywords: Option[Seq[String]] = None,
                                    logo: Option[String] = None,
-                                   institution: Option[IRI] = None,
                                    ontologies: Option[Seq[IRI]] = None,
                                    status: Option[Boolean] = None,
                                    selfjoin: Option[Boolean] = None)
@@ -454,14 +447,14 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologiesADMJsonProtocol._
     import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 
-    implicit val projectADMFormat: JsonFormat[ProjectADM] = lazyFormat(jsonFormat11(ProjectADM))
+    implicit val projectADMFormat: JsonFormat[ProjectADM] = lazyFormat(jsonFormat10(ProjectADM))
     implicit val projectsResponseADMFormat: RootJsonFormat[ProjectsGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectsGetResponseADM, "projects")))
     implicit val projectResponseADMFormat: RootJsonFormat[ProjectGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectGetResponseADM, "project")))
 
     implicit val projectAdminMembersGetResponseADMFormat: RootJsonFormat[ProjectAdminMembersGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectAdminMembersGetResponseADM, "members")))
     implicit val projectMembersGetResponseADMFormat: RootJsonFormat[ProjectMembersGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectMembersGetResponseADM, "members")))
     implicit val createProjectApiRequestADMFormat: RootJsonFormat[CreateProjectApiRequestADM] = rootFormat(lazyFormat(jsonFormat(CreateProjectApiRequestADM, "shortname", "shortcode", "longname", "description", "keywords", "logo", "status", "selfjoin")))
-    implicit val changeProjectApiRequestADMFormat: RootJsonFormat[ChangeProjectApiRequestADM] = rootFormat(lazyFormat(jsonFormat(ChangeProjectApiRequestADM, "shortname", "longname", "description", "keywords", "logo", "institution", "status", "selfjoin")))
+    implicit val changeProjectApiRequestADMFormat: RootJsonFormat[ChangeProjectApiRequestADM] = rootFormat(lazyFormat(jsonFormat(ChangeProjectApiRequestADM, "shortname", "longname", "description", "keywords", "logo", "status", "selfjoin")))
     implicit val projectsKeywordsGetResponseADMFormat: RootJsonFormat[ProjectsKeywordsGetResponseADM] = jsonFormat(ProjectsKeywordsGetResponseADM, "keywords")
     implicit val projectKeywordsGetResponseADMFormat: RootJsonFormat[ProjectKeywordsGetResponseADM] = jsonFormat(ProjectKeywordsGetResponseADM, "keywords")
     implicit val projectOperationResponseADMFormat: RootJsonFormat[ProjectOperationResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectOperationResponseADM, "project")))

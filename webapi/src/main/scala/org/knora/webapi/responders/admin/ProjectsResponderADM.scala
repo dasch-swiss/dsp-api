@@ -114,7 +114,6 @@ class ProjectsResponderADM extends Responder {
                         description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head.asInstanceOf[StringLiteralV2].value),
                         keywords = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectKeyword, Seq.empty[String]).map(_.asInstanceOf[StringLiteralV2].value).sorted,
                         logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head.asInstanceOf[StringLiteralV2].value),
-                        institution = propsMap.get(OntologyConstants.KnoraBase.BelongsToInstitution).map(_.head.asInstanceOf[IriLiteralV2].value),
                         ontologies = ontologyInfos,
                         status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.asInstanceOf[BooleanLiteralV2].value,
                         selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).head.asInstanceOf[BooleanLiteralV2].value
@@ -485,7 +484,6 @@ class ProjectsResponderADM extends Responder {
                 description = changeProjectRequest.description,
                 keywords = changeProjectRequest.keywords,
                 logo = changeProjectRequest.logo,
-                institution = changeProjectRequest.institution,
                 status = changeProjectRequest.status,
                 selfjoin = changeProjectRequest.selfjoin
             )
@@ -620,7 +618,6 @@ class ProjectsResponderADM extends Responder {
             projectUpdatePayload.description,
             projectUpdatePayload.keywords,
             projectUpdatePayload.logo,
-            projectUpdatePayload.institution,
             projectUpdatePayload.ontologies,
             projectUpdatePayload.status,
             projectUpdatePayload.selfjoin).flatten.size
@@ -644,7 +641,6 @@ class ProjectsResponderADM extends Responder {
                 maybeDescription = projectUpdatePayload.description,
                 maybeKeywords = projectUpdatePayload.keywords,
                 maybeLogo = projectUpdatePayload.logo,
-                maybeInstitution = projectUpdatePayload.institution,
                 maybeOntologies = projectUpdatePayload.ontologies,
                 maybeStatus = projectUpdatePayload.status,
                 maybeSelfjoin = projectUpdatePayload.selfjoin
@@ -678,10 +674,6 @@ class ProjectsResponderADM extends Responder {
 
             _ = if (projectUpdatePayload.logo.isDefined) {
                 if (updatedProject.logo != projectUpdatePayload.logo) throw UpdateNotPerformedException("Project's 'logo' was not updated. Please report this as a possible bug.")
-            }
-
-            _ = if (projectUpdatePayload.institution.isDefined) {
-                if (updatedProject.institution != projectUpdatePayload.institution) throw UpdateNotPerformedException("Project's 'institution' was not updated. Please report this as a possible bug.")
             }
 
             _ = if (projectUpdatePayload.ontologies.isDefined) {
@@ -738,7 +730,6 @@ class ProjectsResponderADM extends Responder {
             description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head.asInstanceOf[StringLiteralV2].value),
             keywords = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectKeyword, Seq.empty[String]).map(_.asInstanceOf[StringLiteralV2].value).sorted,
             logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head.asInstanceOf[StringLiteralV2].value),
-            institution = propsMap.get(OntologyConstants.KnoraBase.BelongsToInstitution).map(_.head.asInstanceOf[IriLiteralV2].value),
             ontologies = ontologyInfos,
             status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.asInstanceOf[BooleanLiteralV2].value,
             selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).head.asInstanceOf[BooleanLiteralV2].value

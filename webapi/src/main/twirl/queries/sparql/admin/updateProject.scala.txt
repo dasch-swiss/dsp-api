@@ -32,7 +32,6 @@
  * @param maybeDescription   the new optional value for description.
  * @param maybeKeywords      the new optional value for keywords.
  * @param maybeLogo          the new optional value for logo.
- * @param maybeInstitution   the new optional value for institution.
  * @param maybeOntologies    the new optional value for ontologies.
  * @param maybeStatus        the new optional value for status.
  * @param maybeSelfjoin      the new optional value for selfjoin.
@@ -45,7 +44,6 @@
   maybeDescription: Option[String],
   maybeKeywords: Option[Seq[String]],
   maybeLogo: Option[String],
-  maybeInstitution: Option[IRI],
   maybeOntologies: Option[Seq[IRI]],
   maybeStatus: Option[Boolean],
   maybeSelfjoin: Option[Boolean])
@@ -78,10 +76,6 @@ DELETE {
 
     @if(maybeLogo.nonEmpty) {
         ?project knora-base:projectLogo ?currentLogo .
-    }
-
-    @if(maybeInstitution.nonEmpty) {
-        ?project knora-base:belongsToInstitution ?currentInstitution .
     }
 
     @if(maybeOntologies.nonEmpty) {
@@ -122,10 +116,6 @@ DELETE {
 
     @if(maybeLogo.nonEmpty) {
         ?project knora-base:projectLogo "@maybeLogo.get"^^xsd:string .
-    }
-
-    @if(maybeInstitution.nonEmpty) {
-        ?project knora-base:belongsToInstitution <@maybeInstitution.get> .
     }
 
     @if(maybeOntologies.nonEmpty) {
@@ -173,8 +163,6 @@ WHERE {
     optional {?project knora-base:projectKeyword ?currentKeywords .}
 
     optional {?project knora-base:projectLogo ?currentLogo .}
-
-    optional {?project knora-base:belongsToInstitution ?currentInstitution .}
 
     optional {?project knora-base:projectOntology ?currentOntologies .}
 

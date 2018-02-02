@@ -26,7 +26,6 @@ import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoShortADM
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -303,7 +302,6 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                         description = Some("""updated project description with "quotes" and <html tags>"""),
                         keywords = Some(Seq("updated", "keywords")),
                         logo = Some("/fu/bar/baz-updated.jpg"),
-                        institution = Some("http://rdfh.ch/institutions/dhlab-basel"),
                         status = Some(false),
                         selfjoin = Some(true)
                     ),
@@ -317,7 +315,6 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 received.project.description should be (Some("""updated project description with "quotes" and <html tags>"""))
                 received.project.keywords.sorted should be (Seq("updated", "keywords").sorted)
                 received.project.logo should be (Some("/fu/bar/baz-updated.jpg"))
-                received.project.institution should be (Some("http://rdfh.ch/institutions/dhlab-basel"))
                 received.project.ontologies.isEmpty should be (true)
                 received.project.status should be (false)
                 received.project.selfjoin should be (true)
@@ -359,7 +356,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return 'BadRequest' if nothing would be changed during the update" in {
 
-                an [BadRequestException] should be thrownBy ChangeProjectApiRequestADM(None, None, None, None, None, None, None, None)
+                an [BadRequestException] should be thrownBy ChangeProjectApiRequestADM(None, None, None, None, None, None, None)
 
                 /*
                 actorUnderTest ! ProjectChangeRequestADM(

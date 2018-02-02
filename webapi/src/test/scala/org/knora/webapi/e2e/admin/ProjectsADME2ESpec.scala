@@ -227,7 +227,6 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |    "description": "updated project description",
                        |    "keywords": ["updated", "keywords"],
                        |    "logo": "/fu/bar/baz-updated.jpg",
-                       |    "institution": "http://rdfh.ch/institutions/dhlab-basel",
                        |    "status": true,
                        |    "selfjoin": true
                        |}

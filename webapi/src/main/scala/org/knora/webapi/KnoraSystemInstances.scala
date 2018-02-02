@@ -83,7 +83,6 @@ object KnoraSystemInstances {
             description = Some("Knora System Project"),
             keywords = Seq.empty[String],
             logo = None,
-            institution = None,
             ontologies = Seq(OntologyInfoShortADM(
                 ontologyIri = "http://www.knora.org/ontology/knora-base",
                 ontologyName = "knora-base")),
