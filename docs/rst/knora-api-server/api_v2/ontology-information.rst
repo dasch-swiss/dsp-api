@@ -577,8 +577,10 @@ then add cardinalities for those properties to the class.
 Similarly, to delete a class along with its properties, the client must first remove the cardinalities
 from the class, then delete the property definitions, then delete the class definition.
 
-The API does not allow ontology entities to be modified if they are used in data, except for changes to
-their ``rdfs:label`` and ``rdfs:comment``. Other changes to ontology entities used in data may be
+One of the main goals of the ontology update API is to ensure that the ontologies it creates are valid
+and consistent, and that existing data is not invalidated by a change to an ontology. Currently the API does not
+allow ontology entities to be modified if they are used in data, except for changes to their
+``rdfs:label`` and ``rdfs:comment``. Other changes to ontology entities used in data may be
 supported in future.
 
 Creating a New Ontology
