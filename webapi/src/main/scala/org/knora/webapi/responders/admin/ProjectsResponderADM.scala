@@ -25,8 +25,6 @@ import java.util.UUID
 import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora
-import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoShortADM
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -111,7 +109,7 @@ class ProjectsResponderADM extends Responder {
                         shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head.asInstanceOf[StringLiteralV2].value,
                         shortcode = propsMap.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head.asInstanceOf[StringLiteralV2].value),
                         longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head.asInstanceOf[StringLiteralV2].value),
-                        description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head.asInstanceOf[StringLiteralV2].value),
+                        description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
                         keywords = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectKeyword, Seq.empty[String]).map(_.asInstanceOf[StringLiteralV2].value).sorted,
                         logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head.asInstanceOf[StringLiteralV2].value),
                         ontologies = ontologyInfos,
@@ -410,7 +408,7 @@ class ProjectsResponderADM extends Responder {
                 shortname = createRequest.shortname,
                 shortcode = createRequest.shortcode,
                 maybeLongname = createRequest.longname,
-                maybeDescription = createRequest.description,
+                maybeDescriptions = if(createRequest.description.nonEmpty) {Some(createRequest.description)} else None,
                 maybeKeywords = if (createRequest.keywords.nonEmpty) {Some(createRequest.keywords)} else None,
                 maybeLogo = createRequest.logo,
                 status = createRequest.status,
@@ -638,7 +636,7 @@ class ProjectsResponderADM extends Responder {
                 projectIri = projectIri,
                 maybeShortname = projectUpdatePayload.shortname,
                 maybeLongname = projectUpdatePayload.longname,
-                maybeDescription = projectUpdatePayload.description,
+                maybeDescriptions = projectUpdatePayload.description,
                 maybeKeywords = projectUpdatePayload.keywords,
                 maybeLogo = projectUpdatePayload.logo,
                 maybeOntologies = projectUpdatePayload.ontologies,
@@ -727,7 +725,7 @@ class ProjectsResponderADM extends Responder {
             shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head.asInstanceOf[StringLiteralV2].value,
             shortcode = propsMap.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head.asInstanceOf[StringLiteralV2].value),
             longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head.asInstanceOf[StringLiteralV2].value),
-            description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head.asInstanceOf[StringLiteralV2].value),
+            description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
             keywords = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectKeyword, Seq.empty[String]).map(_.asInstanceOf[StringLiteralV2].value).sorted,
             logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head.asInstanceOf[StringLiteralV2].value),
             ontologies = ontologyInfos,

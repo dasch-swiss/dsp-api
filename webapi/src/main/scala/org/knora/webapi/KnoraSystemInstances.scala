@@ -25,6 +25,7 @@ import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfo
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 /**
   * This object represents built-in User and Project instances.
@@ -80,7 +81,7 @@ object KnoraSystemInstances {
             shortname = "SystemProject",
             shortcode = Some("FFFF"),
             longname = Some("Knora System Project"),
-            description = Some("Knora System Project"),
+            description = Seq(StringLiteralV2(value = "Knora System Project", language = Some("en"))),
             keywords = Seq.empty[String],
             logo = None,
             ontologies = Seq(OntologyInfoShortADM(

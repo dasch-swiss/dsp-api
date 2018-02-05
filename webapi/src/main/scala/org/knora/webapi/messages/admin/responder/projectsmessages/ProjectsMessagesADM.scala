@@ -26,6 +26,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoShortADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
+import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.{BadRequestException, IRI}
@@ -49,7 +50,7 @@ import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
 case class CreateProjectApiRequestADM(shortname: String,
                                       shortcode: String,
                                       longname: Option[String],
-                                      description: Option[String],
+                                      description: Seq[StringLiteralV2],
                                       keywords: Seq[String],
                                       logo: Option[String],
                                       status: Boolean,
@@ -70,7 +71,7 @@ case class CreateProjectApiRequestADM(shortname: String,
   */
 case class ChangeProjectApiRequestADM(shortname: Option[String] = None,
                                      longname: Option[String] = None,
-                                     description: Option[String] = None,
+                                     description: Option[Seq[StringLiteralV2]] = None,
                                      keywords: Option[Seq[String]] = None,
                                      logo: Option[String] = None,
                                      status: Option[Boolean] = None,
@@ -385,7 +386,7 @@ case class ProjectADM(id: IRI,
                       shortname: String,
                       shortcode: Option[String],
                       longname: Option[String],
-                      description: Option[String],
+                      description: Seq[StringLiteralV2],
                       keywords: Seq[String],
                       logo: Option[String],
                       ontologies: Seq[OntologyInfoShortADM],
@@ -395,20 +396,30 @@ case class ProjectADM(id: IRI,
     // ToDo: Refactor by using implicit conversions (when I manage to understand them)
     def asProjectInfoV1: ProjectInfoV1 = {
 
+        val descriptionV1 = if (description.nonEmpty) {
+            Some(description.head.value)
+        } else {
+            None
+        }
+
+        val keywordsV1 = if (keywords.nonEmpty) {
+            Some(keywords.mkString(", "))
+        } else {
+            None
+        }
+
+        val ontologiesV1 = this.ontologies.map(_.ontologyIri.toString)
+
         ProjectInfoV1(
             id = id,
             shortname = shortname,
             shortcode = shortcode,
             longname = longname,
-            description = description,
-            keywords = if (keywords.nonEmpty) {
-                Some(keywords.mkString(", "))
-            } else {
-                None
-            },
+            description = descriptionV1,
+            keywords = keywordsV1,
             logo = logo,
             institution = None,
-            ontologies = this.ontologies.map(_.ontologyIri.toString),
+            ontologies = ontologiesV1,
             status = status,
             selfjoin = selfjoin
         )
@@ -429,7 +440,7 @@ case class ProjectADM(id: IRI,
   */
 case class ProjectUpdatePayloadADM(shortname: Option[String] = None,
                                    longname: Option[String] = None,
-                                   description: Option[String] = None,
+                                   description: Option[Seq[StringLiteralV2]] = None,
                                    keywords: Option[Seq[String]] = None,
                                    logo: Option[String] = None,
                                    ontologies: Option[Seq[IRI]] = None,
@@ -442,7 +453,7 @@ case class ProjectUpdatePayloadADM(shortname: Option[String] = None,
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about projects.
   */
-trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with TriplestoreJsonProtocol {
 
     import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologiesADMJsonProtocol._
     import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._

@@ -172,7 +172,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                         shortname = "newproject",
                         shortcode = "1111",
                         longname = Some("project longname"),
-                        description = Some("project description"),
+                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
                         keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
@@ -186,7 +186,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 received.project.shortname should be("newproject")
                 received.project.shortcode should be(Some("1111"))
                 received.project.longname should contain("project longname")
-                received.project.description should contain("project description")
+                received.project.description should be(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
                 received.project.ontologies.isEmpty should be (true)
 
                 newProjectIri.set(received.project.id)
@@ -199,7 +199,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                         shortname = "newproject2",
                         shortcode = "1112",
                         longname = Some("project longname"),
-                        description = Some("project description"),
+                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
                         keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
@@ -213,7 +213,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 received.project.shortname should be("newproject2")
                 received.project.shortcode should be(Some("1112"))
                 received.project.longname should contain("project longname")
-                received.project.description should contain("project description")
+                received.project.description should be(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
                 received.project.ontologies.isEmpty should be (true)
 
                 //println(s"newProjectIri: ${newProjectIri.get}")
@@ -225,7 +225,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                         shortname = "newproject",
                         shortcode = "1113",
                         longname = Some("project longname"),
-                        description = Some("project description"),
+                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
                         keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
@@ -243,7 +243,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                         shortname = "newproject3",
                         shortcode = "1111",
                         longname = Some("project longname"),
-                        description = Some("project description"),
+                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
                         keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
@@ -262,7 +262,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                         shortname = "",
                         shortcode = "1114",
                         longname = Some("project longname"),
-                        description = Some("project description"),
+                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
                         keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
@@ -281,7 +281,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                         shortname = "newproject4",
                         shortcode = "",
                         longname = Some("project longname"),
-                        description = Some("project description"),
+                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
                         keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
@@ -299,7 +299,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                     changeProjectRequest = ChangeProjectApiRequestADM(
                         shortname = None,
                         longname = Some("updated project longname"),
-                        description = Some("""updated project description with "quotes" and <html tags>"""),
+                        description = Some(Seq(StringLiteralV2(value = """updated project description with "quotes" and <html tags>""", language = Some("en")))),
                         keywords = Some(Seq("updated", "keywords")),
                         logo = Some("/fu/bar/baz-updated.jpg"),
                         status = Some(false),
@@ -312,7 +312,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 received.project.shortname should be("newproject")
                 received.project.shortcode should be(Some("1111"))
                 received.project.longname should be (Some("updated project longname"))
-                received.project.description should be (Some("""updated project description with "quotes" and <html tags>"""))
+                received.project.description should be (Seq(StringLiteralV2(value = """updated project description with "quotes" and <html tags>""", language = Some("en"))))
                 received.project.keywords.sorted should be (Seq("updated", "keywords").sorted)
                 received.project.logo should be (Some("/fu/bar/baz-updated.jpg"))
                 received.project.ontologies.isEmpty should be (true)

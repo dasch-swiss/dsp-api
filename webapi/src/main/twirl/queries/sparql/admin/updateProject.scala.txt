@@ -19,6 +19,7 @@
  *@
 
 @import org.knora.webapi.IRI
+@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 @**
  * Updates an existing project with the provided values.
@@ -41,7 +42,7 @@
   projectIri: IRI,
   maybeShortname: Option[String],
   maybeLongname: Option[String],
-  maybeDescription: Option[String],
+  maybeDescriptions: Option[Seq[StringLiteralV2]],
   maybeKeywords: Option[Seq[String]],
   maybeLogo: Option[String],
   maybeOntologies: Option[Seq[IRI]],
@@ -66,7 +67,7 @@ DELETE {
         ?project knora-base:projectLongname ?currentLongname .
     }
 
-    @if(maybeDescription.nonEmpty) {
+    @if(maybeDescriptions.nonEmpty) {
         ?project knora-base:projectDescription ?currentDescription .
     }
 
@@ -104,8 +105,14 @@ DELETE {
         ?project knora-base:projectLongname """@maybeLongname.get"""^^xsd:string .
     }
 
-    @if(maybeDescription.nonEmpty) {
-        ?project knora-base:projectDescription """@maybeDescription.get"""^^xsd:string .
+    @if(maybeDescriptions.nonEmpty) {
+        @for(description <- maybeDescriptions.get) {
+            @if(description.language.nonEmpty) {
+                knora-base:projectDescription """@description.value"""@@description.language.get;
+            } else {
+                knora-base:projectDescription """@description.value"""^^xsd:string;
+            }
+        }
     }
 
     @if(maybeKeywords.nonEmpty) {
