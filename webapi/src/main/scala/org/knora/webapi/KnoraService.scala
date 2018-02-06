@@ -32,7 +32,9 @@ import akka.http.scaladsl.{ConnectionContext, Http}
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
+import org.knora.webapi.app.{ApplicationStateActor, _}
 import org.knora.webapi.http.CORSSupport.CORS
+import org.knora.webapi.messages.app.appmessages.{GetAllowReloadOverHTTPState, GetLoadDemoDataState}
 import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
@@ -48,7 +50,6 @@ import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
-
 /**
   * Knora Core abstraction.
   */
@@ -90,6 +91,11 @@ trait KnoraService {
     this: Core =>
     // Initialise StringFormatter with the system settings. This must happen before any responders are constructed.
     StringFormatter.init(settings)
+
+    /**
+      * The actor used for storing the application application wide variables in a thread safe maner.
+      */
+    protected val applicationStateActor = system.actorOf(Props(new ApplicationStateActor), name = APPLICATION_STATE_ACTOR_NAME)
 
     /**
       * The supervisor actor that forwards messages to responder actors to handle API requests.
@@ -147,6 +153,10 @@ trait KnoraService {
       * Sends messages to all supervisor actors in a blocking manner, checking if they are all ready.
       */
     def checkActorSystem(): Unit = {
+
+        val applicationStateActorResult = Await.result(applicationStateActor ? Initialized(), 5.seconds).asInstanceOf[InitializedResponse]
+        log.info(s"ApplicationStateActor ready: $applicationStateActorResult")
+
         // TODO: Check if ResponderManager is ready
         log.info(s"ResponderManager ready: - ")
 
@@ -168,7 +178,10 @@ trait KnoraService {
 
         CacheUtil.createCaches(settings.caches)
 
-        if (StartupFlags.loadDemoData.get) {
+        // get loadDemoData value from application state actor
+        val loadDemoData = Await.result(applicationStateActor ? GetLoadDemoDataState(), 1.second).asInstanceOf[Boolean]
+
+        if (loadDemoData) {
             println("Start loading of demo data ...")
             val configList = settings.tripleStoreConfig.getConfigList("rdf-data")
             val rdfDataObjectList = configList.asScala.map {
@@ -184,7 +197,10 @@ trait KnoraService {
         val ontologyCacheFuture = responderManager ? LoadOntologiesRequestV2(systemUser)
         Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[SuccessResponseV2]
 
-        if (StartupFlags.allowReloadOverHTTP.get) {
+        // get allowReloadOverHTTP value from application state actor
+        val allowReloadOverHTTP = Await.result(applicationStateActor ? GetAllowReloadOverHTTPState(), 1.second).asInstanceOf[Boolean]
+
+        if (allowReloadOverHTTP) {
             println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")
         }
 

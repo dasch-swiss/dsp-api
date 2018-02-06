@@ -20,16 +20,17 @@
 
 package org.knora.webapi.routing
 
-import akka.actor.ActorDSL._
+import akka.actor.{Actor, Props}
+import akka.event.Logging
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserInformationTypeADM}
+import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM}
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{KnoraPasswordCredentialsV2, KnoraTokenCredentialsV2}
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_NAME
+import org.knora.webapi.responders._
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.util.{ActorUtil, CacheUtil}
-import org.knora.webapi._
 import org.scalatest.PrivateMethodTester
 
 import scala.concurrent.Future
@@ -43,6 +44,26 @@ object AuthenticatorSpec {
 
         }
         """.stripMargin)
+
+
+    val rootUser = SharedTestDataADM.rootUser
+    val rootUserEmail = rootUser.email
+    val rootUserPassword = "test"
+}
+
+class MockUserActor extends Actor {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    val logger = Logging(context.system, this)
+
+    def receive = {
+        case UserGetADM(maybeIri, maybeEmail, userInformationTypeADM, requestingUser) => {
+            if (maybeEmail.contains(AuthenticatorSpec.rootUserEmail)) {
+                ActorUtil.future2Message(sender, Future(Some(AuthenticatorSpec.rootUser)), logger)
+            } else {
+                ActorUtil.future2Message(sender, Future(None), logger)
+            }
+        }
+    }
 }
 
 class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSender with PrivateMethodTester {
@@ -50,30 +71,16 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     implicit val executionContext = system.dispatcher
     implicit val timeout: Timeout = Duration(5, SECONDS)
 
-    val rootUser = SharedTestDataADM.rootUser
-    val rootUserEmail = rootUser.email
-    val rootUserPassword = "test"
-
-
-    val mockUsersActor = actor(RESPONDER_MANAGER_ACTOR_NAME)(new Act {
-        become {
-            case UserGetADM(maybeIri, maybeEmail, userInformationTypeADM, requestingUser) => {
-                if (maybeEmail.contains(rootUserEmail)) {
-                    ActorUtil.future2Message(sender, Future(Some(rootUser)), logger)
-                } else {
-                    ActorUtil.future2Message(sender, Future(None), logger)
-                }
-            }
-        }
-    })
-
     val getUserADMByEmail = PrivateMethod[Try[UserADM]]('getUserADMByEmail)
     val authenticateCredentialsV2 = PrivateMethod[Boolean]('authenticateCredentialsV2)
+
+    val mockUsersActor = system.actorOf(Props(new MockUserActor), RESPONDER_MANAGER_ACTOR_NAME)
+
 
     "During Authentication" when {
         "called, the 'getUserADMByEmail' method " should {
             "succeed with the correct 'email' " in {
-                Authenticator invokePrivate getUserADMByEmail(rootUserEmail, system, timeout, executionContext) should be(rootUser)
+                Authenticator invokePrivate getUserADMByEmail(AuthenticatorSpec.rootUserEmail, system, timeout, executionContext) should be(AuthenticatorSpec.rootUser)
             }
 
             "fail with the wrong 'email' " in {
@@ -90,7 +97,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         }
         "called, the 'authenticateCredentialsV2' method" should {
             "succeed with correct email/password" in {
-                val correctPasswordCreds = KnoraPasswordCredentialsV2(rootUserEmail, rootUserPassword)
+                val correctPasswordCreds = KnoraPasswordCredentialsV2(AuthenticatorSpec.rootUserEmail, AuthenticatorSpec.rootUserPassword)
                 Authenticator invokePrivate authenticateCredentialsV2(Some(correctPasswordCreds), system, executionContext) should be (true)
             }
             "fail with unknown email" in {
@@ -101,7 +108,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
             }
             "fail with wrong password" in {
                 an [BadCredentialsException] should be thrownBy {
-                    val wrongPasswordCreds = KnoraPasswordCredentialsV2(rootUserEmail, "wrongpassword")
+                    val wrongPasswordCreds = KnoraPasswordCredentialsV2(AuthenticatorSpec.rootUserEmail, "wrongpassword")
                     Authenticator invokePrivate authenticateCredentialsV2(Some(wrongPasswordCreds), system, executionContext)
                 }
             }
