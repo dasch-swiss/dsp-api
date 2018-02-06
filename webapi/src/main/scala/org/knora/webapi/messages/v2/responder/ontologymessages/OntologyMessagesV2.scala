@@ -1204,6 +1204,17 @@ object InputOntologyV2 {
         val standoffClasses: Map[SmartIri, ClassInfoContentV2] = jsonLDObjectToClasses(maybeHasStandoffClasses, ignoreExtraData)
         val standoffProperties: Map[SmartIri, PropertyInfoContentV2] = jsonLDObjectToProperties(maybeHasStandoffProperties, ignoreExtraData)
 
+        // Check whether any entities are in the wrong ontology.
+
+        val entityIris: Iterable[SmartIri] = classes.values.map(_.classIri) ++ properties.values.map(_.propertyIri) ++
+            standoffClasses.values.map(_.classIri) ++ standoffProperties.values.map(_.propertyIri)
+
+        val entityIrisInWrongOntology = entityIris.filter(_.getOntologyFromEntity != externalOntologyIri)
+
+        if (entityIrisInWrongOntology.nonEmpty) {
+            throw BadRequestException(s"One or more entities are not in ontology $externalOntologyIri: ${entityIrisInWrongOntology.mkString(", ")}")
+        }
+
         InputOntologyV2(
             ontologyMetadata = ontologyMetadata,
             classes = classes,

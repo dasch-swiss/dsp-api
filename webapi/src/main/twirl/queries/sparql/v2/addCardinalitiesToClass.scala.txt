@@ -78,7 +78,9 @@ WHERE {
     BIND(IRI("@classIri") AS ?class)
 
     GRAPH ?ontologyNamedGraph {
-         ?ontology rdf:type owl:Ontology ;
-             knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+        ?ontology rdf:type owl:Ontology ;
+            knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+
+        ?class rdf:type owl:Class .
     }
 }

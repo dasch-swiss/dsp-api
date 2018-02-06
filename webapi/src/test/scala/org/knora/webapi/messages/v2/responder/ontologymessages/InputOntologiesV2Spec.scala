@@ -25,7 +25,7 @@ import java.time.Instant
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.jsonld.JsonLDUtil
-import org.knora.webapi.{ApiV2WithValueObjects, CoreSpec}
+import org.knora.webapi.{ApiV2WithValueObjects, BadRequestException, CoreSpec}
 
 /**
   * Tests [[InputOntologiesV2]].
@@ -126,6 +126,100 @@ class InputOntologiesV2Spec extends CoreSpec {
             val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
             paramsAsInput should ===(ClassDef)
         }
+
+        "reject an entity definition in the wrong ontology" in {
+            val params =
+                s"""
+                   |{
+                   |  "knora-api:hasOntologies" : {
+                   |    "@id" : "http://0.0.0.0:3333/ontology/incunabula/v2",
+                   |    "@type" : "owl:Ontology",
+                   |    "knora-api:hasClasses" : {
+                   |      "anything:WildThing" : {
+                   |        "@id" : "anything:WildThing",
+                   |        "@type" : "owl:Class",
+                   |        "rdfs:label" : {
+                   |          "@language" : "en",
+                   |          "@value" : "wild thing"
+                   |        },
+                   |        "rdfs:comment" : {
+                   |          "@language" : "en",
+                   |          "@value" : "A thing that is wild"
+                   |        },
+                   |        "rdfs:subClassOf" : [
+                   |            "http://0.0.0.0:3333/ontology/anything/v2#Thing",
+                   |            {
+                   |                "@type": "http://www.w3.org/2002/07/owl#Restriction",
+                   |                "owl:maxCardinality": 1,
+                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/anything/v2#hasName"
+                   |            }
+                   |        ]
+                   |      }
+                   |    },
+                   |    "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
+                   |  },
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "owl" : "http://www.w3.org/2002/07/owl#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+                   |  }
+                   |}
+            """.stripMargin
+
+            assertThrows[BadRequestException] {
+                InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params))
+            }
+        }
+
+        "reject an entity definition with the wrong IRI" in {
+            val params =
+                s"""
+                   |{
+                   |  "knora-api:hasOntologies" : {
+                   |    "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+                   |    "@type" : "owl:Ontology",
+                   |    "knora-api:hasClasses" : {
+                   |      "anything:WildThing" : {
+                   |        "@id" : "anything:NonWildThing",
+                   |        "@type" : "owl:Class",
+                   |        "rdfs:label" : {
+                   |          "@language" : "en",
+                   |          "@value" : "wild thing"
+                   |        },
+                   |        "rdfs:comment" : {
+                   |          "@language" : "en",
+                   |          "@value" : "A thing that is wild"
+                   |        },
+                   |        "rdfs:subClassOf" : [
+                   |            "http://0.0.0.0:3333/ontology/anything/v2#Thing",
+                   |            {
+                   |                "@type": "http://www.w3.org/2002/07/owl#Restriction",
+                   |                "owl:maxCardinality": 1,
+                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/anything/v2#hasName"
+                   |            }
+                   |        ]
+                   |      }
+                   |    },
+                   |    "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
+                   |  },
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "owl" : "http://www.w3.org/2002/07/owl#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+                   |  }
+                   |}
+            """.stripMargin
+
+            assertThrows[BadRequestException] {
+                InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params))
+            }
+        }
     }
 }
 
@@ -141,17 +235,24 @@ object InputOntologiesV2Spec {
         properties = Map("http://0.0.0.0:3333/ontology/anything/v2#hasName".toSmartIri -> PropertyInfoContentV2(
             propertyIri = "http://0.0.0.0:3333/ontology/anything/v2#hasName".toSmartIri,
             predicates = Map(
-                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
-                    predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-                    objects = Set(),
-                    objectsWithLang = Map(
-                        "en" -> "has name",
-                        "de" -> "hat Namen"
-                    )
+                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+                    predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                    objects = Set("http://www.w3.org/2002/07/owl#ObjectProperty"),
                 ),
                 "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
                     predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
                     objects = Set("http://0.0.0.0:3333/ontology/anything/v2#Thing"),
+                ),
+                "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
+                    predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
+                    objects = Set("http://api.knora.org/ontology/knora-api/v2#TextValue"),
+                ),
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
+                    predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                    objectsWithLang = Map(
+                        "en" -> "has name",
+                        "de" -> "hat Namen"
+                    )
                 ),
                 "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
                     predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
@@ -159,14 +260,6 @@ object InputOntologiesV2Spec {
                         "en" -> "The name of a 'Thing'",
                         "de" -> "Der Name eines Dinges"
                     )
-                ),
-                "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
-                    predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
-                    objects = Set("http://api.knora.org/ontology/knora-api/v2#TextValue"),
-                ),
-                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-                    predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                    objects = Set("http://www.w3.org/2002/07/owl#ObjectProperty"),
                 )
             ),
             subPropertyOf = Set(
@@ -181,6 +274,10 @@ object InputOntologiesV2Spec {
         standoffProperties = Map(),
         classes = Map("http://0.0.0.0:3333/ontology/anything/v2#WildThing".toSmartIri -> ClassInfoContentV2(
             predicates = Map(
+                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+                    predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                    objects = Set("http://www.w3.org/2002/07/owl#Class")
+                ),
                 "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
                     predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
                     objectsWithLang = Map("en" -> "wild thing")
@@ -188,10 +285,6 @@ object InputOntologiesV2Spec {
                 "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
                     predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
                     objectsWithLang = Map("en" -> "A thing that is wild")
-                ),
-                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-                    predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                    objects = Set("http://www.w3.org/2002/07/owl#Class")
                 )
             ),
             classIri = "http://0.0.0.0:3333/ontology/anything/v2#WildThing".toSmartIri,

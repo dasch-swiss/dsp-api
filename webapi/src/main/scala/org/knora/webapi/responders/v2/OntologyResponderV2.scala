@@ -1436,6 +1436,8 @@ class OntologyResponderV2 extends Responder {
                     throw BadRequestException(s"Class ${createClassRequest.classInfoContent.classIri} would not be a subclass of knora-api:Resource")
                 }
 
+                // Check that the cardinalities are valid, and add any inherited cardinalities.
+
                 cardinalitiesForClassWithInheritance = checkCardinalitiesBeforeAdding(
                     internalClassDef = internalClassDef,
                     allBaseClassIris = allBaseClassIris,
@@ -1605,7 +1607,7 @@ class OntologyResponderV2 extends Responder {
                     directCardinalities = existingClassDef.directCardinalities ++ internalClassDef.directCardinalities
                 )
 
-                // Check that the new cardinalities are valid.
+                // Check that the new cardinalities are valid, and add any inherited cardinalities.
 
                 allBaseClassIris: Set[SmartIri] = newInternalClassDef.subClassOf.flatMap {
                     baseClassIri => cacheData.resourceSubClassOfRelations.getOrElse(baseClassIri, Set.empty[SmartIri])
@@ -1764,7 +1766,7 @@ class OntologyResponderV2 extends Responder {
                     directCardinalities = internalClassDef.directCardinalities
                 )
 
-                // Check that the new cardinalities are valid.
+                // Check that the new cardinalities are valid, and add any inherited cardinalities.
 
                 allBaseClassIris: Set[SmartIri] = newInternalClassDef.subClassOf.flatMap {
                     baseClassIri => cacheData.resourceSubClassOfRelations.getOrElse(baseClassIri, Set.empty[SmartIri])
