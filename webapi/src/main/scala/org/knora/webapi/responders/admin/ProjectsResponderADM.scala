@@ -414,7 +414,7 @@ class ProjectsResponderADM extends Responder {
                 status = createRequest.status,
                 hasSelfJoinEnabled = createRequest.selfjoin
             ).toString
-            // _ = log.debug("projectCreateRequestADM - create query: {}", createNewProjectSparqlString)
+            _ = log.debug("projectCreateRequestADM - create query: {}", createNewProjectSparqlString)
 
             createProjectResponse <- (storeManager ? SparqlUpdateRequest(createNewProjectSparqlString)).mapTo[SparqlUpdateResponse]
 
@@ -644,7 +644,7 @@ class ProjectsResponderADM extends Responder {
                 maybeSelfjoin = projectUpdatePayload.selfjoin
             ).toString)
 
-            // _ = log.debug(s"updateProjectADM - update query: {}", updateProjectSparqlString)
+             _ = log.debug(s"updateProjectADM - update query: {}", updateProjectSparqlString)
 
             updateProjectResponse <- (storeManager ? SparqlUpdateRequest(updateProjectSparqlString)).mapTo[SparqlUpdateResponse]
 

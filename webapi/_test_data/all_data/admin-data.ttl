@@ -105,7 +105,7 @@
 
                                 knora-base:projectLongname "Image Collection Demo"^^xsd:string ;
 
-                                knora-base:projectDescription "A demo project of a collection of images"^^xsd:string ;
+                                knora-base:projectDescription "A demo project of a collection of images"@en ;
 
                                 knora-base:projectKeyword "images"^^xsd:string,
                                                           "collection"^^xsd:string ;

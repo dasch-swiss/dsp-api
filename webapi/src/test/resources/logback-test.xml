@@ -89,7 +89,7 @@
     <logger name="org.knora.webapi.responders.admin.GroupsResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.ListsResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.OntologiesResponderADM" level="INFO"/>
-    <logger name="org.knora.webapi.responders.admin.ProjectsResponderADM" level="INFO"/>
+    <logger name="org.knora.webapi.responders.admin.ProjectsResponderADM" level="DEBUG"/>
     <logger name="org.knora.webapi.responders.admin.StoresResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.UsersResponderADM" level="INFO"/>
 

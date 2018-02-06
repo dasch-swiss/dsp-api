@@ -108,9 +108,9 @@ DELETE {
     @if(maybeDescriptions.nonEmpty) {
         @for(description <- maybeDescriptions.get) {
             @if(description.language.nonEmpty) {
-                knora-base:projectDescription """@description.value"""@@description.language.get;
+                knora-base:projectDescription """@description.value"""@@@{description.language.get} ;
             } else {
-                knora-base:projectDescription """@description.value"""^^xsd:string;
+                knora-base:projectDescription """@description.value"""^^xsd:string ;
             }
         }
     }
