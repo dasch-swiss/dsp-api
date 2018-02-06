@@ -28,10 +28,10 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, NotFoundException, SharedTestDataADM}
+import org.knora.webapi.{E2ESpec, SharedTestDataADM}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -124,7 +124,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |    "shortname": "newproject",
                        |    "shortcode": "1111",
                        |    "longname": "project longname",
-                       |    "description": "project description",
+                       |    "description": {"value": "project description", "language": "en"},
                        |    "keywords": ["keywords"],
                        |    "logo": "/fu/bar/baz.jpg",
                        |    "status": true,
@@ -142,7 +142,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 result.shortname should be ("newproject")
                 result.shortcode should be (Some("1111"))
                 result.longname should be (Some("project longname"))
-                result.description should be (Some("project description"))
+                result.description should be (Seq(StringLiteralV2(value = "project description", language = Some("en"))))
                 result.keywords should be (Seq("keywords"))
                 result.logo should be (Some("/fu/bar/baz.jpg"))
                 result.status should be (true)
@@ -160,7 +160,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |    "shortname": "newproject",
                        |    "shortcode"; "1112",
                        |    "longname": "project longname",
-                       |    "description": "project description",
+                       |    "description": {"value": "project description", "language": "en"},
                        |    "keywords": ["keywords"],
                        |    "logo": "/fu/bar/baz.jpg",
                        |    "status": true,
@@ -181,7 +181,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |{
                        |    "shortcode"; "1112",
                        |    "longname": "project longname",
-                       |    "description": "project description",
+                       |    "description": {"value": "project description", "language": "en"},
                        |    "keywords": ["keywords"],
                        |    "logo": "/fu/bar/baz.jpg",
                        |    "status": true,
@@ -202,7 +202,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |{
                        |    "shortname"; "newproject2",
                        |    "longname": "project longname",
-                       |    "description": "project description",
+                       |    "description": {"value": "project description", "language": "en"},
                        |    "keywords": ["keywords"],
                        |    "logo": "/fu/bar/baz.jpg",
                        |    "status": true,
@@ -224,7 +224,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |{
                        |    "shortname": "newproject",
                        |    "longname": "updated project longname",
-                       |    "description": "updated project description",
+                       |    "description": {"value": "updated project description", "language": "en"},
                        |    "keywords": ["updated", "keywords"],
                        |    "logo": "/fu/bar/baz-updated.jpg",
                        |    "status": true,
@@ -242,7 +242,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 result.shortname should be ("newproject")
                 result.shortcode should be (Some("1111"))
                 result.longname should be (Some("updated project longname"))
-                result.description should be (Some("updated project description"))
+                result.description should be (Seq(StringLiteralV2(value = "updated project description", language = Some("en"))))
                 result.keywords.sorted should be (Seq("updated", "keywords").sorted)
                 result.logo should be (Some("/fu/bar/baz-updated.jpg"))
                 result.status should be (true)

@@ -414,7 +414,7 @@ class ProjectsResponderADM extends Responder {
                 status = createRequest.status,
                 hasSelfJoinEnabled = createRequest.selfjoin
             ).toString
-            _ = log.debug("projectCreateRequestADM - create query: {}", createNewProjectSparqlString)
+            // _ = log.debug("projectCreateRequestADM - create query: {}", createNewProjectSparqlString)
 
             createProjectResponse <- (storeManager ? SparqlUpdateRequest(createNewProjectSparqlString)).mapTo[SparqlUpdateResponse]
 
@@ -644,7 +644,7 @@ class ProjectsResponderADM extends Responder {
                 maybeSelfjoin = projectUpdatePayload.selfjoin
             ).toString)
 
-             _ = log.debug(s"updateProjectADM - update query: {}", updateProjectSparqlString)
+             // _ = log.debug(s"updateProjectADM - update query: {}", updateProjectSparqlString)
 
             updateProjectResponse <- (storeManager ? SparqlUpdateRequest(updateProjectSparqlString)).mapTo[SparqlUpdateResponse]
 
@@ -663,7 +663,7 @@ class ProjectsResponderADM extends Responder {
             }
 
             _ = if (projectUpdatePayload.description.isDefined) {
-                if (updatedProject.description != projectUpdatePayload.description) throw UpdateNotPerformedException("Project's 'description' was not updated. Please report this as a possible bug.")
+                if (updatedProject.description.sorted != projectUpdatePayload.description.get.sorted) throw UpdateNotPerformedException("Project's 'description' was not updated. Please report this as a possible bug.")
             }
 
             _ = if (projectUpdatePayload.keywords.isDefined) {

@@ -252,7 +252,9 @@ case class IriLiteralV2(value: IRI) extends LiteralV2(value = value.toString)
   * @param value    the string value.
   * @param language the optional language tag.
   */
-case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2(value = value)
+case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2(value = value) with Ordered[StringLiteralV2] {
+    def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
+}
 
 /**
   * Represents a boolean value.
