@@ -951,12 +951,15 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
                     valueVariablesCreatedInFilters.put(matchFunction.textValueVar, textValHasString)
 
+                    // combine search terms with a logical AND (Lucene syntax)
+                    val searchTerms: CombineSearchTerms = CombineSearchTerms(matchFunction.searchTerm)
+
                     TransformedFilterExpression(
                         None, // FILTER has been replaced by statements
                         Seq(
                             // connects the value object with the value literal
                             StatementPattern.makeExplicit(subj = matchFunction.textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString),
-                            StatementPattern.makeExplicit(subj = textValHasString, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(matchFunction.searchTerm, OntologyConstants.Xsd.String.toSmartIri))
+                            StatementPattern.makeExplicit(subj = textValHasString, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(searchTerms.combineSearchTermsWithLogicalAnd, OntologyConstants.Xsd.String.toSmartIri))
                         )
                     )
 
