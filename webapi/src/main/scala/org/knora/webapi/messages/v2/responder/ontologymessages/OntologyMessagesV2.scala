@@ -685,14 +685,19 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
                             userProfile: UserProfileV1): ChangeOntologyMetadataRequestV2 = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        val inputOntologiesV2 = InputOntologiesV2.fromJsonLD(jsonLDDocument)
 
-        val externalOntologyIri: SmartIri = jsonLDDocument.requireString("@id", stringFormatter.toSmartIriWithErr)
-        val label: String = jsonLDDocument.requireString(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
-        val lastModificationDate: Instant = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
+        val inputMetadata = inputOntologiesV2.ontologies match {
+            case Seq(ontology) => ontology.ontologyMetadata
+            case _ => throw BadRequestException(s"Request requires metadata for exactly one ontology")
+        }
+
+        val ontologyIri = inputMetadata.ontologyIri
+        val label = inputMetadata.label.getOrElse(throw BadRequestException(s"No rdfs:label submitted"))
+        val lastModificationDate = inputMetadata.lastModificationDate.getOrElse(throw BadRequestException("No knora-api:lastModificationDate submitted"))
 
         ChangeOntologyMetadataRequestV2(
-            ontologyIri = externalOntologyIri,
+            ontologyIri = ontologyIri,
             label = label,
             lastModificationDate = lastModificationDate,
             apiRequestID = apiRequestID,
@@ -1382,7 +1387,7 @@ case class PredicateInfoV2(predicateIri: SmartIri,
 
     /**
       * Converts this [[PredicateInfoV2]] to another ontology schema, without converting its objects.
-      *
+      * d
       * @param targetSchema the target schema.
       * @return the converted [[PredicateInfoV2]].
       */

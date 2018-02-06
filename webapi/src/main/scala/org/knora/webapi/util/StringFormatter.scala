@@ -634,7 +634,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                     val hashPos = iri.lastIndexOf('#')
 
                     val (namespace: String, entityName: Option[String]) = if (hashPos >= 0 && hashPos < iri.length) {
-                        (iri.substring(0, hashPos), Some(iri.substring(hashPos + 1)))
+                        (iri.substring(0, hashPos), Some(validateNCName(iri.substring(hashPos + 1), errorFun)))
                     } else {
                         (iri, None)
                     }

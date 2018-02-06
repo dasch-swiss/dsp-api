@@ -631,15 +631,17 @@ Currently, the only modifiable ontology metadata is the ontology's ``rdfs:label`
 
 .. code-block:: jsonld
 
-   {
-       "@id": "ONTOLOGY_IRI",
-       "rdfs:label": "NEW_ONTOLOGY_LABEL",
-       "knora-api:lastModificationDate": "ONTOLOGY_LAST_MODIFICATION_DATE",
-       "@context": {
-           "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-           "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
-       }
-   }
+  {
+    "knora-api:hasOntologies": {
+      "@id": "ONTOLOGY_IRI",
+      "rdfs:label": "NEW_ONTOLOGY_LABEL",
+      "knora-api:lastModificationDate": "ONTOLOGY_LAST_MODIFICATION_DATE"
+    },
+    "@context": {
+      "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+      "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+    }
+  }
 
 A successful response will be a JSON-LD document containing ``knora-api:hasOntologies``,
 providing only the ontology's metadata.
