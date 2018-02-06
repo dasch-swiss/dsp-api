@@ -38,7 +38,7 @@ send "load ../_test_data/ontologies/anything-onto.ttl into http://www.knora.org/
 expect $prompt
 send "load ../_test_data/all_data/anything-data.ttl into http://www.knora.org/data/anything .\r"
 expect $prompt
-send "load ../_test_data/ontologies/beol-onto.ttl into http://www.knora.org/ontology/beol .\r"
+send "load ../_test_data/ontologies/beol-onto.ttl into http://www.knora.org/ontology/0801/beol .\r"
 expect $prompt
 send "load ../_test_data/all_data/beol-data.ttl into http://www.knora.org/data/beol .\r"
 expect $prompt

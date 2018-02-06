@@ -9,7 +9,9 @@
 
 #### Basel range
 
+   - beol: `0801`
    - webern: `08AE`
+
    
 #### Lausanne range
 

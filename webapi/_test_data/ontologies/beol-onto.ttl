@@ -8,11 +8,11 @@
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @prefix standoff: <http://www.knora.org/ontology/standoff#> .
-@base <http://www.knora.org/ontology/beol#> .
+@base <http://www.knora.org/ontology/0801/beol#> .
 
-@prefix : <http://www.knora.org/ontology/beol#> .
+@prefix : <http://www.knora.org/ontology/0801/beol#> .
 
-<http://www.knora.org/ontology/beol> rdf:type owl:Ontology ;
+<http://www.knora.org/ontology/0801/beol> rdf:type owl:Ontology ;
     rdfs:label "The BEOL ontology" .
 
 ##########################################################
@@ -517,7 +517,7 @@
                   salsah-gui:guiElement salsah-gui:Richtext .
 
 ### ###########################################
-###  http://www.knora.org/ontology/beol#mentionedIn
+###  http://www.knora.org/ontology/0801/beol#mentionedIn
 
 :mentionedIn rdf:type owl:ObjectProperty ;
 
@@ -934,6 +934,26 @@
                   knora-base:objectDatatypeConstraint xsd:string .
 
 
+### ###########################################
+### beol:hasSubjects
+
+:hasSubjects rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Themen"@de ,
+                  "Sujet"@fr ,
+                  "Temi"@it ,
+                  "Subjects"@en ;
+
+       knora-base:objectClassConstraint knora-base:ListValue ;
+
+       salsah-gui:guiOrder "1"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:List ;
+
+       salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/73d0ec0302>" .
+
 ##########################################################
 #
 # RESOURCES
@@ -1324,7 +1344,7 @@
 #
 ##########################################################
 
-###  http://www.knora.org/ontology/beol#StandoffFacsimileTag
+###  http://www.knora.org/ontology/0801/beol#StandoffFacsimileTag
 
 :StandoffFacsimileTag rdf:type owl:Class ;
 
@@ -1333,7 +1353,7 @@
                       rdfs:comment "a URI referring to a facsimile"@en .
 
 
-###  http://www.knora.org/ontology/beol#StandoffMathTag
+###  http://www.knora.org/ontology/0801/beol#StandoffMathTag
 
 :StandoffMathTag rdf:type owl:Class ;
 
@@ -1342,7 +1362,7 @@
                  rdfs:comment "mathematical notation encoded in LaTeX"@en .
 
 
-###  http://www.knora.org/ontology/beol#StandoffNoWikiTag
+###  http://www.knora.org/ontology/0801/beol#StandoffNoWikiTag
 
 :StandoffNoWikiTag rdf:type owl:Class ;
 
@@ -1351,7 +1371,7 @@
                  rdfs:comment "escapes a special character in the MediaWiki syntax"@en .
 
 
-###  http://www.knora.org/ontology/beol#StandoffHrTag
+###  http://www.knora.org/ontology/0801/beol#StandoffHrTag
 
 :StandoffHrTag rdf:type owl:Class ;
 
@@ -1360,7 +1380,7 @@
                  rdfs:comment "represents a horizontal line"@en .
 
 
-###  http://www.knora.org/ontology/beol#StandoffNbspTag
+###  http://www.knora.org/ontology/0801/beol#StandoffNbspTag
 
 :StandoffNbspTag rdf:type owl:Class ;
 
@@ -1369,7 +1389,7 @@
                  rdfs:comment "represents a non breaking space"@en .
 
 
-###  http://www.knora.org/ontology/beol#StandoffBrTag
+###  http://www.knora.org/ontology/0801/beol#StandoffBrTag
 
 :StandoffBrTag rdf:type owl:Class ;
 
@@ -1377,10 +1397,10 @@
 
               rdfs:comment "represents a break"@en .
 
-              ###  http://www.knora.org/ontology/beol#StandoffBrTag
+              ###  http://www.knora.org/ontology/0801/beol#StandoffBrTag
 
 
-###  http://www.knora.org/ontology/beol#StandoffPbTag
+###  http://www.knora.org/ontology/0801/beol#StandoffPbTag
 
 :StandoffPbTag rdf:type owl:Class ;
 
@@ -1388,7 +1408,7 @@
 
               rdfs:comment "represents a page break"@en .
 
-###  http://www.knora.org/ontology/beol#StandoffHtmlTag
+###  http://www.knora.org/ontology/0801/beol#StandoffHtmlTag
 :StandoffHtmlTag rdf:type owl:Class ;
 
             rdfs:subClassOf knora-base:StandoffTag ;
@@ -1396,7 +1416,7 @@
             rdfs:comment "represents a HTML tag in MediaWiki"@en .
 
 
-###  http://www.knora.org/ontology/beol#StandoffReferenceTag
+###  http://www.knora.org/ontology/0801/beol#StandoffReferenceTag
 :StandoffReferenceTag  rdf:type owl:Class ;
 
              rdfs:subClassOf knora-base:StandoffTag ;
@@ -1404,7 +1424,7 @@
              rdfs:comment "represents a footnote (<ref>) tag in MediaWiki"@en .
 
 
-###  http://www.knora.org/ontology/beol#standoffTableTagHasBorder
+###  http://www.knora.org/ontology/0801/beol#standoffTableTagHasBorder
 :standoffTableTagHasBorder rdf:type owl:DatatypeProperty ;
 
              rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
@@ -1416,7 +1436,7 @@
              knora-base:objectDatatypeConstraint xsd:string .
 
 
-###  http://www.knora.org/ontology/beol#standoffTableTagHasCellPadding
+###  http://www.knora.org/ontology/0801/beol#standoffTableTagHasCellPadding
 :standoffTableTagHasCellPadding rdf:type owl:DatatypeProperty ;
 
              rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
@@ -1428,7 +1448,7 @@
              knora-base:objectDatatypeConstraint xsd:string .
 
 
-###  http://www.knora.org/ontology/beol#standoffTableCellTagHasWidth
+###  http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasWidth
 :standoffTableCellTagHasWidth rdf:type owl:DatatypeProperty ;
 
                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
@@ -1440,7 +1460,7 @@
                  knora-base:objectDatatypeConstraint xsd:string .
 
 
-###  http://www.knora.org/ontology/beol#standoffTableCellTagHasWidth
+###  http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasWidth
 :standoffTableCellTagHasWidth rdf:type owl:DatatypeProperty ;
 
                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
@@ -1452,7 +1472,7 @@
                  knora-base:objectDatatypeConstraint xsd:string .
 
 
-###  http://www.knora.org/ontology/beol#standoffTableCellTagHasAlignment
+###  http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasAlignment
 :standoffTableCellTagHasAlignment rdf:type owl:DatatypeProperty ;
 
                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
@@ -1464,7 +1484,7 @@
                  knora-base:objectDatatypeConstraint xsd:string .
 
 
-###  http://www.knora.org/ontology/beol#standoffTableCellTagHasVerticalAlignment
+###  http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasVerticalAlignment
 :standoffTableCellTagHasVerticalAlignment rdf:type owl:DatatypeProperty ;
 
                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
@@ -1476,7 +1496,7 @@
                  knora-base:objectDatatypeConstraint xsd:string .
 
 
-###  http://www.knora.org/ontology/beol#standoffTableCellTagHasRowSpan
+###  http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasRowSpan
 :standoffTableCellTagHasRowSpan rdf:type owl:DatatypeProperty ;
 
                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
@@ -1487,7 +1507,7 @@
 
                  knora-base:objectDatatypeConstraint xsd:string .
 
-###  http://www.knora.org/ontology/beol#standoffTableCellTagHasColumnSpan
+###  http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasColumnSpan
 :standoffTableCellTagHasColumnSpan rdf:type owl:DatatypeProperty ;
 
                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
@@ -1499,7 +1519,7 @@
                  knora-base:objectDatatypeConstraint xsd:string .
 
 
-###  http://www.knora.org/ontology/beol#StandoffTableTag
+###  http://www.knora.org/ontology/0801/beol#StandoffTableTag
 :StandoffTableTag rdf:type owl:Class;
 
              rdfs:subClassOf standoff:StandoffTableTag ,
@@ -1513,7 +1533,7 @@
              ] .
 
 
-###  http://www.knora.org/ontology/beol#StandoffTableCellTag
+###  http://www.knora.org/ontology/0801/beol#StandoffTableCellTag
 :StandoffTableCellTag rdf:type owl:Class ;
 
              rdfs:subClassOf standoff:StandoffTableCellTag ,
@@ -1539,7 +1559,7 @@
              ] .
 
 
-###  http://www.knora.org/ontology/beol#StandoffSmallcapsTag
+###  http://www.knora.org/ontology/0801/beol#StandoffSmallcapsTag
 :StandoffSmallTag rdf:type owl:Class ;
 
                 rdfs:subClassOf standoff:StandoffVisualTag ;
@@ -1547,7 +1567,7 @@
                 rdfs:comment "Represents text in small letters format in a TextValue"@en .
 
 
-###  http://www.knora.org/ontology/beol#StandoffEntityTag
+###  http://www.knora.org/ontology/0801/beol#StandoffEntityTag
 :StandoffEntityTag  rdf:type owl:Class ;
 
              rdfs:subClassOf knora-base:StandoffLinkTag ;
@@ -1555,7 +1575,7 @@
              rdfs:comment "represents an entity (<entity>) tag in text"@en .
 
 
-###  http://www.knora.org/ontology/beol#StandoffFigureTag
+###  http://www.knora.org/ontology/0801/beol#StandoffFigureTag
 :StandoffFigureTag  rdf:type owl:Class ;
 
              rdfs:subClassOf knora-base:StandoffLinkTag ;
@@ -1563,7 +1583,7 @@
              rdfs:comment "represents a figure in text"@en .
 
 
-###  http://www.knora.org/ontology/beol#StandoffFontTag
+###  http://www.knora.org/ontology/0801/beol#StandoffFontTag
 :StandoffFontTag rdf:type owl:Class ;
 
               rdfs:subClassOf knora-base:StandoffTag ,

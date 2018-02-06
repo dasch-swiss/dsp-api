@@ -242,7 +242,7 @@
 
                       rdf:type knora-base:AdministrativePermission ;
 
-                      knora-base:forProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+                      knora-base:forProject <http://rdfh.ch/projects/0801> ;
 
                       knora-base:forGroup knora-base:ProjectMember ;
 
@@ -254,7 +254,7 @@
 
                       rdf:type knora-base:AdministrativePermission ;
 
-                      knora-base:forProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+                      knora-base:forProject <http://rdfh.ch/projects/0801> ;
 
                       knora-base:forGroup knora-base:ProjectAdmin ;
 
@@ -266,11 +266,12 @@
 
                       rdf:type knora-base:DefaultObjectAccessPermission ;
 
-                      knora-base:forProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+                      knora-base:forProject <http://rdfh.ch/projects/0801> ;
 
                       knora-base:forGroup knora-base:ProjectMember ;
 
                       knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
+
 
 
 ##########################################################
@@ -314,6 +315,8 @@
                       knora-base:forGroup knora-base:ProjectMember ;
 
                       knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+
 
 
 ##########################################################
