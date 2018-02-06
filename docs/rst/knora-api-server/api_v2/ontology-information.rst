@@ -605,15 +605,20 @@ the client submits a JSON-LD document that does not contain ``knora-api:hasOntol
    {
        "knora-api:ontologyName": "ONTOLOGY_NAME",
        "knora-api:projectIri": "PROJECT_IRI",
-       "rdfs:label": "ONTOLOGY_LABEL",
+       "rdfs:label": "ONTOLOGY_NAME",
        "@context": {
            "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
            "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
        }
    }
 
+The ontology name must follow the rules given in :ref:`knora-iris-v2`.
+
 A successful response will be a JSON-LD document containing ``knora-api:hasOntologies``,
-providing only the ontology's metadata.
+providing only the ontology's metadata, which includes the ontology's IRI. When the client
+makes further requests to create entities (classes and properties) in the ontology, it must
+construct entity IRIs by concatenating the ontology IRI, a ``#`` character, and the
+entity name. An entity name must be a valid XML NCName_.
 
 Changing an Ontology's Metadata
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1092,3 +1097,4 @@ providing only the ontology's metadata.
 
 .. _DaSCH: http://dasch.swiss/
 .. _JSON-LD API: https://www.w3.org/TR/json-ld-api/
+.. _NCName: https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName
