@@ -647,7 +647,7 @@
 
               knora-base:subjectClassConstraint :person ;
 
-              rdfs:subPropertyOf knora-base:hasValue .
+              rdfs:subPropertyOf knora-base:hasValue, foaf:givenName .
 
 
 ### ###########################################
@@ -668,7 +668,7 @@
 
                knora-base:subjectClassConstraint :person ;
 
-               rdfs:subPropertyOf knora-base:hasValue .
+               rdfs:subPropertyOf knora-base:hasValue, foaf:familyName .
 
 
 ### ###########################################
