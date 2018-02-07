@@ -935,31 +935,34 @@
 
 
 ### ###########################################
-### beol:hasSubjects
+### beol:hasSubject
 
-:hasSubjects rdf:type owl:ObjectProperty ;
+:hasSubject rdf:type owl:ObjectProperty ;
 
-       rdfs:subPropertyOf knora-base:hasValue ;
+              rdfs:subPropertyOf knora-base:hasValue ;
 
-       rdfs:label "Themen"@de ,
-                  "Sujet"@fr ,
-                  "Temi"@it ,
-                  "Subjects"@en ;
+              rdfs:label "Themen"@de ,
+                         "thème"@fr ,
+                         "Temi"@it ,
+                         "Topics"@en ;
 
-       knora-base:objectClassConstraint knora-base:ListValue ;
+              rdfs:comment """Themen"""@de ,
+                           """Topics"""@en ;
 
-       salsah-gui:guiOrder "1"^^xsd:integer ;
+              knora-base:objectClassConstraint knora-base:ListValue ;
 
-       salsah-gui:guiElement salsah-gui:List ;
+              salsah-gui:guiOrder "0"^^xsd:integer ;
 
-       salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/73d0ec0302>" .
+              salsah-gui:guiElement salsah-gui:List ;
+
+              salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0801/subject_index>" .
+
 
 ##########################################################
 #
 # RESOURCES
 #
 ##########################################################
-
 
 
 ### ###########################################
@@ -1074,6 +1077,11 @@
                           owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ],
                         [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasSubject ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
                          rdf:type owl:Restriction ;
                           owl:onProperty :mentionsPerson ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger
@@ -1111,6 +1119,7 @@
                    "Figure"@en ;
 
         rdfs:comment "A resource representing a figure"@en .
+
 
 ### ###########################################
 ### beol:endnote
@@ -1195,6 +1204,11 @@
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasText ;
                           owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasSubject ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ];
 
         rdfs:label "Sektion"@de ,
