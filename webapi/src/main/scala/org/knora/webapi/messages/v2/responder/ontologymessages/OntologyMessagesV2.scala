@@ -1956,6 +1956,7 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
   *
   * @param entityInfoContent      a [[ReadClassInfoV2]] providing information about the class.
   * @param canBeInstantiated      `true` if the class can be instantiated via the API.
+  * @param isValueClass           `true` if the class is a Knora value class.
   * @param inheritedCardinalities a [[Map]] of properties to [[Cardinality.Value]] objects representing the class's
   *                               inherited cardinalities on those properties.
   * @param standoffDataType       if this is a standoff tag class, the standoff datatype tag class (if any) that it
@@ -1968,6 +1969,7 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
   */
 case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
                            canBeInstantiated: Boolean = false,
+                           isValueClass: Boolean = false,
                            inheritedCardinalities: Map[SmartIri, Cardinality.Value] = Map.empty[SmartIri, Cardinality.Value],
                            standoffDataType: Option[StandoffDataTypeClasses.Value] = None,
                            linkProperties: Set[SmartIri] = Set.empty[SmartIri],
@@ -2097,10 +2099,16 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
             None
         }
 
+        val isValueClassStatement: Option[(IRI, JsonLDBoolean)] = if (isValueClass && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsValueClass -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
         Map(
             "@id" -> JsonLDString(entityInfoContent.classIri.toString),
             "@type" -> JsonLDString(entityInfoContent.getRdfType.toString)
-        ) ++ jsonSubClassOfStatement ++ resourceIconStatement ++ canBeInstantiatedStatement
+        ) ++ jsonSubClassOfStatement ++ resourceIconStatement ++ canBeInstantiatedStatement ++ isValueClassStatement
     }
 }
 
