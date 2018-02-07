@@ -24,19 +24,22 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.util.Timeout
 import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, KnoraPasswordCredentialsV2, LoginApiRequestPayloadV2}
 import org.knora.webapi.routing.Authenticator
 
+import scala.concurrent.ExecutionContextExecutor
+
 /**
-  * A route providing authentication support. It allows the creation of "sessions", which is used in the SALSAH app.
+  * A route providing API v2 authentication support. It allows the creation of "sessions", which are used in the SALSAH app.
   */
 object AuthenticationRouteV2 extends Authenticator with AuthenticationV2JsonProtocol {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-        implicit val system = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = settings.defaultTimeout
+        implicit val system: ActorSystem = _system
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = settings.defaultTimeout
 
         path("v2" / "authentication") {
             get { // authenticate credentials
