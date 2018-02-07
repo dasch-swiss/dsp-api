@@ -295,7 +295,15 @@ class OntologyResponderV1 extends Responder {
     def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV1] = {
         for {
             response: OntologyEntitiesIriInfoV2 <- (responderManager ? OntologyEntityIrisGetRequestV2(namedGraphIri.toSmartIri, userProfile)).mapTo[OntologyEntitiesIriInfoV2]
-        } yield NamedGraphEntityInfoV1(namedGraphIri = response.ontologyIri.toString, resourceClasses = response.classIris.map(_.toString), propertyIris = response.propertyIris.map(_.toString))
+
+            classIrisForV1 = response.classIris.map(_.toString) -- OntologyConstants.KnoraBase.AbstractResourceClasses
+            propertyIrisForV1 = response.propertyIris.map(_.toString) - OntologyConstants.KnoraBase.ResourceProperty
+
+        } yield NamedGraphEntityInfoV1(
+            namedGraphIri = response.ontologyIri.toString,
+            resourceClasses = classIrisForV1,
+            propertyIris = propertyIrisForV1
+        )
     }
 
     /**

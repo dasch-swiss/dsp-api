@@ -70,10 +70,10 @@ class ListsResponderADM extends Responder {
             statements = listsResponse.statements.toList
 
             items: Seq[ListInfoADM] = statements.map {
-                case (listIri: IRI, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+                case (listIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
                     ListInfoADM(
-                        id = listIri,
+                        id = listIri.toString,
                         projectIri = propsMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException("The required property 'attachedToProject' not found.")).head.asInstanceOf[IriLiteralV2].value,
                         labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
                         comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
@@ -117,9 +117,9 @@ class ListsResponderADM extends Responder {
             // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
             statements = listInfoResponse.statements
             listinfo = statements.head match {
-                case (nodeIri: IRI, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+                case (nodeIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
                     ListInfoADM(
-                        id = nodeIri,
+                        id = nodeIri.toString,
                         projectIri = propsMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException("The required property 'attachedToProject' not found.")).head.asInstanceOf[IriLiteralV2].value,
                         labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
                         comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
@@ -160,9 +160,9 @@ class ListsResponderADM extends Responder {
             // _ = log.debug(s"listNodeInfoGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
 
             listinfo: ListInfoADM = statements.head match {
-                case (nodeIri: IRI, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+                case (nodeIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
                     ListInfoADM (
-                        id = nodeIri,
+                        id = nodeIri.toString,
                         projectIri = propsMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException("The required property 'attachedToProject' not found.")).head.asInstanceOf[IriLiteralV2].value,
                         labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
                         comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
@@ -202,9 +202,9 @@ class ListsResponderADM extends Responder {
             // _ = log.debug(s"listNodeInfoGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
 
             nodeinfo: ListNodeInfoADM = statements.head match {
-                case (nodeIri: IRI, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+                case (nodeIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
                     ListNodeInfoADM (
-                        id = nodeIri,
+                        id = nodeIri.toString,
                         name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
                         labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
                         comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),

@@ -23,7 +23,7 @@ package org.knora.webapi.util.jsonld
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi.util.{JavaUtil, SmartIri, StringFormatter}
-import org.knora.webapi.{BadRequestException, IRI}
+import org.knora.webapi.{BadRequestException, IRI, LanguageCodes}
 
 /**
   * Represents a value in a JSON-LD document.
@@ -250,6 +250,11 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
         value.map {
             case obj: JsonLDObject =>
                 val lang = obj.requireString("@language", stringFormatter.toSparqlEncodedString)
+
+                if (!LanguageCodes.SupportedLanguageCodes(lang)) {
+                    throw BadRequestException(s"Unsupported language code: $lang")
+                }
+
                 val text = obj.requireString("@value", stringFormatter.toSparqlEncodedString)
                 lang -> text
 

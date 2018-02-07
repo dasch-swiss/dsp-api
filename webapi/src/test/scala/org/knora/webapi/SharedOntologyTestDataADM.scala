@@ -25,9 +25,9 @@ import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfo
 object SharedOntologyTestDataADM {
 
     // images
-    val IMAGES_ONTOLOGY_IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "00FF/images"
-    val IMAGES_TITEL_PROPERTY = IMAGES_ONTOLOGY_IRI + "#" + "titel"
-    val IMAGES_BILD_RESOURCE_CLASS = IMAGES_ONTOLOGY_IRI + "#" + "bild"
+    val IMAGES_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "00FF/images"
+    val IMAGES_TITEL_PROPERTY: IRI = IMAGES_ONTOLOGY_IRI + "#" + "titel"
+    val IMAGES_BILD_RESOURCE_CLASS: IRI = IMAGES_ONTOLOGY_IRI + "#" + "bild"
 
     val imagesOntologyInfo = OntologyInfoADM(
         ontologyIri = IMAGES_ONTOLOGY_IRI,
@@ -36,9 +36,9 @@ object SharedOntologyTestDataADM {
     )
 
     // incunabula
-    val INCUNABULA_ONTOLOGY_IRI =  OntologyConstants.KnoraInternal.InternalOntologyStart + "incunabula"
-    val INCUNABULA_BOOK_RESOURCE_CLASS = INCUNABULA_ONTOLOGY_IRI + "#" + "book"
-    val INCUNABULA_PAGE_RESOURCE_CLASS = INCUNABULA_ONTOLOGY_IRI + "#" + "page"
+    val INCUNABULA_ONTOLOGY_IRI: IRI =  OntologyConstants.KnoraInternal.InternalOntologyStart + "incunabula"
+    val INCUNABULA_BOOK_RESOURCE_CLASS: IRI = INCUNABULA_ONTOLOGY_IRI + "#" + "book"
+    val INCUNABULA_PAGE_RESOURCE_CLASS: IRI = INCUNABULA_ONTOLOGY_IRI + "#" + "page"
 
     val incunabulaOntologyInfo = OntologyInfoADM(
         ontologyIri = INCUNABULA_ONTOLOGY_IRI,
@@ -47,7 +47,7 @@ object SharedOntologyTestDataADM {
     )
 
     // anything
-    val ANYTHING_ONTOLOGY_IRI =  OntologyConstants.KnoraInternal.InternalOntologyStart + "anything"
+    val ANYTHING_ONTOLOGY_IRI: IRI =  OntologyConstants.KnoraInternal.InternalOntologyStart + "anything"
 
     val anythingOntologyInfo = OntologyInfoADM(
         ontologyIri = ANYTHING_ONTOLOGY_IRI,
