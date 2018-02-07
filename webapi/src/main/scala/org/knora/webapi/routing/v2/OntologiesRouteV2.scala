@@ -27,27 +27,28 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi._
 
 import scala.concurrent.ExecutionContextExecutor
 
 /**
-  * Provides a spray-routing function for API routes that deal with search.
+  * Provides a routing function for API v2 routes that deal with ontologies.
   */
 object OntologiesRouteV2 extends Authenticator {
-    val ALL_LANGUAGES = "allLanguages"
+    private val ALL_LANGUAGES = "allLanguages"
+    private val LAST_MODIFICATION_DATE = "lastModificationDate"
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
         implicit val timeout: Timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        val responderManager = system.actorSelection("/user/responderManager")
 
         path("ontology" / Segments) { (_: List[String]) =>
             get {
@@ -199,6 +200,102 @@ object OntologiesRouteV2 extends Authenticator {
                     )
                 }
             }
+        } ~ path("v2" / "ontologies" / "classes") {
+            post {
+                // Create a new class.
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessage: CreateClassRequestV2 = CreateClassRequestV2.fromJsonLD(
+                            jsonLDDocument = requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            userProfile = userProfile
+                        )
+
+                        RouteUtilV2.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            responseSchema = ApiV2WithValueObjects
+                        )
+                    }
+                }
+            } ~ put {
+                // Change the labels or comments of a class.
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessage: ChangeClassLabelsOrCommentsRequestV2 = ChangeClassLabelsOrCommentsRequestV2.fromJsonLD(
+                            jsonLDDocument = requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            userProfile = userProfile
+                        )
+
+                        RouteUtilV2.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            responseSchema = ApiV2WithValueObjects
+                        )
+                    }
+                }
+            }
+        } ~ path("v2" / "ontologies" / "cardinalities") {
+            post {
+                // Add cardinalities to a class.
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessage: AddCardinalitiesToClassRequestV2 = AddCardinalitiesToClassRequestV2.fromJsonLD(
+                            jsonLDDocument = requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            userProfile = userProfile
+                        )
+
+                        RouteUtilV2.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            responseSchema = ApiV2WithValueObjects
+                        )
+                    }
+                }
+            } ~ put {
+                // Change a class's cardinalities.
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessage: ChangeCardinalitiesRequestV2 = ChangeCardinalitiesRequestV2.fromJsonLD(
+                            jsonLDDocument = requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            userProfile = userProfile
+                        )
+
+                        RouteUtilV2.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            responseSchema = ApiV2WithValueObjects
+                        )
+                    }
+                }
+            }
         } ~ path("v2" / "ontologies" / "classes" / Segments) { (externalResourceClassIris: List[IRI]) =>
             get {
                 requestContext => {
@@ -232,7 +329,6 @@ object OntologiesRouteV2 extends Authenticator {
 
                     val requestMessage = ClassesGetRequestV2(
                         resourceClassIris = classesForResponder,
-                        responseSchema = responseSchema,
                         allLanguages = allLanguages,
                         userProfile = userProfile
                     )
@@ -246,15 +342,73 @@ object OntologiesRouteV2 extends Authenticator {
                         responseSchema
                     )
                 }
+            } ~ delete {
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val classIriStr = externalResourceClassIris match {
+                        case List(str) => str
+                        case _ => throw BadRequestException(s"Only one class can be deleted at a time")
+                    }
+
+                    val classIri = classIriStr.toSmartIri
+
+                    if (!classIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+                        throw BadRequestException(s"Invalid class IRI for request: $classIriStr")
+                    }
+
+                    val lastModificationDateStr = requestContext.request.uri.query().toMap.getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
+                    val lastModificationDate = stringFormatter.toInstant(lastModificationDateStr, throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
+
+                    val requestMessage = DeleteClassRequestV2(
+                        classIri = classIri,
+                        lastModificationDate = lastModificationDate,
+                        apiRequestID = UUID.randomUUID,
+                        userProfile = userProfile
+                    )
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log,
+                        responseSchema = ApiV2WithValueObjects
+                    )
+                }
             }
         } ~ path("v2" / "ontologies" / "properties") {
             post {
+                // Create a new property.
                 entity(as[String]) { jsonRequest =>
                     requestContext => {
                         val userProfile = getUserProfileV1(requestContext)
                         val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
                         val requestMessage: CreatePropertyRequestV2 = CreatePropertyRequestV2.fromJsonLD(
+                            jsonLDDocument = requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            userProfile = userProfile
+                        )
+
+                        RouteUtilV2.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            responseSchema = ApiV2WithValueObjects
+                        )
+                    }
+                }
+            } ~ put {
+                // Change the labels or comments of a property.
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessage: ChangePropertyLabelsOrCommentsRequestV2 = ChangePropertyLabelsOrCommentsRequestV2.fromJsonLD(
                             jsonLDDocument = requestDoc,
                             apiRequestID = UUID.randomUUID,
                             userProfile = userProfile
@@ -317,8 +471,43 @@ object OntologiesRouteV2 extends Authenticator {
                         responseSchema = responseSchema
                     )
                 }
+            } ~ delete {
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val propertyIriStr = externalPropertyIris match {
+                        case List(str) => str
+                        case _ => throw BadRequestException(s"Only one property can be deleted at a time")
+                    }
+
+                    val propertyIri = propertyIriStr.toSmartIri
+
+                    if (!propertyIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+                        throw BadRequestException(s"Invalid property IRI for request: $propertyIri")
+                    }
+
+                    val lastModificationDateStr = requestContext.request.uri.query().toMap.getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
+                    val lastModificationDate = stringFormatter.toInstant(lastModificationDateStr, throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
+
+                    val requestMessage = DeletePropertyRequestV2(
+                        propertyIri = propertyIri,
+                        lastModificationDate = lastModificationDate,
+                        apiRequestID = UUID.randomUUID,
+                        userProfile = userProfile
+                    )
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log,
+                        responseSchema = ApiV2WithValueObjects
+                    )
+                }
             }
         } ~ path("v2" / "ontologies") {
+            // Create a new, empty ontology.
             post {
                 entity(as[String]) { jsonRequest =>
                     requestContext => {

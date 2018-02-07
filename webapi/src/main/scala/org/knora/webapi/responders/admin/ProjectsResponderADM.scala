@@ -91,7 +91,7 @@ class ProjectsResponderADM extends Responder {
             // _ = log.debug(s"projectsGetADM - statements: $statements")
 
             projects: Seq[ProjectADM] = statements.map {
-                case (projectIri: IRI, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+                case (projectIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
                     val ontologyIris = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, Seq.empty[IRI]).map(_.asInstanceOf[IriLiteralV2].value)
 
@@ -103,7 +103,7 @@ class ProjectsResponderADM extends Responder {
                     }
 
                     ProjectADM(
-                        id = projectIri,
+                        id = projectIri.toString,
                         shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head.asInstanceOf[StringLiteralV2].value,
                         shortcode = propsMap.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head.asInstanceOf[StringLiteralV2].value),
                         longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head.asInstanceOf[StringLiteralV2].value),
@@ -246,7 +246,7 @@ class ProjectsResponderADM extends Responder {
 
             // get project member IRI from results rows
             userIris: Seq[IRI] = if (statements.nonEmpty) {
-                statements.map(_._1)
+                statements.map(_._1.toString)
             } else {
                 Seq.empty[IRI]
             }
@@ -299,7 +299,7 @@ class ProjectsResponderADM extends Responder {
 
             // get project member IRI from results rows
             userIris: Seq[IRI] = if (statements.nonEmpty) {
-                statements.map(_._1)
+                statements.map(_._1.toString)
             } else {
                 Seq.empty[IRI]
             }
@@ -676,11 +676,11 @@ class ProjectsResponderADM extends Responder {
       * @param requestingUser     the user making the request.
       * @return a [[ProjectADM]] representing information about project.
       */
-    private def statements2ProjectADM(statements: (IRI, Map[IRI, Seq[LiteralV2]]), requestingUser: UserADM): ProjectADM = {
+    private def statements2ProjectADM(statements: (SubjectV2, Map[IRI, Seq[LiteralV2]]), requestingUser: UserADM): ProjectADM = {
 
         // log.debug("statements2ProjectADM - statements: {}", statements)
 
-        val projectIri: IRI = statements._1
+        val projectIri: IRI = statements._1.toString
         val propsMap: Map[IRI, Seq[LiteralV2]] = statements._2
 
         val ontologyIris = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, Seq.empty[IRI]).map(_.asInstanceOf[IriLiteralV2].value)

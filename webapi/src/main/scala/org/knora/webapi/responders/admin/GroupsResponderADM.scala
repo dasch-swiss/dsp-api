@@ -85,7 +85,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
             statements = groupsResponse.statements
 
             groups: Seq[Future[GroupADM]] = statements.map {
-                case (groupIri: IRI, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+                case (groupIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
                     val projectIri: IRI = propsMap.getOrElse(OntologyConstants.KnoraBase.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")).head.asInstanceOf[IriLiteralV2].value
 
@@ -97,7 +97,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
                         }
 
                         group = GroupADM(
-                            id = groupIri,
+                            id = groupIri.toString,
                             name = propsMap.getOrElse(OntologyConstants.KnoraBase.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no name attached")).head.asInstanceOf[StringLiteralV2].value,
                             description = propsMap.getOrElse(OntologyConstants.KnoraBase.GroupDescription, throw InconsistentTriplestoreDataException(s"Group $groupIri has no description attached")).head.asInstanceOf[StringLiteralV2].value,
                             project = projectADM,
@@ -446,11 +446,11 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
       * @param requestingUser the user that is making the request.
       * @return a [[GroupADM]] representing information about the group.
       */
-    private def statements2GroupADM(statements: (IRI, Map[IRI, Seq[LiteralV2]]), requestingUser: UserADM): Future[Option[GroupADM]] = {
+    private def statements2GroupADM(statements: (SubjectV2, Map[IRI, Seq[LiteralV2]]), requestingUser: UserADM): Future[Option[GroupADM]] = {
 
         log.debug("statements2GroupADM - statements: {}", statements)
 
-        val groupIri: IRI = statements._1
+        val groupIri: IRI = statements._1.toString
         val propsMap: Map[IRI, Seq[LiteralV2]] = statements._2
 
         log.debug("statements2GroupADM - groupIri: {}", groupIri)

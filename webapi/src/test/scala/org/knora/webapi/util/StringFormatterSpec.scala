@@ -672,6 +672,12 @@ class StringFormatterSpec extends CoreSpec() {
             }
         }
 
+        "reject http://0.0.0.0:3333/ontology/incunabula/v2#1234 (invalid entity name)" in {
+            assertThrows[BadRequestException] {
+                "http://0.0.0.0:3333/ontology/incunabula/v2#1234".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
         "enable pattern matching with SmartIri" in {
             val input: SmartIri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri
 
