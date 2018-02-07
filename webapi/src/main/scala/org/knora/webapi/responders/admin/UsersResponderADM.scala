@@ -107,7 +107,7 @@ class UsersResponderADM extends Responder {
             // _ = log.debug("usersGetADM - statements: {}", statements)
 
             users: Seq[UserADM] = statements.map {
-                case (userIri: IRI, propsMap: Map[IRI, LiteralV2]) =>
+                case (userIri: IRI, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
                     UserADM(
                         id = userIri,
