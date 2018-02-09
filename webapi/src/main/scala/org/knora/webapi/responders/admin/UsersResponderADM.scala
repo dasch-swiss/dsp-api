@@ -107,10 +107,10 @@ class UsersResponderADM extends Responder {
             // _ = log.debug("usersGetADM - statements: {}", statements)
 
             users: Seq[UserADM] = statements.map {
-                case (userIri: IRI, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+                case (userIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
                     UserADM(
-                        id = userIri,
+                        id = userIri.toString,
                         email = propsMap.getOrElse(OntologyConstants.KnoraBase.Email, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'email' defined.")).head.asInstanceOf[StringLiteralV2].value,
                         givenName = propsMap.getOrElse(OntologyConstants.KnoraBase.GivenName, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'givenName' defined.")).head.asInstanceOf[StringLiteralV2].value,
                         familyName = propsMap.getOrElse(OntologyConstants.KnoraBase.FamilyName, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'familyName' defined.")).head.asInstanceOf[StringLiteralV2].value,
@@ -1243,11 +1243,11 @@ class UsersResponderADM extends Responder {
       * @param statements result from the SPARQL query containing user data.
       * @return a [[UserADM]] containing the user's data.
       */
-    private def statements2UserADM(statements: (IRI, Map[IRI, Seq[LiteralV2]]), requestingUser: UserADM): Future[Option[UserADM]] = {
+    private def statements2UserADM(statements: (SubjectV2, Map[IRI, Seq[LiteralV2]]), requestingUser: UserADM): Future[Option[UserADM]] = {
 
         // log.debug("statements2UserADM - statements: {}", statements)
 
-        val userIri: IRI = statements._1
+        val userIri: IRI = statements._1.toString
         val propsMap: Map[IRI, Seq[LiteralV2]] = statements._2
 
         log.debug("statements2UserADM - userIri: {}", userIri)

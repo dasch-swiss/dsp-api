@@ -634,7 +634,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                     val hashPos = iri.lastIndexOf('#')
 
                     val (namespace: String, entityName: Option[String]) = if (hashPos >= 0 && hashPos < iri.length) {
-                        (iri.substring(0, hashPos), Some(iri.substring(hashPos + 1)))
+                        (iri.substring(0, hashPos), Some(validateNCName(iri.substring(hashPos + 1), errorFun)))
                     } else {
                         (iri, None)
                     }
@@ -1307,15 +1307,29 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * Unescapes a string that has been escaped for SPARQL.
       *
       * @param s        the string to be unescaped.
-      * @param errorFun a function that throws an exception. It will be called if the string cannot be processed.
       * @return the unescaped string.
       */
-    def fromSparqlEncodedString(s: String, errorFun: => Nothing): String = {
+    def fromSparqlEncodedString(s: String): String = {
         StringUtils.replaceEach(
             s,
             SparqlEscapeOutput,
             SparqlEscapeInput
         )
+    }
+
+    /**
+      * Validates an OWL cardinality value, which must be 0 or 1 in Knora, and returns the corresponding integer.
+      *
+      * @param s the string to be validated.
+      * @param errorFun a function that throws an exception. It will be called if the string is invalid.
+      * @return the corresponding integer value.
+      */
+    def validateCardinalityValue(s: String, errorFun: => Nothing): Int = {
+        s match {
+            case "0" => 0
+            case "1" => 1
+            case _ => errorFun
+        }
     }
 
     /**

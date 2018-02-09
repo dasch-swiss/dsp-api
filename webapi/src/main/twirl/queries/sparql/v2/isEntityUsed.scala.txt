@@ -21,13 +21,17 @@
 @import org.knora.webapi.util.SmartIri
 
 @*
- * Gets the predicates and objects of an ontology IRI.
+ * Checks whether an ontology entity is used (i.e. is the object
+ * of any statements).
  *
  * @param triplestore the name of the triplestore being used.
- * @param ontologyIri the IRI of the ontology.
+ * @param entityIri the IRI of the ontology.
+ * @param ignoreKnoraConstraints if true, knora-base:subjectClassConstraint and knora-base:objectClassConstraint will be ignored.
+ * This is necessary when modifying the cardinalities of a class.
  *@
 @(triplestore: String,
-  ontologyIri: SmartIri)
+  entityIri: SmartIri,
+  ignoreKnoraConstraints: Boolean = false)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -35,16 +39,20 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-CONSTRUCT {
-    ?ontology ?ontologyPred ?ontologyObj .
-}
+SELECT DISTINCT ?isUsed
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    BIND(IRI("@ontologyIri") AS ?ontology)
+    BIND(IRI("@entityIri") AS ?entity)
+    BIND(true AS ?isUsed)
 
-    ?ontology rdf:type owl:Ontology ;
-        ?ontologyPred ?ontologyObj .
+    ?s ?p ?entity .
+
+    @if(ignoreKnoraConstraints) {
+
+        FILTER(!(?p = knora-base:subjectClassConstraint || ?p = knora-base:objectClassConstraint))
+
+    }
 }

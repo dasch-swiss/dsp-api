@@ -22,19 +22,23 @@
 @import java.time.Instant
 
 @*
- * Changes the metadata attached to an ontology.
+ * Changes the labels or comments of a class.
  *
  * @param triplestore the name of the triplestore being used.
- * @param ontologyNamedGraphIri the IRI of the named graph where the ontology should be stored.
- * @param ontologyIri the IRI of the ontology to be created.
- * @param newLabel the ontology's new label.
+ * @param ontologyNamedGraphIri the IRI of the named graph where the ontology is stored.
+ * @param ontologyIri the IRI of the ontology to be modified.
+ * @param classIri the IRI of the class to be modified.
+ * @param predicateToUpdate rdfs:label or rdfs:comment.
+ * @param newObjects the class's new labels or comments (a map of language codes to values).
  * @param lastModificationDate the xsd:dateTimeStamp that was attached to the ontology when it was last modified.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
  *@
 @(triplestore: String,
   ontologyNamedGraphIri: SmartIri,
   ontologyIri: SmartIri,
-  newLabel: String,
+  classIri: SmartIri,
+  predicateToUpdate: SmartIri,
+  newObjects: Map[String, String],
   lastModificationDate: Instant,
   currentTime: Instant)
 
@@ -46,13 +50,18 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 DELETE {
     GRAPH ?ontologyNamedGraph {
-        ?ontology rdfs:label ?oldLabel ;
-            knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+        ?ontology knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+        ?class <@predicateToUpdate> ?oldObj .
     }
 } INSERT {
     GRAPH ?ontologyNamedGraph {
-        ?ontology rdfs:label """@newLabel"""^^xsd:string ;
-            knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+        ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+
+        @for((newObjLang, newObjText) <- newObjects) {
+
+            ?class <@predicateToUpdate> """@newObjText"""@@@newObjLang .
+
+        }
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
@@ -62,10 +71,12 @@ DELETE {
 WHERE {
     BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
     BIND(IRI("@ontologyIri") AS ?ontology)
+    BIND(IRI("@classIri") AS ?class)
 
     GRAPH ?ontologyNamedGraph {
         ?ontology rdf:type owl:Ontology ;
-            rdfs:label ?oldLabel ;
             knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+
+        ?class <@predicateToUpdate> ?oldObj .
     }
 }

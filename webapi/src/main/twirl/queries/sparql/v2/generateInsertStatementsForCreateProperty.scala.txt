@@ -23,29 +23,31 @@
 
 @*
  * Called by createProperty.scala.txt to generate INSERT statements for creating a property.
+ *
+ * @param propertyDef the definition of the property to be created.
  *@
-@(propertyInfoDef: PropertyInfoContentV2)
+@(propertyDef: PropertyInfoContentV2)
 
-@for(predicate <- propertyInfoDef.predicates.values) {
+@for(predicate <- propertyDef.predicates.values) {
 
-    @* All objects that don't have languages must be IRIs (#668). *@
+    @* In a property definition, all objects that don't have languages must be IRIs (#668). *@
 
     @for(obj <- predicate.objects) {
 
-        <@propertyInfoDef.propertyIri> <@predicate.predicateIri> <@obj> .
+        <@propertyDef.propertyIri> <@predicate.predicateIri> <@obj> .
 
     }
 
     @for((lang, text) <- predicate.objectsWithLang) {
 
-        <@propertyInfoDef.propertyIri> <@predicate.predicateIri> """@text"""@@@lang .
+        <@propertyDef.propertyIri> <@predicate.predicateIri> """@text"""@@@lang .
 
     }
 
 }
 
-@for(superProp <- propertyInfoDef.subPropertyOf) {
+@for(superProp <- propertyDef.subPropertyOf) {
 
-    <@propertyInfoDef.propertyIri> rdfs:subPropertyOf <@superProp> .
+    <@propertyDef.propertyIri> rdfs:subPropertyOf <@superProp> .
 
 }

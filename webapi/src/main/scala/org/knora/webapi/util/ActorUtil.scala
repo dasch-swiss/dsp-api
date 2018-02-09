@@ -116,4 +116,17 @@ object ActorUtil {
             }
         }.map(_.toMap)
     }
+
+    /**
+      * Converts an option containing a future to a future containing an option.
+      *
+      * @param optionFuture an option containing a future.
+      * @return a future containing an option.
+      */
+    def optionFuture2FutureOption[A](optionFuture: Option[Future[A]])(implicit executionContext: ExecutionContext): Future[Option[A]] = {
+        optionFuture match {
+            case Some(f) => f.map(Some(_))
+            case None    => Future.successful(None)
+        }
+    }
 }

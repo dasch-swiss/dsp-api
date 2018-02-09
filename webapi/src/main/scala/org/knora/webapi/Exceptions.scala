@@ -136,6 +136,14 @@ case class DuplicateValueException(message: String = "Duplicate values are not p
 case class OntologyConstraintException(message: String) extends RequestRejectedException(message)
 
 /**
+  * An exception indicating that a requested update is not allowed because another user has edited the
+  * data that was to be updated.
+  *
+  * @param message a description of the error.
+  */
+case class EditConflictException(message: String) extends RequestRejectedException(message)
+
+/**
   * An exception indicating that the submitted standoff is not valid.
   *
   * @param message a description of the error.
