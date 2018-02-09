@@ -273,7 +273,7 @@ case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
   * @param value    the string value.
   * @param language the optional language tag.
   */
-case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2 {
+case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2 with Ordered[StringLiteralV2] {
     override def toString: String = value
     def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
 }

@@ -124,7 +124,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |    "shortname": "newproject",
                        |    "shortcode": "1111",
                        |    "longname": "project longname",
-                       |    "description": {"value": "project description", "language": "en"},
+                       |    "description": [{"value": "project description", "language": "en"}],
                        |    "keywords": ["keywords"],
                        |    "logo": "/fu/bar/baz.jpg",
                        |    "status": true,
@@ -135,7 +135,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
                 val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
+                log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
 
                 val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
@@ -160,7 +160,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |    "shortname": "newproject",
                        |    "shortcode"; "1112",
                        |    "longname": "project longname",
-                       |    "description": {"value": "project description", "language": "en"},
+                       |    "description": [{"value": "project description", "language": "en"}],
                        |    "keywords": ["keywords"],
                        |    "logo": "/fu/bar/baz.jpg",
                        |    "status": true,
@@ -181,7 +181,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |{
                        |    "shortcode"; "1112",
                        |    "longname": "project longname",
-                       |    "description": {"value": "project description", "language": "en"},
+                       |    "description": [{"value": "project description", "language": "en"}],
                        |    "keywords": ["keywords"],
                        |    "logo": "/fu/bar/baz.jpg",
                        |    "status": true,
@@ -202,7 +202,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |{
                        |    "shortname"; "newproject2",
                        |    "longname": "project longname",
-                       |    "description": {"value": "project description", "language": "en"},
+                       |    "description": [{"value": "project description", "language": "en"}],
                        |    "keywords": ["keywords"],
                        |    "logo": "/fu/bar/baz.jpg",
                        |    "status": true,
@@ -224,7 +224,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |{
                        |    "shortname": "newproject",
                        |    "longname": "updated project longname",
-                       |    "description": {"value": "updated project description", "language": "en"},
+                       |    "description": [{"value": "updated project description", "language": "en"}],
                        |    "keywords": ["updated", "keywords"],
                        |    "logo": "/fu/bar/baz-updated.jpg",
                        |    "status": true,
