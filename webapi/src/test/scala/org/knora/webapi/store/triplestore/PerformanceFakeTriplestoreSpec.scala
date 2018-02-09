@@ -44,10 +44,6 @@ object PerformanceFakeTriplestoreSpec {
                             name = "http://www.knora.org/ontology/knora-base"
                         }
                         {
-                            path = "../knora-ontologies/knora-dc.ttl"
-                            name = "http://www.knora.org/ontology/dc"
-                        }
-                        {
                             path = "../knora-ontologies/salsah-gui.ttl"
                             name = "http://www.knora.org/ontology/salsah-gui"
                         }

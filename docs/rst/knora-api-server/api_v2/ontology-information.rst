@@ -218,14 +218,16 @@ simple schema, ``http://0.0.0.0:3333/ontology/00FF/images/simple/v2`` (simplifie
            "@type" : "owl:DatatypeProperty",
            "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
            "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/simple/v2#bild",
-           "rdfs:label" : "Description"
+           "rdfs:label" : "Description",
+           "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/simple/v2#hasValue", "http://purl.org/dc/terms/description" ]
          },
          "p00FF-images:erfassungsdatum" : {
            "@id" : "p00FF-images:erfassungsdatum",
            "@type" : "owl:DatatypeProperty",
            "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Date",
            "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/simple/v2#bild",
-           "rdfs:label" : "Date of acquisition"
+           "rdfs:label" : "Date of acquisition",
+           "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/simple/v2#hasValue", "http://purl.org/dc/terms/date" ]
          },
          "p00FF-images:firstname" : {
            "@id" : "p00FF-images:firstname",
@@ -282,10 +284,10 @@ inherited from ``knora-api:Resource``, such as ``knora-api:hasStandoffLinkTo`` a
 
 In the simple schema, Knora value properties can be datatype properties. The ``knora-base:objectType`` of a
 Knora value property such as ``p00FF-images:description`` is a literal datatype, in this case ``xsd:string``.
-This means that it would be possible for ``p00FF-images:description`` to be a subproperty of some standard property,
-such as ``dcterms:abstract``, whose object is expected to be a literal value. A client that understands
-``rdfs:subPropertyOf``, and is familiar with ``dcterms:abstract``, would then find that objects of
-``p00FF-images:description`` have the expected datatype.
+Moreover, ``p00FF-images:description`` is a subproperty of the standard property ``dcterms:description``,
+whose object can be a literal value. A client that understands ``rdfs:subPropertyOf``, and is familiar
+with ``dcterms:description``, can then work with ``p00FF-images:description`` on the basis of
+its knowledge about ``dcterms:description``.
 
 By default, values for ``rdfs:label`` and ``rdfs:comment`` are returned only in the user's preferred
 language, or in the system default language. To obtain these values in all available languages, add
@@ -467,7 +469,7 @@ default schema, ``http://0.0.0.0:3333/ontology/00FF/images/v2`` (simplified for 
            "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
            "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
            "rdfs:label" : "Description",
-           "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#description"
+           "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/description" ]
          },
          "p00FF-images:erfassungsdatum" : {
            "@id" : "p00FF-images:erfassungsdatum",
@@ -475,7 +477,8 @@ default schema, ``http://0.0.0.0:3333/ontology/00FF/images/v2`` (simplified for 
            "knora-api:isEditable" : true,
            "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
            "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
-           "rdfs:label" : "Date of acquisition"
+           "rdfs:label" : "Date of acquisition",
+           "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/date" ]
          },
          "p00FF-images:firstname" : {
            "@id" : "p00FF-images:firstname",

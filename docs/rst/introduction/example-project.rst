@@ -58,26 +58,24 @@ ontologies that are very commonly used in RDF:
     @prefix owl: <http://www.w3.org/2002/07/owl#> .
     @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
     @prefix foaf: <http://xmlns.com/foaf/0.1/> .
+    @prefix dcterms: <http://purl.org/dc/terms/> .
 
 The ``rdf``, ``rdfs``, and ``owl`` ontologies contain basic properties that
 are used to define ontology entities. The ``xsd`` ontology contains
 definitions of literal data types such as ``string`` and ``integer``. (For
 more information about these ontologies, see the references in :ref:`knora-base`.)
 The ``foaf`` ontology contains classes and properties for representing people.
+The ``dcterms`` ontology represents `Dublin Core`_ metadata.
 
 Then we define prefixes for Knora ontologies:
 
 ::
 
     @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
-    @prefix dc: <http://www.knora.org/ontology/dc#> .
     @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 
 The ``knora-base`` ontology contains Knora's core abstractions, and is
-described in :ref:`knora-base`. The ``dc`` ontology is Knora's version of
-`Dublin Core`_. It is intended to make it possible to define properties in a Knora
-project in terms of Dublin Core abstractions, to facilitate queries that
-search for data across multiple projects. The ``salsah-gui`` ontology includes
+described in :ref:`knora-base`. The ``salsah-gui`` ontology includes
 properties that Knora projects must use to enable SALSAH, Knora's generic
 virtual research environment.
 
@@ -108,7 +106,7 @@ Here is the definition of the ``incunabula:title`` property:
 
     :title rdf:type owl:ObjectProperty ;
 
-           rdfs:subPropertyOf dc:title ;
+           rdfs:subPropertyOf knora-base:hasValue, dcterms:title ;
 
            rdfs:label "Titel"@de ,
                "Titre"@fr ,
@@ -138,14 +136,13 @@ definition of ``:title`` says:
   Object properties point to objects, which have IRIs and can have their own
   properties. Datatype properties point to literal values, such as strings and
   integers.
-* ``rdfs:subPropertyOf dc:title``: It is a subproperty of ``dc:title``, which
-  is a subproperty of ``knora-base:hasValue``. It would have been possible to
-  define ``incunabula:title`` as a direct subproperty of ``knora-base:hasValue``,
-  and indeed many properties in Knora projects are defined in that way. The
-  advantage of using ``dc:title`` is that if you do a search for resources that
-  have a certain ``dc:title``, and there is a resource with a matching
-  ``incunabula:title``, the search results could include that resource. (This
-  feature is planned but not yet implemented in the Knora API server.)
+* ``rdfs:subPropertyOf knora-base:hasValue, dcterms:title``: It is a subproperty of
+  ``knora-base:hasValue`` and ``dcterms:title``. Since the objects of this
+  property will be Knora values, it must be a subproperty of ``knora-base:hasValue``.
+  To facilitate searches, we have also chosen to make it a subproperty of
+  ``dcterms:title``. In the Knora API v2, if you do a search for resources that
+  have a certain ``dcterms:title``, and there is a resource with a matching
+  ``incunabula:title``, the search results could include that resource.
 * ``rdfs:label "Titel"@de``, etc.: It has the specified labels in various
   languages. These are needed, for example, by user interfaces, to prompt the
   user to enter a value.
