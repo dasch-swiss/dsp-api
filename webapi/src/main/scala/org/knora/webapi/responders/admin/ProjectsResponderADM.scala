@@ -118,7 +118,7 @@ class ProjectsResponderADM extends Responder {
                     )
             }
 
-        } yield projects
+        } yield projects.sorted
     }
 
     /**

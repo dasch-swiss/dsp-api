@@ -391,7 +391,12 @@ case class ProjectADM(id: IRI,
                       logo: Option[String],
                       ontologies: Seq[OntologyInfoShortADM],
                       status: Boolean,
-                      selfjoin: Boolean) {
+                      selfjoin: Boolean) extends Ordered[ProjectADM] {
+
+    /**
+      * Allows to sort collections of ProjectADM. Sorting is done by the id.
+      */
+    def compare(that: ProjectADM): Int = this.id.compareTo(that.id)
 
     // ToDo: Refactor by using implicit conversions (when I manage to understand them)
     def asProjectInfoV1: ProjectInfoV1 = {

@@ -268,7 +268,7 @@ case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
 }
 
 /**
-  * Represents a string with an optional language tag.
+  * Represents a string with an optional language tag. Allows sorting inside collections by value.
   *
   * @param value    the string value.
   * @param language the optional language tag.
