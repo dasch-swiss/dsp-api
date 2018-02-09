@@ -42,9 +42,9 @@ package org.knora.webapi.util
 
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.v1.responder.permissionmessages.{PermissionType, PermissionV1}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.{CoreSpec, IRI, OntologyConstants, SharedAdminTestData}
+import org.knora.webapi.{CoreSpec, IRI, OntologyConstants, SharedTestDataV1}
 
 import scala.collection.Map
 
@@ -69,75 +69,75 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
     "PermissionUtil " should {
 
         "return user's max permission for a specific resource (incunabula normal project member user)" in {
-            PermissionUtilV1.getUserPermissionV1(
+            PermissionUtilADM.getUserPermissionV1(
                 subjectIri = "http://rdfh.ch/00014b43f902",
                 subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
+                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
-                userProfile = SharedAdminTestData.incunabulaMemberUser
+                userProfile = SharedTestDataV1.incunabulaMemberUser
             ) should equal(Some(6)) // modify permission
         }
 
         "return user's max permission for a specific resource (incunabula project admin user)" in {
-            PermissionUtilV1.getUserPermissionV1(
+            PermissionUtilADM.getUserPermissionV1(
                 subjectIri = "http://rdfh.ch/00014b43f902",
                 subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
+                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
-                userProfile = SharedAdminTestData.incunabulaProjectAdminUser
+                userProfile = SharedTestDataV1.incunabulaProjectAdminUser
             ) should equal(Some(8)) // change rights permission
         }
 
         "return user's max permission for a specific resource (incunabula creator user)" in {
-            PermissionUtilV1.getUserPermissionV1(
+            PermissionUtilADM.getUserPermissionV1(
                 subjectIri = "http://rdfh.ch/00014b43f902",
                 subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
+                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
-                userProfile = SharedAdminTestData.incunabulaCreatorUser
+                userProfile = SharedTestDataV1.incunabulaCreatorUser
             ) should equal(Some(8)) // change rights permission
         }
 
         "return user's max permission for a specific resource (root user)" in {
-            PermissionUtilV1.getUserPermissionV1(
+            PermissionUtilADM.getUserPermissionV1(
                 subjectIri = "http://rdfh.ch/00014b43f902",
                 subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
+                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
-                userProfile = SharedAdminTestData.rootUser
+                userProfile = SharedTestDataV1.rootUser
             ) should equal(Some(8)) // change rights permission
         }
 
         "return user's max permission for a specific resource (normal user)" in {
-            PermissionUtilV1.getUserPermissionV1(
+            PermissionUtilADM.getUserPermissionV1(
                 subjectIri = "http://rdfh.ch/00014b43f902",
                 subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
+                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
-                userProfile = SharedAdminTestData.normalUser
+                userProfile = SharedTestDataV1.normalUser
             ) should equal(Some(2)) // restricted view permission
         }
 
         "return user's max permission for a specific resource (anonymous user)" in {
-            PermissionUtilV1.getUserPermissionV1(
+            PermissionUtilADM.getUserPermissionV1(
                 subjectIri = "http://rdfh.ch/00014b43f902",
                 subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedAdminTestData.INCUNABULA_PROJECT_IRI,
+                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 subjectPermissionLiteral = permissionLiteral,
-                userProfile = SharedAdminTestData.anonymousUser
+                userProfile = SharedTestDataV1.anonymousUser
             ) should equal(Some(1)) // restricted view permission
         }
 
         "return user's max permission from assertions for a specific resource" in {
             val assertions: Seq[(IRI, String)] = Seq(
                 (OntologyConstants.KnoraBase.AttachedToUser, "http://rdfh.ch/users/91e19f1e01"),
-                (OntologyConstants.KnoraBase.AttachedToProject, SharedAdminTestData.INCUNABULA_PROJECT_IRI),
+                (OntologyConstants.KnoraBase.AttachedToProject, SharedTestDataV1.INCUNABULA_PROJECT_IRI),
                 (OntologyConstants.KnoraBase.HasPermissions, permissionLiteral)
             )
-            PermissionUtilV1.getUserPermissionV1FromAssertions(
+            PermissionUtilADM.getUserPermissionV1FromAssertions(
                 subjectIri = "http://rdfh.ch/00014b43f902",
                 assertions = assertions,
-                userProfile = SharedAdminTestData.incunabulaMemberUser
+                userProfile = SharedTestDataV1.incunabulaMemberUser
             ) should equal(Some(6)) // modify permissions
         }
 
@@ -147,7 +147,7 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
         }
 
         "return parsed permissions string as 'Map[IRI, Set[String]]" in {
-            PermissionUtilV1.parsePermissions(permissionLiteral) should equal(parsedPermissionLiteral)
+            PermissionUtilADM.parsePermissions(permissionLiteral) should equal(parsedPermissionLiteral)
         }
 
 
@@ -155,38 +155,38 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             val hasPermissionsString = "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser,http://rdfh.ch/groups/customgroup|RV knora-base:UnknownUser"
 
             val permissionsSet = Set(
-                PermissionV1.modifyPermission(OntologyConstants.KnoraBase.Creator),
-                PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser),
-                PermissionV1.viewPermission("http://rdfh.ch/groups/customgroup"),
-                PermissionV1.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
+                PermissionADM.modifyPermission(OntologyConstants.KnoraBase.Creator),
+                PermissionADM.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                PermissionADM.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                PermissionADM.viewPermission("http://rdfh.ch/groups/customgroup"),
+                PermissionADM.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
             )
 
-            PermissionUtilV1.parsePermissionsWithType(Some(hasPermissionsString), PermissionType.OAP) should contain allElementsOf permissionsSet
+            PermissionUtilADM.parsePermissionsWithType(Some(hasPermissionsString), PermissionType.OAP) should contain allElementsOf permissionsSet
         }
 
         "return parsed permissions string as 'Set[PermissionV1]' (administrative permissions)" in {
             val hasPermissionsString = "ProjectResourceCreateAllPermission|ProjectAdminAllPermission|ProjectResourceCreateRestrictedPermission <http://www.knora.org/ontology/00FF/images#bild>,<http://www.knora.org/ontology/00FF/images#bildformat>"
 
             val permissionsSet = Set(
-                PermissionV1.ProjectResourceCreateAllPermission,
-                PermissionV1.ProjectAdminAllPermission,
-                PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/00FF/images#bild"),
-                PermissionV1.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/00FF/images#bildformat")
+                PermissionADM.ProjectResourceCreateAllPermission,
+                PermissionADM.ProjectAdminAllPermission,
+                PermissionADM.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/00FF/images#bild"),
+                PermissionADM.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/00FF/images#bildformat")
             )
 
-            PermissionUtilV1.parsePermissionsWithType(Some(hasPermissionsString), PermissionType.AP) should contain allElementsOf permissionsSet
+            PermissionUtilADM.parsePermissionsWithType(Some(hasPermissionsString), PermissionType.AP) should contain allElementsOf permissionsSet
         }
 
         "build a 'PermissionV1' object" in {
-            PermissionUtilV1.buildPermissionObject(
+            PermissionUtilADM.buildPermissionObject(
                 name = OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission,
                 iris = Set("1", "2", "3")
             ) should equal(
                 Set(
-                    PermissionV1.projectResourceCreateRestrictedPermission("1"),
-                    PermissionV1.projectResourceCreateRestrictedPermission("2"),
-                    PermissionV1.projectResourceCreateRestrictedPermission("3")
+                    PermissionADM.projectResourceCreateRestrictedPermission("1"),
+                    PermissionADM.projectResourceCreateRestrictedPermission("2"),
+                    PermissionADM.projectResourceCreateRestrictedPermission("3")
                 )
             )
         }
@@ -194,22 +194,22 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
         "remove duplicate permissions" in {
 
             val duplicatedPermissions = Seq(
-                PermissionV1.restrictedViewPermission("1"),
-                PermissionV1.restrictedViewPermission("1"),
-                PermissionV1.restrictedViewPermission("2"),
-                PermissionV1.changeRightsPermission("2"),
-                PermissionV1.changeRightsPermission("3"),
-                PermissionV1.changeRightsPermission("3")
+                PermissionADM.restrictedViewPermission("1"),
+                PermissionADM.restrictedViewPermission("1"),
+                PermissionADM.restrictedViewPermission("2"),
+                PermissionADM.changeRightsPermission("2"),
+                PermissionADM.changeRightsPermission("3"),
+                PermissionADM.changeRightsPermission("3")
             )
 
             val deduplicatedPermissions = Set(
-                PermissionV1.restrictedViewPermission("1"),
-                PermissionV1.restrictedViewPermission("2"),
-                PermissionV1.changeRightsPermission("2"),
-                PermissionV1.changeRightsPermission("3")
+                PermissionADM.restrictedViewPermission("1"),
+                PermissionADM.restrictedViewPermission("2"),
+                PermissionADM.changeRightsPermission("2"),
+                PermissionADM.changeRightsPermission("3")
             )
 
-            val result = PermissionUtilV1.removeDuplicatePermissions(duplicatedPermissions)
+            val result = PermissionUtilADM.removeDuplicatePermissions(duplicatedPermissions)
             result.size should equal(deduplicatedPermissions.size)
             result should contain allElementsOf deduplicatedPermissions
 
@@ -217,35 +217,35 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
         "remove lesser permissions" in {
             val withLesserPermissions = Set(
-                PermissionV1.restrictedViewPermission("1"),
-                PermissionV1.viewPermission("1"),
-                PermissionV1.modifyPermission("2"),
-                PermissionV1.changeRightsPermission("1"),
-                PermissionV1.deletePermission("2")
+                PermissionADM.restrictedViewPermission("1"),
+                PermissionADM.viewPermission("1"),
+                PermissionADM.modifyPermission("2"),
+                PermissionADM.changeRightsPermission("1"),
+                PermissionADM.deletePermission("2")
             )
 
             val withoutLesserPermissions = Set(
-                PermissionV1.changeRightsPermission("1"),
-                PermissionV1.deletePermission("2")
+                PermissionADM.changeRightsPermission("1"),
+                PermissionADM.deletePermission("2")
             )
 
-            val result = PermissionUtilV1.removeLesserPermissions(withLesserPermissions, PermissionType.OAP)
+            val result = PermissionUtilADM.removeLesserPermissions(withLesserPermissions, PermissionType.OAP)
             result.size should equal(withoutLesserPermissions.size)
             result should contain allElementsOf withoutLesserPermissions
         }
 
         "create permissions string" in {
             val permissions = Set(
-                PermissionV1.changeRightsPermission("1"),
-                PermissionV1.deletePermission("2"),
-                PermissionV1.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                PermissionV1.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                PermissionV1.viewPermission(OntologyConstants.KnoraBase.KnownUser)
+                PermissionADM.changeRightsPermission("1"),
+                PermissionADM.deletePermission("2"),
+                PermissionADM.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
+                PermissionADM.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
+                PermissionADM.viewPermission(OntologyConstants.KnoraBase.KnownUser)
             )
 
             val permissionsString = "CR knora-base:Creator,1|D 2|M knora-base:ProjectMember|V knora-base:KnownUser"
 
-            val result = PermissionUtilV1.formatPermissions(permissions, PermissionType.OAP)
+            val result = PermissionUtilADM.formatPermissions(permissions, PermissionType.OAP)
             result should equal(permissionsString)
 
         }

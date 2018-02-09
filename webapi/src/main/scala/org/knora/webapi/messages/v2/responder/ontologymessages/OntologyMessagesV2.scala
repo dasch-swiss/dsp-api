@@ -87,35 +87,47 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
 }
 
 /**
-  * Requests the addition of a property to an ontology. A successful response will be a [[ReadOntologiesV2]].
+  * Represents information taken from an [[InputOntologyV2]], representing a request to update a property
+  * definition.
   *
-  * @param propertyInfoContent  an [[PropertyInfoContentV2]] containing the property definition.
+  * @param propertyInfoContent  information to be updated in the property definition.
   * @param lastModificationDate the ontology's last modification date.
-  * @param apiRequestID         the ID of the API request.
-  * @param userProfile          the profile of the user making the request.
   */
-case class CreatePropertyRequestV2(propertyInfoContent: PropertyInfoContentV2,
-                                   lastModificationDate: Instant,
-                                   apiRequestID: UUID,
-                                   userProfile: UserProfileV1) extends OntologiesResponderRequestV2
-
+case class PropertyUpdateInfo(propertyInfoContent: PropertyInfoContentV2,
+                              lastModificationDate: Instant)
 
 /**
-  * Constructs instances of [[CreatePropertyRequestV2]] based on JSON-LD requests.
+  * Represents information taken from an [[InputOntologyV2]], representing a request to update a class
+  * definition.
+  *
+  * @param classInfoContent     information to be updated in the class definition.
+  * @param lastModificationDate the ontology's last modification date.
   */
-object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreatePropertyRequestV2] {
+case class ClassUpdateInfo(classInfoContent: ClassInfoContentV2,
+                           lastModificationDate: Instant)
 
-    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
-                            apiRequestID: UUID,
-                            userProfile: UserProfileV1): CreatePropertyRequestV2 = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+/**
+  * Assists in the processing of JSON-LD in ontology entity update requests.
+  */
+object OntologyUpdateHelper {
+    /**
+      * Gets the ontology's last modification date from the request.
+      *
+      * @param inputOntologyV2 an [[InputOntologyV2]] representing the ontology to be updated.
+      * @return the ontology's last modification date.
+      */
+    def getOntologyLastModificationDate(inputOntologyV2: InputOntologyV2): Instant = {
+        inputOntologyV2.ontologyMetadata.lastModificationDate.getOrElse(throw BadRequestException(s"An ontology update request must include the ontology's knora-api:lastModificationDate"))
+    }
 
-        // Use InputOntologiesV2 to process the JSON-LD.
-
-        val inputOntologiesV2 = InputOntologiesV2.fromJsonLD(jsonLDDocument)
-
-        // The request must contain information about exactly one ontology.
-
+    /**
+      * Checks that an [[InputOntologiesV2]] contains information about exactly one ontology to be updated, and returns
+      * that information.
+      *
+      * @param inputOntologiesV2 an [[InputOntologiesV2]] representing the request.
+      * @return an [[InputOntologyV2]] representing information about the ontology to be updated.
+      */
+    private def getOntology(inputOntologiesV2: InputOntologiesV2): InputOntologyV2 = {
         if (inputOntologiesV2.ontologies.lengthCompare(1) != 0) {
             throw BadRequestException(s"Only one definition can be submitted per request")
         }
@@ -129,27 +141,108 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
             throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIri")
         }
 
+        inputOntologyV2
+    }
+
+    /**
+      * Gets a class definition from the request.
+      *
+      * @param inputOntologiesV2 an [[InputOntologiesV2]] that must contain a single ontology, containing a single class definition.
+      * @return a [[ClassUpdateInfo]] containing the class definition and the ontology's last modification date.
+      */
+    def getClassDef(inputOntologiesV2: InputOntologiesV2): ClassUpdateInfo = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val inputOntologyV2 = getOntology(inputOntologiesV2)
+        val externalOntologyIri = inputOntologyV2.ontologyMetadata.ontologyIri
+
         // The ontology's lastModificationDate must be provided.
 
-        val lastModificationDate: Instant = inputOntologyV2.ontologyMetadata.lastModificationDate.getOrElse(throw BadRequestException(s"An ontology update request must include the ontology's knora-api:lastModificationDate"))
+        val lastModificationDate: Instant = getOntologyLastModificationDate(inputOntologyV2)
+
+        // The request must contain exactly one class definition, and no property definitions.
+
+        if (inputOntologyV2.properties.nonEmpty || inputOntologyV2.standoffProperties.nonEmpty) {
+            throw BadRequestException(s"A property definition cannot be submitted when creating or modifying a class")
+        }
+
+        if (inputOntologyV2.standoffClasses.nonEmpty) {
+            throw NotImplementedException(s"Standoff classes cannot yet be created or modified")
+        }
+
+        if (inputOntologyV2.classes.size != 1) {
+            throw BadRequestException(s"Only one class can be created or modified per request")
+        }
+
+        val classInfoContent = inputOntologyV2.classes.values.head
+
+        // Check that the class's IRI is valid.
+
+        val classIri = classInfoContent.classIri
+
+        if (!(classIri.isKnoraApiV2EntityIri &&
+            classIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            classIri.getOntologyFromEntity == externalOntologyIri)) {
+            throw BadRequestException(s"Invalid class IRI: $classIri")
+        }
+
+        // Check that the class's rdf:type is valid.
+
+        val classType: SmartIri = classInfoContent.getRdfType
+
+        if (classType != OntologyConstants.Owl.Class.toSmartIri) {
+            throw BadRequestException(s"Property $classIri must be an owl:Class")
+        }
+
+        // Check that the IRIs of the class's predicates are valid.
+
+        classInfoContent.predicates.keySet.foreach {
+            predIri =>
+                if (predIri.isKnoraIri && !predIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+                    throw BadRequestException(s"Invalid predicate for request: $predIri")
+                }
+        }
+
+        ClassUpdateInfo(
+            classInfoContent = classInfoContent,
+            lastModificationDate = lastModificationDate
+        )
+    }
+
+    /**
+      * Gets a property definition from the request.
+      *
+      * @param inputOntologiesV2 an [[InputOntologiesV2]] that must contain a single ontology, containing a single property definition.
+      * @return a [[PropertyUpdateInfo]] containing the property definition and the ontology's last modification date.
+      */
+    def getPropertyDef(inputOntologiesV2: InputOntologiesV2): PropertyUpdateInfo = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val inputOntologyV2 = getOntology(inputOntologiesV2)
+        val externalOntologyIri = inputOntologyV2.ontologyMetadata.ontologyIri
+
+        // The ontology's lastModificationDate must be provided.
+
+        val lastModificationDate: Instant = getOntologyLastModificationDate(inputOntologyV2)
 
         // The request must contain exactly one property definition, and no class definitions.
 
         if (inputOntologyV2.classes.nonEmpty || inputOntologyV2.standoffClasses.nonEmpty) {
-            throw BadRequestException(s"A class definition cannot be submitted when creating a property")
+            throw BadRequestException(s"A class definition cannot be submitted when creating or modifying a property")
         }
 
         if (inputOntologyV2.standoffProperties.nonEmpty) {
-            throw NotImplementedException(s"Creation of standoff properties is not yet supported")
+            throw NotImplementedException(s"Standoff properties cannot yet be created or modified")
         }
 
         if (inputOntologyV2.properties.size != 1) {
-            throw BadRequestException(s"Only one property can be created per request")
+            throw BadRequestException(s"Only one property can be created or modified per request")
         }
+
+        val propertyInfoContent = inputOntologyV2.properties.values.head
 
         // Check that the property IRI is valid.
 
-        val propertyInfoContent = inputOntologyV2.properties.values.head
         val propertyIri = propertyInfoContent.propertyIri
 
         if (!(propertyIri.isKnoraApiV2EntityIri &&
@@ -174,6 +267,88 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
                     throw BadRequestException(s"Invalid predicate for request: $predIri")
                 }
         }
+
+        PropertyUpdateInfo(
+            propertyInfoContent = propertyInfoContent,
+            lastModificationDate = lastModificationDate
+        )
+    }
+
+    private val LabelAndCommentPredicates = Set(
+        OntologyConstants.Rdfs.Label,
+        OntologyConstants.Rdfs.Comment
+    )
+
+    /**
+      * Gets the values of `rdfs:label` or `rdfs:comment` from a request to update them.
+      *
+      * @param entityInfoContent the data submitted about the entity to be updated.
+      * @return the values of that predicate.
+      */
+    def getLabelsOrComments(entityInfoContent: EntityInfoContentV2): PredicateInfoV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val predicatesWithNewData = entityInfoContent.predicates - OntologyConstants.Rdf.Type.toSmartIri
+
+        if (predicatesWithNewData.size != 1) {
+            throw BadRequestException(s"Either rdfs:label or rdfs:comment must be provided")
+        }
+
+        val predicateInfoToUpdate = predicatesWithNewData.values.head
+        val predicateToUpdate = predicateInfoToUpdate.predicateIri
+
+        if (!LabelAndCommentPredicates(predicateToUpdate.toString)) {
+            throw BadRequestException(s"Invalid predicate: $predicateToUpdate")
+        }
+
+        if (predicateInfoToUpdate.objects.nonEmpty) {
+            throw BadRequestException(s"Missing language code in rdfs:label or rdfs:comment")
+        }
+
+        if (predicateInfoToUpdate.objectsWithLang.isEmpty) {
+            throw BadRequestException(s"An rdfs:label or rdfs:comment with at least one object is required")
+        }
+
+        predicateInfoToUpdate
+    }
+}
+
+/**
+  * Requests the addition of a property to an ontology. A successful response will be a [[ReadOntologiesV2]].
+  *
+  * @param propertyInfoContent  an [[PropertyInfoContentV2]] containing the property definition.
+  * @param lastModificationDate the ontology's last modification date.
+  * @param apiRequestID         the ID of the API request.
+  * @param userProfile          the profile of the user making the request.
+  */
+case class CreatePropertyRequestV2(propertyInfoContent: PropertyInfoContentV2,
+                                   lastModificationDate: Instant,
+                                   apiRequestID: UUID,
+                                   userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+
+/**
+  * Constructs instances of [[CreatePropertyRequestV2]] based on JSON-LD requests.
+  */
+object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreatePropertyRequestV2] {
+    /**
+      * Converts a JSON-LD request to a [[CreatePropertyRequestV2]].
+      *
+      * @param jsonLDDocument the JSON-LD input.
+      * @param apiRequestID   the UUID of the API request.
+      * @param userProfile    the profile of the user making the request.
+      * @return a [[CreatePropertyRequestV2]] representing the input.
+      */
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            userProfile: UserProfileV1): CreatePropertyRequestV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        // Get the property definition and the ontology's last modification date from the JSON-LD.
+
+        val inputOntologiesV2 = InputOntologiesV2.fromJsonLD(jsonLDDocument)
+        val propertyUpdateInfo = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
+        val propertyInfoContent = propertyUpdateInfo.propertyInfoContent
+        val lastModificationDate = propertyUpdateInfo.lastModificationDate
 
         // Check that the knora-api:subjectType (if provided) and the knora-api:objectType point to valid entity IRIs.
 
@@ -212,6 +387,283 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
 }
 
 /**
+  * Requests the addition of a class to an ontology. A successful response will be a [[ReadOntologiesV2]].
+  *
+  * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
+  * @param lastModificationDate the ontology's last modification date.
+  * @param apiRequestID         the ID of the API request.
+  * @param userProfile          the profile of the user making the request.
+  */
+case class CreateClassRequestV2(classInfoContent: ClassInfoContentV2,
+                                lastModificationDate: Instant,
+                                apiRequestID: UUID,
+                                userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+
+/**
+  * Constructs instances of [[CreateClassRequestV2]] based on JSON-LD requests.
+  */
+object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassRequestV2] {
+    /**
+      * Converts a JSON-LD request to a [[CreateClassRequestV2]].
+      *
+      * @param jsonLDDocument the JSON-LD input.
+      * @param apiRequestID   the UUID of the API request.
+      * @param userProfile    the profile of the user making the request.
+      * @return a [[CreateClassRequestV2]] representing the input.
+      */
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, userProfile: UserProfileV1): CreateClassRequestV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        // Get the class definition and the ontology's last modification date from the JSON-LD.
+
+        val inputOntologiesV2 = InputOntologiesV2.fromJsonLD(jsonLDDocument)
+        val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+        val classInfoContent = classUpdateInfo.classInfoContent
+        val lastModificationDate = classUpdateInfo.lastModificationDate
+
+        // The request must provide an rdfs:label and an rdfs:comment.
+
+        if (!classInfoContent.predicates.contains(OntologyConstants.Rdfs.Label.toSmartIri)) {
+            throw BadRequestException("Missing rdfs:label")
+        }
+
+        if (!classInfoContent.predicates.contains(OntologyConstants.Rdfs.Comment.toSmartIri)) {
+            throw BadRequestException("Missing rdfs:comment")
+        }
+
+        CreateClassRequestV2(
+            classInfoContent = classInfoContent,
+            lastModificationDate = lastModificationDate,
+            apiRequestID = apiRequestID,
+            userProfile = userProfile
+        )
+    }
+}
+
+/**
+  * Requests the addition of cardinalities to a class. A successful response will be a [[ReadOntologiesV2]].
+  *
+  * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
+  * @param lastModificationDate the ontology's last modification date.
+  * @param apiRequestID         the ID of the API request.
+  * @param userProfile          the profile of the user making the request.
+  */
+case class AddCardinalitiesToClassRequestV2(classInfoContent: ClassInfoContentV2,
+                                            lastModificationDate: Instant,
+                                            apiRequestID: UUID,
+                                            userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+
+object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCardinalitiesToClassRequestV2] {
+    /**
+      * Converts JSON-LD input into an [[AddCardinalitiesToClassRequestV2]].
+      *
+      * @param jsonLDDocument the JSON-LD input.
+      * @param apiRequestID   the UUID of the API request.
+      * @param userProfile    the profile of the user making the request.
+      * @return an [[AddCardinalitiesToClassRequestV2]] representing the input.
+      */
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, userProfile: UserProfileV1): AddCardinalitiesToClassRequestV2 = {
+        // Get the class definition and the ontology's last modification date from the JSON-LD.
+
+        val inputOntologiesV2 = InputOntologiesV2.fromJsonLD(jsonLDDocument)
+        val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+        val classInfoContent = classUpdateInfo.classInfoContent
+        val lastModificationDate = classUpdateInfo.lastModificationDate
+
+        // The request must provide cardinalities.
+
+        if (classInfoContent.directCardinalities.isEmpty) {
+            throw BadRequestException("No cardinalities specified")
+        }
+
+        AddCardinalitiesToClassRequestV2(
+            classInfoContent = classInfoContent,
+            lastModificationDate = lastModificationDate,
+            apiRequestID = apiRequestID,
+            userProfile = userProfile
+        )
+    }
+}
+
+/**
+  * Requests the replacement of a class's cardinalities with new ones. A successful response will be a [[ReadOntologiesV2]].
+  *
+  * @param classInfoContent     a [[ClassInfoContentV2]] containing the new cardinalities.
+  * @param lastModificationDate the ontology's last modification date.
+  * @param apiRequestID         the ID of the API request.
+  * @param userProfile          the profile of the user making the request.
+  */
+case class ChangeCardinalitiesRequestV2(classInfoContent: ClassInfoContentV2,
+                                        lastModificationDate: Instant,
+                                        apiRequestID: UUID,
+                                        userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+
+object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCardinalitiesRequestV2] {
+    /**
+      * Converts JSON-LD input into a [[ChangeCardinalitiesRequestV2]].
+      *
+      * @param jsonLDDocument the JSON-LD input.
+      * @param apiRequestID   the UUID of the API request.
+      * @param userProfile    the profile of the user making the request.
+      * @return a [[ChangeCardinalitiesRequestV2]] representing the input.
+      */
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, userProfile: UserProfileV1): ChangeCardinalitiesRequestV2 = {
+        val inputOntologiesV2 = InputOntologiesV2.fromJsonLD(jsonLDDocument)
+        val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+        val classInfoContent = classUpdateInfo.classInfoContent
+        val lastModificationDate = classUpdateInfo.lastModificationDate
+
+        ChangeCardinalitiesRequestV2(
+            classInfoContent = classInfoContent,
+            lastModificationDate = lastModificationDate,
+            apiRequestID = apiRequestID,
+            userProfile = userProfile
+        )
+    }
+}
+
+/**
+  * Requests the deletion of a class. A successful response will be a [[ReadOntologyMetadataV2]].
+  *
+  * @param classIri             the IRI of the class to be deleted.
+  * @param lastModificationDate the ontology's last modification date.
+  * @param apiRequestID         the ID of the API request.
+  * @param userProfile          the profile of the user making the request.
+  */
+case class DeleteClassRequestV2(classIri: SmartIri,
+                                lastModificationDate: Instant,
+                                apiRequestID: UUID,
+                                userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+
+/**
+  * Requests the deletion of a property. A successful response will be a [[ReadOntologyMetadataV2]].
+  *
+  * @param propertyIri          the IRI of the property to be deleted.
+  * @param lastModificationDate the ontology's last modification date.
+  * @param apiRequestID         the ID of the API request.
+  * @param userProfile          the profile of the user making the request.
+  */
+case class DeletePropertyRequestV2(propertyIri: SmartIri,
+                                   lastModificationDate: Instant,
+                                   apiRequestID: UUID,
+                                   userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+
+/**
+  * A trait for requests to change entity labels or comments.
+  */
+sealed trait ChangeLabelsOrCommentsRequest {
+    /**
+      * The predicate to update: `rdfs:label` or `rdfs:comment`.
+      */
+    val predicateToUpdate: SmartIri
+
+    /**
+      * The new objects of the predicate (a map of language codes to literals).
+      */
+    val newObjects: Map[String, String]
+}
+
+/**
+  * Requests that a property's labels or comments are changed. A successful response will be a [[ReadOntologiesV2]].
+  *
+  * @param propertyIri          the IRI of the property.
+  * @param predicateToUpdate    `rdfs:label` or `rdfs:comment`.
+  * @param newObjects           the property's new labels or comments (a map of language codes to literals).
+  * @param lastModificationDate the ontology's last modification date.
+  * @param apiRequestID         the ID of the API request.
+  * @param userProfile          the profile of the user making the request.
+  */
+case class ChangePropertyLabelsOrCommentsRequestV2(propertyIri: SmartIri,
+                                                   predicateToUpdate: SmartIri,
+                                                   newObjects: Map[String, String],
+                                                   lastModificationDate: Instant,
+                                                   apiRequestID: UUID,
+                                                   userProfile: UserProfileV1) extends OntologiesResponderRequestV2 with ChangeLabelsOrCommentsRequest
+
+/**
+  * Can convert a JSON-LD request to a [[ChangePropertyLabelsOrCommentsRequestV2]].
+  */
+object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[ChangePropertyLabelsOrCommentsRequestV2] {
+
+
+    /**
+      * Converts a JSON-LD request to a [[ChangePropertyLabelsOrCommentsRequestV2]].
+      *
+      * @param jsonLDDocument the JSON-LD input.
+      * @param apiRequestID   the UUID of the API request.
+      * @param userProfile    the profile of the user making the request.
+      * @return a [[ChangePropertyLabelsOrCommentsRequestV2]] representing the input.
+      */
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            userProfile: UserProfileV1): ChangePropertyLabelsOrCommentsRequestV2 = {
+        val inputOntologiesV2 = InputOntologiesV2.fromJsonLD(jsonLDDocument)
+        val propertyUpdateInfo = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
+        val propertyInfoContent = propertyUpdateInfo.propertyInfoContent
+        val lastModificationDate = propertyUpdateInfo.lastModificationDate
+        val predicateInfoToUpdate = OntologyUpdateHelper.getLabelsOrComments(propertyInfoContent)
+
+        ChangePropertyLabelsOrCommentsRequestV2(
+            propertyIri = propertyInfoContent.propertyIri,
+            predicateToUpdate = predicateInfoToUpdate.predicateIri,
+            newObjects = predicateInfoToUpdate.objectsWithLang,
+            lastModificationDate = lastModificationDate,
+            apiRequestID = apiRequestID,
+            userProfile = userProfile
+        )
+    }
+}
+
+/**
+  * Requests that a class's labels or comments are changed. A successful response will be a [[ReadOntologiesV2]].
+  *
+  * @param classIri             the IRI of the property.
+  * @param predicateToUpdate    `rdfs:label` or `rdfs:comment`.
+  * @param newObjects           the class's new labels or comments (a map of language codes to literals).
+  * @param lastModificationDate the ontology's last modification date.
+  * @param apiRequestID         the ID of the API request.
+  * @param userProfile          the profile of the user making the request.
+  */
+case class ChangeClassLabelsOrCommentsRequestV2(classIri: SmartIri,
+                                                predicateToUpdate: SmartIri,
+                                                newObjects: Map[String, String],
+                                                lastModificationDate: Instant,
+                                                apiRequestID: UUID,
+                                                userProfile: UserProfileV1) extends OntologiesResponderRequestV2 with ChangeLabelsOrCommentsRequest
+
+/**
+  * Can convert a JSON-LD request to a [[ChangeClassLabelsOrCommentsRequestV2]].
+  */
+object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeClassLabelsOrCommentsRequestV2] {
+    /**
+      * Converts a JSON-LD request to a [[ChangeClassLabelsOrCommentsRequestV2]].
+      *
+      * @param jsonLDDocument the JSON-LD input.
+      * @param apiRequestID   the UUID of the API request.
+      * @param userProfile    the profile of the user making the request.
+      * @return a [[ChangeClassLabelsOrCommentsRequestV2]] representing the input.
+      */
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            userProfile: UserProfileV1): ChangeClassLabelsOrCommentsRequestV2 = {
+        val inputOntologiesV2 = InputOntologiesV2.fromJsonLD(jsonLDDocument)
+        val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+        val classInfoContent = classUpdateInfo.classInfoContent
+        val lastModificationDate = classUpdateInfo.lastModificationDate
+        val predicateInfoToUpdate = OntologyUpdateHelper.getLabelsOrComments(classInfoContent)
+
+        ChangeClassLabelsOrCommentsRequestV2(
+            classIri = classInfoContent.classIri,
+            predicateToUpdate = predicateInfoToUpdate.predicateIri,
+            newObjects = predicateInfoToUpdate.objectsWithLang,
+            lastModificationDate = lastModificationDate,
+            apiRequestID = apiRequestID,
+            userProfile = userProfile
+        )
+    }
+}
+
+/**
   * Requests a change in the metadata of an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
   *
   * @param ontologyIri          the external ontology IRI.
@@ -233,14 +685,19 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
                             userProfile: UserProfileV1): ChangeOntologyMetadataRequestV2 = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        val inputOntologiesV2 = InputOntologiesV2.fromJsonLD(jsonLDDocument)
 
-        val externalOntologyIri: SmartIri = jsonLDDocument.requireString("@id", stringFormatter.toSmartIriWithErr)
-        val label: String = jsonLDDocument.requireString(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
-        val lastModificationDate: Instant = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
+        val inputMetadata = inputOntologiesV2.ontologies match {
+            case Seq(ontology) => ontology.ontologyMetadata
+            case _ => throw BadRequestException(s"Request requires metadata for exactly one ontology")
+        }
+
+        val ontologyIri = inputMetadata.ontologyIri
+        val label = inputMetadata.label.getOrElse(throw BadRequestException(s"No rdfs:label submitted"))
+        val lastModificationDate = inputMetadata.lastModificationDate.getOrElse(throw BadRequestException("No knora-api:lastModificationDate submitted"))
 
         ChangeOntologyMetadataRequestV2(
-            ontologyIri = externalOntologyIri,
+            ontologyIri = ontologyIri,
             label = label,
             lastModificationDate = lastModificationDate,
             apiRequestID = apiRequestID,
@@ -381,11 +838,10 @@ case class OntologyEntitiesGetRequestV2(ontologyGraphIris: Set[SmartIri], respon
   * Requests the entity definitions for the given class IRIs. A successful response will be a [[ReadOntologiesV2]].
   *
   * @param resourceClassIris the IRIs of the classes to be queried.
-  * @param responseSchema    the API schema that will be used for the response.
   * @param allLanguages      true if information in all available languages should be returned.
   * @param userProfile       the profile of the user making the request.
   */
-case class ClassesGetRequestV2(resourceClassIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
+case class ClassesGetRequestV2(resourceClassIris: Set[SmartIri], allLanguages: Boolean, userProfile: UserProfileV1) extends OntologiesResponderRequestV2
 
 /**
   * Requests the definitions of the specified properties. A successful response will be a [[ReadOntologiesV2]].
@@ -546,6 +1002,17 @@ case class InputOntologiesV2(ontologies: Seq[InputOntologyV2]) {
     def toOntologySchema(targetSchema: ApiV2Schema): InputOntologiesV2 = {
         InputOntologiesV2(ontologies.map(_.toOntologySchema(targetSchema)))
     }
+
+    /**
+      * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used in tests after an update, when the
+      * input (whose predicate objects have been escaped for use in SPARQL) needs to be compared with the updated data
+      * read back from the triplestore (in which predicate objects are not escaped).
+      *
+      * @return a copy of this [[InputOntologiesV2]] with all predicate objects unescaped.
+      */
+    def unescape: InputOntologiesV2 = {
+        InputOntologiesV2(ontologies = ontologies.map(_.unescape))
+    }
 }
 
 /**
@@ -559,7 +1026,7 @@ object InputOntologiesV2 {
     /**
       * Constructs an [[InputOntologiesV2]] based on JSON-LD input.
       *
-      * @param jsonLDDocument the JSON-LD input.
+      * @param jsonLDDocument  the JSON-LD input.
       * @param ignoreExtraData if `true`, extra data in the JSON-LD will be ignored. This is used only in testing.
       *                        Otherwise, extra data will cause an exception to be thrown.
       * @return a case class instance representing the input.
@@ -618,6 +1085,31 @@ case class InputOntologyV2(ontologyMetadata: OntologyMetadataV2,
             }
         )
     }
+
+    /**
+      * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used in tests after an update, when the
+      * input (whose predicate objects have been escaped for use in SPARQL) needs to be compared with the updated data
+      * read back from the triplestore (in which predicate objects are not escaped).
+      *
+      * @return a copy of this [[InputOntologyV2]] with all predicate objects unescaped.
+      */
+    def unescape: InputOntologyV2 = {
+        InputOntologyV2(
+            ontologyMetadata = ontologyMetadata.unescape,
+            classes = classes.map {
+                case (classIri, classDef) => classIri -> classDef.unescape
+            },
+            properties = properties.map {
+                case (propertyIri, propertyDef) => propertyIri -> propertyDef.unescape
+            },
+            standoffClasses = standoffClasses.map {
+                case (classIri, classDef) => classIri -> classDef.unescape
+            },
+            standoffProperties = standoffProperties.map {
+                case (propertyIri, propertyDef) => propertyIri -> propertyDef.unescape
+            }
+        )
+    }
 }
 
 /**
@@ -673,7 +1165,7 @@ object InputOntologyV2 {
     /**
       * Constructs an [[InputOntologyV2]] based on a JSON-LD object.
       *
-      * @param ontologyObj a JSON-LD object representing information about the ontology.
+      * @param ontologyObj     a JSON-LD object representing information about the ontology.
       * @param ignoreExtraData if `true`, extra data in the JSON-LD will be ignored. This is used only in testing.
       *                        Otherwise, extra data will cause an exception to be thrown.
       * @return an [[InputOntologyV2]] representing the same information.
@@ -711,6 +1203,17 @@ object InputOntologyV2 {
         val properties: Map[SmartIri, PropertyInfoContentV2] = jsonLDObjectToProperties(maybeHasProperties, ignoreExtraData)
         val standoffClasses: Map[SmartIri, ClassInfoContentV2] = jsonLDObjectToClasses(maybeHasStandoffClasses, ignoreExtraData)
         val standoffProperties: Map[SmartIri, PropertyInfoContentV2] = jsonLDObjectToProperties(maybeHasStandoffProperties, ignoreExtraData)
+
+        // Check whether any entities are in the wrong ontology.
+
+        val entityIris: Iterable[SmartIri] = classes.values.map(_.classIri) ++ properties.values.map(_.propertyIri) ++
+            standoffClasses.values.map(_.classIri) ++ standoffProperties.values.map(_.propertyIri)
+
+        val entityIrisInWrongOntology = entityIris.filter(_.getOntologyFromEntity != externalOntologyIri)
+
+        if (entityIrisInWrongOntology.nonEmpty) {
+            throw BadRequestException(s"One or more entities are not in ontology $externalOntologyIri: ${entityIrisInWrongOntology.mkString(", ")}")
+        }
 
         InputOntologyV2(
             ontologyMetadata = ontologyMetadata,
@@ -889,14 +1392,13 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2], includeKn
 case class PredicateInfoV2(predicateIri: SmartIri,
                            objects: Set[String] = Set.empty[String],
                            objectsWithLang: Map[String, String] = Map.empty[String, String]) {
-    // TODO: This class should really store its IRI objects as SmartIris. But this would need more help
-    // from OntologyResponderV2 and probably also from the store package (#668).
+    // TODO: Refactor this class to use org.knora.webapi.messages.store.triplestoremessages.LiteralV2.
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
       * Converts this [[PredicateInfoV2]] to another ontology schema, without converting its objects.
-      *
+      * d
       * @param targetSchema the target schema.
       * @return the converted [[PredicateInfoV2]].
       */
@@ -921,6 +1423,22 @@ case class PredicateInfoV2(predicateIri: SmartIri,
         copy(
             predicateIri = predicateIri.toOntologySchema(targetSchema),
             objects = objects.map(_.toSmartIri.toOntologySchema(targetSchema).toString)
+        )
+    }
+
+    /**
+      * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used after an update, when the
+      * input (whose predicate objects have been escaped for use in SPARQL) needs to be compared with the updated data
+      * read back from the triplestore (in which predicate objects are not escaped).
+      *
+      * @return this predicate with its objects unescaped.
+      */
+    def unescape: PredicateInfoV2 = {
+        copy(
+            objects = objects.map(obj => stringFormatter.fromSparqlEncodedString(obj)),
+            objectsWithLang = objectsWithLang.map {
+                case (lang, obj) => lang -> stringFormatter.fromSparqlEncodedString(obj)
+            }
         )
     }
 }
@@ -1005,6 +1523,28 @@ object Cardinality extends Enumeration {
       * @return an [[OwlCardinalityInfo]].
       */
     def knoraCardinality2OwlCardinality(knoraCardinality: Value): OwlCardinalityInfo = knoraCardinality2OwlCardinalityMap(knoraCardinality)
+
+    /**
+      * Checks whether a cardinality that is directly defined on a class is compatible with an inherited cardinality on the
+      * same property. This will be true only if the directly defined cardinality is at least as restrictive as the
+      * inherited one.
+      *
+      * @param directCardinality      the directly defined cardinality.
+      * @param inheritableCardinality the inherited cardinality.
+      * @return `true` if the directly defined cardinality is compatible with the inherited one.
+      */
+    def isCompatible(directCardinality: Value, inheritableCardinality: Value): Boolean = {
+        if (directCardinality == inheritableCardinality) {
+            true
+        } else {
+            inheritableCardinality match {
+                case MayHaveOne => directCardinality == MustHaveOne
+                case MayHaveMany => true
+                case MustHaveOne => false
+                case MustHaveSome => directCardinality == MustHaveOne
+            }
+        }
+    }
 }
 
 
@@ -1020,12 +1560,37 @@ sealed trait EntityInfoContentV2 {
     protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
+      * Checks that a predicate is present in this [[EntityInfoContentV2]] and that its object is an IRI, and
+      * returns the object as a [[SmartIri]].
+      *
+      * @param predicateIri the IRI of the predicate.
+      * @param errorFun     a function that will be called if the predicate is absent or if its object is not an IRI.
+      * @return a [[SmartIri]] representing the predicate's object.
+      */
+    def requireIriPredicate(predicateIri: SmartIri, errorFun: => Nothing): SmartIri = {
+        predicates.get(predicateIri).flatMap(pred => pred.objects.headOption).getOrElse(errorFun).toSmartIri
+    }
+
+    /**
       * A convenience method that returns the `rdf:type` of this entity. Throws [[InconsistentTriplestoreDataException]]
       * if the entity's predicates do not include `rdf:type`.
       *
       * @return the entity's `rdf:type`.
       */
     def getRdfType: SmartIri
+
+    /**
+      * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used after an update, when the
+      * input (whose predicate objects have been escaped for use in SPARQL) needs to be compared with the updated data
+      * read back from the triplestore (in which predicate objects are not escaped).
+      *
+      * @return the predicates of this [[EntityInfoContentV2]], with their objects unescaped.
+      */
+    protected def unescapePredicateObjects: Map[SmartIri, PredicateInfoV2] = {
+        predicates.map {
+            case (predicateIri, predicateInfo) => predicateIri -> predicateInfo.unescape
+        }
+    }
 
     /**
       * Converts this entity's predicates from one ontology schema to another. Each predicate's IRI is converted,
@@ -1194,7 +1759,13 @@ object EntityInfoContentV2 {
                     case JsonLDString(objStr) =>
                         PredicateInfoV2(
                             predicateIri = predicateIri,
-                            objects = Set(objStr.toString)
+                            objects = Set(stringFormatter.toSparqlEncodedString(objStr, throw BadRequestException(s"Invalid predicate object: $objStr")))
+                        )
+
+                    case objObj: JsonLDObject =>
+                        PredicateInfoV2(
+                            predicateIri = predicateIri,
+                            objectsWithLang = JsonLDArray(Seq(objObj)).toObjsWithLang
                         )
 
                     case objArray: JsonLDArray =>
@@ -1206,7 +1777,7 @@ object EntityInfoContentV2 {
                             PredicateInfoV2(
                                 predicateIri = predicateIri,
                                 objects = objArray.value.map {
-                                    case JsonLDString(objStr) => objStr
+                                    case JsonLDString(objStr) => stringFormatter.toSparqlEncodedString(objStr, throw BadRequestException(s"Invalid predicate object: $objStr"))
                                     case other => throw AssertionException(s"Invalid object for predicate $predicateIriStr: $other")
                                 }.toSet
                             )
@@ -1385,6 +1956,7 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
   *
   * @param entityInfoContent      a [[ReadClassInfoV2]] providing information about the class.
   * @param canBeInstantiated      `true` if the class can be instantiated via the API.
+  * @param isValueClass           `true` if the class is a Knora value class.
   * @param inheritedCardinalities a [[Map]] of properties to [[Cardinality.Value]] objects representing the class's
   *                               inherited cardinalities on those properties.
   * @param standoffDataType       if this is a standoff tag class, the standoff datatype tag class (if any) that it
@@ -1397,6 +1969,7 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
   */
 case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
                            canBeInstantiated: Boolean = false,
+                           isValueClass: Boolean = false,
                            inheritedCardinalities: Map[SmartIri, Cardinality.Value] = Map.empty[SmartIri, Cardinality.Value],
                            standoffDataType: Option[StandoffDataTypeClasses.Value] = None,
                            linkProperties: Set[SmartIri] = Set.empty[SmartIri],
@@ -1526,10 +2099,16 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
             None
         }
 
+        val isValueClassStatement: Option[(IRI, JsonLDBoolean)] = if (isValueClass && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsValueClass -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
         Map(
             "@id" -> JsonLDString(entityInfoContent.classIri.toString),
             "@type" -> JsonLDString(entityInfoContent.getRdfType.toString)
-        ) ++ jsonSubClassOfStatement ++ resourceIconStatement ++ canBeInstantiatedStatement
+        ) ++ jsonSubClassOfStatement ++ resourceIconStatement ++ canBeInstantiatedStatement ++ isValueClassStatement
     }
 }
 
@@ -1568,6 +2147,17 @@ case class ClassInfoContentV2(classIri: SmartIri,
     override def getRdfType: SmartIri = {
         predicates.get(OntologyConstants.Rdf.Type.toSmartIri).flatMap(pred => pred.objects.headOption).getOrElse(throw InconsistentTriplestoreDataException(s"Class $classIri has no rdf:type")).toSmartIri
     }
+
+    /**
+      * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used after an update, when the
+      * input (whose predicate objects have been escaped for use in SPARQL) needs to be compared with the updated data
+      * read back from the triplestore (in which predicate objects are not escaped).
+      *
+      * @return a copy of this object with its predicate objects unescaped.
+      */
+    def unescape: ClassInfoContentV2 = {
+        copy(predicates = unescapePredicateObjects)
+    }
 }
 
 /**
@@ -1596,7 +2186,7 @@ object ClassInfoContentV2 {
     /**
       * Converts a JSON-LD class definition into a [[ClassInfoContentV2]].
       *
-      * @param jsonLDClassDef a JSON-LD object representing a class definition.
+      * @param jsonLDClassDef  a JSON-LD object representing a class definition.
       * @param ignoreExtraData if `true`, extra data in the class definition will be ignored. This is used only in testing.
       *                        Otherwise, extra data will cause an exception to be thrown.
       * @return a [[ClassInfoContentV2]] representing the class definition.
@@ -1712,10 +2302,6 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
 
     import PropertyInfoContentV2._
 
-    def requireIriPredicate(predicateIri: SmartIri, errorFun: => Nothing): SmartIri = {
-        predicates.get(predicateIri).flatMap(pred => pred.objects.headOption).getOrElse(errorFun).toSmartIri
-    }
-
     override def toOntologySchema(targetSchema: OntologySchema): PropertyInfoContentV2 = {
 
         // Are we converting from the internal schema to the API v2 simple schema?
@@ -1783,6 +2369,17 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
     override def getRdfType: SmartIri = {
         predicates.get(OntologyConstants.Rdf.Type.toSmartIri).flatMap(pred => pred.objects.headOption).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdf:type")).toSmartIri
     }
+
+    /**
+      * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used after an update, when the
+      * input (whose predicate objects have been escaped for use in SPARQL) needs to be compared with the updated data
+      * read back from the triplestore (in which predicate objects are not escaped).
+      *
+      * @return a copy of this object with its predicate objects unescaped.
+      */
+    def unescape: PropertyInfoContentV2 = {
+        copy(predicates = unescapePredicateObjects)
+    }
 }
 
 /**
@@ -1817,8 +2414,8 @@ object PropertyInfoContentV2 {
       * Reads a [[PropertyInfoContentV2]] from a JSON-LD object.
       *
       * @param jsonLDPropertyDef the JSON-LD object representing a property definition.
-      * @param ignoreExtraData if `true`, extra data in the property definition will be ignored. This is used only in testing.
-      *                        Otherwise, extra data will cause an exception to be thrown.
+      * @param ignoreExtraData   if `true`, extra data in the property definition will be ignored. This is used only in testing.
+      *                          Otherwise, extra data will cause an exception to be thrown.
       * @return a [[PropertyInfoContentV2]] representing the property definition.
       */
     def fromJsonLDObject(jsonLDPropertyDef: JsonLDObject, ignoreExtraData: Boolean): PropertyInfoContentV2 = {
@@ -1893,6 +2490,19 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
         copy(
             ontologyIri = ontologyIri.toOntologySchema(targetSchema)
         )
+    }
+
+    /**
+      * Undoes the SPARQL-escaping of the `rdfs:label` of this ontology. This method is meant to be used in tests after an update, when the
+      * input (which has been escaped for use in SPARQL) needs to be compared with the updated data
+      * read back from the triplestore (which is not escaped).
+      *
+      * @return a copy of this [[OntologyMetadataV2]] with the `rdfs:label` unescaped.
+      */
+    def unescape: OntologyMetadataV2 = {
+        val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        copy(label = label.map(stringFormatter.fromSparqlEncodedString))
     }
 
     def toJsonLD(targetSchema: ApiV2Schema): Map[String, JsonLDValue] = {

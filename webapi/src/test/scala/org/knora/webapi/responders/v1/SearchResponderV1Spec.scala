@@ -29,7 +29,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Reset
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
 
-import org.knora.webapi.SharedOntologyTestData._
+import org.knora.webapi.SharedOntologyTestDataADM._
 
 import scala.concurrent.duration._
 
@@ -38,11 +38,11 @@ import scala.concurrent.duration._
   */
 object SearchResponderV1Spec {
 
-    private val incunabulaUser = SharedAdminTestData.incunabulaMemberUser
+    private val incunabulaUser = SharedTestDataV1.incunabulaMemberUser
 
-    private val anythingUser1 = SharedAdminTestData.anythingUser1
+    private val anythingUser1 = SharedTestDataV1.anythingUser1
 
-    private val anythingUser2 = SharedAdminTestData.anythingUser2
+    private val anythingUser2 = SharedTestDataV1.anythingUser2
 
     private val fulltextThingResultsForUser1 = Vector(SearchResultRowV1(
         rights = Some(8),
@@ -298,7 +298,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedAdminTestData.rootUser)
+        responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 

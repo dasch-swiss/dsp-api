@@ -672,6 +672,12 @@ class StringFormatterSpec extends CoreSpec() {
             }
         }
 
+        "reject http://0.0.0.0:3333/ontology/incunabula/v2#1234 (invalid entity name)" in {
+            assertThrows[BadRequestException] {
+                "http://0.0.0.0:3333/ontology/incunabula/v2#1234".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
         "enable pattern matching with SmartIri" in {
             val input: SmartIri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri
 
@@ -713,17 +719,17 @@ class StringFormatterSpec extends CoreSpec() {
         }
 
         "return the data named graph of a project without short code" in {
-            val shortname = SharedAdminTestData.incunabulaProjectInfo.shortname
+            val shortname = SharedTestDataV1.incunabulaProjectInfo.shortname
             val expected = s"http://www.knora.org/data/$shortname"
-            val result = stringFormatter.projectDataNamedGraph(SharedAdminTestData.incunabulaProjectInfo)
+            val result = stringFormatter.projectDataNamedGraph(SharedTestDataV1.incunabulaProjectInfo)
             result should be(expected)
         }
 
         "return the data named graph of a project with short code" in {
-            val shortcode = SharedAdminTestData.imagesProjectInfo.shortcode.get
-            val shortname = SharedAdminTestData.imagesProjectInfo.shortname
+            val shortcode = SharedTestDataV1.imagesProjectInfo.shortcode.get
+            val shortname = SharedTestDataV1.imagesProjectInfo.shortname
             val expected = s"http://www.knora.org/data/$shortcode/$shortname"
-            val result = stringFormatter.projectDataNamedGraph(SharedAdminTestData.imagesProjectInfo)
+            val result = stringFormatter.projectDataNamedGraph(SharedTestDataV1.imagesProjectInfo)
             result should be(expected)
         }
 

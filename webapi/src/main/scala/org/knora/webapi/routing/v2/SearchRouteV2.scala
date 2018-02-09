@@ -35,12 +35,12 @@ import org.knora.webapi.{BadRequestException, IRI, InternalSchema, SettingsImpl}
 import scala.concurrent.ExecutionContextExecutor
 
 /**
-  * Provides a spray-routing function for API routes that deal with search.
+  * Provides a function for API routes that deal with search.
   */
 object SearchRouteV2 extends Authenticator {
-    val LIMIT_TO_PROJECT = "limitToProject"
-    val LIMIT_TO_RESOURCE_CLASS = "limitToResourceClass"
-    val OFFSET = "offset"
+    private val LIMIT_TO_PROJECT = "limitToProject"
+    private val LIMIT_TO_RESOURCE_CLASS = "limitToResourceClass"
+    private val OFFSET = "offset"
 
     /**
       * Gets the requested offset. Returns zero if no offset is indicated.

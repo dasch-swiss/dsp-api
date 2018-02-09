@@ -67,7 +67,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
     )
 
     // A test UserProfileV1.
-    private val userProfile = SharedAdminTestData.incunabulaProjectAdminUser
+    private val userProfile = SharedTestDataV1.incunabulaProjectAdminUser
 
     // A test UserDataV1.
     private val userData = userProfile.userData

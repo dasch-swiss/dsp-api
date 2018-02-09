@@ -19,6 +19,7 @@ package org.knora.webapi
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.util.StringFormatter
 import org.scalatest.{BeforeAndAfterAll, Suite}
 
@@ -61,8 +62,8 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
     override def beforeAll: Unit = {
         /* Set the startup flags and start the Knora Server */
         log.debug(s"Starting Knora Service")
-        StartupFlags.allowReloadOverHTTP send true
         checkActorSystem()
+        applicationStateActor ! SetAllowReloadOverHTTPState(true)
         startService()
     }
 

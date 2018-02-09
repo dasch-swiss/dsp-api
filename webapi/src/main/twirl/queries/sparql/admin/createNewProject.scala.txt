@@ -1,0 +1,117 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+
+@*
+ * Creates a new project.
+ *
+ * @param adminNamedGraphIri the name of the graph into which the new project will be created.
+ * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
+                      results from the WHERE clause of the update.
+ * @param projectIri the IRI of the new user
+ * @param projectClassIri the IRI of the OWL class that the new project should belong to.
+ * @param shortname the new project's shortname (required / unique).
+ * @param maybeShortcode the new project's shortcode (optional / unique)
+ * @param maybeLongname the new project's longname.
+ * @param maybeDescription the new project's description.
+ * @param maybeKeywords the new project's keywords.
+ * @param maybeLogo the new project's logo.
+ * @param status the new project's status.
+ * @param hasSelfJoinEnabled the new project's self join status.
+ *
+ *@
+@(adminNamedGraphIri: IRI,
+  triplestore: String,
+  projectIri: IRI,
+  projectClassIri: IRI,
+  shortname: String,
+  maybeShortcode: Option[String],
+  maybeLongname: Option[String],
+  maybeDescription: Option[String],
+  maybeKeywords: Option[String],
+  maybeLogo: Option[String],
+  status: Boolean,
+  hasSelfJoinEnabled: Boolean)
+
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+INSERT {
+    GRAPH ?adminNamedGraphIri {
+        ?projectIri rdf:type ?projectClassIri ;
+
+            knora-base:projectShortname "@shortname"^^xsd:string ;
+
+            @if(maybeShortcode.nonEmpty) {
+                knora-base:projectShortcode "@maybeShortcode.get"^^xsd:string ;
+            }
+
+            @if(maybeLongname.nonEmpty) {
+                knora-base:projectLongname """@maybeLongname.get"""^^xsd:string ;
+            }
+
+            @if(maybeDescription.nonEmpty) {
+                knora-base:projectDescription """@maybeDescription.get"""^^xsd:string ;
+            }
+
+            @if(maybeKeywords.nonEmpty) {
+                knora-base:projectKeywords "@maybeKeywords.get"^^xsd:string ;
+            }
+
+            @if(maybeLogo.nonEmpty) {
+                knora-base:projectLogo "@maybeLogo.get"^^xsd:string ;
+            }
+
+            knora-base:status "@status"^^xsd:boolean ;
+
+            knora-base:hasSelfJoinEnabled "@hasSelfJoinEnabled"^^xsd:boolean .
+    }
+}
+@*
+
+GraphDB's consistency checking requires reasoning, but reasoning interferes with certain things
+in the WHERE clauses of our SPARQL updates, so we set a GraphDB-specific flag to return only
+explicit statements in the WHERE clause here.
+
+*@
+@triplestore match {
+    case "graphdb" | "graphdb-free" => {
+        USING <http://www.ontotext.com/explicit>
+    }
+
+    case other => {}
+}
+WHERE {
+    BIND(IRI("@adminNamedGraphIri") AS ?adminNamedGraphIri)
+    BIND(IRI("@projectIri") AS ?projectIri)
+    BIND(IRI("@projectClassIri") AS ?projectClassIri)
+
+    FILTER NOT EXISTS { ?s knora-base:projectShortname "@shortname"^^xsd:string . }
+
+    @if(maybeShortcode.nonEmpty) {
+        FILTER NOT EXISTS { ?s knora-base:projectShortcode "@maybeShortcode.get"^^xsd:string . }
+    }
+
+}

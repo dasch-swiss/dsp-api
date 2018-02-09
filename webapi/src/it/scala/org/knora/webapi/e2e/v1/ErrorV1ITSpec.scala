@@ -16,7 +16,7 @@ class ErrorV1ITSpec extends ITKnoraLiveSpec with TestingUtilities with Triplesto
 
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, 300.seconds)
     }
 

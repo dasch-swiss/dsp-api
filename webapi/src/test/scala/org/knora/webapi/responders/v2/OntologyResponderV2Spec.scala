@@ -6,31 +6,36 @@ import java.util.UUID
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{MutableTestIri, StringFormatter}
+import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}
 
 import scala.concurrent.duration._
 
+/**
+  * Tests [[OntologyResponderV2]].
+  */
 class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    private val imagesUserProfile = SharedAdminTestData.imagesUser01
-    private val imagesProjectIri = SharedAdminTestData.IMAGES_PROJECT_IRI.toSmartIri
+    private val imagesUserProfile = SharedTestDataV1.imagesUser01
+    private val imagesProjectIri = SharedTestDataV1.IMAGES_PROJECT_IRI.toSmartIri
 
-    private val anythingUserProfile = SharedAdminTestData.anythingAdminUser
-    private val anythingProjectIri = SharedAdminTestData.ANYTHING_PROJECT_IRI.toSmartIri
+    private val anythingUserProfile = SharedTestDataV1.anythingAdminUser
+    private val anythingProjectIri = SharedTestDataV1.ANYTHING_PROJECT_IRI.toSmartIri
 
     private val actorUnderTest = TestActorRef[OntologyResponderV2]
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    private val rdfDataObjects = List()
+    private val rdfDataObjects = List(
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+    )
 
     // The default timeout for receiving reply messages from actors.
     private val timeout = 10.seconds
@@ -62,6 +67,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+            assert(response.ontologies.size == 1)
             val metadata = response.ontologies.head
             assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/foo")
             fooIri.set(metadata.ontologyIri.toOntologySchema(ApiV2WithValueObjects).toString)
@@ -80,6 +86,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+            assert(response.ontologies.size == 1)
             val metadata = response.ontologies.head
             assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/foo")
             assert(metadata.label.contains(newLabel))
@@ -197,7 +204,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        "create an ordinary property in the 'anything' ontology as a subproperty of knora-api:hasValue and schema:name" in {
+        "create a property anything:hasName as a subproperty of knora-api:hasValue and schema:name" in {
 
             actorUnderTest ! OntologyMetadataGetRequestV2(
                 projectIris = Set(anythingProjectIri),
@@ -205,6 +212,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
+            assert(metadataResponse.ontologies.size == 1)
             anythingLastModDate = metadataResponse.ontologies.head.lastModificationDate.get
 
             val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
@@ -252,6 +260,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
                     val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
                     val ontology = externalMsg.ontologies.head
                     val property = ontology.properties(propertyIri)
@@ -275,6 +284,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
+                    assert(msg.ontologies.head.properties.size == 1)
                     val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
                     val readPropertyInfo: ReadPropertyInfoV2 = externalMsg.ontologies.head.properties.values.head
                     readPropertyInfo.entityInfoContent should ===(propertyInfoContent)
@@ -289,6 +300,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
+            assert(metadataResponse.ontologies.size == 1)
             anythingLastModDate = metadataResponse.ontologies.head.lastModificationDate.get
 
             val propertyIri = AnythingOntologyIri.makeEntityIri("hasInterestingThing")
@@ -334,6 +346,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
                     val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
                     val ontology = externalMsg.ontologies.head
                     val property = ontology.properties(propertyIri)
@@ -358,6 +371,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
+                    assert(msg.ontologies.head.properties.size == 1)
                     val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
                     val readPropertyInfo: ReadPropertyInfoV2 = externalMsg.ontologies.head.properties.values.head
                     assert(readPropertyInfo.entityInfoContent.propertyIri == linkValuePropIri)
@@ -378,6 +393,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
+                    assert(msg.ontologies.head.properties.size == 1)
                     val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
                     val readPropertyInfo: ReadPropertyInfoV2 = externalMsg.ontologies.head.properties.values.head
                     assert(readPropertyInfo.isLinkProp)
@@ -393,6 +410,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
+                    assert(msg.ontologies.head.properties.size == 1)
                     val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
                     val readPropertyInfo: ReadPropertyInfoV2 = externalMsg.ontologies.head.properties.values.head
                     assert(readPropertyInfo.entityInfoContent.propertyIri == linkValuePropIri)
@@ -431,6 +450,259 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreatePropertyRequestV2(
+                propertyInfoContent = propertyInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a property with the wrong rdf:type" in {
+
+            val propertyIri = AnythingOntologyIri.makeEntityIri("wrongProperty")
+
+            val propertyInfoContent = PropertyInfoContentV2(
+                propertyIri = propertyIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                        objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                        objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.TextValue)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wrong property"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "An invalid property definition"
+                        )
+                    )
+                ),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreatePropertyRequestV2(
+                propertyInfoContent = propertyInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a property that already exists" in {
+
+            val propertyIri = AnythingOntologyIri.makeEntityIri("hasInteger")
+
+            val propertyInfoContent = PropertyInfoContentV2(
+                propertyIri = propertyIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.ObjectProperty)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                        objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                        objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.IntValue)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wrong property"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "An invalid property definition"
+                        )
+                    )
+                ),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreatePropertyRequestV2(
+                propertyInfoContent = propertyInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a property with a nonexistent Knora superproperty" in {
+
+            val propertyIri = AnythingOntologyIri.makeEntityIri("wrongProperty")
+
+            val propertyInfoContent = PropertyInfoContentV2(
+                propertyIri = propertyIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.ObjectProperty)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                        objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                        objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.IntValue)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wrong property"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "An invalid property definition"
+                        )
+                    )
+                ),
+                subPropertyOf = Set(AnythingOntologyIri.makeEntityIri("nonexistentProperty")),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreatePropertyRequestV2(
+                propertyInfoContent = propertyInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+        }
+
+        "not create a property that is not a subproperty of knora-api:hasValue or knora-api:hasLinkTo" in {
+
+            val propertyIri = AnythingOntologyIri.makeEntityIri("wrongProperty")
+
+            val propertyInfoContent = PropertyInfoContentV2(
+                propertyIri = propertyIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.ObjectProperty)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                        objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                        objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.TextValue)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wrong property"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "An invalid property definition"
+                        )
+                    )
+                ),
+                subPropertyOf = Set("http://xmlns.com/foaf/0.1/name".toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreatePropertyRequestV2(
+                propertyInfoContent = propertyInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a property that is a subproperty of both knora-api:hasValue and knora-api:hasLinkTo" in {
+
+            val propertyIri = AnythingOntologyIri.makeEntityIri("wrongProperty")
+
+            val propertyInfoContent = PropertyInfoContentV2(
+                propertyIri = propertyIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.ObjectProperty)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                        objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                        objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.TextValue)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wrong property"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "An invalid property definition"
+                        )
+                    )
+                ),
+                subPropertyOf = Set(
+                    AnythingOntologyIri.makeEntityIri("hasText"),
+                    AnythingOntologyIri.makeEntityIri("hasOtherThing")
+                ),
                 ontologySchema = ApiV2WithValueObjects
             )
 
@@ -531,6 +803,56 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreatePropertyRequestV2(
+                propertyInfoContent = propertyInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a subproperty of anything:hasInteger with a knora-base:subjectType of knora-api:Representation" in {
+
+            val propertyIri = AnythingOntologyIri.makeEntityIri("wrongProperty")
+
+            val propertyInfoContent = PropertyInfoContentV2(
+                propertyIri = propertyIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.ObjectProperty)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                        objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                        objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.TextValue)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wrong property"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "An invalid property definition"
+                        )
+                    )
+                ),
+                subPropertyOf = Set(AnythingOntologyIri.makeEntityIri("hasInteger")),
                 ontologySchema = ApiV2WithValueObjects
             )
 
@@ -698,6 +1020,55 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "not create a property with a knora-api:objectType of xsd:string" in {
+
+            val propertyIri = AnythingOntologyIri.makeEntityIri("wrongProperty")
+
+            val propertyInfoContent = PropertyInfoContentV2(
+                propertyIri = propertyIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.ObjectProperty)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                        objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                        objects = Set(OntologyConstants.Xsd.String)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wrong property"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "An invalid property definition"
+                        )
+                    )
+                ),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreatePropertyRequestV2(
+                propertyInfoContent = propertyInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
 
         "not create a property whose object type is knora-api:StillImageFileValue" in {
 
@@ -949,6 +1320,1210 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
 
+        }
+
+        "change the labels of a property" in {
+            val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
+
+            val newObjects = Map(
+                "en" -> "has name",
+                "fr" -> "a nom",
+                "de" -> "hat Namen"
+            )
+
+            actorUnderTest ! ChangePropertyLabelsOrCommentsRequestV2(
+                propertyIri = propertyIri,
+                predicateToUpdate = OntologyConstants.Rdfs.Label.toSmartIri,
+                newObjects = newObjects,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readPropertyInfo = ontology.properties(propertyIri)
+                    readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objectsWithLang should ===(newObjects)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "change the comments of a property" in {
+            val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
+
+            val newObjects = Map(
+                "en" -> "The name of a Thing",
+                "fr" -> "Le nom d\\'une chose", // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
+                "de" -> "Der Name eines Dinges"
+            )
+
+            // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
+            val newObjectsUnescaped = newObjects.map {
+                case (lang, obj) => lang -> stringFormatter.fromSparqlEncodedString(obj)
+            }
+
+            actorUnderTest ! ChangePropertyLabelsOrCommentsRequestV2(
+                propertyIri = propertyIri,
+                predicateToUpdate = OntologyConstants.Rdfs.Comment.toSmartIri,
+                newObjects = newObjects,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readPropertyInfo = ontology.properties(propertyIri)
+                    readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objectsWithLang should ===(newObjectsUnescaped)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "create a class anything:WildThing that is a subclass of anything:Thing, with a direct cardinality for anything:hasName" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("WildThing")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wild thing"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "A thing that is wild"
+                        )
+                    )
+                ),
+                directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasName") -> Cardinality.MayHaveOne),
+                subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            val expectedProperties: Set[SmartIri] = Set(
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherThingValue",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasBlueThing",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasThingPicture",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasDate",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasBoolean",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasThingPictureValue",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasText",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasColor",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasInterval",
+                "http://0.0.0.0:3333/ontology/anything/v2#isPartOfOtherThing",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasDecimal",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherThing",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasBlueThingValue",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasInteger",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasListItem",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasRichtext",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasUri",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasName",
+                "http://0.0.0.0:3333/ontology/anything/v2#isPartOfOtherThingValue",
+                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherListItem"
+            ).map(_.toSmartIri)
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
+                    assert(msg.ontologies.head.classes.size == 1)
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readClassInfo = ontology.classes(classIri)
+                    readClassInfo.entityInfoContent should ===(classInfoContent)
+                    readClassInfo.allCardinalities.keySet should ===(expectedProperties)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "create a class anything:Nothing with no properties" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "nothing",
+                            "de" -> "Nichts"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "Represents nothing",
+                            "de" -> "Stellt nichts dar"
+                        )
+                    )
+                ),
+                subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            val expectedProperties = Set(
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
+            ).map(_.toSmartIri)
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
+                    assert(msg.ontologies.head.classes.size == 1)
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readClassInfo = ontology.classes(classIri)
+                    readClassInfo.entityInfoContent should ===(classInfoContent)
+                    readClassInfo.allCardinalities.keySet should ===(expectedProperties)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "change the labels of a class" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+            val newObjects = Map(
+                "en" -> "nothing",
+                "fr" -> "rien"
+            )
+
+            actorUnderTest ! ChangeClassLabelsOrCommentsRequestV2(
+                classIri = classIri,
+                predicateToUpdate = OntologyConstants.Rdfs.Label.toSmartIri,
+                newObjects = newObjects,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readClassInfo = ontology.classes(classIri)
+                    readClassInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objectsWithLang should ===(newObjects)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "change the comments of a class" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+            val newObjects = Map(
+                "en" -> "Represents nothing",
+                "fr" -> "ne représente rien"
+            )
+
+            // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
+            val newObjectsUnescaped = newObjects.map {
+                case (lang, obj) => lang -> stringFormatter.fromSparqlEncodedString(obj)
+            }
+
+            actorUnderTest ! ChangeClassLabelsOrCommentsRequestV2(
+                classIri = classIri,
+                predicateToUpdate = OntologyConstants.Rdfs.Comment.toSmartIri,
+                newObjects = newObjects,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readClassInfo = ontology.classes(classIri)
+                    readClassInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objectsWithLang should ===(newObjectsUnescaped)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "not create a class with the wrong rdf:type" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("WrongClass")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.ObjectProperty)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wrong class"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "An invalid class definition"
+                        )
+                    )
+                ),
+                subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a class that already exists" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Thing")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wrong class"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "An invalid class definition"
+                        )
+                    )
+                ),
+                subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a class with a nonexistent base class" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("WrongClass")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wrong class"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "An invalid class definition"
+                        )
+                    )
+                ),
+                subClassOf = Set(AnythingOntologyIri.makeEntityIri("NonexistentClass")),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+        }
+
+        "not create a class that is not a subclass of knora-api:Resource" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("WrongClass")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wrong class"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "An invalid class definition"
+                        )
+                    )
+                ),
+                subClassOf = Set("http://xmlns.com/foaf/0.1/Person".toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a class with a cardinality for a Knora property that doesn't exist" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("WrongClass")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wrong class"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "An invalid class definition"
+                        )
+                    )
+                ),
+                directCardinalities = Map(AnythingOntologyIri.makeEntityIri("nonexistentProperty") -> Cardinality.MayHaveOne),
+                subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+        }
+
+        "not create a class that has a cardinality for anything:hasInteger but is not a subclass of anything:Thing" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("WrongClass")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wrong class"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "An invalid class definition"
+                        )
+                    )
+                ),
+                directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasInteger") -> Cardinality.MayHaveOne),
+                subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "create a subclass of anything:Thing that has cardinality 1 for anything:hasBoolean" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("RestrictiveThing")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "restrictive thing"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "A more restrictive Thing"
+                        )
+                    )
+                ),
+                directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> Cardinality.MustHaveOne),
+                subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readClassInfo = ontology.classes(classIri)
+                    readClassInfo.entityInfoContent should ===(classInfoContent)
+                    readClassInfo.allCardinalities(AnythingOntologyIri.makeEntityIri("hasBoolean")) should ===(Cardinality.MustHaveOne)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+
+        "not create a subclass of anything:Thing that has cardinality 0-n for anything:hasBoolean" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("WrongClass")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wrong class"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "An invalid class definition"
+                        )
+                    )
+                ),
+                directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> Cardinality.MayHaveMany),
+                subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "create a property anything:hasNothingness with knora-api:subjectType anything:Nothing" in {
+            val propertyIri = AnythingOntologyIri.makeEntityIri("hasNothingness")
+
+            val propertyInfoContent = PropertyInfoContentV2(
+                propertyIri = propertyIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.ObjectProperty)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                        objects = Set(AnythingOntologyIri.makeEntityIri("Nothing").toString)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                        objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "has nothingness",
+                            "de" -> "hat Nichtsein"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "Indicates whether a Nothing has nothingness",
+                            "de" -> "Anzeigt, ob ein Nichts Nichtsein hat"
+                        )
+                    )
+                ),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreatePropertyRequestV2(
+                propertyInfoContent = propertyInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val property = ontology.properties(propertyIri)
+                    property.entityInfoContent should ===(propertyInfoContent)
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "not create a property called anything:Thing, because that IRI is already used for a class" in {
+            val propertyIri = AnythingOntologyIri.makeEntityIri("Thing")
+
+            val propertyInfoContent = PropertyInfoContentV2(
+                propertyIri = propertyIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.ObjectProperty)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                        objects = Set(AnythingOntologyIri.makeEntityIri("Nothing").toString)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                        objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "has nothingness",
+                            "de" -> "hat Nichtsein"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "Indicates whether a Nothing has nothingness",
+                            "de" -> "Anzeigt, ob ein Nichts Nichtsein hat"
+                        )
+                    )
+                ),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreatePropertyRequestV2(
+                propertyInfoContent = propertyInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a class called anything:hasNothingness, because that IRI is already used for a property" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("hasNothingness")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "nothing",
+                            "de" -> "Nichts"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "Represents nothing",
+                            "de" -> "Stellt nichts dar"
+                        )
+                    )
+                ),
+                subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "create a class anything:Void as a subclass of anything:Nothing" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Void")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "void"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "Represents a void"
+                        )
+                    )
+                ),
+                subClassOf = Set(AnythingOntologyIri.makeEntityIri("Nothing")),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
+                    assert(msg.ontologies.head.classes.size == 1)
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readClassInfo = ontology.classes(classIri)
+                    readClassInfo.entityInfoContent should ===(classInfoContent)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "not add a cardinality to the class anything:Nothing, because it has a subclass" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    )
+                ),
+                directCardinalities = Map(
+                    AnythingOntologyIri.makeEntityIri("hasNothingness") -> Cardinality.MayHaveOne
+                ),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! AddCardinalitiesToClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "delete the class anything:Void" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Void")
+
+            actorUnderTest ! DeleteClassRequestV2(
+                classIri = classIri,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologyMetadataV2 =>
+                    assert(msg.ontologies.size == 1)
+                    val metadata = msg.ontologies.head
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "add a cardinality for the property anything:hasNothingness to the class anything:Nothing" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    )
+                ),
+                directCardinalities = Map(
+                    AnythingOntologyIri.makeEntityIri("hasNothingness") -> Cardinality.MayHaveOne
+                ),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! AddCardinalitiesToClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            val expectedProperties = Set(
+                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri,
+                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri,
+                AnythingOntologyIri.makeEntityIri("hasNothingness")
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readClassInfo = ontology.classes(classIri)
+                    readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
+                    readClassInfo.allCardinalities.keySet should ===(expectedProperties)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "not add a cardinality for property anything:hasName to class anything:BlueThing, because the class is used in data" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("BlueThing")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    )
+                ),
+                directCardinalities = Map(
+                    AnythingOntologyIri.makeEntityIri("hasName") -> Cardinality.MayHaveOne
+                ),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! AddCardinalitiesToClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "create a property anything:hasEmptiness with knora-api:subjectType anything:Nothing" in {
+            val propertyIri = AnythingOntologyIri.makeEntityIri("hasEmptiness")
+
+            val propertyInfoContent = PropertyInfoContentV2(
+                propertyIri = propertyIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.ObjectProperty)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                        objects = Set(AnythingOntologyIri.makeEntityIri("Nothing").toString)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                        objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "has emptiness",
+                            "de" -> "hat Leerheit"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "Indicates whether a Nothing has emptiness",
+                            "de" -> "Anzeigt, ob ein Nichts Leerheit hat"
+                        )
+                    )
+                ),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreatePropertyRequestV2(
+                propertyInfoContent = propertyInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val property = ontology.properties(propertyIri)
+                    property.entityInfoContent should ===(propertyInfoContent)
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "change the cardinalities of the class anything:Nothing, replacing anything:hasNothingness with anything:hasEmptiness" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    )
+                ),
+                directCardinalities = Map(
+                    AnythingOntologyIri.makeEntityIri("hasEmptiness") -> Cardinality.MayHaveOne
+                ),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! ChangeCardinalitiesRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            val expectedProperties = Set(
+                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri,
+                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri,
+                AnythingOntologyIri.makeEntityIri("hasEmptiness")
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readClassInfo = ontology.classes(classIri)
+                    readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
+                    readClassInfo.allCardinalities.keySet should ===(expectedProperties)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "not delete the class anything:Nothing, because the property anything:hasEmptiness refers to it" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+            actorUnderTest ! DeleteClassRequestV2(
+                classIri = classIri,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "delete the property anything:hasNothingness" in {
+            val hasNothingness = AnythingOntologyIri.makeEntityIri("hasNothingness")
+
+            actorUnderTest ! DeletePropertyRequestV2(
+                propertyIri = hasNothingness,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologyMetadataV2 =>
+                    assert(msg.ontologies.size == 1)
+                    val metadata = msg.ontologies.head
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "not delete the property anything:hasEmptiness, because the class anything:Nothing refers to it" in {
+            val hasNothingness = AnythingOntologyIri.makeEntityIri("hasEmptiness")
+
+            actorUnderTest ! DeletePropertyRequestV2(
+                propertyIri = hasNothingness,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "remove all cardinalities from the class anything:Nothing" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.Class)
+                    )
+                ),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! ChangeCardinalitiesRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            val expectedProperties = Set(
+                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri,
+                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologiesV2 =>
+                    assert(msg.ontologies.size == 1)
+                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val ontology = externalMsg.ontologies.head
+                    val readClassInfo = ontology.classes(classIri)
+                    readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
+                    readClassInfo.allCardinalities.keySet should ===(expectedProperties)
+
+                    val metadata = ontology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "not delete the property anything:hasEmptiness with the wrong knora-api:lastModificationDate" in {
+            val hasEmptiness = AnythingOntologyIri.makeEntityIri("hasEmptiness")
+
+            actorUnderTest ! DeletePropertyRequestV2(
+                propertyIri = hasEmptiness,
+                lastModificationDate = anythingLastModDate.minusSeconds(60),
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[EditConflictException] should ===(true)
+            }
+        }
+
+        "delete the property anything:hasEmptiness" in {
+            val hasEmptiness = AnythingOntologyIri.makeEntityIri("hasEmptiness")
+
+            actorUnderTest ! DeletePropertyRequestV2(
+                propertyIri = hasEmptiness,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologyMetadataV2 =>
+                    assert(msg.ontologies.size == 1)
+                    val metadata = msg.ontologies.head
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "delete the class anything:Nothing" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+            actorUnderTest ! DeleteClassRequestV2(
+                classIri = classIri,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologyMetadataV2 =>
+                    assert(msg.ontologies.size == 1)
+                    val metadata = msg.ontologies.head
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
         }
     }
 }

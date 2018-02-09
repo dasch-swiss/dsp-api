@@ -82,26 +82,6 @@ object ApiStatusCodesV1 extends Enumeration {
     val UNSPECIFIED_ERROR = Value(999)
 
     /**
-      * Converts an HTTP status code to a similar API status code.
-      *
-      * @param httpStatus an HTTP status code.
-      * @return an API status code.
-      */
-    def fromHttpStatus(httpStatus: StatusCode): Value = {
-        httpStatus match {
-            case StatusCodes.OK => OK
-            case StatusCodes.BadRequest => INVALID_REQUEST_TYPE
-            case StatusCodes.Forbidden => NO_RIGHTS_FOR_OPERATION
-            case StatusCodes.InternalServerError => INTERNAL_SALSAH_ERROR
-            case StatusCodes.NotFound => NOT_FOUND
-            case StatusCodes.NotImplemented => NOT_YET_IMPLEMENTED
-            case StatusCodes.Unauthorized => CREDENTIALS_NOT_VALID
-            case StatusCodes.Conflict => UPDATE_NOT_PERFORMED
-            case other => UNSPECIFIED_ERROR
-        }
-    }
-
-    /**
       * Converts an exception to a similar API status code.
       *
       * @param ex an exception.
@@ -115,12 +95,13 @@ object ApiStatusCodesV1 extends Enumeration {
             case BadCredentialsException(_) => ApiStatusCodesV1.CREDENTIALS_NOT_VALID
             case DuplicateValueException(_) => ApiStatusCodesV1.DUPLICATE_VALUE
             case OntologyConstraintException(_) => ApiStatusCodesV1.ONTOLOGY_CONSTRAINT
+            case EditConflictException(_) => ApiStatusCodesV1.UPDATE_NOT_PERFORMED
             case RequestRejectedException(_) => ApiStatusCodesV1.INVALID_REQUEST_TYPE
 
             // Subclasses of InternalServerException (which must be last in this group)
             case UpdateNotPerformedException(_) => ApiStatusCodesV1.UPDATE_NOT_PERFORMED
             case InternalServerException(_) => ApiStatusCodesV1.INTERNAL_SALSAH_ERROR
-            case other => ApiStatusCodesV1.INTERNAL_SALSAH_ERROR
+            case _ => ApiStatusCodesV1.INTERNAL_SALSAH_ERROR
         }
     }
 
