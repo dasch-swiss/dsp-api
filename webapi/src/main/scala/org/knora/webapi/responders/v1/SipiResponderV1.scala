@@ -28,15 +28,15 @@ import akka.http.scaladsl.model._
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.sipimessages.RepresentationV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiConstants.FileType
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{FileValueV1, StillImageFileValueV1, TextFileValueV1}
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{StringFormatter, PermissionUtilADM}
+import org.knora.webapi.util.PermissionUtilADM
 import spray.json._
 
 import scala.concurrent.Future
@@ -160,7 +160,7 @@ class SipiResponderV1 extends Responder {
         // handle unsuccessful requests to Sipi
         //
         val recoveredConversionResultFuture = conversionResultFuture.recoverWith {
-            case noResponse: akka.stream.impl.io.TcpIdleTimeoutException =>
+            case noResponse: akka.http.impl.engine.HttpConnectionTimeoutException =>
                 // this problem is hardly the user's fault. Create a SipiException
                 throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
 
