@@ -112,8 +112,7 @@ object OntologyConstants {
         KnoraBase.KnoraBaseOntologyLabel,
         KnoraApi.KnoraApiOntologyLabel,
         SalsahGui.SalsahGuiOntologyLabel,
-        Standoff.StandoffOntologyLabel,
-        Dc.DcOntologyLabel
+        Standoff.StandoffOntologyLabel
     )
 
     /**
@@ -511,10 +510,6 @@ object OntologyConstants {
             val assignmentOperator: String = "="
         }
 
-    }
-
-    object Dc {
-        val DcOntologyLabel: String = "dc"
     }
 
     object Ontotext {
