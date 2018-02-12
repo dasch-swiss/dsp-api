@@ -1703,7 +1703,46 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
+        "search for 'Zeitglöcklein des Lebens' using dcterms:title" in {
 
+            val sparqlSimplified =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |    PREFIX dcterms: <http://purl.org/dc/terms/>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book dcterms:title ?title .
+                  |
+                  |    } WHERE {
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book dcterms:title ?title .
+                  |
+                  |        dcterms:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        FILTER(?title = 'Zeitglöcklein des Lebens und Leidens Christi')
+                  |
+                  |    } OFFSET 0
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkCountQuery(responseAs[String], 2)
+
+            }
+
+        }
 
     }
 }
