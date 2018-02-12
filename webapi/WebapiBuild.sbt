@@ -169,7 +169,7 @@ lazy val library =
     new {
         object Version {
             val akkaBase = "2.5.9"
-            val akkaHttp = "10.0.11"
+            val akkaHttp = "10.1.0-RC1"
             val jena = "3.4.0"
             val aspectj = "1.8.7"
             val kamon = "0.5.2"
@@ -180,17 +180,21 @@ lazy val library =
         val akkaAgent              = "com.typesafe.akka"            %% "akka-agent"               % Version.akkaBase
         val akkaStream             = "com.typesafe.akka"            %% "akka-stream"              % Version.akkaBase
         val akkaSlf4j              = "com.typesafe.akka"            %% "akka-slf4j"               % Version.akkaBase
+        val akkaTestkit            = "com.typesafe.akka"            %% "akka-testkit"             % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val akkaStreamTestkit      = "com.typesafe.akka"            %% "akka-stream-testkit"      % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
+
+        // akka http
         val akkaHttp               = "com.typesafe.akka"            %% "akka-http"                % Version.akkaHttp
         val akkaHttpXml            = "com.typesafe.akka"            %% "akka-http-xml"            % Version.akkaHttp
         val akkaHttpSprayJson      = "com.typesafe.akka"            %% "akka-http-spray-json"     % Version.akkaHttp
         val akkaHttpJacksonJava    = "com.typesafe.akka"            %% "akka-http-jackson"        % Version.akkaHttp
-        val akkaTestkit            = "com.typesafe.akka"            %% "akka-testkit"             % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
         val akkaHttpTestkit        = "com.typesafe.akka"            %% "akka-http-testkit"        % Version.akkaHttp    % "test, fuseki, graphdb, tdb, it, fuseki-it"
-        val akkaStreamTestkit      = "com.typesafe.akka"            %% "akka-stream-testkit"      % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
+
+        // testing
         val scalaTest              = "org.scalatest"                %% "scalatest"                % "3.0.4"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
 
         //CORS support
-        val akkaHttpCors           = "ch.megard"                    %% "akka-http-cors"           % "0.1.10"
+        val akkaHttpCors           = "ch.megard"                    %% "akka-http-cors"           % "0.2.2"
 
         // jena
         val jenaLibs               = "org.apache.jena"               % "apache-jena-libs"         % Version.jena exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec")
@@ -244,10 +248,10 @@ lazy val library =
         val scalaJava8Compat       = "org.scala-lang.modules"        % "scala-java8-compat_2.12"  % "0.8.0"
 
         // provides akka jackson (json) support
-        val akkaHttpCirce          = "de.heikoseeberger"            %% "akka-http-circe"          % "1.18.0"
-        val jacksonScala           = "com.fasterxml.jackson.module" %% "jackson-module-scala"     % "2.9.0"
+        val akkaHttpCirce          = "de.heikoseeberger"            %% "akka-http-circe"          % "1.20.0-RC1"
+        val jacksonScala           = "com.fasterxml.jackson.module" %% "jackson-module-scala"     % "2.9.4"
 
-        val jsonldJava             = "com.github.jsonld-java"        % "jsonld-java"              % "0.10.0"
+        val jsonldJava             = "com.github.jsonld-java"        % "jsonld-java"              % "0.11.1"
     }
 
 lazy val javaRunOptions = Seq(

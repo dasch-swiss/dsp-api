@@ -35,7 +35,7 @@ object RejectingRouteE2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing users endpoint.
+  * End-to-End (E2E) test specification for testing route rejections.
   */
 class RejectingRouteE2ESpec extends E2ESpec(RejectingRouteE2ESpec.config) {
 

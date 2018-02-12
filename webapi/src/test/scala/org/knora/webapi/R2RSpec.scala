@@ -16,7 +16,6 @@
 
 package org.knora.webapi
 
-import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
@@ -29,7 +28,7 @@ import scala.concurrent.{Await, Future}
 /**
   * Created by subotic on 08.12.15.
   */
-class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
+class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Matchers with BeforeAndAfterAll {
 
     def actorRefFactory = system
 
