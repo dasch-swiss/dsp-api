@@ -580,12 +580,7 @@ class ResourcesResponderV1 extends Responder {
             // Get the resource info (minus ontology-based information) and the user's permissions on it.
             (permissions, resInfoWithoutQueryingOntology: ResourceInfoV1) <- resourceInfoFuture
 
-            // Make a set of the IRIs of ontology entities that we need information about.
-            entityIris: Set[IRI] = groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++
-                groupedPropsByType.groupedLinkProperties.groupedProperties.keySet ++
-                incomingTypes ++ linkedResourceTypes + resInfoWithoutQueryingOntology.restype_id // use Set to eliminate redundancy
-
-            // Ask the ontology responder for information about those entities.
+            // Ask the ontology responder for information about the ontology entities that we need information about.
             entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
                 resourceClassIris = incomingTypes ++ linkedResourceTypes + resInfoWithoutQueryingOntology.restype_id,
                 propertyIris = groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++ groupedPropsByType.groupedLinkProperties.groupedProperties.keySet,
