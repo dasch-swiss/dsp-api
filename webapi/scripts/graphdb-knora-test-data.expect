@@ -14,8 +14,6 @@ send "load ../../knora-ontologies/standoff-onto.ttl into http://www.knora.org/on
 expect $prompt
 send "load ../../knora-ontologies/standoff-data.ttl into http://www.knora.org/data/standoff .\r"
 expect $prompt
-send "load ../../knora-ontologies/knora-dc.ttl into http://www.knora.org/ontology/dc .\r"
-expect $prompt
 send "load ../../knora-ontologies/salsah-gui.ttl into http://www.knora.org/ontology/salsah-gui .\r"
 expect $prompt
 send "load ../_test_data/all_data/admin-data.ttl into http://www.knora.org/data/admin .\r"
@@ -42,14 +40,10 @@ send "load ../_test_data/ontologies/beol-onto.ttl into http://www.knora.org/onto
 expect $prompt
 send "load ../_test_data/all_data/beol-data.ttl into http://www.knora.org/data/0801/beol .\r"
 expect $prompt
-
-
 send "load ../_test_data/ontologies/biblio-onto.ttl into http://www.knora.org/ontology/biblio .\r"
 expect $prompt
 send "load ../_test_data/all_data/biblio-data.ttl into http://www.knora.org/data/biblio .\r"
 expect $prompt
-
-
 send "load ../_test_data/ontologies/webern-onto.ttl into http://www.knora.org/ontology/08AE/webern .\r"
 expect $prompt
 send "load ../_test_data/all_data/webern-data.ttl into http://www.knora.org/data/08AE/webern .\r"

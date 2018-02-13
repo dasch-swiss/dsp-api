@@ -119,7 +119,7 @@ class UsersResponderADM extends Responder {
                     )
             }
 
-        } yield users
+        } yield users.sorted
     }
 
     /**

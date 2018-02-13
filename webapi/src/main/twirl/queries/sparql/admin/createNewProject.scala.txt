@@ -19,6 +19,7 @@
  *@
 
 @import org.knora.webapi.IRI
+@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 @*
  * Creates a new project.
@@ -43,10 +44,10 @@
   projectIri: IRI,
   projectClassIri: IRI,
   shortname: String,
-  maybeShortcode: Option[String],
+  shortcode: String,
   maybeLongname: Option[String],
-  maybeDescription: Option[String],
-  maybeKeywords: Option[String],
+  maybeDescriptions: Option[Seq[StringLiteralV2]],
+  maybeKeywords: Option[Seq[String]],
   maybeLogo: Option[String],
   status: Boolean,
   hasSelfJoinEnabled: Boolean)
@@ -64,20 +65,26 @@ INSERT {
 
             knora-base:projectShortname "@shortname"^^xsd:string ;
 
-            @if(maybeShortcode.nonEmpty) {
-                knora-base:projectShortcode "@maybeShortcode.get"^^xsd:string ;
-            }
+            knora-base:projectShortcode "@shortcode"^^xsd:string ;
 
             @if(maybeLongname.nonEmpty) {
                 knora-base:projectLongname """@maybeLongname.get"""^^xsd:string ;
             }
 
-            @if(maybeDescription.nonEmpty) {
-                knora-base:projectDescription """@maybeDescription.get"""^^xsd:string ;
+            @if(maybeDescriptions.nonEmpty) {
+                @for(description <- maybeDescriptions.get) {
+                    @if(description.language.nonEmpty) {
+                        knora-base:projectDescription """@description.value"""@@@{description.language.get} ;
+                    } else {
+                        knora-base:projectDescription """@description.value"""^^xsd:string ;
+                    }
+                }
             }
 
             @if(maybeKeywords.nonEmpty) {
-                knora-base:projectKeywords "@maybeKeywords.get"^^xsd:string ;
+                @for(keyword <- maybeKeywords.get) {
+                  knora-base:projectKeyword "@keyword"^^xsd:string ;
+                }
             }
 
             @if(maybeLogo.nonEmpty) {
@@ -110,8 +117,5 @@ WHERE {
 
     FILTER NOT EXISTS { ?s knora-base:projectShortname "@shortname"^^xsd:string . }
 
-    @if(maybeShortcode.nonEmpty) {
-        FILTER NOT EXISTS { ?s knora-base:projectShortcode "@maybeShortcode.get"^^xsd:string . }
-    }
-
+    FILTER NOT EXISTS { ?s knora-base:projectShortcode "@shortcode"^^xsd:string . }
 }

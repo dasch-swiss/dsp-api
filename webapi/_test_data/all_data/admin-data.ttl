@@ -105,9 +105,10 @@
 
                                 knora-base:projectLongname "Image Collection Demo"^^xsd:string ;
 
-                                knora-base:projectDescription "A demo project of a collection of images"^^xsd:string ;
+                                knora-base:projectDescription "A demo project of a collection of images"@en ;
 
-                                knora-base:projectKeywords "images, collection"^^xsd:string ;
+                                knora-base:projectKeyword "images"^^xsd:string,
+                                                          "collection"^^xsd:string ;
 
                                 knora-base:belongsToInstitution <http://rdfh.ch/institutions/dhlab-basel> ;
 
@@ -225,7 +226,20 @@ Das Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten 
 Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.
 </p>"""^^xsd:string ;
 
-                                          knora-base:projectKeywords """Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images"""^^xsd:string ;
+                                          knora-base:projectKeyword "Basler Frühdrucke"^^xsd:string,
+                                                                    "Inkunabel"^^xsd:string,
+                                                                    "Narrenschiff"^^xsd:string,
+                                                                    "Wiegendrucke"^^xsd:string,
+                                                                    "Sebastian Brant"^^xsd:string,
+                                                                    "Bilderfolgen"^^xsd:string,
+                                                                    "early print"^^xsd:string,
+                                                                    "incunabula"^^xsd:string,
+                                                                    "ship of fools"^^xsd:string,
+                                                                    "Kunsthistorisches Seminar Universität Basel"^^xsd:string,
+                                                                    "Late Middle Ages"^^xsd:string,
+                                                                    "Letterpress Printing"^^xsd:string,
+                                                                    "Basel"^^xsd:string,
+                                                                    "Contectualisation of images"^^xsd:string ;
 
                                           knora-base:projectOntology <http://www.knora.org/ontology/incunabula> ;
 

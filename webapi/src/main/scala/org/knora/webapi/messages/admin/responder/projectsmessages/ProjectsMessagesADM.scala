@@ -23,13 +23,14 @@ package org.knora.webapi.messages.admin.responder.projectsmessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.messages.admin.responder.ontologiesmessages.{OntologyInfoADM, OntologyInfoShortADM}
+import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoShortADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
+import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.{BadRequestException, IRI}
-import spray.json.{DefaultJsonProtocol, JsonFormat, RootJsonFormat}
+import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -47,10 +48,10 @@ import spray.json.{DefaultJsonProtocol, JsonFormat, RootJsonFormat}
   * @param selfjoin    the status of self-join of the project to be created.
   */
 case class CreateProjectApiRequestADM(shortname: String,
-                                      shortcode: Option[String],
+                                      shortcode: String,
                                       longname: Option[String],
-                                      description: Option[String],
-                                      keywords: Option[String],
+                                      description: Seq[StringLiteralV2],
+                                      keywords: Seq[String],
                                       logo: Option[String],
                                       status: Boolean,
                                       selfjoin: Boolean) extends ProjectsADMJsonProtocol {
@@ -65,16 +66,14 @@ case class CreateProjectApiRequestADM(shortname: String,
   * @param description   the new project's description.
   * @param keywords      the new project's keywords.
   * @param logo          the new project's logo.
-  * @param institution   the new project's institution.
   * @param status        the new project's status.
   * @param selfjoin      the new project's self-join status.
   */
 case class ChangeProjectApiRequestADM(shortname: Option[String] = None,
                                      longname: Option[String] = None,
-                                     description: Option[String] = None,
-                                     keywords: Option[String] = None,
+                                     description: Option[Seq[StringLiteralV2]] = None,
+                                     keywords: Option[Seq[String]] = None,
                                      logo: Option[String] = None,
-                                     institution: Option[IRI] = None,
                                      status: Option[Boolean] = None,
                                      selfjoin: Option[Boolean] = None) extends ProjectsADMJsonProtocol {
 
@@ -84,7 +83,6 @@ case class ChangeProjectApiRequestADM(shortname: Option[String] = None,
         description,
         keywords,
         logo,
-        institution,
         status,
         selfjoin
     ).flatten.size
@@ -199,7 +197,7 @@ case class ProjectMembersGetRequestADM(maybeIri: Option[IRI],
 /**
   * Returns all admin users of a project identified either through its IRI, shortname or shortcode.
   *
-  * @param maybeIri           the IRI of the project.
+  * @param maybeIri       the IRI of the project.
   * @param maybeShortname the project's short name.
   * @param maybeShortcode the project's shortcode.
   * @param requestingUser the user making the request.
@@ -218,6 +216,23 @@ case class ProjectAdminMembersGetRequestADM(maybeIri: Option[IRI],
     // Only one is allowed
     if (parametersCount == 0 || parametersCount > 1) throw BadRequestException("Need to provide either project IRI, shortname, or shortcode.")
 }
+
+/**
+  * Returns all unique keywords for all projects.
+  *
+  * @param requestingUser the user making the request.
+  */
+case class ProjectsKeywordsGetRequestADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
+
+/**
+  * Returns all keywords for a project identified through IRI.
+  *
+  * @param projectIri the IRI of the project.
+  * @param requestingUser the user making the request.
+  */
+case class ProjectKeywordsGetRequestADM(projectIri: IRI,
+                                        requestingUser: UserADM) extends ProjectsResponderRequestADM
+
 
 /**
   * Requests the creation of a new project.
@@ -286,7 +301,7 @@ case class ProjectOntologyRemoveADM(projectIri: IRI,
 
 // Responses
 /**
-  * Represents the Knora API v1 JSON response to a request for information about all projects.
+  * Represents the Knora API ADM JSON response to a request for information about all projects.
   *
   * @param projects information about all existing projects.
   */
@@ -295,7 +310,7 @@ case class ProjectsGetResponseADM(projects: Seq[ProjectADM]) extends KnoraRespon
 }
 
 /**
-  * Represents the Knora API v1 JSON response to a request for information about a single project.
+  * Represents the Knora API ADM JSON response to a request for information about a single project.
   *
   * @param project all information about the project.
   */
@@ -304,7 +319,7 @@ case class ProjectGetResponseADM(project: ProjectADM) extends KnoraResponseADM w
 }
 
 /**
-  * Represents the Knora API v1 JSON response to a request for a list of members inside a single project.
+  * Represents the Knora API ADM JSON response to a request for a list of members inside a single project.
   *
   * @param members    a list of members.
   */
@@ -314,13 +329,31 @@ case class ProjectMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResp
 }
 
 /**
-  * Represents the Knora API v1 JSON response to a request for a list of admin members inside a single project.
+  * Represents the Knora API ADM JSON response to a request for a list of admin members inside a single project.
   *
   * @param members    a list of admin members.
   */
 case class ProjectAdminMembersGetResponseADM(members: Seq[UserADM]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
 
     def toJsValue = projectAdminMembersGetResponseADMFormat.write(this)
+}
+
+/**
+  * Represents a response to a request for all keywords of all projects.
+  *
+  * @param keywords a list of keywords.
+  */
+case class ProjectsKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
+    def toJsValue: JsValue = projectsKeywordsGetResponseADMFormat.write(this)
+}
+
+/**
+  * Represents a response to a request for all keywords of a single project.
+  *
+  * @param keywords a list of keywords.
+  */
+case class ProjectKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraResponseADM with ProjectsADMJsonProtocol {
+    def toJsValue: JsValue = projectKeywordsGetResponseADMFormat.write(this)
 }
 
 /**
@@ -345,7 +378,6 @@ case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraRespons
   * @param description        The project's description.
   * @param keywords           The project's keywords.
   * @param logo               The project's logo.
-  * @param institution        The project's institution.
   * @param ontologies         The project's ontologies.
   * @param status             The project's status.
   * @param selfjoin           The project's self-join status.
@@ -354,27 +386,45 @@ case class ProjectADM(id: IRI,
                       shortname: String,
                       shortcode: Option[String],
                       longname: Option[String],
-                      description: Option[String],
-                      keywords: Option[String],
+                      description: Seq[StringLiteralV2],
+                      keywords: Seq[String],
                       logo: Option[String],
-                      institution: Option[IRI],
                       ontologies: Seq[OntologyInfoShortADM],
                       status: Boolean,
-                      selfjoin: Boolean) {
+                      selfjoin: Boolean) extends Ordered[ProjectADM] {
+
+    /**
+      * Allows to sort collections of ProjectADM. Sorting is done by the id.
+      */
+    def compare(that: ProjectADM): Int = this.id.compareTo(that.id)
 
     // ToDo: Refactor by using implicit conversions (when I manage to understand them)
     def asProjectInfoV1: ProjectInfoV1 = {
+
+        val descriptionV1 = if (description.nonEmpty) {
+            Some(description.head.value)
+        } else {
+            None
+        }
+
+        val keywordsV1 = if (keywords.nonEmpty) {
+            Some(keywords.mkString(", "))
+        } else {
+            None
+        }
+
+        val ontologiesV1 = this.ontologies.map(_.ontologyIri.toString)
 
         ProjectInfoV1(
             id = id,
             shortname = shortname,
             shortcode = shortcode,
             longname = longname,
-            description = description,
-            keywords = keywords,
+            description = descriptionV1,
+            keywords = keywordsV1,
             logo = logo,
-            institution = institution,
-            ontologies = this.ontologies.map(_.ontologyIri.toString),
+            institution = None,
+            ontologies = ontologiesV1,
             status = status,
             selfjoin = selfjoin
         )
@@ -389,17 +439,15 @@ case class ProjectADM(id: IRI,
   * @param description        The project's description.
   * @param keywords           The project's keywords.
   * @param logo               The project's logo.
-  * @param institution        The project's institution.
   * @param ontologies         The project's ontologies.
   * @param status             The project's status.
   * @param selfjoin           The project's self-join status.
   */
 case class ProjectUpdatePayloadADM(shortname: Option[String] = None,
                                    longname: Option[String] = None,
-                                   description: Option[String] = None,
-                                   keywords: Option[String] = None,
+                                   description: Option[Seq[StringLiteralV2]] = None,
+                                   keywords: Option[Seq[String]] = None,
                                    logo: Option[String] = None,
-                                   institution: Option[IRI] = None,
                                    ontologies: Option[Seq[IRI]] = None,
                                    status: Option[Boolean] = None,
                                    selfjoin: Option[Boolean] = None)
@@ -410,19 +458,21 @@ case class ProjectUpdatePayloadADM(shortname: Option[String] = None,
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about projects.
   */
-trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with TriplestoreJsonProtocol {
 
     import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologiesADMJsonProtocol._
     import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 
-    implicit val projectADMFormat: JsonFormat[ProjectADM] = lazyFormat(jsonFormat11(ProjectADM))
+    implicit val projectADMFormat: JsonFormat[ProjectADM] = lazyFormat(jsonFormat10(ProjectADM))
     implicit val projectsResponseADMFormat: RootJsonFormat[ProjectsGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectsGetResponseADM, "projects")))
     implicit val projectResponseADMFormat: RootJsonFormat[ProjectGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectGetResponseADM, "project")))
 
     implicit val projectAdminMembersGetResponseADMFormat: RootJsonFormat[ProjectAdminMembersGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectAdminMembersGetResponseADM, "members")))
     implicit val projectMembersGetResponseADMFormat: RootJsonFormat[ProjectMembersGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectMembersGetResponseADM, "members")))
     implicit val createProjectApiRequestADMFormat: RootJsonFormat[CreateProjectApiRequestADM] = rootFormat(lazyFormat(jsonFormat(CreateProjectApiRequestADM, "shortname", "shortcode", "longname", "description", "keywords", "logo", "status", "selfjoin")))
-    implicit val changeProjectApiRequestADMFormat: RootJsonFormat[ChangeProjectApiRequestADM] = rootFormat(lazyFormat(jsonFormat(ChangeProjectApiRequestADM, "shortname", "longname", "description", "keywords", "logo", "institution", "status", "selfjoin")))
+    implicit val changeProjectApiRequestADMFormat: RootJsonFormat[ChangeProjectApiRequestADM] = rootFormat(lazyFormat(jsonFormat(ChangeProjectApiRequestADM, "shortname", "longname", "description", "keywords", "logo", "status", "selfjoin")))
+    implicit val projectsKeywordsGetResponseADMFormat: RootJsonFormat[ProjectsKeywordsGetResponseADM] = jsonFormat(ProjectsKeywordsGetResponseADM, "keywords")
+    implicit val projectKeywordsGetResponseADMFormat: RootJsonFormat[ProjectKeywordsGetResponseADM] = jsonFormat(ProjectKeywordsGetResponseADM, "keywords")
     implicit val projectOperationResponseADMFormat: RootJsonFormat[ProjectOperationResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectOperationResponseADM, "project")))
 
 }

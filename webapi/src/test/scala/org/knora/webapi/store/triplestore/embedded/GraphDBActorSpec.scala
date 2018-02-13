@@ -52,7 +52,6 @@ object GraphDBActorSpec {
           |               "/_DATA/_ttl/incunabula-data.ttl",
           |               "/_DATA/_ttl/incunabula-onto.ttl",
           |               "/_DATA/_ttl/knora-base.ttl",
-          |               "/_DATA/_ttl/knora-dc.ttl",
           |               "/_DATA/_ttl/salsah-gui.ttl"
           |           ]
           |       }

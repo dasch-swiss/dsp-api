@@ -1,18 +1,18 @@
 ### An overview of project `shortcodes` in use. Every project needs to have a unique shortcode assigned.
 
 
-#### Default range
+#### Default range - `0000` - `00FF`
 
    - system: `0000`
    - dokubib: `00FE`
    - images: `00FF`
 
-#### Basel range
-
-   - beol: `0801`
-   - webern: `08AE`
-
    
-#### Lausanne range
+#### Lausanne range - `0100` to `07FF`
 
    - drawings gods: `0106`
+
+
+#### Basel range - `0800` to `08FF`
+   - beol: `0801`
+   - webern: `08AE`
