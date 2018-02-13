@@ -28,7 +28,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.OwlCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
@@ -1307,6 +1307,7 @@ case class ReadOntologiesV2(ontologies: Seq[ReadOntologyV2]) extends KnoraRespon
         // Make the JSON-LD context.
         val context = JsonLDObject(Map(
             OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(knoraApiPrefixExpansion),
+            OntologyConstants.SalsahGui.SalsahGuiOntologyLabel -> JsonLDString(OntologyConstants.SalsahGui.SalsahGuiPrefixExpansion),
             "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
             "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
             "owl" -> JsonLDString("http://www.w3.org/2002/07/owl#"),
@@ -1454,9 +1455,10 @@ object Cardinality extends Enumeration {
       * @param owlCardinalityIri   the IRI of the OWL cardinality, which must be a member of the set
       *                            [[OntologyConstants.Owl.cardinalityOWLRestrictions]].
       * @param owlCardinalityValue the value of the OWL cardinality, which must be 0 or 1.
+      * @param guiOrder the SALSAH GUI order.
       * @return a [[Value]].
       */
-    case class OwlCardinalityInfo(owlCardinalityIri: IRI, owlCardinalityValue: Int) {
+    case class OwlCardinalityInfo(owlCardinalityIri: IRI, owlCardinalityValue: Int, guiOrder: Option[Int] = None) {
         if (!OntologyConstants.Owl.cardinalityOWLRestrictions.contains(owlCardinalityIri)) {
             throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality property: $owlCardinalityIri")
         }
@@ -1467,6 +1469,14 @@ object Cardinality extends Enumeration {
 
         override def toString: String = s"<$owlCardinalityIri> $owlCardinalityValue"
     }
+
+    /**
+      * Represents a Knora cardinality with an optional SALSAH GUI order.
+      *
+      * @param cardinality the Knora cardinality.
+      * @param guiOrder the SALSAH GUI order.
+      */
+    case class KnoraCardinalityInfo(cardinality: Value, guiOrder: Option[Int] = None)
 
     type Cardinality = Value
 
@@ -1512,8 +1522,13 @@ object Cardinality extends Enumeration {
       * @param owlCardinality information about an OWL cardinality.
       * @return a [[Value]].
       */
-    def owlCardinality2KnoraCardinality(propertyIri: IRI, owlCardinality: OwlCardinalityInfo): Value = {
-        owlCardinality2KnoraCardinalityMap.getOrElse(owlCardinality, throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality $owlCardinality for $propertyIri"))
+    def owlCardinality2KnoraCardinality(propertyIri: IRI, owlCardinality: OwlCardinalityInfo): KnoraCardinalityInfo = {
+        val cardinality = owlCardinality2KnoraCardinalityMap.getOrElse(owlCardinality.copy(guiOrder = None), throw InconsistentTriplestoreDataException(s"Invalid OWL cardinality $owlCardinality for $propertyIri"))
+
+        KnoraCardinalityInfo(
+            cardinality = cardinality,
+            guiOrder = owlCardinality.guiOrder
+        )
     }
 
     /**
@@ -1522,7 +1537,9 @@ object Cardinality extends Enumeration {
       * @param knoraCardinality a [[Value]].
       * @return an [[OwlCardinalityInfo]].
       */
-    def knoraCardinality2OwlCardinality(knoraCardinality: Value): OwlCardinalityInfo = knoraCardinality2OwlCardinalityMap(knoraCardinality)
+    def knoraCardinality2OwlCardinality(knoraCardinality: KnoraCardinalityInfo): OwlCardinalityInfo = {
+        knoraCardinality2OwlCardinalityMap(knoraCardinality.cardinality).copy(guiOrder = knoraCardinality.guiOrder)
+    }
 
     /**
       * Checks whether a cardinality that is directly defined on a class is compatible with an inherited cardinality on the
@@ -1970,7 +1987,7 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
 case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
                            canBeInstantiated: Boolean = false,
                            isValueClass: Boolean = false,
-                           inheritedCardinalities: Map[SmartIri, Cardinality.Value] = Map.empty[SmartIri, Cardinality.Value],
+                           inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = Map.empty[SmartIri, KnoraCardinalityInfo],
                            standoffDataType: Option[StandoffDataTypeClasses.Value] = None,
                            linkProperties: Set[SmartIri] = Set.empty[SmartIri],
                            linkValueProperties: Set[SmartIri] = Set.empty[SmartIri],
@@ -1978,7 +1995,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
     /**
       * All the class's cardinalities, both direct and indirect.
       */
-    lazy val allCardinalities: Map[SmartIri, Cardinality.Value] = inheritedCardinalities ++ entityInfoContent.directCardinalities
+    lazy val allCardinalities: Map[SmartIri, KnoraCardinalityInfo] = inheritedCardinalities ++ entityInfoContent.directCardinalities
 
     def toOntologySchema(targetSchema: ApiV2Schema): ReadClassInfoV2 = {
         // If we're converting to the simplified API v2 schema, remove references to link value properties.
@@ -2029,7 +2046,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
 
         // If this is a project-specific class, add the standard cardinalities from knora-api:Resource for the target
         // schema.
-        val completedCardinalities: Map[SmartIri, Cardinality.Value] = if (!entityInfoContent.classIri.isKnoraBuiltInDefinitionIri) {
+        val completedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = if (!entityInfoContent.classIri.isKnoraBuiltInDefinitionIri) {
             targetSchema match {
                 case ApiV2Simple => allCardinalities ++ KnoraApiV2Simple.Resource.allCardinalities
                 case ApiV2WithValueObjects => allCardinalities ++ KnoraApiV2WithValueObjects.Resource.allCardinalities
@@ -2039,10 +2056,14 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
         }
 
         // Convert OWL cardinalities to JSON-LD.
-        val owlCardinalities: Seq[JsonLDObject] = completedCardinalities.toArray.sortBy(_._1).map {
-            case (propertyIri: SmartIri, cardinality: Cardinality.Value) =>
+        val owlCardinalities: Seq[JsonLDObject] = completedCardinalities.toArray.sortBy {
+            case (propertyIri, _) => propertyIri
+        }.sortBy {
+            case (_, cardinalityInfo: KnoraCardinalityInfo) => cardinalityInfo.guiOrder
+        }.map {
+            case (propertyIri: SmartIri, cardinalityInfo: KnoraCardinalityInfo) =>
 
-                val prop2card: (IRI, JsonLDInt) = cardinality match {
+                val prop2card: (IRI, JsonLDInt) = cardinalityInfo.cardinality match {
                     case Cardinality.MayHaveMany => OntologyConstants.Owl.MinCardinality -> JsonLDInt(0)
                     case Cardinality.MayHaveOne => OntologyConstants.Owl.MaxCardinality -> JsonLDInt(1)
                     case Cardinality.MustHaveOne => OntologyConstants.Owl.Cardinality -> JsonLDInt(1)
@@ -2050,17 +2071,21 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
                 }
 
                 // If we're using the complex schema and the cardinality is inherited, add an annotation to say so.
-                val isInherited = if (targetSchema == ApiV2WithValueObjects && !entityInfoContent.directCardinalities.contains(propertyIri)) {
+                val isInheritedStatement = if (targetSchema == ApiV2WithValueObjects && !entityInfoContent.directCardinalities.contains(propertyIri)) {
                     Some(OntologyConstants.KnoraApiV2WithValueObjects.IsInherited -> JsonLDBoolean(true))
                 } else {
                     None
+                }
+
+                val guiOrderStatement = cardinalityInfo.guiOrder.map {
+                    guiOrder => OntologyConstants.SalsahGui.GuiOrder -> JsonLDInt(guiOrder)
                 }
 
                 JsonLDObject(Map(
                     "@type" -> JsonLDString(OntologyConstants.Owl.Restriction),
                     OntologyConstants.Owl.OnProperty -> JsonLDString(propertyIri.toString),
                     prop2card
-                ) ++ isInherited)
+                ) ++ isInheritedStatement ++ guiOrderStatement)
         }
 
         val resourceIconPred = targetSchema match {
@@ -2128,7 +2153,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
   */
 case class ClassInfoContentV2(classIri: SmartIri,
                               predicates: Map[SmartIri, PredicateInfoV2] = Map.empty[SmartIri, PredicateInfoV2],
-                              directCardinalities: Map[SmartIri, Cardinality.Value] = Map.empty[SmartIri, Cardinality.Value],
+                              directCardinalities: Map[SmartIri, KnoraCardinalityInfo] = Map.empty[SmartIri, KnoraCardinalityInfo],
                               xsdStringRestrictionPattern: Option[String] = None,
                               subClassOf: Set[SmartIri] = Set.empty[SmartIri],
                               ontologySchema: OntologySchema) extends EntityInfoContentV2 with KnoraContentV2[ClassInfoContentV2] {
@@ -2209,7 +2234,7 @@ object ClassInfoContentV2 {
 
         val filteredClassDef = JsonLDObject(jsonLDClassDef.value.filterKeys(AllowedJsonLDClassPredicates))
 
-        val (subClassOf: Set[SmartIri], directCardinalities: Map[SmartIri, Cardinality.Value]) = filteredClassDef.maybeArray(OntologyConstants.Rdfs.SubClassOf) match {
+        val (subClassOf: Set[SmartIri], directCardinalities: Map[SmartIri, KnoraCardinalityInfo]) = filteredClassDef.maybeArray(OntologyConstants.Rdfs.SubClassOf) match {
             case Some(valueArray: JsonLDArray) =>
                 val baseClasses: Set[SmartIri] = valueArray.value.collect {
                     case JsonLDString(baseClass) => baseClass.toSmartIri
@@ -2219,7 +2244,7 @@ object ClassInfoContentV2 {
                     case cardinalityObj: JsonLDObject => cardinalityObj
                 }
 
-                val directCardinalities: Map[SmartIri, Cardinality.Value] = restrictions.foldLeft(Map.empty[SmartIri, Cardinality.Value]) {
+                val directCardinalities: Map[SmartIri, KnoraCardinalityInfo] = restrictions.foldLeft(Map.empty[SmartIri, KnoraCardinalityInfo]) {
                     case (acc, restriction) =>
                         if (restriction.value.get(OntologyConstants.KnoraApiV2WithValueObjects.IsInherited).contains(JsonLDBoolean(true))) {
                             // If ignoreExtraData is true and we encounter knora-api:isInherited in a cardinality, ignore the whole cardinality.
@@ -2257,10 +2282,12 @@ object ClassInfoContentV2 {
                             }
 
                             val onProperty = restriction.requireString(OntologyConstants.Owl.OnProperty, stringFormatter.toSmartIriWithErr)
+                            val guiOrder = restriction.maybeInt(OntologyConstants.SalsahGui.GuiOrder).map(_.value)
 
                             val owlCardinalityInfo = OwlCardinalityInfo(
                                 owlCardinalityIri = owlCardinalityIri,
-                                owlCardinalityValue = owlCardinalityValue
+                                owlCardinalityValue = owlCardinalityValue,
+                                guiOrder = guiOrder
                             )
 
                             acc + (onProperty -> Cardinality.owlCardinality2KnoraCardinality(
@@ -2272,7 +2299,7 @@ object ClassInfoContentV2 {
 
                 (baseClasses, directCardinalities)
 
-            case None => (Set.empty[SmartIri], Map.empty[SmartIri, Cardinality.Value])
+            case None => (Set.empty[SmartIri], Map.empty[SmartIri, KnoraCardinalityInfo])
         }
 
         ClassInfoContentV2(

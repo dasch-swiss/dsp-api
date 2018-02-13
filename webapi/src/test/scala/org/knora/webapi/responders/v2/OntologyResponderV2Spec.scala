@@ -8,6 +8,7 @@ import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
@@ -1416,7 +1417,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasName") -> Cardinality.MayHaveOne),
+                directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
                 subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
                 ontologySchema = ApiV2WithValueObjects
             )
@@ -1784,7 +1785,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                directCardinalities = Map(AnythingOntologyIri.makeEntityIri("nonexistentProperty") -> Cardinality.MayHaveOne),
+                directCardinalities = Map(AnythingOntologyIri.makeEntityIri("nonexistentProperty") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
                 subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
                 ontologySchema = ApiV2WithValueObjects
             )
@@ -1826,7 +1827,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasInteger") -> Cardinality.MayHaveOne),
+                directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
                 subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
                 ontologySchema = ApiV2WithValueObjects
             )
@@ -1868,7 +1869,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> Cardinality.MustHaveOne),
+                directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> KnoraCardinalityInfo(Cardinality.MustHaveOne)),
                 subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
                 ontologySchema = ApiV2WithValueObjects
             )
@@ -1887,7 +1888,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     val ontology = externalMsg.ontologies.head
                     val readClassInfo = ontology.classes(classIri)
                     readClassInfo.entityInfoContent should ===(classInfoContent)
-                    readClassInfo.allCardinalities(AnythingOntologyIri.makeEntityIri("hasBoolean")) should ===(Cardinality.MustHaveOne)
+                    readClassInfo.allCardinalities(AnythingOntologyIri.makeEntityIri("hasBoolean")).cardinality should ===(Cardinality.MustHaveOne)
 
                     val metadata = ontology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
@@ -1920,7 +1921,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> Cardinality.MayHaveMany),
+                directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> KnoraCardinalityInfo(Cardinality.MayHaveMany)),
                 subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
                 ontologySchema = ApiV2WithValueObjects
             )
@@ -2153,7 +2154,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 directCardinalities = Map(
-                    AnythingOntologyIri.makeEntityIri("hasNothingness") -> Cardinality.MayHaveOne
+                    AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
                 ),
                 ontologySchema = ApiV2WithValueObjects
             )
@@ -2204,7 +2205,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 directCardinalities = Map(
-                    AnythingOntologyIri.makeEntityIri("hasNothingness") -> Cardinality.MayHaveOne
+                    AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
                 ),
                 ontologySchema = ApiV2WithValueObjects
             )
@@ -2250,7 +2251,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 directCardinalities = Map(
-                    AnythingOntologyIri.makeEntityIri("hasName") -> Cardinality.MayHaveOne
+                    AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
                 ),
                 ontologySchema = ApiV2WithValueObjects
             )
@@ -2339,7 +2340,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 directCardinalities = Map(
-                    AnythingOntologyIri.makeEntityIri("hasEmptiness") -> Cardinality.MayHaveOne
+                    AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
                 ),
                 ontologySchema = ApiV2WithValueObjects
             )
