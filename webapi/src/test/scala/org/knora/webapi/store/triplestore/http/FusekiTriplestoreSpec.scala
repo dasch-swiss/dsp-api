@@ -53,10 +53,6 @@ object FusekiTriplestoreSpec {
                             name = "http://www.knora.org/ontology/knora-base"
                         }
                         {
-                            path = "_test_data/ontologies/knora-dc.ttl"
-                            name = "http://www.knora.org/ontology/dc"
-                        }
-                        {
                             path = "_test_data/ontologies/salsah-gui.ttl"
                             name = "http://www.knora.org/ontology/salsah-gui"
                         }
@@ -89,7 +85,6 @@ class FusekiTriplestoreSpec extends CoreSpec("FusekiTriplestoreTestSystem", Fuse
     val rdfDataObjects = List (
 
         RdfDataObject(path = "_test_data/ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
-        RdfDataObject(path = "_test_data/ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "_test_data/ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/ontologies/dokubib-onto.ttl", name = "http://www.knora.org/ontology/dokubib")

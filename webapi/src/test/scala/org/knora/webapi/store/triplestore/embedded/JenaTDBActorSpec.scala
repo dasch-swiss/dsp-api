@@ -53,10 +53,6 @@ object JenaTDBActorSpec {
                             name = "http://www.knora.org/ontology/knora-base"
                         }
                         {
-                            path = "_test_data/ontologies/knora-dc.ttl"
-                            name = "http://www.knora.org/ontology/dc"
-                        }
-                        {
                             path = "_test_data/ontologies/salsah-gui.ttl"
                             name = "http://www.knora.org/ontology/salsah-gui"
                         }
@@ -97,7 +93,6 @@ class JenaTDBActorSpec extends CoreSpec("JenaTDBActorTestSystem", JenaTDBActorSp
 
     val rdfDataObjects = List (
         RdfDataObject(path = "_test_data/ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
-        RdfDataObject(path = "_test_data/ontologies/knora-dc.ttl", name = "http://www.knora.org/ontology/dc"),
         RdfDataObject(path = "_test_data/ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
         RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),

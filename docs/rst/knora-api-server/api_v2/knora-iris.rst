@@ -69,7 +69,6 @@ Knora ontologies:
 - ``knora-base``
 - ``standoff``
 - ``salsah-gui``
-- ``dc``
 
 Names starting with ``knora`` are reserved for future built-in Knora ontologies. A project-specific
 ontology name may not start with the letter ``v`` followed by a digit, and may not contain these
