@@ -148,10 +148,6 @@ In ``application.conf`` set to use the embedded triplestore:
                 name = "http://www.knora.org/ontology/knora-base"
             }
             {
-                path = "../knora-ontologies/knora-dc.ttl"
-                name = "http://www.knora.org/ontology/dc"
-            }
-            {
                 path = "../knora-ontologies/salsah-gui.ttl"
                 name = "http://www.knora.org/ontology/salsah-gui"
             }
@@ -214,8 +210,6 @@ As an example, to use it inside a test you could write something like:
     val rdfDataObjects = List (
            RdfDataObject(path = "../knora-ontologies/knora-base.ttl",
                          name = "http://www.knora.org/ontology/knora-base"),
-           RdfDataObject(path = "../knora-ontologies/knora-dc.ttl",
-                         name = "http://www.knora.org/ontology/dc"),
            RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl",
                          name = "http://www.knora.org/ontology/salsah-gui"),
            RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl",

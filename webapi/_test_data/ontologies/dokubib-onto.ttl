@@ -4,7 +4,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
-@prefix dc: <http://www.knora.org/ontology/dc#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @base <http://www.knora.org/ontology/dokubib> .
@@ -259,7 +259,7 @@
 
 :erwerbsdatum rdf:type owl:ObjectProperty ;
 
-              rdfs:subPropertyOf dc:date ;
+              rdfs:subPropertyOf knora-base:hasValue, dcterms:date ;
 
               rdfs:label """Erwerbsdatum"""@de ,
                          """Date d'acquisition"""@fr ,
@@ -423,7 +423,7 @@
 
 :eingangsdatum rdf:type owl:ObjectProperty ;
 
-               rdfs:subPropertyOf dc:date ;
+               rdfs:subPropertyOf knora-base:hasValue, dcterms:date ;
 
                rdfs:label """Eingangsdatum"""@de ,
                           """Date de réception"""@fr ,
@@ -544,7 +544,7 @@
 
 :description rdf:type owl:ObjectProperty ;
 
-             rdfs:subPropertyOf dc:description ;
+             rdfs:subPropertyOf knora-base:hasValue, dcterms:description ;
 
              rdfs:label """Beschreibung"""@de ,
                         """Description"""@fr ,
@@ -687,7 +687,7 @@
 
 :erfassungsdatum rdf:type owl:ObjectProperty ;
 
-                 rdfs:subPropertyOf dc:date ;
+                 rdfs:subPropertyOf knora-base:hasValue, dcterms:date ;
 
                  rdfs:label """Erfassungsdatum"""@de ,
                             """Date d'acquisition"""@fr ,
@@ -708,7 +708,7 @@
 
 :mutationsdatum rdf:type owl:ObjectProperty ;
 
-                rdfs:subPropertyOf dc:date ;
+                rdfs:subPropertyOf knora-base:hasValue, dcterms:date ;
 
                 rdfs:label """Mutationsdatum"""@de ,
                            """Date de mutation"""@fr ,
