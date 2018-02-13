@@ -108,7 +108,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
                     } yield group
             }.toSeq
             result: Seq[GroupADM] <- Future.sequence(groups)
-        } yield result
+        } yield result.sorted
     }
 
     /**

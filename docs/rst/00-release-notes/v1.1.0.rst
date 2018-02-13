@@ -1,0 +1,61 @@
+.. Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+   Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+
+   This file is part of Knora.
+
+   Knora is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Affero General Public License as published
+   by the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   Knora is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU Affero General Public License for more details.
+
+   You should have received a copy of the GNU Affero General Public
+   License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+
+********************
+v1.1.0 Release Notes
+********************
+
+See the `release`_ on Github.
+
+
+Required changes to existing data:
+----------------------------------
+
+
+1. Project ontologies property changed:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``knora-base:projectOntologyGraph`` needs to be renamed to ``knora-base:projectOntology``. Also before it
+was a ``xsd:string``, where now it needs to be an IRI. The graph where the ontology is stored will need to have
+the same name.
+
+
+2. Project data graph property removed:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The property ``knora-base:projectDataGraph`` needs to be removed.
+
+
+2. Project shortcode property added:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``knora-base:projectShortcode`` property was added. When adding a project shortcode, we also need to update:
+
+1. the IRI of the project to: ``http://rdfh.ch/projects/[shortcode]``
+2. the IRIs all project ontologies to: ``http://www.knora.org/ontology/[shortcode]/[ontoname]``
+3. the IRIs of lists to: ``http://rdfh.ch/lists/[shortcode]/[UUID]``
+4. the IRIs of groups to: ``http://rdfh.ch/groups/[shortcode]/[UUID]``
+
+New features:
+-------------
+
+Bugfixes:
+---------
+
+
+.. _release: https://github.com/dhlab-basel/Knora/releases/tag/v1.1.0
