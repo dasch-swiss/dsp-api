@@ -83,6 +83,42 @@ object ProjectsRouteADM extends Authenticator with ProjectsADMJsonProtocol {
                         )
                 }
             }
+        } ~ path("admin" / "projects" / "keywords") {
+            get {
+                /* returns all unique keywords for all projects as a list */
+                requestContext =>
+
+                    val requestingUser = getUserADM(requestContext)
+
+                    val requestMessage = ProjectsKeywordsGetRequestADM(requestingUser = requestingUser)
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+        } ~ path("admin" / "projects" / "keywords" / Segment) { value =>
+            get {
+                /* returns all keywords for a single project */
+                requestContext =>
+
+                    val requestingUser = getUserADM(requestContext)
+
+                    val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+
+                    val requestMessage = ProjectKeywordsGetRequestADM(projectIri = checkedProjectIri, requestingUser = requestingUser)
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
         } ~ path("admin" / "projects" / Segment) { value =>
             get {
                 /* returns a single project identified either through iri, shortname, or shortcode */
@@ -111,40 +147,18 @@ object ProjectsRouteADM extends Authenticator with ProjectsADMJsonProtocol {
                         )
                 }
             } ~
-                put {
-                    /* update a project identified by iri */
-                    entity(as[ChangeProjectApiRequestADM]) { apiRequest =>
-                        requestContext =>
-                            val requestingUser = getUserADM(requestContext)
-                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
-
-                            /* the api request is already checked at time of creation. see case class. */
-
-                            val requestMessage = ProjectChangeRequestADM(
-                                projectIri = checkedProjectIri,
-                                changeProjectRequest = apiRequest,
-                                requestingUser = requestingUser,
-                                apiRequestID = UUID.randomUUID()
-                            )
-
-                            RouteUtilADM.runJsonRoute(
-                                requestMessage,
-                                requestContext,
-                                settings,
-                                responderManager,
-                                log
-                            )
-                    }
-                } ~
-                delete {
-                    /* update project status to false */
+            put {
+                /* update a project identified by iri */
+                entity(as[ChangeProjectApiRequestADM]) { apiRequest =>
                     requestContext =>
                         val requestingUser = getUserADM(requestContext)
                         val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
+                        /* the api request is already checked at time of creation. see case class. */
+
                         val requestMessage = ProjectChangeRequestADM(
                             projectIri = checkedProjectIri,
-                            changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false)),
+                            changeProjectRequest = apiRequest,
                             requestingUser = requestingUser,
                             apiRequestID = UUID.randomUUID()
                         )
@@ -157,6 +171,28 @@ object ProjectsRouteADM extends Authenticator with ProjectsADMJsonProtocol {
                             log
                         )
                 }
+            } ~
+            delete {
+                /* update project status to false */
+                requestContext =>
+                    val requestingUser = getUserADM(requestContext)
+                    val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+
+                    val requestMessage = ProjectChangeRequestADM(
+                        projectIri = checkedProjectIri,
+                        changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false)),
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
         } ~ path("admin" / "projects" / "members" / Segment) { value =>
             get {
                 /* returns all members part of a project identified through iri or shortname */

@@ -118,13 +118,21 @@ class ProjectsResponderV1 extends Responder {
             projects = projectsWithProperties.map {
                 case (projectIri: String, propsMap: Map[String, Seq[String]]) =>
 
+                    val keywordsSeq: Seq[String] = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectKeyword, Seq.empty[String]).sorted
+
+                    val maybeKeywords: Option[String] = if (keywordsSeq.nonEmpty) {
+                        Some(keywordsSeq.mkString(", "))
+                    } else {
+                        None
+                    }
+
                     ProjectInfoV1(
                         id = projectIri,
                         shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head,
                         shortcode = propsMap.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head),
                         longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head),
                         description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head),
-                        keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords).map(_.head),
+                        keywords = maybeKeywords,
                         logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head),
                         institution = propsMap.get(OntologyConstants.KnoraBase.BelongsToInstitution).map(_.head),
                         ontologies = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, Seq.empty[IRI]),
@@ -497,6 +505,14 @@ class ProjectsResponderV1 extends Responder {
                 case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
             }
 
+            val keywordsSeq: Seq[String] = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectKeyword, Seq.empty[String]).sorted
+
+            val maybeKeywords: Option[String] = if (keywordsSeq.nonEmpty) {
+                Some(keywordsSeq.mkString(", "))
+            } else {
+                None
+            }
+
             // log.debug(s"createProjectInfoV1 - projectProperties: $projectProperties")
 
             /* create and return the project info */
@@ -506,7 +522,7 @@ class ProjectsResponderV1 extends Responder {
                 shortcode = projectProperties.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head),
                 longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head),
                 description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head),
-                keywords = projectProperties.get(OntologyConstants.KnoraBase.ProjectKeywords).map(_.head),
+                keywords = maybeKeywords,
                 logo = projectProperties.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head),
                 institution = projectProperties.get(OntologyConstants.KnoraBase.BelongsToInstitution).map(_.head),
                 ontologies = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, Seq.empty[IRI]),
