@@ -884,3 +884,22 @@
 	knora-base:creationDate "2016-10-17T19:16:04.916+02:00"^^xsd:dateTime ;
 	rdfs:label "A blue thing" ;
 	knora-base:isDeleted false .
+
+<http://rdfh.ch/anything/thing_with_list_value> a anything:Thing ;
+    knora-base:isDeleted false ;
+    knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+    anything:hasListItem <http://rdfh.ch/anything/thing_with_list_value/list_value> ;
+    rdfs:label "A thing that has a list value" ;
+    knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+    knora-base:creationDate "2018-01-31T15:05:10Z"^^xsd:dateTimeStamp .
+
+<http://rdfh.ch/anything/thing_with_list_value/list_value> a knora-base:ListValue ;
+    knora-base:isDeleted false ;
+    knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+    knora-base:valueHasOrder 0 ;
+    knora-base:valueHasString "http://data.knora.org/anything/treeList02" ;
+    knora-base:valueHasOrder 0 ;
+    knora-base:valueHasListNode	<http://data.knora.org/anything/treeList02> ;
+    knora-base:valueCreationDate "2018-01-31T15:05:10Z"^^xsd:dateTimeStamp ;
+    knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
