@@ -870,12 +870,12 @@
 ###  http://www.knora.org/ontology/biblio#bookHasContent
 :bookHasContent rdf:type owl:ObjectProperty ;
 
-                    rdfs:label "Inhalt"@de ,
-                               "Content"@en ;
+                    rdfs:label "Buch-Inhalt"@de ,
+                               "Book Content"@en ;
 
                     rdfs:comment """Represents content of Book ."""@en ;
 
-                    knora-base:objectClassConstraint beol:writtenSource ;
+                    knora-base:objectClassConstraint :BookContent ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
@@ -890,13 +890,13 @@
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
-###  http://www.knora.org/ontology/biblio#bookHasIntroduction
-:bookHasIntroduction rdf:type owl:ObjectProperty ;
+###  http://www.knora.org/ontology/biblio#hasIntroduction
+:hasIntroduction rdf:type owl:ObjectProperty ;
 
-                    rdfs:label "Einleitung des Buches"@de ,
-                               "Introduction of Book"@en ;
+                    rdfs:label "Einleitung"@de ,
+                               "Introduction"@en ;
 
-                    rdfs:comment """Represents introduction of Book ."""@en ;
+                    rdfs:comment """Represents introduction."""@en ;
 
                     knora-base:objectClassConstraint beol:introduction;
 
@@ -905,9 +905,9 @@
                     rdfs:subPropertyOf knora-base:hasLinkTo .
 
 
-###  http://www.knora.org/ontology/biblio#bookHasIntroductionValue
+###  http://www.knora.org/ontology/biblio#hasIntroductionValue
 
-:bookHasIntroductionValue rdf:type owl:ObjectProperty ;
+:hasIntroductionValue rdf:type owl:ObjectProperty ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -1678,6 +1678,31 @@
 
                     rdfs:comment "A resource representing a journal "@en .
 
+###  http://www.knora.org/ontology/biblio#BookContent
+
+:BookContent rdf:type owl:Class ;
+                    rdfs:subClassOf knora-base:Resource,
+                    [ rdf:type owl:Restriction ;
+                       owl:onProperty :hasIntroduction ;
+                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                       owl:onProperty :hasIntroductionValue ;
+                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                       owl:onProperty :hasContent ;
+                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                       owl:onProperty :hasContentValue ;
+                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ];
+
+                    rdfs:label "Buch-Inhalt"@de ,
+                                "Book Content"@en ;
+
+                    rdfs:comment "A resource representing content of a book "@en .
 
 ###  http://www.knora.org/ontology/biblio#Book
 
@@ -1716,14 +1741,7 @@
                                        owl:onProperty :bookHasContentValue ;
                                        owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
-                                    [ rdf:type owl:Restriction ;
-                                       owl:onProperty :bookHasIntroduction ;
-                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                    ],
-                                    [ rdf:type owl:Restriction ;
-                                       owl:onProperty :bookHasIntroductionValue ;
-                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                    ],
+
                                     [ rdf:type owl:Restriction ;
                                         owl:onProperty beol:comment ;
                                         owl:minCardinality "0"^^xsd:nonNegativeInteger
