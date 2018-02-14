@@ -66,7 +66,6 @@ CONSTRUCT {
 
     ?valueObject knora-base:valueHasListNode  ?listNode .
     ?listNode knora-base:listNodeName ?listNodeName .
-    ?listNodeLabel rdfs:label ?listNodeNameLabel .
 
 } WHERE {
     VALUES ?resource { @for(resIri <- resourceIris) { <@resIri> } }
@@ -111,7 +110,6 @@ CONSTRUCT {
                         ?valueObject a knora-base:ListValue .
                         ?valueObject knora-base:valueHasListNode  ?listNode .
                         ?listNode knora-base:listNodeName ?listNodeName .
-                        ?listNodeLabel rdfs:label ?listNodeNameLabel .
                      }
                 }
             } UNION {
