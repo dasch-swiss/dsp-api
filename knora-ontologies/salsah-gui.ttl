@@ -50,8 +50,8 @@
 ###  http://www.knora.org/ontology/salsah-gui#guiOrder
 
 :guiOrder rdf:type owl:AnnotationProperty ;
-          
-          knora-base:objectDatatypeConstraint xsd:integer .
+
+          knora-base:objectDatatypeConstraint xsd:nonNegativeInteger .
 
 
 
