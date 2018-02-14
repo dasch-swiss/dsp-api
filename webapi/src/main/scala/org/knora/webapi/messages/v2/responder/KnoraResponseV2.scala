@@ -321,7 +321,7 @@ case class GeomValueContentV2(valueHasString: String, valueHasGeometry: String, 
   * @param valueHasString        the string representation of the time interval.
   * @param valueHasIntervalStart the start of the time interval.
   * @param valueHasIntervalEnd   the end of the time interval.
-  * @param comment               a comment on this `GeomValueContentV2`, if any.
+  * @param comment               a comment on this `IntervalValueContentV2`, if any.
   */
 case class IntervalValueContentV2(valueHasString: String, valueHasIntervalStart: BigDecimal, valueHasIntervalEnd: BigDecimal, comment: Option[String]) extends ValueContentV2 {
 
@@ -343,16 +343,22 @@ case class IntervalValueContentV2(valueHasString: String, valueHasIntervalStart:
   *
   * @param valueHasString   the string representation of the hierarchical list node value.
   * @param valueHasListNode the IRI of the hierarchical list node pointed to.
-  * @param comment          a comment on this `GeomValueContentV2`, if any.
+  * @param listNodeName     the name of the hierarchical list node pointed to.
+  * @param comment          a comment on this `HierarchicalListValueContentV2`, if any.
   */
-case class HierarchicalListValueContentV2(valueHasString: String, valueHasListNode: IRI, comment: Option[String]) extends ValueContentV2 {
+case class HierarchicalListValueContentV2(valueHasString: String, valueHasListNode: IRI, listNodeName: String, comment: Option[String]) extends ValueContentV2 {
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.ListValue
 
     def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNode -> JsonLDString(valueHasListNode)))
+        JsonLDObject(
+            Map(
+                OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNode -> JsonLDString(valueHasListNode),
+                OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNodeName -> JsonLDString(listNodeName)
+            )
+        )
     }
 
 }

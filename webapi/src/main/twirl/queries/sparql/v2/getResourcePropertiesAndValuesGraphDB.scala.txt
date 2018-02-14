@@ -63,8 +63,11 @@ CONSTRUCT {
         knora-base:attachedToUser ?referredResourceCreator ;
         knora-base:hasPermissions ?referredResourcePermissions ;
         knora-base:attachedToProject ?referredResourceProject .
-    ?valueObject  knora-base:valueHasListNode  ?listNode .
+
+    ?valueObject knora-base:valueHasListNode  ?listNode .
     ?listNode knora-base:listNodeName ?listNodeName .
+    ?listNodeLabel rdfs:label ?listNodeNameLabel .
+
 } WHERE {
     VALUES ?resource { @for(resIri <- resourceIris) { <@resIri> } }
 
@@ -105,9 +108,10 @@ CONSTRUCT {
                     }
                 } UNION {
                      GRAPH <http://www.ontotext.com/explicit> {
-                         ?valueObject a knora-base:ListValue .
-                         ?valueObject  knora-base:valueHasListNode  ?listNode .
+                        ?valueObject a knora-base:ListValue .
+                        ?valueObject knora-base:valueHasListNode  ?listNode .
                         ?listNode knora-base:listNodeName ?listNodeName .
+                        ?listNodeLabel rdfs:label ?listNodeNameLabel .
                      }
                 }
             } UNION {

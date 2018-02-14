@@ -691,6 +691,7 @@ object OntologyConstants {
         val BooleanValueAsBoolean: IRI = KnoraApiV2PrefixExpansion + "booleanValueAsBoolean"
 
         val HierarchicalListValueAsListNode: IRI = KnoraApiV2PrefixExpansion + "hierarchicalListValueAsListNode"
+        val HierarchicalListValueAsListNodeName: IRI = KnoraApiV2PrefixExpansion + "hierarchicalListValueAsListNodeName"
 
         val ColorValueAsColor: IRI = KnoraApiV2PrefixExpansion + "colorValueAsColor"
 
