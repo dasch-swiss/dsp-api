@@ -55,7 +55,7 @@
 
 :sectionHasTitle rdf:type owl:ObjectProperty ;
 
-       rdfs:subPropertyOf dc:title ;
+       rdfs:subPropertyOf knora-base:hasValue, dcterms:title;
 
        rdfs:label "Titel"@de ,
                   "Titre"@fr ,
@@ -1609,3 +1609,18 @@
               ] ;
 
               rdfs:comment "Represents font for special character"@en .
+
+###  http://www.knora.org/ontology/0801/beol#StandoffFigTag
+:StandoffFigTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents a html figure tag"@en .
+
+
+###  http://www.knora.org/ontology/0801/beol#StandoffCaptionTag
+:StandoffCaptionTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents a caption tag"@en .
