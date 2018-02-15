@@ -112,7 +112,8 @@ lazy val webapi = (project in file(".")).
             mainClass in IntegrationTest := Some("org.scalatest.tools.Runner")
         ).
         enablePlugins(SbtTwirl). // Enable the sbt-twirl plugin
-        enablePlugins(JavaAppPackaging) // Enable the sbt-native-packager plugin
+        enablePlugins(JavaAppPackaging). // Enable the sbt-native-packager plugin
+        enablePlugins(GatlingPlugin) // load testing
 
 lazy val webApiCommonSettings = Seq(
     organization := "org.knora",
@@ -142,6 +143,8 @@ lazy val webApiLibs = Seq(
     library.commonsValidator,
     library.diff,
     library.ehcache,
+    library.gatlingHighcharts,
+    library.gatlingTestFramework,
     library.gwtServlet,
     library.jacksonScala,
     library.jsonldJava,
@@ -187,7 +190,11 @@ lazy val library =
         val akkaTestkit            = "com.typesafe.akka"            %% "akka-testkit"             % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
         val akkaHttpTestkit        = "com.typesafe.akka"            %% "akka-http-testkit"        % Version.akkaHttp    % "test, fuseki, graphdb, tdb, it, fuseki-it"
         val akkaStreamTestkit      = "com.typesafe.akka"            %% "akka-stream-testkit"      % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
+
+        // testing
         val scalaTest              = "org.scalatest"                %% "scalatest"                % "3.0.4"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val gatlingHighcharts      = "io.gatling.highcharts"         % "gatling-charts-highcharts"% "2.3.0"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val gatlingTestFramework   = "io.gatling"                    % "gatling-test-framework"   % "2.3.0"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
 
         //CORS support
         val akkaHttpCors           = "ch.megard"                    %% "akka-http-cors"           % "0.1.10"
@@ -252,8 +259,8 @@ lazy val library =
 
 lazy val javaRunOptions = Seq(
     // "-showversion",
-    "-Xms1G",
-    "-Xmx1G"
+    "-Xms2G",
+    "-Xmx2G"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500"
