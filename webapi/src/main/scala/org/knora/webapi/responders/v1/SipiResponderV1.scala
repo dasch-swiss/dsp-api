@@ -160,7 +160,7 @@ class SipiResponderV1 extends Responder {
         // handle unsuccessful requests to Sipi
         //
         val recoveredConversionResultFuture = conversionResultFuture.recoverWith {
-            case noResponse: akka.http.impl.engine.HttpConnectionTimeoutException =>
+            case noResponse: akka.stream.scaladsl.TcpIdleTimeoutException =>
                 // this problem is hardly the user's fault. Create a SipiException
                 throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
 
