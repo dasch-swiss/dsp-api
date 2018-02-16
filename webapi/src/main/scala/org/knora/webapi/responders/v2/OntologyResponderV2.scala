@@ -37,6 +37,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, _}
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.StringFormatter.SalsahGuiAttributeDefinition
 import org.knora.webapi.util.{ActorUtil, CacheUtil, ErrorHandlingMap, SmartIri}
 
 import scala.concurrent.Future
@@ -241,6 +242,25 @@ class OntologyResponderV2 extends Responder {
                         ))
                     }
             }
+
+            // Get the information about Guielement instances from salsah-gui.
+            guiElementSparql = queries.sparql.v2.txt.getSalsahGuiElements(triplestore = settings.triplestoreType).toString()
+            guilElementResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(guiElementSparql)).mapTo[SparqlSelectResponse]
+            guiElementRows: Seq[VariableResultsRow] = guilElementResponse.results.bindings
+            guiAttributeDefinitions: Map[IRI, Set[SalsahGuiAttributeDefinition]] = guiElementRows.groupBy(_.rowMap("guiElement")).map {
+                case (guiElementIri: IRI, rows: Seq[VariableResultsRow]) =>
+                    val attributeDefs = rows.map(_.rowMap("guiAttributeDefinition")).toSet.map {
+                        attributeDefStr: String =>
+                            stringFormatter.toSalsahGuiAttributeDefinition(
+                                attributeDefStr,
+                                throw InconsistentTriplestoreDataException(s"Invalid salsah-gui:guiAttributeDefinition in $guiElementIri: $attributeDefStr")
+                            )
+                    }
+
+                    guiElementIri -> attributeDefs
+            }
+
+            _ = println(s"guiAttributeDefinitions: $guiAttributeDefinitions")
 
             // Get all resource class definitions.
             resourceDefsSparql = queries.sparql.v2.txt.getResourceClassDefinitions(triplestore = settings.triplestoreType).toString()
@@ -474,6 +494,29 @@ class OntologyResponderV2 extends Responder {
                     }
 
                     val ontologyIri = propertyIri.getOntologyFromEntity
+
+                    // If the property has the predicate salsah-gui:guiAttribute, validate the objects of that predicate.
+                    predicates.get(OntologyConstants.SalsahGui.GuiAttribute.toSmartIri) match {
+                        case Some(guiAttributePred) =>
+                            // Find out which GUI element the property uses.
+                            val guiElementIri: IRI = predicates.getOrElse(OntologyConstants.SalsahGui.GuiElement.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has salsah-gui:guiAttribute but no salsah-gui:guiElement")).objects.head
+
+                            // Get that element's GUI attribute definitions.
+                            val guiAttributeDefs: Set[SalsahGuiAttributeDefinition] = guiAttributeDefinitions.getOrElse(guiElementIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has salsah-gui:guiAttribute, but $guiElementIri has no salsah-gui:guiAttributeDefinition"))
+
+                            // Syntactically validate each attribute.
+                            for (guiAttributeObj <- guiAttributePred.objects) {
+                                val guiAttribute = stringFormatter.toSalsahGuiAttribute(
+                                    s = guiAttributeObj,
+                                    attributeDefs = guiAttributeDefs,
+                                    errorFun = throw InconsistentTriplestoreDataException(s"Property $propertyIri contains an invalid salsah-gui:guiAttribute: $guiAttributeObj")
+                                )
+
+                                println(guiAttribute)
+                            }
+
+                        case None => ()
+                    }
 
                     val propertyEntityInfo = ReadPropertyInfoV2(
                         entityInfoContent = PropertyInfoContentV2(

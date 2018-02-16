@@ -62,9 +62,6 @@
 
                   salsah-gui:guiElement salsah-gui:Date ;
 
-                  salsah-gui:guiAttribute "size=16" ,
-                                        "maxlength=32" ;
-
                   rdfs:comment """Datum der Entstehung"""@de ,
                                """Date of creation"""@en .
 

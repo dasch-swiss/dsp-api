@@ -54,7 +54,8 @@ Properties
    ``guiElement``. The attributes 
 
 ``guiAttributeDefinition``
-   TODO: document this (see `#744 <https://github.com/dhlab-basel/Knora/issues/744>`_).
+   Used only in the ``salsah-gui`` ontology itself, to specify the form of the objects of ``guiAttribute``
+   when used with a particular ``Guielement``.
 
 Classes
 =======
@@ -66,7 +67,9 @@ Individuals
 ===========
 
 ``Colorpicker``
-   A GUI element for selecting a color.
+   A GUI element for selecting a color. A property definition that uses this element may
+   also contain a ``guiAttribute`` predicate whose object is a string in the form
+   ``"ncolors=N"``, where ``N`` is an integer specifying the number of colors to display.
 
 ``Date``
    A GUI element for selecting a date.
@@ -77,39 +80,60 @@ Individuals
 ``Geonames``
    A GUI element for selecting a Geonames_ identifier.
 
-``Iconclass``
-   TODO: what is this (see `#744 <https://github.com/dhlab-basel/Knora/issues/744>`_)?
-
 ``Interval``
    A GUI element for selecting a time interval in an audio or video recording.
 
 ``List``
    A GUI element for selecting an item in a hierarchical list (see :ref:`knora-base-list-value`).
-   TODO: How is this different from ``Pulldown`` (see `#744 <https://github.com/dhlab-basel/Knora/issues/744>`_)?
+   A property definition that uses this element must also contain a ``guiAttribute`` predicate
+   whose object is a string in the form ``"hlist=<LIST_IRI>"``, where ``LIST_IRI`` is the IRI of a
+   ``knora-base:ListNode``.
 
 ``Pulldown``
-   TODO: How is this different from ``List`` (see `#744 <https://github.com/dhlab-basel/Knora/issues/744>`_)?
+   A GUI element for selecting an item in a flat list (see :ref:`knora-base-list-value`) using a pull-down menu.
+   A property definition that uses this element must also contain a ``guiAttribute`` predicate
+   whose object is a string in the form ``"hlist=<LIST_IRI>"``, where ``LIST_IRI`` is the IRI of a
+   ``knora-base:ListNode``.
 
 ``Radio``
-   A GUI element for selecting an item in a hierarchical list using radio buttons.
+   A GUI element for selecting an item in a flat list (see :ref:`knora-base-list-value`) using radio buttons.
+   A property definition that uses this element must also contain a ``guiAttribute`` predicate
+   whose object is a string in the form ``"hlist=<LIST_IRI>"``, where ``LIST_IRI`` is the IRI of a
+   ``knora-base:ListNode``.
 
 ``Richtext``
-   A GUI element for editing formatted text.
+   A GUI element for editing multi-line formatted text.
 
 ``Searchbox``
-   A GUI element for searching for a particular resource.
+   A GUI element for searching for a resource by matching text in its ``rdfs:label``. For Knora API v1,
+   a property definition that uses this element may also contain a ``guiAttribute`` predicate whose object
+   is a string in the form ``"numprops=N"``, where ``N`` is an integer specifying the number of describing
+   properties to be returned for each found resource. For Knora API v2, the ``guiAttribute`` has no effect.
 
 ``SimpleText``
-   A GUI element for editing unformatted text.
+   A GUI element for editing a single line of unformatted text. A property definition that uses this element may
+   also contain a ``guiAttribute`` predicate with one or both of the following objects: a string in the form
+   ``"size=N"``, where ``N`` is an integer specifying the size of the text field, and a string in the form
+   ``"maxlength=N"``, where ``N`` is an integer specifying the maximum length of the string to be input.
 
 ``Slider``
-   A GUI element for choosing numerical values using a slider.
+   A GUI element for choosing numerical values using a slider. A property definition that uses this element may
+   also contain a ``guiAttribute`` predicate with one or both of the following objects: a string in the form
+   ``"min=N"``, where ``N`` is an integer specifying the minimum value of the input, and a string in the form
+   ``"max=N"``, where ``N`` is an integer specifying the maximum value of the input.
 
 ``Spinbox``
-   A GUI element for choosing numerical values using a spinbox.
+   A GUI element for choosing numerical values using a spinbox. A property definition that uses this element may
+   also contain a ``guiAttribute`` predicate with one or both of the following objects: a string in the form
+   ``"min=N"``, where ``N`` is an integer specifying the minimum value of the input, and a string in the form
+   ``"max=N"``, where ``N`` is an integer specifying the maximum value of the input.
 
 ``Textarea``
-   TODO: How is this different from ``Richtext`` (see `#744 <https://github.com/dhlab-basel/Knora/issues/744>`_)?
+   A GUI element for editing multi-line unformatted text. A property definition that uses this element may
+   also contain a ``guiAttribute`` predicate with one or more of the following objects: a string in the form
+   ``"width=N"``, where ``N`` is a percentage of the window width (an integer followed by ``%``),
+   ``"cols=N"``, where ``N`` is an integer representing the number of colums in the text entry box, and a string
+   in the form ``"rows=N"``, where ``N`` is an integer specifying the height of the text entry box in rows.
 
 ``Checkbox``
    A GUI element for choosing a boolean value using a checkbox.

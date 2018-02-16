@@ -66,9 +66,7 @@
 
                knora-base:objectClassConstraint :Thing ;
 
-               salsah-gui:guiElement salsah-gui:Searchbox ;
-
-	           salsah-gui:guiAttribute "size=45".
+               salsah-gui:guiElement salsah-gui:Searchbox .
 
 
 
@@ -121,10 +119,7 @@
 
        knora-base:objectClassConstraint knora-base:TextValue ;
 
-       salsah-gui:guiElement salsah-gui:Richtext ;
-
-       salsah-gui:guiAttribute "size=80" ,
-                               "maxlength=255" .
+       salsah-gui:guiElement salsah-gui:Richtext .
 
 
 :hasDate rdf:type owl:ObjectProperty ;
@@ -140,10 +135,7 @@
 
        knora-base:objectClassConstraint knora-base:DateValue ;
 
-       salsah-gui:guiElement salsah-gui:Date ;
-
-       salsah-gui:guiAttribute "size=16" ,
-                               "maxlength=32" .
+       salsah-gui:guiElement salsah-gui:Date .
 
 
 

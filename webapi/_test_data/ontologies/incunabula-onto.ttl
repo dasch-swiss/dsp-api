@@ -129,9 +129,6 @@
 
          salsah-gui:guiElement salsah-gui:Date ;
 
-         salsah-gui:guiAttribute "size=16" ,
-                                 "maxlength=32" ;
-
          rdfs:comment """Datum der Herausgabe"""@de .
 
 
@@ -320,8 +317,8 @@
 
          salsah-gui:guiElement salsah-gui:SimpleText ;
 
-         salsah-gui:guiAttribute "min=4" ,
-                                 "max=8" .
+         salsah-gui:guiAttribute "size=8" ,
+                                 "maxlength=8" .
 
 
 ### ###########################################
@@ -532,9 +529,7 @@
 
                knora-base:objectClassConstraint knora-base:TextValue ;
 
-               salsah-gui:guiElement salsah-gui:Pulldown ;
-
-               salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/4b6d86ce03>" .
+               salsah-gui:guiElement salsah-gui:Richtext .
 
 
 ### ###########################################

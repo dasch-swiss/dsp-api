@@ -231,7 +231,7 @@
 
          salsah-gui:guiElement salsah-gui:Pulldown ;
 
-         salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/6cce4ce5>" .
+         salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/00FF/6cce4ce5>" .
 
 
 ### ###########################################
@@ -293,8 +293,7 @@
 
                 salsah-gui:guiElement salsah-gui:Searchbox ;
 
-                salsah-gui:guiAttribute "restypeid=32" ,
-                                        "numprops=2" .
+                salsah-gui:guiAttribute "numprops=2" .
 
 
 ### ###########################################
@@ -315,8 +314,7 @@
 
            salsah-gui:guiElement salsah-gui:Searchbox ;
 
-           salsah-gui:guiAttribute "restypeid=32" ,
-                                   "numprops=2" .
+           salsah-gui:guiAttribute "numprops=2" .
 
 
 ### ###########################################
@@ -361,7 +359,7 @@
 
             salsah-gui:guiElement salsah-gui:Radio ;
 
-            salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/0702a01e01>" .
+            salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/00FF/0702a01e01>" .
 
 
 ### ###########################################
@@ -448,7 +446,7 @@
 
        salsah-gui:guiElement salsah-gui:List ;
 
-       salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/73d0ec0302>" .
+       salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/00FF/73d0ec0302>" .
 
 
 ### ###########################################
@@ -538,7 +536,7 @@
 
             salsah-gui:guiElement salsah-gui:Radio ;
 
-            salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/d19af9ab>" .
+            salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/00FF/d19af9ab>" .
 
 
 ### ###########################################
@@ -602,8 +600,7 @@
 
                  salsah-gui:guiElement salsah-gui:Searchbox ;
 
-                 salsah-gui:guiAttribute "restypeid=33" ,
-                                         "numprops=1" .
+                 salsah-gui:guiAttribute "numprops=1" .
 
 
 ### ###########################################
@@ -626,8 +623,7 @@
 
             salsah-gui:guiElement salsah-gui:Searchbox ;
 
-            salsah-gui:guiAttribute "restypeid=33" ,
-                                    "numprops=1" .
+            salsah-gui:guiAttribute "numprops=1" .
 
 
 ### ###########################################
@@ -732,8 +728,7 @@
 
               salsah-gui:guiElement salsah-gui:Searchbox ;
 
-              salsah-gui:guiAttribute "restypeid=32" ,
-                                      "numprops=2" .
+              salsah-gui:guiAttribute "numprops=2" .
 
 
 ### ###########################################
@@ -756,8 +751,7 @@
 
          salsah-gui:guiElement salsah-gui:Searchbox ;
 
-         salsah-gui:guiAttribute "restypeid=32" ,
-                                 "numprops=2" .
+         salsah-gui:guiAttribute "numprops=2" .
 
 
 ### ###########################################
@@ -780,8 +774,7 @@
 
                 salsah-gui:guiElement salsah-gui:Searchbox ;
 
-                salsah-gui:guiAttribute "restypeid=32" ,
-                                        "numprops=2" .
+                salsah-gui:guiAttribute "numprops=2" .
 
 
 ### ###########################################
@@ -804,8 +797,7 @@
 
            salsah-gui:guiElement salsah-gui:Searchbox ;
 
-           salsah-gui:guiAttribute "restypeid=32" ,
-                                   "numprops=2" .
+           salsah-gui:guiAttribute "numprops=2" .
 
 ##########################################################
 #
