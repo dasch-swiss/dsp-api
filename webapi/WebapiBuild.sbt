@@ -18,6 +18,18 @@ lazy val webapi = (project in file(".")).
         settings(inConfig(Test)(
             Defaults.testTasks ++ baseAssemblySettings
         ): _*).
+        settings(inConfig(Gatling)( // add our settings to the gatling config
+            Defaults.testTasks ++ Seq(
+                fork := true,
+                javaOptions ++= javaTestOptions
+            )
+        ): _*).
+        settings(inConfig(GatlingIt)( // add our settings to the gatling it config
+            Defaults.testTasks ++ Seq(
+                fork := true,
+                javaOptions ++= javaTestOptions
+            )
+        ): _*).
         settings(inConfig(FusekiTest)(
             Defaults.testTasks ++ Seq(
                 fork := true,

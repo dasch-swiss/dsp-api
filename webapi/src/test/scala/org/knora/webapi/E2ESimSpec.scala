@@ -19,10 +19,9 @@ package org.knora.webapi
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import com.typesafe.config.Config
-import io.gatling.http.funspec.GatlingHttpFunSpec
+import io.gatling.core.scenario.Simulation
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.util.StringFormatter
-import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 
 import scala.languageFeature.postfixOps
 
@@ -31,7 +30,7 @@ import scala.languageFeature.postfixOps
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-class PerfSpec(_system: ActorSystem) extends GatlingHttpFunSpec with Core with KnoraService with Suite with WordSpecLike with Matchers with BeforeAndAfterAll {
+abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core with KnoraService {
 
     /* needed by the core trait */
     implicit lazy val settings: SettingsImpl = Settings(system)
@@ -54,10 +53,10 @@ class PerfSpec(_system: ActorSystem) extends GatlingHttpFunSpec with Core with K
     if (!settings.knoraApiUseHttp) throw HttpConfigurationException("PerfSpec tests currently require HTTP")
 
     // gatling config
-    val baseURL = settings.knoraApiHttpBaseUrl
-    // override def httpConf = super.httpConf.header("MyHeader", "MyValue")
+    // val httpConf = http.warmUp("http://www.google.com") // set own warmup target instead og galting.io
 
-    override def beforeAll: Unit = {
+
+    before {
         /* Set the startup flags and start the Knora Server */
         log.debug(s"Starting Knora Service")
         checkActorSystem()
@@ -67,7 +66,7 @@ class PerfSpec(_system: ActorSystem) extends GatlingHttpFunSpec with Core with K
         startService()
     }
 
-    override def afterAll: Unit = {
+    after {
         /* Stop the server when everything else has finished */
         log.debug(s"Stopping Knora Service")
         stopService()
