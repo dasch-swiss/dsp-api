@@ -22,7 +22,7 @@ import org.knora.webapi.E2ESimSpec
 
 import scala.concurrent.duration._
 
-class AdminMixE2ESimSpec extends E2ESimSpec(UsersADME2ESimSpec.config) {
+class AdminMixE2ESimSpec extends E2ESimSpec {
 
 
     val protobolBuilder = http

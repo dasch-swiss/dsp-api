@@ -18,13 +18,25 @@ package org.knora.webapi
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigFactory}
 import io.gatling.core.scenario.Simulation
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.util.StringFormatter
 
 import scala.languageFeature.postfixOps
 
+
+object E2ESimSpec {
+
+    val config: Config = ConfigFactory.load()
+
+    val defaultConfig: Config = ConfigFactory.parseString(
+        """
+          akka.loglevel = "ERROR"
+          akka.stdout-loglevel = "ERROR"
+        """.stripMargin
+    ).withFallback(config)
+}
 
 /**
   * This class can be used in End-to-End testing. It starts the Knora server and
@@ -36,13 +48,13 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
     implicit lazy val settings: SettingsImpl = Settings(system)
     StringFormatter.initForTest()
 
-    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESpec.defaultConfig)))
+    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESimSpec.defaultConfig)))
 
-    def this(config: Config) = this(ActorSystem("PerfSpec", config.withFallback(E2ESpec.defaultConfig)))
+    def this(config: Config) = this(ActorSystem("PerfSpec", config.withFallback(E2ESimSpec.defaultConfig)))
 
-    def this(name: String) = this(ActorSystem(name, E2ESpec.defaultConfig))
+    def this(name: String) = this(ActorSystem(name, E2ESimSpec.defaultConfig))
 
-    def this() = this(ActorSystem("PerfSpec", E2ESpec.defaultConfig))
+    def this() = this(ActorSystem("PerfSpec", E2ESimSpec.defaultConfig))
 
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system

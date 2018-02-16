@@ -23,7 +23,7 @@ import org.knora.webapi.E2ESimSpec
 import scala.concurrent.duration._
 
 
-class GroupsADME2ESimSpec extends E2ESimSpec(UsersADME2ESimSpec.config) {
+class GroupsADME2ESimSpec extends E2ESimSpec {
 
 
     val protobolBuilder = http
