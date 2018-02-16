@@ -19,11 +19,13 @@ package org.knora.webapi.e2e.admin
 import io.gatling.core.Predef.{forAll, global, rampUsers, scenario, _}
 import io.gatling.http.Predef.{http, status}
 import org.knora.webapi.E2ESimSpec
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 import scala.concurrent.duration._
 
 class AdminMixE2ESimSpec extends E2ESimSpec {
 
+    override val rdfDataObjects: Seq[RdfDataObject] = Seq.empty[RdfDataObject]
 
     val protobolBuilder = http
             .baseURL("http://localhost:3333")

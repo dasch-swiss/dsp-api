@@ -18,13 +18,18 @@ package org.knora.webapi
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import akka.pattern._
+import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import io.gatling.core.scenario.Simulation
+import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, ResetTriplestoreContentResponseADM}
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.util.StringFormatter
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.languageFeature.postfixOps
-
 
 object E2ESimSpec {
 
@@ -32,8 +37,8 @@ object E2ESimSpec {
 
     val defaultConfig: Config = ConfigFactory.parseString(
         """
-          akka.loglevel = "ERROR"
-          akka.stdout-loglevel = "ERROR"
+          akka.loglevel = "INFO"
+          akka.stdout-loglevel = "INFO"
         """.stripMargin
     ).withFallback(config)
 }
@@ -64,24 +69,26 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
 
     if (!settings.knoraApiUseHttp) throw HttpConfigurationException("PerfSpec tests currently require HTTP")
 
-    // gatling config
-    // val httpConf = http.warmUp("http://www.google.com") // set own warmup target instead og galting.io
-
+    // needs to be overridden in subclass
+    val rdfDataObjects: Seq[RdfDataObject]
 
     before {
         /* Set the startup flags and start the Knora Server */
-        log.debug(s"Starting Knora Service")
+        log.info(s"executing before setup started")
         checkActorSystem()
 
         applicationStateActor ! SetAllowReloadOverHTTPState(true)
 
         startService()
+
+        implicit val timeout: Timeout = 300.second
+        Await.result(responderManager ? ResetTriplestoreContentRequestADM(rdfDataObjects), 300.second).asInstanceOf[ResetTriplestoreContentResponseADM]
+        log.info(s"executing before setup finished")
     }
 
     after {
         /* Stop the server when everything else has finished */
-        log.debug(s"Stopping Knora Service")
+        log.info(s"executing after setup")
         stopService()
     }
-
 }
