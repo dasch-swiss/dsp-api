@@ -37,8 +37,8 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, _}
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter.SalsahGuiAttributeDefinition
-import org.knora.webapi.util.{ActorUtil, CacheUtil, ErrorHandlingMap, SmartIri}
+import org.knora.webapi.util.StringFormatter.{SalsahGuiAttributeDefinition, SalsahGuiAttribute, SalsahGuiAttributeValue}
+import org.knora.webapi.util._
 
 import scala.concurrent.Future
 
@@ -247,20 +247,25 @@ class OntologyResponderV2 extends Responder {
             guiElementSparql = queries.sparql.v2.txt.getSalsahGuiElements(triplestore = settings.triplestoreType).toString()
             guilElementResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(guiElementSparql)).mapTo[SparqlSelectResponse]
             guiElementRows: Seq[VariableResultsRow] = guilElementResponse.results.bindings
-            guiAttributeDefinitions: Map[IRI, Set[SalsahGuiAttributeDefinition]] = guiElementRows.groupBy(_.rowMap("guiElement")).map {
+
+            // Make a map of Guielement IRIs to sets of SalsahGuiAttributeDefinition.
+            allGuiAttributeDefinitions: Map[IRI, Set[SalsahGuiAttributeDefinition]] = guiElementRows.groupBy(_.rowMap("guiElement")).map {
                 case (guiElementIri: IRI, rows: Seq[VariableResultsRow]) =>
-                    val attributeDefs = rows.map(_.rowMap("guiAttributeDefinition")).toSet.map {
-                        attributeDefStr: String =>
-                            stringFormatter.toSalsahGuiAttributeDefinition(
-                                attributeDefStr,
-                                throw InconsistentTriplestoreDataException(s"Invalid salsah-gui:guiAttributeDefinition in $guiElementIri: $attributeDefStr")
-                            )
-                    }
+                    val attributeDefs: Set[SalsahGuiAttributeDefinition] = rows.flatMap {
+                        row: VariableResultsRow =>
+                            row.rowMap.get("guiAttributeDefinition") match {
+                                case Some(attributeDefStr) =>
+                                    Some(stringFormatter.toSalsahGuiAttributeDefinition(
+                                        attributeDefStr,
+                                        throw InconsistentTriplestoreDataException(s"Invalid salsah-gui:guiAttributeDefinition in $guiElementIri: $attributeDefStr")
+                                    ))
+
+                                case None => None
+                            }
+                    }.toSet
 
                     guiElementIri -> attributeDefs
             }
-
-            _ = println(s"guiAttributeDefinitions: $guiAttributeDefinitions")
 
             // Get all resource class definitions.
             resourceDefsSparql = queries.sparql.v2.txt.getResourceClassDefinitions(triplestore = settings.triplestoreType).toString()
@@ -495,27 +500,45 @@ class OntologyResponderV2 extends Responder {
 
                     val ontologyIri = propertyIri.getOntologyFromEntity
 
-                    // If the property has the predicate salsah-gui:guiAttribute, validate the objects of that predicate.
-                    predicates.get(OntologyConstants.SalsahGui.GuiAttribute.toSmartIri) match {
-                        case Some(guiAttributePred) =>
-                            // Find out which GUI element the property uses.
-                            val guiElementIri: IRI = predicates.getOrElse(OntologyConstants.SalsahGui.GuiElement.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has salsah-gui:guiAttribute but no salsah-gui:guiElement")).objects.head
+                    // Find out which salsah-gui:Guielement the property uses, if any.
+                    val maybeGuiElementIri: Option[IRI] = predicates.get(OntologyConstants.SalsahGui.GuiElement.toSmartIri).flatMap(_.objects.headOption)
 
-                            // Get that element's GUI attribute definitions.
-                            val guiAttributeDefs: Set[SalsahGuiAttributeDefinition] = guiAttributeDefinitions.getOrElse(guiElementIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has salsah-gui:guiAttribute, but $guiElementIri has no salsah-gui:guiAttributeDefinition"))
+                    // Get that Guielement's attribute definitions, if any.
+                    val guiAttributeDefs: Set[SalsahGuiAttributeDefinition] = maybeGuiElementIri match {
+                        case Some(guiElementIri) =>
+                            allGuiAttributeDefinitions.getOrElse(guiElementIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has salsah-gui:guiElement $guiElementIri, which doesn't exist"))
+
+                        case None => Set.empty[SalsahGuiAttributeDefinition]
+                    }
+
+                    // If the property has the predicate salsah-gui:guiAttribute, syntactically validate the objects of that predicate.
+                    val guiAttributes: Set[SalsahGuiAttribute] = predicates.get(OntologyConstants.SalsahGui.GuiAttribute.toSmartIri) match {
+                        case Some(guiAttributePred) =>
+                            val guiElementIri = maybeGuiElementIri.getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has salsah-gui:guiAttribute, but no salsah-gui:guiElement"))
+
+                            if (guiAttributeDefs.isEmpty) {
+                                throw InconsistentTriplestoreDataException(s"Property $propertyIri has salsah-gui:guiAttribute, but $guiElementIri has no salsah-gui:guiAttributeDefinition")
+                            }
 
                             // Syntactically validate each attribute.
-                            for (guiAttributeObj <- guiAttributePred.objects) {
-                                val guiAttribute = stringFormatter.toSalsahGuiAttribute(
+                            guiAttributePred.objects.map {
+                                guiAttributeObj => stringFormatter.toSalsahGuiAttribute(
                                     s = guiAttributeObj,
                                     attributeDefs = guiAttributeDefs,
                                     errorFun = throw InconsistentTriplestoreDataException(s"Property $propertyIri contains an invalid salsah-gui:guiAttribute: $guiAttributeObj")
                                 )
-
-                                println(guiAttribute)
                             }
 
-                        case None => ()
+                        case None => Set.empty[SalsahGuiAttribute]
+                    }
+
+                    // Check that all required GUI attributes are provided.
+                    val requiredAttributeNames = guiAttributeDefs.filter(_.isRequired).map(_.attributeName)
+                    val providedAttributeNames = guiAttributes.map(_.attributeName)
+                    val missingAttributeNames: Set[String] = requiredAttributeNames -- providedAttributeNames
+
+                    if (missingAttributeNames.nonEmpty) {
+                        throw InconsistentTriplestoreDataException(s"Property $propertyIri has one or more missing objects of salsah-gui:guiAttribute: ${missingAttributeNames.mkString(", ")}")
                     }
 
                     val propertyEntityInfo = ReadPropertyInfoV2(

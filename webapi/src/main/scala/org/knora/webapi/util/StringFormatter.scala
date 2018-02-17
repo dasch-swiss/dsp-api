@@ -113,11 +113,15 @@ object StringFormatter {
     /**
       * Represents a parsed object of the property `salsah-gui:guiAttributeDefinition`.
       *
-      * @param attributeName the name of the attribute.
-      * @param isRequired    `true` if the attribute is required.
-      * @param allowedType   the type of the attribute's value.
+      * @param attributeName    the name of the attribute.
+      * @param isRequired       `true` if the attribute is required.
+      * @param allowedType      the type of the attribute's value.
+      * @param enumeratedValues the allowed values, if this is an enumerated string attribute.
       */
-    case class SalsahGuiAttributeDefinition(attributeName: String, isRequired: Boolean, allowedType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value)
+    case class SalsahGuiAttributeDefinition(attributeName: String,
+                                            isRequired: Boolean,
+                                            allowedType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value,
+                                            enumeratedValues: Set[String] = Set.empty[String])
 
     /**
       * Represents a parsed object of the property `salsah-gui:guiAttribute`.
@@ -634,8 +638,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     private val ApiVersionNumberRegex: Regex = "^v[0-9]+.*$".r
 
     // Parses an object of salsah-gui:guiAttributeDefinition.
-    private val SalsahGuiAttributeDefinitionRegex: Regex =
-        """^(\p{L}+)(\(required\))?:([\p{L}\|]+)$""".r
+    private val SalsahGuiAttributeDefinitionRegex: Regex = """^(\p{L}+)(\(required\))?:(\p{L}+)(\(([\p{L}\|]+)\))?$""".r
 
     // Parses an object of salsa-gui:guiAttribute.
     private val SalsahGuiAttributeRegex: Regex =
@@ -1406,9 +1409,26 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       */
     def toSalsahGuiAttributeDefinition(s: String, errorFun: => Nothing): SalsahGuiAttributeDefinition = {
         s match {
-            case SalsahGuiAttributeDefinitionRegex(attributeName: String, Optional(required), allowedTypeStr: String) =>
+            case SalsahGuiAttributeDefinitionRegex(attributeName, Optional(maybeRequired), allowedTypeStr, _, Optional(maybeEnumeratedValuesStr)) =>
                 val allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.lookup(allowedTypeStr)
-                SalsahGuiAttributeDefinition(attributeName, required.nonEmpty, allowedType)
+
+                val enumeratedValues: Set[String] = maybeEnumeratedValuesStr match {
+                    case Some(enumeratedValuesStr) =>
+                        if (allowedType != OntologyConstants.SalsahGui.SalsahGuiAttributeType.Str) {
+                            errorFun
+                        }
+
+                        enumeratedValuesStr.split('|').toSet
+
+                    case None => Set.empty[String]
+                }
+
+                SalsahGuiAttributeDefinition(
+                    attributeName = attributeName,
+                    isRequired = maybeRequired.nonEmpty,
+                    allowedType = allowedType,
+                    enumeratedValues = enumeratedValues
+                )
 
             case _ => errorFun
         }
@@ -1458,6 +1478,10 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                         }
 
                     case OntologyConstants.SalsahGui.SalsahGuiAttributeType.Str =>
+                        if (attributeDef.enumeratedValues.nonEmpty && !attributeDef.enumeratedValues.contains(attributeValue)) {
+                            errorFun
+                        }
+
                         Some(SalsahGuiStringAttributeValue(attributeValue))
 
                     case _ => None

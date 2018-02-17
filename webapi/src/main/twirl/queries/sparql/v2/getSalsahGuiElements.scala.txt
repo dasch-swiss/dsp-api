@@ -41,7 +41,10 @@ SELECT ?guiElement ?guiAttributeDefinition
 }
 WHERE {
     GRAPH <http://www.knora.org/ontology/salsah-gui> {
-        ?guiElement a salsah-gui:Guielement ;
-            salsah-gui:guiAttributeDefinition ?guiAttributeDefinition .
+        ?guiElement a salsah-gui:Guielement .
+
+        OPTIONAL {
+            ?guiElement salsah-gui:guiAttributeDefinition ?guiAttributeDefinition .
+        }
     }
 }

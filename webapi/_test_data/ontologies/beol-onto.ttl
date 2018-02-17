@@ -438,8 +438,8 @@
 
          salsah-gui:guiElement salsah-gui:SimpleText ;
 
-         salsah-gui:guiAttribute "min=4" ,
-                                 "max=8" .
+         salsah-gui:guiAttribute "size=8" ,
+                                 "maxlength=8" .
 
 
 ### ###########################################

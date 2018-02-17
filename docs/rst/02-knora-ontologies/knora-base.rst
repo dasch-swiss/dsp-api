@@ -863,7 +863,7 @@ Knora's built-in support for “standoff” markup, which is stored
 separately from the text. This has some advantages over embedded markup
 such as XML. [#]_ While XML requires markup to have a hierarchical
 structure, and does not allow overlapping tags, standoff nodes do not
-have these limitations (Schmidt2016_). A standoff tag can be attached to
+have these limitations. [Schmidt2016]_ A standoff tag can be attached to
 any substring in the text by giving its start and end positions. [#]_
 For example, suppose we have the following text:
 

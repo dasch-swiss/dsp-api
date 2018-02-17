@@ -200,8 +200,8 @@
 :Spinbox rdf:type :Guielement ,
                   owl:NamedIndividual ;
          
-         :guiAttributeDefinition "max(required):decimal" ,
-                                 "min(required):decimal" .
+         :guiAttributeDefinition "max:decimal" ,
+                                 "min:decimal" .
 
 
 
@@ -213,7 +213,7 @@
           :guiAttributeDefinition "cols:integer" ,
                                   "rows:integer" ,
                                   "width:percent" ,
-                                  "wrap:string" .
+                                  "wrap:string(soft|hard)" .
 
 
 ###  http://www.knora.org/ontology/salsah-gui#Checkbox

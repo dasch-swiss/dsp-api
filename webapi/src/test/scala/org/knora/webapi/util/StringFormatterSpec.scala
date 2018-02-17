@@ -754,43 +754,48 @@ class StringFormatterSpec extends CoreSpec() {
 
         "parse the objects of salsah-gui:guiAttributeDefinition" in {
             stringFormatter.toSalsahGuiAttributeDefinition("hlist(required):iri", throw AssertionException("not valid")) should ===(
-                SalsahGuiAttributeDefinition(attributeName = "hlist", isRequired = true, allowedTypes = Set(OntologyConstants.SalsahGui.SalsahGuiAttributeType.Iri))
+                SalsahGuiAttributeDefinition(attributeName = "hlist", isRequired = true, allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Iri)
             )
 
             stringFormatter.toSalsahGuiAttributeDefinition("numprops:integer", throw AssertionException("not valid")) should ===(
-                SalsahGuiAttributeDefinition(attributeName = "numprops", isRequired = false, allowedTypes = Set(OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer))
+                SalsahGuiAttributeDefinition(attributeName = "numprops", isRequired = false, allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer)
             )
 
             stringFormatter.toSalsahGuiAttributeDefinition("size:integer", throw AssertionException("not valid")) should ===(
-                SalsahGuiAttributeDefinition(attributeName = "size", isRequired = false, allowedTypes = Set(OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer))
+                SalsahGuiAttributeDefinition(attributeName = "size", isRequired = false, allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer)
             )
 
             stringFormatter.toSalsahGuiAttributeDefinition("maxlength:integer", throw AssertionException("not valid")) should ===(
-                SalsahGuiAttributeDefinition(attributeName = "maxlength", isRequired = false, allowedTypes = Set(OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer))
+                SalsahGuiAttributeDefinition(attributeName = "maxlength", isRequired = false, allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer)
             )
 
             stringFormatter.toSalsahGuiAttributeDefinition("max(required):decimal", throw AssertionException("not valid")) should ===(
-                SalsahGuiAttributeDefinition(attributeName = "max", isRequired = true, allowedTypes = Set(OntologyConstants.SalsahGui.SalsahGuiAttributeType.Decimal))
+                SalsahGuiAttributeDefinition(attributeName = "max", isRequired = true, allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Decimal)
             )
 
             stringFormatter.toSalsahGuiAttributeDefinition("min(required):decimal", throw AssertionException("not valid")) should ===(
-                SalsahGuiAttributeDefinition(attributeName = "min", isRequired = true, allowedTypes = Set(OntologyConstants.SalsahGui.SalsahGuiAttributeType.Decimal))
+                SalsahGuiAttributeDefinition(attributeName = "min", isRequired = true, allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Decimal)
             )
 
-            stringFormatter.toSalsahGuiAttributeDefinition("width:integer|percent", throw AssertionException("not valid")) should ===(
+            stringFormatter.toSalsahGuiAttributeDefinition("width:percent", throw AssertionException("not valid")) should ===(
                 SalsahGuiAttributeDefinition(
                     attributeName = "width",
                     isRequired = false,
-                    allowedTypes = Set(OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer, OntologyConstants.SalsahGui.SalsahGuiAttributeType.Percent)
+                    allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Percent
                 )
             )
 
             stringFormatter.toSalsahGuiAttributeDefinition("rows:integer", throw AssertionException("not valid")) should ===(
-                SalsahGuiAttributeDefinition(attributeName = "rows", isRequired = false, allowedTypes = Set(OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer))
+                SalsahGuiAttributeDefinition(attributeName = "rows", isRequired = false, allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer)
             )
 
-            stringFormatter.toSalsahGuiAttributeDefinition("wrap:string", throw AssertionException("not valid")) should ===(
-                SalsahGuiAttributeDefinition(attributeName = "wrap", isRequired = false, allowedTypes = Set(OntologyConstants.SalsahGui.SalsahGuiAttributeType.Str))
+            stringFormatter.toSalsahGuiAttributeDefinition("wrap:string(soft|hard)", throw AssertionException("not valid")) should ===(
+                SalsahGuiAttributeDefinition(
+                    attributeName = "wrap",
+                    isRequired = false,
+                    allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Str,
+                    enumeratedValues = Set("soft", "hard")
+                )
             )
         }
     }
