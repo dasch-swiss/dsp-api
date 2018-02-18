@@ -151,6 +151,11 @@ lazy val webApiLibs = Seq(
     library.jenaLibs,
     library.jenaText,
     library.jwt,
+    library.kamonCore,
+    library.kamonAkka,
+    library.kamonPrometheus,
+    library.kamonZipkin,
+    library.kamonJaeger,
     library.logbackClassic,
     library.rdf4jRioTurtle,
     library.rdf4jQueryParserSparql,
@@ -172,7 +177,7 @@ lazy val library =
             val akkaHttp = "10.0.11"
             val jena = "3.4.0"
             val aspectj = "1.8.7"
-            val kamon = "0.5.2"
+            val kamon = "1.0.0"
         }
 
         // akka
@@ -211,15 +216,12 @@ lazy val library =
         // caching
         val ehcache                = "net.sf.ehcache"                % "ehcache"                  % "2.10.0"
 
-        // monitoring - disabled for now
-        val aspectjWeaver          = "org.aspectj"                   % "aspectjweaver"            % Version.aspectj
-        val aspectjRt              = "org.aspectj"                   % "aspectjrt"                % Version.aspectj
+        // monitoring
         val kamonCore              = "io.kamon"                     %% "kamon-core"               % Version.kamon
-        val kamonSpray             = "io.kamon"                     %% "kamon-spray"              % Version.kamon
-        val kamonStatsD            = "io.kamon"                     %% "kamon-statsd"             % Version.kamon
-        val kamonLogReporter       = "io.kamon"                     %% "kamon-log-reporter"       % Version.kamon
-        val kamonSystemMetrics     = "io.kamon"                     %% "kamon-system-metrics"     % Version.kamon
-        val kamonNewRelic          = "io.kamon"                     %% "kamon-newrelic"           % Version.kamon
+        val kamonAkka              = "io.kamon"                     %% "kamon-akka-2.5"           % Version.kamon
+        val kamonPrometheus        = "io.kamon"                     %% "kamon-prometheus"         % Version.kamon
+        val kamonZipkin            = "io.kamon"                     %% "kamon-zipkin"             % Version.kamon
+        val kamonJaeger            = "io.kamon"                     %% "kamon-jaeger"             % Version.kamon
 
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",
