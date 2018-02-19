@@ -20,11 +20,12 @@
 .. toctree::
     :maxdepth: 2
 
-    introduction/index
-    knora-ontologies/index
-    knora-api-server/index
-    salsah/index
-    sipi/index
+    00-release-notes/index
+    01-introduction/index
+    02-knora-ontologies/index
+    03-knora-api-server/index
+    04-salsah/index
+    05-sipi/index
 
 .. ********************
    List of TODOs

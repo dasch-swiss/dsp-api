@@ -112,8 +112,7 @@ object OntologyConstants {
         KnoraBase.KnoraBaseOntologyLabel,
         KnoraApi.KnoraApiOntologyLabel,
         SalsahGui.SalsahGuiOntologyLabel,
-        Standoff.StandoffOntologyLabel,
-        Dc.DcOntologyLabel
+        Standoff.StandoffOntologyLabel
     )
 
     /**
@@ -320,7 +319,7 @@ object OntologyConstants {
         val ProjectShortcode: IRI = KnoraBasePrefixExpansion + "projectShortcode"
         val ProjectLongname: IRI = KnoraBasePrefixExpansion + "projectLongname"
         val ProjectDescription: IRI = KnoraBasePrefixExpansion + "projectDescription"
-        val ProjectKeywords: IRI = KnoraBasePrefixExpansion + "projectKeywords"
+        val ProjectKeyword: IRI = KnoraBasePrefixExpansion + "projectKeyword"
         val ProjectLogo: IRI = KnoraBasePrefixExpansion + "projectLogo"
         val BelongsToInstitution: IRI = KnoraBasePrefixExpansion + "belongsToInstitution"
         val ProjectOntology: IRI = KnoraBasePrefixExpansion + "projectOntology"
@@ -511,10 +510,6 @@ object OntologyConstants {
             val assignmentOperator: String = "="
         }
 
-    }
-
-    object Dc {
-        val DcOntologyLabel: String = "dc"
     }
 
     object Ontotext {

@@ -88,7 +88,7 @@
     <!-- Admin -->
     <logger name="org.knora.webapi.responders.admin.GroupsResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.ListsResponderADM" level="INFO"/>
-    <logger name="org.knora.webapi.responders.admin.OntologiesResponderADM" level="DEBUG"/>
+    <logger name="org.knora.webapi.responders.admin.OntologiesResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.ProjectsResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.StoresResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.UsersResponderADM" level="INFO"/>
@@ -113,8 +113,8 @@
     <logger name="org.knora.webapi.responders.admin.ListsAdminResponderSpec" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.UsersResponderADMSpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.ListsADME2ESpec" level="INFO"/>
-    <logger name="org.knora.webapi.e2e.admin.ProjectsADME2ESpec" level="DEBUG"/>
-    <logger name="org.knora.webapi.e2e.admin.UsersADME2ESpec" level="INFO"/>
+    <logger name="org.knora.webapi.e2e.admin.ProjectsADME2ESpec" level="INFO"/>
+    <logger name="org.knora.webapi.e2e.admin.UsersADME2ESpecE2E" level="INFO"/>
 
 
     <root level="INFO">

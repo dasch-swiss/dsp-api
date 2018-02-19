@@ -269,7 +269,7 @@
         "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/simple/v2#bild",
         "rdfs:label" : "Description",
-        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/simple/v2#description"
+        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/simple/v2#hasValue", "http://purl.org/dc/terms/description" ]
       },
       "p00FF-images:eingangsdatum" : {
         "@id" : "p00FF-images:eingangsdatum",
@@ -277,7 +277,7 @@
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Date",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/simple/v2#bildformat",
         "rdfs:label" : "Date of receipt",
-        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/simple/v2#date"
+        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/simple/v2#hasValue", "http://purl.org/dc/terms/date" ]
       },
       "p00FF-images:email" : {
         "@id" : "p00FF-images:email",
@@ -293,7 +293,7 @@
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Date",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/simple/v2#bild",
         "rdfs:label" : "Date of acquisition",
-        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/simple/v2#date"
+        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/simple/v2#hasValue", "http://purl.org/dc/terms/date" ]
       },
       "p00FF-images:erwerbsdatum" : {
         "@id" : "p00FF-images:erwerbsdatum",
@@ -301,7 +301,7 @@
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Date",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/simple/v2#bildformat",
         "rdfs:label" : "Date of acquisition",
-        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/simple/v2#date"
+        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/simple/v2#hasValue", "http://purl.org/dc/terms/date" ]
       },
       "p00FF-images:fax" : {
         "@id" : "p00FF-images:fax",
@@ -394,7 +394,7 @@
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Date",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/simple/v2#bild",
         "rdfs:label" : "Mutation date",
-        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/simple/v2#date"
+        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/simple/v2#hasValue", "http://purl.org/dc/terms/date" ]
       },
       "p00FF-images:negativnummer" : {
         "@id" : "p00FF-images:negativnummer",
@@ -472,7 +472,6 @@
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "p00FF-images" : "http://0.0.0.0:3333/ontology/00FF/images/simple/v2#",
-    "dc" : "http://api.knora.org/ontology/dc/simple/v2#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
