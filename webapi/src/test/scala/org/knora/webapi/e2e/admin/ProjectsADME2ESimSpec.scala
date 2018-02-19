@@ -23,7 +23,12 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 import scala.concurrent.duration._
 
-
+/**
+  * Simulation Scenario for testing the projects endpoints.
+  *
+  * This simulation scenario accesses the projects endpoint with
+  * 1000 users concurrently.
+  */
 class ProjectsADME2ESimSpec extends E2ESimSpec {
 
     override val rdfDataObjects: Seq[RdfDataObject] = Seq.empty[RdfDataObject]

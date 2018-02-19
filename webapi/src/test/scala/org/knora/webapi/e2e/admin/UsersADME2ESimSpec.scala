@@ -10,6 +10,8 @@ import scala.util.Random
 
 
 /**
+  * Simulation Scenario for testing the users endpoint.
+  *
   * In this simulation scenario, concurrently, 1000 users retrieve a list of all users,
   * while additional 20 users register themselves. The mean response time should be less
   * then 300 ms (according to a quick google search, 200 ms are standard).

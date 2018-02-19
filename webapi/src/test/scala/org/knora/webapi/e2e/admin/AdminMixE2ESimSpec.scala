@@ -23,6 +23,11 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 import scala.concurrent.duration._
 
+/**
+  * Simulation Scenario for testing the admin endpoints.
+  *
+  * This simulation scenario accesses the users, groups, and projects endpoint.
+  */
 class AdminMixE2ESimSpec extends E2ESimSpec {
 
     override val rdfDataObjects: Seq[RdfDataObject] = Seq.empty[RdfDataObject]
