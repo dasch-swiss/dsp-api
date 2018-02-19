@@ -4,8 +4,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
-import org.knora.webapi.messages.v1.responder.ApiStatusCodesV1
-import org.knora.webapi.messages.v2.responder.ApiStatusCodesV2
+import org.knora.webapi.http.{ApiStatusCodesV1, ApiStatusCodesV2}
 import spray.json.{JsNumber, JsObject, JsString, JsValue}
 
 /**
@@ -39,7 +38,7 @@ object KnoraExceptionHandler {
                 val url = uri.path.toString
 
                 println(s"KnoraExceptionHandler - case: ise - url: $url")
-                log.error(ise, s"Unable to run route $uri")
+                log.error(ise, s"Unable to run route $url")
 
                 if (url.contains("v1")) {
                     complete(exceptionToJsonHttpResponseV1(ise, settingsImpl))
@@ -54,7 +53,7 @@ object KnoraExceptionHandler {
                 val url = uri.path.toString
 
                 println(s"KnoraExceptionHandler - case: other - url: $url")
-                log.error(other, s"Unable to run route $uri")
+                log.error(other, s"Unable to run route $url")
 
                 if (url.contains("v1")) {
                     complete(exceptionToJsonHttpResponseV1(other, settingsImpl))

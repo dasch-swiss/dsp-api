@@ -41,55 +41,55 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
 
 
 
-    val nfe = path("v1" / "nfe") {
+    val nfe = path( ("v1" | "v2" | "admin") / "nfe") {
         get {
             throw NotFoundException("not found")
         }
     }
 
-    val fe = path("v1" | "v2" | "admin" / "fe") {
+    val fe = path( (("v1" | "v2") | "admin") / "fe") {
         get {
             throw ForbiddenException("forbidden")
         }
     }
 
-    val bce = path("v1" | "v2" | "admin" / "bce") {
+    val bce = path( ("v1" | "v2" | "admin") / "bce") {
         get {
             throw BadCredentialsException("bad credentials")
         }
     }
 
-    val dve = path("v1" | "v2" | "admin" / "dve") {
+    val dve = path( ("v1" | "v2" | "admin") / "dve") {
         get {
             throw DuplicateValueException("duplicate value")
         }
     }
 
-    val oce = path("v1" | "v2" | "admin" / "oce") {
+    val oce = path( ("v1" | "v2" | "admin") / "oce") {
         get {
             throw OntologyConstraintException("ontology constraint")
         }
     }
 
-    val ece = path("v1" | "v2" | "admin" / "ece") {
+    val ece = path( ("v1" | "v2" | "admin") / "ece") {
         get {
             throw EditConflictException("edit conflict")
         }
     }
 
-    val sse = path("v1" | "v2" | "admin" / "sse") {
+    val sse = path( ("v1" | "v2" | "admin") / "sse") {
         get {
             throw SparqlSearchException("sparql search")
         }
     }
 
-    val unpe = path("v1" | "v2" | "admin" / "unpe") {
+    val unpe = path( ("v1" | "v2" | "admin") / "unpe") {
         get {
             throw UpdateNotPerformedException("update not performed")
         }
     }
 
-    val ae = path("v1" | "v2" | "admin" / "ae") {
+    val ae = path( ("v1" | "v2" | "admin") / "ae") {
         get {
             throw AuthenticationException("authentication exception")
         }
@@ -101,21 +101,28 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
 
     "The Exception Handler" should {
 
-        "return an nfe exception for v1" in {
+        "return correct status code and response for 'NotFoundException'" in {
             Get("/v1/nfe") ~> route ~> check {
 
-                println(responseAs[String])
+                //println(responseAs[String])
 
                 status should be(StatusCodes.NotFound)
 
                 responseAs[String] should be("{\"status\":9,\"error\":\"org.knora.webapi.NotFoundException: not found\"}")
             }
-        }
 
-        "return an nfe exception for v2" in {
             Get("/v2/nfe") ~> route ~> check {
 
-                println(responseAs[String])
+                //println(responseAs[String])
+
+                status should be(StatusCodes.NotFound)
+
+                responseAs[String] should be("{\"error\":\"org.knora.webapi.NotFoundException: not found\"}")
+            }
+
+            Get("/admin/nfe") ~> route ~> check {
+
+                //println(responseAs[String])
 
                 status should be(StatusCodes.NotFound)
 
@@ -123,40 +130,166 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
             }
         }
 
-        "akka path matcher pipe combinator bug (1)" in {
 
-            val works = path("v1" / "fu") {
-                complete("fu")
-            } ~ path("v2" / "fu") {
-                complete("fu")
+        "return correct status code and response for 'ForbiddenException'" in {
+            Get("/v1/fe") ~> route ~> check {
+
+                status should be(StatusCodes.Forbidden)
+
+                responseAs[String] should be("{\"status\":3,\"error\":\"org.knora.webapi.ForbiddenException: forbidden\",\"access\":\"NO_ACCESS\"}")
             }
 
-            Get("/v1/fu") ~> works ~> check {
-                responseAs[String] should be("fu")
+            Get("/v2/fe") ~> route ~> check {
+
+                status should be(StatusCodes.Forbidden)
+
+                responseAs[String] should be("{\"error\":\"org.knora.webapi.ForbiddenException: forbidden\"}")
             }
 
-            Get("/v2/fu") ~> works ~> check {
-                responseAs[String] should be("fu")
-            }
+            Get("/admin/fe") ~> route ~> check {
 
+                status should be(StatusCodes.Forbidden)
+
+                responseAs[String] should be("{\"error\":\"org.knora.webapi.ForbiddenException: forbidden\"}")
+            }
         }
 
-        "akka path matcher pipe combinator bug (2)" in {
+        "return correct status code and response for 'DuplicateValueException'" in {
+            Get("/v1/dve") ~> route ~> check {
 
-            val nope = path("v1" | "v2" / "fu") {
-                complete("fu")
+                status should be(StatusCodes.BadRequest)
+
+                responseAs[String] should be("{\"status\":28,\"error\":\"org.knora.webapi.DuplicateValueException: duplicate value\"}")
             }
 
-            Get ("/v1/fu") ~> nope ~> check {
-                println(responseAs[String])
-                responseAs[String] should be ("fu")
+            Get("/v2/dve") ~> route ~> check {
+
+                status should be(StatusCodes.BadRequest)
+
+                responseAs[String] should be("{\"error\":\"org.knora.webapi.DuplicateValueException: duplicate value\"}")
             }
 
-            Get ("/v2/fu") ~> nope ~> check {
-                println(responseAs[String])
-                responseAs[String] should be ("fu")
+            Get("/admin/dve") ~> route ~> check {
+
+                status should be(StatusCodes.BadRequest)
+
+                responseAs[String] should be("{\"error\":\"org.knora.webapi.DuplicateValueException: duplicate value\"}")
+            }
+        }
+
+        "return correct status code and response for 'OntologyConstraintException'" in {
+            Get("/v1/oce") ~> route ~> check {
+
+                status should be(StatusCodes.BadRequest)
+
+                responseAs[String] should be("{\"status\":29,\"error\":\"org.knora.webapi.OntologyConstraintException: ontology constraint\"}")
             }
 
+            Get("/v2/oce") ~> route ~> check {
+
+                status should be(StatusCodes.BadRequest)
+
+                responseAs[String] should be("{\"error\":\"org.knora.webapi.OntologyConstraintException: ontology constraint\"}")
+            }
+
+            Get("/admin/oce") ~> route ~> check {
+
+                status should be(StatusCodes.BadRequest)
+
+                responseAs[String] should be("{\"error\":\"org.knora.webapi.OntologyConstraintException: ontology constraint\"}")
+            }
+        }
+
+        "return correct status code and response for 'EditConflictException'" in {
+            Get("/v1/ece") ~> route ~> check {
+
+                status should be(StatusCodes.Conflict)
+
+                responseAs[String] should be("{\"status\":27,\"error\":\"org.knora.webapi.EditConflictException: edit conflict\"}")
+            }
+
+            Get("/v2/ece") ~> route ~> check {
+
+                status should be(StatusCodes.Conflict)
+
+                responseAs[String] should be("{\"error\":\"org.knora.webapi.EditConflictException: edit conflict\"}")
+            }
+
+            Get("/admin/ece") ~> route ~> check {
+
+                status should be(StatusCodes.Conflict)
+
+                responseAs[String] should be("{\"error\":\"org.knora.webapi.EditConflictException: edit conflict\"}")
+            }
+        }
+
+        "return correct status code and response for 'SparqlSearchException'" in {
+            Get("/v1/sse") ~> route ~> check {
+
+                status should be(StatusCodes.BadRequest)
+
+                responseAs[String] should be("{\"status\":11,\"error\":\"org.knora.webapi.SparqlSearchException: sparql search\"}")
+            }
+
+            Get("/v2/sse") ~> route ~> check {
+
+                status should be(StatusCodes.BadRequest)
+
+                responseAs[String] should be("{\"error\":\"org.knora.webapi.SparqlSearchException: sparql search\"}")
+            }
+
+            Get("/admin/sse") ~> route ~> check {
+
+                status should be(StatusCodes.BadRequest)
+
+                responseAs[String] should be("{\"error\":\"org.knora.webapi.SparqlSearchException: sparql search\"}")
+            }
+        }
+
+        "return correct status code and response for 'UpdateNotPerformedException'" in {
+            Get("/v1/unpe") ~> route ~> check {
+
+                status should be(StatusCodes.Conflict)
+
+                responseAs[String] should be("{\"status\":27,\"error\":\"org.knora.webapi.UpdateNotPerformedException: update not performed\"}")
+            }
+
+            Get("/v2/unpe") ~> route ~> check {
+
+                status should be(StatusCodes.Conflict)
+
+                responseAs[String] should be("{\"error\":\"org.knora.webapi.UpdateNotPerformedException: update not performed\"}")
+            }
+
+            Get("/admin/unpe") ~> route ~> check {
+
+                status should be(StatusCodes.Conflict)
+
+                responseAs[String] should be("{\"error\":\"org.knora.webapi.UpdateNotPerformedException: update not performed\"}")
+            }
+        }
+
+        "return correct status code and response for 'AuthenticationException'" in {
+            Get("/v1/ae") ~> route ~> check {
+
+                status should be(StatusCodes.InternalServerError)
+
+                responseAs[String] should be("{\"status\":4,\"error\":\"org.knora.webapi.AuthenticationException: authentication exception\"}")
+            }
+
+            Get("/v2/ae") ~> route ~> check {
+
+                status should be(StatusCodes.InternalServerError)
+
+                responseAs[String] should be("{\"error\":\"org.knora.webapi.AuthenticationException: authentication exception\"}")
+            }
+
+            Get("/admin/ae") ~> route ~> check {
+
+                status should be(StatusCodes.InternalServerError)
+
+                responseAs[String] should be("{\"error\":\"org.knora.webapi.AuthenticationException: authentication exception\"}")
+            }
         }
     }
 }
