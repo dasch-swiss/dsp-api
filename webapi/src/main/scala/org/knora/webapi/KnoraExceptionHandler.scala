@@ -23,7 +23,8 @@ object KnoraExceptionHandler {
         case rre: RequestRejectedException =>
             extractRequest { request =>
                 val url = request.uri.path.toString
-                println(s"KnoraExceptionHandler - case: rre - url: $url")
+
+                log.debug(s"KnoraExceptionHandler - case: rre - url: $url")
 
                 if (url.contains("v1")) {
                     complete(exceptionToJsonHttpResponseV1(rre, settingsImpl))
@@ -37,7 +38,7 @@ object KnoraExceptionHandler {
                 val uri = request.uri
                 val url = uri.path.toString
 
-                println(s"KnoraExceptionHandler - case: ise - url: $url")
+                log.debug(s"KnoraExceptionHandler - case: ise - url: $url")
                 log.error(ise, s"Unable to run route $url")
 
                 if (url.contains("v1")) {
@@ -52,7 +53,7 @@ object KnoraExceptionHandler {
                 val uri = request.uri
                 val url = uri.path.toString
 
-                println(s"KnoraExceptionHandler - case: other - url: $url")
+                log.debug(s"KnoraExceptionHandler - case: other - url: $url")
                 log.error(other, s"Unable to run route $url")
 
                 if (url.contains("v1")) {
@@ -78,6 +79,7 @@ object KnoraExceptionHandler {
 
         // Generate an HTTP response containing the error message, the API status code, and the HTTP status code.
 
+        // this is a special case where we need to add 'access'
         val maybeAccess: Option[(String, JsValue)] = if (apiStatus == ApiStatusCodesV1.NO_RIGHTS_FOR_OPERATION) {
             Some("access" -> JsString("NO_ACCESS"))
         } else {
@@ -106,12 +108,12 @@ object KnoraExceptionHandler {
         // Get the HTTP status code that corresponds to the exception.
         val httpStatus: StatusCode = ApiStatusCodesV2.fromException(ex)
 
-        // Generate an HTTP response containing the error message and the HTTP status code.
-
+        // Generate an HTTP response containing the error message ...
         val responseFields: Map[String, JsValue] = Map(
             "error" -> JsString(makeClientErrorMessage(ex, settings))
         )
 
+        // ... and the HTTP status code.
         HttpResponse(
             status = httpStatus,
             entity = HttpEntity(ContentType(MediaTypes.`application/json`), JsObject(responseFields).compactPrint)
