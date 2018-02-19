@@ -29,7 +29,6 @@ Developing the Knora API Server
    build-process
    intellij-config
    documentation
-   test-tags
-   testing-with-fuseki
+   testing
    docker-cheat-sheet
    monitoring

@@ -21,7 +21,7 @@ class IriLockerSpec extends WordSpec with Matchers {
     "IriLocker" should {
         "not allow a request to acquire a lock when another request already has it" in {
             def runLongTask(): Future[String] = Future {
-                Thread.sleep(3500)
+                Thread.sleep(4500)
                 SUCCESS
             }
 
@@ -49,7 +49,7 @@ class IriLockerSpec extends WordSpec with Matchers {
             )
 
             val secondTaskFailedWithLockTimeout = try {
-                Await.result(secondTaskResultFuture, 3.seconds)
+                Await.result(secondTaskResultFuture, 5.seconds)
                 false
             } catch {
                 case ale: ApplicationLockException => true
