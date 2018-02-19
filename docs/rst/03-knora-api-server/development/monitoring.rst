@@ -1,4 +1,4 @@
-.. Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+.. Copyright © 2015-2018 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
    Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
 
    This file is part of Knora.
@@ -16,20 +16,22 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-*******************************
-Developing the Knora API Server
-*******************************
 
-.. toctree::
-   :maxdepth: 2
+Monitoring the Webapi Server
+============================
 
-   overview
-   fuseki
-   graphdb
-   build-process
-   intellij-config
-   documentation
-   test-tags
-   testing-with-fuseki
-   docker-cheat-sheet
-   monitoring
+Monitoring is implemented by using the Prometheus / Grafana stack.
+
+Usage:
+------
+
+(1) Start `webapi` with the necessary `-p` option (e.g., from inside sbt: `run -p` or `reStart -p`
+
+(2) Start the monitoring stack by executing the following line inside the `monitoring` folder:
+
+::
+
+  $ WEBAPIHOST=<YourLocalIP> ADMIN_USER=admin ADMIN_PASSWORD=admin docker-compose up -d
+
+(3) Head over to `localhost:3000`, log in using the admin username and password, and open the
+    "Webapi Akka Actor System" dashboard.
