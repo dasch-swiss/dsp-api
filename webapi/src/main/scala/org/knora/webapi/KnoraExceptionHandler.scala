@@ -24,7 +24,7 @@ object KnoraExceptionHandler {
             extractRequest { request =>
                 val url = request.uri.path.toString
 
-                log.debug(s"KnoraExceptionHandler - case: rre - url: $url")
+                // println(s"KnoraExceptionHandler - case: rre - url: $url")
 
                 if (url.contains("v1")) {
                     complete(exceptionToJsonHttpResponseV1(rre, settingsImpl))
@@ -38,7 +38,7 @@ object KnoraExceptionHandler {
                 val uri = request.uri
                 val url = uri.path.toString
 
-                log.debug(s"KnoraExceptionHandler - case: ise - url: $url")
+                // println(s"KnoraExceptionHandler - case: ise - url: $url")
                 log.error(ise, s"Unable to run route $url")
 
                 if (url.contains("v1")) {
