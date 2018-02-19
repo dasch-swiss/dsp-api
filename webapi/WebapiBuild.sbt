@@ -149,7 +149,7 @@ lazy val webApiLibs = Seq(
     library.jodaTime,
     library.jodaConvert,
     library.jenaLibs,
-    library.jenaTest,
+    library.jenaText,
     library.jwt,
     library.logbackClassic,
     library.rdf4jRioTurtle,
@@ -198,7 +198,7 @@ lazy val library =
 
         // jena
         val jenaLibs               = "org.apache.jena"               % "apache-jena-libs"         % Version.jena exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec")
-        val jenaTest               = "org.apache.jena"               % "jena-text"                % Version.jena exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec")
+        val jenaText               = "org.apache.jena"               % "jena-text"                % Version.jena exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec")
 
         // logging
         val scalaLogging           = "com.typesafe.scala-logging"   %% "scala-logging"            % "3.5.0"

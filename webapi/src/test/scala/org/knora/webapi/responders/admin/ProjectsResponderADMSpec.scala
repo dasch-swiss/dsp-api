@@ -170,10 +170,10 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectCreateRequestADM(
                     CreateProjectApiRequestADM(
                         shortname = "newproject",
-                        shortcode = None,
+                        shortcode = "1111",
                         longname = Some("project longname"),
-                        description = Some("project description"),
-                        keywords = Some("keywords"),
+                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+                        keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
                         selfjoin = false
@@ -184,8 +184,9 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
 
                 received.project.shortname should be("newproject")
+                received.project.shortcode should be(Some("1111"))
                 received.project.longname should contain("project longname")
-                received.project.description should contain("project description")
+                received.project.description should be(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
                 received.project.ontologies.isEmpty should be (true)
 
                 newProjectIri.set(received.project.id)
@@ -196,10 +197,10 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectCreateRequestADM(
                     CreateProjectApiRequestADM(
                         shortname = "newproject2",
-                        shortcode = Some("1111"),
+                        shortcode = "1112",
                         longname = Some("project longname"),
-                        description = Some("project description"),
-                        keywords = Some("keywords"),
+                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+                        keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
                         selfjoin = false
@@ -210,12 +211,11 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
 
                 received.project.shortname should be("newproject2")
-                received.project.shortcode should be(Some("1111"))
+                received.project.shortcode should be(Some("1112"))
                 received.project.longname should contain("project longname")
-                received.project.description should contain("project description")
+                received.project.description should be(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
                 received.project.ontologies.isEmpty should be (true)
 
-                newProjectIri.set(received.project.id)
                 //println(s"newProjectIri: ${newProjectIri.get}")
             }
 
@@ -223,10 +223,10 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectCreateRequestADM(
                     CreateProjectApiRequestADM(
                         shortname = "newproject",
-                        shortcode = None,
+                        shortcode = "1113",
                         longname = Some("project longname"),
-                        description = Some("project description"),
-                        keywords = Some("keywords"),
+                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+                        keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
                         selfjoin = false
@@ -241,10 +241,10 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectCreateRequestADM(
                     CreateProjectApiRequestADM(
                         shortname = "newproject3",
-                        shortcode = Some("1111"),
+                        shortcode = "1111",
                         longname = Some("project longname"),
-                        description = Some("project description"),
-                        keywords = Some("keywords"),
+                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+                        keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
                         selfjoin = false
@@ -260,10 +260,10 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectCreateRequestADM(
                     CreateProjectApiRequestADM(
                         shortname = "",
-                        shortcode = None,
+                        shortcode = "1114",
                         longname = Some("project longname"),
-                        description = Some("project description"),
-                        keywords = Some("keywords"),
+                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+                        keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
                         selfjoin = false
@@ -274,16 +274,34 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 expectMsg(Failure(BadRequestException("'Shortname' cannot be empty")))
             }
 
+            "return 'BadRequestException' if project 'shortcode' during creation is missing" in {
+
+                actorUnderTest ! ProjectCreateRequestADM(
+                    CreateProjectApiRequestADM(
+                        shortname = "newproject4",
+                        shortcode = "",
+                        longname = Some("project longname"),
+                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+                        keywords = Seq("keywords"),
+                        logo = Some("/fu/bar/baz.jpg"),
+                        status = true,
+                        selfjoin = false
+                    ),
+                    SharedTestDataADM.rootUser,
+                    UUID.randomUUID()
+                )
+                expectMsg(Failure(BadRequestException("The supplied short code: '' is not valid.")))
+            }
+
             "UPDATE a project" in {
                 actorUnderTest ! ProjectChangeRequestADM(
                     projectIri = newProjectIri.get,
                     changeProjectRequest = ChangeProjectApiRequestADM(
                         shortname = None,
                         longname = Some("updated project longname"),
-                        description = Some("""updated project description with "quotes" and <html tags>"""),
-                        keywords = Some("updated keywords"),
+                        description = Some(Seq(StringLiteralV2(value = """updated project description with "quotes" and <html tags>""", language = Some("en")))),
+                        keywords = Some(Seq("updated", "keywords")),
                         logo = Some("/fu/bar/baz-updated.jpg"),
-                        institution = Some("http://rdfh.ch/institutions/dhlab-basel"),
                         status = Some(false),
                         selfjoin = Some(true)
                     ),
@@ -291,11 +309,12 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                     UUID.randomUUID()
                 )
                 val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
+                received.project.shortname should be("newproject")
+                received.project.shortcode should be(Some("1111"))
                 received.project.longname should be (Some("updated project longname"))
-                received.project.description should be (Some("""updated project description with "quotes" and <html tags>"""))
-                received.project.keywords should be (Some("updated keywords"))
+                received.project.description should be (Seq(StringLiteralV2(value = """updated project description with "quotes" and <html tags>""", language = Some("en"))))
+                received.project.keywords.sorted should be (Seq("updated", "keywords").sorted)
                 received.project.logo should be (Some("/fu/bar/baz-updated.jpg"))
-                received.project.institution should be (Some("http://rdfh.ch/institutions/dhlab-basel"))
                 received.project.ontologies.isEmpty should be (true)
                 received.project.status should be (false)
                 received.project.selfjoin should be (true)
@@ -337,7 +356,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return 'BadRequest' if nothing would be changed during the update" in {
 
-                an [BadRequestException] should be thrownBy ChangeProjectApiRequestADM(None, None, None, None, None, None, None, None)
+                an [BadRequestException] should be thrownBy ChangeProjectApiRequestADM(None, None, None, None, None, None, None)
 
                 /*
                 actorUnderTest ! ProjectChangeRequestADM(
@@ -552,6 +571,42 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Failure(NotFoundException(s"Project 'wrongshortcode' not found.")))
+            }
+        }
+
+        "used to query keywords" should {
+
+            "return all unique keywords for all projects" in {
+                actorUnderTest ! ProjectsKeywordsGetRequestADM(SharedTestDataADM.rootUser)
+                val received: ProjectsKeywordsGetResponseADM = expectMsgType[ProjectsKeywordsGetResponseADM](timeout)
+                received.keywords.size should be (18)
+            }
+
+            "return all keywords for a single project" in {
+                actorUnderTest ! ProjectKeywordsGetRequestADM(
+                    projectIri = SharedTestDataADM.incunabulaProject.id,
+                    requestingUser = SharedTestDataADM.rootUser
+                )
+                val received: ProjectKeywordsGetResponseADM = expectMsgType[ProjectKeywordsGetResponseADM](timeout)
+                received.keywords should be (SharedTestDataADM.incunabulaProject.keywords)
+            }
+
+            "return empty list for a project without keywords" in {
+                actorUnderTest ! ProjectKeywordsGetRequestADM(
+                    projectIri = SharedTestDataADM.anythingProject.id,
+                    requestingUser = SharedTestDataADM.rootUser
+                )
+                val received: ProjectKeywordsGetResponseADM = expectMsgType[ProjectKeywordsGetResponseADM](timeout)
+                received.keywords should be (Seq.empty[String])
+            }
+
+            "return 'NotFound' when the project IRI is unknown" in {
+                actorUnderTest ! ProjectKeywordsGetRequestADM(
+                    projectIri = "http://rdfh.ch/projects/notexisting",
+                    SharedTestDataADM.rootUser
+                )
+
+                expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
             }
         }
     }

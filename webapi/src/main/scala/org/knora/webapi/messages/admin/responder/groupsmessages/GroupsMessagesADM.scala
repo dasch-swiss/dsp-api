@@ -220,7 +220,13 @@ case class GroupADM(id: IRI,
                     description: String,
                     project: ProjectADM,
                     status: Boolean,
-                    selfjoin: Boolean) {
+                    selfjoin: Boolean) extends Ordered[GroupADM] {
+
+
+    /**
+      * Allows to sort collections of GroupADM. Sorting is done by the id.
+      */
+    def compare(that: GroupADM): Int = this.id.compareTo(that.id)
 
     def asGroupShortADM: GroupShortADM = {
 
