@@ -71,11 +71,14 @@ lazy val webapi = (project in file(".")).
             logLevel := Level.Info,
             fork in run := true,
             javaOptions in run ++= javaRunOptions,
-            //javaOptions in run <++= AspectjKeys.weaverOptions in Aspectj,
-            //javaOptions in Revolver.reStart <++= AspectjKeys.weaverOptions in Aspectj,
+            javaOptions in reStart ++= javaRunOptions,
+            javaOptions in Test ++= javaTestOptions,
+            javaOptions in reStart ++= resolvedJavaAgents.value map { resolved =>
+                "-javaagent:" + resolved.artifact.absolutePath + resolved.agent.arguments
+            },// allows sbt-javaagent to work with sbt-revolver
+            javaAgents += library.aspectJWeaver,
             mainClass in (Compile, run) := Some("org.knora.webapi.Main"),
             fork in Test := true,
-            javaOptions in Test ++= javaTestOptions,
             parallelExecution in Test := false,
             // enable publishing the jar produced by `sbt test:package` and `sbt it:package`
             publishArtifact in (Test, packageBin) := true,
@@ -125,7 +128,9 @@ lazy val webapi = (project in file(".")).
         ).
         enablePlugins(SbtTwirl). // Enable the sbt-twirl plugin
         enablePlugins(JavaAppPackaging). // Enable the sbt-native-packager plugin
-        enablePlugins(GatlingPlugin) // load testing
+        enablePlugins(GatlingPlugin). // load testing
+        enablePlugins(JavaAgent). // Adds AspectJ Weaver configuration
+        enablePlugins(RevolverPlugin)
 
 lazy val webApiCommonSettings = Seq(
     organization := "org.knora",
@@ -135,6 +140,7 @@ lazy val webApiCommonSettings = Seq(
 )
 
 lazy val webApiLibs = Seq(
+    library.aspectJWeaver,
     library.akkaActor,
     library.akkaAgent,
     library.akkaHttp,
@@ -166,6 +172,11 @@ lazy val webApiLibs = Seq(
     library.jenaLibs,
     library.jenaText,
     library.jwt,
+    library.kamonCore,
+    library.kamonAkka,
+    library.kamonPrometheus,
+    library.kamonZipkin,
+    library.kamonJaeger,
     library.logbackClassic,
     library.rdf4jRioTurtle,
     library.rdf4jQueryParserSparql,
@@ -186,8 +197,8 @@ lazy val library =
             val akkaBase = "2.5.9"
             val akkaHttp = "10.1.0-RC2"
             val jena = "3.4.0"
-            val aspectj = "1.8.7"
-            val kamon = "0.5.2"
+            val aspectj = "1.8.13"
+            val kamon = "1.0.0"
         }
 
         // akka
@@ -232,15 +243,13 @@ lazy val library =
         // caching
         val ehcache                = "net.sf.ehcache"                % "ehcache"                  % "2.10.0"
 
-        // monitoring - disabled for now
-        val aspectjWeaver          = "org.aspectj"                   % "aspectjweaver"            % Version.aspectj
-        val aspectjRt              = "org.aspectj"                   % "aspectjrt"                % Version.aspectj
+        // monitoring
         val kamonCore              = "io.kamon"                     %% "kamon-core"               % Version.kamon
-        val kamonSpray             = "io.kamon"                     %% "kamon-spray"              % Version.kamon
-        val kamonStatsD            = "io.kamon"                     %% "kamon-statsd"             % Version.kamon
-        val kamonLogReporter       = "io.kamon"                     %% "kamon-log-reporter"       % Version.kamon
-        val kamonSystemMetrics     = "io.kamon"                     %% "kamon-system-metrics"     % Version.kamon
-        val kamonNewRelic          = "io.kamon"                     %% "kamon-newrelic"           % Version.kamon
+        val kamonAkka              = "io.kamon"                     %% "kamon-akka-2.5"           % Version.kamon
+        val kamonPrometheus        = "io.kamon"                     %% "kamon-prometheus"         % Version.kamon
+        val kamonZipkin            = "io.kamon"                     %% "kamon-zipkin"             % Version.kamon
+        val kamonJaeger            = "io.kamon"                     %% "kamon-jaeger"             % Version.kamon
+        val aspectJWeaver          = "org.aspectj"                   % "aspectjweaver"            % Version.aspectj
 
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",

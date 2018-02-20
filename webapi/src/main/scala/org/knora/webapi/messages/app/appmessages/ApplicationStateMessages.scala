@@ -8,4 +8,12 @@ case class GetLoadDemoDataState() extends ApplicationStateRequest
 case class SetAllowReloadOverHTTPState(value: Boolean) extends ApplicationStateRequest
 case class GetAllowReloadOverHTTPState() extends ApplicationStateRequest
 
+case class SetPrometheusReporterState(value: Boolean) extends ApplicationStateRequest
+case class GetPrometheusReporterState() extends ApplicationStateRequest
+
+case class SetZipkinReporterState(value: Boolean) extends ApplicationStateRequest
+case class GetZipkinReporterState() extends ApplicationStateRequest
+
+case class SetJaegerReporterState(value: Boolean) extends ApplicationStateRequest
+case class GetJaegerReporterState() extends ApplicationStateRequest
 
