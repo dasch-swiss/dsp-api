@@ -42,8 +42,8 @@ import scala.concurrent.duration._
 object UsersADME2ESpec {
     val config = ConfigFactory.parseString(
         """
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
+          akka.loglevel = "INFO"
+          akka.stdout-loglevel = "INFO"
         """.stripMargin)
 }
 
@@ -133,6 +133,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
         val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+        println(request)
         singleAwaitingRequest(request, 300.seconds)
     }
 
