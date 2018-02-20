@@ -35,3 +35,9 @@ Usage:
 
 (3) Head over to `localhost:3000`, log in using the admin username and password, and open the
     "Webapi Akka Actor System" dashboard.
+
+(4) To shut down the monitoring stack, run the following line inside the `monitoring` folder:
+
+::
+
+  $ docker-compose down

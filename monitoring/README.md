@@ -12,3 +12,9 @@ docker. If you are running `webapi` inside a docker container, then connect this
 
 To enable the proemetheus reporter inside `webapi`, start the server with the `-p` flag, or set
 the configuration key `app.monitoring.prometheus-reporter` in `application.conf` to `true`.
+
+To shut down the monitoring stack, run:
+
+```
+$ docker-compose down
+```
