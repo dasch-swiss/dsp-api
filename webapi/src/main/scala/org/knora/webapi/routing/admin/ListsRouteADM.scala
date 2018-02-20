@@ -20,15 +20,17 @@
 
 package org.knora.webapi.routing.admin
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import org.knora.webapi.messages.admin.responder.listsmessages.{ListGetRequestADM, ListInfoGetRequestADM, ListNodeInfoGetRequestADM, ListsGetRequestADM}
+import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
+import org.knora.webapi.{BadRequestException, IRI, NotImplementedException, SettingsImpl}
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -66,7 +68,24 @@ object ListsRouteADM extends Authenticator {
             } ~
             post {
                 /* create a list */
-                ???
+                entity(as[CreateListApiRequestADM]) { apiRequest =>
+                    requestContext =>
+                        val requestingUser = getUserADM(requestContext)
+
+                        val requestMessage = ListCreateRequestADM(
+                            createListRequest = apiRequest,
+                            requestingUser = requestingUser,
+                            apiRequestID = UUID.randomUUID()
+                        )
+
+                        RouteUtilADM.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
             }
         } ~
         path("admin" / "lists" / Segment) {iri =>
@@ -88,10 +107,12 @@ object ListsRouteADM extends Authenticator {
             } ~
             put {
                 /* update list */
+                throw NotImplementedException("Method not implemented.")
                 ???
             } ~
             delete {
                 /* delete (deactivate) list */
+                throw NotImplementedException("Method not implemented.")
                 ???
             }
         } ~
@@ -113,12 +134,27 @@ object ListsRouteADM extends Authenticator {
                     )
             } ~
             put {
-                /* update list node */
-                ???
-            } ~
-            delete {
-                /* delete list node */
-                ???
+                /* update list info */
+                entity(as[ChangeListInfoApiRequestADM]) { apiRequest =>
+                    requestContext =>
+                        val requestingUser = getUserADM(requestContext)
+                        val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
+
+                        val requestMessage = ListInfoChangeRequestADM(
+                            listIri = listIri,
+                            changeListRequest = apiRequest,
+                            requestingUser = requestingUser,
+                            apiRequestID = UUID.randomUUID()
+                        )
+
+                        RouteUtilADM.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
             }
         } ~
         path("admin" / "lists" / "nodes" / Segment) {iri =>
@@ -140,10 +176,12 @@ object ListsRouteADM extends Authenticator {
             } ~
             put {
                 /* update list node */
+                throw NotImplementedException("Method not implemented.")
                 ???
             } ~
             delete {
                 /* delete list node */
+                throw NotImplementedException("Method not implemented.")
                 ???
             }
         }

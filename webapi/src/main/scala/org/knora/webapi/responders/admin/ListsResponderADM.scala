@@ -16,13 +16,17 @@
 
 package org.knora.webapi.responders.admin
 
+import java.util.UUID
+
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
+import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.{KnoraIdUtil, StringFormatter}
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
@@ -33,12 +37,22 @@ import scala.concurrent.Future
   */
 class ListsResponderADM extends Responder {
 
+    // Creates IRIs for new Knora user objects.
+    val knoraIdUtil = new KnoraIdUtil
+
+    // The IRI used to lock user creation and update
+    val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"
+
+    val stringFormatter = StringFormatter.getGeneralInstance
+
     def receive: PartialFunction[Any, Unit] = {
         case ListsGetRequestADM(projectIri, requestingUser) => future2Message(sender(), listsGetAdminRequest(projectIri, requestingUser), log)
         case ListGetRequestADM(listIri, requestingUser) => future2Message(sender(), listGetAdminRequest(listIri, requestingUser), log)
         case ListInfoGetRequestADM(listIri, requestingUser) => future2Message(sender(), listInfoGetAdminRequest(listIri, requestingUser), log)
         case ListNodeInfoGetRequestADM(listIri, requestingUser) => future2Message(sender(), listNodeInfoGetAdminRequest(listIri, requestingUser), log)
         case NodePathGetRequestADM(iri, requestingUser) => future2Message(sender(), nodePathGetAdminRequest(iri, requestingUser), log)
+        case ListCreateRequestADM(createListRequest, requestingUser, apiRequestID) => future2Message(sender(), listCreateRequestADM(createListRequest, requestingUser, apiRequestID), log)
+        case ListInfoChangeRequestADM(listIri, changeListRequest, requestingUser, apiRequestID) => future2Message(sender(), listInfoChangeRequest(listIri, changeListRequest, requestingUser, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -421,5 +435,112 @@ class ListsResponderADM extends Responder {
                     }
             }
         } yield NodePathGetResponseADM(nodelist = makePath(queryNodeIri, nodeMap, parentMap, Nil))
+    }
+
+
+    /**
+      * Creates a list.
+      *
+      * @param createListRequest the new list's information.
+      * @param requestingUser the user that is making the request.
+      * @param apiRequestID   the unique api request ID.
+      * @return a [[ListInfoGetResponseADM]]
+      * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
+      * @throws BadRequestException in the case when the project IRI or label is missing or invalid.
+      */
+    private def listCreateRequestADM(createListRequest: CreateListApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListInfoGetResponseADM] = {
+
+        def listCreateTask(createListRequest: CreateListApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
+            // check if required information is supplied
+            _ <- Future(if (createListRequest.projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty"))
+            _ = if (createListRequest.labels.isEmpty) throw BadRequestException("At least one label needs to be supplied.")
+
+            /* Verify that the project exists. */
+            maybeProject <- (responderManager ? ProjectGetADM(maybeIri = Some(createListRequest.projectIri), maybeShortname = None, maybeShortcode = None, KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+            project: ProjectADM = maybeProject match {
+                case Some(project: ProjectADM) => project
+                case None => throw BadRequestException(s"Project '${createListRequest.projectIri}' not found.")
+            }
+
+            maybeShortcode = project.shortcode
+
+            //FIXME: in which data graph should we store the list if there are multiple ontologies defined? (issue #747)
+            dataNamedGraph = project.ontologies.head.ontologyIri
+
+            listIri = knoraIdUtil.makeRandomListIri(maybeShortcode)
+
+            // Create the new user.
+            createNewListSparqlString = queries.sparql.admin.txt.createNewList(
+                dataNamedGraph = OntologyConstants.NamedGraphs.AdminNamedGraph,
+                triplestore = settings.triplestoreType,
+                userIri = userIri,
+                userClassIri = OntologyConstants.KnoraBase.User,
+                email = createRequest.email,
+                password = hashedPassword,
+                givenName = createRequest.givenName,
+                familyName = createRequest.familyName,
+                status = createRequest.status,
+                preferredLanguage = createRequest.lang,
+                systemAdmin = createRequest.systemAdmin
+            ).toString
+            //_ = log.debug(s"createNewUser: $createNewUserSparqlString")
+            createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparqlString)).mapTo[SparqlUpdateResponse]
+
+
+            // Verify that the user was created.
+            sparqlQuery = queries.sparql.admin.txt.getUsers(
+                triplestore = settings.triplestoreType,
+                maybeIri = Some(userIri),
+                maybeEmail = None
+            ).toString()
+            userDataQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
+
+            // create the user profile
+            maybeNewUserADM <- statements2UserADM(userDataQueryResponse.statements.head, requestingUser)
+
+            newUserADM = maybeNewUserADM.getOrElse(throw UpdateNotPerformedException(s"User $userIri was not created. Please report this as a possible bug."))
+
+            // write the newly created user profile to cache
+            _ = writeUserADMToCache(newUserADM)
+
+            // create the user operation response
+            userOperationResponseV1 = UserOperationResponseADM(newUserADM.ofType(UserInformationTypeADM.RESTRICTED))
+
+        } yield userOperationResponseV1
+
+        for {
+            // run user creation with an global IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                LISTS_GLOBAL_LOCK_IRI,
+                () => listCreateTask(createListRequest, requestingUser, apiRequestID)
+            )
+        } yield taskResult
+    }
+
+    private def listInfoChangeRequest(listIri: IRI, changeListRequest: ChangeUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListInfoGetResponseADM] = {
+        ???
+    }
+
+
+    ////////////////////
+    // Helper Methods //
+    ////////////////////
+
+    /**
+      * Helper method for checking if a project identified by IRI exists.
+      *
+      * @param projectIri the IRI of the project.
+      * @return a [[Boolean]].
+      */
+    def projectByIriExists(projectIri: IRI): Future[Boolean] = {
+        for {
+            askString <- Future(queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
+            //_ = log.debug("projectExists - query: {}", askString)
+
+            checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            result = checkProjectExistsResponse.result
+
+        } yield result
     }
 }

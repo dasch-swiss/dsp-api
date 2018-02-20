@@ -17,9 +17,11 @@
 package org.knora.webapi.messages.admin.responder.listsmessages
 
 
+import java.util.UUID
+
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
 import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, RootJsonFormat, _}
@@ -27,6 +29,27 @@ import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
 
+
+case class CreateListApiRequestADM(projectIri: IRI,
+                                   labels: Option[Seq[StringLiteralV2]] = None,
+                                   comments: Option[Seq[StringLiteralV2]] = None) extends ListADMJsonProtocol {
+
+    def toJsValue: JsValue = createListApiRequestADMFormat.write(this)
+}
+
+/**
+  * Represents an API request payload that asks the Knora API server to update an existing list's basic information.
+  *
+  * @param id         the IRI of the list.
+  * @param labels     the labels.
+  * @param comments   the comments.
+  */
+case class ChangeListInfoApiRequestADM(id: IRI,
+                                       labels: Option[Seq[StringLiteralV2]] = None,
+                                       comments: Option[Seq[StringLiteralV2]] = None) extends ListADMJsonProtocol {
+
+    def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -86,6 +109,30 @@ case class NodePathGetRequestADM(iri: IRI,
                                  requestingUser: UserADM) extends ListsResponderRequestADM
 
 
+/**
+  * Requests the creation of a new list.
+  *
+  * @param createListRequest the [[CreateListApiRequestADM]] information used for creating the new list.
+  * @param requestingUser    the user creating the new list.
+  * @param apiRequestID      the ID of the API request.
+  */
+case class ListCreateRequestADM(createListRequest: CreateListApiRequestADM,
+                                requestingUser: UserADM,
+                                apiRequestID: UUID) extends ListsResponderRequestADM
+
+/**
+  * Request updating basic information of an existing list.
+  *
+  * @param listIri           the IRI of the list to be updated.
+  * @param changeListRequest the data which needs to be update.
+  * @param requestingUser    the user initiating the request.
+  * @param apiRequestID      the ID of the API request.
+  */
+case class ListInfoChangeRequestADM(listIri: IRI,
+                                    changeListRequest: ChangeListInfoApiRequestADM,
+                                    requestingUser: UserADM,
+                                    apiRequestID: UUID) extends ListsResponderRequestADM
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
 
@@ -129,6 +176,7 @@ case class ListNodeInfoGetResponseADM(nodeinfo: ListNodeInfoADM) extends KnoraRe
 
     def toJsValue: JsValue = listNodeInfoGetResponseADMFormat.write(this)
 }
+
 
 /**
   * Responds to a [[NodePathGetRequestADM]] by providing the path to a particular hierarchical list node.
@@ -451,6 +499,8 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     }
 
 
+    implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat3(CreateListApiRequestADM)
+    implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat3(ChangeListInfoApiRequestADM)
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "nodelist")
     implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
     implicit val listGetResponseADMFormat: RootJsonFormat[ListGetResponseADM] = jsonFormat(ListGetResponseADM, "list")
