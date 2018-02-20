@@ -25,12 +25,9 @@
 
     <logger name="org.apache.jena.riot" level="ERROR"/>
     <logger name="org.apache.jena.tdb" level="ERROR"/>
-
-    <logger name="akka" level="INFO"/>
+    <logger name="akka" level="ERROR"/>
     <logger name="akka.event.slf4j.Slf4jLogger" level="ERROR"/>
-
     <logger name="net.sf.ehcache.config" level="ERROR"/>
-
     <logger name="spray.can.server.HttpListener" level="ERROR"/>
 
     <logger name="org.knora" level="INFO"/>
