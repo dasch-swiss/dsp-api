@@ -31,3 +31,4 @@ Developing the Knora API Server
    documentation
    testing
    docker-cheat-sheet
+   monitoring
