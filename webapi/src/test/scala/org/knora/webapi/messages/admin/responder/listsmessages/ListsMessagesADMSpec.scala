@@ -31,7 +31,7 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
 
     "Conversion from case class to JSON and back" should {
 
-        "work for a 'ListInfo'" in {
+        "work for a 'ListInfoADM'" in {
 
             val listInfo: ListInfoADM = ListInfoADM (
                 id = "http://data.knora.org/lists/73d0ec0302",
@@ -49,7 +49,7 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
             converted should be(listInfo)
         }
 
-        "work for a 'ListNodeInfo'" in {
+        "work for a 'ListNodeInfoADM'" in {
 
             val listNodeInfo: ListNodeInfoADM = ListNodeInfoADM (
                 id = "http://rdfh.ch/lists/00FF/526f26ed04",
@@ -68,7 +68,7 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
             converted should be(listNodeInfo)
         }
 
-        "work for a 'ListNode'" in {
+        "work for a 'ListNodeADM'" in {
 
             val listNode: ListNodeADM = ListNodeADM(
                 id = "http://rdfh.ch/lists/00FF/526f26ed04",
@@ -88,7 +88,7 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
             converted should be(listNode)
         }
 
-        "work for a 'FullList'" in {
+        "work for a 'ListADM'" in {
 
             val listInfo: ListInfoADM = ListInfoADM (
                 id = "http://data.knora.org/lists/73d0ec0302",
@@ -106,11 +106,11 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
                 position = Some(0)
             )
 
-            val json = ListFullADM(listInfo, Seq(listNode)).toJson.compactPrint
+            val json = ListADM(listInfo, Seq(listNode)).toJson.compactPrint
 
             // json should be ("")
 
-            val converted: ListFullADM = json.parseJson.convertTo[ListFullADM]
+            val converted: ListADM = json.parseJson.convertTo[ListADM]
 
             converted.listinfo should be(listInfo)
             converted.children.head should be(listNode)

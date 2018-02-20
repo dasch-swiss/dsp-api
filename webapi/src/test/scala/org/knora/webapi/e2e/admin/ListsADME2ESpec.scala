@@ -111,7 +111,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 response.status should be(StatusCodes.OK)
 
-                val lists: Seq[ListNodeInfoADM] = AkkaHttpUtils.httpResponseToJson(response).fields("items").convertTo[Seq[ListNodeInfoADM]]
+                val lists: Seq[ListADM] = AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListADM]]
 
                 // log.debug("lists: {}", lists)
 
@@ -125,7 +125,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 response.status should be(StatusCodes.OK)
 
-                val lists: Seq[ListNodeInfoADM] = AkkaHttpUtils.httpResponseToJson(response).fields("items").convertTo[Seq[ListNodeInfoADM]]
+                val lists: Seq[ListADM] = AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListADM]]
 
                 // log.debug("lists: {}", lists)
 
@@ -139,7 +139,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 response.status should be(StatusCodes.OK)
 
-                val lists: Seq[ListNodeInfoADM] = AkkaHttpUtils.httpResponseToJson(response).fields("items").convertTo[Seq[ListNodeInfoADM]]
+                val lists: Seq[ListADM] = AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListADM]]
 
                 // log.debug("lists: {}", lists)
 
@@ -167,7 +167,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 response.status should be(StatusCodes.OK)
 
-                val receivedList: ListFullADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListFullADM]
+                val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
                 receivedList.listinfo.sorted should be (bigListInfo.sorted)
                 receivedList.children.map(_.sorted) should be (bigListNodes.map(_.sorted))
             }

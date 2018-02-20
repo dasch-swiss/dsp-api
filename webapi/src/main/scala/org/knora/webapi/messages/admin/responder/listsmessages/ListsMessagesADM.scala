@@ -92,9 +92,9 @@ case class NodePathGetRequestADM(iri: IRI,
 /**
   * Represents a sequence of list info nodes.
   *
-  * @param items a [[ListInfoADM]] sequence.
+  * @param lists a [[ListADM]] sequence.
   */
-case class ListsGetResponseADM(items: Seq[ListInfoADM]) extends KnoraResponseADM with ListADMJsonProtocol {
+case class ListsGetResponseADM(lists: Seq[ListADM]) extends KnoraResponseADM with ListADMJsonProtocol {
     def toJsValue = listsGetResponseADMFormat.write(this)
 }
 
@@ -103,7 +103,7 @@ case class ListsGetResponseADM(items: Seq[ListInfoADM]) extends KnoraResponseADM
   *
   * @param list the complete list.
   */
-case class ListGetResponseADM(list: ListFullADM) extends KnoraResponseADM with ListADMJsonProtocol {
+case class ListGetResponseADM(list: ListADM) extends KnoraResponseADM with ListADMJsonProtocol {
 
     def toJsValue = listGetResponseADMFormat.write(this)
 }
@@ -144,20 +144,19 @@ case class NodePathGetResponseADM(nodelist: Seq[ListNodeADM]) extends KnoraRespo
 // Components of messages
 
 
-case class ListFullADM(listinfo: ListInfoADM, children: Seq[ListNodeADM]) {
+case class ListADM(listinfo: ListInfoADM, children: Seq[ListNodeADM]) {
     /**
       * Sorts the whole hierarchy.
       *
       * @return a sorted [[List]].
       */
-    def sorted: ListFullADM = {
-        ListFullADM(
+    def sorted: ListADM = {
+        ListADM(
             listinfo = listinfo,
             children = children.sortBy(_.id)
         )
     }
 }
-
 
 /**
   * Represents basic information about a list, the information stored in the list's root node.
@@ -413,14 +412,14 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         }
     }
 
-    implicit object ListFormat extends JsonFormat[ListFullADM] {
+    implicit object ListFormat extends JsonFormat[ListADM] {
         /**
-          * Converts a [[ListFullADM]] to a [[JsValue]].
+          * Converts a [[ListADM]] to a [[JsValue]].
           *
-          * @param list a [[ListFullADM]].
+          * @param list a [[ListADM]].
           * @return a [[JsValue]].
           */
-        def write(list: ListFullADM): JsValue = {
+        def write(list: ListADM): JsValue = {
             JsObject(
                 "listinfo" -> list.listinfo.toJson,
                 "children" -> JsArray(list.children.map(_.toJson).toVector)
@@ -433,7 +432,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           * @param value a [[JsValue]].
           * @return a [[List]].
           */
-        def read(value: JsValue): ListFullADM = {
+        def read(value: JsValue): ListADM = {
 
             val fields = value.asJsObject.fields
 
@@ -444,7 +443,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
                 case _ => throw DeserializationException("The expected field 'children' is in the wrong format.")
             }
 
-            ListFullADM(
+            ListADM(
                 listinfo = listinfo,
                 children = children
             )
@@ -453,7 +452,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
 
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "nodelist")
-    implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "items")
+    implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
     implicit val listGetResponseADMFormat: RootJsonFormat[ListGetResponseADM] = jsonFormat(ListGetResponseADM, "list")
     implicit val listInfoGetResponseADMFormat: RootJsonFormat[ListInfoGetResponseADM] = jsonFormat(ListInfoGetResponseADM, "listinfo")
     implicit val listNodeInfoGetResponseADMFormat: RootJsonFormat[ListNodeInfoGetResponseADM] = jsonFormat(ListNodeInfoGetResponseADM, "nodeinfo")

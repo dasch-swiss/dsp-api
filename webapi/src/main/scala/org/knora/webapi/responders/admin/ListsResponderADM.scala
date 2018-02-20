@@ -69,20 +69,25 @@ class ListsResponderADM extends Responder {
             // Seq(subjectIri, (objectIri -> Seq(stringWithOptionalLand))
             statements = listsResponse.statements.toList
 
-            items: Seq[ListInfoADM] = statements.map {
+            lists: Seq[ListADM] = statements.map {
                 case (listIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
-                    ListInfoADM(
+                    val info = ListInfoADM(
                         id = listIri.toString,
                         projectIri = propsMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException("The required property 'attachedToProject' not found.")).head.asInstanceOf[IriLiteralV2].value,
                         labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
                         comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
                     )
+
+                    ListADM(
+                        listinfo = info,
+                        children = Seq.empty[ListNodeADM]
+                    )
             }
 
             // _ = log.debug("listsGetAdminRequest - items: {}", items)
 
-        } yield ListsGetResponseADM(items = items)
+        } yield ListsGetResponseADM(lists = lists)
     }
 
     /**
@@ -126,7 +131,7 @@ class ListsResponderADM extends Responder {
                     )
             }
 
-            list = ListFullADM(listinfo = listinfo, children = children)
+            list = ListADM(listinfo = listinfo, children = children)
             // _ = log.debug(s"listGetRequestV2 - list: {}", MessageUtil.toSource(list))
 
         } yield ListGetResponseADM(list = list)

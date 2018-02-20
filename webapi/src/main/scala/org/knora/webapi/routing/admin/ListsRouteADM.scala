@@ -112,14 +112,14 @@ object ListsRouteADM extends Authenticator {
                         log
                     )
             } ~
-                    put {
-                        /* update list node */
-                        ???
-                    } ~
-                    delete {
-                        /* delete list node */
-                        ???
-                    }
+            put {
+                /* update list node */
+                ???
+            } ~
+            delete {
+                /* delete list node */
+                ???
+            }
         } ~
         path("admin" / "lists" / "nodes" / Segment) {iri =>
             get {
