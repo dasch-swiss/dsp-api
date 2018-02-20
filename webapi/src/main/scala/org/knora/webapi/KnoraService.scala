@@ -32,9 +32,13 @@ import akka.http.scaladsl.{ConnectionContext, Http}
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
+import kamon.Kamon
+import kamon.jaeger.Jaeger
+import kamon.prometheus.PrometheusReporter
+import kamon.zipkin.ZipkinReporter
 import org.knora.webapi.app.{ApplicationStateActor, _}
 import org.knora.webapi.http.CORSSupport.CORS
-import org.knora.webapi.messages.app.appmessages.{GetAllowReloadOverHTTPState, GetLoadDemoDataState}
+import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
@@ -203,6 +207,26 @@ trait KnoraService {
         if (allowReloadOverHTTP) {
             println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")
         }
+
+        // start the different reporters. reporters are the connection points between kamon (the collector) and
+        // the application which we will use to look at the collected data.
+
+        val prometheusReporter = Await.result(applicationStateActor ? GetPrometheusReporterState(), 1.second).asInstanceOf[Boolean]
+        if (prometheusReporter) {
+            Kamon.addReporter(new PrometheusReporter()) // metrics
+        }
+
+        val zipkinReporter = Await.result(applicationStateActor ? GetZipkinReporterState(), 1.second).asInstanceOf[Boolean]
+        if (zipkinReporter) {
+            Kamon.addReporter(new ZipkinReporter()) // tracing
+        }
+
+        val jaegerReporter = Await.result(applicationStateActor ? GetJaegerReporterState(), 1.second).asInstanceOf[Boolean]
+        if (zipkinReporter) {
+            Kamon.addReporter(new Jaeger()) // tracing
+        }
+
+
 
         // Either HTTP or HTTPs, or both, must be enabled.
         if (!(settings.knoraApiUseHttp || settings.knoraApiUseHttps)) {
