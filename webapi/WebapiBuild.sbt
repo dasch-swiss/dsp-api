@@ -18,6 +18,18 @@ lazy val webapi = (project in file(".")).
         settings(inConfig(Test)(
             Defaults.testTasks ++ baseAssemblySettings
         ): _*).
+        settings(inConfig(Gatling)( // add our settings to the gatling config
+            Defaults.testTasks ++ Seq(
+                fork := true,
+                javaOptions ++= javaTestOptions
+            )
+        ): _*).
+        settings(inConfig(GatlingIt)( // add our settings to the gatling it config
+            Defaults.testTasks ++ Seq(
+                fork := true,
+                javaOptions ++= javaTestOptions
+            )
+        ): _*).
         settings(inConfig(FusekiTest)(
             Defaults.testTasks ++ Seq(
                 fork := true,
@@ -112,7 +124,8 @@ lazy val webapi = (project in file(".")).
             mainClass in IntegrationTest := Some("org.scalatest.tools.Runner")
         ).
         enablePlugins(SbtTwirl). // Enable the sbt-twirl plugin
-        enablePlugins(JavaAppPackaging) // Enable the sbt-native-packager plugin
+        enablePlugins(JavaAppPackaging). // Enable the sbt-native-packager plugin
+        enablePlugins(GatlingPlugin) // load testing
 
 lazy val webApiCommonSettings = Seq(
     organization := "org.knora",
@@ -142,6 +155,8 @@ lazy val webApiLibs = Seq(
     library.commonsValidator,
     library.diff,
     library.ehcache,
+    library.gatlingHighcharts,
+    library.gatlingTestFramework,
     library.gwtServlet,
     library.jacksonScala,
     library.jsonldJava,
@@ -192,6 +207,8 @@ lazy val library =
 
         // testing
         val scalaTest              = "org.scalatest"                %% "scalatest"                % "3.0.4"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val gatlingHighcharts      = "io.gatling.highcharts"         % "gatling-charts-highcharts"% "2.3.0"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val gatlingTestFramework   = "io.gatling"                    % "gatling-test-framework"   % "2.3.0"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
 
         //CORS support
         val akkaHttpCors           = "ch.megard"                    %% "akka-http-cors"           % "0.2.2"
@@ -256,8 +273,8 @@ lazy val library =
 
 lazy val javaRunOptions = Seq(
     // "-showversion",
-    "-Xms1G",
-    "-Xmx1G"
+    "-Xms2G",
+    "-Xmx2G"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500"
