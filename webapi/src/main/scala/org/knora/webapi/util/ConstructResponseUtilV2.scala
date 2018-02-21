@@ -21,7 +21,7 @@
 package org.knora.webapi.util
 
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
+import org.knora.webapi.messages.store.triplestoremessages.{LiteralV2, SparqlConstructResponse}
 import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
