@@ -232,6 +232,9 @@ class UsersResponderADM extends Responder {
       */
     private def createNewUserADM(createRequest: CreateUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
+        /**
+          * The actual task run with an IRI lock.
+          */
         def createNewUserTask(createRequest: CreateUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
             // check if required information is supplied
             _ <- Future(if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty"))

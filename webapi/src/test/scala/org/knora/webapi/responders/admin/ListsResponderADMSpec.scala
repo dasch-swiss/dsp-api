@@ -20,6 +20,8 @@
 
 package org.knora.webapi.responders.admin
 
+import java.util.UUID
+
 import akka.actor.Props
 import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
@@ -28,6 +30,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.MutableTestIri
@@ -184,11 +187,71 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
             val newListIri = new MutableTestIri
 
-            "create a list" ignore {
+            "create a list" in {
+                actorUnderTest ! ListCreateRequestADM(
+                    createListRequest = CreateListApiRequestADM(
+                        projectIri = IMAGES_PROJECT_IRI,
+                        labels = Some(Seq(StringLiteralV2(value = "Neue Liste", language = Some("de")))),
+                        None
+                    ),
+                    requestingUser = requestingUser,
+                    apiRequestID = UUID.randomUUID
+                )
 
+                val received: ListGetResponseADM = expectMsgType[ListGetResponseADM](timeout)
+
+                val listInfo = received.list.listinfo
+                listInfo.projectIri should be (IMAGES_PROJECT_IRI)
+
+                val labels: Seq[StringLiteralV2] = listInfo.labels
+                labels.size should be (1)
+                labels.head should be (StringLiteralV2(value = "Neue Liste", language = Some("de")))
+
+                val comments = received.list.listinfo.comments
+                comments.isEmpty should be (true)
+
+                val children = received.list.children
+                children.size should be (0)
+
+                // store list IRI for next test
+                newListIri.set(listInfo.id)
             }
 
-            "update basic list information" ignore {
+            "update basic list information" in {
+                actorUnderTest ! ListInfoChangeRequestADM(
+                    listIri = newListIri.get,
+                    changeListRequest = ChangeListInfoApiRequestADM(
+                        labels = Some(Seq(
+                            StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
+                            StringLiteralV2(value = "Changed list", language = Some("en"))
+                        )),
+                        comments = Some(Seq(
+                            StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
+                            StringLiteralV2(value = "New comment", language = Some("en"))
+                        ))
+                    ),
+                    requestingUser = requestingUser,
+                    apiRequestID = UUID.randomUUID
+                )
+
+                val received: ListInfoGetResponseADM = expectMsgType[ListInfoGetResponseADM](timeout)
+
+                val listInfo = received.listinfo
+                listInfo.projectIri should be (IMAGES_PROJECT_IRI)
+
+                val labels: Seq[StringLiteralV2] = listInfo.labels
+                labels.size should be (2)
+                labels.sorted should be (Seq(
+                    StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
+                    StringLiteralV2(value = "Changed list", language = Some("en"))
+                ).sorted)
+
+                val comments = listInfo.comments
+                comments.size should be (2)
+                comments.sorted should be (Seq(
+                    StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
+                    StringLiteralV2(value = "New comment", language = Some("en"))
+                ).sorted)
 
             }
 

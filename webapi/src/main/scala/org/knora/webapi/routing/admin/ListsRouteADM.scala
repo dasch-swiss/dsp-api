@@ -37,7 +37,7 @@ import scala.concurrent.ExecutionContextExecutor
 /**
   * Provides a spray-routing function for API routes that deal with lists.
   */
-object ListsRouteADM extends Authenticator {
+object ListsRouteADM extends Authenticator with ListADMJsonProtocol {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system

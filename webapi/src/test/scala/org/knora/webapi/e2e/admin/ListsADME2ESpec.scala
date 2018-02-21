@@ -25,8 +25,9 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi.SharedTestDataV1.IMAGES_PROJECT_IRI
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
@@ -177,12 +178,65 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
             val newListIri = new MutableTestIri
 
-            "create a list" ignore {
+            "create a list" in {
 
+                val params =
+                    s"""
+                       |{
+                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "labels": [{ "value": "Neue Liste", "language": "de"}]
+                       |}
+                """.stripMargin
+
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+
+                val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
+
+                val listInfo = receivedList.listinfo
+                listInfo.projectIri should be (IMAGES_PROJECT_IRI)
+
+                val labels: Seq[StringLiteralV2] = listInfo.labels
+                labels.size should be (1)
+                labels.head should be (StringLiteralV2(value = "Neue Liste", language = Some("de")))
+
+                val comments = receivedList.listinfo.comments
+                comments.isEmpty should be (true)
+
+                val children = receivedList.children
+                children.size should be (0)
+
+                // store list IRI for next test
+                newListIri.set(listInfo.id)
             }
 
-            "update basic list information" ignore {
+            "update basic list information" in {
+                val params =
+                    s"""
+                       |{
+                       |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+                       |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+                       |}
+                """.stripMargin
 
+                val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/infos/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+
+                val receivedListInfo: ListInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListInfoADM]
+
+                receivedListInfo.projectIri should be (IMAGES_PROJECT_IRI)
+
+                val labels: Seq[StringLiteralV2] = receivedListInfo.labels
+                labels.size should be (2)
+
+                val comments = receivedListInfo.comments
+                comments.size should be (2)
             }
 
             "add flat nodes" ignore {

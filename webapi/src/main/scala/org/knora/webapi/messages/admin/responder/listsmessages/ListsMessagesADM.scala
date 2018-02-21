@@ -40,13 +40,19 @@ case class CreateListApiRequestADM(projectIri: IRI,
 /**
   * Represents an API request payload that asks the Knora API server to update an existing list's basic information.
   *
-  * @param id         the IRI of the list.
   * @param labels     the labels.
   * @param comments   the comments.
   */
-case class ChangeListInfoApiRequestADM(id: IRI,
-                                       labels: Option[Seq[StringLiteralV2]] = None,
+case class ChangeListInfoApiRequestADM(labels: Option[Seq[StringLiteralV2]] = None,
                                        comments: Option[Seq[StringLiteralV2]] = None) extends ListADMJsonProtocol {
+
+    val parametersCount: Int = List(
+        labels,
+        comments
+    ).flatten.size
+
+    // something needs to be sent, i.e. everything 'None' is not allowed
+    if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
 
     def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
 }
@@ -499,8 +505,8 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     }
 
 
-    implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat3(CreateListApiRequestADM)
-    implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat3(ChangeListInfoApiRequestADM)
+    implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "projectIri", "labels", "comments")
+    implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "labels", "comments")
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "nodelist")
     implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
     implicit val listGetResponseADMFormat: RootJsonFormat[ListGetResponseADM] = jsonFormat(ListGetResponseADM, "list")

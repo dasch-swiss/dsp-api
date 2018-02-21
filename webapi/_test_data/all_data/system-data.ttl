@@ -13,8 +13,8 @@
 	knora-base:isRootNode true ;
 	rdfs:label "The Yes, No, Maybe List"@en ;
 	rdfs:label "Die Ja, Nein, Vielleicht Liste"@de ;
-	rdfs:comment "This list can be used by all projects."@en
-  rdfs:comment "Diese Liste kann von allen Projekten verwendet werden."@de
+	rdfs:comment "This list can be used by all projects."@en ;
+  rdfs:comment "Diese Liste kann von allen Projekten verwendet werden."@de ;
 	knora-base:attachedToProject <http://www.knora.org/ontology/knora-base#SystemProject> ;
 	knora-base:hasSubListNode <http://rdfh.ch/lists/FFFF/ynm01-01> , <http://rdfh.ch/lists/FFFF/ynm01-02> , <http://rdfh.ch/lists/FFFF/ynm01-03> .
 

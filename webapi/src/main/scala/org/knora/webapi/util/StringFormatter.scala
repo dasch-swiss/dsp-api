@@ -29,6 +29,7 @@ import org.apache.commons.validator.routines.UrlValidator
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
@@ -1699,6 +1700,20 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortcode.get + "/" + projectInfo.shortname
         } else {
             OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortname
+        }
+    }
+
+    /**
+      * Given the [[ProjectADM]] calculates the project's data named graph.
+      *
+      * @param project the project's [[ProjectADM]].
+      * @return the IRI of the project's data named graph.
+      */
+    def projectDataNamedGraphV2(project: ProjectADM): IRI = {
+        if (project.shortcode.isDefined) {
+            OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortcode.get + "/" + project.shortname
+        } else {
+            OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortname
         }
     }
 
