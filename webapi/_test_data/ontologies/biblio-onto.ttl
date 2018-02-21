@@ -913,6 +913,28 @@
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
+###  http://www.knora.org/ontology/biblio#hasContent
+:hasContent rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Inhalt"@de ,
+                               "Content"@en ;
+
+                    rdfs:comment """Represents content of book."""@en ;
+
+                    knora-base:objectClassConstraint beol:letter;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
+
+
+###  http://www.knora.org/ontology/biblio#hasContentValue
+
+:hasContentValue rdf:type owl:ObjectProperty ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 ###  http://www.knora.org/ontology/biblio#numPages
 
