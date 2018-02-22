@@ -221,6 +221,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 actorUnderTest ! ListInfoChangeRequestADM(
                     listIri = newListIri.get,
                     changeListRequest = ChangeListInfoApiRequestADM(
+                        listIri = newListIri.get,
                         labels = Some(Seq(
                             StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
                             StringLiteralV2(value = "Changed list", language = Some("en"))

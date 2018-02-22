@@ -216,6 +216,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val params =
                     s"""
                        |{
+                       |    "listIri": "${newListIri.get}",
                        |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
                        |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
                        |}

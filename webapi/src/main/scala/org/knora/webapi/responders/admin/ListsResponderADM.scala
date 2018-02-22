@@ -529,6 +529,7 @@ class ListsResponderADM extends Responder {
         def listInfoChangeTask(listIri: IRI, changeListRequest: ChangeListInfoApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
             // check if required information is supplied
             _ <- Future(if (changeListRequest.labels.isEmpty && changeListRequest.comments.isEmpty) throw BadRequestException("No data would be changed. Aborting update request."))
+            _ = if (!listIri.equals(changeListRequest.listIri)) throw BadRequestException("List IRI in path and payload don't match.")
 
             /* Verify that the list exists. */
             maybeList <- listGetADM(rootNodeIri = listIri, requestingUser = KnoraSystemInstances.Users.SystemUser)

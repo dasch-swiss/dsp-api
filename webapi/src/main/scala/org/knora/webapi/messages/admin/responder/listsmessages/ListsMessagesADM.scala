@@ -40,10 +40,12 @@ case class CreateListApiRequestADM(projectIri: IRI,
 /**
   * Represents an API request payload that asks the Knora API server to update an existing list's basic information.
   *
+  * @param listIri    the IRI of the list to change.
   * @param labels     the labels.
   * @param comments   the comments.
   */
-case class ChangeListInfoApiRequestADM(labels: Option[Seq[StringLiteralV2]] = None,
+case class ChangeListInfoApiRequestADM(listIri: IRI,
+                                       labels: Option[Seq[StringLiteralV2]] = None,
                                        comments: Option[Seq[StringLiteralV2]] = None) extends ListADMJsonProtocol {
 
     val parametersCount: Int = List(
@@ -506,7 +508,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
 
     implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "projectIri", "labels", "comments")
-    implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "labels", "comments")
+    implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "labels", "comments")
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "nodelist")
     implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
     implicit val listGetResponseADMFormat: RootJsonFormat[ListGetResponseADM] = jsonFormat(ListGetResponseADM, "list")
