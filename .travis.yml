@@ -74,6 +74,10 @@ jobs:
         - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop
         # start the integration tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt it:test
+    - stage: test
+          script:
+            # compile docs - any links to missing files should result in an build error
+            - cd $TRAVIS_BUILD_DIR/docs2/ && sbt paradox
     #- stage: test
     #  script:
     #    # prepare needed graphdb-se files
