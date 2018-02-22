@@ -1,6 +1,7 @@
 Knora Documentation
 =======
 
+@@toc { depth=2 }
 
 @@@ index
 
@@ -12,13 +13,3 @@ Knora Documentation
 * [Sipi](05-sipi/index.md)
 
 @@@
-
-
-Paradox is a Markdown documentation tool for software projects.
-The GitHub repo is [lightbend/paradox][repo].
-
-**Paradox is NOT supported under the Lightbend subscription.**
-
-### Setup
-
-Find [the latest](https://github.com/lightbend/paradox/releases) version, and create `project/paradox.sbt`:
