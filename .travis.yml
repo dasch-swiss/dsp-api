@@ -59,6 +59,8 @@ jobs:
         - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
         # start the built-in webapi server tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt graphdb:test
+        # test sbt stage
+        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt stage
     - stage: test
       script:
         # prepare needed graphdb-se files

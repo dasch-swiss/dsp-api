@@ -1,5 +1,8 @@
 import sbt._
 import NativePackagerHelper._
+import sbt.io.IO
+import sbtassembly.MergeStrategy
+import sbtassembly.MergeStrategy._
 
 connectInput in run := true
 
@@ -93,6 +96,8 @@ lazy val webapi = (project in file(".")).
             test in assembly := {},
             test in (Test, assembly) := {},
             test in (IntegrationTest, assembly) := {},
+            // need to use our custom merge strategy because of aop.xml (AspectJ)
+            assemblyMergeStrategy in assembly := customMergeStrategy,
             // Skip packageDoc task on stage
             mappings in (Compile, packageDoc) := Seq(),
             mappings in Universal := {
@@ -329,3 +334,37 @@ lazy val javaEmbeddedJenaTDBTestOptions = Seq(
 lazy val javaIntegrationTestOptions = Seq(
     "-Dconfig.resource=graphdb.conf"
 ) ++ javaBaseTestOptions
+
+
+// Create a new MergeStrategy for aop.xml files, as the aop.xml file is present in more than one package.
+// When we create a fat JAR (assembly task), then we need to resolve this conflict.
+val aopMerge: MergeStrategy = new MergeStrategy {
+    val name = "aopMerge"
+    import scala.xml._
+    import scala.xml.dtd._
+
+    def apply(tempDir: File, path: String, files: Seq[File]): Either[String, Seq[(File, String)]] = {
+        val dt = DocType("aspectj", PublicID("-//AspectJ//DTD//EN", "http://www.eclipse.org/aspectj/dtd/aspectj.dtd"), Nil)
+        val file = MergeStrategy.createMergeTarget(tempDir, path)
+        val xmls: Seq[Elem] = files.map(XML.loadFile)
+        val aspectsChildren: Seq[Node] = xmls.flatMap(_ \\ "aspectj" \ "aspects" \ "_")
+        val weaverChildren: Seq[Node] = xmls.flatMap(_ \\ "aspectj" \ "weaver" \ "_")
+        val options: String = xmls.map(x => (x \\ "aspectj" \ "weaver" \ "@options").text).mkString(" ").trim
+        val weaverAttr = if (options.isEmpty) Null else new UnprefixedAttribute("options", options, Null)
+        val aspects = new Elem(null, "aspects", Null, TopScope, false, aspectsChildren: _*)
+        val weaver = new Elem(null, "weaver", weaverAttr, TopScope, false, weaverChildren: _*)
+        val aspectj = new Elem(null, "aspectj", Null, TopScope, false, aspects, weaver)
+        XML.save(file.toString, aspectj, "UTF-8", xmlDecl = false, dt)
+        IO.append(file, IO.Newline.getBytes(IO.defaultCharset))
+        Right(Seq(file -> path))
+    }
+}
+
+// Use defaultMergeStrategy with a case for aop.xml
+// I like this better than the inline version mentioned in assembly's README
+val customMergeStrategy: String => MergeStrategy = {
+    case PathList("META-INF", "aop.xml") =>
+        aopMerge
+    case s =>
+        defaultMergeStrategy(s)
+}
