@@ -96,7 +96,7 @@ lazy val webapi = (project in file(".")).
             test in assembly := {},
             test in (Test, assembly) := {},
             test in (IntegrationTest, assembly) := {},
-            // need to use our custom merge strategy because of AspectJ
+            // need to use our custom merge strategy because of aop.xml (AspectJ)
             assemblyMergeStrategy in assembly := customMergeStrategy,
             // Skip packageDoc task on stage
             mappings in (Compile, packageDoc) := Seq(),
@@ -334,7 +334,8 @@ lazy val javaIntegrationTestOptions = Seq(
 ) ++ javaBaseTestOptions
 
 
-// Create a new MergeStrategy for aop.xml files
+// Create a new MergeStrategy for aop.xml files, as the aop.xml file is present in more than one package.
+// When we create a fat JAR (assembly task), then we need to resolve this conflict.
 val aopMerge: MergeStrategy = new MergeStrategy {
     val name = "aopMerge"
     import scala.xml._
