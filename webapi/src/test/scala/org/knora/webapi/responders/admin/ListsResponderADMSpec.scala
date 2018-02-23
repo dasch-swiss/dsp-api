@@ -23,6 +23,7 @@ package org.knora.webapi.responders.admin
 import java.util.UUID
 
 import akka.actor.Props
+import akka.actor.Status.Failure
 import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.SharedTestDataV1._
@@ -217,6 +218,20 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 newListIri.set(listInfo.id)
             }
 
+            "return a 'ForbiddenException' if the user creating the list is not project or system admin" in {
+                actorUnderTest ! ListCreateRequestADM(
+                    createListRequest = CreateListApiRequestADM(
+                        projectIri = IMAGES_PROJECT_IRI,
+                        labels = Some(Seq(StringLiteralV2(value = "Neue Liste", language = Some("de")))),
+                        None
+                    ),
+                    requestingUser = requestingUser,
+                    apiRequestID = UUID.randomUUID
+                )
+
+                expectMsg(Failure(ForbiddenException("Lists can only be created by a project or system administrator")))
+            }
+
             "update basic list information" in {
                 actorUnderTest ! ListInfoChangeRequestADM(
                     listIri = newListIri.get,
@@ -254,6 +269,27 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     StringLiteralV2(value = "New comment", language = Some("en"))
                 ).sorted)
 
+            }
+
+            "return a 'ForbiddenException' if the user updating the list is not project or system admin" in {
+                actorUnderTest ! ListInfoChangeRequestADM(
+                    listIri = newListIri.get,
+                    changeListRequest = ChangeListInfoApiRequestADM(
+                        listIri = newListIri.get,
+                        labels = Some(Seq(
+                            StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
+                            StringLiteralV2(value = "Changed list", language = Some("en"))
+                        )),
+                        comments = Some(Seq(
+                            StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
+                            StringLiteralV2(value = "New comment", language = Some("en"))
+                        ))
+                    ),
+                    requestingUser = requestingUser,
+                    apiRequestID = UUID.randomUUID
+                )
+
+                expectMsg(Failure(ForbiddenException("Lists can only be updated by a project or system administrator")))
             }
 
             "add flat nodes" ignore {
