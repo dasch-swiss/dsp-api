@@ -22,14 +22,14 @@ fi
 
 # Build the HTML docs.
 
-make html
+sbt makeSite
 make jsonformat
 
 # Copy the built HTML docs to a temporary directory.
 
 rm -rf $TMP_HTML
 mkdir $TMP_HTML
-cp -R _build/html $TMP_HTML/manual
+cp -R target/site/sphinx $TMP_HTML/manual
 cp -R _format_docu $TMP_HTML/api
 
 # Switch to the gh-pages branch and remove the existing HTML docs from it.
