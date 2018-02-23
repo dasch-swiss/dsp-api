@@ -28,6 +28,8 @@ siteSubdirName in SphinxSite := "sphinx"
 enablePlugins(ParadoxPlugin)
 paradoxTheme := Some(builtinParadoxTheme("generic"))
 
-// Global Sphynx settings
+// Global Sphinx settings
 enablePlugins(SphinxPlugin)
+
+
 

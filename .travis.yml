@@ -79,7 +79,9 @@ jobs:
     # testing docs
     - stage: test
       script:
-        # compile docs - any links to missing files should result in an build error
+        # install the necessary sphinx package
+        - yum install python-sphinx
+        # compile docs (both sphinx and paradox) - any links to missing files should result in an build error
         - cd $TRAVIS_BUILD_DIR/docs && sbt makeSite
     # Salsah browser tests
     #- stage: test
