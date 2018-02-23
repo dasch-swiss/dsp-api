@@ -80,7 +80,7 @@ jobs:
     - stage: test
       script:
         # compile docs - any links to missing files should result in an build error
-        - cd $TRAVIS_BUILD_DIR/docs2/ && sbt paradox
+        - cd $TRAVIS_BUILD_DIR/docs && sbt makeSite
     # Salsah browser tests
     #- stage: test
     #  script:
