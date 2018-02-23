@@ -80,7 +80,9 @@ jobs:
     - stage: test
       script:
         # install the necessary sphinx package
-        - yum install python-sphinx
+        - apt-get install python3-sphinx
+        # check if sphinx is working
+        - sphinx-build --version
         # compile docs (both sphinx and paradox) - any links to missing files should result in an build error
         - cd $TRAVIS_BUILD_DIR/docs && sbt makeSite
     # Salsah browser tests
