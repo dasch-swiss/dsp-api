@@ -20,9 +20,9 @@ import akka.http.scaladsl.model._
 import org.knora.webapi._
 
 /**
-  * The possible values for the HTTP status code that is returned as part of each Knora API v2 response.
+  * The possible values for the HTTP status code that is returned as part of each Knora ADM response.
   */
-object ApiStatusCodesV2 {
+object ApiStatusCodesADM {
 
     /**
       * Converts an exception to a similar HTTP status code.
