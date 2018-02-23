@@ -75,6 +75,6 @@ How to Write Performance / Simulation Tests
 Bellow is an example of an simulation calling the ``/admin/users`` endpoint. The simulation ramps up 1000 users
 over 5 seconds, all accessing the ``/admin/users`` endpoint.
 
-.. literalinclude:: ../../../../webapi/src/test/scala/org/knora/webapi/e2e/ExampleE2ESimSpec.scala
+.. literalinclude:: ../../../../../webapi/src/test/scala/org/knora/webapi/e2e/ExampleE2ESimSpec.scala
 
 

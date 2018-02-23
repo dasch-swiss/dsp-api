@@ -157,7 +157,7 @@ status of the build (successful, unsucessful, ongoing).
 The build that is executed on Travis-CI is defined in ``.travis.yml`` situated in the root folder of the project, and
 looks like this:
 
-.. literalinclude:: ../../../../.travis.yml
+.. literalinclude:: ../../../../../.travis.yml
     :language: yaml
     :linenos:
 
@@ -174,7 +174,7 @@ It basically means:
 SBT Build Configuration
 -----------------------
 
-.. literalinclude:: ../../../../webapi/WebapiBuild.sbt
+.. literalinclude:: ../../../../../webapi/WebapiBuild.sbt
 
 
 .. _webapi-server-startup-flags:

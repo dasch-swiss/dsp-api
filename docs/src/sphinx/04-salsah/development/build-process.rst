@@ -104,4 +104,4 @@ To run the tests in headless mode, execute them with the ``headless`` prefix, e.
 SBT Build Configuration
 ------------------------
 
-.. literalinclude:: ../../../../salsah/SalsahBuild.sbt
+.. literalinclude:: ../../../../../salsah/SalsahBuild.sbt
