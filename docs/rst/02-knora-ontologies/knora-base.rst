@@ -336,7 +336,7 @@ Properties of Value
     A resource may have several properties of the same type with
     different values (which will be of the same class), and it may be
     necessary to indicate an order in which these values occur. For
-    example, a book may have several authors which should appear in af
+    example, a book may have several authors which should appear in a
     defined order. Hence, ``valueHasOrder``, when present, points to an
     integer literal indicating the order of a given value relative to
     the other values of the same property. These integers will not
