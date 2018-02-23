@@ -1449,7 +1449,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                 // The regex matched. Get the attribute definition corresponding to the attribute name.
                 val attributeDef = attributeDefs.find(_.attributeName == attributeName).getOrElse(errorFun)
 
-                // Try to parse the value using all the types that are allowed by the attribute definition.
+                // Try to parse the value as the type given in the attribute definition.
                 val maybeParsedAttrValue: Option[SalsahGuiAttributeValue] = attributeDef.allowedType match {
                     case OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer =>
                         catching(classOf[NumberFormatException]).opt(attributeValue.toInt).map(SalsahGuiIntegerAttributeValue)
