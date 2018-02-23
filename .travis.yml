@@ -80,7 +80,7 @@ jobs:
     - stage: test
       script:
         # install the necessary sphinx package
-        - apt-get install python3-sphinx
+        - sudo apt-get install python3-sphinx
         # check if sphinx is working
         - sphinx-build --version
         # compile docs (both sphinx and paradox) - any links to missing files should result in an build error
