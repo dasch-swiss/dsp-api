@@ -39,8 +39,8 @@
   listIri: IRI,
   projectIri: IRI,
   listClassIri: IRI,
-  labels: Seq[StringLiteralV2],
-  maybeComments: Option[Seq[StringLiteralV2]])
+  maybeLabels: Seq[StringLiteralV2],
+  maybeComments: Seq[StringLiteralV2])
 
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -55,16 +55,18 @@ INSERT {
 
         ?listIri knora-base:attachedToProject ?projectIri .
 
-        @for(label <- labels) {
-            @if(label.language.nonEmpty) {
-                ?listIri rdfs:label """@label.value"""@@@{label.language.get} .
-            } else {
-                ?listIri rdfs:label """@label.value"""^^xsd:string .
+        @if(maybeLabels.nonEmpty) {
+            @for(label <- maybeLabels) {
+                @if(label.language.nonEmpty) {
+                    ?listIri rdfs:label """@label.value"""@@@{label.language.get} .
+                } else {
+                    ?listIri rdfs:label """@label.value"""^^xsd:string .
+                }
             }
         }
 
         @if(maybeComments.nonEmpty) {
-            @for(comment <- maybeComments.get) {
+            @for(comment <- maybeComments) {
                 @if(comment.language.nonEmpty) {
                     ?listIri rdfs:comment """@comment.value"""@@@{comment.language.get} .
                 } else {

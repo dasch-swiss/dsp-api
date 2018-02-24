@@ -38,7 +38,7 @@ import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
 
-
+import org.knora.webapi.responders.admin.ListsResponderADM._
 /**
   * Static data for testing [[ListsResponderADM]].
   */
@@ -71,8 +71,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
     )
 
-    private val requestingUser = SharedTestDataADM.imagesUser01
-
     private val bigListInfo: ListInfoADM = SharedListsTestDataADM.bigListInfo
 
     private val summerNodeInfo: ListNodeInfoADM = SharedListsTestDataADM.summerNodeInfo
@@ -93,7 +91,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(requestingUser.asUserProfileV1)
+        responderManager ! LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser.asUserProfileV1)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
@@ -102,7 +100,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         "used to query information about lists" should {
 
             "return all lists" in {
-                actorUnderTest ! ListsGetRequestADM(requestingUser = requestingUser)
+                actorUnderTest ! ListsGetRequestADM(requestingUser = SharedTestDataADM.imagesUser01)
 
                 val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
 
@@ -110,7 +108,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "return all lists belonging to the images project" in {
-                actorUnderTest ! ListsGetRequestADM(projectIri = Some(IMAGES_PROJECT_IRI), requestingUser = requestingUser)
+                actorUnderTest ! ListsGetRequestADM(projectIri = Some(IMAGES_PROJECT_IRI), requestingUser = SharedTestDataADM.imagesUser01)
 
                 val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
 
@@ -120,7 +118,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "return all lists belonging to the anything project" in {
-                actorUnderTest ! ListsGetRequestADM(projectIri = Some(ANYTHING_PROJECT_IRI), requestingUser = requestingUser)
+                actorUnderTest ! ListsGetRequestADM(projectIri = Some(ANYTHING_PROJECT_IRI), requestingUser = SharedTestDataADM.imagesUser01)
 
                 val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
 
@@ -132,7 +130,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             "return basic list information (images list)" in {
                 actorUnderTest ! ListInfoGetRequestADM(
                     iri = "http://rdfh.ch/lists/00FF/73d0ec0302",
-                    requestingUser = requestingUser
+                    requestingUser = SharedTestDataADM.imagesUser01
                 )
 
                 val received: ListInfoGetResponseADM = expectMsgType[ListInfoGetResponseADM](timeout)
@@ -145,7 +143,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             "return basic list information (anything list)" in {
                 actorUnderTest ! ListInfoGetRequestADM(
                     iri = "http://data.knora.org/anything/otherTreeList",
-                    requestingUser = requestingUser
+                    requestingUser = SharedTestDataADM.imagesUser01
                 )
 
                 val received: ListInfoGetResponseADM = expectMsgType[ListInfoGetResponseADM](timeout)
@@ -158,7 +156,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             "return basic node information (images list - sommer)" in {
                 actorUnderTest ! ListNodeInfoGetRequestADM(
                     iri = "http://rdfh.ch/lists/00FF/526f26ed04",
-                    requestingUser = requestingUser
+                    requestingUser = SharedTestDataADM.imagesUser01
                 )
 
                 val received: ListNodeInfoGetResponseADM = expectMsgType[ListNodeInfoGetResponseADM](timeout)
@@ -171,7 +169,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             "return a full list response" in {
                 actorUnderTest ! ListGetRequestADM(
                     iri = "http://rdfh.ch/lists/00FF/73d0ec0302",
-                    requestingUser = requestingUser
+                    requestingUser = SharedTestDataADM.imagesUser01
                 )
 
                 val received: ListGetResponseADM = expectMsgType[ListGetResponseADM](timeout)
@@ -192,10 +190,10 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 actorUnderTest ! ListCreateRequestADM(
                     createListRequest = CreateListApiRequestADM(
                         projectIri = IMAGES_PROJECT_IRI,
-                        labels = Some(Seq(StringLiteralV2(value = "Neue Liste", language = Some("de")))),
-                        None
+                        labels = Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))),
+                        comments = Seq.empty[StringLiteralV2]
                     ),
-                    requestingUser = requestingUser,
+                    requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID
                 )
 
@@ -222,14 +220,14 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 actorUnderTest ! ListCreateRequestADM(
                     createListRequest = CreateListApiRequestADM(
                         projectIri = IMAGES_PROJECT_IRI,
-                        labels = Some(Seq(StringLiteralV2(value = "Neue Liste", language = Some("de")))),
-                        None
+                        labels = Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))),
+                        comments = Seq.empty[StringLiteralV2]
                     ),
-                    requestingUser = requestingUser,
+                    requestingUser = SharedTestDataADM.imagesUser02,
                     apiRequestID = UUID.randomUUID
                 )
 
-                expectMsg(Failure(ForbiddenException("Lists can only be created by a project or system administrator")))
+                expectMsg(Failure(ForbiddenException(LIST_CREATE_PERMISSION_ERROR)))
             }
 
             "update basic list information" in {
@@ -237,16 +235,17 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     listIri = newListIri.get,
                     changeListRequest = ChangeListInfoApiRequestADM(
                         listIri = newListIri.get,
-                        labels = Some(Seq(
+                        projectIri = IMAGES_PROJECT_IRI,
+                        labels = Seq(
                             StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
                             StringLiteralV2(value = "Changed list", language = Some("en"))
-                        )),
-                        comments = Some(Seq(
+                        ),
+                        comments = Seq(
                             StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
                             StringLiteralV2(value = "New comment", language = Some("en"))
-                        ))
+                        )
                     ),
-                    requestingUser = requestingUser,
+                    requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID
                 )
 
@@ -271,25 +270,26 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
             }
 
-            "return a 'ForbiddenException' if the user updating the list is not project or system admin" in {
+            "return a 'ForbiddenException' if the user changing the list is not project or system admin" in {
                 actorUnderTest ! ListInfoChangeRequestADM(
                     listIri = newListIri.get,
                     changeListRequest = ChangeListInfoApiRequestADM(
                         listIri = newListIri.get,
-                        labels = Some(Seq(
+                        projectIri = IMAGES_PROJECT_IRI,
+                        labels = Seq(
                             StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
                             StringLiteralV2(value = "Changed list", language = Some("en"))
-                        )),
-                        comments = Some(Seq(
+                        ),
+                        comments = Seq(
                             StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
                             StringLiteralV2(value = "New comment", language = Some("en"))
-                        ))
+                        )
                     ),
-                    requestingUser = requestingUser,
+                    requestingUser = SharedTestDataADM.imagesUser02,
                     apiRequestID = UUID.randomUUID
                 )
 
-                expectMsg(Failure(ForbiddenException("Lists can only be updated by a project or system administrator")))
+                expectMsg(Failure(ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)))
             }
 
             "add flat nodes" ignore {

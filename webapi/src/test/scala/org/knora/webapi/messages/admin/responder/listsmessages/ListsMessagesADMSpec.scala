@@ -21,6 +21,8 @@
 package org.knora.webapi.messages.admin.responder.listsmessages
 
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.responders.admin.ListsResponderADM._
+import org.knora.webapi.{BadRequestException, SharedTestDataADM}
 import org.scalatest.{Matchers, WordSpecLike}
 import spray.json._
 
@@ -28,6 +30,8 @@ import spray.json._
   * This spec is used to test 'ListAdminMessages'.
   */
 class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonProtocol {
+
+    val exampleListIri = "http://rdfh.ch/lists/00FF/abcd"
 
     "Conversion from case class to JSON and back" should {
 
@@ -114,6 +118,141 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
 
             converted.listinfo should be(listInfo)
             converted.children.head should be(listNode)
+        }
+
+        "throw 'BadRequestException' for `CreateListApiRequestADM` when project IRI is empty" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "projectIri": "",
+                   |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+                   |    "comments": []
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
+
+            thrown.getMessage should equal (PROJECT_IRI_MISSING_ERROR)
+
+        }
+
+        "throw 'BadRequestException' for `CreateListApiRequestADM` when project IRI is invalid" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "projectIri": "not an IRI",
+                   |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+                   |    "comments": []
+                   |}
+                """.stripMargin
+
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
+
+            thrown.getMessage should equal (PROJECT_IRI_INVALID_ERROR)
+        }
+
+        "throw 'BadRequestException' for `CreateListApiRequestADM` when labels is empty" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                   |    "labels": [],
+                   |    "comments": []
+                   |}
+                """.stripMargin
+
+            val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
+
+            thrown.getMessage should equal (LABEL_MISSING_ERROR)
+        }
+
+        "throw 'BadRequestException' for `ChangeListInfoApiRequestADM` when list IRI is empty" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "listIri": "",
+                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                   |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+                   |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
+
+            thrown.getMessage should equal (LIST_IRI_MISSING_ERROR)
+        }
+
+        "throw 'BadRequestException' for `ChangeListInfoApiRequestADM` when list IRI is invalid" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "listIri": "notvalidIRI",
+                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                   |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+                   |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
+
+            thrown.getMessage should equal (LIST_IRI_INVALID_ERROR)
+        }
+
+        "throw 'BadRequestException' for `ChangeListInfoApiRequestADM` when project IRI is empty" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "listIri": "$exampleListIri",
+                   |    "projectIri": "",
+                   |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+                   |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
+
+            thrown.getMessage should equal (PROJECT_IRI_MISSING_ERROR)
+        }
+
+        "throw 'BadRequestException' for `ChangeListInfoApiRequestADM` when project IRI is invalid" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "listIri": "$exampleListIri",
+                   |    "projectIri": "notvalidIRI",
+                   |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+                   |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
+
+            thrown.getMessage should equal (PROJECT_IRI_INVALID_ERROR)
+        }
+
+        "throw 'BadRequestException' for `ChangeListInfoApiRequestADM` when labels and comments are empty" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "listIri": "$exampleListIri",
+                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                   |    "labels": [],
+                   |    "comments": []
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
+
+            thrown.getMessage should equal (REQUEST_NOT_CHANGING_DATA_ERROR)
+
         }
 
     }

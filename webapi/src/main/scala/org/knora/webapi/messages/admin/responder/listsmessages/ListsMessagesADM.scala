@@ -24,37 +24,77 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
+import org.knora.webapi.responders.admin.ListsResponderADM._
 import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, RootJsonFormat, _}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
 
 
+/**
+  * Represents an API request payload that asks the Knora API server to create a new list. At least one
+  * label needs to be supplied.
+  *
+  * @param projectIri the IRI of the project the list belongs to.
+  * @param labels     the list's labels.
+  * @param comments   the list's comments.
+  */
 case class CreateListApiRequestADM(projectIri: IRI,
-                                   labels: Option[Seq[StringLiteralV2]] = None,
-                                   comments: Option[Seq[StringLiteralV2]] = None) extends ListADMJsonProtocol {
+                                   labels: Seq[StringLiteralV2],
+                                   comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
 
     def toJsValue: JsValue = createListApiRequestADMFormat.write(this)
+
+    if (projectIri.isEmpty) {
+        // println(this)
+        throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
+    }
+
+    // TODO: make check more strict, by checking if IRI is in the form `http://rdfh.ch/projects/<shortcode>`
+    // TODO: cannot use StringFormatter for this, because in ListsMessagesADMSpec we don't have a running actor system and thus no settings.
+    if (!projectIri.startsWith("http://rdfh.ch/projects")) {
+        // println(this)
+        throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
+    }
+
+    if (labels.isEmpty) {
+        // println(this)
+        throw BadRequestException(LABEL_MISSING_ERROR)
+    }
 }
 
 /**
   * Represents an API request payload that asks the Knora API server to update an existing list's basic information.
   *
   * @param listIri    the IRI of the list to change.
+  * @param projectIri the IRI of the project the list belongs to.
   * @param labels     the labels.
   * @param comments   the comments.
   */
 case class ChangeListInfoApiRequestADM(listIri: IRI,
-                                       labels: Option[Seq[StringLiteralV2]] = None,
-                                       comments: Option[Seq[StringLiteralV2]] = None) extends ListADMJsonProtocol {
+                                       projectIri: IRI,
+                                       labels: Seq[StringLiteralV2],
+                                       comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
 
-    val parametersCount: Int = List(
-        labels,
-        comments
-    ).flatten.size
+    if (listIri.isEmpty) {
+        throw BadRequestException(LIST_IRI_MISSING_ERROR)
+    }
 
-    // something needs to be sent, i.e. everything 'None' is not allowed
-    if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
+    if (!listIri.startsWith("http://rdfh.ch/lists")) {
+        throw BadRequestException(LIST_IRI_INVALID_ERROR)
+    }
+
+    if (projectIri.isEmpty) {
+        throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
+    }
+
+    if (!projectIri.startsWith("http://rdfh.ch/projects")) {
+        throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
+    }
+
+    if (labels.isEmpty && comments.isEmpty) {
+        throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR)
+    }
 
     def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
 }
@@ -508,7 +548,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
 
     implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "projectIri", "labels", "comments")
-    implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "labels", "comments")
+    implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "projectIri", "labels", "comments")
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "nodelist")
     implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
     implicit val listGetResponseADMFormat: RootJsonFormat[ListGetResponseADM] = jsonFormat(ListGetResponseADM, "list")

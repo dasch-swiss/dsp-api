@@ -25,6 +25,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.responders.admin.ListsResponderADM._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.KnoraIdUtil
@@ -32,6 +33,18 @@ import org.knora.webapi.util.KnoraIdUtil
 import scala.annotation.tailrec
 import scala.collection.breakOut
 import scala.concurrent.Future
+
+object ListsResponderADM {
+
+    val LIST_IRI_MISSING_ERROR = "List IRI cannot be empty."
+    val LIST_IRI_INVALID_ERROR = "List IRI cannot be empty."
+    val PROJECT_IRI_MISSING_ERROR = "Project IRI cannot be empty."
+    val PROJECT_IRI_INVALID_ERROR = "Project IRI is invalid."
+    val LABEL_MISSING_ERROR = "At least one label needs to be supplied."
+    val LIST_CREATE_PERMISSION_ERROR = "A list can only be created by the project or system administrator."
+    val LIST_CHANGE_PERMISSION_ERROR = "A list can only be changed by the project or system administrator."
+    val REQUEST_NOT_CHANGING_DATA_ERROR = "No data would be changed."
+}
 
 /**
   * A responder that returns information about hierarchical lists.
@@ -473,9 +486,15 @@ class ListsResponderADM extends Responder {
           * The actual task run with an IRI lock.
           */
         def listCreateTask(createListRequest: CreateListApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
-            // check if required information is supplied
-            _ <- Future(if (createListRequest.projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty"))
-            _ = if (createListRequest.labels.isEmpty) throw BadRequestException("At least one label needs to be supplied.")
+
+            // check if the requesting user is allowed to perform operation
+            _ <- Future(
+                if (!requestingUser.permissions.isProjectAdmin(createListRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
+                    // not project or a system admin
+                    // log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
+                    throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
+                }
+            )
 
             /* Verify that the project exists. */
             maybeProject <- (responderManager ? ProjectGetADM(maybeIri = Some(createListRequest.projectIri), maybeShortname = None, maybeShortcode = None, KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
@@ -496,7 +515,7 @@ class ListsResponderADM extends Responder {
                 listIri = listIri,
                 projectIri = project.id,
                 listClassIri = OntologyConstants.KnoraBase.ListNode,
-                labels = createListRequest.labels.get,
+                maybeLabels = createListRequest.labels,
                 maybeComments = createListRequest.comments
             ).toString
             // _ = log.debug("listCreateRequestADM - createNewListSparqlString: {}", createNewListSparqlString)
@@ -528,8 +547,17 @@ class ListsResponderADM extends Responder {
           */
         def listInfoChangeTask(listIri: IRI, changeListRequest: ChangeListInfoApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
             // check if required information is supplied
-            _ <- Future(if (changeListRequest.labels.isEmpty && changeListRequest.comments.isEmpty) throw BadRequestException("No data would be changed. Aborting update request."))
+            _ <- Future(if (changeListRequest.labels.isEmpty && changeListRequest.comments.isEmpty) throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR))
             _ = if (!listIri.equals(changeListRequest.listIri)) throw BadRequestException("List IRI in path and payload don't match.")
+
+            // check if the requesting user is allowed to perform operation
+            _ <- Future(
+                if (!requestingUser.permissions.isProjectAdmin(changeListRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
+                    // not project or a system admin
+                    // log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
+                    throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+                }
+            )
 
             /* Verify that the list exists. */
             maybeList <- listGetADM(rootNodeIri = listIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
@@ -567,12 +595,12 @@ class ListsResponderADM extends Responder {
             updatedList = maybeListADM.getOrElse(throw UpdateNotPerformedException(s"List $listIri was not updated. Please report this as a possible bug."))
 
 
-            _ = if (changeListRequest.labels.isDefined) {
-                if (updatedList.listinfo.labels.sorted != changeListRequest.labels.get.sorted) throw UpdateNotPerformedException("Lists's 'labels' where not updated. Please report this as a possible bug.")
+            _ = if (changeListRequest.labels.nonEmpty) {
+                if (updatedList.listinfo.labels.sorted != changeListRequest.labels.sorted) throw UpdateNotPerformedException("Lists's 'labels' where not updated. Please report this as a possible bug.")
             }
 
-            _ = if (changeListRequest.comments.isDefined) {
-                if (updatedList.listinfo.comments.sorted != changeListRequest.comments.get.sorted) throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
+            _ = if (changeListRequest.comments.nonEmpty) {
+                if (updatedList.listinfo.comments.sorted != changeListRequest.comments.sorted) throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
             }
 
             // _ = log.debug(s"listInfoChangeRequest - updatedList: {}", updatedList)
