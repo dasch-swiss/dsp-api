@@ -747,11 +747,14 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                                     if (hostname == hostAndPort) {
                                         (Some(parseApiV2VersionSegments(segments)), true)
                                     } else {
+                                        // If we don't recognise the hostname, this isn't a Knora IRI.
                                         (None, false)
                                     }
 
                                 case None =>
-                                    // If we don't recognise the hostname, this isn't a Knora IRI.
+                                    // If we don't have the Knora API server's hostname (because we're using the
+                                    // StringFormatter instance for constant ontologies), we can't recognise
+                                    // project-specific Knora API v2 IRIs.
                                     (None, false)
                             }
                     }
