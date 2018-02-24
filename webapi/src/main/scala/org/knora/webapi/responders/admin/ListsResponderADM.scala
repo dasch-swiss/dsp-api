@@ -587,7 +587,7 @@ class ListsResponderADM extends Responder {
                 maybeComments = changeListRequest.comments
             ).toString
             // _ = log.debug("listCreateRequestADM - createNewListSparqlString: {}", createNewListSparqlString)
-            createResourceResponse <- (storeManager ? SparqlUpdateRequest(changeListInfoSparqlString)).mapTo[SparqlUpdateResponse]
+            changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeListInfoSparqlString)).mapTo[SparqlUpdateResponse]
 
 
             /* Verify that the list was updated */
