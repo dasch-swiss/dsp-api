@@ -21,9 +21,10 @@
 package org.knora.webapi.messages.v2.responder
 
 import java.io.{StringReader, StringWriter}
-import javax.xml.transform.stream.StreamSource
 
+import javax.xml.transform.stream.StreamSource
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.twirl.StandoffTagV1
@@ -610,40 +611,6 @@ case class ReadResourceV2(resourceIri: IRI, label: String, resourceClass: IRI, v
   * @param resourceInfos additional information attached to the resource (literals).
   */
 case class CreateResource(label: String, resourceClass: IRI, values: Map[IRI, Seq[CreateValueV2]], resourceInfos: Map[IRI, LiteralV2]) extends ResourceV2
-
-/**
-  * A trait representing literals that may be directly attached to a resource.
-  */
-sealed trait LiteralV2
-
-/**
-  * Represents a string literal attached to a resource.
-  *
-  * @param value a string literal.
-  */
-case class StringLiteralV2(value: String) extends LiteralV2
-
-/**
-  * Represents an integer literal attached to a resource.
-  *
-  * @param value an integer literal.
-  */
-case class IntegerLiteralV2(value: Int) extends LiteralV2
-
-/**
-  * Represents a decimal literal attached to a resource.
-  *
-  * @param value a decimal literal.
-  */
-case class DecimalLiteralV2(value: BigDecimal) extends LiteralV2
-
-/**
-  * Represents a boolean literal attached to a resource.
-  *
-  * @param value a boolean literal.
-  */
-case class BooleanLiteralV2(value: Boolean) extends LiteralV2
-
 
 /**
   *

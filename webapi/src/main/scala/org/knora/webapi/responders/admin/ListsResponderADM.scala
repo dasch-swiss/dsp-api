@@ -16,29 +16,55 @@
 
 package org.knora.webapi.responders.admin
 
+import java.util.UUID
+
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
+import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.admin.ListsResponderADM._
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.KnoraIdUtil
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
 import scala.concurrent.Future
+
+object ListsResponderADM {
+
+    val LIST_IRI_MISSING_ERROR = "List IRI cannot be empty."
+    val LIST_IRI_INVALID_ERROR = "List IRI cannot be empty."
+    val PROJECT_IRI_MISSING_ERROR = "Project IRI cannot be empty."
+    val PROJECT_IRI_INVALID_ERROR = "Project IRI is invalid."
+    val LABEL_MISSING_ERROR = "At least one label needs to be supplied."
+    val LIST_CREATE_PERMISSION_ERROR = "A list can only be created by the project or system administrator."
+    val LIST_CHANGE_PERMISSION_ERROR = "A list can only be changed by the project or system administrator."
+    val REQUEST_NOT_CHANGING_DATA_ERROR = "No data would be changed."
+}
 
 /**
   * A responder that returns information about hierarchical lists.
   */
 class ListsResponderADM extends Responder {
 
+    // Creates IRIs for new Knora user objects.
+    val knoraIdUtil = new KnoraIdUtil
+
+    // The IRI used to lock user creation and update
+    val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"
+
     def receive: PartialFunction[Any, Unit] = {
-        case ListsGetRequestADM(projectIri, requestingUser) => future2Message(sender(), listsGetAdminRequest(projectIri, requestingUser), log)
-        case ListGetRequestADM(listIri, requestingUser) => future2Message(sender(), listGetAdminRequest(listIri, requestingUser), log)
+        case ListsGetRequestADM(projectIri, requestingUser) => future2Message(sender(), listsGetRequestADM(projectIri, requestingUser), log)
+        case ListGetRequestADM(listIri, requestingUser) => future2Message(sender(), listGetRequestADM(listIri, requestingUser), log)
         case ListInfoGetRequestADM(listIri, requestingUser) => future2Message(sender(), listInfoGetAdminRequest(listIri, requestingUser), log)
         case ListNodeInfoGetRequestADM(listIri, requestingUser) => future2Message(sender(), listNodeInfoGetAdminRequest(listIri, requestingUser), log)
         case NodePathGetRequestADM(iri, requestingUser) => future2Message(sender(), nodePathGetAdminRequest(iri, requestingUser), log)
+        case ListCreateRequestADM(createListRequest, requestingUser, apiRequestID) => future2Message(sender(), listCreateRequestADM(createListRequest, requestingUser, apiRequestID), log)
+        case ListInfoChangeRequestADM(listIri, changeListRequest, requestingUser, apiRequestID) => future2Message(sender(), listInfoChangeRequest(listIri, changeListRequest, requestingUser, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -52,7 +78,7 @@ class ListsResponderADM extends Responder {
       * @param requestingUser the user making the request.
       * @return a [[ListsGetResponseADM]].
       */
-    def listsGetAdminRequest(projectIri: Option[IRI], requestingUser: UserADM): Future[ListsGetResponseADM] = {
+    def listsGetRequestADM(projectIri: Option[IRI], requestingUser: UserADM): Future[ListsGetResponseADM] = {
 
         // log.debug("listsGetRequestV2")
 
@@ -69,30 +95,35 @@ class ListsResponderADM extends Responder {
             // Seq(subjectIri, (objectIri -> Seq(stringWithOptionalLand))
             statements = listsResponse.statements.toList
 
-            items: Seq[ListInfoADM] = statements.map {
+            lists: Seq[ListADM] = statements.map {
                 case (listIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
-                    ListInfoADM(
+                    val info = ListInfoADM(
                         id = listIri.toString,
                         projectIri = propsMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException("The required property 'attachedToProject' not found.")).head.asInstanceOf[IriLiteralV2].value,
                         labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
                         comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
                     )
+
+                    ListADM(
+                        listinfo = info,
+                        children = Seq.empty[ListNodeADM]
+                    )
             }
 
             // _ = log.debug("listsGetAdminRequest - items: {}", items)
 
-        } yield ListsGetResponseADM(items = items)
+        } yield ListsGetResponseADM(lists = lists)
     }
 
     /**
-      * Retrieves a complete list (root and all children) from the triplestore and returns it as a [[ListGetResponseADM]].
+      * Retrieves a complete list (root and all children) from the triplestore and returns it as a optional [[ListADM]].
       *
       * @param rootNodeIri the Iri if the root node of the list to be queried.
       * @param requestingUser the user making the request.
-      * @return a [[ListGetResponseADM]].
+      * @return a optional [[ListADM]].
       */
-    def listGetAdminRequest(rootNodeIri: IRI, requestingUser: UserADM): Future[ListGetResponseADM] = {
+    def listGetADM(rootNodeIri: IRI, requestingUser: UserADM): Future[Option[ListADM]] = {
 
         for {
             // this query will give us only the information about the root node.
@@ -103,33 +134,53 @@ class ListsResponderADM extends Responder {
 
             listInfoResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
 
-            // check to see if list could be found
-            _ = if (listInfoResponse.statements.isEmpty) {
-                throw NotFoundException(s"List not found: $rootNodeIri")
+            // _ = log.debug(s"listGetADM - statements: {}", MessageUtil.toSource(listInfoResponse.statements))
+
+            maybeList: Option[ListADM] <- if (listInfoResponse.statements.nonEmpty) {
+                for {
+                    // here we know that the list exists and it is fine if children is an empty list
+                    children: Seq[ListNodeADM] <- listGetChildren(rootNodeIri, requestingUser)
+
+                    // _ = log.debug(s"listGetADM - children count: {}", children.size)
+
+                    // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
+                    statements = listInfoResponse.statements
+                    listinfo = statements.head match {
+                        case (nodeIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+                            ListInfoADM(
+                                id = nodeIri.toString,
+                                projectIri = propsMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException("The required property 'attachedToProject' not found.")).head.asInstanceOf[IriLiteralV2].value,
+                                labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
+                                comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+                            )
+                    }
+
+                    list = ListADM(listinfo = listinfo, children = children)
+                    // _ = log.debug(s"listGetADM - list: {}", MessageUtil.toSource(list))
+                } yield Some(list)
+            } else {
+                FastFuture.successful(None)
             }
-            // _ = log.debug(s"listExtendedGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
 
-            // here we know that the list exists and it is fine if children is an empty list
-            children: Seq[ListNodeADM] <- listGetChildren(rootNodeIri, requestingUser)
+        } yield maybeList
+    }
 
-            // _ = log.debug(s"listGetRequestV2 - children count: {}", children.size)
+    /**
+      * Retrieves a complete list (root and all children) from the triplestore and returns it as a [[ListGetResponseADM]].
+      *
+      * @param rootNodeIri the Iri if the root node of the list to be queried.
+      * @param requestingUser the user making the request.
+      * @return a [[ListGetResponseADM]].
+      */
+    def listGetRequestADM(rootNodeIri: IRI, requestingUser: UserADM): Future[ListGetResponseADM] = {
 
-            // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
-            statements = listInfoResponse.statements
-            listinfo = statements.head match {
-                case (nodeIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
-                    ListInfoADM(
-                        id = nodeIri.toString,
-                        projectIri = propsMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException("The required property 'attachedToProject' not found.")).head.asInstanceOf[IriLiteralV2].value,
-                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
-                    )
+        for {
+            maybeListADM <- listGetADM(rootNodeIri, requestingUser)
+            result = maybeListADM match {
+                case Some(list) => ListGetResponseADM(list = list)
+                case None => throw NotFoundException(s"List '$rootNodeIri' not found")
             }
-
-            list = ListFullADM(listinfo = listinfo, children = children)
-            // _ = log.debug(s"listGetRequestV2 - list: {}", MessageUtil.toSource(list))
-
-        } yield ListGetResponseADM(list = list)
+        } yield result
     }
 
     /**
@@ -416,5 +467,175 @@ class ListsResponderADM extends Responder {
                     }
             }
         } yield NodePathGetResponseADM(nodelist = makePath(queryNodeIri, nodeMap, parentMap, Nil))
+    }
+
+
+    /**
+      * Creates a list.
+      *
+      * @param createListRequest the new list's information.
+      * @param requestingUser the user that is making the request.
+      * @param apiRequestID   the unique api request ID.
+      * @return a [[ListInfoGetResponseADM]]
+      * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
+      * @throws BadRequestException in the case when the project IRI or label is missing or invalid.
+      */
+    private def listCreateRequestADM(createListRequest: CreateListApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListGetResponseADM] = {
+
+        /**
+          * The actual task run with an IRI lock.
+          */
+        def listCreateTask(createListRequest: CreateListApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
+
+            // check if the requesting user is allowed to perform operation
+            _ <- Future(
+                if (!requestingUser.permissions.isProjectAdmin(createListRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
+                    // not project or a system admin
+                    // log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
+                    throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
+                }
+            )
+
+            /* Verify that the project exists. */
+            maybeProject <- (responderManager ? ProjectGetADM(maybeIri = Some(createListRequest.projectIri), maybeShortname = None, maybeShortcode = None, KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+            project: ProjectADM = maybeProject match {
+                case Some(project: ProjectADM) => project
+                case None => throw BadRequestException(s"Project '${createListRequest.projectIri}' not found.")
+            }
+
+            maybeShortcode = project.shortcode
+            dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
+
+            listIri = knoraIdUtil.makeRandomListIri(maybeShortcode)
+
+            // Create the new list
+            createNewListSparqlString = queries.sparql.admin.txt.createNewList(
+                dataNamedGraph = dataNamedGraph,
+                triplestore = settings.triplestoreType,
+                listIri = listIri,
+                projectIri = project.id,
+                listClassIri = OntologyConstants.KnoraBase.ListNode,
+                maybeLabels = createListRequest.labels,
+                maybeComments = createListRequest.comments
+            ).toString
+            // _ = log.debug("listCreateRequestADM - createNewListSparqlString: {}", createNewListSparqlString)
+            createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewListSparqlString)).mapTo[SparqlUpdateResponse]
+
+
+            // Verify that the list was created.
+            maybeNewListADM <- listGetADM(listIri, KnoraSystemInstances.Users.SystemUser)
+            newListADM = maybeNewListADM.getOrElse(throw UpdateNotPerformedException(s"List $listIri was not created. Please report this as a possible bug."))
+
+            // _ = log.debug(s"listCreateRequestADM - newListADM: $newListADM")
+
+        } yield ListGetResponseADM(list = newListADM)
+
+        for {
+            // run list creation with an global IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                LISTS_GLOBAL_LOCK_IRI,
+                () => listCreateTask(createListRequest, requestingUser, apiRequestID)
+            )
+        } yield taskResult
+    }
+
+    private def listInfoChangeRequest(listIri: IRI, changeListRequest: ChangeListInfoApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListInfoGetResponseADM] = {
+
+        /**
+          * The actual task run with an IRI lock.
+          */
+        def listInfoChangeTask(listIri: IRI, changeListRequest: ChangeListInfoApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
+            // check if required information is supplied
+            _ <- Future(if (changeListRequest.labels.isEmpty && changeListRequest.comments.isEmpty) throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR))
+            _ = if (!listIri.equals(changeListRequest.listIri)) throw BadRequestException("List IRI in path and payload don't match.")
+
+            // check if the requesting user is allowed to perform operation
+            _ <- Future(
+                if (!requestingUser.permissions.isProjectAdmin(changeListRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
+                    // not project or a system admin
+                    // log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
+                    throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+                }
+            )
+
+            /* Verify that the list exists. */
+            maybeList <- listGetADM(rootNodeIri = listIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            list: ListADM = maybeList match {
+                case Some(list: ListADM) => list
+                case None => throw BadRequestException(s"List '$listIri' not found.")
+            }
+
+            /* Get the project information */
+            maybeProject <- (responderManager ? ProjectGetADM(maybeIri = Some(list.listinfo.projectIri), maybeShortname = None, maybeShortcode = None, KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+            project: ProjectADM = maybeProject match {
+                case Some(project: ProjectADM) => project
+                case None => throw BadRequestException(s"Project '${list.listinfo.projectIri}' not found.")
+            }
+
+            // get the data graph of the project.
+            dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
+
+            // Update the list
+            changeListInfoSparqlString = queries.sparql.admin.txt.updateListInfo(
+                dataNamedGraph = dataNamedGraph,
+                triplestore = settings.triplestoreType,
+                listIri = listIri,
+                projectIri = project.id,
+                listClassIri = OntologyConstants.KnoraBase.ListNode,
+                maybeLabels = changeListRequest.labels,
+                maybeComments = changeListRequest.comments
+            ).toString
+            // _ = log.debug("listCreateRequestADM - createNewListSparqlString: {}", createNewListSparqlString)
+            changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeListInfoSparqlString)).mapTo[SparqlUpdateResponse]
+
+
+            /* Verify that the list was updated */
+            maybeListADM <- listGetADM(listIri, KnoraSystemInstances.Users.SystemUser)
+            updatedList = maybeListADM.getOrElse(throw UpdateNotPerformedException(s"List $listIri was not updated. Please report this as a possible bug."))
+
+
+            _ = if (changeListRequest.labels.nonEmpty) {
+                if (updatedList.listinfo.labels.sorted != changeListRequest.labels.sorted) throw UpdateNotPerformedException("Lists's 'labels' where not updated. Please report this as a possible bug.")
+            }
+
+            _ = if (changeListRequest.comments.nonEmpty) {
+                if (updatedList.listinfo.comments.sorted != changeListRequest.comments.sorted) throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
+            }
+
+            // _ = log.debug(s"listInfoChangeRequest - updatedList: {}", updatedList)
+
+        } yield ListInfoGetResponseADM(listinfo = updatedList.listinfo)
+
+        for {
+            // run list info update with an local IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                listIri,
+                () => listInfoChangeTask(listIri, changeListRequest, requestingUser, apiRequestID)
+            )
+        } yield taskResult
+    }
+
+
+    ////////////////////
+    // Helper Methods //
+    ////////////////////
+
+    /**
+      * Helper method for checking if a project identified by IRI exists.
+      *
+      * @param projectIri the IRI of the project.
+      * @return a [[Boolean]].
+      */
+    def projectByIriExists(projectIri: IRI): Future[Boolean] = {
+        for {
+            askString <- Future(queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
+            //_ = log.debug("projectExists - query: {}", askString)
+
+            checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            result = checkProjectExistsResponse.result
+
+        } yield result
     }
 }

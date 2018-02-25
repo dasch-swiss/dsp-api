@@ -80,8 +80,10 @@ New features:
     - Change: Project description has language tag and is returned as array. Needs change to existing data. Please see example above.
     - Change: Remove institution from project (will be added later with the FAIR metadata)
     - Change: Sorting of collections with admin objects (user, group, project)
-    - New: Keywords endpoint at ``admin/projects/keywords`` returns all unique keywords (as strings) for all projects in an array
-    - New: Keywords endpoint at ``admin/projects/keywords/[projectIri]`` returns all keywords of a single project.
+    - New: Keywords endpoint at ``/admin/projects/keywords`` returns all unique keywords (as strings) for all projects in an array
+    - New: Keywords endpoint at ``/admin/projects/keywords/[projectIri]`` returns all keywords of a single project.
+    - New: Lists endpoint at ``/admin/lists/`` allows new lists to be created.
+    - New: Lists endpoint at ``/admin/lists/infos/<listIri>`` allows to change basic list information.
 
 
 
