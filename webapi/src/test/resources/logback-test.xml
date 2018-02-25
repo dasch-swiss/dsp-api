@@ -59,6 +59,7 @@
 
     <logger name="org.knora" level="INFO"/>
     <logger name="org.knora.webapi" level="INFO"/>
+    <logger name="org.knora.webapi.KnoraExceptionHandler" level="INFO"/>
     <logger name="org.knora.webapi.app.ApplicationStateActor" level="INFO"/>
     <logger name="org.knora.webapi.util.cache" level="INFO"/>
     <logger name="org.knora.webapi.util.PermissionUtilADM" level="INFO"/>

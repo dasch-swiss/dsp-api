@@ -138,7 +138,7 @@ class StandoffResponderV1 extends Responder {
 
                 val sipiResponseFutureRecovered: Future[HttpResponse] = sipiResponseFuture.recoverWith {
 
-                    case noResponse: akka.http.impl.engine.HttpConnectionTimeoutException =>
+                    case noResponse: akka.stream.scaladsl.TcpIdleTimeoutException =>
                         // this problem is hardly the user's fault. Create a SipiException
                         throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
 
