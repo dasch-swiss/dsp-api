@@ -25,6 +25,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.responders.admin.ListsResponderADM._
+import org.knora.webapi.util.StringFormatter
 import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, RootJsonFormat, _}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,16 +44,14 @@ case class CreateListApiRequestADM(projectIri: IRI,
                                    labels: Seq[StringLiteralV2],
                                    comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
 
-    def toJsValue: JsValue = createListApiRequestADMFormat.write(this)
+    private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
 
     if (projectIri.isEmpty) {
         // println(this)
         throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
     }
 
-    // TODO: make check more strict, by checking if IRI is in the form `http://rdfh.ch/projects/<shortcode>`
-    // TODO: cannot use StringFormatter for this, because in ListsMessagesADMSpec we don't have a running actor system and thus no settings.
-    if (!projectIri.startsWith("http://rdfh.ch/projects")) {
+    if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
         // println(this)
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
@@ -61,6 +60,8 @@ case class CreateListApiRequestADM(projectIri: IRI,
         // println(this)
         throw BadRequestException(LABEL_MISSING_ERROR)
     }
+
+    def toJsValue: JsValue = createListApiRequestADMFormat.write(this)
 }
 
 /**
@@ -76,11 +77,13 @@ case class ChangeListInfoApiRequestADM(listIri: IRI,
                                        labels: Seq[StringLiteralV2],
                                        comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
 
+    private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+
     if (listIri.isEmpty) {
         throw BadRequestException(LIST_IRI_MISSING_ERROR)
     }
 
-    if (!listIri.startsWith("http://rdfh.ch/lists")) {
+    if (!stringFormatter.isKnoraListIriStr(listIri)) {
         throw BadRequestException(LIST_IRI_INVALID_ERROR)
     }
 
@@ -88,7 +91,7 @@ case class ChangeListInfoApiRequestADM(listIri: IRI,
         throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
     }
 
-    if (!projectIri.startsWith("http://rdfh.ch/projects")) {
+    if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
 

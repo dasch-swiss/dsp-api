@@ -1233,6 +1233,24 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     }
 
     /**
+      * Returns `true` if an IRI string looks like a Knora project IRI
+      *
+      * @param iri the IRI to be checked.
+      */
+    def isKnoraProjectIriStr(iri: IRI): Boolean = {
+        iri.startsWith("http://" + KnoraIdUtil.IriDomain + "/projects/")
+    }
+
+    /**
+      * Returns `true` if an IRI string looks like a Knora list IRI.
+      *
+      * @param iri the IRI to be checked.
+      */
+    def isKnoraListIriStr(iri: IRI): Boolean = {
+        iri.startsWith("http://" + KnoraIdUtil.IriDomain + "/lists/")
+    }
+
+    /**
       * Checks that a string represents a valid resource identifier in a standoff link.
       *
       * @param s               the string to be checked.
