@@ -190,7 +190,12 @@ object InternalServerException {
   *
   * @param message a description of the error.
   */
-case class AuthenticationException(message: String = "Error during authentication. Please report this as a possible bug.") extends InternalServerException(message)
+case class AuthenticationException(message: String = "Error during authentication. Please report this as a possible bug.", cause: Option[Throwable] = None) extends InternalServerException(message)
+
+object AuthenticationException {
+    def apply(message: String, e: Throwable, log: LoggingAdapter): AuthenticationException =
+        AuthenticationException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+}
 
 /**
   * Indicates that data could not be converted from one format to another. This exception should not be thrown when

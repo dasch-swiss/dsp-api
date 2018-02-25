@@ -71,6 +71,9 @@ after:
 New features:
 -------------
 
+- General
+    - Change: Return differently formatted JSON responses for exception messages, depending on which route (``v1``, ``v2``` or ``admin``) was accessed.
+
 - Admin API
     - Change: Project shortcode is required for the creation of new projects
     - Change: Project keywords are now a sequence. Needs change to existing data. Please see example above.
@@ -81,6 +84,8 @@ New features:
     - New: Keywords endpoint at ``/admin/projects/keywords/[projectIri]`` returns all keywords of a single project.
     - New: Lists endpoint at ``/admin/lists/`` allows new lists to be created.
     - New: Lists endpoint at ``/admin/lists/infos/<listIri>`` allows to change basic list information.
+
+
 
 
 Bugfixes:
