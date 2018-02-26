@@ -343,6 +343,46 @@
                                   "rows=4" ,
                                   "wrap=soft" .
 
+### ###########################################
+### beol:letterHasRepertoriumNumber
+
+:letterHasRepertoriumNumber rdf:type owl:ObjectProperty ;
+
+          rdfs:label "Repertorium-Nummer"@de ,
+                     "Repertorium-Number"@en ;
+
+          rdfs:comment """Der Nummer in Repertorium der Euler-Korrespondenz (O.IVA/1, p.134-166)"""@de ,
+                       """Number in Repertorium of Euler correspondence (O.IVA/1, p.134-166)"""@en ;
+
+          knora-base:subjectClassConstraint :letter ;
+
+          knora-base:objectClassConstraint knora-base:TextValue ;
+
+          salsah-gui:guiElement salsah-gui:SimpleText ;
+
+          knora-base:subjectClassConstraint :person ;
+
+          rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:letterHasLanguage
+
+:letterHasLanguage rdf:type owl:ObjectProperty ;
+
+                rdfs:label "Sprache"@de ,
+                         "Language"@en ;
+
+                rdfs:comment """Represents language of the letter."""@en ;
+
+                knora-base:objectClassConstraint knora-base:TextValue ;
+
+                salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                knora-base:subjectClassConstraint :letter ;
+
+                rdfs:subPropertyOf knora-base:hasValue .
+
 
 ### ###########################################
 ### beol:endnoteHasNumber
@@ -960,12 +1000,173 @@
               salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0801/subject_index>" .
 
 
+### ###########################################
+### beol:archiveHasAbbreviation
+
+:archiveHasAbbreviation rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Archive Arbbreviation"@en ;
+
+                    rdfs:comment """Represents the abbreviation of name of archive."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    knora-base:subjectClassConstraint :Archive ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
+### ###########################################
+### beol:archiveHasLocation
+
+:archiveHasLocation rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Archive Location"@en ;
+
+                    rdfs:comment """Represents location of an archive."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    knora-base:subjectClassConstraint :Archive ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
+### ###########################################
+### beol:manuscriptStartFolium
+
+:manuscriptStartFolium rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Start Folium"@en ;
+
+                    rdfs:comment """Represents the start folium."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    knora-base:subjectClassConstraint :manuscript ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:manuscriptEndFolium
+
+:manuscriptEndFolium rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "End Folium"@en ;
+
+                    rdfs:comment """Represents the last folium."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    knora-base:subjectClassConstraint :manuscript ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:manuscriptHasArchive
+
+:manuscriptHasArchive rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Archive of Manuscript"@en ;
+
+                    rdfs:comment """Represents the archive where manuscript is stored."""@en ;
+
+                    knora-base:objectClassConstraint :Archive ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
+
+
+### ###########################################
+### beol:manuscriptHasArchiveValue
+
+:manuscriptHasArchiveValue rdf:type owl:ObjectProperty ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
+
+
+
+### ###########################################
+### beol:manuscriptHasShelfMark
+
+:manuscriptHasShelfMark rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Shelfmark"@en ;
+
+                    rdfs:comment """Represents the shelf mark of manuscript in archive."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    knora-base:subjectClassConstraint :manuscript ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
+### ###########################################
+### beol:archiveHasName
+
+:archiveHasName rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Name"@de ,
+                            "Name"@en ,
+                            "nom"@fr ,
+                            "nome"@it ;
+
+                    rdfs:comment """Represents a Name."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    rdfs:subPropertyOf knora-base:hasValue  .
 ##########################################################
 #
 # RESOURCES
 #
 ##########################################################
 
+### ###########################################
+### beol:Archive
+:Archive rdf:type owl:Class ;
+
+                    rdfs:subClassOf knora-base:Resource ,
+                        [   rdf:type owl:Restriction ;
+                            owl:onProperty :archiveHasName ;
+                            owl:minCardinality "1"^^xsd:nonNegativeInteger
+                        ],
+                        [   rdf:type owl:Restriction ;
+                            owl:onProperty :archiveHasAbbreviation ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [   rdf:type owl:Restriction ;
+                            owl:onProperty :archiveHasLocation ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [   rdf:type owl:Restriction ;
+                            owl:onProperty :mentionedIn ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [   rdf:type owl:Restriction ;
+                            owl:onProperty :comment ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ];
+                    rdfs:label "Archive"@de ,
+                                "Archive"@en ;
+
+                    rdfs:comment "A resource representing an Archive "@en .
 
 ### ###########################################
 ### beol:manuscript
@@ -973,6 +1174,30 @@
 :manuscript rdf:type owl:Class ;
 
           rdfs:subClassOf :writtenSource ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :manuscriptHasArchive ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          ],
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :manuscriptHasArchiveValue ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          ],
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :manuscriptStartFolium ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          ],
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :manuscriptEndFolium ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          ],
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :manuscriptHasShelfMark ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          ],
+                          [   rdf:type owl:Restriction ;
+                              owl:onProperty :mentionedIn ;
+                              owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          ],
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty :comment ;
@@ -1048,6 +1273,17 @@
                           owl:onProperty :letterHasNumber ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ],
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :letterHasRepertoriumNumber ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :letterHasLanguage ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+
                         [
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterHasTranslation ;
