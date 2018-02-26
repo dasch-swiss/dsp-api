@@ -82,7 +82,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 PropertyDefinitionV1(
                     guiorder = Some(1),
                     gui_name = Some("text"),
-                    attributes = Some("max=8;min=4"),
+                    attributes = Some("maxlength=8;size=8"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-1",
                     vocabulary = "http://www.knora.org/ontology/incunabula",
@@ -189,8 +189,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(12),
-                    gui_name = Some("pulldown"),
-                    attributes = Some("hlist=<http://data.knora.org/lists/4b6d86ce03>"),
+                    gui_name = Some("richtext"),
+                    attributes = None,
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-n",
                     vocabulary = "http://www.knora.org/ontology/incunabula",
@@ -285,7 +285,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 PropertyDefinitionV1(
                     guiorder = Some(5),
                     gui_name = Some("date"),
-                    attributes = Some("maxlength=32;size=16"),
+                    attributes = None,
                     valuetype_id = "http://www.knora.org/ontology/knora-base#DateValue",
                     occurrence = "0-1",
                     vocabulary = "http://www.knora.org/ontology/incunabula",
@@ -404,7 +404,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 PropertyDefinitionV1(
                     guiorder = None,
                     gui_name = Some("geometry"),
-                    attributes = Some("width=95%;rows=4;wrap=soft"),
+                    attributes = None,
                     valuetype_id = "http://www.knora.org/ontology/knora-base#GeomValue",
                     occurrence = "1-n",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
@@ -783,7 +783,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("text"),
-                attributes = Some("max=8;min=4"),
+                attributes = Some("maxlength=8;size=8"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                 vocabulary = "http://www.knora.org/ontology/incunabula",
                 description = Some("A distinct identification of a book page"),
@@ -792,8 +792,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 id = "http://www.knora.org/ontology/incunabula#pagenum"
             ),
             PropertyDefinitionInNamedGraphV1(
-                gui_name = Some("pulldown"),
-                attributes = Some("hlist=<http://data.knora.org/lists/4b6d86ce03>"),
+                gui_name = Some("richtext"),
+                attributes = None,
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                 vocabulary = "http://www.knora.org/ontology/incunabula",
                 description = Some("Transkription"),
@@ -893,7 +893,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("date"),
-                attributes = Some("maxlength=32;size=16"),
+                attributes = None,
                 valuetype_id = "http://www.knora.org/ontology/knora-base#DateValue",
                 vocabulary = "http://www.knora.org/ontology/incunabula",
                 description = Some("Datum der Herausgabe"),

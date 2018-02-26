@@ -32,12 +32,13 @@ import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.OwlCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
 import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, _}
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{ActorUtil, CacheUtil, ErrorHandlingMap, SmartIri}
+import org.knora.webapi.util.StringFormatter.{SalsahGuiAttributeDefinition, SalsahGuiAttribute, SalsahGuiAttributeValue}
+import org.knora.webapi.util._
 
 import scala.concurrent.Future
 
@@ -242,6 +243,30 @@ class OntologyResponderV2 extends Responder {
                     }
             }
 
+            // Get the information about Guielement instances from salsah-gui.
+            guiElementSparql = queries.sparql.v2.txt.getSalsahGuiElements(triplestore = settings.triplestoreType).toString()
+            guilElementResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(guiElementSparql)).mapTo[SparqlSelectResponse]
+            guiElementRows: Seq[VariableResultsRow] = guilElementResponse.results.bindings
+
+            // Make a map of Guielement IRIs to sets of SalsahGuiAttributeDefinition.
+            allGuiAttributeDefinitions: Map[IRI, Set[SalsahGuiAttributeDefinition]] = guiElementRows.groupBy(_.rowMap("guiElement")).map {
+                case (guiElementIri: IRI, rows: Seq[VariableResultsRow]) =>
+                    val attributeDefs: Set[SalsahGuiAttributeDefinition] = rows.flatMap {
+                        row: VariableResultsRow =>
+                            row.rowMap.get("guiAttributeDefinition") match {
+                                case Some(attributeDefStr) =>
+                                    Some(stringFormatter.toSalsahGuiAttributeDefinition(
+                                        attributeDefStr,
+                                        throw InconsistentTriplestoreDataException(s"Invalid salsah-gui:guiAttributeDefinition in $guiElementIri: $attributeDefStr")
+                                    ))
+
+                                case None => None
+                            }
+                    }.toSet
+
+                    guiElementIri -> attributeDefs
+            }
+
             // Get all resource class definitions.
             resourceDefsSparql = queries.sparql.v2.txt.getResourceClassDefinitions(triplestore = settings.triplestoreType).toString()
             resourceDefsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(resourceDefsSparql)).mapTo[SparqlSelectResponse]
@@ -341,10 +366,12 @@ class OntologyResponderV2 extends Responder {
                             val cardinalityRowMap = cardinalityRow.rowMap
                             val propertyIri = cardinalityRowMap("cardinalityProp").toKnoraInternalSmartIri
                             val owlCardinalityValueStr = cardinalityRowMap("cardinalityVal")
+                            val maybeGuiOrderStr = cardinalityRowMap.get("guiOrder")
 
                             val owlCardinalityInfo = OwlCardinalityInfo(
                                 owlCardinalityIri = cardinalityRowMap("cardinality"),
-                                owlCardinalityValue = stringFormatter.validateCardinalityValue(owlCardinalityValueStr, throw InconsistentTriplestoreDataException(s"Resource class $resourceClassIri has an invalid cardinality value on property $propertyIri: $owlCardinalityValueStr"))
+                                owlCardinalityValue = stringFormatter.validateCardinalityValue(owlCardinalityValueStr, throw InconsistentTriplestoreDataException(s"Resource class $resourceClassIri has an invalid cardinality value on property $propertyIri: $owlCardinalityValueStr")),
+                                guiOrder = maybeGuiOrderStr.map(guiOrderStr => stringFormatter.validateInt(guiOrderStr, throw InconsistentTriplestoreDataException(s"Invalid salsah-gui:guiOrder on property $propertyIri in class $resourceClassIri: $guiOrderStr")))
                             )
 
                             propertyIri -> owlCardinalityInfo
@@ -416,14 +443,14 @@ class OntologyResponderV2 extends Responder {
 
                     // Make maps of the class's direct and inherited cardinalities.
 
-                    val directCardinalities: Map[SmartIri, Cardinality.Value] = directResourceClassCardinalities(resourceClassIri).map {
+                    val directCardinalities: Map[SmartIri, KnoraCardinalityInfo] = directResourceClassCardinalities(resourceClassIri).map {
                         case (propertyIri, owlCardinalityInfo) =>
                             propertyIri -> Cardinality.owlCardinality2KnoraCardinality(propertyIri = propertyIri.toString, owlCardinality = owlCardinalityInfo)
                     }
 
                     val directCardinalityPropertyIris = directCardinalities.keySet
 
-                    val inheritedCardinalities: Map[SmartIri, Cardinality.Value] = allOwlCardinalitiesForClass.filterNot {
+                    val inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = allOwlCardinalitiesForClass.filterNot {
                         case (propertyIri, _) => directCardinalityPropertyIris.contains(propertyIri)
                     }.map {
                         case (propertyIri, owlCardinalityInfo) =>
@@ -472,6 +499,47 @@ class OntologyResponderV2 extends Responder {
                     }
 
                     val ontologyIri = propertyIri.getOntologyFromEntity
+
+                    // Find out which salsah-gui:Guielement the property uses, if any.
+                    val maybeGuiElementIri: Option[IRI] = predicates.get(OntologyConstants.SalsahGui.GuiElement.toSmartIri).flatMap(_.objects.headOption)
+
+                    // Get that Guielement's attribute definitions, if any.
+                    val guiAttributeDefs: Set[SalsahGuiAttributeDefinition] = maybeGuiElementIri match {
+                        case Some(guiElementIri) =>
+                            allGuiAttributeDefinitions.getOrElse(guiElementIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has salsah-gui:guiElement $guiElementIri, which doesn't exist"))
+
+                        case None => Set.empty[SalsahGuiAttributeDefinition]
+                    }
+
+                    // If the property has the predicate salsah-gui:guiAttribute, syntactically validate the objects of that predicate.
+                    val guiAttributes: Set[SalsahGuiAttribute] = predicates.get(OntologyConstants.SalsahGui.GuiAttribute.toSmartIri) match {
+                        case Some(guiAttributePred) =>
+                            val guiElementIri = maybeGuiElementIri.getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has salsah-gui:guiAttribute, but no salsah-gui:guiElement"))
+
+                            if (guiAttributeDefs.isEmpty) {
+                                throw InconsistentTriplestoreDataException(s"Property $propertyIri has salsah-gui:guiAttribute, but $guiElementIri has no salsah-gui:guiAttributeDefinition")
+                            }
+
+                            // Syntactically validate each attribute.
+                            guiAttributePred.objects.map {
+                                guiAttributeObj => stringFormatter.toSalsahGuiAttribute(
+                                    s = guiAttributeObj,
+                                    attributeDefs = guiAttributeDefs,
+                                    errorFun = throw InconsistentTriplestoreDataException(s"Property $propertyIri contains an invalid salsah-gui:guiAttribute: $guiAttributeObj")
+                                )
+                            }
+
+                        case None => Set.empty[SalsahGuiAttribute]
+                    }
+
+                    // Check that all required GUI attributes are provided.
+                    val requiredAttributeNames = guiAttributeDefs.filter(_.isRequired).map(_.attributeName)
+                    val providedAttributeNames = guiAttributes.map(_.attributeName)
+                    val missingAttributeNames: Set[String] = requiredAttributeNames -- providedAttributeNames
+
+                    if (missingAttributeNames.nonEmpty) {
+                        throw InconsistentTriplestoreDataException(s"Property $propertyIri has one or more missing objects of salsah-gui:guiAttribute: ${missingAttributeNames.mkString(", ")}")
+                    }
 
                     val propertyEntityInfo = ReadPropertyInfoV2(
                         entityInfoContent = PropertyInfoContentV2(
@@ -649,14 +717,14 @@ class OntologyResponderV2 extends Responder {
 
                     // Make maps of the class's direct and inherited cardinalities.
 
-                    val directCardinalities: Map[SmartIri, Cardinality.Value] = directStandoffClassCardinalities(standoffClassIri).map {
+                    val directCardinalities: Map[SmartIri, KnoraCardinalityInfo] = directStandoffClassCardinalities(standoffClassIri).map {
                         case (propertyIri, owlCardinalityInfo) =>
                             propertyIri -> Cardinality.owlCardinality2KnoraCardinality(propertyIri = propertyIri.toString, owlCardinality = owlCardinalityInfo)
                     }
 
                     val directCardinalityPropertyIris = directCardinalities.keySet
 
-                    val inheritedCardinalities: Map[SmartIri, Cardinality.Value] = allOwlCardinalitiesForClass.filterNot {
+                    val inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = allOwlCardinalitiesForClass.filterNot {
                         case (propertyIri, _) => directCardinalityPropertyIris.contains(propertyIri)
                     }.map {
                         case (propertyIri, owlCardinalityInfo) =>
@@ -1450,7 +1518,7 @@ class OntologyResponderV2 extends Responder {
 
                 propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
 
-                inheritedCardinalities: Map[SmartIri, Cardinality.Value] = cardinalitiesForClassWithInheritance.filterNot {
+                inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = cardinalitiesForClassWithInheritance.filterNot {
                     case (propertyIri, _) => internalClassDef.directCardinalities.contains(propertyIri)
                 }
 
@@ -1624,7 +1692,7 @@ class OntologyResponderV2 extends Responder {
 
                 propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
 
-                inheritedCardinalities: Map[SmartIri, Cardinality.Value] = cardinalitiesForClassWithInheritance.filterNot {
+                inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = cardinalitiesForClassWithInheritance.filterNot {
                     case (propertyIri, _) => newInternalClassDef.directCardinalities.contains(propertyIri)
                 }
 
@@ -1783,7 +1851,7 @@ class OntologyResponderV2 extends Responder {
 
                 propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
 
-                inheritedCardinalities: Map[SmartIri, Cardinality.Value] = cardinalitiesForClassWithInheritance.filterNot {
+                inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = cardinalitiesForClassWithInheritance.filterNot {
                     case (propertyIri, _) => newInternalClassDef.directCardinalities.contains(propertyIri)
                 }
 
@@ -2086,7 +2154,7 @@ class OntologyResponderV2 extends Responder {
       */
     private def checkCardinalitiesBeforeAdding(internalClassDef: ClassInfoContentV2,
                                                allBaseClassIris: Set[SmartIri],
-                                               cacheData: OntologyCacheData): Map[SmartIri, Cardinality.Value] = {
+                                               cacheData: OntologyCacheData): Map[SmartIri, KnoraCardinalityInfo] = {
         // If the class has cardinalities, check that the properties are already defined as Knora properties.
 
         internalClassDef.directCardinalities.keySet.foreach {
@@ -2098,7 +2166,7 @@ class OntologyResponderV2 extends Responder {
 
         // Get the cardinalities that the class can inherit.
 
-        val cardinalitiesAvailableToInherit: Map[SmartIri, Cardinality.Value] = internalClassDef.subClassOf.flatMap {
+        val cardinalitiesAvailableToInherit: Map[SmartIri, KnoraCardinalityInfo] = internalClassDef.subClassOf.flatMap {
             baseClassIri => cacheData.classDefs(baseClassIri).allCardinalities
         }.toMap
 
@@ -2121,7 +2189,7 @@ class OntologyResponderV2 extends Responder {
 
         // Let directly-defined cardinalities override cardinalities in base classes.
 
-        val cardinalitiesForClassWithInheritance: Map[SmartIri, Cardinality.Value] = overrideCardinalities(
+        val cardinalitiesForClassWithInheritance: Map[SmartIri, KnoraCardinalityInfo] = overrideCardinalities(
             thisClassCardinalities = thisClassKnoraCardinalities,
             inheritableCardinalities = inheritableKnoraCardinalities,
             allSubPropertyOfRelations = cacheData.subPropertyOfRelations
@@ -2848,7 +2916,7 @@ class OntologyResponderV2 extends Responder {
             case blankNodeLiteral: BlankNodeLiteralV2 => blankNodeLiteral
         }.toSet
 
-        val directCardinalities: Map[SmartIri, Cardinality.Value] = restrictionBlankNodeIDs.map {
+        val directCardinalities: Map[SmartIri, KnoraCardinalityInfo] = restrictionBlankNodeIDs.map {
             blankNodeID =>
                 val blankNode: Map[IRI, Seq[LiteralV2]] = statements.getOrElse(BlankNodeSubjectV2(blankNodeID.value), throw InconsistentTriplestoreDataException(s"Blank node '${blankNodeID.value}' not found in construct query result"))
 
@@ -2881,9 +2949,19 @@ class OntologyResponderV2 extends Responder {
                     case other => throw InconsistentTriplestoreDataException(s"Expected one integer object for predicate $owlCardinalityIri in blank node '${blankNodeID.value}', got $other")
                 }
 
+                val guiOrder: Option[Int] = blankNode.get(OntologyConstants.SalsahGui.GuiOrder) match {
+                    case Some(Seq(IntLiteralV2(intVal))) => Some(intVal)
+                    case None => None
+                    case other => throw InconsistentTriplestoreDataException(s"Expected one integer object for predicate ${OntologyConstants.SalsahGui.GuiOrder} in blank node '${blankNodeID.value}', got $other")
+                }
+
                 propertyIri.toSmartIri -> Cardinality.owlCardinality2KnoraCardinality(
                     propertyIri = propertyIri,
-                    owlCardinality = Cardinality.OwlCardinalityInfo(owlCardinalityIri = owlCardinalityIri, owlCardinalityValue = owlCardinalityValue)
+                    owlCardinality = Cardinality.OwlCardinalityInfo(
+                        owlCardinalityIri = owlCardinalityIri,
+                        owlCardinalityValue = owlCardinalityValue,
+                        guiOrder = guiOrder
+                    )
                 )
         }.toMap
 
@@ -3119,18 +3197,18 @@ class OntologyResponderV2 extends Responder {
                         // Get the inheritable cardinality, if any, on each base property.
                         inheritableCardinalities.get(baseProp) match {
                             case Some(basePropCardinality: OwlCardinalityInfo) =>
-                                val thisClassKnoraCardinality: Cardinality.Value = Cardinality.owlCardinality2KnoraCardinality(
+                                val thisClassKnoraCardinality: KnoraCardinalityInfo = Cardinality.owlCardinality2KnoraCardinality(
                                     propertyIri = thisClassProp.toString,
                                     owlCardinality = thisClassCardinality
                                 )
 
-                                val inheritableKnoraCardinality: Cardinality.Value = Cardinality.owlCardinality2KnoraCardinality(
+                                val inheritableKnoraCardinality: KnoraCardinalityInfo = Cardinality.owlCardinality2KnoraCardinality(
                                     propertyIri = baseProp.toString,
                                     owlCardinality = basePropCardinality
                                 )
 
                                 // Check that the directly defined cardinality is at least as restrictive as the inheritable one.
-                                if (!Cardinality.isCompatible(directCardinality = thisClassKnoraCardinality, inheritableCardinality = inheritableKnoraCardinality)) {
+                                if (!Cardinality.isCompatible(directCardinality = thisClassKnoraCardinality.cardinality, inheritableCardinality = inheritableKnoraCardinality.cardinality)) {
                                     throw BadRequestException(s"The directly defined cardinality $thisClassKnoraCardinality on $thisClassProp is not compatible with the inherited cardinality $inheritableKnoraCardinality on $baseProp, because it is less restrictive")
                                 } /* else {
                                     println(s"The directly defined cardinality $thisClassKnoraCardinality on $thisClassProp is compatible with the inherited cardinality $inheritableKnoraCardinality on $baseProp, because it is at least as restrictive")

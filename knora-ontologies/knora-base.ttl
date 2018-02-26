@@ -332,8 +332,6 @@
 
              salsah-gui:guiElement salsah-gui:Geometry ;
 
-             salsah-gui:guiAttribute "width=95%;rows=4;wrap=soft"^^xsd:string ;
-
              :objectClassConstraint :GeomValue ;
 
              :subjectClassConstraint :Region .
