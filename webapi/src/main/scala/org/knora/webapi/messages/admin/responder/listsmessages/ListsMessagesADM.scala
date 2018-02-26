@@ -17,16 +17,90 @@
 package org.knora.webapi.messages.admin.responder.listsmessages
 
 
+import java.util.UUID
+
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
+import org.knora.webapi.responders.admin.ListsResponderADM._
+import org.knora.webapi.util.StringFormatter
 import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, RootJsonFormat, _}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
 
+
+/**
+  * Represents an API request payload that asks the Knora API server to create a new list. At least one
+  * label needs to be supplied.
+  *
+  * @param projectIri the IRI of the project the list belongs to.
+  * @param labels     the list's labels.
+  * @param comments   the list's comments.
+  */
+case class CreateListApiRequestADM(projectIri: IRI,
+                                   labels: Seq[StringLiteralV2],
+                                   comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
+
+    private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+    if (projectIri.isEmpty) {
+        // println(this)
+        throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
+    }
+
+    if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
+        // println(this)
+        throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
+    }
+
+    if (labels.isEmpty) {
+        // println(this)
+        throw BadRequestException(LABEL_MISSING_ERROR)
+    }
+
+    def toJsValue: JsValue = createListApiRequestADMFormat.write(this)
+}
+
+/**
+  * Represents an API request payload that asks the Knora API server to update an existing list's basic information.
+  *
+  * @param listIri    the IRI of the list to change.
+  * @param projectIri the IRI of the project the list belongs to.
+  * @param labels     the labels.
+  * @param comments   the comments.
+  */
+case class ChangeListInfoApiRequestADM(listIri: IRI,
+                                       projectIri: IRI,
+                                       labels: Seq[StringLiteralV2],
+                                       comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
+
+    private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+    if (listIri.isEmpty) {
+        throw BadRequestException(LIST_IRI_MISSING_ERROR)
+    }
+
+    if (!stringFormatter.isKnoraListIriStr(listIri)) {
+        throw BadRequestException(LIST_IRI_INVALID_ERROR)
+    }
+
+    if (projectIri.isEmpty) {
+        throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
+    }
+
+    if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
+        throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
+    }
+
+    if (labels.isEmpty && comments.isEmpty) {
+        throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR)
+    }
+
+    def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -86,15 +160,39 @@ case class NodePathGetRequestADM(iri: IRI,
                                  requestingUser: UserADM) extends ListsResponderRequestADM
 
 
+/**
+  * Requests the creation of a new list.
+  *
+  * @param createListRequest the [[CreateListApiRequestADM]] information used for creating the new list.
+  * @param requestingUser    the user creating the new list.
+  * @param apiRequestID      the ID of the API request.
+  */
+case class ListCreateRequestADM(createListRequest: CreateListApiRequestADM,
+                                requestingUser: UserADM,
+                                apiRequestID: UUID) extends ListsResponderRequestADM
+
+/**
+  * Request updating basic information of an existing list.
+  *
+  * @param listIri           the IRI of the list to be updated.
+  * @param changeListRequest the data which needs to be update.
+  * @param requestingUser    the user initiating the request.
+  * @param apiRequestID      the ID of the API request.
+  */
+case class ListInfoChangeRequestADM(listIri: IRI,
+                                    changeListRequest: ChangeListInfoApiRequestADM,
+                                    requestingUser: UserADM,
+                                    apiRequestID: UUID) extends ListsResponderRequestADM
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
 
 /**
   * Represents a sequence of list info nodes.
   *
-  * @param items a [[ListInfoADM]] sequence.
+  * @param lists a [[ListADM]] sequence.
   */
-case class ListsGetResponseADM(items: Seq[ListInfoADM]) extends KnoraResponseADM with ListADMJsonProtocol {
+case class ListsGetResponseADM(lists: Seq[ListADM]) extends KnoraResponseADM with ListADMJsonProtocol {
     def toJsValue = listsGetResponseADMFormat.write(this)
 }
 
@@ -103,7 +201,7 @@ case class ListsGetResponseADM(items: Seq[ListInfoADM]) extends KnoraResponseADM
   *
   * @param list the complete list.
   */
-case class ListGetResponseADM(list: ListFullADM) extends KnoraResponseADM with ListADMJsonProtocol {
+case class ListGetResponseADM(list: ListADM) extends KnoraResponseADM with ListADMJsonProtocol {
 
     def toJsValue = listGetResponseADMFormat.write(this)
 }
@@ -130,6 +228,7 @@ case class ListNodeInfoGetResponseADM(nodeinfo: ListNodeInfoADM) extends KnoraRe
     def toJsValue: JsValue = listNodeInfoGetResponseADMFormat.write(this)
 }
 
+
 /**
   * Responds to a [[NodePathGetRequestADM]] by providing the path to a particular hierarchical list node.
   *
@@ -144,20 +243,19 @@ case class NodePathGetResponseADM(nodelist: Seq[ListNodeADM]) extends KnoraRespo
 // Components of messages
 
 
-case class ListFullADM(listinfo: ListInfoADM, children: Seq[ListNodeADM]) {
+case class ListADM(listinfo: ListInfoADM, children: Seq[ListNodeADM]) {
     /**
       * Sorts the whole hierarchy.
       *
       * @return a sorted [[List]].
       */
-    def sorted: ListFullADM = {
-        ListFullADM(
+    def sorted: ListADM = {
+        ListADM(
             listinfo = listinfo,
             children = children.sortBy(_.id)
         )
     }
 }
-
 
 /**
   * Represents basic information about a list, the information stored in the list's root node.
@@ -413,14 +511,14 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         }
     }
 
-    implicit object ListFormat extends JsonFormat[ListFullADM] {
+    implicit object ListFormat extends JsonFormat[ListADM] {
         /**
-          * Converts a [[ListFullADM]] to a [[JsValue]].
+          * Converts a [[ListADM]] to a [[JsValue]].
           *
-          * @param list a [[ListFullADM]].
+          * @param list a [[ListADM]].
           * @return a [[JsValue]].
           */
-        def write(list: ListFullADM): JsValue = {
+        def write(list: ListADM): JsValue = {
             JsObject(
                 "listinfo" -> list.listinfo.toJson,
                 "children" -> JsArray(list.children.map(_.toJson).toVector)
@@ -433,7 +531,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           * @param value a [[JsValue]].
           * @return a [[List]].
           */
-        def read(value: JsValue): ListFullADM = {
+        def read(value: JsValue): ListADM = {
 
             val fields = value.asJsObject.fields
 
@@ -444,7 +542,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
                 case _ => throw DeserializationException("The expected field 'children' is in the wrong format.")
             }
 
-            ListFullADM(
+            ListADM(
                 listinfo = listinfo,
                 children = children
             )
@@ -452,8 +550,10 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     }
 
 
+    implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "projectIri", "labels", "comments")
+    implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "projectIri", "labels", "comments")
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "nodelist")
-    implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "items")
+    implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
     implicit val listGetResponseADMFormat: RootJsonFormat[ListGetResponseADM] = jsonFormat(ListGetResponseADM, "list")
     implicit val listInfoGetResponseADMFormat: RootJsonFormat[ListInfoGetResponseADM] = jsonFormat(ListInfoGetResponseADM, "listinfo")
     implicit val listNodeInfoGetResponseADMFormat: RootJsonFormat[ListNodeInfoGetResponseADM] = jsonFormat(ListNodeInfoGetResponseADM, "nodeinfo")

@@ -59,6 +59,7 @@
 
     <logger name="org.knora" level="INFO"/>
     <logger name="org.knora.webapi" level="INFO"/>
+    <logger name="org.knora.webapi.KnoraExceptionHandler" level="INFO"/>
     <logger name="org.knora.webapi.app.ApplicationStateActor" level="INFO"/>
     <logger name="org.knora.webapi.util.cache" level="INFO"/>
     <logger name="org.knora.webapi.util.PermissionUtilADM" level="INFO"/>
@@ -87,7 +88,7 @@
 
     <!-- Admin -->
     <logger name="org.knora.webapi.responders.admin.GroupsResponderADM" level="INFO"/>
-    <logger name="org.knora.webapi.responders.admin.ListsResponderADM" level="INFO"/>
+    <logger name="org.knora.webapi.responders.admin.ListsResponderADM" level="DEBUG"/>
     <logger name="org.knora.webapi.responders.admin.OntologiesResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.ProjectsResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.StoresResponderADM" level="INFO"/>
