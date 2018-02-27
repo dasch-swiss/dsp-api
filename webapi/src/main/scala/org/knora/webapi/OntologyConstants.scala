@@ -84,6 +84,7 @@ object OntologyConstants {
         val String: IRI = XsdPrefixExpansion + "string"
         val Boolean: IRI = XsdPrefixExpansion + "boolean"
         val Integer: IRI = XsdPrefixExpansion + "integer"
+        val NonNegativeInteger: IRI = XsdPrefixExpansion + "nonNegativeInteger"
         val Decimal: IRI = XsdPrefixExpansion + "decimal"
         val Uri: IRI = XsdPrefixExpansion + "anyURI"
         val Pattern: IRI = XsdPrefixExpansion + "pattern"
@@ -111,8 +112,7 @@ object OntologyConstants {
         KnoraBase.KnoraBaseOntologyLabel,
         KnoraApi.KnoraApiOntologyLabel,
         SalsahGui.SalsahGuiOntologyLabel,
-        Standoff.StandoffOntologyLabel,
-        Dc.DcOntologyLabel
+        Standoff.StandoffOntologyLabel
     )
 
     /**
@@ -319,7 +319,7 @@ object OntologyConstants {
         val ProjectShortcode: IRI = KnoraBasePrefixExpansion + "projectShortcode"
         val ProjectLongname: IRI = KnoraBasePrefixExpansion + "projectLongname"
         val ProjectDescription: IRI = KnoraBasePrefixExpansion + "projectDescription"
-        val ProjectKeywords: IRI = KnoraBasePrefixExpansion + "projectKeywords"
+        val ProjectKeyword: IRI = KnoraBasePrefixExpansion + "projectKeyword"
         val ProjectLogo: IRI = KnoraBasePrefixExpansion + "projectLogo"
         val BelongsToInstitution: IRI = KnoraBasePrefixExpansion + "belongsToInstitution"
         val ProjectOntology: IRI = KnoraBasePrefixExpansion + "projectOntology"
@@ -505,15 +505,23 @@ object OntologyConstants {
         val Geonames: IRI = SalsahGuiPrefixExpansion + "Geonames"
         val Fileupload: IRI = SalsahGuiPrefixExpansion + "Fileupload"
 
-        object attributeNames {
-            val resourceClass: String = "restypeid"
-            val assignmentOperator: String = "="
+        object SalsahGuiAttributeType extends Enumeration {
+
+            val Integer: Value = Value(0, "integer")
+            val Percent: Value = Value(1, "percent")
+            val Decimal: Value = Value(2, "decimal")
+            val Str: Value = Value(3, "string")
+            val Iri: Value = Value(4, "iri")
+
+            val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
+
+            def lookup(name: String): Value = {
+                valueMap.get(name) match {
+                    case Some(value) => value
+                    case None => throw InconsistentTriplestoreDataException(s"salsah-gui attribute type not found: $name")
+                }
+            }
         }
-
-    }
-
-    object Dc {
-        val DcOntologyLabel: String = "dc"
     }
 
     object Ontotext {
@@ -570,6 +578,7 @@ object OntologyConstants {
         val IsLinkProperty: IRI = KnoraApiV2PrefixExpansion + "isLinkProperty"
         val IsLinkValueProperty: IRI = KnoraApiV2PrefixExpansion + "isLinkValueProperty"
         val CanBeInstantiated: IRI = KnoraApiV2PrefixExpansion + "canBeInstantiated"
+        val IsValueClass: IRI = KnoraApiV2PrefixExpansion + "isValueClass"
         val IsInherited: IRI = KnoraApiV2PrefixExpansion + "isInherited"
         val OntologyName: IRI = KnoraApiV2PrefixExpansion + "ontologyName"
         val ProjectIri: IRI = KnoraApiV2PrefixExpansion + "projectIri"
@@ -653,6 +662,8 @@ object OntologyConstants {
         val DateValueHasEndMonth: IRI = KnoraApiV2PrefixExpansion + "dateValueHasEndMonth"
         val DateValueHasStartDay: IRI = KnoraApiV2PrefixExpansion + "dateValueHasStartDay"
         val DateValueHasEndDay: IRI = KnoraApiV2PrefixExpansion + "dateValueHasEndDay"
+        val DateValueHasStartEra: IRI = KnoraApiV2PrefixExpansion + "dateValueHasStartEra"
+        val DateValueHasEndEra: IRI = KnoraApiV2PrefixExpansion + "dateValueHasEndEra"
         val DateValueHasCalendar: IRI = KnoraApiV2PrefixExpansion + "dateValueHasCalendar"
 
         val TextValueAsHtml: IRI = KnoraApiV2PrefixExpansion + "textValueAsHtml"

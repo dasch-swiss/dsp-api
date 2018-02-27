@@ -1,3 +1,4 @@
+
 {
   "knora-api:hasOntologies" : {
     "@id" : "http://api.knora.org/ontology/knora-api/v2",
@@ -8,6 +9,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents an audio file value.",
         "rdfs:label" : "Audio file value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#FileValue", {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -90,6 +92,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a boolean value.",
         "rdfs:label" : "Boolean value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -116,6 +119,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a color value.",
         "rdfs:label" : "Color value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -142,6 +146,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a 3D file value.",
         "rdfs:label" : "3D file value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#FileValue", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -220,6 +225,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a date as a period with different possible precisions.",
         "rdfs:label" : "Date value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "owl:maxCardinality" : 1,
@@ -228,6 +234,10 @@
           "@type" : "owl:Restriction",
           "owl:maxCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra"
         }, {
           "@type" : "owl:Restriction",
           "owl:maxCardinality" : 1,
@@ -240,6 +250,10 @@
           "@type" : "owl:Restriction",
           "owl:maxCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra"
         }, {
           "@type" : "owl:Restriction",
           "owl:maxCardinality" : 1,
@@ -270,6 +284,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a decimal value.",
         "rdfs:label" : "Decimal value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -296,6 +311,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a document file value.",
         "rdfs:label" : "Document file value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#FileValue", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -374,6 +390,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a file value.",
         "rdfs:label" : "File value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -450,6 +467,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a geometry value.",
         "rdfs:label" : "Geometry value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -476,6 +494,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a Geoname value.",
         "rdfs:label" : "Geoname value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -502,6 +521,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents an integer value.",
         "rdfs:label" : "Integer value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -528,6 +548,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a time interval.",
         "rdfs:label" : "Interval value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -607,6 +628,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a link from one resource to another.",
         "rdfs:label" : "Link value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -641,6 +663,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a value in a hierarchical list.",
         "rdfs:label" : "List value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -667,6 +690,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a moving image file value.",
         "rdfs:label" : "Moving image file value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#FileValue", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -895,6 +919,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a still image file value.",
         "rdfs:label" : "Still image file value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#FileValue", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -985,6 +1010,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a text file value.",
         "rdfs:label" : "Text file value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#FileValue", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -1063,6 +1089,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents text with optional markup.",
         "rdfs:label" : "Text value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -1097,6 +1124,7 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a URI value.",
         "rdfs:label" : "URI value",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -1121,6 +1149,7 @@
       "knora-api:Value" : {
         "@id" : "knora-api:Value",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -1201,6 +1230,15 @@
         "rdfs:label" : "Date value has end day",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#valueHas"
       },
+      "knora-api:dateValueHasEndEra" : {
+        "@id" : "knora-api:dateValueHasEndEra",
+        "@type" : "owl:DatatypeProperty",
+        "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
+        "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
+        "rdfs:comment" : "Represents the end era of a date value.",
+        "rdfs:label" : "Date value has end era",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#valueHas"
+      },
       "knora-api:dateValueHasEndMonth" : {
         "@id" : "knora-api:dateValueHasEndMonth",
         "@type" : "owl:DatatypeProperty",
@@ -1226,6 +1264,15 @@
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
         "rdfs:comment" : "Represents the start day of a date value.",
         "rdfs:label" : "Date value has start day",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#valueHas"
+      },
+      "knora-api:dateValueHasStartEra" : {
+        "@id" : "knora-api:dateValueHasStartEra",
+        "@type" : "owl:DatatypeProperty",
+        "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
+        "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
+        "rdfs:comment" : "Represents the start era of a date value.",
+        "rdfs:label" : "Date value has start era",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#valueHas"
       },
       "knora-api:dateValueHasStartMonth" : {
@@ -1763,6 +1810,7 @@
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
+    "salsah-gui" : "http://www.knora.org/ontology/salsah-gui#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
     "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }

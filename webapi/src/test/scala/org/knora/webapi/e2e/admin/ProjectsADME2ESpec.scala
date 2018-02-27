@@ -25,10 +25,10 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
+import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.knora.webapi.{E2ESpec, SharedTestDataADM}
@@ -122,9 +122,10 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                     s"""
                        |{
                        |    "shortname": "newproject",
+                       |    "shortcode": "1111",
                        |    "longname": "project longname",
-                       |    "description": "project description",
-                       |    "keywords": "keywords",
+                       |    "description": [{"value": "project description", "language": "en"}],
+                       |    "keywords": ["keywords"],
                        |    "logo": "/fu/bar/baz.jpg",
                        |    "status": true,
                        |    "selfjoin": false
@@ -134,14 +135,15 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
                 val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
+                log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
 
                 val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
                 result.shortname should be ("newproject")
+                result.shortcode should be (Some("1111"))
                 result.longname should be (Some("project longname"))
-                result.description should be (Some("project description"))
-                result.keywords should be (Some("keywords"))
+                result.description should be (Seq(StringLiteralV2(value = "project description", language = Some("en"))))
+                result.keywords should be (Seq("keywords"))
                 result.logo should be (Some("/fu/bar/baz.jpg"))
                 result.status should be (true)
                 result.selfjoin should be (false)
@@ -156,9 +158,10 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                     s"""
                        |{
                        |    "shortname": "newproject",
+                       |    "shortcode"; "1112",
                        |    "longname": "project longname",
-                       |    "description": "project description",
-                       |    "keywords": "keywords",
+                       |    "description": [{"value": "project description", "language": "en"}],
+                       |    "keywords": ["keywords"],
                        |    "logo": "/fu/bar/baz.jpg",
                        |    "status": true,
                        |    "selfjoin": false
@@ -176,9 +179,31 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 val params =
                     s"""
                        |{
+                       |    "shortcode"; "1112",
                        |    "longname": "project longname",
-                       |    "description": "project description",
-                       |    "keywords": "keywords",
+                       |    "description": [{"value": "project description", "language": "en"}],
+                       |    "keywords": ["keywords"],
+                       |    "logo": "/fu/bar/baz.jpg",
+                       |    "status": true,
+                       |    "selfjoin": false
+                       |}
+                """.stripMargin
+
+
+                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                response.status should be (StatusCodes.BadRequest)
+            }
+
+            "return 'BadRequest' if 'shortcode' during creation is missing" in {
+                val params =
+                    s"""
+                       |{
+                       |    "shortname"; "newproject2",
+                       |    "longname": "project longname",
+                       |    "description": [{"value": "project description", "language": "en"}],
+                       |    "keywords": ["keywords"],
                        |    "logo": "/fu/bar/baz.jpg",
                        |    "status": true,
                        |    "selfjoin": false
@@ -199,10 +224,9 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |{
                        |    "shortname": "newproject",
                        |    "longname": "updated project longname",
-                       |    "description": "updated project description",
-                       |    "keywords": "updated keywords",
+                       |    "description": [{"value": "updated project description", "language": "en"}],
+                       |    "keywords": ["updated", "keywords"],
                        |    "logo": "/fu/bar/baz-updated.jpg",
-                       |    "institution": "http://rdfh.ch/institutions/dhlab-basel",
                        |    "status": true,
                        |    "selfjoin": true
                        |}
@@ -216,9 +240,10 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
                 val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
                 result.shortname should be ("newproject")
+                result.shortcode should be (Some("1111"))
                 result.longname should be (Some("updated project longname"))
-                result.description should be (Some("updated project description"))
-                result.keywords should be (Some("updated keywords"))
+                result.description should be (Seq(StringLiteralV2(value = "updated project description", language = Some("en"))))
+                result.keywords.sorted should be (Seq("updated", "keywords").sorted)
                 result.logo should be (Some("/fu/bar/baz-updated.jpg"))
                 result.status should be (true)
                 result.selfjoin should be (true)
@@ -278,6 +303,49 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
                 val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
                 members.size should be (2)
+            }
+        }
+
+        "used to query keywords" should {
+
+            "return all unique keywords for all projects" in {
+                val request = Get(baseApiUrl + s"/admin/projects/keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                assert(response.status === StatusCodes.OK)
+
+                val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
+                keywords.size should be (18)
+            }
+
+            "return all keywords for a single project" in {
+                val incunabulaIriEnc = java.net.URLEncoder.encode(SharedTestDataADM.incunabulaProject.id, "utf-8")
+                val request = Get(baseApiUrl + s"/admin/projects/keywords/$incunabulaIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                assert(response.status === StatusCodes.OK)
+
+                val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
+                keywords should be (SharedTestDataADM.incunabulaProject.keywords)
+            }
+
+            "return empty list for a project without keywords" in {
+                val anythingIriEnc = java.net.URLEncoder.encode(SharedTestDataADM.anythingProject.id, "utf-8")
+                val request = Get(baseApiUrl + s"/admin/projects/keywords/$anythingIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                assert(response.status === StatusCodes.OK)
+
+                val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
+                keywords should be (Seq.empty[String])
+            }
+
+            "return 'NotFound' when the project IRI is unknown" in {
+                val notexistingIriEnc = java.net.URLEncoder.encode("http://rdfh.ch/projects/notexisting", "utf-8")
+                val request = Get(baseApiUrl + s"/admin/projects/keywords/$notexistingIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                assert(response.status === StatusCodes.NotFound)
             }
         }
     }

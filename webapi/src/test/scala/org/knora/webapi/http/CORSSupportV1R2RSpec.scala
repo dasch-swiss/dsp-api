@@ -23,7 +23,6 @@ import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Methods`, _}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.util.Timeout
-import ch.megard.akka.http.cors.CorsRejection
 import org.knora.webapi.R2RSpec
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.routing.v1.ResourcesRouteV1

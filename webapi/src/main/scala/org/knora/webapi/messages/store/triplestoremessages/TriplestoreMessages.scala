@@ -21,8 +21,7 @@
 package org.knora.webapi.messages.store.triplestoremessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import arq.iri
-import org.knora.webapi.util.{ErrorHandlingMap, SmartIri}
+import org.knora.webapi.util.ErrorHandlingMap
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, TriplestoreResponseException}
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsObject, JsString, JsValue, JsonFormat, NullOptions, RootJsonFormat, _}
 
@@ -128,9 +127,9 @@ case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreReq
 /**
   * A response to a [[SparqlExtendedConstructRequest]].
   *
-  * @param statements a map of subject IRIs to statements about each subject.
+  * @param statements a map of subjects to statements about each subject.
   */
-case class SparqlExtendedConstructResponse(statements: Map[IRI, Map[IRI, Seq[LiteralV2]]])
+case class SparqlExtendedConstructResponse(statements: Map[SubjectV2, Map[IRI, Seq[LiteralV2]]])
 
 /**
   * Represents a SPARQL Update operation to be performed.
@@ -231,43 +230,71 @@ case class InitializedResponse(initFinished: Boolean)
   */
 case class RdfDataObject(path: String, name: String)
 
+/**
+  * Represents the subject of a statement read from the triplestore.
+  */
+sealed trait SubjectV2
+
+case class IriSubjectV2(value: IRI) extends SubjectV2 {
+    override def toString: IRI = value
+}
+
+case class BlankNodeSubjectV2(value: String) extends SubjectV2 {
+    override def toString: String = value
+}
 
 /**
-  * A case class for representing a literal coming from the triplestore. There are different subclasses
-  * representing literals with the extended type-information stored in the triplestore.
-  *
-  * @param value
+  * Represents a literal read from the triplestore. There are different subclasses
+  * representing literals with the extended type information stored in the triplestore.
   */
-abstract class LiteralV2(value: String)
+sealed trait LiteralV2
 
 /**
   * Represents an object IRI.
   *
   * @param value the IRI.
   */
-case class IriLiteralV2(value: IRI) extends LiteralV2(value = value.toString)
+case class IriLiteralV2(value: IRI) extends LiteralV2 {
+    override def toString: IRI = value
+}
 
 /**
-  * Represents a string with an optional language tag.
+  * Represents a blank node identifier.
+  *
+  * @param value the identifier of the blank node.
+  */
+case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
+    override def toString: String = value
+}
+
+/**
+  * Represents a string with an optional language tag. Allows sorting inside collections by value.
   *
   * @param value    the string value.
   * @param language the optional language tag.
   */
-case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2(value = value)
+case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2 with Ordered[StringLiteralV2] {
+    override def toString: String = value
+    def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
+}
 
 /**
   * Represents a boolean value.
   *
   * @param value the boolean value.
   */
-case class BooleanLiteralV2(value: Boolean) extends LiteralV2(value = value.toString)
+case class BooleanLiteralV2(value: Boolean) extends LiteralV2 {
+    override def toString: String = value.toString
+}
 
 /**
   * Represents an integer value.
   *
   * @param value the boolean value.
   */
-case class IntLiteralV2(value: Int) extends LiteralV2(value = value.toString)
+case class IntLiteralV2(value: Int) extends LiteralV2 {
+    override def toString: String = value.toString
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting

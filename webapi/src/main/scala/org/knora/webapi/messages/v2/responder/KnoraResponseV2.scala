@@ -21,9 +21,10 @@
 package org.knora.webapi.messages.v2.responder
 
 import java.io.{StringReader, StringWriter}
-import javax.xml.transform.stream.StreamSource
 
+import javax.xml.transform.stream.StreamSource
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.twirl.StandoffTagV1
@@ -140,12 +141,24 @@ case class DateValueContentV2(valueHasString: String,
       * @return a Map of knora-api value properties to numbers (year, month, day) representing the date value.
       */
     def toKnoraApiDateValueAssertions: Map[IRI, JsonLDValue] = {
-        val startDateAssertions = DateUtilV2.convertJDNToDate(valueHasStartJDN, valueHasStartPrecision, valueHasCalendar).toStartDateAssertions().map {
-            case (k: IRI, v: Int) => (k, JsonLDInt(v))
-        }
 
-        val endDateAssertions = DateUtilV2.convertJDNToDate(valueHasEndJDN, valueHasEndPrecision, valueHasCalendar).toEndDateAssertions().map {
+        val startDateConversion = DateUtilV2.convertJDNToDate(valueHasStartJDN, valueHasStartPrecision, valueHasCalendar)
+
+        val startDateAssertions = startDateConversion.toStartDateAssertions.map {
             case (k: IRI, v: Int) => (k, JsonLDInt(v))
+
+        } ++ startDateConversion.toStartEraAssertion.map {
+
+            case (k: IRI, v: String) => (k, JsonLDString(v))
+        }
+        val endDateConversion = DateUtilV2.convertJDNToDate(valueHasEndJDN, valueHasEndPrecision, valueHasCalendar)
+
+        val endDateAssertions = endDateConversion.toEndDateAssertions.map {
+            case (k: IRI, v: Int) => (k, JsonLDInt(v))
+
+        } ++ endDateConversion.toEndEraAssertion.map {
+
+            case (k: IRI, v: String) => (k, JsonLDString(v))
         }
 
         startDateAssertions ++ endDateAssertions
@@ -516,13 +529,13 @@ case class TextFileValueContentV2(valueHasString: String, internalMimeType: Stri
 /**
   * Represents a Knora link value.
   *
-  * @param valueHasString      the string representation of the referred resource.
-  * @param subject             the Iri of the link's source resource.
-  * @param predicate           the link's predicate.
-  * @param target              the Iri of the link's target resource.
-  * @param comment             a comment on the link.
-  * @param incomingLink        indicates if it is an incoming link.
-  * @param nestedResource      information about the nested resource, if given.
+  * @param valueHasString the string representation of the referred resource.
+  * @param subject        the Iri of the link's source resource.
+  * @param predicate      the link's predicate.
+  * @param target         the Iri of the link's target resource.
+  * @param comment        a comment on the link.
+  * @param incomingLink   indicates if it is an incoming link.
+  * @param nestedResource information about the nested resource, if given.
   */
 case class LinkValueContentV2(valueHasString: String, subject: IRI, predicate: IRI, target: IRI, comment: Option[String], incomingLink: Boolean, nestedResource: Option[ReadResourceV2]) extends ValueContentV2 {
 
@@ -598,40 +611,6 @@ case class ReadResourceV2(resourceIri: IRI, label: String, resourceClass: IRI, v
   * @param resourceInfos additional information attached to the resource (literals).
   */
 case class CreateResource(label: String, resourceClass: IRI, values: Map[IRI, Seq[CreateValueV2]], resourceInfos: Map[IRI, LiteralV2]) extends ResourceV2
-
-/**
-  * A trait representing literals that may be directly attached to a resource.
-  */
-sealed trait LiteralV2
-
-/**
-  * Represents a string literal attached to a resource.
-  *
-  * @param value a string literal.
-  */
-case class StringLiteralV2(value: String) extends LiteralV2
-
-/**
-  * Represents an integer literal attached to a resource.
-  *
-  * @param value an integer literal.
-  */
-case class IntegerLiteralV2(value: Int) extends LiteralV2
-
-/**
-  * Represents a decimal literal attached to a resource.
-  *
-  * @param value a decimal literal.
-  */
-case class DecimalLiteralV2(value: BigDecimal) extends LiteralV2
-
-/**
-  * Represents a boolean literal attached to a resource.
-  *
-  * @param value a boolean literal.
-  */
-case class BooleanLiteralV2(value: Boolean) extends LiteralV2
-
 
 /**
   *

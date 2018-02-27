@@ -453,7 +453,12 @@ case class UserADM(id: IRI,
                    groups: Seq[GroupADM] = Vector.empty[GroupADM],
                    projects: Seq[ProjectADM] = Seq.empty[ProjectADM],
                    sessionId: Option[String] = None,
-                   permissions: PermissionsDataADM = PermissionsDataADM()) {
+                   permissions: PermissionsDataADM = PermissionsDataADM()) extends Ordered[UserADM] {
+
+    /**
+      * Allows to sort collections of UserADM. Sorting is done by the id.
+      */
+    def compare(that: UserADM): Int = this.id.compareTo(that.id)
 
     /**
       * Check password using either SHA-1 or SCrypt.

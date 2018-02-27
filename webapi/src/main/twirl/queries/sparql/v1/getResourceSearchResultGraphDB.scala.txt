@@ -51,9 +51,9 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-SELECT DISTINCT ?resourceIri ?firstProp ?attachedToUser ?attachedToProject ?resourcePermissions
+SELECT DISTINCT ?resourceIri ?resourceClass ?firstProp ?attachedToUser ?attachedToProject ?resourcePermissions
 @if(numberOfProps > 1) {
-    (GROUP_CONCAT(?valueString; separator="@separator") AS ?values) (GROUP_CONCAT(?guiOrder; separator=";") AS ?guiOrders) (GROUP_CONCAT(?valueOrder; separator=";") AS ?valueOrders)
+    (GROUP_CONCAT(?valueString; separator="@separator") AS ?values) (GROUP_CONCAT(?property; separator="@separator") AS ?properties) (GROUP_CONCAT(?valueOrder; separator="@separator") AS ?valueOrders)
 }
 WHERE {
 
@@ -98,34 +98,24 @@ WHERE {
 
         GRAPH <http://www.ontotext.com/explicit> {
             ?resourceIri ?property ?valueObjectIri .
-         }
+        }
 
         ?property knora-base:objectClassConstraint knora-base:TextValue .
         ?valueObjectIri knora-base:valueHasString ?valueString ;
             knora-base:isDeleted false ;
             knora-base:valueHasOrder ?valueOrder .
 
-        OPTIONAL {
-            ?property salsah-gui:guiOrder ?maybeGuiOrder .
-        }
-
-        @*
-            If no guiOrder is given for the property, assign -1.
-
-            This may occur in case of resources like the knora-base:LinkObj that are directly
-            assigned a property like hasComment, which project specific properties extend and attach a guiOrder to.
-
-        *@
-
-        BIND(IF(BOUND(?maybeGuiOrder), ?maybeGuiOrder, -1) AS ?guiOrder)
-
     }
 
-    ?resourceIri knora-base:attachedToUser ?attachedToUser ;
-        knora-base:attachedToProject ?attachedToProject ;
-        knora-base:hasPermissions ?resourcePermissions .
+    GRAPH <http://www.ontotext.com/explicit> {
+        ?resourceIri a ?resourceClass ;
+            knora-base:attachedToUser ?attachedToUser ;
+            knora-base:attachedToProject ?attachedToProject ;
+            knora-base:hasPermissions ?resourcePermissions .
+    }
+
 }
 
-GROUP BY ?resourceIri ?firstProp ?attachedToUser ?attachedToProject ?resourcePermissions
+GROUP BY ?resourceIri ?resourceClass ?firstProp ?attachedToUser ?attachedToProject ?resourcePermissions
 
 LIMIT @limitOfResults

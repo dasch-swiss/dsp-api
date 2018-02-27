@@ -61,7 +61,7 @@ object IriLocker {
     /**
       * The number of times to try to acquire a lock before giving up.
       */
-    private val MAX_LOCK_RETRIES = 20
+    private val MAX_LOCK_RETRIES = 40
 
     /**
       * The total number of milliseconds that an API request should wait before giving up on acquiring a lock.

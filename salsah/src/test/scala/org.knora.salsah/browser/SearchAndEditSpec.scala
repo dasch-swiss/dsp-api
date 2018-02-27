@@ -263,7 +263,7 @@ class SearchAndEditSpec extends SalsahSpec {
             val firstSel = selections.head
 
             // list node from selection "HIERARCHICAL LISTS" in images-demo-data
-            val listNodeSport = "http://data.knora.org/lists/71a1543cce"
+            val listNodeSport = "http://rdfh.ch/lists/00FF/71a1543cce"
 
             firstSel.selectByValue(listNodeSport)
 
@@ -273,7 +273,7 @@ class SearchAndEditSpec extends SalsahSpec {
             val secondSel = selections(1)
 
             // list node from selection "HIERARCHICAL LISTS" in images-demo-data
-            val listNodeFliegen = "http://data.knora.org/lists/d1fa87bbe3"
+            val listNodeFliegen = "http://rdfh.ch/lists/00FF/d1fa87bbe3"
 
             secondSel.selectByValue(listNodeFliegen)
 

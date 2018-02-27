@@ -4,7 +4,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
-@prefix dc: <http://www.knora.org/ontology/dc#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @prefix standoff: <http://www.knora.org/ontology/standoff#> .
@@ -27,7 +27,7 @@
 
     :title rdf:type owl:ObjectProperty ;
 
-           rdfs:subPropertyOf dc:title ;
+           rdfs:subPropertyOf knora-base:hasValue, dcterms:title ;
 
            rdfs:label "Titel"@de ,
                       "Titre"@fr ,
@@ -41,8 +41,6 @@
 
            knora-base:objectClassConstraint knora-base:TextValue ;
 
-           salsah-gui:guiOrder "1"^^xsd:integer ;
-
            salsah-gui:guiElement salsah-gui:SimpleText ;
 
            salsah-gui:guiAttribute "size=80" ,
@@ -53,7 +51,7 @@
 
     :creationDate rdf:type owl:ObjectProperty ;
 
-                  rdfs:subPropertyOf dc:date ;
+                  rdfs:subPropertyOf knora-base:hasValue, dcterms:date ;
 
                   rdfs:label "Datum der Entstehung"@de ,
                              "Date of creation"@en ;
@@ -62,12 +60,7 @@
 
                   knora-base:objectClassConstraint knora-base:DateValue ;
 
-                  salsah-gui:guiOrder "3"^^xsd:integer ;
-
                   salsah-gui:guiElement salsah-gui:Date ;
-
-                  salsah-gui:guiAttribute "size=16" ,
-                                        "maxlength=32" ;
 
                   rdfs:comment """Datum der Entstehung"""@de ,
                                """Date of creation"""@en .
@@ -89,8 +82,6 @@
            knora-base:subjectClassConstraint :writtenSource ;
 
            knora-base:objectClassConstraint :person ;
-
-           salsah-gui:guiOrder "2"^^xsd:integer ;
 
            salsah-gui:guiElement salsah-gui:Searchbox .
 
@@ -128,8 +119,6 @@
               knora-base:subjectClassConstraint :letter ;
 
               knora-base:objectClassConstraint :person ;
-
-              salsah-gui:guiOrder "4"^^xsd:integer ;
 
               salsah-gui:guiElement salsah-gui:Searchbox .
 
@@ -271,8 +260,6 @@
 
                 knora-base:objectClassConstraint :person ;
 
-                salsah-gui:guiOrder "5"^^xsd:integer ;
-
                 salsah-gui:guiElement salsah-gui:Searchbox .
 
 ### ###########################################
@@ -309,8 +296,6 @@
 
           knora-base:objectClassConstraint knora-base:TextValue ;
 
-          salsah-gui:guiOrder "6"^^xsd:integer ;
-
           salsah-gui:guiElement salsah-gui:Textarea ;
 
           salsah-gui:guiAttribute "cols=60" ,
@@ -334,8 +319,6 @@
           knora-base:subjectClassConstraint :endnote ;
 
           knora-base:objectClassConstraint knora-base:TextValue ;
-
-          salsah-gui:guiOrder "6"^^xsd:integer ;
 
           salsah-gui:guiElement salsah-gui:Textarea ;
 
@@ -362,8 +345,6 @@
 
           knora-base:objectClassConstraint knora-base:TextValue ;
 
-          salsah-gui:guiOrder "6"^^xsd:integer ;
-
           salsah-gui:guiElement salsah-gui:Textarea ;
 
           salsah-gui:guiAttribute "cols=60" ,
@@ -388,8 +369,6 @@
 
              knora-base:subjectClassConstraint :page ;
 
-             salsah-gui:guiOrder "2"^^xsd:integer ;
-
              salsah-gui:guiElement salsah-gui:Searchbox .
 
 
@@ -412,8 +391,6 @@
 
         knora-base:objectClassConstraint :writtenSource ;
 
-        salsah-gui:guiOrder "7"^^xsd:integer ;
-
         salsah-gui:guiElement salsah-gui:Searchbox .
 
 ### ###########################################
@@ -435,8 +412,6 @@
         knora-base:subjectClassConstraint :page ;
 
         knora-base:objectClassConstraint knora-base:IntValue ;
-
-        salsah-gui:guiOrder "9"^^xsd:integer ;
 
         salsah-gui:guiElement salsah-gui:Spinbox ;
 
@@ -461,12 +436,10 @@
 
          knora-base:objectClassConstraint knora-base:TextValue ;
 
-         salsah-gui:guiOrder "10"^^xsd:integer ;
-
          salsah-gui:guiElement salsah-gui:SimpleText ;
 
-         salsah-gui:guiAttribute "min=4" ,
-                                 "max=8" .
+         salsah-gui:guiAttribute "size=8" ,
+                                 "maxlength=8" .
 
 
 ### ###########################################
@@ -487,8 +460,6 @@
                   knora-base:subjectClassConstraint knora-base:Resource ;
 
                   knora-base:objectClassConstraint knora-base:TextValue ;
-
-                  salsah-gui:guiOrder "11"^^xsd:integer ;
 
                   salsah-gui:guiElement salsah-gui:Richtext .
 
@@ -525,8 +496,6 @@
 
                   knora-base:objectClassConstraint knora-base:TextValue ;
 
-                  salsah-gui:guiOrder "11"^^xsd:integer ;
-
                   salsah-gui:guiElement salsah-gui:Richtext .
 
 
@@ -549,8 +518,6 @@
 
                       knora-base:objectClassConstraint :person ;
 
-                      salsah-gui:guiOrder "5"^^xsd:integer ;
-
                       salsah-gui:guiElement salsah-gui:Searchbox .
 
 
@@ -571,8 +538,6 @@
                                "has son"@en ;
 
                     rdfs:comment """Repräsentiert eine Vater-Sohn Beziehung"""@de ;
-
-                    salsah-gui:guiOrder "5"^^xsd:integer ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox .
 
@@ -596,6 +561,7 @@
                   knora-base:subjectClassConstraint :person ;
 
                   rdfs:subPropertyOf knora-base:hasValue .
+
 
     ### ###########################################
     ### beol:hasFamilyName
@@ -881,23 +847,32 @@
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty :pagenum ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                             salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                          ] ,
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty :partOfValue ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                             owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                             salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                          ] ,
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty :partOf ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                             owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                             salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                          ] ,
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty :seqnum ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                             salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                          ] ,
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty :comment ;
-                             owl:minCardinality "0"^^xsd:nonNegativeInteger
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                             salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
                           ] ;
 
           knora-base:resourceIcon "page.gif" ;
@@ -920,57 +895,68 @@
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasRecipient ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
                         ],
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasRecipientValue ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
                         ],
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :letterHasNumber ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
                         ],
                         [
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterHasTranslation ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
                         ],
                         [
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterHasTranslationValue ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
                         ],
                         [
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterIsReplyTo ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
                         ],
                         [
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterIsReplyToValue ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
                         ],
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasFigure ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
                         ],
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasFigureValue ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
                         ],
                         [
                          rdf:type owl:Restriction ;
                           owl:onProperty :mentionsPerson ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
                         ],
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :mentionsPersonValue ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
                         ];
 
         knora-base:resourceIcon "letter.png" ;
@@ -1007,22 +993,26 @@
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :endnoteHasNumber ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
                         ],
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasFigure ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
                         ],
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasFigureValue ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
                         ],
                         [
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasText ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
                         ];
 
         rdfs:label "Endnote"@de ,
@@ -1039,32 +1029,38 @@
              [
                rdf:type owl:Restriction ;
                owl:onProperty :title ;
-               owl:minCardinality "1"^^xsd:nonNegativeInteger
+               owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+               salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
              ] ,
              [
                rdf:type owl:Restriction ;
                owl:onProperty :hasAuthorValue ;
-               owl:minCardinality "0"^^xsd:nonNegativeInteger
+               owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+               salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
              ],
              [
                rdf:type owl:Restriction ;
                owl:onProperty :hasAuthor ;
-               owl:minCardinality "0"^^xsd:nonNegativeInteger
+               owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+               salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
              ],
              [
                rdf:type owl:Restriction ;
                owl:onProperty :creationDate ;
-               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+               salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
              ] ,
              [
                rdf:type owl:Restriction ;
                owl:onProperty :location ;
-               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+               salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
              ],
              [
                rdf:type owl:Restriction ;
                owl:onProperty :hasText ;
-               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+               salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
              ];
 
     rdfs:comment "schriftliche Quelle"@de ;
@@ -1078,77 +1074,95 @@
 :person rdf:type owl:Class ;
 
     rdfs:subClassOf knora-base:Resource, foaf:Person ,
-    					[ rdf:type owl:Restriction ;
+    				[ rdf:type owl:Restriction ;
                       owl:onProperty :hasFamilyName ;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasGivenName ;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :personHasTitle ;
-                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasAlternativeName ;
-                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
                       ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasIAFIdentifier ;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasBirthDate ;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasDeathDate ;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
-                    owl:onProperty :hasFloruitDate;
-                    owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      owl:onProperty :hasFloruitDate;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "7"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasMarriageDate;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "8"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasBirthPlace ;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "9"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasDeathPlace ;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "10"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasFloruitPlace ;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "11"^^xsd:nonNegativeInteger
                       ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasMarriagePlace ;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "12"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasSonValue ;
-                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "13"^^xsd:nonNegativeInteger
                     ],
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasSon ;
-                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "13"^^xsd:nonNegativeInteger
                     ] ,
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :hasDictionaryEntries ;
-                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "14"^^xsd:nonNegativeInteger
                     ] ,
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :comment ;
-                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "15"^^xsd:nonNegativeInteger
                     ] ,
                     [ rdf:type owl:Restriction ;
                       owl:onProperty :mentionedIn ;
-                      owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "16"^^xsd:nonNegativeInteger
                     ] ;
 
     knora-base:resourceIcon "person.png" ;
