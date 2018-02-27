@@ -19,12 +19,14 @@ package org.knora.webapi.responders.admin
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, ResetTriplestoreContentResponseADM}
+import org.knora.webapi.messages.app.appmessages.GetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 
-import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 /**
   * This responder is used by [[org.knora.webapi.routing.admin.StoreRouteADM]], for piping through HTTP requests to the
@@ -52,10 +54,11 @@ class StoresResponderADM extends Responder {
 
         log.info(s"resetTriplestoreContent - called")
         log.debug(s"resetTriplestoreContent called with: {}", rdfDataObjects.toString)
-        log.debug(s"StartupFlags.allowReloadOverHTTP = {}", StartupFlags.allowReloadOverHTTP.get)
+        val allowReloadOverHTTP = Await.result(applicationStateActor ? GetAllowReloadOverHTTPState(), 1.second).asInstanceOf[Boolean]
+        log.debug(s"StartupFlags.allowReloadOverHTTP = {}", allowReloadOverHTTP)
 
         for {
-            value <- StartupFlags.allowReloadOverHTTP.future()
+            value: Boolean <- (applicationStateActor ? GetAllowReloadOverHTTPState()).mapTo[Boolean]
             _ = if (!value) {
                 //println("resetTriplestoreContent - will throw ForbiddenException")
                 throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?")

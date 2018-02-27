@@ -26,6 +26,7 @@ import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfo
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 /**
   * This object holds the same user which are loaded with '_test_data/all_data/admin-data.ttl'. Using this object
@@ -241,10 +242,9 @@ object SharedTestDataADM {
         shortname = "images",
         shortcode = Some("00FF"),
         longname = Some("Image Collection Demo"),
-        description = Some("A demo project of a collection of images"),
-        keywords = Some("images, collection"),
+        description = Seq(StringLiteralV2(value = "A demo project of a collection of images", language = Some("en"))),
+        keywords = Seq("images", "collection").sorted,
         logo = None,
-        institution = Some("http://rdfh.ch/institutions/dhlab-basel"),
         ontologies = Seq(OntologyInfoShortADM(
             ontologyIri = SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI,
             ontologyName = "images"
@@ -372,10 +372,9 @@ object SharedTestDataADM {
         shortname = "incunabula",
         shortcode = None,
         longname = Some("Bilderfolgen Basler Frühdrucke"),
-        description = Some("<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>"),
-        keywords = Some("Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images"),
+        description = Seq(StringLiteralV2(value = "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>", language = None)),
+        keywords = Seq("Basler Frühdrucke", "Inkunabel", "Narrenschiff", "Wiegendrucke", "Sebastian Brant", "Bilderfolgen", "early print", "incunabula", "ship of fools", "Kunsthistorisches Seminar Universität Basel", "Late Middle Ages", "Letterpress Printing", "Basel", "Contectualisation of images").sorted,
         logo = Some("incunabula_logo.png"),
-        institution = None,
         ontologies = Seq(OntologyInfoShortADM(
             ontologyIri = SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI,
             ontologyName = "incunabula"
@@ -444,10 +443,9 @@ object SharedTestDataADM {
         shortname = "anything",
         shortcode = None,
         longname = Some("Anything Project"),
-        description = Some("Anything Project"),
-        keywords = None,
+        description = Seq(StringLiteralV2(value = "Anything Project", language = None)),
+        keywords = Seq.empty[String],
         logo = None,
-        institution = None,
         ontologies = Seq(OntologyInfoShortADM(
             ontologyIri = SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI,
             ontologyName = "anything"
@@ -468,10 +466,9 @@ object SharedTestDataADM {
         shortname = "beol",
         shortcode = None,
         longname = Some("Bernoulli-Euler Online"),
-        description = Some("Bernoulli-Euler Online"),
-        keywords = None,
+        description = Seq(StringLiteralV2(value = "Bernoulli-Euler Online", language = None)),
+        keywords = Seq.empty[String],
         logo = None,
-        institution = None,
         ontologies = Seq(OntologyInfoShortADM(
             ontologyIri = "http://www.knora.org/ontology/beol",
             ontologyName = "beol"
@@ -492,10 +489,9 @@ object SharedTestDataADM {
         shortname = "biblio",
         shortcode = None,
         longname = Some("Bibliography"),
-        description = Some("Bibliography"),
-        keywords = None,
+        description = Seq(StringLiteralV2(value = "Bibliography", language = None)),
+        keywords = Seq.empty[String],
         logo = None,
-        institution = None,
         ontologies = Seq(OntologyInfoShortADM(
             ontologyIri = "http://www.knora.org/ontology/biblio",
             ontologyName = "biblio"
@@ -531,10 +527,9 @@ object SharedTestDataADM {
         shortname = "dokubib",
         shortcode = Some("00FE"),
         longname = Some("Dokubib"),
-        description = Some("Dokubib"),
-        keywords = None,
+        description = Seq(StringLiteralV2(value = "Dokubib", language = None)),
+        keywords = Seq.empty[String],
         logo = None,
-        institution = None,
         ontologies = Seq(OntologyInfoShortADM(
                 ontologyIri = "http://www.knora.org/ontology/00FE/dokubib",
                 ontologyName = "dokubib"

@@ -60,7 +60,9 @@ class ProjectsResponderADM extends Responder {
         case ProjectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => future2Message(sender(), projectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser), log)
         case ProjectMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => future2Message(sender(), projectMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser), log)
         case ProjectAdminMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => future2Message(sender(), projectAdminMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser), log)
-        case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) => future2Message(sender(), projectCreateRequestV1(createRequest, requestingUser, apiRequestID), log)
+        case ProjectsKeywordsGetRequestADM(requestingUser) => future2Message(sender(), projectsKeywordsGetRequestADM(requestingUser), log)
+        case ProjectKeywordsGetRequestADM(projectIri, requestingUser) => future2Message(sender(), projectKeywordsGetRequestADM(projectIri, requestingUser), log)
+        case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) => future2Message(sender(), projectCreateRequestADM(createRequest, requestingUser, apiRequestID), log)
         case ProjectChangeRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID) => future2Message(sender(), changeBasicInformationRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID), log)
         case ProjectOntologyAddADM(projectIri, ontologyIri, requestingUser, apiRequestID) => future2Message(sender(), projectOntologyAddADM(projectIri, ontologyIri, requestingUser, apiRequestID), log)
         case ProjectOntologyRemoveADM(projectIri, ontologyIri, requestingUser, apiRequestID) => future2Message(sender(), projectOntologyRemoveADM(projectIri, ontologyIri, requestingUser, apiRequestID), log)
@@ -91,7 +93,7 @@ class ProjectsResponderADM extends Responder {
             // _ = log.debug(s"projectsGetADM - statements: $statements")
 
             projects: Seq[ProjectADM] = statements.map {
-                case (projectIri: IRI, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+                case (projectIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
                     val ontologyIris = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, Seq.empty[IRI]).map(_.asInstanceOf[IriLiteralV2].value)
 
@@ -103,21 +105,20 @@ class ProjectsResponderADM extends Responder {
                     }
 
                     ProjectADM(
-                        id = projectIri,
+                        id = projectIri.toString,
                         shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head.asInstanceOf[StringLiteralV2].value,
                         shortcode = propsMap.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head.asInstanceOf[StringLiteralV2].value),
                         longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head.asInstanceOf[StringLiteralV2].value),
-                        description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head.asInstanceOf[StringLiteralV2].value),
-                        keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords).map(_.head.asInstanceOf[StringLiteralV2].value),
+                        description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
+                        keywords = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectKeyword, Seq.empty[String]).map(_.asInstanceOf[StringLiteralV2].value).sorted,
                         logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head.asInstanceOf[StringLiteralV2].value),
-                        institution = propsMap.get(OntologyConstants.KnoraBase.BelongsToInstitution).map(_.head.asInstanceOf[IriLiteralV2].value),
                         ontologies = ontologyInfos,
                         status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.asInstanceOf[BooleanLiteralV2].value,
                         selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).head.asInstanceOf[BooleanLiteralV2].value
                     )
             }
 
-        } yield projects
+        } yield projects.sorted
     }
 
     /**
@@ -246,7 +247,7 @@ class ProjectsResponderADM extends Responder {
 
             // get project member IRI from results rows
             userIris: Seq[IRI] = if (statements.nonEmpty) {
-                statements.map(_._1)
+                statements.map(_._1.toString)
             } else {
                 Seq.empty[IRI]
             }
@@ -299,7 +300,7 @@ class ProjectsResponderADM extends Responder {
 
             // get project member IRI from results rows
             userIris: Seq[IRI] = if (statements.nonEmpty) {
-                statements.map(_._1)
+                statements.map(_._1.toString)
             } else {
                 Seq.empty[IRI]
             }
@@ -316,6 +317,42 @@ class ProjectsResponderADM extends Responder {
     }
 
     /**
+      * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
+      *
+      * @param requestingUser the user making the request.
+      * @return all keywords for all projects as [[ProjectsKeywordsGetResponseADM]]
+      */
+    private def projectsKeywordsGetRequestADM(requestingUser: UserADM): Future[ProjectsKeywordsGetResponseADM] = {
+
+        for {
+            projects <- projectsGetADM(KnoraSystemInstances.Users.SystemUser)
+
+            keywords: Seq[String] = projects.flatMap(_.keywords).distinct.sorted
+
+        } yield ProjectsKeywordsGetResponseADM(keywords = keywords)
+    }
+
+    /**
+      * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
+      *
+      * @param projectIri the IRI of the project.
+      * @param requestingUser the user making the request.
+      * @return keywords for a projects as [[ProjectKeywordsGetResponseADM]]
+      */
+    private def projectKeywordsGetRequestADM(projectIri: IRI, requestingUser: UserADM): Future[ProjectKeywordsGetResponseADM] = {
+
+        for {
+            maybeProject <- projectGetADM(maybeIri = Some(projectIri), maybeShortcode = None, maybeShortname = None, requestingUser = KnoraSystemInstances.Users.SystemUser)
+
+            keywords: Seq[String] = maybeProject match {
+                case Some(p) => p.keywords
+                case None => throw NotFoundException(s"Project '$projectIri' not found.")
+            }
+
+        } yield ProjectKeywordsGetResponseADM(keywords = keywords)
+    }
+
+    /**
       * Creates a project.
       *
       * @param createRequest  the new project's information.
@@ -326,7 +363,7 @@ class ProjectsResponderADM extends Responder {
       * @throws DuplicateValueException in the case when either the shortname or shortcode are not unique.
       * @throws BadRequestException in the case when the shortcode is invalid.
       */
-    private def projectCreateRequestV1(createRequest: CreateProjectApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ProjectOperationResponseADM] = {
+    private def projectCreateRequestADM(createRequest: CreateProjectApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ProjectOperationResponseADM] = {
 
         // log.debug("projectCreateRequestV1 - createRequest: {}", createRequest)
 
@@ -347,22 +384,18 @@ class ProjectsResponderADM extends Responder {
             }
 
             // check if the optionally supplied shortcode is valid and unique
-            shortcodeExists <- if (createRequest.shortcode.isDefined) {
+            shortcodeExists <- {
                 val shortcode = StringFormatter.getGeneralInstance.validateProjectShortcode(
-                    createRequest.shortcode.get,
-                    errorFun = throw BadRequestException(s"The supplied short code: '${createRequest.shortcode.get}' is not valid.")
+                    createRequest.shortcode,
+                    errorFun = throw BadRequestException(s"The supplied short code: '${createRequest.shortcode}' is not valid.")
                 )
                 projectByShortcodeExists(shortcode)
-            } else {
-                FastFuture.successful(false)
             }
             _ = if (shortcodeExists) {
-                throw DuplicateValueException(s"Project with the shortcode: '${createRequest.shortcode.get}' already exists")
+                throw DuplicateValueException(s"Project with the shortcode: '${createRequest.shortcode}' already exists")
             }
 
-            newProjectIRI = knoraIdUtil.makeRandomProjectIri(createRequest.shortcode)
-            projectOntologyGraphString = "http://www.knora.org/ontology/" + createRequest.shortname
-            projectDataGraphString = "http://www.knora.org/data/" + createRequest.shortname
+            newProjectIRI = knoraIdUtil.makeRandomProjectIri(Some(createRequest.shortcode))
 
             // Create the new project.
             createNewProjectSparqlString = queries.sparql.admin.txt.createNewProject(
@@ -371,15 +404,15 @@ class ProjectsResponderADM extends Responder {
                 projectIri = newProjectIRI,
                 projectClassIri = OntologyConstants.KnoraBase.KnoraProject,
                 shortname = createRequest.shortname,
-                maybeShortcode = createRequest.shortcode,
+                shortcode = createRequest.shortcode,
                 maybeLongname = createRequest.longname,
-                maybeDescription = createRequest.description,
-                maybeKeywords = createRequest.keywords,
+                maybeDescriptions = if(createRequest.description.nonEmpty) {Some(createRequest.description)} else None,
+                maybeKeywords = if (createRequest.keywords.nonEmpty) {Some(createRequest.keywords)} else None,
                 maybeLogo = createRequest.logo,
                 status = createRequest.status,
                 hasSelfJoinEnabled = createRequest.selfjoin
             ).toString
-            //_ = log.debug("createNewProjectV1 - update query: {}", createNewProjectSparqlString)
+            // _ = log.debug("projectCreateRequestADM - create query: {}", createNewProjectSparqlString)
 
             createProjectResponse <- (storeManager ? SparqlUpdateRequest(createNewProjectSparqlString)).mapTo[SparqlUpdateResponse]
 
@@ -447,7 +480,6 @@ class ProjectsResponderADM extends Responder {
                 description = changeProjectRequest.description,
                 keywords = changeProjectRequest.keywords,
                 logo = changeProjectRequest.logo,
-                institution = changeProjectRequest.institution,
                 status = changeProjectRequest.status,
                 selfjoin = changeProjectRequest.selfjoin
             )
@@ -582,7 +614,6 @@ class ProjectsResponderADM extends Responder {
             projectUpdatePayload.description,
             projectUpdatePayload.keywords,
             projectUpdatePayload.logo,
-            projectUpdatePayload.institution,
             projectUpdatePayload.ontologies,
             projectUpdatePayload.status,
             projectUpdatePayload.selfjoin).flatten.size
@@ -603,16 +634,15 @@ class ProjectsResponderADM extends Responder {
                 projectIri = projectIri,
                 maybeShortname = projectUpdatePayload.shortname,
                 maybeLongname = projectUpdatePayload.longname,
-                maybeDescription = projectUpdatePayload.description,
+                maybeDescriptions = projectUpdatePayload.description,
                 maybeKeywords = projectUpdatePayload.keywords,
                 maybeLogo = projectUpdatePayload.logo,
-                maybeInstitution = projectUpdatePayload.institution,
                 maybeOntologies = projectUpdatePayload.ontologies,
                 maybeStatus = projectUpdatePayload.status,
                 maybeSelfjoin = projectUpdatePayload.selfjoin
             ).toString)
 
-            // _ = log.debug(s"updateProjectADM - query: {}", updateProjectSparqlString)
+             // _ = log.debug(s"updateProjectADM - update query: {}", updateProjectSparqlString)
 
             updateProjectResponse <- (storeManager ? SparqlUpdateRequest(updateProjectSparqlString)).mapTo[SparqlUpdateResponse]
 
@@ -620,7 +650,7 @@ class ProjectsResponderADM extends Responder {
             maybeUpdatedProject <- projectGetADM(maybeIri = Some(projectIri), maybeShortname = None, maybeShortcode = None, requestingUser = KnoraSystemInstances.Users.SystemUser)
             updatedProject: ProjectADM = maybeUpdatedProject.getOrElse(throw UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
 
-            // _ = log.debug("updateProjectADM - projectUpdatePayload: {} /  updatedProject: {}", projectUpdatePayload, updatedProject)
+            _ = log.debug("updateProjectADM - projectUpdatePayload: {} /  updatedProject: {}", projectUpdatePayload, updatedProject)
 
             _ = if (projectUpdatePayload.shortname.isDefined) {
                 if (updatedProject.shortname != projectUpdatePayload.shortname.get) throw UpdateNotPerformedException("Project's 'shortname' was not updated. Please report this as a possible bug.")
@@ -631,19 +661,15 @@ class ProjectsResponderADM extends Responder {
             }
 
             _ = if (projectUpdatePayload.description.isDefined) {
-                if (updatedProject.description != projectUpdatePayload.description) throw UpdateNotPerformedException("Project's 'description' was not updated. Please report this as a possible bug.")
+                if (updatedProject.description.sorted != projectUpdatePayload.description.get.sorted) throw UpdateNotPerformedException("Project's 'description' was not updated. Please report this as a possible bug.")
             }
 
             _ = if (projectUpdatePayload.keywords.isDefined) {
-                if (updatedProject.keywords != projectUpdatePayload.keywords) throw UpdateNotPerformedException("Project's 'keywords' was not updated. Please report this as a possible bug.")
+                if (updatedProject.keywords.sorted != projectUpdatePayload.keywords.get.sorted) throw UpdateNotPerformedException("Project's 'keywords' was not updated. Please report this as a possible bug.")
             }
 
             _ = if (projectUpdatePayload.logo.isDefined) {
                 if (updatedProject.logo != projectUpdatePayload.logo) throw UpdateNotPerformedException("Project's 'logo' was not updated. Please report this as a possible bug.")
-            }
-
-            _ = if (projectUpdatePayload.institution.isDefined) {
-                if (updatedProject.institution != projectUpdatePayload.institution) throw UpdateNotPerformedException("Project's 'institution' was not updated. Please report this as a possible bug.")
             }
 
             _ = if (projectUpdatePayload.ontologies.isDefined) {
@@ -676,11 +702,11 @@ class ProjectsResponderADM extends Responder {
       * @param requestingUser     the user making the request.
       * @return a [[ProjectADM]] representing information about project.
       */
-    private def statements2ProjectADM(statements: (IRI, Map[IRI, Seq[LiteralV2]]), requestingUser: UserADM): ProjectADM = {
+    private def statements2ProjectADM(statements: (SubjectV2, Map[IRI, Seq[LiteralV2]]), requestingUser: UserADM): ProjectADM = {
 
         // log.debug("statements2ProjectADM - statements: {}", statements)
 
-        val projectIri: IRI = statements._1
+        val projectIri: IRI = statements._1.toString
         val propsMap: Map[IRI, Seq[LiteralV2]] = statements._2
 
         val ontologyIris = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, Seq.empty[IRI]).map(_.asInstanceOf[IriLiteralV2].value)
@@ -697,10 +723,9 @@ class ProjectsResponderADM extends Responder {
             shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head.asInstanceOf[StringLiteralV2].value,
             shortcode = propsMap.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head.asInstanceOf[StringLiteralV2].value),
             longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head.asInstanceOf[StringLiteralV2].value),
-            description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head.asInstanceOf[StringLiteralV2].value),
-            keywords = propsMap.get(OntologyConstants.KnoraBase.ProjectKeywords).map(_.head.asInstanceOf[StringLiteralV2].value),
+            description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
+            keywords = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectKeyword, Seq.empty[String]).map(_.asInstanceOf[StringLiteralV2].value).sorted,
             logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head.asInstanceOf[StringLiteralV2].value),
-            institution = propsMap.get(OntologyConstants.KnoraBase.BelongsToInstitution).map(_.head.asInstanceOf[IriLiteralV2].value),
             ontologies = ontologyInfos,
             status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.asInstanceOf[BooleanLiteralV2].value,
             selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).head.asInstanceOf[BooleanLiteralV2].value

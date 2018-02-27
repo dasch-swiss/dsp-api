@@ -1,0 +1,82 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.util.SmartIri
+@import java.time.Instant
+
+@*
+ * Changes the labels or comments of a class.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param ontologyNamedGraphIri the IRI of the named graph where the ontology is stored.
+ * @param ontologyIri the IRI of the ontology to be modified.
+ * @param classIri the IRI of the class to be modified.
+ * @param predicateToUpdate rdfs:label or rdfs:comment.
+ * @param newObjects the class's new labels or comments (a map of language codes to values).
+ * @param lastModificationDate the xsd:dateTimeStamp that was attached to the ontology when it was last modified.
+ * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
+ *@
+@(triplestore: String,
+  ontologyNamedGraphIri: SmartIri,
+  ontologyIri: SmartIri,
+  classIri: SmartIri,
+  predicateToUpdate: SmartIri,
+  newObjects: Map[String, String],
+  lastModificationDate: Instant,
+  currentTime: Instant)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+DELETE {
+    GRAPH ?ontologyNamedGraph {
+        ?ontology knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+        ?class <@predicateToUpdate> ?oldObj .
+    }
+} INSERT {
+    GRAPH ?ontologyNamedGraph {
+        ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+
+        @for((newObjLang, newObjText) <- newObjects) {
+
+            ?class <@predicateToUpdate> """@newObjText"""@@@newObjLang .
+
+        }
+    }
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
+    BIND(IRI("@ontologyIri") AS ?ontology)
+    BIND(IRI("@classIri") AS ?class)
+
+    GRAPH ?ontologyNamedGraph {
+        ?ontology rdf:type owl:Ontology ;
+            knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+
+        ?class <@predicateToUpdate> ?oldObj .
+    }
+}

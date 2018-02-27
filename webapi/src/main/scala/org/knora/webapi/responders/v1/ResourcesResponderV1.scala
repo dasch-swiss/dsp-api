@@ -36,6 +36,7 @@ import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
@@ -580,12 +581,7 @@ class ResourcesResponderV1 extends Responder {
             // Get the resource info (minus ontology-based information) and the user's permissions on it.
             (permissions, resInfoWithoutQueryingOntology: ResourceInfoV1) <- resourceInfoFuture
 
-            // Make a set of the IRIs of ontology entities that we need information about.
-            entityIris: Set[IRI] = groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++
-                groupedPropsByType.groupedLinkProperties.groupedProperties.keySet ++
-                incomingTypes ++ linkedResourceTypes + resInfoWithoutQueryingOntology.restype_id // use Set to eliminate redundancy
-
-            // Ask the ontology responder for information about those entities.
+            // Ask the ontology responder for information about the ontology entities that we need information about.
             entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
                 resourceClassIris = incomingTypes ++ linkedResourceTypes + resInfoWithoutQueryingOntology.restype_id,
                 propertyIris = groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++ groupedPropsByType.groupedLinkProperties.groupedProperties.keySet,
@@ -637,8 +633,8 @@ class ResourcesResponderV1 extends Responder {
 
             // Collect all property IRIs and their cardinalities for the queried resource's type, except the ones that point to LinkValue objects or FileValue objects,
             // which are not relevant in this API operation.
-            propsAndCardinalities: Map[IRI, Cardinality.Value] = resourceTypeEntityInfo.cardinalities.filterNot {
-                case (propertyIri, cardinality) =>
+            propsAndCardinalities: Map[IRI, KnoraCardinalityInfo] = resourceTypeEntityInfo.cardinalities.filterNot {
+                case (propertyIri, _) =>
                     resourceTypeEntityInfo.linkValueProperties(propertyIri) || resourceTypeEntityInfo.fileValueProperties(propertyIri)
             }
 
@@ -664,6 +660,7 @@ class ResourcesResponderV1 extends Responder {
             emptyProps: Set[PropertyV1] = emptyPropsIris.map {
                 propertyIri =>
                     val propertyEntityInfo: PropertyInfoV1 = emptyPropsInfoResponse.propertyInfoMap(propertyIri)
+                    val guiOrder = resourceTypeEntityInfo.cardinalities(propertyIri).guiOrder
 
                     if (propertyEntityInfo.isLinkProp) {
                         // It is a linking prop: its valuetype_id is knora-base:LinkValue.
@@ -673,10 +670,10 @@ class ResourcesResponderV1 extends Responder {
                         PropertyV1(
                             pid = propertyIri,
                             valuetype_id = Some(OntologyConstants.KnoraBase.LinkValue),
-                            guiorder = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt),
+                            guiorder = guiOrder,
                             guielement = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
                             label = propertyEntityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                            occurrence = Some(propsAndCardinalities(propertyIri).toString),
+                            occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
                             attributes = (propertyEntityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))).mkString(";"),
                             value_rights = Nil
                         )
@@ -685,10 +682,10 @@ class ResourcesResponderV1 extends Responder {
                         PropertyV1(
                             pid = propertyIri,
                             valuetype_id = propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint),
-                            guiorder = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt),
+                            guiorder = guiOrder,
                             guielement = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
                             label = propertyEntityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
-                            occurrence = Some(propsAndCardinalities(propertyIri).toString),
+                            occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
                             attributes = propertyEntityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute).mkString(";"),
                             value_rights = Nil
                         )
@@ -1128,9 +1125,10 @@ class ResourcesResponderV1 extends Responder {
 
             searchResponse <- (storeManager ? SparqlSelectRequest(searchResourcesSparql)).mapTo[SparqlSelectResponse]
 
-            resources: Seq[ResourceSearchResultRowV1] = searchResponse.results.bindings.map {
+            resultFutures: Seq[Future[ResourceSearchResultRowV1]] = searchResponse.results.bindings.map {
                 case (row: VariableResultsRow) =>
                     val resourceIri = row.rowMap("resourceIri")
+                    val resourceClass = row.rowMap("resourceClass")
                     val firstProp = row.rowMap("firstProp")
                     val attachedToUser = row.rowMap("attachedToUser")
                     val attachedToProject = row.rowMap("attachedToProject")
@@ -1138,44 +1136,62 @@ class ResourcesResponderV1 extends Responder {
 
                     val permissionCode = PermissionUtilADM.getUserPermissionV1(subjectIri = resourceIri, subjectCreator = attachedToUser, subjectProject = attachedToProject, subjectPermissionLiteral = resourcePermissions, userProfile = userProfile)
 
-                    if (numberOfProps > 1) {
-                        // The client requested more than one property per resource that was found.
+                    for {
+                        resourceClassInfoResponse <- (responderManager ? EntityInfoGetRequestV1(resourceClassIris = Set(resourceClass), userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
 
-                        val valueStrings = row.rowMap("values").split(StringFormatter.INFORMATION_SEPARATOR_ONE)
-                        val guiOrders = row.rowMap("guiOrders").split(";")
-                        val valueOrders = row.rowMap("valueOrders").split(";")
+                        cardinalities: Map[IRI, KnoraCardinalityInfo] = resourceClassInfoResponse.resourceClassInfoMap(resourceClass).cardinalities
 
-                        // create a list of three tuples, sort it by guiOrder and valueOrder and return only string values
-                        val values: Seq[String] = (valueStrings, guiOrders, valueOrders).zipped.toVector.sortBy(row => (row._2.toInt, row._3.toInt)).map(_._1)
+                        searchResultRow: ResourceSearchResultRowV1 = if (numberOfProps > 1) {
+                            // The client requested more than one property per resource that was found.
 
-                        // ?values is given: it is one string to be split by separator
-                        val propValues = values.foldLeft(Vector(firstProp)) {
-                            case (acc, prop: String) =>
-                                if (prop == firstProp || prop == acc.last) {
-                                    // in the SPAQRL results, all values are returned four times because of inclusion of permissions. If already existent, ignore prop.
-                                    acc
-                                } else {
-                                    acc :+ prop // append prop to List
+                            val valueStrings = row.rowMap("values").split(StringFormatter.INFORMATION_SEPARATOR_ONE)
+                            val properties = row.rowMap("properties").split(StringFormatter.INFORMATION_SEPARATOR_ONE)
+                            val valueOrders = row.rowMap("valueOrders").split(StringFormatter.INFORMATION_SEPARATOR_ONE).map(_.toInt)
+
+                            val guiOrders: Array[Int] = properties.map {
+                                propertyIri => cardinalities(propertyIri).guiOrder match {
+                                    case Some(order) => order
+                                    case None => -1
                                 }
+                            }
+
+                            // create a list of three tuples, sort it by guiOrder and valueOrder and return only string values
+                            val values: Seq[String] = (valueStrings, guiOrders, valueOrders).zipped.toVector.sortBy(row => (row._2, row._3)).map(_._1)
+
+                            // ?values is given: it is one string to be split by separator
+                            val propValues = values.foldLeft(Vector(firstProp)) {
+                                case (acc, prop: String) =>
+                                    if (prop == firstProp || prop == acc.last) {
+                                        // in the SPAQRL results, all values are returned four times because of inclusion of permissions. If already existent, ignore prop.
+                                        acc
+                                    } else {
+                                        acc :+ prop // append prop to List
+                                    }
+                            }
+
+                            ResourceSearchResultRowV1(
+                                id = row.rowMap("resourceIri"),
+                                value = propValues.slice(0, numberOfProps), // take only as many elements as were requested by the client.
+                                rights = permissionCode
+
+                            )
+                        } else {
+                            // ?firstProp is sufficient: the client requested just one property per resource that was found
+                            ResourceSearchResultRowV1(
+                                id = row.rowMap("resourceIri"),
+                                value = Vector(firstProp),
+                                rights = permissionCode
+                            )
                         }
 
-                        ResourceSearchResultRowV1(
-                            id = row.rowMap("resourceIri"),
-                            value = propValues.slice(0, numberOfProps), // take only as many elements as were requested by the client.
-                            rights = permissionCode
+                    } yield searchResultRow
 
-                        )
-                    } else {
-                        // ?firstProp is sufficient: the client requested just one property per resource that was found
-                        ResourceSearchResultRowV1(
-                            id = row.rowMap("resourceIri"),
-                            value = Vector(firstProp),
-                            rights = permissionCode
-                        )
-                    }
-            }.filter(_.rights.nonEmpty) // user must have permissions to see resource (must not be None)
+            }
 
-        } yield ResourceSearchResponseV1(resources = resources)
+            resources: Seq[ResourceSearchResultRowV1] <- Future.sequence(resultFutures)
+            filteredResources = resources.filter(_.rights.nonEmpty) // user must have permissions to see resource (must not be None)
+
+        } yield ResourceSearchResponseV1(resources = filteredResources)
     }
 
 
@@ -1498,9 +1514,9 @@ class ResourcesResponderV1 extends Responder {
 
             _ = values.foreach {
                 case (propertyIri, valuesForProperty) =>
-                    val cardinality = resourceClassInfo.cardinalities.getOrElse(propertyIri, throw OntologyConstraintException(s"Resource class $resourceClassIri has no cardinality for property $propertyIri"))
+                    val cardinalityInfo = resourceClassInfo.cardinalities.getOrElse(propertyIri, throw OntologyConstraintException(s"Resource class $resourceClassIri has no cardinality for property $propertyIri"))
 
-                    if ((cardinality == Cardinality.MayHaveOne || cardinality == Cardinality.MustHaveOne) && valuesForProperty.size > 1) {
+                    if ((cardinalityInfo.cardinality == Cardinality.MayHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveOne) && valuesForProperty.size > 1) {
                         throw OntologyConstraintException(s"Resource class $resourceClassIri does not allow more than one value for property $propertyIri")
                     }
             }
@@ -1510,7 +1526,7 @@ class ResourcesResponderV1 extends Responder {
 
             // Check that no required values are missing.
             requiredProps: Set[IRI] = resourceClassInfo.cardinalities.filter {
-                case (propIri, cardinality) => cardinality == Cardinality.MustHaveOne || cardinality == Cardinality.MustHaveSome
+                case (propIri, cardinalityInfo) => cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveSome
             }.keySet -- resourceClassInfo.linkValueProperties -- resourceClassInfo.fileValueProperties // exclude link value and file value properties from checking
 
             submittedPropertyIris = values.keySet
@@ -2135,7 +2151,7 @@ class ResourcesResponderV1 extends Responder {
             groupedPropsByType: GroupedPropertiesByType <- getGroupedProperties(resourceIri)
 
             // TODO: Should we get rid of the tuple and replace it by a case class?
-            (propertyInfoMap: Map[IRI, PropertyInfoV1], resourceEntityInfoMap: Map[IRI, ClassInfoV1], propsAndCardinalities: Map[IRI, Cardinality.Value]) <- maybeResourceTypeIri match {
+            (propertyInfoMap: Map[IRI, PropertyInfoV1], resourceEntityInfoMap: Map[IRI, ClassInfoV1], propsAndCardinalities: Map[IRI, KnoraCardinalityInfo]) <- maybeResourceTypeIri match {
                 case Some(resourceTypeIri) =>
                     val propertyEntityIris: Set[IRI] = groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++ groupedPropsByType.groupedLinkProperties.groupedProperties.keySet
                     val resourceEntityIris: Set[IRI] = Set(resourceTypeIri)
@@ -2148,14 +2164,14 @@ class ResourcesResponderV1 extends Responder {
                         resourceTypeEntityInfo = resourceEntityInfoMap(resourceTypeIri)
 
                         // all properties and their cardinalities for the queried resource's type, except the ones that point to LinkValue objects
-                        propsAndCardinalities: Map[IRI, Cardinality.Value] = resourceTypeEntityInfo.cardinalities.filterNot {
-                            case (propertyIri, cardinality) =>
+                        propsAndCardinalities: Map[IRI, KnoraCardinalityInfo] = resourceTypeEntityInfo.cardinalities.filterNot {
+                            case (propertyIri, _) =>
                                 resourceTypeEntityInfo.linkValueProperties(propertyIri)
                         }
                     } yield (propertyInfoMap, resourceEntityInfoMap, propsAndCardinalities)
 
                 case None =>
-                    Future((Map.empty[IRI, PropertyInfoV1], Map.empty[IRI, ClassInfoV1], Map.empty[IRI, Cardinality.Value]))
+                    Future((Map.empty[IRI, PropertyInfoV1], Map.empty[IRI, ClassInfoV1], Map.empty[IRI, KnoraCardinalityInfo]))
             }
 
             queryResult <- queryResults2PropertyV1s(
@@ -2337,7 +2353,7 @@ class ResourcesResponderV1 extends Responder {
                                          groupedPropertiesByType: GroupedPropertiesByType,
                                          propertyInfoMap: Map[IRI, PropertyInfoV1],
                                          resourceEntityInfoMap: Map[IRI, ClassInfoV1],
-                                         propsAndCardinalities: Map[IRI, Cardinality.Value],
+                                         propsAndCardinalities: Map[IRI, KnoraCardinalityInfo],
                                          userProfile: UserProfileV1): Future[Seq[PropertyV1]] = {
         /**
           * Constructs a [[PropertyV1]].
@@ -2348,7 +2364,7 @@ class ResourcesResponderV1 extends Responder {
           * @param valueObjects        a list of [[ValueObjectV1]] instances representing the `knora-base:Value` objects associated with the property in the queried resource.
           * @return a [[PropertyV1]].
           */
-        def makePropertyV1(propertyIri: IRI, propertyCardinality: Option[Cardinality.Value], propertyEntityInfo: Option[PropertyInfoV1], valueObjects: Seq[ValueObjectV1]): PropertyV1 = {
+        def makePropertyV1(propertyIri: IRI, propertyCardinality: Option[KnoraCardinalityInfo], propertyEntityInfo: Option[PropertyInfoV1], valueObjects: Seq[ValueObjectV1]): PropertyV1 = {
             PropertyV1(
                 pid = propertyIri,
                 valuetype_id = propertyEntityInfo.flatMap {
@@ -2360,10 +2376,10 @@ class ResourcesResponderV1 extends Responder {
                             row.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
                         }
                 },
-                guiorder = propertyEntityInfo.flatMap(_.getPredicateObject(OntologyConstants.SalsahGui.GuiOrder).map(_.toInt)),
+                guiorder = propertyCardinality.flatMap(_.guiOrder),
                 guielement = propertyEntityInfo.flatMap(_.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri))),
                 label = propertyEntityInfo.flatMap(_.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage))),
-                occurrence = propertyCardinality.map(_.toString),
+                occurrence = propertyCardinality.map(_.cardinality.toString),
                 attributes = propertyEntityInfo match {
                     case Some(entityInfo) =>
                         if (entityInfo.isLinkProp) {

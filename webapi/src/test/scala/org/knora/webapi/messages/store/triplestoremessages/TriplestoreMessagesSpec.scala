@@ -31,7 +31,7 @@ class TriplestoreMessagesSpec extends WordSpecLike with Matchers with ListADMJso
 
     "Conversion from case class to JSON and back" should {
 
-        "work for a 'StringV2' without language tag" in {
+        "work for a 'StringLiteralV2' without language tag" in {
 
             val string = StringLiteralV2("stringwithoutlang", None)
             val json = string.toJson.compactPrint
@@ -44,7 +44,7 @@ class TriplestoreMessagesSpec extends WordSpecLike with Matchers with ListADMJso
         }
 
 
-        "work for a 'StringV2' with language tag" in {
+        "work for a 'StringLiteralV2' with language tag" in {
 
             val string = StringLiteralV2("stringwithlang", Some("de"))
             val json = string.toJson.compactPrint

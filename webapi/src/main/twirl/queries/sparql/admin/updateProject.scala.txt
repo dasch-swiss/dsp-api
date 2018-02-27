@@ -19,6 +19,7 @@
  *@
 
 @import org.knora.webapi.IRI
+@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 @**
  * Updates an existing project with the provided values.
@@ -32,7 +33,6 @@
  * @param maybeDescription   the new optional value for description.
  * @param maybeKeywords      the new optional value for keywords.
  * @param maybeLogo          the new optional value for logo.
- * @param maybeInstitution   the new optional value for institution.
  * @param maybeOntologies    the new optional value for ontologies.
  * @param maybeStatus        the new optional value for status.
  * @param maybeSelfjoin      the new optional value for selfjoin.
@@ -42,10 +42,9 @@
   projectIri: IRI,
   maybeShortname: Option[String],
   maybeLongname: Option[String],
-  maybeDescription: Option[String],
-  maybeKeywords: Option[String],
+  maybeDescriptions: Option[Seq[StringLiteralV2]],
+  maybeKeywords: Option[Seq[String]],
   maybeLogo: Option[String],
-  maybeInstitution: Option[IRI],
   maybeOntologies: Option[Seq[IRI]],
   maybeStatus: Option[Boolean],
   maybeSelfjoin: Option[Boolean])
@@ -68,20 +67,16 @@ DELETE {
         ?project knora-base:projectLongname ?currentLongname .
     }
 
-    @if(maybeDescription.nonEmpty) {
+    @if(maybeDescriptions.nonEmpty) {
         ?project knora-base:projectDescription ?currentDescription .
     }
 
     @if(maybeKeywords.nonEmpty) {
-        ?project knora-base:projectKeywords ?currentKeywords .
+        ?project knora-base:projectKeyword ?currentKeywords .
     }
 
     @if(maybeLogo.nonEmpty) {
         ?project knora-base:projectLogo ?currentLogo .
-    }
-
-    @if(maybeInstitution.nonEmpty) {
-        ?project knora-base:belongsToInstitution ?currentInstitution .
     }
 
     @if(maybeOntologies.nonEmpty) {
@@ -110,20 +105,24 @@ DELETE {
         ?project knora-base:projectLongname """@maybeLongname.get"""^^xsd:string .
     }
 
-    @if(maybeDescription.nonEmpty) {
-        ?project knora-base:projectDescription """@maybeDescription.get"""^^xsd:string .
+    @if(maybeDescriptions.nonEmpty) {
+        @for(description <- maybeDescriptions.get) {
+            @if(description.language.nonEmpty) {
+                ?project knora-base:projectDescription """@description.value"""@@@{description.language.get} .
+            } else {
+                ?project knora-base:projectDescription """@description.value"""^^xsd:string .
+            }
+        }
     }
 
     @if(maybeKeywords.nonEmpty) {
-        ?project knora-base:projectKeywords "@maybeKeywords.get"^^xsd:string .
+        @for(keyword <- maybeKeywords.get) {
+          ?project knora-base:projectKeyword "@keyword"^^xsd:string .
+        }
     }
 
     @if(maybeLogo.nonEmpty) {
         ?project knora-base:projectLogo "@maybeLogo.get"^^xsd:string .
-    }
-
-    @if(maybeInstitution.nonEmpty) {
-        ?project knora-base:belongsToInstitution <@maybeInstitution.get> .
     }
 
     @if(maybeOntologies.nonEmpty) {
@@ -168,11 +167,9 @@ WHERE {
 
     optional {?project knora-base:projectDescription ?currentDescription .}
 
-    optional {?project knora-base:projectKeywords ?currentKeywords .}
+    optional {?project knora-base:projectKeyword ?currentKeywords .}
 
     optional {?project knora-base:projectLogo ?currentLogo .}
-
-    optional {?project knora-base:belongsToInstitution ?currentInstitution .}
 
     optional {?project knora-base:projectOntology ?currentOntologies .}
 
