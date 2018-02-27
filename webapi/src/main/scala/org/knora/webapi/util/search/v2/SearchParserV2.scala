@@ -46,6 +46,10 @@ object SearchParserV2 {
     private val sparqlParserFactory = new SPARQLParserFactory()
     private val sparqlParser = sparqlParserFactory.getParser
 
+    object supportedFunctions {
+        val contains: IRI = OntologyConstants.XPathFunctions.Contains
+    }
+
     /**
       * Given a string representation of a simple SPARQL CONSTRUCT query, returns a [[ConstructQuery]].
       *
@@ -67,8 +71,10 @@ object SearchParserV2 {
 
     /**
       * An RDF4J [[algebra.QueryModelVisitor]] that converts a [[ParsedQuery]] into a [[ConstructQuery]].
+      *
+      * @param isInNegation Indicates if the element currently processed is in a context of negation (FILTER NOT EXISTS or MINUS).
       */
-    class ConstructQueryModelVisitor extends algebra.QueryModelVisitor[SparqlSearchException] {
+    class ConstructQueryModelVisitor(isInNegation: Boolean = false) extends algebra.QueryModelVisitor[SparqlSearchException] {
         private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Represents a statement pattern in the CONSTRUCT clause. Each string could be a variable name or a parser-generated
@@ -89,6 +95,9 @@ object SearchParserV2 {
 
         // The OFFSET specified in the input query.
         private var offset: Long = 0
+
+        // Entities mentioned positively (i.e. not only in a FILTER NOT EXISTS or MINUS) in the WHERE clause.
+        private val positiveEntities: collection.mutable.Set[Entity] = collection.mutable.Set.empty[Entity]
 
         /**
           * After this visitor has visited the parse tree, this method returns a [[ConstructQuery]] representing
@@ -135,7 +144,7 @@ object SearchParserV2 {
 
             ConstructQuery(
                 constructClause = ConstructClause(statements = constructStatements),
-                whereClause = WhereClause(patterns = getWherePatterns),
+                whereClause = WhereClause(patterns = getWherePatterns, positiveEntities = positiveEntities.toSet),
                 orderBy = orderBy,
                 offset = offset
             )
@@ -166,7 +175,7 @@ object SearchParserV2 {
         }
 
         private def makeIri(rdf4jIri: rdf4j.model.IRI): IriRef = {
-            val smartIri: SmartIri = rdf4jIri.stringValue.toSmartIriWithErr(() => throw SparqlSearchException(s"Invalid IRI: ${rdf4jIri.stringValue}"))
+            val smartIri: SmartIri = rdf4jIri.stringValue.toSmartIriWithErr(throw SparqlSearchException(s"Invalid IRI: ${rdf4jIri.stringValue}"))
             checkIriSchema(smartIri)
             IriRef(smartIri)
         }
@@ -192,12 +201,12 @@ object SearchParserV2 {
           * @return a [[Entity]].
           */
         private def makeEntity(objVar: algebra.Var): Entity = {
-            if (objVar.isAnonymous || objVar.isConstant) {
+            val entity: Entity = if (objVar.isAnonymous || objVar.isConstant) {
                 objVar.getValue match {
                     case iri: rdf4j.model.IRI => makeIri(iri)
 
                     case literal: rdf4j.model.Literal =>
-                        val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(() => throw SparqlSearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
+                        val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(throw SparqlSearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
                         checkIriSchema(datatype)
                         XsdLiteral(value = literal.stringValue, datatype = datatype)
 
@@ -206,6 +215,24 @@ object SearchParserV2 {
             } else {
                 QueryVariable(objVar.getName)
             }
+
+            // only add entity to positiveEntities if it is not in a negative context (FILTER NOT EXISTS, MINUS)
+            if (!isInNegation) {
+
+                // only add entity to positive entities if it is an Iri or a query variable
+                // ignore literals
+                entity match {
+                    case iri: IriRef =>
+                        positiveEntities += iri
+
+                    case queryVar: QueryVariable =>
+                        positiveEntities += queryVar
+
+                    case _ =>
+                }
+            }
+
+            entity
         }
 
         override def meet(node: algebra.StatementPattern): Unit = {
@@ -251,8 +278,9 @@ object SearchParserV2 {
                 case _: algebra.Union => throw SparqlSearchException("Nested UNIONs are not allowed in search queries")
 
                 case otherLeftArg =>
-                    val leftArgVisitor = new ConstructQueryModelVisitor
+                    val leftArgVisitor = new ConstructQueryModelVisitor(isInNegation = isInNegation)
                     otherLeftArg.visit(leftArgVisitor)
+                    positiveEntities ++= leftArgVisitor.positiveEntities
                     checkBlockPatterns(leftArgVisitor.getWherePatterns)
             }
 
@@ -261,8 +289,9 @@ object SearchParserV2 {
                 case rightArgUnion: algebra.Union =>
                     // If the right arg is also a UNION, recursively get its blocks. This represents a sequence of
                     // UNIONs rather than a nested UNION.
-                    val rightArgVisitor = new ConstructQueryModelVisitor
+                    val rightArgVisitor = new ConstructQueryModelVisitor(isInNegation = isInNegation)
                     rightArgUnion.visit(rightArgVisitor)
+                    positiveEntities ++= rightArgVisitor.positiveEntities
                     val rightWherePatterns = rightArgVisitor.getWherePatterns
 
                     if (rightWherePatterns.size > 1) {
@@ -275,8 +304,9 @@ object SearchParserV2 {
                     }
 
                 case otherRightArg =>
-                    val rightArgVisitor = new ConstructQueryModelVisitor
+                    val rightArgVisitor = new ConstructQueryModelVisitor(isInNegation = isInNegation)
                     otherRightArg.visit(rightArgVisitor)
+                    positiveEntities ++= rightArgVisitor.positiveEntities
                     Seq(checkBlockPatterns(rightArgVisitor.getWherePatterns))
             }
 
@@ -472,7 +502,7 @@ object SearchParserV2 {
             node.getLeftArg.visit(this)
 
             // Get the patterns inside the MINUS.
-            val subQueryVisitor = new ConstructQueryModelVisitor
+            val subQueryVisitor = new ConstructQueryModelVisitor(isInNegation = true)
             node.getRightArg.visit(subQueryVisitor)
             wherePatterns.append(MinusPattern(subQueryVisitor.getWherePatterns))
         }
@@ -557,7 +587,7 @@ object SearchParserV2 {
             def makeFilterNotExists(not: algebra.Not): FilterNotExistsPattern = {
                 not.getArg match {
                     case exists: algebra.Exists =>
-                        val subQueryVisitor = new ConstructQueryModelVisitor
+                        val subQueryVisitor = new ConstructQueryModelVisitor(isInNegation = true)
                         exists.getSubQuery.visit(subQueryVisitor)
                         FilterNotExistsPattern(subQueryVisitor.getWherePatterns)
 
@@ -574,7 +604,7 @@ object SearchParserV2 {
 
                         CompareExpression(
                             leftArg = leftArg,
-                            operator = CompareExpressionOperator.lookup(operator, () => throw SparqlSearchException(s"Operator $operator is not supported in a CompareExpression")),
+                            operator = CompareExpressionOperator.lookup(operator, throw SparqlSearchException(s"Operator $operator is not supported in a CompareExpression")),
                             rightArg = rightArg
                         )
 
@@ -601,7 +631,7 @@ object SearchParserV2 {
                             case iri: rdf4j.model.IRI => makeIri(iri)
 
                             case literal: rdf4j.model.Literal =>
-                                val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(() => throw SparqlSearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
+                                val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(throw SparqlSearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
                                 checkIriSchema(datatype)
                                 XsdLiteral(value = literal.stringValue, datatype = datatype)
                             case other => throw SparqlSearchException(s"Unsupported ValueConstant: $other with class ${other.getClass.getName}")
@@ -609,7 +639,88 @@ object SearchParserV2 {
 
                     case sparqlVar: algebra.Var => makeEntity(sparqlVar)
 
-                    case other => throw SparqlSearchException(s"Unsupported FILTER expression: $other")
+                    case regex: algebra.Regex =>
+
+                        // first argument representing the text value to be checked
+                        val textValueArg: algebra.ValueExpr = regex.getArg
+
+                        val textValueVar = textValueArg match {
+                            case objVar: algebra.Var =>
+                                makeEntity(objVar) match {
+                                    case queryVar: QueryVariable => queryVar
+                                    case _ => throw SparqlSearchException(s"Entity $objVar not allowed in regex function as the first argument, a variable is required")
+                                }
+                            case other => throw SparqlSearchException(s"$other is not allowed in regex function as first argument, a variable is required")
+                        }
+
+                        // second argument representing the REGEX pattern to be used to perform the check
+                        val patternArg: algebra.ValueExpr = regex.getPatternArg
+
+                        val pattern: String = patternArg match {
+                            case valConstant: algebra.ValueConstant =>
+                                valConstant.getValue.stringValue()
+                            case other => throw SparqlSearchException(s"$other not allowed in regex function as the second argument, a string is expected")
+
+                        }
+
+                        // third argument representing the modifier to be used with when applying the REGEX pattern
+                        val modifierArg: algebra.ValueExpr = regex.getFlagsArg
+
+                        val modifier: String = modifierArg match {
+                            case valConstant: algebra.ValueConstant =>
+                                valConstant.getValue.stringValue()
+                            case other => throw SparqlSearchException(s"$other not allowed in regex function as the third argument, a string is expected")
+
+                        }
+
+                        RegexFunction(
+                            textValueVar = textValueVar,
+                            pattern = pattern,
+                            modifier = modifier
+                        )
+
+                    case functionCall: algebra.FunctionCall =>
+
+                        val functionUri: IRI = functionCall.getURI
+
+                        val args = functionCall.getArgs
+
+                        functionUri match {
+
+                            case SearchParserV2.supportedFunctions.contains =>
+
+                                // check that there are two arguments:
+
+                                if (args.size() != 2) throw SparqlSearchException(s"Wrong number of args given for $functionUri")
+
+                                // 1. arg: query variable
+                                val textValVar: QueryVariable = args.get(0) match {
+                                    case objVar: algebra.Var =>
+                                        makeEntity(objVar) match {
+                                            case queryVar: QueryVariable => queryVar
+                                            case _ => throw SparqlSearchException(s"Entity $objVar not allowed in match function as the first argument, a variable is required")
+                                        }
+                                    case other => throw SparqlSearchException(s"$other is not allowed in match function as first argument, a variable is required")
+                                }
+
+                                // 2. arg: string
+                                val searchTerm: String = args.get(1) match {
+                                    case valConstant: algebra.ValueConstant =>
+                                        valConstant.getValue.stringValue()
+                                    case other => throw SparqlSearchException(s"$other not allowed in match function as the second argument, a string is expected")
+
+                                }
+
+                                MatchFunction(
+                                    textValueVar = textValVar,
+                                    searchTerm = searchTerm
+                                )
+
+                            case other => throw SparqlSearchException(s"Unsupported function in FILTER expression: $other")
+
+                        }
+
+                    case other => throw SparqlSearchException(s"Unsupported FILTER expression: ${other.getClass}")
                 }
             }
 
@@ -693,8 +804,9 @@ object SearchParserV2 {
             node.getLeftArg.visit(this)
 
             // Visit the nodes that are in the OPTIONAL.
-            val rightArgVisitor = new ConstructQueryModelVisitor
+            val rightArgVisitor = new ConstructQueryModelVisitor(isInNegation = isInNegation)
             node.getRightArg.visit(rightArgVisitor)
+            positiveEntities ++= rightArgVisitor.positiveEntities
             wherePatterns.append(OptionalPattern(checkBlockPatterns(rightArgVisitor.getWherePatterns)))
         }
 

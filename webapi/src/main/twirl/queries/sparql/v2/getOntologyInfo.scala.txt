@@ -18,7 +18,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
-@import org.knora.webapi.IRI
+@import org.knora.webapi.util.SmartIri
 
 @*
  * Gets the predicates and objects of an ontology IRI.
@@ -27,7 +27,7 @@
  * @param ontologyIri the IRI of the ontology.
  *@
 @(triplestore: String,
-  ontologyIri: IRI)
+  ontologyIri: SmartIri)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -35,9 +35,16 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?ontologyPred ?ontologyObj
+CONSTRUCT {
+    ?ontology ?ontologyPred ?ontologyObj .
+}
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
 WHERE {
     BIND(IRI("@ontologyIri") AS ?ontology)
 
-    ?ontology ?ontologyPred ?ontologyObj .
+    ?ontology rdf:type owl:Ontology ;
+        ?ontologyPred ?ontologyObj .
 }

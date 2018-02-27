@@ -32,14 +32,19 @@ import akka.http.scaladsl.{ConnectionContext, Http}
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
+import kamon.Kamon
+import kamon.jaeger.Jaeger
+import kamon.prometheus.PrometheusReporter
+import kamon.zipkin.ZipkinReporter
+import org.knora.webapi.app.{ApplicationStateActor, _}
 import org.knora.webapi.http.CORSSupport.CORS
+import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
-import org.knora.webapi.messages.v1.responder.permissionmessages.PermissionDataV1
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders._
-import org.knora.webapi.routing.admin.ListsAdminRoute
+import org.knora.webapi.routing.RejectingRoute
+import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
 import org.knora.webapi.store._
@@ -49,7 +54,6 @@ import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
-
 /**
   * Knora Core abstraction.
   */
@@ -93,14 +97,19 @@ trait KnoraService {
     StringFormatter.init(settings)
 
     /**
+      * The actor used for storing the application application wide variables in a thread safe maner.
+      */
+    protected val applicationStateActor = system.actorOf(Props(new ApplicationStateActor), name = APPLICATION_STATE_ACTOR_NAME)
+
+    /**
       * The supervisor actor that forwards messages to responder actors to handle API requests.
       */
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    protected val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     /**
       * The supervisor actor that forwards messages to actors that deal with persistent storage.
       */
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+    protected val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
@@ -110,17 +119,14 @@ trait KnoraService {
     /**
       * A user representing the Knora API server, used for initialisation on startup.
       */
-    private val systemUser = UserProfileV1(
-        userData = UserDataV1(lang = "en"),
-        isSystemUser = true,
-        permissionData = PermissionDataV1(anonymousUser = false)
-    )
+    private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
 
     /**
       * All routes composed together and CORS activated.
       */
     private val apiRoutes: Route = CORS(
-        ResourcesRouteV1.knoraApiPath(system, settings, log) ~
+        RejectingRoute.knoraApiPath(system, settings, log) ~
+            ResourcesRouteV1.knoraApiPath(system, settings, log) ~
             ValuesRouteV1.knoraApiPath(system, settings, log) ~
             SipiRouteV1.knoraApiPath(system, settings, log) ~
             StandoffRouteV1.knoraApiPath(system, settings, log) ~
@@ -130,16 +136,19 @@ trait KnoraService {
             AuthenticationRouteV1.knoraApiPath(system, settings, log) ~
             AssetsRouteV1.knoraApiPath(system, settings, log) ~
             CkanRouteV1.knoraApiPath(system, settings, log) ~
-            StoreRouteV1.knoraApiPath(system, settings, log) ~
             UsersRouteV1.knoraApiPath(system, settings, log) ~
             ProjectsRouteV1.knoraApiPath(system, settings, log) ~
-            GroupsRouteV1.knoraApiPath(system, settings, log) ~
-            PermissionsRouteV1.knoraApiPath(system, settings, log) ~
             OntologiesRouteV2.knoraApiPath(system, settings, log) ~
             SearchRouteV2.knoraApiPath(system, settings, log) ~
             ResourcesRouteV2.knoraApiPath(system, settings, log) ~
-            ListsAdminRoute.knoraApiPath(system, settings, log) ~
-            AuthenticationRouteV2.knoraApiPath(system, settings, log),
+            AuthenticationRouteV2.knoraApiPath(system, settings, log) ~
+            GroupsRouteADM.knoraApiPath(system, settings, log) ~
+            ListsRouteADM.knoraApiPath(system, settings, log) ~
+            OntologiesRouteADM.knoraApiPath(system, settings, log) ~
+            PermissionsRouteADM.knoraApiPath(system, settings, log) ~
+            ProjectsRouteADM.knoraApiPath(system, settings, log) ~
+            StoreRouteADM.knoraApiPath(system, settings, log) ~
+            UsersRouteADM.knoraApiPath(system, settings, log),
         settings,
         log
     )
@@ -148,6 +157,10 @@ trait KnoraService {
       * Sends messages to all supervisor actors in a blocking manner, checking if they are all ready.
       */
     def checkActorSystem(): Unit = {
+
+        val applicationStateActorResult = Await.result(applicationStateActor ? Initialized(), 5.seconds).asInstanceOf[InitializedResponse]
+        log.info(s"ApplicationStateActor ready: $applicationStateActorResult")
+
         // TODO: Check if ResponderManager is ready
         log.info(s"ResponderManager ready: - ")
 
@@ -169,7 +182,10 @@ trait KnoraService {
 
         CacheUtil.createCaches(settings.caches)
 
-        if (StartupFlags.loadDemoData.get) {
+        // get loadDemoData value from application state actor
+        val loadDemoData = Await.result(applicationStateActor ? GetLoadDemoDataState(), 1.second).asInstanceOf[Boolean]
+
+        if (loadDemoData) {
             println("Start loading of demo data ...")
             val configList = settings.tripleStoreConfig.getConfigList("rdf-data")
             val rdfDataObjectList = configList.asScala.map {
@@ -185,9 +201,32 @@ trait KnoraService {
         val ontologyCacheFuture = responderManager ? LoadOntologiesRequestV2(systemUser)
         Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[SuccessResponseV2]
 
-        if (StartupFlags.allowReloadOverHTTP.get) {
+        // get allowReloadOverHTTP value from application state actor
+        val allowReloadOverHTTP = Await.result(applicationStateActor ? GetAllowReloadOverHTTPState(), 1.second).asInstanceOf[Boolean]
+
+        if (allowReloadOverHTTP) {
             println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")
         }
+
+        // start the different reporters. reporters are the connection points between kamon (the collector) and
+        // the application which we will use to look at the collected data.
+
+        val prometheusReporter = Await.result(applicationStateActor ? GetPrometheusReporterState(), 1.second).asInstanceOf[Boolean]
+        if (prometheusReporter) {
+            Kamon.addReporter(new PrometheusReporter()) // metrics
+        }
+
+        val zipkinReporter = Await.result(applicationStateActor ? GetZipkinReporterState(), 1.second).asInstanceOf[Boolean]
+        if (zipkinReporter) {
+            Kamon.addReporter(new ZipkinReporter()) // tracing
+        }
+
+        val jaegerReporter = Await.result(applicationStateActor ? GetJaegerReporterState(), 1.second).asInstanceOf[Boolean]
+        if (zipkinReporter) {
+            Kamon.addReporter(new Jaeger()) // tracing
+        }
+
+
 
         // Either HTTP or HTTPs, or both, must be enabled.
         if (!(settings.knoraApiUseHttp || settings.knoraApiUseHttps)) {

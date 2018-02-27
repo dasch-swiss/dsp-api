@@ -27,27 +27,28 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi._
 
 import scala.concurrent.ExecutionContextExecutor
 
 /**
-  * Provides a spray-routing function for API routes that deal with search.
+  * Provides a routing function for API v2 routes that deal with ontologies.
   */
 object OntologiesRouteV2 extends Authenticator {
-    val ALL_LANGUAGES = "allLanguages"
+    private val ALL_LANGUAGES = "allLanguages"
+    private val LAST_MODIFICATION_DATE = "lastModificationDate"
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
         implicit val timeout: Timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        val responderManager = system.actorSelection("/user/responderManager")
 
         path("ontology" / Segments) { (_: List[String]) =>
             get {
@@ -69,9 +70,7 @@ object OntologiesRouteV2 extends Authenticator {
                         throw BadRequestException(s"Invalid or unknown URL path for external ontology: $urlPath")
                     }
 
-                    val requestedOntology = requestedOntologyStr.toSmartIriWithErr(() => throw BadRequestException(s"Invalid ontology IRI: $requestedOntologyStr"))
-                    val ontologyForResponder: SmartIri = stringFormatter.requestedOntologyToOntologyForResponder(requestedOntology)
-                    val ontologiesForResponder: Set[SmartIri] = Set(ontologyForResponder)
+                    val requestedOntology = requestedOntologyStr.toSmartIriWithErr(throw BadRequestException(s"Invalid ontology IRI: $requestedOntologyStr"))
 
                     val responseSchema = requestedOntology.getOntologySchema match {
                         case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
@@ -80,10 +79,10 @@ object OntologiesRouteV2 extends Authenticator {
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
-                    val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
+                    val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = OntologyEntitiesGetRequestV2(
-                        ontologyGraphIris = ontologiesForResponder,
+                        ontologyGraphIris = Set(requestedOntology),
                         responseSchema = responseSchema,
                         allLanguages = allLanguages,
                         userProfile = userProfile
@@ -114,12 +113,34 @@ object OntologiesRouteV2 extends Authenticator {
                         log
                     )
                 }
+            } ~ put {
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessage: ChangeOntologyMetadataRequestV2 = ChangeOntologyMetadataRequestV2.fromJsonLD(
+                            jsonLDDocument = requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            userProfile = userProfile
+                        )
+
+                        RouteUtilV2.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            responseSchema = ApiV2WithValueObjects
+                        )
+                    }
+                }
             }
         } ~ path("v2" / "ontologies" / "metadata" / Segments) { (projectIris: List[IRI]) =>
             get {
                 requestContext => {
                     val userProfile = getUserProfileV1(requestContext)
-                    val validatedProjectIris = projectIris.map(iri => stringFormatter.validateAndEscapeIri(iri, () => throw BadRequestException("Invalid project IRI: $iri"))).toSet
+                    val validatedProjectIris = projectIris.map(iri => iri.toSmartIriWithErr(throw BadRequestException(s"Invalid project IRI: $iri"))).toSet
                     val requestMessage = OntologyMetadataGetRequestV2(projectIris = validatedProjectIris, userProfile = userProfile)
 
                     RouteUtilV2.runJsonRoute(
@@ -138,15 +159,14 @@ object OntologiesRouteV2 extends Authenticator {
 
                     val ontologiesAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalOntologyIris.map {
                         (namedGraphStr: IRI) =>
-                            val requestedOntologyIri: SmartIri = namedGraphStr.toSmartIriWithErr(() => throw BadRequestException(s"Invalid ontology IRI: $namedGraphStr"))
+                            val requestedOntologyIri: SmartIri = namedGraphStr.toSmartIriWithErr(throw BadRequestException(s"Invalid ontology IRI: $namedGraphStr"))
 
                             val schema = requestedOntologyIri.getOntologySchema match {
                                 case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
                                 case _ => throw BadRequestException(s"Invalid ontology IRI: $namedGraphStr")
                             }
 
-                            val ontologyForResponder = stringFormatter.requestedOntologyToOntologyForResponder(requestedOntologyIri)
-                            (ontologyForResponder, schema)
+                            (requestedOntologyIri, schema)
                     }.toSet
 
                     val (ontologiesForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = ontologiesAndSchemas.unzip
@@ -161,7 +181,7 @@ object OntologiesRouteV2 extends Authenticator {
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
-                    val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
+                    val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = OntologyEntitiesGetRequestV2(
                         ontologyGraphIris = ontologiesForResponder,
@@ -180,6 +200,102 @@ object OntologiesRouteV2 extends Authenticator {
                     )
                 }
             }
+        } ~ path("v2" / "ontologies" / "classes") {
+            post {
+                // Create a new class.
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessage: CreateClassRequestV2 = CreateClassRequestV2.fromJsonLD(
+                            jsonLDDocument = requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            userProfile = userProfile
+                        )
+
+                        RouteUtilV2.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            responseSchema = ApiV2WithValueObjects
+                        )
+                    }
+                }
+            } ~ put {
+                // Change the labels or comments of a class.
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessage: ChangeClassLabelsOrCommentsRequestV2 = ChangeClassLabelsOrCommentsRequestV2.fromJsonLD(
+                            jsonLDDocument = requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            userProfile = userProfile
+                        )
+
+                        RouteUtilV2.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            responseSchema = ApiV2WithValueObjects
+                        )
+                    }
+                }
+            }
+        } ~ path("v2" / "ontologies" / "cardinalities") {
+            post {
+                // Add cardinalities to a class.
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessage: AddCardinalitiesToClassRequestV2 = AddCardinalitiesToClassRequestV2.fromJsonLD(
+                            jsonLDDocument = requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            userProfile = userProfile
+                        )
+
+                        RouteUtilV2.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            responseSchema = ApiV2WithValueObjects
+                        )
+                    }
+                }
+            } ~ put {
+                // Change a class's cardinalities.
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessage: ChangeCardinalitiesRequestV2 = ChangeCardinalitiesRequestV2.fromJsonLD(
+                            jsonLDDocument = requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            userProfile = userProfile
+                        )
+
+                        RouteUtilV2.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            responseSchema = ApiV2WithValueObjects
+                        )
+                    }
+                }
+            }
         } ~ path("v2" / "ontologies" / "classes" / Segments) { (externalResourceClassIris: List[IRI]) =>
             get {
                 requestContext => {
@@ -187,16 +303,14 @@ object OntologiesRouteV2 extends Authenticator {
 
                     val classesAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalResourceClassIris.map {
                         (classIriStr: IRI) =>
-                            val requestedClassIri: SmartIri = classIriStr.toSmartIriWithErr(() => throw BadRequestException(s"Invalid class IRI: $classIriStr"))
+                            val requestedClassIri: SmartIri = classIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid class IRI: $classIriStr"))
 
                             val schema = requestedClassIri.getOntologySchema match {
                                 case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
                                 case _ => throw BadRequestException(s"Invalid class IRI: $classIriStr")
                             }
 
-                            val classForResponder = stringFormatter.requestedEntityToEntityForResponder(requestedClassIri)
-
-                            (classForResponder, schema)
+                            (requestedClassIri, schema)
                     }.toSet
 
                     val (classesForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = classesAndSchemas.unzip
@@ -211,11 +325,10 @@ object OntologiesRouteV2 extends Authenticator {
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
-                    val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
+                    val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = ClassesGetRequestV2(
                         resourceClassIris = classesForResponder,
-                        responseSchema = responseSchema,
                         allLanguages = allLanguages,
                         userProfile = userProfile
                     )
@@ -229,6 +342,88 @@ object OntologiesRouteV2 extends Authenticator {
                         responseSchema
                     )
                 }
+            } ~ delete {
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val classIriStr = externalResourceClassIris match {
+                        case List(str) => str
+                        case _ => throw BadRequestException(s"Only one class can be deleted at a time")
+                    }
+
+                    val classIri = classIriStr.toSmartIri
+
+                    if (!classIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+                        throw BadRequestException(s"Invalid class IRI for request: $classIriStr")
+                    }
+
+                    val lastModificationDateStr = requestContext.request.uri.query().toMap.getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
+                    val lastModificationDate = stringFormatter.toInstant(lastModificationDateStr, throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
+
+                    val requestMessage = DeleteClassRequestV2(
+                        classIri = classIri,
+                        lastModificationDate = lastModificationDate,
+                        apiRequestID = UUID.randomUUID,
+                        userProfile = userProfile
+                    )
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log,
+                        responseSchema = ApiV2WithValueObjects
+                    )
+                }
+            }
+        } ~ path("v2" / "ontologies" / "properties") {
+            post {
+                // Create a new property.
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessage: CreatePropertyRequestV2 = CreatePropertyRequestV2.fromJsonLD(
+                            jsonLDDocument = requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            userProfile = userProfile
+                        )
+
+                        RouteUtilV2.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            responseSchema = ApiV2WithValueObjects
+                        )
+                    }
+                }
+            } ~ put {
+                // Change the labels or comments of a property.
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val userProfile = getUserProfileV1(requestContext)
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessage: ChangePropertyLabelsOrCommentsRequestV2 = ChangePropertyLabelsOrCommentsRequestV2.fromJsonLD(
+                            jsonLDDocument = requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            userProfile = userProfile
+                        )
+
+                        RouteUtilV2.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            responseSchema = ApiV2WithValueObjects
+                        )
+                    }
+                }
             }
         } ~ path("v2" / "ontologies" / "properties" / Segments) { (externalPropertyIris: List[IRI]) =>
             get {
@@ -237,15 +432,14 @@ object OntologiesRouteV2 extends Authenticator {
 
                     val propsAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalPropertyIris.map {
                         (propIriStr: IRI) =>
-                            val requestedPropIri: SmartIri = propIriStr.toSmartIriWithErr(() => throw BadRequestException(s"Invalid class IRI: $propIriStr"))
+                            val requestedPropIri: SmartIri = propIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $propIriStr"))
 
                             val schema = requestedPropIri.getOntologySchema match {
                                 case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
-                                case _ => throw BadRequestException(s"Invalid class IRI: $propIriStr")
+                                case _ => throw BadRequestException(s"Invalid property IRI: $propIriStr")
                             }
 
-                            val propForResponder = stringFormatter.requestedEntityToEntityForResponder(requestedPropIri)
-                            (propForResponder, schema)
+                            (requestedPropIri, schema)
                     }.toSet
 
                     val (propsForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = propsAndSchemas.unzip
@@ -260,9 +454,9 @@ object OntologiesRouteV2 extends Authenticator {
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
-                    val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), () => throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
+                    val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
-                    val requestMessage = PropertyEntitiesGetRequestV2(
+                    val requestMessage = PropertiesGetRequestV2(
                         propertyIris = propsForResponder,
                         allLanguages = allLanguages,
                         userProfile = userProfile
@@ -277,8 +471,43 @@ object OntologiesRouteV2 extends Authenticator {
                         responseSchema = responseSchema
                     )
                 }
+            } ~ delete {
+                requestContext => {
+                    val userProfile = getUserProfileV1(requestContext)
+
+                    val propertyIriStr = externalPropertyIris match {
+                        case List(str) => str
+                        case _ => throw BadRequestException(s"Only one property can be deleted at a time")
+                    }
+
+                    val propertyIri = propertyIriStr.toSmartIri
+
+                    if (!propertyIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+                        throw BadRequestException(s"Invalid property IRI for request: $propertyIri")
+                    }
+
+                    val lastModificationDateStr = requestContext.request.uri.query().toMap.getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
+                    val lastModificationDate = stringFormatter.toInstant(lastModificationDateStr, throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
+
+                    val requestMessage = DeletePropertyRequestV2(
+                        propertyIri = propertyIri,
+                        lastModificationDate = lastModificationDate,
+                        apiRequestID = UUID.randomUUID,
+                        userProfile = userProfile
+                    )
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log,
+                        responseSchema = ApiV2WithValueObjects
+                    )
+                }
             }
         } ~ path("v2" / "ontologies") {
+            // Create a new, empty ontology.
             post {
                 entity(as[String]) { jsonRequest =>
                     requestContext => {

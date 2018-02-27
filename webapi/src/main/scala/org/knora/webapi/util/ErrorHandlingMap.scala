@@ -22,7 +22,7 @@ package org.knora.webapi.util
 
 import org.knora.webapi.InconsistentTriplestoreDataException
 
-import scala.collection.{Iterator, MapLike}
+import scala.collection.{GenTraversableOnce, Iterator, MapLike}
 
 /**
   * A [[Map]] that facilitates error-handling, by wrapping an ordinary [[Map]] and overriding the `default`
@@ -74,6 +74,14 @@ class ErrorHandlingMap[A, B](toWrap: Map[A, B],
 
     override def -(key: A): ErrorHandlingMap[A, B] = {
         new ErrorHandlingMap(wrapped - key, errorTemplateFun, errorFun)
+    }
+
+    override def ++[V1 >: B](xs: GenTraversableOnce[(A, V1)]): ErrorHandlingMap[A, V1] = {
+        new ErrorHandlingMap(wrapped ++ xs, errorTemplateFun, errorFun)
+    }
+
+    override def --(xs: GenTraversableOnce[A]): ErrorHandlingMap[A, B] = {
+        new ErrorHandlingMap(wrapped -- xs, errorTemplateFun, errorFun)
     }
 
     /**

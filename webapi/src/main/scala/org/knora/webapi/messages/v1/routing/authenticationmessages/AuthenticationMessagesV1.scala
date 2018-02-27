@@ -21,7 +21,9 @@
 package org.knora.webapi.messages.v1.routing.authenticationmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,6 +49,24 @@ case class CredentialsV1(userIri: IRI, email: String, password: String) {
     def urlEncodedIri = java.net.URLEncoder.encode(userIri, "utf-8")
 
     def urlEncodedEmail = java.net.URLEncoder.encode(email, "utf-8")
+}
+
+/**
+  * Representing user's credentials
+  *
+  * @param user  the user's information.
+  */
+case class CredentialsADM(user: UserADM, password: String) {
+
+    def iri = user.id
+
+    def urlEncodedIri = java.net.URLEncoder.encode(iri, "utf-8")
+
+    def email = user.email
+
+    def urlEncodedEmail = java.net.URLEncoder.encode(email, "utf-8")
+
+    def basicHttpCredentials = BasicHttpCredentials(email, password)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

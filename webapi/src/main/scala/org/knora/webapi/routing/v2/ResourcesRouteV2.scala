@@ -24,23 +24,25 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.util.Timeout
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcePreviewRequestV2, ResourcesGetRequestV2}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.language.postfixOps
 
 /**
-  * Provides a spray-routing function for API routes that deal with search.
+  * Provides a routing function for API v2 routes that deal with resources.
   */
 object ResourcesRouteV2 extends Authenticator {
 
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-        implicit val system = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = settings.defaultTimeout
+        implicit val system: ActorSystem = _system
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
         val stringFormatter = StringFormatter.getGeneralInstance
 
@@ -53,7 +55,7 @@ object ResourcesRouteV2 extends Authenticator {
 
                     val resourceIris: Seq[IRI] = resIris.map {
                         resIri: String =>
-                            stringFormatter.validateAndEscapeIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
+                            stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
                     }
 
                     val requestMessage = ResourcesGetRequestV2(resourceIris = resourceIris, userProfile = userProfile)
@@ -76,7 +78,7 @@ object ResourcesRouteV2 extends Authenticator {
 
                     val resourceIris: Seq[IRI] = resIris.map {
                         resIri: String =>
-                            stringFormatter.validateAndEscapeIri(resIri, () => throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
+                            stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
                     }
 
                     val requestMessage = ResourcePreviewRequestV2(resourceIris = resourceIris, userProfile = userProfile)

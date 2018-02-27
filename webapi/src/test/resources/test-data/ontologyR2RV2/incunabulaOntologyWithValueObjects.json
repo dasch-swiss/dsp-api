@@ -1,617 +1,617 @@
 {
-  "knora-api:hasClasses" : {
-    "incunabula:Sideband" : {
-      "@id" : "incunabula:Sideband",
-      "@type" : "owl:Class",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:canBeInstantiated" : true,
-      "rdfs:comment" : "Randleistentyp",
-      "rdfs:label" : "Randleiste",
-      "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#StillImageRepresentation", {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#description"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:cardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#sbTitle"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:minCardinality" : 0,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#sideband_comment"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:cardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:cardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:minCardinality" : 0,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:minCardinality" : 0,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:minCardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#lastModificationDate"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:cardinality" : 1,
-        "owl:onProperty" : "http://schema.org/name"
-      } ]
+  "knora-api:hasOntologies" : {
+    "@id" : "http://0.0.0.0:3333/ontology/incunabula/v2",
+    "@type" : "owl:Ontology",
+    "knora-api:hasClasses" : {
+      "incunabula:Sideband" : {
+        "@id" : "incunabula:Sideband",
+        "@type" : "owl:Class",
+        "knora-api:canBeInstantiated" : true,
+        "rdfs:comment" : "Randleistentyp",
+        "rdfs:label" : "Randleiste",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#StillImageRepresentation", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#lastModificationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://schema.org/name"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 0,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#sbTitle"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 1,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#description"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 2,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#sideband_comment"
+        } ]
+      },
+      "incunabula:book" : {
+        "@id" : "incunabula:book",
+        "@type" : "owl:Class",
+        "knora-api:canBeInstantiated" : true,
+        "knora-api:resourceIcon" : "book.gif",
+        "rdfs:comment" : "Diese Resource-Klasse beschreibt ein Buch",
+        "rdfs:label" : "Book",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Resource", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#lastModificationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://schema.org/name"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 1,
+          "owl:minCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#title"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 2,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#description"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 2,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#hasAuthor"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 3,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#publisher"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 4,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#publoc"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 5,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#citation"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 5,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#pubdate"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 6,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#location"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 7,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#url"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 9,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#physical_desc"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 10,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#note"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 12,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#book_comment"
+        } ]
+      },
+      "incunabula:misc" : {
+        "@id" : "incunabula:misc",
+        "@type" : "owl:Class",
+        "knora-api:canBeInstantiated" : true,
+        "rdfs:comment" : "A fake resource class that only has optional properties",
+        "rdfs:label" : "Sonstiges",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Resource", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#lastModificationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://schema.org/name"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 0,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#miscHasColor"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 1,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#miscHasGeometry"
+        } ]
+      },
+      "incunabula:page" : {
+        "@id" : "incunabula:page",
+        "@type" : "owl:Class",
+        "knora-api:canBeInstantiated" : true,
+        "knora-api:resourceIcon" : "page.gif",
+        "rdfs:comment" : "A page is a part of a book",
+        "rdfs:label" : "Page",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#StillImageRepresentation", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#lastModificationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://schema.org/name"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 1,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#pagenum"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 2,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#description"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 2,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#partOf"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 2,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#partOfValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 3,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#seqnum"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 5,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#citation"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 6,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#page_comment"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 7,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#origname"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 10,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#hasLeftSideband"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 10,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#hasLeftSidebandValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 11,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#hasRightSideband"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 11,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#hasRightSidebandValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 12,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#transcription"
+        } ]
+      }
     },
-    "incunabula:book" : {
-      "@id" : "incunabula:book",
-      "@type" : "owl:Class",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:canBeInstantiated" : true,
-      "knora-api:resourceIcon" : "book.gif",
-      "rdfs:comment" : "Diese Resource-Klasse beschreibt ein Buch",
-      "rdfs:label" : "Book",
-      "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Resource", {
-        "@type" : "owl:Restriction",
-        "owl:minCardinality" : 0,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#book_comment"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:minCardinality" : 0,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#citation"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#description"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:minCardinality" : 0,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#hasAuthor"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#location"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:minCardinality" : 0,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#note"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#physical_desc"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#pubdate"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:minCardinality" : 0,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#publisher"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#publoc"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:minCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#title"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#url"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:cardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:cardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:minCardinality" : 0,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:minCardinality" : 0,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#lastModificationDate"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:cardinality" : 1,
-        "owl:onProperty" : "http://schema.org/name"
-      } ]
+    "knora-api:hasProperties" : {
+      "incunabula:book_comment" : {
+        "@id" : "incunabula:book_comment",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "rdfs:comment" : "Unstrukturierte Bemerkungen zu einem Objekt",
+        "rdfs:label" : "Comment",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasComment"
+      },
+      "incunabula:citation" : {
+        "@id" : "incunabula:citation",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
+        "rdfs:comment" : "Stellt einen Verweis dar.",
+        "rdfs:label" : "Citation/reference",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "incunabula:description" : {
+        "@id" : "incunabula:description",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
+        "rdfs:comment" : "Description",
+        "rdfs:label" : "Description",
+        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/description" ]
+      },
+      "incunabula:hasAuthor" : {
+        "@id" : "incunabula:hasAuthor",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "rdfs:comment" : "Erzeuger/Autor",
+        "rdfs:label" : "Creator",
+        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/creator" ]
+      },
+      "incunabula:hasLeftSideband" : {
+        "@id" : "incunabula:hasLeftSideband",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkProperty" : true,
+        "knora-api:objectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#Sideband",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "rdfs:comment" : "Verweis auf einen Randleistentyp",
+        "rdfs:label" : "Randleistentyp links",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"
+      },
+      "incunabula:hasLeftSidebandValue" : {
+        "@id" : "incunabula:hasLeftSidebandValue",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkValueProperty" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "rdfs:comment" : "Verweis auf einen Randleistentyp",
+        "rdfs:label" : "Randleistentyp links",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue"
+      },
+      "incunabula:hasRightSideband" : {
+        "@id" : "incunabula:hasRightSideband",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkProperty" : true,
+        "knora-api:objectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#Sideband",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "rdfs:comment" : "Verweis auf einen Randleistentyp",
+        "rdfs:label" : "Randleistentyp rechts",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"
+      },
+      "incunabula:hasRightSidebandValue" : {
+        "@id" : "incunabula:hasRightSidebandValue",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkValueProperty" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "rdfs:comment" : "Verweis auf einen Randleistentyp",
+        "rdfs:label" : "Randleistentyp rechts",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue"
+      },
+      "incunabula:location" : {
+        "@id" : "incunabula:location",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "rdfs:comment" : "Der Ort wo sich das physische Original befindet",
+        "rdfs:label" : "Location",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "incunabula:miscHasBook" : {
+        "@id" : "incunabula:miscHasBook",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkProperty" : true,
+        "knora-api:objectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#misc",
+        "rdfs:label" : "Verbindung mit einem Buch",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"
+      },
+      "incunabula:miscHasColor" : {
+        "@id" : "incunabula:miscHasColor",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#ColorValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#misc",
+        "rdfs:label" : "Farbe",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "incunabula:miscHasGeometry" : {
+        "@id" : "incunabula:miscHasGeometry",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#GeomValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#misc",
+        "rdfs:label" : "Geometrie",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "incunabula:note" : {
+        "@id" : "incunabula:note",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "rdfs:comment" : "A note concerning the object",
+        "rdfs:label" : "Note",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "incunabula:origname" : {
+        "@id" : "incunabula:origname",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "rdfs:comment" : "Der originale Dateiname",
+        "rdfs:label" : "Original filename",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "incunabula:page_comment" : {
+        "@id" : "incunabula:page_comment",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "rdfs:comment" : "Unstrukturierte Bemerkungen zu einem Objekt",
+        "rdfs:label" : "Comment",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasComment"
+      },
+      "incunabula:pagenum" : {
+        "@id" : "incunabula:pagenum",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "rdfs:comment" : "A distinct identification of a book page",
+        "rdfs:label" : "Page identifier",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "incunabula:partOf" : {
+        "@id" : "incunabula:partOf",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkProperty" : true,
+        "knora-api:objectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "rdfs:comment" : "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches.",
+        "rdfs:label" : "is a part of",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#isPartOf"
+      },
+      "incunabula:partOfValue" : {
+        "@id" : "incunabula:partOfValue",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkValueProperty" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "rdfs:comment" : "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches.",
+        "rdfs:label" : "is a part of",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#isPartOfValue"
+      },
+      "incunabula:physical_desc" : {
+        "@id" : "incunabula:physical_desc",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "rdfs:comment" : "Generelle physische Beschreibung des Objektes wie Material, Grösse etc.",
+        "rdfs:label" : "Phyiscal description",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "incunabula:pubdate" : {
+        "@id" : "incunabula:pubdate",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "rdfs:comment" : "Datum der Herausgabe",
+        "rdfs:label" : "Datum der Herausgabe",
+        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/date" ]
+      },
+      "incunabula:publisher" : {
+        "@id" : "incunabula:publisher",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "rdfs:comment" : "Publishing is the process of production and dissemination of literature or information – the activity of making information available for public view. In some cases authors may be their own publishers, meaning: originators and developers of content also provide media to deliver and display the content. (Wikipedia http://en.wikipedia.org/wiki/Publisher)",
+        "rdfs:label" : "Publisher",
+        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/publisher" ]
+      },
+      "incunabula:publoc" : {
+        "@id" : "incunabula:publoc",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "rdfs:comment" : "Ort der Herausgabe",
+        "rdfs:label" : "Publication location",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "incunabula:sbTitle" : {
+        "@id" : "incunabula:sbTitle",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#Sideband",
+        "rdfs:label" : "Title",
+        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/title" ]
+      },
+      "incunabula:seqnum" : {
+        "@id" : "incunabula:seqnum",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#IntValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "rdfs:comment" : "This property stands for the position within a set of rdered items (resoucres)",
+        "rdfs:label" : "Sequence number",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#seqnum"
+      },
+      "incunabula:sideband_comment" : {
+        "@id" : "incunabula:sideband_comment",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#Sideband",
+        "rdfs:comment" : "Unstrukturierte Bemerkungen zu einem Objekt",
+        "rdfs:label" : "Kommentar (Richtext)",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasComment"
+      },
+      "incunabula:title" : {
+        "@id" : "incunabula:title",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "rdfs:comment" : "Titel",
+        "rdfs:label" : "Title",
+        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/title" ]
+      },
+      "incunabula:transcription" : {
+        "@id" : "incunabula:transcription",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "rdfs:comment" : "Transkription",
+        "rdfs:label" : "Transkription",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "incunabula:url" : {
+        "@id" : "incunabula:url",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "rdfs:comment" : "Uniform Resource Identifier",
+        "rdfs:label" : "URI",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      }
     },
-    "incunabula:misc" : {
-      "@id" : "incunabula:misc",
-      "@type" : "owl:Class",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:canBeInstantiated" : true,
-      "rdfs:comment" : "A fake resource class that only has optional properties",
-      "rdfs:label" : "Sonstiges",
-      "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Resource", {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#miscHasColor"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#miscHasGeometry"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:cardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:cardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:minCardinality" : 0,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:minCardinality" : 0,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#lastModificationDate"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:cardinality" : 1,
-        "owl:onProperty" : "http://schema.org/name"
-      } ]
-    },
-    "incunabula:page" : {
-      "@id" : "incunabula:page",
-      "@type" : "owl:Class",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:canBeInstantiated" : true,
-      "knora-api:resourceIcon" : "page.gif",
-      "rdfs:comment" : "A page is a part of a book",
-      "rdfs:label" : "Page",
-      "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#StillImageRepresentation", {
-        "@type" : "owl:Restriction",
-        "owl:minCardinality" : 0,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#citation"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#description"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#hasLeftSideband"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#hasLeftSidebandValue"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#hasRightSideband"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#hasRightSidebandValue"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:cardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#origname"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:minCardinality" : 0,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#page_comment"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#pagenum"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:cardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#partOf"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:cardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#partOfValue"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#seqnum"
-      }, {
-        "@type" : "owl:Restriction",
-        "owl:minCardinality" : 0,
-        "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#transcription"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:cardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:cardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:minCardinality" : 0,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:minCardinality" : 0,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:minCardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:maxCardinality" : 1,
-        "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#lastModificationDate"
-      }, {
-        "@type" : "owl:Restriction",
-        "knora-api:isInherited" : true,
-        "owl:cardinality" : 1,
-        "owl:onProperty" : "http://schema.org/name"
-      } ]
-    }
+    "knora-api:hasStandoffClasses" : { },
+    "knora-api:hasStandoffProperties" : { },
+    "rdfs:label" : "The incunabula ontology"
   },
-  "knora-api:hasOntologiesWithClasses" : {
-    "http://0.0.0.0:3333/ontology/incunabula/v2" : [ "http://0.0.0.0:3333/ontology/incunabula/v2#Sideband", "http://0.0.0.0:3333/ontology/incunabula/v2#book", "http://0.0.0.0:3333/ontology/incunabula/v2#misc", "http://0.0.0.0:3333/ontology/incunabula/v2#page" ]
-  },
-  "knora-api:hasProperties" : {
-    "incunabula:book_comment" : {
-      "@id" : "incunabula:book_comment",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
-      "rdfs:comment" : "Unstrukturierte Bemerkungen zu einem Objekt",
-      "rdfs:label" : "Comment",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasComment"
-    },
-    "incunabula:citation" : {
-      "@id" : "incunabula:citation",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
-      "rdfs:comment" : "Stellt einen Verweis dar.",
-      "rdfs:label" : "Citation/reference",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
-    },
-    "incunabula:description" : {
-      "@id" : "incunabula:description",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
-      "rdfs:comment" : "Description",
-      "rdfs:label" : "Description",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#description"
-    },
-    "incunabula:hasAuthor" : {
-      "@id" : "incunabula:hasAuthor",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
-      "rdfs:comment" : "Erzeuger/Autor",
-      "rdfs:label" : "Creator",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#creator"
-    },
-    "incunabula:hasLeftSideband" : {
-      "@id" : "incunabula:hasLeftSideband",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#Sideband",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
-      "rdfs:comment" : "Verweis auf einen Randleistentyp",
-      "rdfs:label" : "Randleistentyp links",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo",
-      "knora-api:isLinkProperty": true
-    },
-    "incunabula:hasLeftSidebandValue" : {
-      "@id" : "incunabula:hasLeftSidebandValue",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
-      "rdfs:comment" : "Verweis auf einen Randleistentyp",
-      "rdfs:label" : "Randleistentyp links",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue",
-      "knora-api:isLinkValueProperty" : true
-    },
-    "incunabula:hasRightSideband" : {
-      "@id" : "incunabula:hasRightSideband",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#Sideband",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
-      "rdfs:comment" : "Verweis auf einen Randleistentyp",
-      "rdfs:label" : "Randleistentyp rechts",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo",
-      "knora-api:isLinkProperty": true
-    },
-    "incunabula:hasRightSidebandValue" : {
-      "@id" : "incunabula:hasRightSidebandValue",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
-      "rdfs:comment" : "Verweis auf einen Randleistentyp",
-      "rdfs:label" : "Randleistentyp rechts",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue",
-      "knora-api:isLinkValueProperty" : true
-    },
-    "incunabula:location" : {
-      "@id" : "incunabula:location",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
-      "rdfs:comment" : "Der Ort wo sich das physische Original befindet",
-      "rdfs:label" : "Location",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
-    },
-    "incunabula:miscHasBook" : {
-      "@id" : "incunabula:miscHasBook",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#misc",
-      "rdfs:label" : "Verbindung mit einem Buch",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo",
-      "knora-api:isLinkProperty" : true
-    },
-    "incunabula:miscHasColor" : {
-      "@id" : "incunabula:miscHasColor",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#ColorValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#misc",
-      "rdfs:label" : "Farbe",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
-    },
-    "incunabula:miscHasGeometry" : {
-      "@id" : "incunabula:miscHasGeometry",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#GeomValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#misc",
-      "rdfs:label" : "Geometrie",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
-    },
-    "incunabula:note" : {
-      "@id" : "incunabula:note",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
-      "rdfs:comment" : "A note concerning the object",
-      "rdfs:label" : "Note",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
-    },
-    "incunabula:origname" : {
-      "@id" : "incunabula:origname",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
-      "rdfs:comment" : "Der originale Dateiname",
-      "rdfs:label" : "Original filename",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
-    },
-    "incunabula:page_comment" : {
-      "@id" : "incunabula:page_comment",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
-      "rdfs:comment" : "Unstrukturierte Bemerkungen zu einem Objekt",
-      "rdfs:label" : "Comment",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasComment"
-    },
-    "incunabula:pagenum" : {
-      "@id" : "incunabula:pagenum",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
-      "rdfs:comment" : "A distinct identification of a book page",
-      "rdfs:label" : "Page identifier",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
-    },
-    "incunabula:partOf" : {
-      "@id" : "incunabula:partOf",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
-      "rdfs:comment" : "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches.",
-      "rdfs:label" : "is a part of",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#isPartOf",
-      "knora-api:isLinkProperty": true
-    },
-    "incunabula:partOfValue" : {
-      "@id" : "incunabula:partOfValue",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
-      "rdfs:comment" : "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches.",
-      "rdfs:label" : "is a part of",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#isPartOfValue",
-      "knora-api:isLinkValueProperty" : true
-    },
-    "incunabula:physical_desc" : {
-      "@id" : "incunabula:physical_desc",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
-      "rdfs:comment" : "Generelle physische Beschreibung des Objektes wie Material, Grösse etc.",
-      "rdfs:label" : "Phyiscal description",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
-    },
-    "incunabula:pubdate" : {
-      "@id" : "incunabula:pubdate",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
-      "rdfs:comment" : "Datum der Herausgabe",
-      "rdfs:label" : "Datum der Herausgabe",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#date"
-    },
-    "incunabula:publisher" : {
-      "@id" : "incunabula:publisher",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
-      "rdfs:comment" : "Publishing is the process of production and dissemination of literature or information – the activity of making information available for public view. In some cases authors may be their own publishers, meaning: originators and developers of content also provide media to deliver and display the content. (Wikipedia http://en.wikipedia.org/wiki/Publisher)",
-      "rdfs:label" : "Publisher",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#publisher"
-    },
-    "incunabula:publoc" : {
-      "@id" : "incunabula:publoc",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
-      "rdfs:comment" : "Ort der Herausgabe",
-      "rdfs:label" : "Publication location",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
-    },
-    "incunabula:sbTitle" : {
-      "@id" : "incunabula:sbTitle",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#Sideband",
-      "rdfs:label" : "Title",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#title"
-    },
-    "incunabula:seqnum" : {
-      "@id" : "incunabula:seqnum",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#IntValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
-      "rdfs:comment" : "This property stands for the position within a set of rdered items (resoucres)",
-      "rdfs:label" : "Sequence number",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#seqnum"
-    },
-    "incunabula:sideband_comment" : {
-      "@id" : "incunabula:sideband_comment",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#Sideband",
-      "rdfs:comment" : "Unstrukturierte Bemerkungen zu einem Objekt",
-      "rdfs:label" : "Kommentar (Richtext)",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasComment"
-    },
-    "incunabula:title" : {
-      "@id" : "incunabula:title",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
-      "rdfs:comment" : "Titel",
-      "rdfs:label" : "Title",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/dc/v2#title"
-    },
-    "incunabula:transcription" : {
-      "@id" : "incunabula:transcription",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
-      "rdfs:comment" : "Transkription",
-      "rdfs:label" : "Transkription",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
-    },
-    "incunabula:url" : {
-      "@id" : "incunabula:url",
-      "@type" : "owl:ObjectProperty",
-      "knora-api:belongsToOntology" : "http://0.0.0.0:3333/ontology/incunabula/v2",
-      "knora-api:isEditable" : true,
-      "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
-      "rdfs:comment" : "Uniform Resource Identifier",
-      "rdfs:label" : "URI",
-      "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
-    }
-  },
-  "knora-api:hasStandoffClasses" : { },
-  "knora-api:hasStandoffProperties" : { },
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "dc" : "http://api.knora.org/ontology/dc/v2#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
+    "salsah-gui" : "http://www.knora.org/ontology/salsah-gui#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
     "incunabula" : "http://0.0.0.0:3333/ontology/incunabula/v2#",
     "xsd" : "http://www.w3.org/2001/XMLSchema#"

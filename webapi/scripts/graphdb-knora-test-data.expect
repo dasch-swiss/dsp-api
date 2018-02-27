@@ -14,8 +14,6 @@ send "load ../../knora-ontologies/standoff-onto.ttl into http://www.knora.org/on
 expect $prompt
 send "load ../../knora-ontologies/standoff-data.ttl into http://www.knora.org/data/standoff .\r"
 expect $prompt
-send "load ../../knora-ontologies/knora-dc.ttl into http://www.knora.org/ontology/dc .\r"
-expect $prompt
 send "load ../../knora-ontologies/salsah-gui.ttl into http://www.knora.org/ontology/salsah-gui .\r"
 expect $prompt
 send "load ../_test_data/all_data/admin-data.ttl into http://www.knora.org/data/admin .\r"
@@ -28,7 +26,7 @@ send "load ../_test_data/ontologies/incunabula-onto.ttl into http://www.knora.or
 expect $prompt
 send "load ../_test_data/all_data/incunabula-data.ttl into http://www.knora.org/data/incunabula .\r"
 expect $prompt
-send "load ../_test_data/ontologies/dokubib-onto.ttl into http://www.knora.org/ontology/dokubib .\r"
+send "load ../_test_data/ontologies/dokubib-onto.ttl into http://www.knora.org/ontology/00FE/dokubib .\r"
 expect $prompt
 send "load ../_test_data/ontologies/images-onto.ttl into http://www.knora.org/ontology/00FF/images .\r"
 expect $prompt
@@ -46,7 +44,9 @@ send "load ../_test_data/ontologies/biblio-onto.ttl into http://www.knora.org/on
 expect $prompt
 send "load ../_test_data/all_data/biblio-data.ttl into http://www.knora.org/data/biblio .\r"
 expect $prompt
-send "load ../_test_data/ontologies/example.ttl into http://www.knora.org/ontology/0001/example .\r"
+send "load ../_test_data/ontologies/webern-onto.ttl into http://www.knora.org/ontology/08AE/webern .\r"
+expect $prompt
+send "load ../_test_data/all_data/webern-data.ttl into http://www.knora.org/data/08AE/webern .\r"
 expect $prompt
 send "close .\r"
 expect $prompt

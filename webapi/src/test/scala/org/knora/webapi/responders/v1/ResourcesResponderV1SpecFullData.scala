@@ -27,7 +27,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
-import org.knora.webapi.{OntologyConstants, Settings, SharedAdminTestData}
+import org.knora.webapi.{OntologyConstants, Settings, SharedTestDataV1}
 
 
 object ResourcesResponderV1SpecFullData {
@@ -285,7 +285,7 @@ object ResourcesResponderV1SpecFullData {
                     era2="CE"
                 )),
                 occurrence = Some("0-1"),
-                attributes = "size=16;maxlength=32",
+                attributes = "",
                 label = Some("Datum der Herausgabe"),
                 is_annotation = "0",
                 guielement = Some("date"),
@@ -526,7 +526,7 @@ object ResourcesResponderV1SpecFullData {
                     utf8str = "a1r, Titelblatt"
                 )),
                 occurrence = Some("0-1"),
-                attributes = "min=4;max=8",
+                attributes = "size=8;maxlength=8",
                 label = Some("Seitenbezeichnung"),
                 is_annotation = "0",
                 guielement = Some("text"),
@@ -728,10 +728,10 @@ object ResourcesResponderV1SpecFullData {
                 value_ids = Nil,
                 values = Nil,
                 occurrence = Some("0-n"),
-                attributes = "hlist=<http://data.knora.org/lists/4b6d86ce03>",
+                attributes = "",
                 label = Some("Transkription"),
                 is_annotation = "0",
-                guielement = Some("pulldown"),
+                guielement = Some("richtext"),
                 guiorder = Some(12),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,

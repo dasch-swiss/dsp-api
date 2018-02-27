@@ -12,7 +12,8 @@
 # A trivial ontology, based on anything-onto.ttl, used only for testing Knora.
 
 @prefix : <http://www.knora.org/ontology/something#> .
-<http://www.knora.org/ontology/something> rdf:type owl:Ontology .
+<http://www.knora.org/ontology/something> rdf:type owl:Ontology ;
+    rdfs:label "The something ontology" .
 
 :Something rdf:type owl:Class ;
 

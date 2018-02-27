@@ -168,7 +168,7 @@ class KnoraIdUtil {
     def makeProjectMappingIri(projectIri: IRI, mappingName: String): IRI = {
         val mappingIri = s"$projectIri/mappings/$mappingName"
         // check that the mapping IRI is valid (mappingName is user input)
-        stringFormatter.validateAndEscapeIri(mappingIri, () => throw BadRequestException(s"the created mapping IRI $mappingIri is invalid"))
+        stringFormatter.validateAndEscapeIri(mappingIri, throw BadRequestException(s"the created mapping IRI $mappingIri is invalid"))
     }
 
     /**
@@ -233,6 +233,22 @@ class KnoraIdUtil {
     def makeRandomPersonIri: IRI = {
         val knoraPersonUuid = makeRandomBase64EncodedUuid
         s"http://$IriDomain/users/$knoraPersonUuid"
+    }
+
+    /**
+      * Creates a new list IRI based on a UUID.
+      *
+      * @param maybeShortcode the optional project shortcode.
+      * @return a new list IRI.
+      */
+    def makeRandomListIri(maybeShortcode: Option[String]): String = {
+        val knoraListUuid = makeRandomBase64EncodedUuid
+
+        if (maybeShortcode.isDefined) {
+            s"http://$IriDomain/lists/${maybeShortcode.get}/$knoraListUuid"
+        } else {
+            s"http://$IriDomain/lists/$knoraListUuid"
+        }
     }
 
     /**

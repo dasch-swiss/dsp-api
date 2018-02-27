@@ -26,17 +26,20 @@ package org.knora.webapi
 object OntologyConstants {
 
     object Rdf {
-        val RdfPrefixExpansion: IRI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        val RdfOntologyIri: IRI = "http://www.w3.org/1999/02/22-rdf-syntax-ns"
+        val RdfPrefixExpansion: IRI = RdfOntologyIri + "#"
 
         val Type: IRI = RdfPrefixExpansion + "type"
         val Subject: IRI = RdfPrefixExpansion + "subject"
         val Predicate: IRI = RdfPrefixExpansion + "predicate"
         val Object: IRI = RdfPrefixExpansion + "object"
         val Property: IRI = RdfPrefixExpansion + "Property"
+        val LangString: IRI = RdfPrefixExpansion + "langString"
     }
 
     object Rdfs {
-        val RdfsPrefixExpansion = "http://www.w3.org/2000/01/rdf-schema#"
+        val RdfsOntologyIri: IRI = "http://www.w3.org/2000/01/rdf-schema"
+        val RdfsPrefixExpansion: IRI = RdfsOntologyIri + "#"
 
         val Label: IRI = RdfsPrefixExpansion + "label"
         val Comment: IRI = RdfsPrefixExpansion + "comment"
@@ -48,6 +51,7 @@ object OntologyConstants {
     object Owl {
         val OwlPrefixExpansion: IRI = "http://www.w3.org/2002/07/owl#"
 
+        val Ontology: IRI = OwlPrefixExpansion + "Ontology"
         val Restriction: IRI = OwlPrefixExpansion + "Restriction"
         val OnProperty: IRI = OwlPrefixExpansion + "onProperty"
         val Cardinality: IRI = OwlPrefixExpansion + "cardinality"
@@ -80,6 +84,7 @@ object OntologyConstants {
         val String: IRI = XsdPrefixExpansion + "string"
         val Boolean: IRI = XsdPrefixExpansion + "boolean"
         val Integer: IRI = XsdPrefixExpansion + "integer"
+        val NonNegativeInteger: IRI = XsdPrefixExpansion + "nonNegativeInteger"
         val Decimal: IRI = XsdPrefixExpansion + "decimal"
         val Uri: IRI = XsdPrefixExpansion + "anyURI"
         val Pattern: IRI = XsdPrefixExpansion + "pattern"
@@ -107,8 +112,7 @@ object OntologyConstants {
         KnoraBase.KnoraBaseOntologyLabel,
         KnoraApi.KnoraApiOntologyLabel,
         SalsahGui.SalsahGuiOntologyLabel,
-        Standoff.StandoffOntologyLabel,
-        Dc.DcOntologyLabel
+        Standoff.StandoffOntologyLabel
     )
 
     /**
@@ -152,6 +156,7 @@ object OntologyConstants {
         val mappingHasDefaultXSLTransformation: IRI = KnoraBasePrefixExpansion + "mappingHasDefaultXSLTransformation"
 
         val IsMainResource: IRI = KnoraBasePrefixExpansion + "isMainResource"
+        val MatchesTextIndex = KnoraBasePrefixExpansion + "matchesTextIndex" // virtual property to be repleced by a triplestore-specific one
 
         val AbstractResourceClasses = Set(
             Resource,
@@ -206,7 +211,7 @@ object OntologyConstants {
 
         val ResourceProperty: IRI = KnoraBasePrefixExpansion + "resourceProperty"
         val HasValue: IRI = KnoraBasePrefixExpansion + "hasValue"
-        val HasIncomingLinks = KnoraBasePrefixExpansion + "hasIncomingLinks"
+        val HasIncomingLinks: IRI = KnoraBasePrefixExpansion + "hasIncomingLinks"
         val HasFileValue: IRI = KnoraBasePrefixExpansion + "hasFileValue"
         val HasStillImageFileValue: IRI = KnoraBasePrefixExpansion + "hasStillImageFileValue"
         val HasMovingImageFileValue: IRI = KnoraBasePrefixExpansion + "hasMovingImageFileValue"
@@ -246,6 +251,16 @@ object OntologyConstants {
         val StillImageFileValue: IRI = KnoraBasePrefixExpansion + "StillImageFileValue"
         val MovingImageFileValue: IRI = KnoraBasePrefixExpansion + "MovingImageFileValue"
         val TextFileValue: IRI = KnoraBasePrefixExpansion + "TextFileValue"
+
+        val FileValueClasses: Set[IRI] = Set(
+            FileValue,
+            StillImageFileValue,
+            MovingImageFileValue,
+            AudioFileValue,
+            DDDFileValue,
+            TextFileValue,
+            DocumentFileValue
+        )
 
         val ValueClasses: Set[IRI] = Set(
             TextValue,
@@ -304,7 +319,7 @@ object OntologyConstants {
         val ProjectShortcode: IRI = KnoraBasePrefixExpansion + "projectShortcode"
         val ProjectLongname: IRI = KnoraBasePrefixExpansion + "projectLongname"
         val ProjectDescription: IRI = KnoraBasePrefixExpansion + "projectDescription"
-        val ProjectKeywords: IRI = KnoraBasePrefixExpansion + "projectKeywords"
+        val ProjectKeyword: IRI = KnoraBasePrefixExpansion + "projectKeyword"
         val ProjectLogo: IRI = KnoraBasePrefixExpansion + "projectLogo"
         val BelongsToInstitution: IRI = KnoraBasePrefixExpansion + "belongsToInstitution"
         val ProjectOntology: IRI = KnoraBasePrefixExpansion + "projectOntology"
@@ -423,6 +438,11 @@ object OntologyConstants {
           */
         val SystemUser: IRI = KnoraBasePrefixExpansion + "SystemUser"
 
+        /**
+          * Every user not logged-in is per default an anonymous user.
+          */
+        val AnonymousUser: IRI = KnoraBasePrefixExpansion + "AnonymousUser"
+
         val CreationDate: IRI = KnoraBasePrefixExpansion + "creationDate"
         val ValueCreationDate: IRI = KnoraBasePrefixExpansion + "valueCreationDate"
 
@@ -485,15 +505,31 @@ object OntologyConstants {
         val Geonames: IRI = SalsahGuiPrefixExpansion + "Geonames"
         val Fileupload: IRI = SalsahGuiPrefixExpansion + "Fileupload"
 
-        object attributeNames {
-            val resourceClass: String = "restypeid"
-            val assignmentOperator: String = "="
-        }
+        object SalsahGuiAttributeType extends Enumeration {
 
+            val Integer: Value = Value(0, "integer")
+            val Percent: Value = Value(1, "percent")
+            val Decimal: Value = Value(2, "decimal")
+            val Str: Value = Value(3, "string")
+            val Iri: Value = Value(4, "iri")
+
+            val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
+
+            def lookup(name: String): Value = {
+                valueMap.get(name) match {
+                    case Some(value) => value
+                    case None => throw InconsistentTriplestoreDataException(s"salsah-gui attribute type not found: $name")
+                }
+            }
+        }
     }
 
-    object Dc {
-        val DcOntologyLabel: String = "dc"
+    object Ontotext {
+        val LuceneFulltext = "http://www.ontotext.com/owlim/lucene#fullTextSearchIndex"
+    }
+
+    object XPathFunctions {
+        val Contains = "http://www.w3.org/2005/xpath-functions#contains"
     }
 
     object KnoraXmlImportV1 {
@@ -538,14 +574,11 @@ object OntologyConstants {
 
         val HasShortname: IRI = KnoraApiV2PrefixExpansion + "hasShortname"
 
-        val HasOntologiesWithClasses: IRI = KnoraApiV2PrefixExpansion + "hasOntologiesWithClasses"
-
-        val BelongsToOntology: IRI = KnoraApiV2PrefixExpansion + "belongsToOntology"
-
         val IsEditable: IRI = KnoraApiV2PrefixExpansion + "isEditable"
         val IsLinkProperty: IRI = KnoraApiV2PrefixExpansion + "isLinkProperty"
         val IsLinkValueProperty: IRI = KnoraApiV2PrefixExpansion + "isLinkValueProperty"
         val CanBeInstantiated: IRI = KnoraApiV2PrefixExpansion + "canBeInstantiated"
+        val IsValueClass: IRI = KnoraApiV2PrefixExpansion + "isValueClass"
         val IsInherited: IRI = KnoraApiV2PrefixExpansion + "isInherited"
         val OntologyName: IRI = KnoraApiV2PrefixExpansion + "ontologyName"
         val ProjectIri: IRI = KnoraApiV2PrefixExpansion + "projectIri"
@@ -582,7 +615,7 @@ object OntologyConstants {
 
         val Value: IRI = KnoraApiV2PrefixExpansion + "Value"
         val TextValue: IRI = KnoraApiV2PrefixExpansion + "TextValue"
-        val IntegerValue: IRI = KnoraApiV2PrefixExpansion + "IntegerValue"
+        val IntValue: IRI = KnoraApiV2PrefixExpansion + "IntValue"
         val DecimalValue: IRI = KnoraApiV2PrefixExpansion + "DecimalValue"
         val BooleanValue: IRI = KnoraApiV2PrefixExpansion + "BooleanValue"
         val DateValue: IRI = KnoraApiV2PrefixExpansion + "DateValue"
@@ -594,6 +627,7 @@ object OntologyConstants {
         val GeonameValue: IRI = KnoraApiV2PrefixExpansion + "GeonameValue"
         val FileValue: IRI = KnoraApiV2PrefixExpansion + "FileValue"
         val ColorValue: IRI = KnoraApiV2PrefixExpansion + "ColorValue"
+
         val StillImageFileValue: IRI = KnoraApiV2PrefixExpansion + "StillImageFileValue"
         val MovingImageFileValue: IRI = KnoraApiV2PrefixExpansion + "MovingImageFileValue"
         val AudioFileValue: IRI = KnoraApiV2PrefixExpansion + "AudioFileValue"
@@ -628,13 +662,15 @@ object OntologyConstants {
         val DateValueHasEndMonth: IRI = KnoraApiV2PrefixExpansion + "dateValueHasEndMonth"
         val DateValueHasStartDay: IRI = KnoraApiV2PrefixExpansion + "dateValueHasStartDay"
         val DateValueHasEndDay: IRI = KnoraApiV2PrefixExpansion + "dateValueHasEndDay"
+        val DateValueHasStartEra: IRI = KnoraApiV2PrefixExpansion + "dateValueHasStartEra"
+        val DateValueHasEndEra: IRI = KnoraApiV2PrefixExpansion + "dateValueHasEndEra"
         val DateValueHasCalendar: IRI = KnoraApiV2PrefixExpansion + "dateValueHasCalendar"
 
         val TextValueAsHtml: IRI = KnoraApiV2PrefixExpansion + "textValueAsHtml"
         val TextValueAsXml: IRI = KnoraApiV2PrefixExpansion + "textValueAsXml"
         val TextValueHasMapping: IRI = KnoraApiV2PrefixExpansion + "textValueHasMapping"
 
-        val IntegerValueAsInteger: IRI = KnoraApiV2PrefixExpansion + "integerValueAsInteger"
+        val IntValueAsInt: IRI = KnoraApiV2PrefixExpansion + "intValueAsInt"
 
         val DecimalValueAsDecimal: IRI = KnoraApiV2PrefixExpansion + "decimalValueAsDecimal"
 

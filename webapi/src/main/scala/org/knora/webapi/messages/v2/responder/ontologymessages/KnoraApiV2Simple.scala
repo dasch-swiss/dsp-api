@@ -21,8 +21,9 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import org.knora.webapi._
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
   * Represents the `knora-api` ontology, version 2, in the [[ApiV2Simple]] schema.
@@ -30,6 +31,11 @@ import org.knora.webapi.util.IriConversions._
 object KnoraApiV2Simple {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+    val OntologyMetadata = OntologyMetadataV2(
+        ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri,
+        label = Some("The simplified knora-api ontology")
+    )
 
     val Resource: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.Resource,
@@ -1109,7 +1115,6 @@ object KnoraApiV2Simple {
                               objectsWithLang: Map[String, String] = Map.empty[String, String]): PredicateInfoV2 = {
         PredicateInfoV2(
             predicateIri = predicateIri.toSmartIri,
-            ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri,
             objects = objects,
             objectsWithLang = objectsWithLang
         )
@@ -1158,7 +1163,6 @@ object KnoraApiV2Simple {
         ReadPropertyInfoV2(
             entityInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri.toSmartIri,
-                ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri,
                 ontologySchema = ApiV2Simple,
                 predicates = predsWithTypes.map {
                     pred => pred.predicateIri -> pred
@@ -1182,24 +1186,23 @@ object KnoraApiV2Simple {
                           subClassOf: Set[IRI] = Set.empty[IRI],
                           predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
                           directCardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
-                          inheritedCardinalities: Map[SmartIri, Cardinality.Value] = Map.empty[SmartIri, Cardinality.Value]): ReadClassInfoV2 = {
-        val predicatesWithType = predicates :+ makePredicate(
-            predicateIri = OntologyConstants.Rdf.Type,
+                          inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = Map.empty[SmartIri, KnoraCardinalityInfo]): ReadClassInfoV2 = {
+
+        val rdfType = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
             objects = Set(OntologyConstants.Owl.Class)
         )
 
         ReadClassInfoV2(
             entityInfoContent = ClassInfoContentV2(
-                rdfType = OntologyConstants.Owl.Class.toSmartIri,
                 classIri = classIri.toSmartIri,
-                predicates = predicatesWithType.map {
+                predicates = predicates.map {
                     pred => pred.predicateIri -> pred
-                }.toMap,
+                }.toMap + rdfType,
                 directCardinalities = directCardinalities.map {
-                    case (propertyIri, cardinality) => propertyIri.toSmartIri -> cardinality
+                    case (propertyIri, cardinality) => propertyIri.toSmartIri -> KnoraCardinalityInfo(cardinality)
                 },
                 subClassOf = subClassOf.map(_.toSmartIri),
-                ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri,
                 ontologySchema = ApiV2Simple
             ),
             inheritedCardinalities = inheritedCardinalities
@@ -1221,20 +1224,19 @@ object KnoraApiV2Simple {
                              subClassOf: Option[IRI] = None,
                              xsdStringRestrictionPattern: Option[String] = None,
                              predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2]): ReadClassInfoV2 = {
-        val predicatesWithType = predicates :+ makePredicate(
-            predicateIri = OntologyConstants.Rdf.Type,
+
+        val rdfType = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
             objects = Set(OntologyConstants.Rdfs.Datatype)
         )
 
         ReadClassInfoV2(
             entityInfoContent = ClassInfoContentV2(
                 classIri = datatypeIri.toSmartIri,
-                ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri,
-                rdfType = OntologyConstants.Rdfs.Datatype.toSmartIri,
                 xsdStringRestrictionPattern = xsdStringRestrictionPattern,
-                predicates = predicatesWithType.map {
+                predicates = predicates.map {
                     pred => pred.predicateIri -> pred
-                }.toMap,
+                }.toMap + rdfType,
                 subClassOf = subClassOf.toSet.map {
                     iri: IRI => iri.toSmartIri
                 },

@@ -1,20 +1,28 @@
-FROM dhlabbasel/webapi-base:latest
+# first stage does the building
+FROM dhlabbasel/sbt-ivy2-cache as build-stage
 
 MAINTAINER Ivan Subotic "ivan.subotic@unibas.ch"
 
-# Get and build salsah release package, cleanup
+ENV LANG="en_US.UTF-8"
+ENV JAVA_OPTS="-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8"
+
+# copy source code
+RUN mkdir /src
 COPY . /src
 
+# generate deployment packaging
 RUN \
   cd /src && \
   sbt stage && \
   mkdir /salsah && \
-  cp -r /src/target/universal/stage/* /salsah && \
-  rm -rf /src
+  cp -r /src/target/universal/stage/* /salsah
 
-VOLUME ["/localdata"]
+# starting second stage
+FROM openjdk:8-jre-alpine
 
-# Expose the webapi default port
+COPY --from=build-stage /salsah /salsah
+
+# Expose the salsah default port
 EXPOSE 3335
 
 CMD ["/salsah/bin/salsah"]

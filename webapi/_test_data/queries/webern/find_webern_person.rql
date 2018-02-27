@@ -1,0 +1,12 @@
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX webern: <http://www.knora.org/ontology/08AE/webern#>
+
+SELECT *
+WHERE {
+	?s a foaf:Person .
+    ?s knora-base:attachedToProject ?project .
+
+    ?project knora-base:projectShortname "webern" .
+
+} LIMIT 100

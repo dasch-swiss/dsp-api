@@ -564,7 +564,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         val predicates = valueProps.literalData
 
         val isPreviewStr = predicates.get(OntologyConstants.KnoraBase.IsPreview).flatMap(_.literals.headOption)
-        val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, () => throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
+        val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
 
         Future(StillImageFileValueV1(
             internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
@@ -629,7 +629,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @return an attribute string to be included in the attributes for the GUI
       */
     def makeAttributeRestype(resourceClass: IRI) = {
-        OntologyConstants.SalsahGui.attributeNames.resourceClass + OntologyConstants.SalsahGui.attributeNames.assignmentOperator + resourceClass
+        "restypeid=" + resourceClass
     }
 
     /**
