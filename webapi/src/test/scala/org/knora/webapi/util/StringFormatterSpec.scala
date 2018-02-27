@@ -22,6 +22,7 @@ package org.knora.webapi.util
 
 import org.knora.webapi._
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.StringFormatter.SalsahGuiAttributeDefinition
 
 /**
   * Tests [[StringFormatter]].
@@ -672,6 +673,12 @@ class StringFormatterSpec extends CoreSpec() {
             }
         }
 
+        "reject http://0.0.0.0:3333/ontology/incunabula/v2#1234 (invalid entity name)" in {
+            assertThrows[BadRequestException] {
+                "http://0.0.0.0:3333/ontology/incunabula/v2#1234".toSmartIriWithErr(throw BadRequestException(s"Invalid IRI"))
+            }
+        }
+
         "enable pattern matching with SmartIri" in {
             val input: SmartIri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri
 
@@ -713,17 +720,17 @@ class StringFormatterSpec extends CoreSpec() {
         }
 
         "return the data named graph of a project without short code" in {
-            val shortname = SharedAdminTestData.incunabulaProjectInfo.shortname
+            val shortname = SharedTestDataV1.incunabulaProjectInfo.shortname
             val expected = s"http://www.knora.org/data/$shortname"
-            val result = stringFormatter.projectDataNamedGraph(SharedAdminTestData.incunabulaProjectInfo)
+            val result = stringFormatter.projectDataNamedGraph(SharedTestDataV1.incunabulaProjectInfo)
             result should be(expected)
         }
 
         "return the data named graph of a project with short code" in {
-            val shortcode = SharedAdminTestData.imagesProjectInfo.shortcode.get
-            val shortname = SharedAdminTestData.imagesProjectInfo.shortname
+            val shortcode = SharedTestDataV1.imagesProjectInfo.shortcode.get
+            val shortname = SharedTestDataV1.imagesProjectInfo.shortname
             val expected = s"http://www.knora.org/data/$shortcode/$shortname"
-            val result = stringFormatter.projectDataNamedGraph(SharedAdminTestData.imagesProjectInfo)
+            val result = stringFormatter.projectDataNamedGraph(SharedTestDataV1.imagesProjectInfo)
             result should be(expected)
         }
 
@@ -745,5 +752,51 @@ class StringFormatterSpec extends CoreSpec() {
             }
         }
 
+        "parse the objects of salsah-gui:guiAttributeDefinition" in {
+            stringFormatter.toSalsahGuiAttributeDefinition("hlist(required):iri", throw AssertionException("not valid")) should ===(
+                SalsahGuiAttributeDefinition(attributeName = "hlist", isRequired = true, allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Iri)
+            )
+
+            stringFormatter.toSalsahGuiAttributeDefinition("numprops:integer", throw AssertionException("not valid")) should ===(
+                SalsahGuiAttributeDefinition(attributeName = "numprops", isRequired = false, allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer)
+            )
+
+            stringFormatter.toSalsahGuiAttributeDefinition("size:integer", throw AssertionException("not valid")) should ===(
+                SalsahGuiAttributeDefinition(attributeName = "size", isRequired = false, allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer)
+            )
+
+            stringFormatter.toSalsahGuiAttributeDefinition("maxlength:integer", throw AssertionException("not valid")) should ===(
+                SalsahGuiAttributeDefinition(attributeName = "maxlength", isRequired = false, allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer)
+            )
+
+            stringFormatter.toSalsahGuiAttributeDefinition("max(required):decimal", throw AssertionException("not valid")) should ===(
+                SalsahGuiAttributeDefinition(attributeName = "max", isRequired = true, allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Decimal)
+            )
+
+            stringFormatter.toSalsahGuiAttributeDefinition("min(required):decimal", throw AssertionException("not valid")) should ===(
+                SalsahGuiAttributeDefinition(attributeName = "min", isRequired = true, allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Decimal)
+            )
+
+            stringFormatter.toSalsahGuiAttributeDefinition("width:percent", throw AssertionException("not valid")) should ===(
+                SalsahGuiAttributeDefinition(
+                    attributeName = "width",
+                    isRequired = false,
+                    allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Percent
+                )
+            )
+
+            stringFormatter.toSalsahGuiAttributeDefinition("rows:integer", throw AssertionException("not valid")) should ===(
+                SalsahGuiAttributeDefinition(attributeName = "rows", isRequired = false, allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer)
+            )
+
+            stringFormatter.toSalsahGuiAttributeDefinition("wrap:string(soft|hard)", throw AssertionException("not valid")) should ===(
+                SalsahGuiAttributeDefinition(
+                    attributeName = "wrap",
+                    isRequired = false,
+                    allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Str,
+                    enumeratedValues = Set("soft", "hard")
+                )
+            )
+        }
     }
 }

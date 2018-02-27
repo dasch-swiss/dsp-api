@@ -36,7 +36,7 @@ import scala.concurrent.duration._
 object SipiResponderV1Spec {
 
     // A test UserProfileV1.
-    private val userProfile: UserProfileV1 = SharedAdminTestData.incunabulaMemberUser
+    private val userProfile: UserProfileV1 = SharedTestDataV1.incunabulaMemberUser
 
     // A test UserDataV1.
     private val userData: UserDataV1 = userProfile.userData
@@ -65,7 +65,7 @@ class SipiResponderV1Spec extends CoreSpec() with ImplicitSender {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedAdminTestData.rootUser)
+        responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 

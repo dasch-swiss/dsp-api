@@ -38,7 +38,7 @@ import scala.concurrent.duration._
   */
 object PersistentMapResponderV2Spec {
     private val base64Encoder = Base64.getUrlEncoder.withoutPadding
-    private val userProfile = SharedAdminTestData.incunabulaProjectAdminUser
+    private val userProfile = SharedTestDataV1.incunabulaProjectAdminUser
     private val userEmailBytes = userProfile.userData.email.getOrElse(throw AssertionException(s"Test user has no email address")).getBytes("UTF-8")
     private val userEmailBase64 = base64Encoder.encodeToString(userEmailBytes)
     private val testMap1Path = s"user/$userEmailBase64/testmap1"

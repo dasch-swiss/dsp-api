@@ -65,7 +65,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    private val anythingUser = SharedAdminTestData.anythingUser1
+    private val anythingUser = SharedTestDataV1.anythingUser1
     private val anythingUserEmail = anythingUser.userData.email.get
 
     private val password = "test"
@@ -80,7 +80,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataV1.rootUser), 10.seconds)
     }
 
     "The Search v2 Endpoint" should {
@@ -1516,7 +1516,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkCountQuery(responseAs[String], 7)
+                checkCountQuery(responseAs[String], 10)
 
             }
 
@@ -1572,6 +1572,173 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 checkCountQuery(responseAs[String], 1)
+
+            }
+
+        }
+
+        "search for a book whose title contains 'Zeit' using the regex function" in {
+
+            val sparqlSimplified =
+                """
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |    CONSTRUCT {
+                  |
+                  |        ?mainRes knora-api:isMainResource true .
+                  |
+                  |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
+                  |
+                  |     } WHERE {
+                  |
+                  |        ?mainRes a knora-api:Resource .
+                  |
+                  |        ?mainRes a <http://0.0.0.0:3333/ontology/incunabula/simple/v2#book> .
+                  |
+                  |
+                  |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
+                  |        <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
+                  |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
+                  |
+                  |        FILTER regex(?propVal0, "Zeit", "i")
+                  |
+                  |     }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeit.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkCountQuery(responseAs[String], 2)
+
+            }
+
+        }
+
+        "search for a book whose title contains 'Zeitglöcklein' using the contains function" in {
+
+            val sparqlSimplified =
+                """
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |    CONSTRUCT {
+                  |
+                  |        ?mainRes knora-api:isMainResource true .
+                  |
+                  |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
+                  |
+                  |     } WHERE {
+                  |
+                  |        ?mainRes a knora-api:Resource .
+                  |
+                  |        ?mainRes a <http://0.0.0.0:3333/ontology/incunabula/simple/v2#book> .
+                  |
+                  |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
+                  |        <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
+                  |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
+                  |
+                  |        FILTER contains(?propVal0, "Zeitglöcklein")
+                  |
+                  |     }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkCountQuery(responseAs[String], 2)
+
+            }
+
+
+        }
+
+        "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the contains function" in {
+
+            val sparqlSimplified =
+                """
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |    CONSTRUCT {
+                  |
+                  |        ?mainRes knora-api:isMainResource true .
+                  |
+                  |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
+                  |
+                  |     } WHERE {
+                  |
+                  |        ?mainRes a knora-api:Resource .
+                  |
+                  |        ?mainRes a <http://0.0.0.0:3333/ontology/incunabula/simple/v2#book> .
+                  |
+                  |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
+                  |        <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
+                  |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
+                  |
+                  |        FILTER contains(?propVal0, "Zeitglöcklein Lebens")
+                  |
+                  |     }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkCountQuery(responseAs[String], 2)
+
+            }
+
+
+        }
+
+        "search for 'Zeitglöcklein des Lebens' using dcterms:title" in {
+
+            val sparqlSimplified =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |    PREFIX dcterms: <http://purl.org/dc/terms/>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book dcterms:title ?title .
+                  |
+                  |    } WHERE {
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book dcterms:title ?title .
+                  |
+                  |        dcterms:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        FILTER(?title = 'Zeitglöcklein des Lebens und Leidens Christi')
+                  |
+                  |    } OFFSET 0
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkCountQuery(responseAs[String], 2)
 
             }
 

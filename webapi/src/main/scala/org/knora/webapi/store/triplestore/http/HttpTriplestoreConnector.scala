@@ -22,7 +22,7 @@ package org.knora.webapi.store.triplestore.http
 
 import java.io.StringReader
 
-import akka.actor.{Actor, ActorLogging, Status}
+import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
 import akka.http.javadsl.model.headers.Authorization
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
@@ -30,13 +30,13 @@ import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
 import org.apache.commons.lang3.StringUtils
+import org.eclipse.rdf4j
 import org.eclipse.rdf4j.model.Statement
-import org.eclipse.rdf4j.model.impl.SimpleLiteral
 import org.eclipse.rdf4j.rio.RDFHandler
 import org.eclipse.rdf4j.rio.turtle._
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{StringV2, _}
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FakeTriplestore
@@ -46,7 +46,7 @@ import spray.json._
 import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters._
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -54,14 +54,15 @@ import scala.util.{Failure, Success, Try}
   * `application.conf`.
   */
 class HttpTriplestoreConnector extends Actor with ActorLogging {
+
     // MIME type constants.
     private val mimeTypeApplicationSparqlResultsJson = MediaType.applicationWithFixedCharset("sparql-results+json", HttpCharsets.`UTF-8`) // JSON is always UTF-8
     private val mimeTypeTextTurtle = MediaType.text("turtle") // Turtle is always UTF-8
     private val mimeTypeApplicationSparqlUpdate = MediaType.applicationWithFixedCharset("sparql-update", HttpCharsets.`UTF-8`) // SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly"
 
-    private implicit val system = context.system
-    private implicit val executionContext = system.dispatcher
-    private implicit val materializer = ActorMaterializer()
+    private implicit val system: ActorSystem = context.system
+    private implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    private implicit val materializer: ActorMaterializer = ActorMaterializer()
     private val settings = Settings(system)
     private val triplestoreType = settings.triplestoreType
 
@@ -249,7 +250,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             /**
               * A collection of all the statements in the input file, grouped and sorted by subject IRI.
               */
-            private var statements = Map.empty[IRI, Map[IRI, Seq[StringV2]]]
+            private var statements = Map.empty[SubjectV2, Map[IRI, Seq[LiteralV2]]]
 
             override def handleComment(comment: IRI): Unit = {}
 
@@ -259,20 +260,40 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
               * @param st the statement to be added.
               */
             override def handleStatement(st: Statement): Unit = {
-                val subjectIri = st.getSubject.stringValue
-                val predicateIri = st.getPredicate.stringValue
-                val objectIri = st.getObject.stringValue
-                val objectLang: Option[String] = st.getObject match {
-                    case lit: SimpleLiteral => lit.getLanguage.asScala // needs the 'scala.compat.java8.OptionConverters._' import
-                    case _ => None
+                val subject: SubjectV2 = st.getSubject match {
+                    case iri: rdf4j.model.IRI => IriSubjectV2(iri.stringValue)
+                    case blankNode: rdf4j.model.BNode => BlankNodeSubjectV2(blankNode.getID)
+                    case other => throw InconsistentTriplestoreDataException(s"Unsupported subject in construct query result: $other")
                 }
-                val currentStatementsForSubject: Map[IRI, Seq[StringV2]] = statements.getOrElse(subjectIri, Map.empty[IRI, Seq[StringV2]])
-                val currentStatementsForPredicate: Seq[StringV2] = currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[StringV2])
 
-                val updatedPredicateStatements = currentStatementsForPredicate :+ StringV2(objectIri, objectLang)
+                val predicateIri = st.getPredicate.stringValue
+
+                // log.debug("sparqlHttpExtendedConstruct - handleStatement - object: {}", st.getObject)
+
+                val objectLiteral: LiteralV2 = st.getObject match {
+                    case iri: rdf4j.model.IRI => IriLiteralV2(value = iri.stringValue)
+                    case blankNode: rdf4j.model.BNode => BlankNodeLiteralV2(value = blankNode.getID)
+
+                    case literal: rdf4j.model.Literal => literal.getDatatype.toString match {
+                        case OntologyConstants.Rdf.LangString => StringLiteralV2(value = literal.stringValue, language = literal.getLanguage.asScala)
+                        case OntologyConstants.Xsd.String => StringLiteralV2(value = literal.stringValue, language = None)
+                        case OntologyConstants.Xsd.Boolean => BooleanLiteralV2(value = literal.booleanValue)
+                        case OntologyConstants.Xsd.Integer | OntologyConstants.Xsd.NonNegativeInteger => IntLiteralV2(value = literal.intValue)
+                        case unknown => throw NotImplementedException(s"The literal type '$unknown' is not implemented.")
+                    }
+
+                    case other => throw InconsistentTriplestoreDataException(s"Unsupported object in construct query result: $other")
+                }
+
+                // log.debug("sparqlHttpExtendedConstruct - handleStatement - objectLiteral: {}", objectLiteral)
+
+                val currentStatementsForSubject: Map[IRI, Seq[LiteralV2]] = statements.getOrElse(subject, Map.empty[IRI, Seq[LiteralV2]])
+                val currentStatementsForPredicate: Seq[LiteralV2] = currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[LiteralV2])
+
+                val updatedPredicateStatements = currentStatementsForPredicate :+ objectLiteral
                 val updatedSubjectStatements = currentStatementsForSubject + (predicateIri -> updatedPredicateStatements)
 
-                statements += (subjectIri -> updatedSubjectStatements)
+                statements += (subject -> updatedSubjectStatements)
             }
 
             override def endRDF(): Unit = {}

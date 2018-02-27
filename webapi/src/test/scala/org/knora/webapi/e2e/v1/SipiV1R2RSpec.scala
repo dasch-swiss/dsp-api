@@ -39,7 +39,7 @@ import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
-import org.knora.webapi.{FileWriteException, LiveActorMaker, R2RSpec, SharedAdminTestData}
+import org.knora.webapi.{FileWriteException, LiveActorMaker, R2RSpec, SharedTestDataV1}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -72,8 +72,8 @@ class SipiV1R2RSpec extends R2RSpec {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(30).second)
 
-    private val rootEmail = SharedAdminTestData.rootUser.userData.email.get
-    private val incunabulaProjectAdminEmail = SharedAdminTestData.incunabulaProjectAdminUser.userData.email.get
+    private val rootEmail = SharedTestDataV1.rootUser.userData.email.get
+    private val incunabulaProjectAdminEmail = SharedTestDataV1.incunabulaProjectAdminUser.userData.email.get
     private val testPass = "test"
 
     val rdfDataObjects = List(
@@ -83,7 +83,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedAdminTestData.rootUser), 30.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataV1.rootUser), 30.seconds)
     }
 
     object RequestParams {

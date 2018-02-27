@@ -28,12 +28,13 @@
 @(triplestore: String)
 
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
 
-SELECT ?graph ?resourceClass ?resourceClassPred ?resourceClassObj ?resourceClassObjLang ?cardinalityProp ?cardinality ?cardinalityVal
+SELECT ?graph ?resourceClass ?resourceClassPred ?resourceClassObj ?resourceClassObjLang ?cardinalityProp ?cardinality ?cardinalityVal ?guiOrder
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
@@ -51,6 +52,11 @@ WHERE {
         ?restriction owl:onProperty ?cardinalityProp .
         ?cardinalityProp rdfs:subPropertyOf* knora-base:resourceProperty .
         ?restriction ?cardinality ?cardinalityVal .
+
+        OPTIONAL {
+            ?restriction salsah-gui:guiOrder ?guiOrder .
+        }
+
         FILTER(?cardinality = owl:cardinality || ?cardinality = owl:minCardinality || ?cardinality = owl:maxCardinality)
     }
     UNION

@@ -25,7 +25,7 @@ import akka.testkit.{ImplicitSender, TestActorRef, TestProbe}
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceInfoGetRequestV1
 import org.knora.webapi.responders._
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.{CoreSpec, SharedAdminTestData, TestProbeMaker}
+import org.knora.webapi.{CoreSpec, SharedTestDataV1, TestProbeMaker}
 
 /**
   * Tests [[ResponderManager]].
@@ -51,7 +51,7 @@ class ResponderManagerV1Spec extends CoreSpec("ResponderManagerTestSystem") with
         "start the 'ResourcesResponder' router " in {
             mockResourcesRouter.isInstanceOf[TestProbe] should ===(true)
 
-            val testMsg = ResourceInfoGetRequestV1("http://data.knora.org/xyz", SharedAdminTestData.anonymousUser)
+            val testMsg = ResourceInfoGetRequestV1("http://data.knora.org/xyz", SharedTestDataV1.anonymousUser)
             actorUnderTest ! testMsg
             mockResourcesRouter.expectMsg(testMsg)
         }

@@ -1,9 +1,13 @@
 package org.knora.webapi.util
 
+import java.time.Instant
+
 import org.apache.commons.lang3.StringEscapeUtils
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LiteralValueType, ResourceCreateValueObjectResponseV1, ResourceCreateValueResponseV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Value
 
 import scala.reflect.runtime.{universe => ru}
 
@@ -37,10 +41,24 @@ object MessageUtil {
             case byte: Byte => byte.toString
             case s: String => "\"" + StringEscapeUtils.escapeJava(s) + "\""
             case Some(value) => "Some(" + toSource(value) + ")"
+            case smartIri: SmartIri => "\"" + StringEscapeUtils.escapeJava(smartIri.toString) + "\".toSmartIri"
+            case instant: Instant => "Instant.parse(\"" + instant.toString + "\")"
             case None => "None"
 
             // Handle enumerations.
+
+            case cardinality: Cardinality.Value =>
+                cardinality match {
+                    case Cardinality.MayHaveOne => "Cardinality.MayHaveOne"
+                    case Cardinality.MayHaveMany => "Cardinality.MayHaveMany"
+                    case Cardinality.MustHaveOne => "Cardinality.MustHaveOne"
+                    case Cardinality.MustHaveSome => "Cardinality.MustHaveSome"
+                }
+
             case enumVal if enumVal.getClass.getName == "scala.Enumeration$Val" => enumVal.toString
+
+            case ontologySchema: OntologySchema =>
+                ontologySchema.getClass.getSimpleName.stripSuffix("$")
 
             // Handle collections.
 
@@ -60,6 +78,30 @@ object MessageUtil {
                 map.map {
                     case (key, value) => toSource(key) + " -> " + toSource(value)
                 }.mkString("Map(" + maybeNewLine, ", " + maybeNewLine, maybeNewLine + ")")
+
+            // Handle case classes.
+            case caseClass: Product =>
+                val objClass = obj.getClass
+                val objClassName = objClass.getSimpleName
+
+                val fieldMap: Map[String, Any] = (Map[String, Any]() /: caseClass.getClass.getDeclaredFields) {
+                    (acc, field) =>
+                        if (field.getName == "stringFormatter" || field.getName == "MODULE$") { // ridiculous hack
+                            acc
+                        } else {
+                            field.setAccessible(true)
+                            acc + (field.getName -> field.get(caseClass))
+                        }
+                }
+
+                val members: Iterable[String] = fieldMap.map {
+                    case (fieldName, fieldValue) =>
+                        val fieldValueString = toSource(fieldValue)
+                        s"$fieldName = $fieldValueString"
+                }
+
+                val maybeNewLine = maybeMakeNewLine(members.size)
+                members.mkString(objClassName + "(" + maybeNewLine, ", " + maybeNewLine, maybeNewLine + ")")
 
             // Handle other classes.
             case _ =>

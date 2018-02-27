@@ -22,14 +22,37 @@ package org.knora.webapi.util
 
 import java.util.{Calendar, GregorianCalendar}
 
-import org.knora.webapi.{IRI, OntologyConstants}
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
-import org.knora.webapi.messages.v2.responder.DateValueContentV2
+import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 
 /**
   * Utility functions for converting dates.
   */
 object DateUtilV2 {
+
+    /**
+      * Enumeration for era.
+      */
+    object KnoraEraV2 extends Enumeration {
+        val BCE: KnoraEraV2.Value = Value(0, "BCE")
+        val CE: KnoraEraV2.Value = Value(1, "CE")
+
+        val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
+
+        /**
+          * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
+          * [[InconsistentTriplestoreDataException]].
+          *
+          * @param name the name of the value.
+          * @return the requested value.
+          */
+        def lookup(name: String): Value = {
+            valueMap.get(name) match {
+                case Some(value) => value
+                case None => throw InconsistentTriplestoreDataException(s"Calendar era not supported: $name")
+            }
+        }
+    }
 
     /**
       * Represents a date as year, month, day including the given precision.
@@ -39,14 +62,14 @@ object DateUtilV2 {
       * @param day       the date's day.
       * @param precision the given date's precision.
       */
-    case class DateYearMonthDay(year: Int, month: Int, day: Int, precision: KnoraPrecisionV1.Value) {
+    case class DateYearMonthDay(year: Int, month: Int, day: Int, era: KnoraEraV2.Value, precision: KnoraPrecisionV1.Value) {
 
         /**
           * Converts the [[DateYearMonthDay]] to knora-api assertions representing a start date.
           *
           * @return a Map of knora-api value properties to numbers (year, month, day) taking into account the given precision.
           */
-        def toStartDateAssertions(): Map[IRI, Int] = {
+        def toStartDateAssertions: Map[IRI, Int] = {
 
             precision match {
 
@@ -70,9 +93,20 @@ object DateUtilV2 {
 
             }
 
+
         }
 
-        def toEndDateAssertions(): Map[IRI, Int] = {
+        /**
+          * Converts the era to knora-api assertions representing a start era.
+          *
+          * @return a map of knora-api value StartEra property to era
+          */
+        def toStartEraAssertion: Map[IRI, String] = {
+            Map(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra -> era.toString)
+
+        }
+
+        def toEndDateAssertions: Map[IRI, Int] = {
 
             /**
               * Converts the [[DateYearMonthDay]] to knora-api assertions representing an end date.
@@ -103,6 +137,17 @@ object DateUtilV2 {
 
         }
 
+        /**
+          * Converts the era to knora-api assertions representing an end era.
+          *
+          * @return a map of knora-api value EndEra property to era
+          */
+        def toEndEraAssertion: Map[IRI, String] = {
+
+            Map(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra -> era.toString)
+
+        }
+
 
     }
 
@@ -120,8 +165,10 @@ object DateUtilV2 {
         val year: Int = javaGregorianCalendarDate.get(Calendar.YEAR)
         val month: Int = javaGregorianCalendarDate.get(Calendar.MONTH) + 1 // Attention: in java.util.Calendar, month count starts with 0
         val day: Int = javaGregorianCalendarDate.get(Calendar.DAY_OF_MONTH)
+        val era: String = DateUtilV1.eraToString(javaGregorianCalendarDate.get(Calendar.ERA))
 
-        DateYearMonthDay(year = year, month = month, day = day, precision = precision)
+
+        DateYearMonthDay(year = year, month = month, day = day, era = KnoraEraV2.lookup(era), precision = precision)
 
     }
 

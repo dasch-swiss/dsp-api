@@ -54,7 +54,7 @@ abstract class SalsahSpec extends WordSpecLike with Matchers with RequestBuildin
       */
     protected def loadTestData(rdfDataObjectsJsonList: String): Unit = {
 
-        val request = Post(settings.webapiUrl + "/v1/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjectsJsonList))
+        val request = Post(settings.webapiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjectsJsonList))
         singleAwaitingRequest(request, 300.seconds)
     }
 

@@ -212,6 +212,22 @@ object DateUtilV1 {
     }
 
     /**
+      * Converts era property of java.calendar to a string format.
+      *
+      * @param era java.calendar era property.
+      * @return string format of era.
+      */
+    def eraToString(era: Int) : String = {
+
+        era match {
+
+            case 1 => StringFormatter.Era_CE
+            case 0 => StringFormatter.Era_BCE
+            case other => throw AssertionException(s"A valid era should be 0 or 1, but $other given")
+
+        }
+    }
+    /**
       * Converts a Julian Day Number to a string in `YYYY[-MM[-DD] ]` format.
       *
       * @param julianDay    a Julian Day Number.
@@ -225,26 +241,19 @@ object DateUtilV1 {
         val month = gregorianCalendar.get(Calendar.MONTH) + 1
         // Attention: in java.util.Calendar, month count starts with 0
         val day = gregorianCalendar.get(Calendar.DAY_OF_MONTH)
-        val era = gregorianCalendar.get(Calendar.ERA)
-
-        val date_era: String = era match {
-
-            case 1 => StringFormatter.Era_CE
-            case 0 => StringFormatter.Era_BCE
-
-        }
+        val era = eraToString(gregorianCalendar.get(Calendar.ERA))
         precision match {
             case KnoraPrecisionV1.YEAR =>
                 // Year precision: just include the year.
-                f"$year%04d $date_era"
+                f"$year%04d $era"
 
             case KnoraPrecisionV1.MONTH =>
                 // Month precision: include the year and the month.
-                f"$year%04d-$month%02d $date_era"
+                f"$year%04d-$month%02d $era"
 
             case KnoraPrecisionV1.DAY =>
                 // Day precision: include the year, the month, and the day.
-                f"$year%04d-$month%02d-$day%02d $date_era"
+                f"$year%04d-$month%02d-$day%02d $era"
         }
 
 

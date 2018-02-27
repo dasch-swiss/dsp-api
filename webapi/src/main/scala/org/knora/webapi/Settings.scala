@@ -137,6 +137,16 @@ class SettingsImpl(config: Config) extends Extension {
     val fallbackLanguage: String = config.getString("user.default-language")
 
     val profileQueries: Boolean = config.getBoolean("app.triplestore.profile-queries")
+
+    val routesToReject: Seq[String] = config.getList("app.routes-to-reject").iterator.asScala.map {
+        (mType: ConfigValue) => mType.unwrapped.toString
+    }.toSeq
+
+    // monitoring reporters
+    val prometheusReporter: Boolean = config.getBoolean("app.monitoring.prometheus-reporter")
+    val zipkinReporter: Boolean = config.getBoolean("app.monitoring.zipkin-reporter")
+    val jaegerReporter: Boolean = config.getBoolean("app.monitoring.jaeger-reporter")
+
 }
 
 object Settings extends ExtensionId[SettingsImpl] with ExtensionIdProvider {

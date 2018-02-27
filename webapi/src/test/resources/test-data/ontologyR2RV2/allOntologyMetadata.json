@@ -1,5 +1,9 @@
 {
   "knora-api:hasOntologies" : [ {
+    "@id" : "http://0.0.0.0:3333/ontology/00FE/dokubib/v2",
+    "@type" : "http://www.w3.org/2002/07/owl#Ontology",
+    "rdfs:label" : "The dokubib ontology"
+  }, {
     "@id" : "http://0.0.0.0:3333/ontology/00FF/images/v2",
     "@type" : "http://www.w3.org/2002/07/owl#Ontology",
     "rdfs:label" : "The images demo ontology"
@@ -20,10 +24,6 @@
     "@id" : "http://0.0.0.0:3333/ontology/biblio/v2",
     "@type" : "http://www.w3.org/2002/07/owl#Ontology",
     "rdfs:label" : "The Biblio ontology"
-  }, {
-    "@id" : "http://0.0.0.0:3333/ontology/dokubib/v2",
-    "@type" : "http://www.w3.org/2002/07/owl#Ontology",
-    "rdfs:label" : "The dokubib ontology"
   }, {
     "@id" : "http://0.0.0.0:3333/ontology/incunabula/v2",
     "@type" : "http://www.w3.org/2002/07/owl#Ontology",

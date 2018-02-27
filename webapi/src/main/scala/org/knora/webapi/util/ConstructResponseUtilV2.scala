@@ -21,7 +21,7 @@
 package org.knora.webapi.util
 
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
+import org.knora.webapi.messages.store.triplestoremessages.{LiteralV2, SparqlConstructResponse}
 import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
@@ -94,7 +94,7 @@ object ConstructResponseUtilV2 {
             case (resIri: IRI, assertions: Seq[(IRI, String)]) =>
                 // filter out those resources that the user has not sufficient permissions to see
                 // please note that this also applies to referred resources
-                PermissionUtilV1.getUserPermissionV1FromAssertions(resIri, assertions, userProfile).isEmpty
+                PermissionUtilADM.getUserPermissionV1FromAssertions(resIri, assertions, userProfile).isEmpty
         }
 
         val flatResourcesWithValues: Map[IRI, ResourceWithValueRdfData] = resourceStatementsVisible.map {
@@ -161,7 +161,7 @@ object ConstructResponseUtilV2 {
                                 val resourceProject: String = predicateMap(OntologyConstants.KnoraBase.AttachedToProject)
 
                                 // prepend the resource's project to the value's assertions
-                                PermissionUtilV1.getUserPermissionV1FromAssertions(valObjIri, (OntologyConstants.KnoraBase.AttachedToProject, resourceProject) +: valueObjAssertions, userProfile).nonEmpty
+                                PermissionUtilADM.getUserPermissionV1FromAssertions(valObjIri, (OntologyConstants.KnoraBase.AttachedToProject, resourceProject) +: valueObjAssertions, userProfile).nonEmpty
                         }.flatMap {
                             valObjIri: IRI =>
 

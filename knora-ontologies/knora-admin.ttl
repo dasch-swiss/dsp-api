@@ -371,13 +371,13 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#projectKeywords
+###  http://www.knora.org/ontology/knora-base#projectKeyword
 
-:projectKeywords rdf:type owl:DatatypeProperty ;
+:projectKeyword rdf:type owl:DatatypeProperty ;
 
              rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-             rdfs:comment "A comma-delimited list of keywords describing a project"@en ;
+             rdfs:comment "A keyword describing a project"@en ;
 
              :subjectClassConstraint :knoraProject ;
 
@@ -625,8 +625,8 @@
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
-                                owl:onProperty :projectKeywords ;
-                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                owl:onProperty :projectKeyword ;
+                                owl:minCardinality "0"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectLogo ;
@@ -737,13 +737,24 @@
             :preferredLanguage "en" ;
             :isInSystemAdminGroup "false"^^xsd:boolean .
 
+###  http://www.knora.org/ontology/knora-base#AnonymousUser
+:AnonymousUser rdf:type :User ;
+            rdfs:comment "A built-in anonymous user."@en ;
+            :email "anonymous@localhost" ;
+            :givenName "Knora" ;
+            :familyName "Anonymous" ;
+            :password "-" ;
+            :status "true"^^xsd:boolean ;
+            :preferredLanguage "en" ;
+            :isInSystemAdminGroup "false"^^xsd:boolean .
+
 ### http://www.knora.org/ontology/knora-base#SystemProject
 :SystemProject rdf:type :knoraProject ;
             rdfs:comment "A built-in project representing the Knora System."@en ;
             :projectShortname "SystemProject" ;
             :projectShortcode "FFFF" ;
             :projectLongname "Knora System Project" ;
-            :projectDescription "Knora System Project" ;
+            :projectDescription "Knora System Project"@en ;
             :projectOntology <http://www.knora.org/ontology/knora-base> ;
             :status "true"^^xsd:boolean ;
             :hasSelfJoinEnabled "false"^^xsd:boolean .
