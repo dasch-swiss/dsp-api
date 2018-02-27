@@ -54,7 +54,7 @@ See [docs/Readme.md](docs/Readme.md).
 ## Try it out
 
 ### Quick Installation Guide for Knora, Salsah, Sipi and GraphDB
-A manual to get all mentioned components locally up and running can be found [here:](https://github.com/dhlab-basel/Knora/wiki/Quick-Installation-Guide-for-Knora,-Salsah,-Sipi-and-GraphDB)
+A manual to get all mentioned components locally up and running can be found [here](https://github.com/dhlab-basel/Knora/wiki/Quick-Installation-Guide-for-Knora,-Salsah,-Sipi-and-GraphDB).
 
 ### Run the Knora API server
 
