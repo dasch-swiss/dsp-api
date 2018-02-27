@@ -902,7 +902,7 @@ object KnoraApiV2WithValueObjects {
         isEditable = true,
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElement,
+                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
                 objects = Set(OntologyConstants.SalsahGui.Colorpicker)
             ),
             makePredicate(
@@ -936,7 +936,7 @@ object KnoraApiV2WithValueObjects {
         isEditable = true,
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElement,
+                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
                 objects = Set(OntologyConstants.SalsahGui.Geometry)
             ),
             makePredicate(
@@ -969,7 +969,7 @@ object KnoraApiV2WithValueObjects {
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue),
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElement,
+                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
                 objects = Set(OntologyConstants.SalsahGui.Richtext)
             ),
             makePredicate(
@@ -998,7 +998,7 @@ object KnoraApiV2WithValueObjects {
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue),
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElement,
+                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
                 objects = Set(OntologyConstants.SalsahGui.Fileupload)
             ),
             makePredicate(
@@ -1028,7 +1028,7 @@ object KnoraApiV2WithValueObjects {
         isEditable = true,
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElement,
+                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
                 objects = Set(OntologyConstants.SalsahGui.Fileupload)
             ),
             makePredicate(
@@ -1058,7 +1058,7 @@ object KnoraApiV2WithValueObjects {
         isEditable = true,
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElement,
+                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
                 objects = Set(OntologyConstants.SalsahGui.Fileupload)
             ),
             makePredicate(
@@ -1088,7 +1088,7 @@ object KnoraApiV2WithValueObjects {
         isEditable = true,
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElement,
+                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
                 objects = Set(OntologyConstants.SalsahGui.Fileupload)
             ),
             makePredicate(
@@ -1118,7 +1118,7 @@ object KnoraApiV2WithValueObjects {
         isEditable = true,
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElement,
+                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
                 objects = Set(OntologyConstants.SalsahGui.Fileupload)
             ),
             makePredicate(
@@ -1148,7 +1148,7 @@ object KnoraApiV2WithValueObjects {
         isEditable = true,
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElement,
+                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
                 objects = Set(OntologyConstants.SalsahGui.Fileupload)
             ),
             makePredicate(
@@ -1178,7 +1178,7 @@ object KnoraApiV2WithValueObjects {
         isEditable = true,
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElement,
+                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
                 objects = Set(OntologyConstants.SalsahGui.Fileupload)
             ),
             makePredicate(

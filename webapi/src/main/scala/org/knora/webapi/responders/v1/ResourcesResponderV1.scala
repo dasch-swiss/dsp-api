@@ -671,7 +671,7 @@ class ResourcesResponderV1 extends Responder {
                             pid = propertyIri,
                             valuetype_id = Some(OntologyConstants.KnoraBase.LinkValue),
                             guiorder = guiOrder,
-                            guielement = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
+                            guielement = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
                             label = propertyEntityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
                             occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
                             attributes = (propertyEntityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))).mkString(";"),
@@ -683,7 +683,7 @@ class ResourcesResponderV1 extends Responder {
                             pid = propertyIri,
                             valuetype_id = propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint),
                             guiorder = guiOrder,
-                            guielement = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
+                            guielement = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
                             label = propertyEntityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
                             occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
                             attributes = propertyEntityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute).mkString(";"),
@@ -2377,7 +2377,7 @@ class ResourcesResponderV1 extends Responder {
                         }
                 },
                 guiorder = propertyCardinality.flatMap(_.guiOrder),
-                guielement = propertyEntityInfo.flatMap(_.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri))),
+                guielement = propertyEntityInfo.flatMap(_.getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri))),
                 label = propertyEntityInfo.flatMap(_.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage))),
                 occurrence = propertyCardinality.map(_.cardinality.toString),
                 attributes = propertyEntityInfo match {

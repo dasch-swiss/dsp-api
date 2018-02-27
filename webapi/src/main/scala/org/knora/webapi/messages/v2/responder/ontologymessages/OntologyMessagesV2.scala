@@ -866,6 +866,7 @@ case class PropertiesGetRequestV2(propertyIris: Set[SmartIri], allLanguages: Boo
 case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
                           classes: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2],
                           properties: Map[SmartIri, ReadPropertyInfoV2] = Map.empty[SmartIri, ReadPropertyInfoV2],
+                          individuals: Map[SmartIri, ReadIndividualInfoV2] = Map.empty[SmartIri, ReadIndividualInfoV2],
                           standoffClasses: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2],
                           standoffProperties: Map[SmartIri, ReadPropertyInfoV2] = Map.empty[SmartIri, ReadPropertyInfoV2],
                           userLang: Option[String] = None) {
@@ -898,6 +899,9 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
                 case (classIri, readClassInfo) => classIri.toOntologySchema(targetSchema) -> readClassInfo.toOntologySchema(targetSchema)
             },
             properties = convertedProperties,
+            individuals = individuals.map {
+                case (individualIri, readIndividualInfo) => individualIri.toOntologySchema(targetSchema) -> readIndividualInfo.toOntologySchema(targetSchema)
+            },
             standoffClasses = standoffClasses.map {
                 case (classIri, readClassInfo) => classIri.toOntologySchema(targetSchema) -> readClassInfo.toOntologySchema(targetSchema)
             },
@@ -946,25 +950,24 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
 
         val jsonProperties: Map[IRI, JsonLDObject] = propertiesToJsonLD(properties)
 
+        // individuals
+
+        val jsonIndividuals: Map[IRI, JsonLDObject] = individuals.map {
+            case (individualIri, individualInfo) =>
+                val individualJson = userLang match {
+                    case Some(lang) => individualInfo.toJsonLDWithSingleLanguage(targetSchema = targetSchema, userLang = lang, settings = settings)
+                    case None => individualInfo.toJsonLDWithAllLanguages(targetSchema = targetSchema)
+                }
+
+                individualIri.toString -> individualJson
+        }
+
         // standoff classes and properties
-
-        val hasStandoffClassesProp = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasStandoffClasses
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffClasses
-        }
-
-        val hasStandoffPropertiesProp = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasStandoffProperties
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffProperties
-        }
 
         val jsonStandoffClasses: Map[IRI, JsonLDObject] = classesToJsonLD(standoffClasses)
         val jsonStandoffProperties: Map[IRI, JsonLDObject] = propertiesToJsonLD(standoffProperties)
 
-        val jsonStandoffEntities: Map[IRI, JsonLDObject] = Map(
-            hasStandoffClassesProp -> JsonLDObject(jsonStandoffClasses),
-            hasStandoffPropertiesProp -> JsonLDObject(jsonStandoffProperties)
-        )
+        // Assemble the JSON-LD.
 
         val hasClassesProp = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasClasses
@@ -976,11 +979,33 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
             case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasProperties
         }
 
+        val hasIndividualsProp = targetSchema match {
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasIndividuals
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasIndividuals
+        }
+
+        val hasStandoffClassesProp = targetSchema match {
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasStandoffClasses
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffClasses
+        }
+
+        val hasStandoffPropertiesProp = targetSchema match {
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasStandoffProperties
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffProperties
+        }
+
+        val maybeIndividualsStatement = if (jsonIndividuals.nonEmpty) {
+            Some(hasIndividualsProp -> JsonLDObject(jsonIndividuals))
+        } else {
+            None
+        }
+
         JsonLDObject(
-            ontologyMetadata.toJsonLD(targetSchema) ++
-                Map(hasClassesProp -> JsonLDObject(jsonClasses),
-                    hasPropertiesProp -> JsonLDObject(jsonProperties)) ++
-                jsonStandoffEntities
+            ontologyMetadata.toJsonLD(targetSchema) ++ maybeIndividualsStatement +
+                (hasClassesProp -> JsonLDObject(jsonClasses)) +
+                (hasPropertiesProp -> JsonLDObject(jsonProperties)) +
+                (hasStandoffClassesProp -> JsonLDObject(jsonStandoffClasses)) +
+                (hasStandoffPropertiesProp -> JsonLDObject(jsonStandoffProperties))
         )
     }
 }
@@ -1566,7 +1591,7 @@ object Cardinality extends Enumeration {
 
 
 /**
-  * Represents information about an ontology entity (a class or property definition).
+  * Represents information about an ontology entity.
   */
 sealed trait EntityInfoContentV2 {
     /**
@@ -1816,7 +1841,7 @@ object EntityInfoContentV2 {
 }
 
 /**
-  * Represents information about either a resource or a property entity, as returned in an API response.
+  * Represents information about an ontolgoy entity, as returned in an API response.
   */
 sealed trait ReadEntityInfoV2 {
     /**
@@ -1878,93 +1903,6 @@ sealed trait ReadEntityInfoV2 {
         }
 
         JsonLDObject(getNonLanguageSpecific(targetSchema) ++ labels ++ comments)
-    }
-}
-
-/**
-  * Represents an RDF property definition as returned in an API response.
-  *
-  * @param entityInfoContent                   a [[PropertyInfoContentV2]] providing information about the property.
-  * @param isEditable                          `true` if the property's value is editable via the Knora API.
-  * @param isLinkProp                          `true` if the property is a subproperty of `knora-base:hasLinkTo`.
-  * @param isLinkValueProp                     `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
-  * @param isFileValueProp                     `true` if the property is a subproperty of `knora-base:hasFileValue`.
-  * @param isStandoffInternalReferenceProperty if `true`, this is a subproperty (directly or indirectly) of
-  *                                            [[OntologyConstants.KnoraBase.StandoffTagHasInternalReference]].
-  */
-case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
-                              isEditable: Boolean = false,
-                              isLinkProp: Boolean = false,
-                              isLinkValueProp: Boolean = false,
-                              isFileValueProp: Boolean = false,
-                              isStandoffInternalReferenceProperty: Boolean = false) extends ReadEntityInfoV2 {
-    def toOntologySchema(targetSchema: ApiV2Schema): ReadPropertyInfoV2 = copy(
-        entityInfoContent = entityInfoContent.toOntologySchema(targetSchema)
-    )
-
-    def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
-        if (entityInfoContent.ontologySchema != targetSchema) {
-            throw DataConversionException(s"ReadPropertyInfoV2 for property ${entityInfoContent.propertyIri} is not in schema $targetSchema")
-        }
-
-        // Get the correct knora-api:subjectType and knora-api:objectType predicates for the target API schema.
-        val (subjectTypePred: IRI, objectTypePred: IRI) = targetSchema match {
-            case ApiV2Simple => (OntologyConstants.KnoraApiV2Simple.SubjectType, OntologyConstants.KnoraApiV2Simple.ObjectType)
-            case ApiV2WithValueObjects => (OntologyConstants.KnoraApiV2WithValueObjects.SubjectType, OntologyConstants.KnoraApiV2WithValueObjects.ObjectType)
-        }
-
-        // Get the property's knora-api:subjectType and knora-api:objectType, if provided.
-        val (maybeSubjectType: Option[SmartIri], maybeObjectType: Option[SmartIri]) = entityInfoContent.ontologySchema match {
-            case InternalSchema => throw DataConversionException(s"ReadPropertyInfoV2 for property ${entityInfoContent.propertyIri} is not in schema $targetSchema")
-
-            case ApiV2Simple =>
-                (entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.SubjectType.toSmartIri),
-                    entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri))
-
-            case ApiV2WithValueObjects =>
-                (entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri),
-                    entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri))
-        }
-
-        // Make the property's knora-api:subjectType and knora-api:objectType statements.
-        val subjectTypeStatement: Option[(IRI, JsonLDString)] = maybeSubjectType.map(subjectTypeObj => (subjectTypePred, JsonLDString(subjectTypeObj.toString)))
-        val objectTypeStatement: Option[(IRI, JsonLDString)] = maybeObjectType.map(objectTypeObj => (objectTypePred, JsonLDString(objectTypeObj.toString)))
-
-        // Get the property's rdf:type.
-        val propertyType: SmartIri = entityInfoContent.getPredicateIriObject(OntologyConstants.Rdf.Type.toSmartIri).getOrElse(throw InconsistentTriplestoreDataException(s"Property ${entityInfoContent.propertyIri} has no rdf:type"))
-
-        val jsonSubPropertyOf: Seq[JsonLDString] = entityInfoContent.subPropertyOf.filter(_ != OntologyConstants.KnoraBase.ObjectCannotBeMarkedAsDeleted).toSeq.map {
-            superProperty => JsonLDString(superProperty.toString)
-        }
-
-        val jsonSubPropertyOfStatement: Option[(IRI, JsonLDArray)] = if (jsonSubPropertyOf.nonEmpty) {
-            Some(OntologyConstants.Rdfs.SubPropertyOf -> JsonLDArray(jsonSubPropertyOf))
-        } else {
-            None
-        }
-
-        val isEditableStatement: Option[(IRI, JsonLDBoolean)] = if (isEditable && targetSchema == ApiV2WithValueObjects) {
-            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsEditable -> JsonLDBoolean(true))
-        } else {
-            None
-        }
-
-        val isLinkValuePropertyStatement: Option[(IRI, JsonLDBoolean)] = if (isLinkValueProp && targetSchema == ApiV2WithValueObjects) {
-            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkValueProperty -> JsonLDBoolean(true))
-        } else {
-            None
-        }
-
-        val isLinkPropertyStatement = if (isLinkProp && targetSchema == ApiV2WithValueObjects) {
-            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkProperty -> JsonLDBoolean(true))
-        } else {
-            None
-        }
-
-        Map(
-            "@id" -> JsonLDString(entityInfoContent.propertyIri.toString),
-            "@type" -> JsonLDString(propertyType.toString)
-        ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++ isEditableStatement ++ isLinkValuePropertyStatement ++ isLinkPropertyStatement
     }
 }
 
@@ -2134,6 +2072,116 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
             "@id" -> JsonLDString(entityInfoContent.classIri.toString),
             "@type" -> JsonLDString(entityInfoContent.getRdfType.toString)
         ) ++ jsonSubClassOfStatement ++ resourceIconStatement ++ canBeInstantiatedStatement ++ isValueClassStatement
+    }
+}
+
+/**
+  * Represents an OWL property definition as returned in an API response.
+  *
+  * @param entityInfoContent                   a [[PropertyInfoContentV2]] providing information about the property.
+  * @param isEditable                          `true` if the property's value is editable via the Knora API.
+  * @param isLinkProp                          `true` if the property is a subproperty of `knora-base:hasLinkTo`.
+  * @param isLinkValueProp                     `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
+  * @param isFileValueProp                     `true` if the property is a subproperty of `knora-base:hasFileValue`.
+  * @param isStandoffInternalReferenceProperty if `true`, this is a subproperty (directly or indirectly) of
+  *                                            [[OntologyConstants.KnoraBase.StandoffTagHasInternalReference]].
+  */
+case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
+                              isEditable: Boolean = false,
+                              isLinkProp: Boolean = false,
+                              isLinkValueProp: Boolean = false,
+                              isFileValueProp: Boolean = false,
+                              isStandoffInternalReferenceProperty: Boolean = false) extends ReadEntityInfoV2 {
+    def toOntologySchema(targetSchema: ApiV2Schema): ReadPropertyInfoV2 = copy(
+        entityInfoContent = entityInfoContent.toOntologySchema(targetSchema)
+    )
+
+    def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
+        if (entityInfoContent.ontologySchema != targetSchema) {
+            throw DataConversionException(s"ReadPropertyInfoV2 for property ${entityInfoContent.propertyIri} is not in schema $targetSchema")
+        }
+
+        // Get the correct knora-api:subjectType and knora-api:objectType predicates for the target API schema.
+        val (subjectTypePred: IRI, objectTypePred: IRI) = targetSchema match {
+            case ApiV2Simple => (OntologyConstants.KnoraApiV2Simple.SubjectType, OntologyConstants.KnoraApiV2Simple.ObjectType)
+            case ApiV2WithValueObjects => (OntologyConstants.KnoraApiV2WithValueObjects.SubjectType, OntologyConstants.KnoraApiV2WithValueObjects.ObjectType)
+        }
+
+        // Get the property's knora-api:subjectType and knora-api:objectType, if provided.
+        val (maybeSubjectType: Option[SmartIri], maybeObjectType: Option[SmartIri]) = entityInfoContent.ontologySchema match {
+            case InternalSchema => throw DataConversionException(s"ReadPropertyInfoV2 for property ${entityInfoContent.propertyIri} is not in schema $targetSchema")
+
+            case ApiV2Simple =>
+                (entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.SubjectType.toSmartIri),
+                    entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri))
+
+            case ApiV2WithValueObjects =>
+                (entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri),
+                    entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri))
+        }
+
+        // Make the property's knora-api:subjectType and knora-api:objectType statements.
+        val subjectTypeStatement: Option[(IRI, JsonLDString)] = maybeSubjectType.map(subjectTypeObj => (subjectTypePred, JsonLDString(subjectTypeObj.toString)))
+        val objectTypeStatement: Option[(IRI, JsonLDString)] = maybeObjectType.map(objectTypeObj => (objectTypePred, JsonLDString(objectTypeObj.toString)))
+
+        val jsonSubPropertyOf: Seq[JsonLDString] = entityInfoContent.subPropertyOf.filter(_ != OntologyConstants.KnoraBase.ObjectCannotBeMarkedAsDeleted).toSeq.map {
+            superProperty => JsonLDString(superProperty.toString)
+        }
+
+        val jsonSubPropertyOfStatement: Option[(IRI, JsonLDArray)] = if (jsonSubPropertyOf.nonEmpty) {
+            Some(OntologyConstants.Rdfs.SubPropertyOf -> JsonLDArray(jsonSubPropertyOf))
+        } else {
+            None
+        }
+
+        val isEditableStatement: Option[(IRI, JsonLDBoolean)] = if (isEditable && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsEditable -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
+        val isLinkValuePropertyStatement: Option[(IRI, JsonLDBoolean)] = if (isLinkValueProp && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkValueProperty -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
+        val isLinkPropertyStatement = if (isLinkProp && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkProperty -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
+        Map(
+            "@id" -> JsonLDString(entityInfoContent.propertyIri.toString),
+            "@type" -> JsonLDString(entityInfoContent.getRdfType.toString)
+        ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++ isEditableStatement ++ isLinkValuePropertyStatement ++ isLinkPropertyStatement
+    }
+}
+
+/**
+  * Represents an OWL named individual definition as returned in an API response.
+  *
+  * @param entityInfoContent an [[IndividualInfoContentV2]] representing information about the named individual.
+  */
+case class ReadIndividualInfoV2(entityInfoContent: IndividualInfoContentV2) extends ReadEntityInfoV2 {
+    def toOntologySchema(targetSchema: ApiV2Schema): ReadIndividualInfoV2 = copy(
+        entityInfoContent = entityInfoContent.toOntologySchema(targetSchema)
+    )
+
+    override protected def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
+        val jsonLDPredicates: Map[IRI, JsonLDValue] = entityInfoContent.predicates.foldLeft(Map.empty[IRI, JsonLDValue]) {
+            case (acc, (predicateIri, predicateInfo)) =>
+                if (predicateInfo.objects.nonEmpty) {
+                    acc + (predicateIri.toString -> JsonLDArray(predicateInfo.objects.map(JsonLDString).toSeq))
+                } else {
+                    acc
+                }
+        }
+
+        Map(
+            "@id" -> JsonLDString(entityInfoContent.individualIri.toString)
+        ) ++ jsonLDPredicates
     }
 }
 
@@ -2477,6 +2525,54 @@ object PropertyInfoContentV2 {
             subPropertyOf = subPropertyOf,
             ontologySchema = ontologySchema
         )
+    }
+}
+
+/**
+  * Represents assertions about an OWL named individual.
+  *
+  * @param individualIri the IRI of the named individual.
+  * @param predicates the predicates of the named individual.
+  * @param ontologySchema indicates whether this named individual belongs to an internal ontology (for use in the
+  *                       triplestore) or an external one (for use in the Knora API).
+  */
+case class IndividualInfoContentV2(individualIri: SmartIri,
+                                   predicates: Map[SmartIri, PredicateInfoV2],
+                                   ontologySchema: OntologySchema) extends EntityInfoContentV2 with KnoraContentV2[IndividualInfoContentV2] {
+    override def getRdfType: SmartIri = {
+        predicates.get(OntologyConstants.Rdf.Type.toSmartIri).flatMap {
+            pred => pred.objects.find(_ != OntologyConstants.Owl.NamedIndividual)
+        }.getOrElse(throw InconsistentTriplestoreDataException(s"Named individual $individualIri has no rdf:type other than owl:NamedIndividual")).toSmartIri
+    }
+
+    override def toOntologySchema(targetSchema: OntologySchema): IndividualInfoContentV2 = {
+        copy(
+            individualIri = individualIri.toOntologySchema(targetSchema),
+            predicates = convertPredicates(
+                predsWithKnoraDefinitionIriObjs = Set(OntologyConstants.Rdf.Type.toSmartIri),
+                targetSchema = targetSchema
+            ),
+            ontologySchema = targetSchema
+        )
+    }
+}
+
+/**
+  * Can read an [[IndividualInfoContentV2]] from JSON-LD.
+  */
+object IndividualInfoContentV2 {
+    def fromJsonLDObject(jsonLDIndividualDef: JsonLDObject): IndividualInfoContentV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val individualIri: SmartIri = jsonLDIndividualDef.requireString("@id", stringFormatter.toSmartIriWithErr)
+        val ontologySchema: OntologySchema = individualIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid named individual IRI: $individualIri"))
+
+        IndividualInfoContentV2(
+            individualIri = individualIri,
+            predicates = EntityInfoContentV2.predicatesFromJsonLDObject(jsonLDIndividualDef),
+            ontologySchema = ontologySchema
+        )
+
     }
 }
 

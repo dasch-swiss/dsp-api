@@ -37,7 +37,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, _}
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter.{SalsahGuiAttributeDefinition, SalsahGuiAttribute, SalsahGuiAttributeValue}
+import org.knora.webapi.util.StringFormatter.{SalsahGuiAttribute, SalsahGuiAttributeDefinition}
 import org.knora.webapi.util._
 
 import scala.concurrent.Future
@@ -78,15 +78,17 @@ class OntologyResponderV2 extends Responder {
       *
       * @param ontologyMetadata              metadata about available ontologies.
       * @param ontologyClasses               a map of ontology IRIs to sets of non-standoff class IRIs defined in each ontology.
-      * @param ontologyProperties            a map of property IRIs to sets of non-standoff property IRIs defined in each ontology.
+      * @param ontologyProperties            a map of ontology IRIs to sets of non-standoff property IRIs defined in each ontology.
+      * @param ontologyIndividuals           a map of ontology IRIs to sets of OWL named individuals defined in each ontology.
+      * @param ontologyStandoffClasses       a map of ontology IRIs to sets of standoff class IRIs defined in each ontology.
+      * @param ontologyStandoffProperties    a map of ontology IRIs to sets of standoff property IRIs defined in each ontology.
       * @param classDefs                     a map of class IRIs to definitions.
       * @param resourceSubClassOfRelations   a map of IRIs of resource classes to sets of the IRIs of their base classes.
       * @param valueSubClassOfRelations      a map of IRIs of value classes to sets of the IRIs of their base classes.
       * @param resourceSuperClassOfRelations a map of IRIs of resource classes to sets of the IRIs of their subclasses.
-      * @param propertyDefs                  a map of property IRIs to property definitions.
-      * @param subPropertyOfRelations        a map of property IRIs to sets of the IRIs of their base properties.
-      * @param ontologyStandoffClasses       a map of ontology IRIs to sets of standoff class IRIs defined in each ontology.
-      * @param ontologyStandoffProperties    a map of property IRIs to sets of standoff property IRIs defined in each ontology.
+      * @param propertyDefs                  a map of non-standoff property IRIs to property definitions.
+      * @param subPropertyOfRelations        a map of non-standoff property IRIs to sets of the IRIs of their base properties.
+      * @param individuals                   a map of OWL named individual IRIs to definitions.
       * @param standoffClassDefs             a map of standoff class IRIs to definitions.
       * @param standoffPropertyDefs          a map of property IRIs to property definitions.
       * @param standoffClassDefsWithDataType a map of standoff class IRIs to class definitions, including only standoff datatype tags.
@@ -94,17 +96,20 @@ class OntologyResponderV2 extends Responder {
     private case class OntologyCacheData(ontologyMetadata: Map[SmartIri, OntologyMetadataV2],
                                          ontologyClasses: Map[SmartIri, Set[SmartIri]],
                                          ontologyProperties: Map[SmartIri, Set[SmartIri]],
+                                         ontologyIndividuals: Map[SmartIri, Set[SmartIri]],
+                                         ontologyStandoffClasses: Map[SmartIri, Set[SmartIri]],
+                                         ontologyStandoffProperties: Map[SmartIri, Set[SmartIri]],
                                          classDefs: Map[SmartIri, ReadClassInfoV2],
                                          resourceSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                          valueSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                          resourceSuperClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                          propertyDefs: Map[SmartIri, ReadPropertyInfoV2],
                                          subPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
-                                         ontologyStandoffClasses: Map[SmartIri, Set[SmartIri]],
-                                         ontologyStandoffProperties: Map[SmartIri, Set[SmartIri]],
+                                         individuals: Map[SmartIri, ReadIndividualInfoV2],
                                          standoffClassDefs: Map[SmartIri, ReadClassInfoV2],
                                          standoffPropertyDefs: Map[SmartIri, ReadPropertyInfoV2],
-                                         standoffClassDefsWithDataType: Map[SmartIri, ReadClassInfoV2])
+                                         standoffClassDefsWithDataType: Map[SmartIri, ReadClassInfoV2],
+                                         guiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]])
 
     def receive = {
         case LoadOntologiesRequestV2(userProfile) => future2Message(sender(), loadOntologies(userProfile), log)
@@ -141,86 +146,6 @@ class OntologyResponderV2 extends Responder {
     private def loadOntologies(userProfile: UserProfileV1): Future[SuccessResponseV2] = {
         // TODO: determine whether the user is authorised to reload the ontologies (depends on pull request #168).
 
-        /**
-          * Finds the duplicate IRIs in a vector.
-          *
-          * @param iris the IRIs to check for duplicates.
-          * @return the IRIs that have duplicates.
-          */
-        def findDuplicateIris(iris: Vector[SmartIri]): Set[SmartIri] = {
-            iris.groupBy(identity).collect {
-                case (x, Vector(_, _, _*)) => x
-            }.toSet
-        }
-
-        /**
-          * Recursively walks up an entity hierarchy, collecting the IRIs of all base entities.
-          *
-          * @param iri             the IRI of an entity.
-          * @param directRelations a map of entities to their direct base entities.
-          * @return all the base entities of the specified entity.
-          */
-        def getAllBaseDefs(iri: SmartIri, directRelations: Map[SmartIri, Set[SmartIri]]): Set[SmartIri] = {
-            def getAllBaseDefsRec(initialIri: SmartIri, currentIri: SmartIri): Set[SmartIri] = {
-                directRelations.get(currentIri) match {
-                    case Some(baseDefs) =>
-                        baseDefs ++ baseDefs.flatMap {
-                            baseDef =>
-                                if (baseDef == initialIri) {
-                                    throw InconsistentTriplestoreDataException(s"Entity $initialIri has an inheritance cycle with entity $baseDef")
-                                } else {
-                                    getAllBaseDefsRec(initialIri, baseDef)
-                                }
-                        }
-
-                    case None => Set.empty[SmartIri]
-                }
-            }
-
-            getAllBaseDefsRec(initialIri = iri, currentIri = iri)
-        }
-
-        /**
-          * Given a resource class, recursively adds its inherited cardinalities to the cardinalities it defines
-          * directly. A cardinality for a subproperty in a subclass overrides a cardinality for a base property in
-          * a base class.
-          *
-          * @param resourceClassIri                 the IRI of the resource class whose properties are to be computed.
-          * @param directSubClassOfRelations        a map of the direct `rdfs:subClassOf` relations defined on each resource class.
-          * @param allSubPropertyOfRelations        a map in which each property IRI points to the full set of its base properties.
-          * @param directResourceClassCardinalities a map of the cardinalities defined directly on each resource class.
-          * @return a map in which each key is the IRI of a property that has a cardinality in the resource class (or that it inherits
-          *         from its base classes), and each value is the cardinality on the property.
-          */
-        def inheritCardinalities(resourceClassIri: SmartIri,
-                                 directSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
-                                 allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
-                                 directResourceClassCardinalities: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]]): Map[SmartIri, OwlCardinalityInfo] = {
-            // Recursively get properties that are available to inherit from base classes. If we have no information about
-            // a class, that could mean that it isn't a subclass of knora-base:Resource (e.g. it's something like
-            // foaf:Person), in which case we assume that it has no base classes.
-            val cardinalitiesAvailableToInherit: Map[SmartIri, OwlCardinalityInfo] = directSubClassOfRelations.getOrElse(resourceClassIri, Set.empty[SmartIri]).foldLeft(Map.empty[SmartIri, OwlCardinalityInfo]) {
-                case (acc, baseClass) =>
-                    acc ++ inheritCardinalities(
-                        resourceClassIri = baseClass,
-                        directSubClassOfRelations = directSubClassOfRelations,
-                        allSubPropertyOfRelations = allSubPropertyOfRelations,
-                        directResourceClassCardinalities = directResourceClassCardinalities
-                    )
-            }
-
-            // Get the properties that have cardinalities defined directly on this class. Again, if we have no information
-            // about a class, we assume that it has no cardinalities.
-            val thisClassCardinalities: Map[SmartIri, OwlCardinalityInfo] = directResourceClassCardinalities.getOrElse(resourceClassIri, Map.empty[SmartIri, OwlCardinalityInfo])
-
-            // Combine the cardinalities defined directly on this class with the ones that are available to inherit.
-            overrideCardinalities(
-                thisClassCardinalities = thisClassCardinalities,
-                inheritableCardinalities = cardinalitiesAvailableToInherit,
-                allSubPropertyOfRelations = allSubPropertyOfRelations
-            )
-        }
-
         for {
             // Get all ontology metdata.
             ontologyMetdataSparql <- Future(queries.sparql.v2.txt.getAllOntologyInfo(triplestore = settings.triplestoreType).toString())
@@ -249,7 +174,7 @@ class OntologyResponderV2 extends Responder {
             guiElementRows: Seq[VariableResultsRow] = guilElementResponse.results.bindings
 
             // Make a map of Guielement IRIs to sets of SalsahGuiAttributeDefinition.
-            allGuiAttributeDefinitions: Map[IRI, Set[SalsahGuiAttributeDefinition]] = guiElementRows.groupBy(_.rowMap("guiElement")).map {
+            allGuiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]] = guiElementRows.groupBy(_.rowMap("guiElement")).map {
                 case (guiElementIri: IRI, rows: Seq[VariableResultsRow]) =>
                     val attributeDefs: Set[SalsahGuiAttributeDefinition] = rows.flatMap {
                         row: VariableResultsRow =>
@@ -264,18 +189,46 @@ class OntologyResponderV2 extends Responder {
                             }
                     }.toSet
 
-                    guiElementIri -> attributeDefs
+                    guiElementIri.toSmartIri -> attributeDefs
             }
 
+            // Reconstruct the named individuals in the salsah-gui ontology.
+            allIndividuals: Map[SmartIri, ReadIndividualInfoV2] = allGuiAttributeDefinitions.map {
+                case (guiElementIri, guiAttributeDefs) =>
+                    guiElementIri -> ReadIndividualInfoV2(
+                        IndividualInfoContentV2(
+                            individualIri = guiElementIri,
+                            predicates = Map(
+                                OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                                    predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                                    objects = Set(
+                                        OntologyConstants.SalsahGui.GuiElementProp,
+                                        OntologyConstants.Owl.NamedIndividual
+                                    )
+                                ),
+                                OntologyConstants.SalsahGui.GuiAttributeDefinition.toSmartIri -> PredicateInfoV2(
+                                    predicateIri = OntologyConstants.SalsahGui.GuiAttributeDefinition.toSmartIri,
+                                    objects = guiAttributeDefs.map(_.unparsedString)
+                                )
+                            ),
+                            ontologySchema = InternalSchema
+                        )
+                    )
+            }
+
+            graphIndividualMap: Map[SmartIri, Set[SmartIri]] = Map(
+                OntologyConstants.SalsahGui.SalsahGuiOntologyIri.toSmartIri -> allIndividuals.keySet
+            )
+
             // Get all resource class definitions.
-            resourceDefsSparql = queries.sparql.v2.txt.getResourceClassDefinitions(triplestore = settings.triplestoreType).toString()
-            resourceDefsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(resourceDefsSparql)).mapTo[SparqlSelectResponse]
-            resourceDefsRows: Seq[VariableResultsRow] = resourceDefsResponse.results.bindings
+            resourceClassDefsSparql = queries.sparql.v2.txt.getResourceClassDefinitions(triplestore = settings.triplestoreType).toString()
+            resourceClassDefsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(resourceClassDefsSparql)).mapTo[SparqlSelectResponse]
+            resourceClassDefsRows: Seq[VariableResultsRow] = resourceClassDefsResponse.results.bindings
 
             // Get the value class hierarchy.
-            valueClassesSparql = queries.sparql.v2.txt.getValueClassHierarchy(triplestore = settings.triplestoreType).toString()
-            valueClassesResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(valueClassesSparql)).mapTo[SparqlSelectResponse]
-            valueClassesRows: Seq[VariableResultsRow] = valueClassesResponse.results.bindings
+            valueClassDefsSparql = queries.sparql.v2.txt.getValueClassHierarchy(triplestore = settings.triplestoreType).toString()
+            valueClassDefsResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(valueClassDefsSparql)).mapTo[SparqlSelectResponse]
+            valueClassDefsRows: Seq[VariableResultsRow] = valueClassDefsResponse.results.bindings
 
             // Get all property definitions.
             propertyDefsSparql = queries.sparql.v2.txt.getPropertyDefinitions(triplestore = settings.triplestoreType).toString()
@@ -283,7 +236,7 @@ class OntologyResponderV2 extends Responder {
             propertyDefsRows: Seq[VariableResultsRow] = propertyDefsResponse.results.bindings
 
             // Make a map of IRIs of ontologies to IRIs of resource classes defined in each one.
-            graphClassMap: Map[SmartIri, Set[SmartIri]] = resourceDefsRows.groupBy(_.rowMap("graph").toKnoraInternalSmartIri).map {
+            graphClassMap: Map[SmartIri, Set[SmartIri]] = resourceClassDefsRows.groupBy(_.rowMap("graph").toKnoraInternalSmartIri).map {
                 case (graphIri: SmartIri, graphRows: Seq[VariableResultsRow]) =>
                     graphIri -> graphRows.map(_.rowMap("resourceClass")).toSet.map((classIri: IRI) => classIri.toKnoraInternalSmartIri)
             } + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2Simple.Classes.keySet) +
@@ -297,7 +250,7 @@ class OntologyResponderV2 extends Responder {
                 (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2WithValueObjects.Properties.keySet)
 
             // Group the rows representing resource class definitions by resource class IRI.
-            resourceClassDefsGrouped: Map[SmartIri, Seq[VariableResultsRow]] = resourceDefsRows.groupBy(_.rowMap("resourceClass").toKnoraInternalSmartIri)
+            resourceClassDefsGrouped: Map[SmartIri, Seq[VariableResultsRow]] = resourceClassDefsRows.groupBy(_.rowMap("resourceClass").toKnoraInternalSmartIri)
             resourceClassIris = resourceClassDefsGrouped.keySet
 
             // Group the rows representing property definitions by property IRI.
@@ -305,7 +258,7 @@ class OntologyResponderV2 extends Responder {
             propertyIris = propertyDefsGrouped.keySet
 
             // Group the rows representing value class relations by value class IRI.
-            valueClassesGrouped: Map[SmartIri, Seq[VariableResultsRow]] = valueClassesRows.groupBy(_.rowMap("valueClass").toKnoraInternalSmartIri)
+            valueClassesGrouped: Map[SmartIri, Seq[VariableResultsRow]] = valueClassDefsRows.groupBy(_.rowMap("valueClass").toKnoraInternalSmartIri)
 
             // Make a map of resource class IRIs to their immediate base classes.
             directResourceSubClassOfRelations: Map[SmartIri, Set[SmartIri]] = resourceClassDefsGrouped.map {
@@ -381,7 +334,7 @@ class OntologyResponderV2 extends Responder {
             }
 
             // Allow each resource class to inherit cardinalities from its base classes.
-            resourceCardinalitiesWithInheritance: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]] = resourceClassIris.map {
+            resourceClassCardinalitiesWithInheritance: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]] = resourceClassIris.map {
                 resourceClassIri =>
                     val resourceClassCardinalities: Map[SmartIri, OwlCardinalityInfo] = inheritCardinalities(
                         resourceClassIri = resourceClassIri,
@@ -397,7 +350,7 @@ class OntologyResponderV2 extends Responder {
             resourceClassInfos: Map[SmartIri, ReadClassInfoV2] = makeResourceClassInfos(
                 resourceDefsGrouped = resourceClassDefsGrouped,
                 directResourceClassCardinalities = directResourceClassCardinalities,
-                resourceCardinalitiesWithInheritance = resourceCardinalitiesWithInheritance,
+                resourceClassCardinalitiesWithInheritance = resourceClassCardinalitiesWithInheritance,
                 directResourceSubClassOfRelations = directResourceSubClassOfRelations,
                 allLinkProps = allLinkProps,
                 allLinkValueProps = allLinkValueProps,
@@ -593,17 +546,21 @@ class OntologyResponderV2 extends Responder {
                 ontologyMetadata = new ErrorHandlingMap[SmartIri, OntologyMetadataV2](ontologyMetadata, { key => s"Ontology not found: $key" }),
                 ontologyClasses = new ErrorHandlingMap[SmartIri, Set[SmartIri]](graphClassMap, { key => s"Ontology not found: $key" }),
                 ontologyProperties = new ErrorHandlingMap[SmartIri, Set[SmartIri]](graphPropMap, { key => s"Ontology not found: $key" }),
+                ontologyIndividuals = new ErrorHandlingMap[SmartIri, Set[SmartIri]](graphIndividualMap, { key => s"Ontology not found: $key" }),
+                ontologyStandoffClasses = new ErrorHandlingMap[SmartIri, Set[SmartIri]](standoffGraphClassMap, { key => s"Ontology not found: $key" }),
+                ontologyStandoffProperties = new ErrorHandlingMap[SmartIri, Set[SmartIri]](standoffGraphPropMap, { key => s"Ontology not found: $key" }),
                 classDefs = new ErrorHandlingMap[SmartIri, ReadClassInfoV2](allClassDefs, { key => s"Class not found: $key" }),
                 resourceSubClassOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allResourceSubClassOfRelations, { key => s"Class not found: $key" }),
                 valueSubClassOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allValueSubClassOfRelations, { key => s"Class not found: $key" }),
                 resourceSuperClassOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allResourceSuperClassOfRelations, { key => s"Class not found: $key" }),
                 propertyDefs = new ErrorHandlingMap[SmartIri, ReadPropertyInfoV2](allPropertyDefs, { key => s"Property not found: $key" }),
                 subPropertyOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSubPropertyOfRelations, { key => s"Property not found: $key" }),
-                ontologyStandoffClasses = new ErrorHandlingMap[SmartIri, Set[SmartIri]](standoffGraphClassMap, { key => s"Ontology not found: $key" }),
-                ontologyStandoffProperties = new ErrorHandlingMap[SmartIri, Set[SmartIri]](standoffGraphPropMap, { key => s"Ontology not found: $key" }),
+                individuals = new ErrorHandlingMap[SmartIri, ReadIndividualInfoV2](allIndividuals, { key => s"OWL named individual not found: $key" }),
                 standoffClassDefs = new ErrorHandlingMap[SmartIri, ReadClassInfoV2](standoffClassInfos, { key => s"Standoff class def not found $key" }),
                 standoffPropertyDefs = new ErrorHandlingMap[SmartIri, ReadPropertyInfoV2](standoffClassPropertyInfos, { key => s"Standoff property def not found $key" }),
-                standoffClassDefsWithDataType = new ErrorHandlingMap[SmartIri, ReadClassInfoV2](standoffClassEntityInfosWithDataType, { key => s"Standoff class def with datatype not found $key" }))
+                standoffClassDefsWithDataType = new ErrorHandlingMap[SmartIri, ReadClassInfoV2](standoffClassEntityInfosWithDataType, { key => s"Standoff class def with datatype not found $key" }),
+                guiAttributeDefinitions = new ErrorHandlingMap[SmartIri, Set[SalsahGuiAttributeDefinition]](allGuiAttributeDefinitions, { key => s"salsah-gui:Guielement not found: $key" })
+            )
 
             _ = storeCacheData(ontologyCacheData)
 
@@ -613,21 +570,21 @@ class OntologyResponderV2 extends Responder {
     /**
       * Constructs a map of resource class IRIs to their definitions.
       *
-      * @param resourceDefsGrouped                  SPARQL SELECT query result rows representing resource class definitions, grouped by resource class IRI.
-      * @param directResourceClassCardinalities     a map of the cardinalities defined directly on each resource class. Each resource class
-      *                                             IRI points to a map of property IRIs to [[OwlCardinalityInfo]] objects.
-      * @param resourceCardinalitiesWithInheritance a map of the cardinalities defined directly on each resource class or inherited from
-      *                                             base classes. Each resource class IRI points to a map of property IRIs to
-      *                                             [[OwlCardinalityInfo]] objects.
-      * @param directResourceSubClassOfRelations    a map of resource class IRIs to their immediate base classes.
-      * @param allLinkProps                         a set of the IRIs of all link properties.
-      * @param allLinkValueProps                    a set of the IRIs of link value properties.
-      * @param allFileValueProps                    a set of the IRIs of all file value properties.
+      * @param resourceDefsGrouped                       SPARQL SELECT query result rows representing resource class definitions, grouped by resource class IRI.
+      * @param directResourceClassCardinalities          a map of the cardinalities defined directly on each resource class. Each resource class
+      *                                                  IRI points to a map of property IRIs to [[OwlCardinalityInfo]] objects.
+      * @param resourceClassCardinalitiesWithInheritance a map of the cardinalities defined directly on each resource class or inherited from
+      *                                                  base classes. Each resource class IRI points to a map of property IRIs to
+      *                                                  [[OwlCardinalityInfo]] objects.
+      * @param directResourceSubClassOfRelations         a map of resource class IRIs to their immediate base classes.
+      * @param allLinkProps                              a set of the IRIs of all link properties.
+      * @param allLinkValueProps                         a set of the IRIs of link value properties.
+      * @param allFileValueProps                         a set of the IRIs of all file value properties.
       * @return a map of resource class IRIs to their definitions.
       */
     private def makeResourceClassInfos(resourceDefsGrouped: Map[SmartIri, Seq[VariableResultsRow]],
                                        directResourceClassCardinalities: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]],
-                                       resourceCardinalitiesWithInheritance: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]],
+                                       resourceClassCardinalitiesWithInheritance: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]],
                                        directResourceSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                        allLinkProps: Set[SmartIri],
                                        allLinkValueProps: Set[SmartIri],
@@ -659,7 +616,7 @@ class OntologyResponderV2 extends Responder {
                 } + rdfType
 
                 // Get the OWL cardinalities for the class.
-                val allOwlCardinalitiesForClass: Map[SmartIri, OwlCardinalityInfo] = resourceCardinalitiesWithInheritance(resourceClassIri)
+                val allOwlCardinalitiesForClass: Map[SmartIri, OwlCardinalityInfo] = resourceClassCardinalitiesWithInheritance(resourceClassIri)
                 val allPropertyIrisForCardinalitiesInClass: Set[SmartIri] = allOwlCardinalitiesForClass.keys.toSet
 
                 // Identify the link properties, like value properties, and file value properties in the cardinalities.
@@ -816,7 +773,7 @@ class OntologyResponderV2 extends Responder {
       */
     private def makeResourceClassPropertyInfos(propertyDefsGrouped: Map[SmartIri, Seq[VariableResultsRow]],
                                                directSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
-                                               allGuiAttributeDefinitions: Map[IRI, Set[SalsahGuiAttributeDefinition]],
+                                               allGuiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]],
                                                allLinkProps: Set[SmartIri],
                                                allLinkValueProps: Set[SmartIri],
                                                allFileValueProps: Set[SmartIri]) = {
@@ -918,17 +875,17 @@ class OntologyResponderV2 extends Responder {
       * @param propertyInfoContent        the property definition.
       * @param allGuiAttributeDefinitions the GUI attribute definitions for each GUI element.
       */
-    private def validateGuiAttributes(propertyInfoContent: PropertyInfoContentV2, allGuiAttributeDefinitions: Map[IRI, Set[SalsahGuiAttributeDefinition]]): Unit = {
+    private def validateGuiAttributes(propertyInfoContent: PropertyInfoContentV2, allGuiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]]): Unit = {
         val propertyIri = propertyInfoContent.propertyIri
         val predicates = propertyInfoContent.predicates
 
         // Find out which salsah-gui:Guielement the property uses, if any.
-        val maybeGuiElementIri: Option[IRI] = predicates.get(OntologyConstants.SalsahGui.GuiElement.toSmartIri).flatMap(_.objects.headOption)
+        val maybeGuiElementIri: Option[IRI] = predicates.get(OntologyConstants.SalsahGui.GuiElementProp.toSmartIri).flatMap(_.objects.headOption)
 
         // Get that Guielement's attribute definitions, if any.
         val guiAttributeDefs: Set[SalsahGuiAttributeDefinition] = maybeGuiElementIri match {
             case Some(guiElementIri) =>
-                allGuiAttributeDefinitions.getOrElse(guiElementIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has salsah-gui:guiElement $guiElementIri, which doesn't exist"))
+                allGuiAttributeDefinitions.getOrElse(guiElementIri.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has salsah-gui:guiElement $guiElementIri, which doesn't exist"))
 
             case None => Set.empty[SalsahGuiAttributeDefinition]
         }
@@ -3391,4 +3348,86 @@ class OntologyResponderV2 extends Responder {
                 baseClass -> baseClassAndSubClasses.map(_._2).toSet
         }
     }
+
+    /**
+      * Finds the duplicate IRIs in a vector.
+      *
+      * @param iris the IRIs to check for duplicates.
+      * @return the IRIs that have duplicates.
+      */
+    private def findDuplicateIris(iris: Vector[SmartIri]): Set[SmartIri] = {
+        iris.groupBy(identity).collect {
+            case (x, Vector(_, _, _*)) => x
+        }.toSet
+    }
+
+    /**
+      * Recursively walks up an entity hierarchy, collecting the IRIs of all base entities.
+      *
+      * @param iri             the IRI of an entity.
+      * @param directRelations a map of entities to their direct base entities.
+      * @return all the base entities of the specified entity.
+      */
+    private def getAllBaseDefs(iri: SmartIri, directRelations: Map[SmartIri, Set[SmartIri]]): Set[SmartIri] = {
+        def getAllBaseDefsRec(initialIri: SmartIri, currentIri: SmartIri): Set[SmartIri] = {
+            directRelations.get(currentIri) match {
+                case Some(baseDefs) =>
+                    baseDefs ++ baseDefs.flatMap {
+                        baseDef =>
+                            if (baseDef == initialIri) {
+                                throw InconsistentTriplestoreDataException(s"Entity $initialIri has an inheritance cycle with entity $baseDef")
+                            } else {
+                                getAllBaseDefsRec(initialIri, baseDef)
+                            }
+                    }
+
+                case None => Set.empty[SmartIri]
+            }
+        }
+
+        getAllBaseDefsRec(initialIri = iri, currentIri = iri)
+    }
+
+    /**
+      * Given a resource class, recursively adds its inherited cardinalities to the cardinalities it defines
+      * directly. A cardinality for a subproperty in a subclass overrides a cardinality for a base property in
+      * a base class.
+      *
+      * @param resourceClassIri                 the IRI of the resource class whose properties are to be computed.
+      * @param directSubClassOfRelations        a map of the direct `rdfs:subClassOf` relations defined on each resource class.
+      * @param allSubPropertyOfRelations        a map in which each property IRI points to the full set of its base properties.
+      * @param directResourceClassCardinalities a map of the cardinalities defined directly on each resource class.
+      * @return a map in which each key is the IRI of a property that has a cardinality in the resource class (or that it inherits
+      *         from its base classes), and each value is the cardinality on the property.
+      */
+    private def inheritCardinalities(resourceClassIri: SmartIri,
+                                     directSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
+                                     allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
+                                     directResourceClassCardinalities: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]]): Map[SmartIri, OwlCardinalityInfo] = {
+        // Recursively get properties that are available to inherit from base classes. If we have no information about
+        // a class, that could mean that it isn't a subclass of knora-base:Resource (e.g. it's something like
+        // foaf:Person), in which case we assume that it has no base classes.
+        val cardinalitiesAvailableToInherit: Map[SmartIri, OwlCardinalityInfo] = directSubClassOfRelations.getOrElse(resourceClassIri, Set.empty[SmartIri]).foldLeft(Map.empty[SmartIri, OwlCardinalityInfo]) {
+            case (acc, baseClass) =>
+                acc ++ inheritCardinalities(
+                    resourceClassIri = baseClass,
+                    directSubClassOfRelations = directSubClassOfRelations,
+                    allSubPropertyOfRelations = allSubPropertyOfRelations,
+                    directResourceClassCardinalities = directResourceClassCardinalities
+                )
+        }
+
+        // Get the properties that have cardinalities defined directly on this class. Again, if we have no information
+        // about a class, we assume that it has no cardinalities.
+        val thisClassCardinalities: Map[SmartIri, OwlCardinalityInfo] = directResourceClassCardinalities.getOrElse(resourceClassIri, Map.empty[SmartIri, OwlCardinalityInfo])
+
+        // Combine the cardinalities defined directly on this class with the ones that are available to inherit.
+        overrideCardinalities(
+            thisClassCardinalities = thisClassCardinalities,
+            inheritableCardinalities = cardinalitiesAvailableToInherit,
+            allSubPropertyOfRelations = allSubPropertyOfRelations
+        )
+    }
+
+
 }

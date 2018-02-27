@@ -76,6 +76,8 @@ object OntologyConstants {
             MinCardinality,
             MaxCardinality
         )
+
+        val NamedIndividual: IRI = OwlPrefixExpansion + "NamedIndividual"
     }
 
     object Xsd {
@@ -486,8 +488,10 @@ object OntologyConstants {
         val SalsahGuiPrefixExpansion: IRI = SalsahGuiOntologyIri + "#"
 
         val GuiAttribute: IRI = SalsahGuiPrefixExpansion + "guiAttribute"
+        val GuiAttributeDefinition: IRI = SalsahGuiPrefixExpansion + "guiAttributeDefinition"
         val GuiOrder: IRI = SalsahGuiPrefixExpansion + "guiOrder"
-        val GuiElement: IRI = SalsahGuiPrefixExpansion + "guiElement"
+        val GuiElementProp: IRI = SalsahGuiPrefixExpansion + "guiElement"
+        val GuiElementClass: IRI = SalsahGuiPrefixExpansion + "Guielement"
         val SimpleText: IRI = SalsahGuiPrefixExpansion + "SimpleText"
         val Textarea: IRI = SalsahGuiPrefixExpansion + "Textarea"
         val Pulldown: IRI = SalsahGuiPrefixExpansion + "Pulldown"
@@ -585,6 +589,7 @@ object OntologyConstants {
 
         val HasClasses: IRI = KnoraApiV2PrefixExpansion + "hasClasses"
         val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
+        val HasIndividuals: IRI = KnoraApiV2PrefixExpansion + "hasIndividuals"
         val HasStandoffClasses: IRI = KnoraApiV2PrefixExpansion + "hasStandoffClasses"
         val HasStandoffProperties: IRI = KnoraApiV2PrefixExpansion + "hasStandoffProperties"
 
@@ -762,6 +767,7 @@ object OntologyConstants {
 
         val HasClasses: IRI = KnoraApiV2PrefixExpansion + "hasClasses"
         val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
+        val HasIndividuals: IRI = KnoraApiV2PrefixExpansion + "hasIndividuals"
         val HasStandoffClasses: IRI = KnoraApiV2PrefixExpansion + "hasStandoffClasses"
         val HasStandoffProperties: IRI = KnoraApiV2PrefixExpansion + "hasStandoffProperties"
 
