@@ -245,6 +245,42 @@
                                 """Translation"""@en .
 
 ### ###########################################
+### beol:letterHasOriginal
+
+:letterHasOriginal rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+              rdfs:label "Manuscript des Briefs"@de ,
+                         "Manuscript of letter"@en ;
+
+              rdfs:comment "Manuscript des Briefs"@de ,
+                           "Manuscript of letter"@en ;
+
+              knora-base:subjectClassConstraint :letter ;
+
+              knora-base:objectClassConstraint :manuscript ;
+
+              salsah-gui:guiElement salsah-gui:Searchbox .
+
+### ###########################################
+### beol:letterHasOriginalValue
+
+:letterHasOriginalValue rdf:type owl:ObjectProperty ;
+
+                   knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                   knora-base:subjectClassConstraint :letter ;
+
+                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                   rdfs:label "Manuscript des Briefs"@de ,
+                              "Manuscript of letter"@en ;
+
+                   rdfs:comment "Manuscript des Briefs"@de ,
+                                "Manuscript of letter"@en .
+
+### ###########################################
 ### beol:letterIsReplyTo
 
 :letterIsReplyTo rdf:type owl:ObjectProperty ;
@@ -279,6 +315,7 @@
 
                    rdfs:comment """Der Brief ist eine Antwort auf einen Brief"""@de ,
                                 """Letter is reply to another letter"""@en .
+
 
 ### ###########################################
 ### beol:mentionsPerson
@@ -1132,6 +1169,8 @@
                     salsah-gui:guiElement salsah-gui:SimpleText ;
 
                     rdfs:subPropertyOf knora-base:hasValue  .
+
+
 ##########################################################
 #
 # RESOURCES
@@ -1283,7 +1322,16 @@
                           owl:onProperty :letterHasLanguage ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger
                         ],
-
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :letterHasOriginal ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :letterHasOriginalValue ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                        ],
                         [
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterHasTranslation ;
@@ -1337,8 +1385,6 @@
                    "Letter"@en ;
 
         rdfs:comment "A resource representing a letter"@en .
-
-
 
 
 ### ###########################################
