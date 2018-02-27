@@ -1033,6 +1033,30 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/teaching>.
 
 #
+# Atharvaveda
+#
+
+<http://rdfh.ch/projects/atharvaveda> a knora-base:knoraProject;
+	knora-base:projectShortname "Atharvaveda"^^xsd:string;
+	knora-base:projectLongname "An ontology about Atharvaveda"^^xsd:string;
+	knora-base:projectDescription "Formal description of Atharvaveda, general subclasses, related classes and properties."^^xsd:string;
+	knora-base:projectOntology <http://www.knora.org/ontology/atharvaveda>;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://rdfh.ch/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://rdfh.ch/projects/atharvaveda>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean;
+	knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/atharvaveda>.
+
+#
 # Political Geography
 #
 
@@ -1055,3 +1079,99 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 	knora-base:isInProject <http://rdfh.ch/projects/political-geography>;
 	knora-base:isInSystemAdminGroup "false"^^xsd:boolean;
 	knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/political-geography>.
+
+#
+# Device
+#
+
+<http://rdfh.ch/projects/device> a knora-base:knoraProject;
+	knora-base:projectShortname "Device"^^xsd:string;
+	knora-base:projectLongname "An ontology about device"^^xsd:string;
+	knora-base:projectDescription "Formal description of device, general subclasses, related classes and properties."^^xsd:string;
+	knora-base:projectOntology <http://www.knora.org/ontology/device>;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://rdfh.ch/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://rdfh.ch/projects/device>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean;
+	knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/device>.
+
+#
+# Text Editing
+#
+
+<http://rdfh.ch/projects/text-editing> a knora-base:knoraProject;
+	knora-base:projectShortname "Text Editing"^^xsd:string;
+	knora-base:projectLongname "An ontology about text editing"^^xsd:string;
+	knora-base:projectDescription "Formal description of text editing, general subclasses, related classes and properties."^^xsd:string;
+	knora-base:projectOntology <http://www.knora.org/ontology/text-editing>;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://rdfh.ch/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://rdfh.ch/projects/text-editing>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean;
+	knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/text-editing>.
+
+#
+# Indology
+#
+
+<http://rdfh.ch/projects/indology> a knora-base:knoraProject;
+	knora-base:projectShortname "Indology"^^xsd:string;
+	knora-base:projectLongname "An ontology about Indology"^^xsd:string;
+	knora-base:projectDescription "Formal description of Indology, general subclasses, related classes and properties."^^xsd:string;
+	knora-base:projectOntology <http://www.knora.org/ontology/indology>;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://rdfh.ch/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://rdfh.ch/projects/indology>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean;
+	knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/indology>.
+
+#
+# Text Structure
+#
+
+<http://rdfh.ch/projects/text-structure> a knora-base:knoraProject;
+	knora-base:projectShortname "Text Structure"^^xsd:string;
+	knora-base:projectLongname "An ontology about text structure"^^xsd:string;
+	knora-base:projectDescription "Formal description of text structure, subclasses, related classes and properties."^^xsd:string;
+	knora-base:projectOntology <http://www.knora.org/ontology/text-structure>;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://rdfh.ch/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://rdfh.ch/projects/text-structure>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean;
+	knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/text-structure>.

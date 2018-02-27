@@ -92,6 +92,16 @@ send "load ../_test_data/ontologies/teaching-ontology-knora.ttl into http://www.
 expect $prompt
 send "load ../_test_data/ontologies/political-geography-ontology-knora.ttl into http://www.knora.org/ontology/political-geography .\r"
 expect $prompt
+send "load ../_test_data/ontologies/text-editing-ontology-knora.ttl into http://www.knora.org/ontology/text-editing .\r"
+expect $prompt
+send "load ../_test_data/ontologies/atharvaveda-ontology-knora.ttl into http://www.knora.org/ontology/atharvaveda .\r"
+expect $prompt
+send "load ../_test_data/ontologies/device-ontology-knora.ttl into http://www.knora.org/ontology/device .\r"
+expect $prompt
+send "load ../_test_data/ontologies/indology-ontology-knora.ttl into http://www.knora.org/ontology/indology .\r"
+expect $prompt
+send "load ../_test_data/ontologies/text-structure-ontology-knora.ttl into http://www.knora.org/ontology/text-structure .\r"
+expect $prompt
 send "close .\r"
 expect $prompt
 send "exit .\r"
