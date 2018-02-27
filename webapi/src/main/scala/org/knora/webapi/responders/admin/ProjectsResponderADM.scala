@@ -396,8 +396,6 @@ class ProjectsResponderADM extends Responder {
             }
 
             newProjectIRI = knoraIdUtil.makeRandomProjectIri(Some(createRequest.shortcode))
-            projectOntologyGraphString = "http://www.knora.org/ontology/" + createRequest.shortname
-            projectDataGraphString = "http://www.knora.org/data/" + createRequest.shortname
 
             // Create the new project.
             createNewProjectSparqlString = queries.sparql.admin.txt.createNewProject(

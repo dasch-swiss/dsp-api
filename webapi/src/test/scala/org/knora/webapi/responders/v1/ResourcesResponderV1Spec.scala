@@ -113,7 +113,7 @@ object ResourcesResponderV1Spec {
                     Some("http://www.knora.org/ontology/knora-base#GeomValue"),
                     Some("textval"),
                     Some("geometry"),
-                    "width=95%;rows=4;wrap=soft",
+                    "",
                     "0",
                     Vector(
                         PropertyGetValueV1(
@@ -208,7 +208,7 @@ object ResourcesResponderV1Spec {
             targetResourceIri = "http://data.knora.org/project-thing-2"
         )),
         occurrence = Some("0-n"),
-        attributes = "size=45;restypeid=http://www.knora.org/ontology/anything#Thing",
+        attributes = "restypeid=http://www.knora.org/ontology/anything#Thing",
         label = Some("Ein anderes Ding"),
         guielement = Some("searchbox"),
         guiorder = Some(1),

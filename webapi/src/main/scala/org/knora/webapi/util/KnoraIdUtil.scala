@@ -236,6 +236,22 @@ class KnoraIdUtil {
     }
 
     /**
+      * Creates a new list IRI based on a UUID.
+      *
+      * @param maybeShortcode the optional project shortcode.
+      * @return a new list IRI.
+      */
+    def makeRandomListIri(maybeShortcode: Option[String]): String = {
+        val knoraListUuid = makeRandomBase64EncodedUuid
+
+        if (maybeShortcode.isDefined) {
+            s"http://$IriDomain/lists/${maybeShortcode.get}/$knoraListUuid"
+        } else {
+            s"http://$IriDomain/lists/$knoraListUuid"
+        }
+    }
+
+    /**
       * Creates a new standoff tag IRI based on a UUID.
       *
       * @param valueIri the IRI of the text value containing the standoff tag.

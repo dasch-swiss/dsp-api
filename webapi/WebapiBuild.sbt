@@ -1,5 +1,8 @@
 import sbt._
 import NativePackagerHelper._
+import sbt.io.IO
+import sbtassembly.MergeStrategy
+import sbtassembly.MergeStrategy._
 
 connectInput in run := true
 
@@ -17,6 +20,18 @@ lazy val webapi = (project in file(".")).
         settings(webApiCommonSettings:  _*).
         settings(inConfig(Test)(
             Defaults.testTasks ++ baseAssemblySettings
+        ): _*).
+        settings(inConfig(Gatling)( // add our settings to the gatling config
+            Defaults.testTasks ++ Seq(
+                fork := true,
+                javaOptions ++= javaTestOptions
+            )
+        ): _*).
+        settings(inConfig(GatlingIt)( // add our settings to the gatling it config
+            Defaults.testTasks ++ Seq(
+                fork := true,
+                javaOptions ++= javaTestOptions
+            )
         ): _*).
         settings(inConfig(FusekiTest)(
             Defaults.testTasks ++ Seq(
@@ -59,11 +74,14 @@ lazy val webapi = (project in file(".")).
             logLevel := Level.Info,
             fork in run := true,
             javaOptions in run ++= javaRunOptions,
-            //javaOptions in run <++= AspectjKeys.weaverOptions in Aspectj,
-            //javaOptions in Revolver.reStart <++= AspectjKeys.weaverOptions in Aspectj,
+            javaOptions in reStart ++= javaRunOptions,
+            javaOptions in Test ++= javaTestOptions,
+            javaOptions in reStart ++= resolvedJavaAgents.value map { resolved =>
+                "-javaagent:" + resolved.artifact.absolutePath + resolved.agent.arguments
+            },// allows sbt-javaagent to work with sbt-revolver
+            javaAgents += library.aspectJWeaver,
             mainClass in (Compile, run) := Some("org.knora.webapi.Main"),
             fork in Test := true,
-            javaOptions in Test ++= javaTestOptions,
             parallelExecution in Test := false,
             // enable publishing the jar produced by `sbt test:package` and `sbt it:package`
             publishArtifact in (Test, packageBin) := true,
@@ -78,6 +96,8 @@ lazy val webapi = (project in file(".")).
             test in assembly := {},
             test in (Test, assembly) := {},
             test in (IntegrationTest, assembly) := {},
+            // need to use our custom merge strategy because of aop.xml (AspectJ)
+            assemblyMergeStrategy in assembly := customMergeStrategy,
             // Skip packageDoc task on stage
             mappings in (Compile, packageDoc) := Seq(),
             mappings in Universal := {
@@ -112,7 +132,10 @@ lazy val webapi = (project in file(".")).
             mainClass in IntegrationTest := Some("org.scalatest.tools.Runner")
         ).
         enablePlugins(SbtTwirl). // Enable the sbt-twirl plugin
-        enablePlugins(JavaAppPackaging) // Enable the sbt-native-packager plugin
+        enablePlugins(JavaAppPackaging). // Enable the sbt-native-packager plugin
+        enablePlugins(GatlingPlugin). // load testing
+        enablePlugins(JavaAgent). // Adds AspectJ Weaver configuration
+        enablePlugins(RevolverPlugin)
 
 lazy val webApiCommonSettings = Seq(
     organization := "org.knora",
@@ -122,6 +145,7 @@ lazy val webApiCommonSettings = Seq(
 )
 
 lazy val webApiLibs = Seq(
+    library.aspectJWeaver,
     library.akkaActor,
     library.akkaAgent,
     library.akkaHttp,
@@ -142,6 +166,8 @@ lazy val webApiLibs = Seq(
     library.commonsValidator,
     library.diff,
     library.ehcache,
+    library.gatlingHighcharts,
+    library.gatlingTestFramework,
     library.gwtServlet,
     library.jacksonScala,
     library.jsonldJava,
@@ -151,6 +177,11 @@ lazy val webApiLibs = Seq(
     library.jenaLibs,
     library.jenaText,
     library.jwt,
+    library.kamonCore,
+    library.kamonAkka,
+    library.kamonPrometheus,
+    library.kamonZipkin,
+    library.kamonJaeger,
     library.logbackClassic,
     library.rdf4jRioTurtle,
     library.rdf4jQueryParserSparql,
@@ -169,10 +200,10 @@ lazy val library =
     new {
         object Version {
             val akkaBase = "2.5.9"
-            val akkaHttp = "10.0.11"
+            val akkaHttp = "10.1.0-RC2"
             val jena = "3.4.0"
-            val aspectj = "1.8.7"
-            val kamon = "0.5.2"
+            val aspectj = "1.8.13"
+            val kamon = "1.0.0"
         }
 
         // akka
@@ -180,17 +211,23 @@ lazy val library =
         val akkaAgent              = "com.typesafe.akka"            %% "akka-agent"               % Version.akkaBase
         val akkaStream             = "com.typesafe.akka"            %% "akka-stream"              % Version.akkaBase
         val akkaSlf4j              = "com.typesafe.akka"            %% "akka-slf4j"               % Version.akkaBase
+        val akkaTestkit            = "com.typesafe.akka"            %% "akka-testkit"             % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val akkaStreamTestkit      = "com.typesafe.akka"            %% "akka-stream-testkit"      % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
+
+        // akka http
         val akkaHttp               = "com.typesafe.akka"            %% "akka-http"                % Version.akkaHttp
         val akkaHttpXml            = "com.typesafe.akka"            %% "akka-http-xml"            % Version.akkaHttp
         val akkaHttpSprayJson      = "com.typesafe.akka"            %% "akka-http-spray-json"     % Version.akkaHttp
         val akkaHttpJacksonJava    = "com.typesafe.akka"            %% "akka-http-jackson"        % Version.akkaHttp
-        val akkaTestkit            = "com.typesafe.akka"            %% "akka-testkit"             % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
         val akkaHttpTestkit        = "com.typesafe.akka"            %% "akka-http-testkit"        % Version.akkaHttp    % "test, fuseki, graphdb, tdb, it, fuseki-it"
-        val akkaStreamTestkit      = "com.typesafe.akka"            %% "akka-stream-testkit"      % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
+
+        // testing
         val scalaTest              = "org.scalatest"                %% "scalatest"                % "3.0.4"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val gatlingHighcharts      = "io.gatling.highcharts"         % "gatling-charts-highcharts"% "2.3.0"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val gatlingTestFramework   = "io.gatling"                    % "gatling-test-framework"   % "2.3.0"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
 
         //CORS support
-        val akkaHttpCors           = "ch.megard"                    %% "akka-http-cors"           % "0.1.10"
+        val akkaHttpCors           = "ch.megard"                    %% "akka-http-cors"           % "0.2.2"
 
         // jena
         val jenaLibs               = "org.apache.jena"               % "apache-jena-libs"         % Version.jena exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec")
@@ -211,15 +248,13 @@ lazy val library =
         // caching
         val ehcache                = "net.sf.ehcache"                % "ehcache"                  % "2.10.0"
 
-        // monitoring - disabled for now
-        val aspectjWeaver          = "org.aspectj"                   % "aspectjweaver"            % Version.aspectj
-        val aspectjRt              = "org.aspectj"                   % "aspectjrt"                % Version.aspectj
+        // monitoring
         val kamonCore              = "io.kamon"                     %% "kamon-core"               % Version.kamon
-        val kamonSpray             = "io.kamon"                     %% "kamon-spray"              % Version.kamon
-        val kamonStatsD            = "io.kamon"                     %% "kamon-statsd"             % Version.kamon
-        val kamonLogReporter       = "io.kamon"                     %% "kamon-log-reporter"       % Version.kamon
-        val kamonSystemMetrics     = "io.kamon"                     %% "kamon-system-metrics"     % Version.kamon
-        val kamonNewRelic          = "io.kamon"                     %% "kamon-newrelic"           % Version.kamon
+        val kamonAkka              = "io.kamon"                     %% "kamon-akka-2.5"           % Version.kamon
+        val kamonPrometheus        = "io.kamon"                     %% "kamon-prometheus"         % Version.kamon
+        val kamonZipkin            = "io.kamon"                     %% "kamon-zipkin"             % Version.kamon
+        val kamonJaeger            = "io.kamon"                     %% "kamon-jaeger"             % Version.kamon
+        val aspectJWeaver          = "org.aspectj"                   % "aspectjweaver"            % Version.aspectj
 
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",
@@ -233,8 +268,8 @@ lazy val library =
         val xmlunitCore            = "org.xmlunit"                   % "xmlunit-core"             % "2.1.1"
 
         // other
-        val rdf4jRioTurtle         = "org.eclipse.rdf4j"             % "rdf4j-rio-turtle"         % "2.2.1"
-        val rdf4jQueryParserSparql = "org.eclipse.rdf4j"             % "rdf4j-queryparser-sparql" % "2.2.1"
+        val rdf4jRioTurtle         = "org.eclipse.rdf4j"             % "rdf4j-rio-turtle"         % "2.2.4"
+        val rdf4jQueryParserSparql = "org.eclipse.rdf4j"             % "rdf4j-queryparser-sparql" % "2.2.4"
         val scallop                = "org.rogach"                   %% "scallop"                  % "2.0.5"
         val gwtServlet             = "com.google.gwt"                % "gwt-servlet"              % "2.8.0"
         val sayonHE                = "net.sf.saxon"                  % "Saxon-HE"                 % "9.7.0-14"
@@ -244,16 +279,16 @@ lazy val library =
         val scalaJava8Compat       = "org.scala-lang.modules"        % "scala-java8-compat_2.12"  % "0.8.0"
 
         // provides akka jackson (json) support
-        val akkaHttpCirce          = "de.heikoseeberger"            %% "akka-http-circe"          % "1.18.0"
-        val jacksonScala           = "com.fasterxml.jackson.module" %% "jackson-module-scala"     % "2.9.0"
+        val akkaHttpCirce          = "de.heikoseeberger"            %% "akka-http-circe"          % "1.20.0-RC1"
+        val jacksonScala           = "com.fasterxml.jackson.module" %% "jackson-module-scala"     % "2.9.4"
 
-        val jsonldJava             = "com.github.jsonld-java"        % "jsonld-java"              % "0.10.0"
+        val jsonldJava             = "com.github.jsonld-java"        % "jsonld-java"              % "0.11.1"
     }
 
 lazy val javaRunOptions = Seq(
     // "-showversion",
-    "-Xms1G",
-    "-Xmx1G"
+    "-Xms2G",
+    "-Xmx2G"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500"
@@ -299,3 +334,37 @@ lazy val javaEmbeddedJenaTDBTestOptions = Seq(
 lazy val javaIntegrationTestOptions = Seq(
     "-Dconfig.resource=graphdb.conf"
 ) ++ javaBaseTestOptions
+
+
+// Create a new MergeStrategy for aop.xml files, as the aop.xml file is present in more than one package.
+// When we create a fat JAR (assembly task), then we need to resolve this conflict.
+val aopMerge: MergeStrategy = new MergeStrategy {
+    val name = "aopMerge"
+    import scala.xml._
+    import scala.xml.dtd._
+
+    def apply(tempDir: File, path: String, files: Seq[File]): Either[String, Seq[(File, String)]] = {
+        val dt = DocType("aspectj", PublicID("-//AspectJ//DTD//EN", "http://www.eclipse.org/aspectj/dtd/aspectj.dtd"), Nil)
+        val file = MergeStrategy.createMergeTarget(tempDir, path)
+        val xmls: Seq[Elem] = files.map(XML.loadFile)
+        val aspectsChildren: Seq[Node] = xmls.flatMap(_ \\ "aspectj" \ "aspects" \ "_")
+        val weaverChildren: Seq[Node] = xmls.flatMap(_ \\ "aspectj" \ "weaver" \ "_")
+        val options: String = xmls.map(x => (x \\ "aspectj" \ "weaver" \ "@options").text).mkString(" ").trim
+        val weaverAttr = if (options.isEmpty) Null else new UnprefixedAttribute("options", options, Null)
+        val aspects = new Elem(null, "aspects", Null, TopScope, false, aspectsChildren: _*)
+        val weaver = new Elem(null, "weaver", weaverAttr, TopScope, false, weaverChildren: _*)
+        val aspectj = new Elem(null, "aspectj", Null, TopScope, false, aspects, weaver)
+        XML.save(file.toString, aspectj, "UTF-8", xmlDecl = false, dt)
+        IO.append(file, IO.Newline.getBytes(IO.defaultCharset))
+        Right(Seq(file -> path))
+    }
+}
+
+// Use defaultMergeStrategy with a case for aop.xml
+// I like this better than the inline version mentioned in assembly's README
+val customMergeStrategy: String => MergeStrategy = {
+    case PathList("META-INF", "aop.xml") =>
+        aopMerge
+    case s =>
+        defaultMergeStrategy(s)
+}
