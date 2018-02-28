@@ -44,8 +44,6 @@
 
        knora-base:objectClassConstraint knora-base:TextValue ;
 
-       salsah-gui:guiOrder "1"^^xsd:integer ;
-
        salsah-gui:guiElement salsah-gui:SimpleText ;
 
        salsah-gui:guiAttribute "size=80" ,
@@ -996,8 +994,6 @@
                            """Topics"""@en ;
 
               knora-base:objectClassConstraint knora-base:ListValue ;
-
-              salsah-gui:guiOrder "0"^^xsd:integer ;
 
               salsah-gui:guiElement salsah-gui:List ;
 
