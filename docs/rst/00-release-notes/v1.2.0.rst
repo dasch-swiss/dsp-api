@@ -116,6 +116,10 @@ of the transformed Turtle file, and restart the Knora API server. Be sure to tes
 installation using a copy of your data and ontologies, before updating the ontology used by a
 live server.
 
+Also, you have to replace the `salsah-gui` ontology that you have in the triplestore with the one
+in `salsah-gui.ttl`.
+
+
 New features:
 -------------
 
