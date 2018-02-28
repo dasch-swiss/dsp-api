@@ -1071,6 +1071,24 @@
 
 
 ### ###########################################
+### beol:manuscriptAdditionalFolium
+
+:manuscriptAdditionalFolium rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Additional Folium"@en ;
+
+                    rdfs:comment """Represents an additional folium."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    knora-base:subjectClassConstraint :manuscript ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
 ### beol:manuscriptHasArchive
 
 :manuscriptHasArchive rdf:type owl:ObjectProperty ;
@@ -1315,6 +1333,10 @@
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :manuscriptEndFolium ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          ],
+                          [   rdf:type owl:Restriction ;
+                              owl:onProperty :manuscriptAdditionalFolium ;
+                              owl:minCardinality "0"^^xsd:nonNegativeInteger
                           ],
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :manuscriptHasShelfMark ;
