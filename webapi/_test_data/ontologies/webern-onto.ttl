@@ -40,9 +40,7 @@
                            """Représente le nom de famille d'une personne."""@fr ,
                            """Rappresenta il nome di famiglia di una persona."""@it ;
 
-              salsah-gui:guiElement salsah-gui:SimpleText ;
-
-              salsah-gui:guiOrder "1"^^xsd:integer .
+              salsah-gui:guiElement salsah-gui:SimpleText .
 
     ### ###########################################
     ### webern:hasGivenName
@@ -65,9 +63,7 @@
                            """Représente le prénom d'une personne."""@fr ,
                            """Rappresenta il nome di battesimo di una persona."""@it ;
 
-              salsah-gui:guiElement salsah-gui:SimpleText ;
-
-              salsah-gui:guiOrder "2"^^xsd:integer .
+              salsah-gui:guiElement salsah-gui:SimpleText .
 
     ### ###########################################
     ### webern:hasAlternativeName
@@ -90,9 +86,7 @@
                            """Représente le nom alternatif d'une personne."""@fr ,
                            """Rappresenta i nomi alternativi di una persona."""@it ;
 
-              salsah-gui:guiElement salsah-gui:Richtext ;
-
-              salsah-gui:guiOrder "3"^^xsd:integer .
+              salsah-gui:guiElement salsah-gui:Richtext .
 
     ### ###########################################
     ### webern:hasIAFIdentifier
@@ -115,9 +109,7 @@
                            """Représente le numéro GND attribué à une personne."""@fr ,
                            """Rappresenta il numero GND assegnato ad una persona."""@it ;
 
-              salsah-gui:guiElement salsah-gui:SimpleText ;
-
-              salsah-gui:guiOrder "4"^^xsd:integer .
+              salsah-gui:guiElement salsah-gui:SimpleText .
 
     ### ###########################################
     ### webern:hasBirthPlace
@@ -140,9 +132,7 @@
                            """Représente le lieu de naissance d'une personne."""@fr ,
                            """Rappresenta il luogo di nascita di una persona."""@it ;
 
-              salsah-gui:guiElement salsah-gui:SimpleText ;
-
-              salsah-gui:guiOrder "5"^^xsd:integer .
+              salsah-gui:guiElement salsah-gui:SimpleText .
 
     ### ###########################################
     ### webern:hasBirthDate
@@ -165,9 +155,7 @@
                            """Représente la date de naissance d'une personne."""@fr ,
                            """Rappresenta la data di nascita di una persona."""@it ;
 
-              salsah-gui:guiElement salsah-gui:Date ;
-
-              salsah-gui:guiOrder "6"^^xsd:integer .
+              salsah-gui:guiElement salsah-gui:Date .
 
     ### ###########################################
     ### webern:hasDeathDate
@@ -190,9 +178,7 @@
                            """Représente la date de décès d'une personne."""@fr ,
                            """Rappresenta la data del decesso di una persona."""@it ;
 
-              salsah-gui:guiElement salsah-gui:Date ;
-
-              salsah-gui:guiOrder "7"^^xsd:integer .
+              salsah-gui:guiElement salsah-gui:Date .
 
     ### ###########################################
     ### webern:hasDeathPlace
@@ -215,9 +201,7 @@
                            """Représente le lieu de décès d'une personne."""@fr ,
                            """Rappresenta il luogo del decesso di una persona."""@it ;
 
-              salsah-gui:guiElement salsah-gui:SimpleText ;
-
-              salsah-gui:guiOrder "8"^^xsd:integer .
+              salsah-gui:guiElement salsah-gui:SimpleText .
 
     ### ###########################################
     ### webern:hasDeathPlace
@@ -240,9 +224,7 @@
                            """Représente le lieu de décès d'une personne."""@fr ,
                            """Rappresenta il luogo del decesso di una persona."""@it ;
 
-              salsah-gui:guiElement salsah-gui:SimpleText ;
-
-              salsah-gui:guiOrder "8"^^xsd:integer .
+              salsah-gui:guiElement salsah-gui:SimpleText .
 
     ### ###########################################
     ### webern:hasBiography
@@ -265,9 +247,7 @@
                            """Représente la biographie d'une personne."""@fr ,
                            """Rappresenta la biografia di una persona."""@it ;
 
-              salsah-gui:guiElement salsah-gui:Richtext ;
-
-              salsah-gui:guiOrder "9"^^xsd:integer .
+              salsah-gui:guiElement salsah-gui:Richtext .
 
     ### ###########################################
     ### webern:hasBiographySource
@@ -290,9 +270,7 @@
                            """Représente les sources de la biographie d'une personne."""@fr ,
                            """Rappresenta le fonti della biografia di una persona."""@it ;
 
-              salsah-gui:guiElement salsah-gui:Richtext ;
-
-              salsah-gui:guiOrder "10"^^xsd:integer .
+              salsah-gui:guiElement salsah-gui:Richtext .
 
     ### ###########################################
     ### webern:hasRelation
@@ -315,9 +293,7 @@
                            """Représente la relation d'une personne avec Webern."""@fr ,
                            """Rappresenta la relazione di una persona con Webern."""@it ;
 
-              salsah-gui:guiElement salsah-gui:Richtext ;
-
-              salsah-gui:guiOrder "11"^^xsd:integer .
+              salsah-gui:guiElement salsah-gui:Richtext .
 
     ### ###########################################
     ### webern:comment
@@ -340,9 +316,7 @@
                            """Représente un commentaire sur la ressource."""@fr ,
                            """Rappresenta un commento sulla risorsa."""@it ;
 
-              salsah-gui:guiElement salsah-gui:Richtext ;
-
-              salsah-gui:guiOrder "20"^^xsd:integer .
+              salsah-gui:guiElement salsah-gui:Richtext .
 
 
     ##########################################################
@@ -361,51 +335,63 @@
         rdfs:subClassOf knora-base:Resource, foaf:Person ,
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasFamilyName ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
                         ],
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasGivenName ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
                         ],
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasAlternativeName ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
                         ],
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasIAFIdentifier ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
                         ],
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasBirthPlace ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
                         ],
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasBirthDate ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
                         ],
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasDeathDate ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
                         ],
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasDeathPlace ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "7"^^xsd:nonNegativeInteger
                         ],
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasBiography ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "8"^^xsd:nonNegativeInteger
                         ],
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasBiographySource ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "9"^^xsd:nonNegativeInteger
                         ],
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :hasRelation ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "10"^^xsd:nonNegativeInteger
                         ],
                         [ rdf:type owl:Restriction ;
                           owl:onProperty :comment ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "11"^^xsd:nonNegativeInteger
                         ] ;
 
         knora-base:resourceIcon "person.png" ;

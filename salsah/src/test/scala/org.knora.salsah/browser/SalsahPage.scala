@@ -97,6 +97,7 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       * @param fullName user's full name
       */
     def doLogin(email: String, password: String, fullName: String): Unit = {
+            Thread.sleep(500)
 
             val loginButton = eventually(driver.findElement(By.id("dologin")))
             loginButton.click()

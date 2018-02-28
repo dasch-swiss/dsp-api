@@ -39,12 +39,13 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.XMLTagItem
 import org.knora.webapi.util.standoff._
-import org.knora.webapi.util.{CacheUtil, StringFormatter, KnoraIdUtil}
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, StringFormatter}
 import org.knora.webapi.{BadRequestException, _}
 import org.xml.sax.SAXException
 
@@ -738,8 +739,8 @@ class StandoffResponderV1 extends Responder {
 
                     // collect the required standoff properties for the standoff class
                     val requiredPropsForClass = standoffClassEntities.standoffClassInfoMap(standoffClass).cardinalities.filter {
-                        case (property: IRI, card: Cardinality.Value) =>
-                            card == Cardinality.MustHaveOne || card == Cardinality.MustHaveSome
+                        case (property: IRI, card: KnoraCardinalityInfo) =>
+                            card.cardinality == Cardinality.MustHaveOne || card.cardinality == Cardinality.MustHaveSome
                     }.keySet -- StandoffProperties.systemProperties -- StandoffProperties.dataTypeProperties
 
                     // check that all the required standoff properties exist in the mapping

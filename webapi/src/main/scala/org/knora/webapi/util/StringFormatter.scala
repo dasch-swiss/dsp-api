@@ -20,6 +20,7 @@
 
 package org.knora.webapi.util
 
+import java.text.ParseException
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 
@@ -38,6 +39,7 @@ import org.knora.webapi.util.JavaUtil.Optional
 import spray.json.JsonParser
 
 import scala.util.matching.Regex
+import scala.util.control.Exception._
 
 /**
   * Provides the singleton instance of [[StringFormatter]], as well as string formatting constants.
@@ -108,6 +110,79 @@ object StringFormatter {
       * @param prefixLabel the prefix label.
       */
     case class XmlImportNamespaceInfoV1(namespace: IRI, prefixLabel: String)
+
+    /**
+      * Represents a parsed object of the property `salsah-gui:guiAttributeDefinition`.
+      *
+      * @param attributeName    the name of the attribute.
+      * @param isRequired       `true` if the attribute is required.
+      * @param allowedType      the type of the attribute's value.
+      * @param enumeratedValues the allowed values, if this is an enumerated string attribute.
+      */
+    case class SalsahGuiAttributeDefinition(attributeName: String,
+                                            isRequired: Boolean,
+                                            allowedType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value,
+                                            enumeratedValues: Set[String] = Set.empty[String])
+
+    /**
+      * Represents a parsed object of the property `salsah-gui:guiAttribute`.
+      *
+      * @param attributeName  the name of the attribute.
+      * @param attributeValue the value of the attribute.
+      */
+    case class SalsahGuiAttribute(attributeName: String, attributeValue: SalsahGuiAttributeValue)
+
+    /**
+      * Represents a parsed value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
+      */
+    sealed trait SalsahGuiAttributeValue {
+        def attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value
+    }
+
+    /**
+      * Represents a parsed integer value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
+      *
+      * @param value the integer value.
+      */
+    case class SalsahGuiIntegerAttributeValue(value: Int) extends SalsahGuiAttributeValue {
+        override val attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer
+    }
+
+    /**
+      * Represents a parsed percent value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
+      *
+      * @param value the percent value.
+      */
+    case class SalsahGuiPercentAttributeValue(value: Int) extends SalsahGuiAttributeValue {
+        override val attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Percent
+    }
+
+    /**
+      * Represents a parsed decimal value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
+      *
+      * @param value the decimal value.
+      */
+    case class SalsahGuiDecimalAttributeValue(value: BigDecimal) extends SalsahGuiAttributeValue {
+        override val attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Decimal
+    }
+
+    /**
+      * Represents a parsed string value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
+      *
+      * @param value the string value.
+      */
+    case class SalsahGuiStringAttributeValue(value: String) extends SalsahGuiAttributeValue {
+        override val attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Str
+    }
+
+    /**
+      * Represents a parsed IRI value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
+      *
+      * @param value the IRI value.
+      */
+    case class SalsahGuiIriAttributeValue(value: IRI) extends SalsahGuiAttributeValue {
+        override val attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Iri
+    }
 
     /*
 
@@ -338,6 +413,7 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
 
     /**
       * If this is a Knora ontology IRI, constructs a Knora entity IRI based on it. Otherwise, throws [[DataConversionException]].
+      *
       * @param entityName the name of the entity.
       */
     def makeEntityIri(entityName: String): SmartIri
@@ -473,18 +549,18 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
     // EE being the era: one of BC or AD
     private val KnoraDateRegex: Regex = ("""^(GREGORIAN|JULIAN)""" +
-            CalendarSeparator + // calendar name
-            """(?:[1-9][0-9]{0,3})(""" + // year
-            PrecisionSeparator +
-            """(?!00)[0-9]{1,2}(""" + // month
-            PrecisionSeparator +
-            """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?(""" + // day
-            CalendarSeparator + // separator if a period is given
-            """(?:[1-9][0-9]{0,3})(""" + // year 2
-            PrecisionSeparator +
-            """(?!00)[0-9]{1,2}(""" + // month 2
-            PrecisionSeparator +
-            """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?)?$""").r // day 2
+        CalendarSeparator + // calendar name
+        """(?:[1-9][0-9]{0,3})(""" + // year
+        PrecisionSeparator +
+        """(?!00)[0-9]{1,2}(""" + // month
+        PrecisionSeparator +
+        """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?(""" + // day
+        CalendarSeparator + // separator if a period is given
+        """(?:[1-9][0-9]{0,3})(""" + // year 2
+        PrecisionSeparator +
+        """(?!00)[0-9]{1,2}(""" + // month 2
+        PrecisionSeparator +
+        """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?)?$""").r // day 2
 
     // The expected format of a datetime.
     private val dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss"
@@ -530,10 +606,10 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
     // A regex for the URL path of an API v2 ontology (built-in or project-specific).
     private val ApiV2OntologyUrlPathRegex: Regex = (
-            "^" + "/ontology/((" +
-                    ProjectIDPattern + ")/)?(" + NCNamePattern + ")(" +
-                    OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")$"
-            ).r
+        "^" + "/ontology/((" +
+            ProjectIDPattern + ")/)?(" + NCNamePattern + ")(" +
+            OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")$"
+        ).r
 
     // The start of the IRI of a project-specific API v2 ontology that is served by this API server.
     private val MaybeProjectSpecificApiV2OntologyStart: Option[String] = knoraApiHostAndPort match {
@@ -543,24 +619,32 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
     // A regex for a project-specific XML import namespace.
     private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
-            "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart + "((" +
-                    ProjectIDPattern + ")/)?(" + NCNamePattern + ")" +
-                    OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
-            ).r
+        "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart + "((" +
+            ProjectIDPattern + ")/)?(" + NCNamePattern + ")" +
+            OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
+        ).r
 
     // In XML import data, a property from another ontology is referred to as prefixLabel__localName. The prefix label
     // may start with a project ID (prefixed with 'p') and a hyphen. This regex parses that pattern.
     private val PropertyFromOtherOntologyInXmlImportRegex: Regex = (
+
             "^(p(" + ProjectIDPattern + ")-)?(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
             ).r
 
     // In XML import data, a standoff link tag that refers to a resource described in the import must have the
     // form defined by this regex.
     private val StandoffLinkReferenceToClientIDForResourceRegex: Regex = (
-            "^ref:(" + NCNamePattern + ")$"
-            ).r
+        "^ref:(" + NCNamePattern + ")$"
+        ).r
 
     private val ApiVersionNumberRegex: Regex = "^v[0-9]+.*$".r
+
+    // Parses an object of salsah-gui:guiAttributeDefinition.
+    private val SalsahGuiAttributeDefinitionRegex: Regex = """^(\p{L}+)(\(required\))?:(\p{L}+)(\(([\p{L}\|]+)\))?$""".r
+
+    // Parses an object of salsa-gui:guiAttribute.
+    private val SalsahGuiAttributeRegex: Regex =
+        """^(\p{L}+)=(.+)$""".r
 
     /**
       * The information that is stored about non-Knora IRIs.
@@ -622,8 +706,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             case None =>
                 // Parse the IRI from scratch.
                 if (isKnoraDataIriStr(iri) ||
-                        iri.startsWith(OntologyConstants.NamedGraphs.DataNamedGraphStart) ||
-                        iri == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph) {
+                    iri.startsWith(OntologyConstants.NamedGraphs.DataNamedGraphStart) ||
+                    iri == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph) {
                     // This is a Knora data or named graph IRI. Nothing else to do.
                     SmartIriInfo(
                         iriType = KnoraDataIri,
@@ -665,11 +749,14 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                                     if (hostname == hostAndPort) {
                                         (Some(parseApiV2VersionSegments(segments)), true)
                                     } else {
+                                        // If we don't recognise the hostname, this isn't a Knora IRI.
                                         (None, false)
                                     }
 
                                 case None =>
-                                    // If we don't recognise the hostname, this isn't a Knora IRI.
+                                    // If we don't have the Knora API server's hostname (because we're using the
+                                    // StringFormatter instance for constant ontologies), we can't recognise
+                                    // project-specific Knora API v2 IRIs.
                                     (None, false)
                             }
                     }
@@ -1325,7 +1412,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     /**
       * Unescapes a string that has been escaped for SPARQL.
       *
-      * @param s        the string to be unescaped.
+      * @param s the string to be unescaped.
       * @return the unescaped string.
       */
     def fromSparqlEncodedString(s: String): String = {
@@ -1337,9 +1424,107 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     }
 
     /**
+      * Parses an object of `salsah-gui:guiAttributeDefinition`.
+      *
+      * @param s        the string to be parsed.
+      * @param errorFun a function that throws an exception. It will be called if the string is invalid.
+      * @return a [[SalsahGuiAttributeDefinition]].
+      */
+    def toSalsahGuiAttributeDefinition(s: String, errorFun: => Nothing): SalsahGuiAttributeDefinition = {
+        s match {
+            case SalsahGuiAttributeDefinitionRegex(attributeName, Optional(maybeRequired), allowedTypeStr, _, Optional(maybeEnumeratedValuesStr)) =>
+                val allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.lookup(allowedTypeStr)
+
+                val enumeratedValues: Set[String] = maybeEnumeratedValuesStr match {
+                    case Some(enumeratedValuesStr) =>
+                        if (allowedType != OntologyConstants.SalsahGui.SalsahGuiAttributeType.Str) {
+                            errorFun
+                        }
+
+                        enumeratedValuesStr.split('|').toSet
+
+                    case None => Set.empty[String]
+                }
+
+                SalsahGuiAttributeDefinition(
+                    attributeName = attributeName,
+                    isRequired = maybeRequired.nonEmpty,
+                    allowedType = allowedType,
+                    enumeratedValues = enumeratedValues
+                )
+
+            case _ => errorFun
+        }
+    }
+
+    /**
+      * Parses an object of `salsah-gui:guiAttribute`.
+      *
+      * @param s             the string to be parsed.
+      * @param attributeDefs the values of `salsah-gui:guiAttributeDefinition` for the property.
+      * @param errorFun      a function that throws an exception. It will be called if the string is invalid.
+      * @return a [[SalsahGuiAttribute]].
+      */
+    def toSalsahGuiAttribute(s: String, attributeDefs: Set[SalsahGuiAttributeDefinition], errorFun: => Nothing): SalsahGuiAttribute = {
+        // Try to parse the expression using a regex.
+        s match {
+            case SalsahGuiAttributeRegex(attributeName: String, attributeValue: String) =>
+                // The regex matched. Get the attribute definition corresponding to the attribute name.
+                val attributeDef = attributeDefs.find(_.attributeName == attributeName).getOrElse(errorFun)
+
+                // Try to parse the value as the type given in the attribute definition.
+                val maybeParsedAttrValue: Option[SalsahGuiAttributeValue] = attributeDef.allowedType match {
+                    case OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer =>
+                        catching(classOf[NumberFormatException]).opt(attributeValue.toInt).map(SalsahGuiIntegerAttributeValue)
+
+                    case OntologyConstants.SalsahGui.SalsahGuiAttributeType.Decimal =>
+                        catching(classOf[NumberFormatException]).opt(BigDecimal(attributeValue)).map(SalsahGuiDecimalAttributeValue)
+
+                    case OntologyConstants.SalsahGui.SalsahGuiAttributeType.Percent =>
+                        if (attributeValue.endsWith("%")) {
+                            val intStr = attributeValue.stripSuffix("%")
+                            catching(classOf[NumberFormatException]).opt(intStr.toInt).map(SalsahGuiPercentAttributeValue)
+                        } else {
+                            None
+                        }
+
+                    case OntologyConstants.SalsahGui.SalsahGuiAttributeType.Iri =>
+                        if (attributeValue.startsWith("<") && attributeValue.endsWith(">")) {
+                            val iriWithoutAngleBrackets = attributeValue.substring(1, attributeValue.length - 1)
+
+                            catching(classOf[ParseException]).opt(validateAndEscapeIri(
+                                iriWithoutAngleBrackets,
+                                throw new ParseException("Couldn't parse IRI", 1))
+                            ).map(SalsahGuiIriAttributeValue)
+                        } else {
+                            None
+                        }
+
+                    case OntologyConstants.SalsahGui.SalsahGuiAttributeType.Str =>
+                        if (attributeDef.enumeratedValues.nonEmpty && !attributeDef.enumeratedValues.contains(attributeValue)) {
+                            errorFun
+                        }
+
+                        Some(SalsahGuiStringAttributeValue(attributeValue))
+
+                    case _ => None
+                }
+
+                maybeParsedAttrValue match {
+                    case Some(parsedAttrValue) => SalsahGuiAttribute(attributeName = attributeName, attributeValue = parsedAttrValue)
+                    case None => errorFun
+                }
+
+            case _ =>
+                // The expression couldn't be parsed.
+                errorFun
+        }
+    }
+
+    /**
       * Validates an OWL cardinality value, which must be 0 or 1 in Knora, and returns the corresponding integer.
       *
-      * @param s the string to be validated.
+      * @param s        the string to be validated.
       * @param errorFun a function that throws an exception. It will be called if the string is invalid.
       * @return the corresponding integer value.
       */

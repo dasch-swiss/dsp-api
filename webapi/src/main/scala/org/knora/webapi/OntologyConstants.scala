@@ -505,11 +505,23 @@ object OntologyConstants {
         val Geonames: IRI = SalsahGuiPrefixExpansion + "Geonames"
         val Fileupload: IRI = SalsahGuiPrefixExpansion + "Fileupload"
 
-        object attributeNames {
-            val resourceClass: String = "restypeid"
-            val assignmentOperator: String = "="
-        }
+        object SalsahGuiAttributeType extends Enumeration {
 
+            val Integer: Value = Value(0, "integer")
+            val Percent: Value = Value(1, "percent")
+            val Decimal: Value = Value(2, "decimal")
+            val Str: Value = Value(3, "string")
+            val Iri: Value = Value(4, "iri")
+
+            val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
+
+            def lookup(name: String): Value = {
+                valueMap.get(name) match {
+                    case Some(value) => value
+                    case None => throw InconsistentTriplestoreDataException(s"salsah-gui attribute type not found: $name")
+                }
+            }
+        }
     }
 
     object Ontotext {

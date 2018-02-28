@@ -25,6 +25,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 import org.knora.webapi.util.IriConversions._
@@ -346,7 +347,7 @@ class ClassInfoV1(classInfoV2: ReadClassInfoV2) extends EntityInfoV1 {
       * Returns a [[Map]] of properties to [[Cardinality.Value]] objects representing the resource class's
       *                            cardinalities on those properties.
       */
-    def cardinalities: Map[IRI, Cardinality.Value] = {
+    def cardinalities: Map[IRI, KnoraCardinalityInfo] = {
         classInfoV2.allCardinalities.map {
             case (smartIri, cardinality) => smartIri.toString -> cardinality
         }
@@ -467,6 +468,7 @@ trait PropertyDefinitionBaseV1 {
   * @param attributes   HTML attributes to be used with the property's GUI element.
   * @param gui_name     the IRI of a named individual of type `salsah-gui:Guielement`, representing the type of GUI element
   *                     that should be used for inputting values for this property.
+  * @param guiorder     the property's order among the properties defined on some particular class.
   */
 case class PropertyDefinitionV1(id: IRI,
                                 name: IRI,

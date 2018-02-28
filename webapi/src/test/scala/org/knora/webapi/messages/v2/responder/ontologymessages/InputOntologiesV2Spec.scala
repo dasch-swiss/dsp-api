@@ -22,6 +22,7 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import java.time.Instant
 
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.jsonld.JsonLDUtil
@@ -289,7 +290,7 @@ object InputOntologiesV2Spec {
             ),
             classIri = "http://0.0.0.0:3333/ontology/anything/v2#WildThing".toSmartIri,
             ontologySchema = ApiV2WithValueObjects,
-            directCardinalities = Map("http://0.0.0.0:3333/ontology/anything/v2#hasName".toSmartIri -> Cardinality.MayHaveOne),
+            directCardinalities = Map("http://0.0.0.0:3333/ontology/anything/v2#hasName".toSmartIri -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
             subClassOf = Set("http://0.0.0.0:3333/ontology/anything/v2#Thing".toSmartIri)
         )),
         ontologyMetadata = OntologyMetadataV2(
