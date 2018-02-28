@@ -1966,12 +1966,12 @@
                  knora-base:objectDatatypeConstraint xsd:string .
 
 
-###  http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasWidth
-:standoffTableCellTagHasWidth rdf:type owl:DatatypeProperty ;
+###  http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasStyle
+:standoffTableCellTagHasStyle rdf:type owl:DatatypeProperty ;
 
                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-                 rdfs:comment "settings for the width of a table cell"@en ;
+                 rdfs:comment "settings for the style of a table cell"@en ;
 
                  knora-base:subjectClassConstraint :StandoffTableCellTag ;
 
@@ -2046,6 +2046,10 @@
              [ rdf:type owl:Restriction ;
                owl:onProperty :standoffTableCellTagHasWidth ;
                owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ] ,
+             [ rdf:type owl:Restriction ;
+                owl:onProperty :standoffTableCellTagHasStyle ;
+                owl:maxCardinality "1"^^xsd:nonNegativeInteger
              ] ,
              [ rdf:type owl:Restriction ;
                owl:onProperty :standoffTableCellTagHasAlignment ;
