@@ -44,7 +44,7 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 0,
@@ -143,7 +143,7 @@
     "p00FF-images" : "http://0.0.0.0:3333/ontology/00FF/images/v2#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
-    "salsah-gui" : "http://www.knora.org/ontology/salsah-gui#",
+    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
     "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }

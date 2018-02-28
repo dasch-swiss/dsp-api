@@ -399,6 +399,7 @@ object OntologyConstants {
 
         /* Standoff */
 
+        val StandoffTag: IRI = KnoraBasePrefixExpansion + "StandoffTag"
         val StandoffTagHasStart: IRI = KnoraBasePrefixExpansion + "standoffTagHasStart"
         val StandoffTagHasEnd: IRI = KnoraBasePrefixExpansion + "standoffTagHasEnd"
         val StandoffTagHasStartIndex: IRI = KnoraBasePrefixExpansion + "standoffTagHasStartIndex"
@@ -719,6 +720,15 @@ object OntologyConstants {
 
     }
 
+    object SalsahGuiApiV2WithValueObjects {
+        val SalsahGuiOntologyIri: IRI = KnoraApi.ApiOntologyStart + SalsahGui.SalsahGuiOntologyLabel + KnoraApiV2WithValueObjects.VersionSegment
+        val SalsahGuiPrefixExpansion: IRI = SalsahGuiOntologyIri + "#"
+
+        val GuiAttribute: IRI = SalsahGuiPrefixExpansion + "guiAttribute"
+        val GuiOrder: IRI = SalsahGuiPrefixExpansion + "guiOrder"
+        val GuiElementProp: IRI = SalsahGuiPrefixExpansion + "guiElement"
+    }
+
     object KnoraApiV2Simple {
 
         val VersionSegment = "/simple/v2"
@@ -840,11 +850,13 @@ object OntologyConstants {
     val CorrespondingPredicates: Map[(OntologySchema, OntologySchema), Map[IRI, IRI]] = Map(
         (InternalSchema, ApiV2Simple) -> Map(
             OntologyConstants.KnoraBase.SubjectClassConstraint -> OntologyConstants.KnoraApiV2Simple.SubjectType,
-            OntologyConstants.KnoraBase.ObjectClassConstraint -> OntologyConstants.KnoraApiV2Simple.ObjectType
+            OntologyConstants.KnoraBase.ObjectClassConstraint -> OntologyConstants.KnoraApiV2Simple.ObjectType,
+            OntologyConstants.KnoraBase.ObjectDatatypeConstraint -> OntologyConstants.KnoraApiV2Simple.ObjectType
         ),
         (InternalSchema, ApiV2WithValueObjects) -> Map(
             OntologyConstants.KnoraBase.SubjectClassConstraint -> OntologyConstants.KnoraApiV2WithValueObjects.SubjectType,
-            OntologyConstants.KnoraBase.ObjectClassConstraint -> OntologyConstants.KnoraApiV2WithValueObjects.ObjectType
+            OntologyConstants.KnoraBase.ObjectClassConstraint -> OntologyConstants.KnoraApiV2WithValueObjects.ObjectType,
+            OntologyConstants.KnoraBase.ObjectDatatypeConstraint -> OntologyConstants.KnoraApiV2WithValueObjects.ObjectType
         ),
         (ApiV2Simple, InternalSchema) -> Map(
             OntologyConstants.KnoraApiV2Simple.SubjectType -> OntologyConstants.KnoraBase.SubjectClassConstraint,

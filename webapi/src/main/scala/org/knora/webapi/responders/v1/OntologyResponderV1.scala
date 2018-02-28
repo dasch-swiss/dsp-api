@@ -173,10 +173,10 @@ class OntologyResponderV1 extends Responder {
             resourceClassInfo: ClassInfoV1 = resourceClassInfoResponse.resourceClassInfoMap.getOrElse(resourceTypeIri, throw NotFoundException(s"Resource class $resourceTypeIri not found"))
 
             // Get all information about those properties.
-            propertyInfo: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = resourceClassInfo.cardinalities.keySet, userProfile = userProfile)
+            propertyInfo: EntityInfoGetResponseV1 <- getEntityInfoResponseV1(propertyIris = resourceClassInfo.knoraResourceCardinalities.keySet, userProfile = userProfile)
 
             // Build the property definitions.
-            propertyDefinitions: Vector[PropertyDefinitionV1] = resourceClassInfo.cardinalities.filterNot {
+            propertyDefinitions: Vector[PropertyDefinitionV1] = resourceClassInfo.knoraResourceCardinalities.filterNot {
                 // filter out the properties that point to LinkValue objects
                 case (propertyIri, _) =>
                     resourceClassInfo.linkValueProperties(propertyIri) || propertyIri == OntologyConstants.KnoraBase.HasStandoffLinkTo
@@ -295,7 +295,7 @@ class OntologyResponderV1 extends Responder {
       */
     def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserProfileV1): Future[NamedGraphEntityInfoV1] = {
         for {
-            response: OntologyEntitiesIriInfoV2 <- (responderManager ? OntologyEntityIrisGetRequestV2(namedGraphIri.toSmartIri, userProfile)).mapTo[OntologyEntitiesIriInfoV2]
+            response: OntologyKnoraEntitiesIriInfoV2 <- (responderManager ? OntologyKnoraEntityIrisGetRequestV2(namedGraphIri.toSmartIri, userProfile)).mapTo[OntologyKnoraEntitiesIriInfoV2]
 
             classIrisForV1 = response.classIris.map(_.toString) -- OntologyConstants.KnoraBase.AbstractResourceClasses
             propertyIrisForV1 = response.propertyIris.map(_.toString) - OntologyConstants.KnoraBase.ResourceProperty

@@ -39,7 +39,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.FakeTriplestore
+import org.knora.webapi.util.{FakeTriplestore, StringFormatter}
 import org.knora.webapi.util.SparqlResultProtocol._
 import spray.json._
 
@@ -252,6 +252,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
               */
             private var statements = Map.empty[SubjectV2, Map[IRI, Seq[LiteralV2]]]
 
+            private val stringFormatter = StringFormatter.getGeneralInstance
+
             override def handleComment(comment: IRI): Unit = {}
 
             /**
@@ -279,6 +281,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                         case OntologyConstants.Xsd.String => StringLiteralV2(value = literal.stringValue, language = None)
                         case OntologyConstants.Xsd.Boolean => BooleanLiteralV2(value = literal.booleanValue)
                         case OntologyConstants.Xsd.Integer | OntologyConstants.Xsd.NonNegativeInteger => IntLiteralV2(value = literal.intValue)
+                        case OntologyConstants.Xsd.DateTimeStamp => DateTimeLiteralV2(stringFormatter.toInstant(literal.stringValue, throw InconsistentTriplestoreDataException(s"Invalid xsd:dateTimeStamp: ${literal.stringValue}")))
                         case unknown => throw NotImplementedException(s"The literal type '$unknown' is not implemented.")
                     }
 

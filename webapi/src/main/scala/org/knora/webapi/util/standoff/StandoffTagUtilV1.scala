@@ -323,7 +323,7 @@ object StandoffTagUtilV1 {
                 val standoffClassIri: IRI = standoffDefFromMapping.standoffClassIri
 
                 // get the cardinalities of the current standoff class
-                val cardinalities: Map[IRI, KnoraCardinalityInfo] = standoffEntities.standoffClassInfoMap.getOrElse(standoffClassIri, throw NotFoundException(s"information about standoff class $standoffClassIri was not found in ontology")).cardinalities
+                val cardinalities: Map[IRI, KnoraCardinalityInfo] = standoffEntities.standoffClassInfoMap.getOrElse(standoffClassIri, throw NotFoundException(s"information about standoff class $standoffClassIri was not found in ontology")).knoraResourceCardinalities
 
                 // create a standoff base tag with the information available from standoff util
                 val standoffBaseTagV1: StandoffTagV1 = standoffNodeFromXML match {

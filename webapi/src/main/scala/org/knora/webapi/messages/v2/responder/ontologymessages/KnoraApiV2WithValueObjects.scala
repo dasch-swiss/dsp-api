@@ -38,7 +38,6 @@ object KnoraApiV2WithValueObjects {
 
     val Resource: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Resource,
-        subClassOf = Set(OntologyConstants.SchemaOrg.Thing),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -57,7 +56,7 @@ object KnoraApiV2WithValueObjects {
             )
         ),
         directCardinalities = Map(
-            OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
+            OntologyConstants.Rdfs.Label -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo -> Cardinality.MayHaveMany,
             OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue -> Cardinality.MayHaveMany,
             OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> Cardinality.MustHaveOne,
@@ -402,7 +401,6 @@ object KnoraApiV2WithValueObjects {
     val ForbiddenResource: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.ForbiddenResource,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
-        canBeInstantiated = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
