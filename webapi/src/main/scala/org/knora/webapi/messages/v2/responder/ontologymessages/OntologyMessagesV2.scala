@@ -1355,13 +1355,20 @@ case class ReadOntologiesV2(ontologies: Seq[ReadOntologyV2]) extends KnoraRespon
   * Returns metadata about Knora ontologies.
   *
   * @param ontologies      the metadata to be returned.
-  * @param includeKnoraApi if true, includes metadata about the `knora-api` ontology for the target schema.
   */
-case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2], includeKnoraApi: Boolean = false) extends KnoraResponseV2 {
+case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends KnoraResponseV2 {
 
     private def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyMetadataV2 = {
+        // We may have metadata for knora-api in more than one schema. Just return the one for the target schema.
+
+        val ontologiesAvailableInTargetSchema = ontologies.filterNot {
+            ontology =>
+                ontology.ontologyIri.getOntologyName == OntologyConstants.KnoraApi.KnoraApiOntologyLabel &&
+                    !ontology.ontologyIri.getOntologySchema.contains(targetSchema)
+        }
+
         copy(
-            ontologies = ontologies.map(_.toOntologySchema(targetSchema))
+            ontologies = ontologiesAvailableInTargetSchema.map(_.toOntologySchema(targetSchema))
         )
     }
 
@@ -1376,17 +1383,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2], includeKn
             "rdfs" -> JsonLDString(OntologyConstants.Rdfs.RdfsPrefixExpansion)
         ))
 
-        val maybeKnoraApiMetadata = if (includeKnoraApi) {
-            targetSchema match {
-                case ApiV2Simple => Some(KnoraApiV2Simple.OntologyMetadata)
-                case ApiV2WithValueObjects => Some(KnoraApiV2WithValueObjects.OntologyMetadata)
-            }
-        } else {
-            None
-        }
-
-        val ontologiesWithKnoraApi = ontologies ++ maybeKnoraApiMetadata
-        val ontologiesJson: Vector[JsonLDObject] = ontologiesWithKnoraApi.toVector.sortBy(_.ontologyIri).map(ontology => JsonLDObject(ontology.toJsonLD(targetSchema)))
+        val ontologiesJson: Vector[JsonLDObject] = ontologies.toVector.sortBy(_.ontologyIri).map(ontology => JsonLDObject(ontology.toJsonLD(targetSchema)))
 
         val hasOntologiesProp = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasOntologies

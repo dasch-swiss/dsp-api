@@ -85,6 +85,7 @@ object OntologyConstants {
 
         val String: IRI = XsdPrefixExpansion + "string"
         val Boolean: IRI = XsdPrefixExpansion + "boolean"
+        val Int: IRI = XsdPrefixExpansion + "int"
         val Integer: IRI = XsdPrefixExpansion + "integer"
         val NonNegativeInteger: IRI = XsdPrefixExpansion + "nonNegativeInteger"
         val Decimal: IRI = XsdPrefixExpansion + "decimal"

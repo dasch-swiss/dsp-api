@@ -76,25 +76,25 @@ class OntologyResponderV2 extends Responder {
     /**
       * A container for all the cached ontology data.
       *
-      * @param ontologyMetadata              metadata about available ontologies.
-      * @param ontologyNonStandoffClasses    a map of ontology IRIs to sets of non-standoff class IRIs defined in each ontology.
-      * @param ontologyNonStandoffProperties a map of ontology IRIs to sets of non-standoff property IRIs defined in each ontology.
-      * @param ontologyIndividuals           a map of ontology IRIs to sets of OWL named individuals defined in each ontology.
-      * @param ontologyStandoffClasses       a map of ontology IRIs to sets of standoff class IRIs defined in each ontology.
-      * @param ontologyStandoffProperties    a map of ontology IRIs to sets of standoff property IRIs defined in each ontology.
-      * @param classDefs                     a map of class IRIs to definitions.
-      * @param subClassOfRelations           a map of IRIs of resource classes to sets of the IRIs of their base classes.
-      * @param superClassOfRelations         a map of IRIs of value classes to sets of the IRIs of their base classes.
-      * @param propertyDefs                  a map of non-standoff property IRIs to property definitions.
-      * @param subPropertyOfRelations        a map of non-standoff property IRIs to sets of the IRIs of their base properties.
-      * @param individuals                   a map of OWL named individual IRIs to definitions.
-      * @param standoffClasses               the IRIs of all standoff classes.
-      * @param standoffClassesWithDataType   the IRIs of all standoff datatype classes.
-      * @param standoffProperties            the IRIs of all standoff properties.
+      * @param ontologyMetadata            metadata about available ontologies.
+      * @param ontologyNonStandoffClasses  a map of ontology IRIs to sets of non-standoff class IRIs defined in each ontology.
+      * @param ontologyProperties          a map of ontology IRIs to sets of property IRIs defined in each ontology.
+      * @param ontologyIndividuals         a map of ontology IRIs to sets of OWL named individuals defined in each ontology.
+      * @param ontologyStandoffClasses     a map of ontology IRIs to sets of standoff class IRIs defined in each ontology.
+      * @param ontologyStandoffProperties  a map of ontology IRIs to sets of standoff property IRIs defined in each ontology.
+      * @param classDefs                   a map of class IRIs to definitions.
+      * @param subClassOfRelations         a map of IRIs of resource classes to sets of the IRIs of their base classes.
+      * @param superClassOfRelations       a map of IRIs of value classes to sets of the IRIs of their base classes.
+      * @param propertyDefs                a map of non-standoff property IRIs to property definitions.
+      * @param subPropertyOfRelations      a map of non-standoff property IRIs to sets of the IRIs of their base properties.
+      * @param individuals                 a map of OWL named individual IRIs to definitions.
+      * @param standoffClasses             the IRIs of all standoff classes.
+      * @param standoffClassesWithDataType the IRIs of all standoff datatype classes.
+      * @param standoffProperties          the IRIs of all standoff properties.
       */
     private case class OntologyCacheData(ontologyMetadata: Map[SmartIri, OntologyMetadataV2],
                                          ontologyNonStandoffClasses: Map[SmartIri, Set[SmartIri]],
-                                         ontologyNonStandoffProperties: Map[SmartIri, Set[SmartIri]],
+                                         ontologyProperties: Map[SmartIri, Set[SmartIri]],
                                          ontologyIndividuals: Map[SmartIri, Set[SmartIri]],
                                          ontologyStandoffClasses: Map[SmartIri, Set[SmartIri]],
                                          ontologyStandoffProperties: Map[SmartIri, Set[SmartIri]],
@@ -328,6 +328,7 @@ class OntologyResponderV2 extends Responder {
         val readPropertyInfos: Map[SmartIri, ReadPropertyInfoV2] = makeReadPropertyInfos(
             propertyDefs = allPropertyDefs,
             directSubPropertyOfRelations = directSubPropertyOfRelations,
+            allSubPropertyOfRelations = allSubPropertyOfRelations,
             allGuiAttributeDefinitions = allGuiAttributeDefinitions,
             allKnoraResourceProps = allKnoraResourceProps,
             allLinkProps = allLinkProps,
@@ -340,26 +341,28 @@ class OntologyResponderV2 extends Responder {
 
         // Construct the ontology cache.
 
-        val ontologyMetadataForCache = allOntologyMetadata - OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri
+        val ontologyMetadataForCache = allOntologyMetadata - OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri +
+            (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2Simple.OntologyMetadata) +
+            (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2WithValueObjects.OntologyMetadata)
 
+        // Standoff classes are subclasses of knora-base:StandoffTag.
         val standoffClasses: Set[SmartIri] = allClassIris.filter {
             standoffClassIri => allSubClassOfRelations(standoffClassIri).contains(OntologyConstants.KnoraBase.StandoffTag.toSmartIri)
         }
 
+        // Standoff classes with datatypes are subclasses of any of the classes in the enumeration StandoffDataTypeClasses.
         val standoffClassesWithDataType: Set[SmartIri] = standoffClasses.filter {
             standoffClassIri => readClassInfos(standoffClassIri).standoffDataType.isDefined
         }
 
+        // Standoff properties are all properties that standoff classes have cardinalities for.
         val standoffProperties: Set[SmartIri] = standoffClasses.flatMap {
-            standoffClassIri => allClassDefs(standoffClassIri).directCardinalities.keySet
+            standoffClassIri => readClassInfos(standoffClassIri).allCardinalities.keySet
         }
 
+        // Non-standoff classes are all standoff classes that aren't subclasses of knora-base:StandoffTag.
         val ontologyNonStandoffClasses: Map[SmartIri, Set[SmartIri]] = classIrisPerOntology.map {
             case (ontologyIri, classIris) => ontologyIri -> (classIris -- standoffClasses)
-        }
-
-        val ontologyNonStandoffProperties: Map[SmartIri, Set[SmartIri]] = propertyIrisPerOntology.map {
-            case (ontologyIri, propertyIris) => ontologyIri -> (propertyIris -- standoffProperties)
         }
 
         val ontologyStandoffClasses: Map[SmartIri, Set[SmartIri]] = classIrisPerOntology.map {
@@ -375,7 +378,7 @@ class OntologyResponderV2 extends Responder {
         val ontologyCacheData: OntologyCacheData = OntologyCacheData(
             ontologyMetadata = new ErrorHandlingMap[SmartIri, OntologyMetadataV2](ontologyMetadataForCache, { key => s"Ontology not found: $key" }),
             ontologyNonStandoffClasses = new ErrorHandlingMap[SmartIri, Set[SmartIri]](ontologyNonStandoffClasses, { key => s"Ontology not found: $key" }),
-            ontologyNonStandoffProperties = new ErrorHandlingMap[SmartIri, Set[SmartIri]](ontologyNonStandoffProperties, { key => s"Ontology not found: $key" }),
+            ontologyProperties = new ErrorHandlingMap[SmartIri, Set[SmartIri]](propertyIrisPerOntology, { key => s"Ontology not found: $key" }),
             ontologyIndividuals = new ErrorHandlingMap[SmartIri, Set[SmartIri]](individualIrisPerOntology, { key => s"Ontology not found: $key" }),
             ontologyStandoffClasses = new ErrorHandlingMap[SmartIri, Set[SmartIri]](ontologyStandoffClasses, { key => s"Ontology not found: $key" }),
             ontologyStandoffProperties = new ErrorHandlingMap[SmartIri, Set[SmartIri]](ontologyStandoffProperties, { key => s"Ontology not found: $key" }),
@@ -560,6 +563,7 @@ class OntologyResponderV2 extends Responder {
       *
       * @param propertyDefs                 a map of property IRIs to property definitions.
       * @param directSubPropertyOfRelations a map of property IRIs to their immediate base properties.
+      * @param allSubPropertyOfRelations    a map of property IRIs to all their base properties.
       * @param allGuiAttributeDefinitions   a map of `Guielement` IRIs to sets of [[SalsahGuiAttributeDefinition]].
       * @param allKnoraResourceProps        a set of the IRIs of all Knora resource properties.
       * @param allLinkProps                 a set of the IRIs of all link properties.
@@ -569,6 +573,7 @@ class OntologyResponderV2 extends Responder {
       */
     private def makeReadPropertyInfos(propertyDefs: Map[SmartIri, PropertyInfoContentV2],
                                       directSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
+                                      allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
                                       allGuiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]],
                                       allKnoraResourceProps: Set[SmartIri],
                                       allLinkProps: Set[SmartIri],
@@ -589,7 +594,8 @@ class OntologyResponderV2 extends Responder {
                     isKnoraResourceProp = allKnoraResourceProps.contains(propertyIri),
                     isLinkProp = allLinkProps.contains(propertyIri),
                     isLinkValueProp = allLinkValueProps.contains(propertyIri),
-                    isFileValueProp = allFileValueProps.contains(propertyIri)
+                    isFileValueProp = allFileValueProps.contains(propertyIri),
+                    isStandoffInternalReferenceProperty = allSubPropertyOfRelations(propertyIri).contains(OntologyConstants.KnoraBase.StandoffTagHasInternalReference.toSmartIri)
                 )
 
                 propertyIri -> propertyEntityInfo
@@ -717,6 +723,22 @@ class OntologyResponderV2 extends Responder {
     }
 
     /**
+      * Given a requested entity IRI, finds the IRI of the corresponding cached entity.
+      *
+      * @param entityIri the requested entity IRI.
+      * @return the IRI of the corresponding cached entity.
+      */
+    private def makeEntityIriForCache(entityIri: SmartIri): SmartIri = {
+        if (OntologyConstants.ConstantOntologies.contains(entityIri.getOntologyFromEntity.toString)) {
+            // The client is asking about an entity in a constant ontology, so don't translate its IRI.
+            entityIri
+        } else {
+            // The client is asking about a non-constant entity. Translate its IRI to an internal entity IRI.
+            entityIri.toOntologySchema(InternalSchema)
+        }
+    }
+
+    /**
       * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV1]] describing both resource and property entities.
       *
       * @param classIris    the IRIs of the resource entities to be queried.
@@ -725,16 +747,6 @@ class OntologyResponderV2 extends Responder {
       * @return an [[EntityInfoGetResponseV1]].
       */
     private def getEntityInfoResponseV2(classIris: Set[SmartIri] = Set.empty[SmartIri], propertyIris: Set[SmartIri] = Set.empty[SmartIri], userProfile: UserProfileV1): Future[EntityInfoGetResponseV2] = {
-        def makeEntityIriForCache(entityIri: SmartIri): SmartIri = {
-            if (OntologyConstants.ConstantOntologies.contains(entityIri.getOntologyFromEntity.toString)) {
-                // The client is asking about an entity in a constant ontology, so don't translate its IRI.
-                entityIri
-            } else {
-                // The client is asking about a non-constant entity. Translate its IRI to an internal entity IRI.
-                entityIri.toOntologySchema(InternalSchema)
-            }
-        }
-
         for {
             cacheData <- getCacheData
 
@@ -774,9 +786,26 @@ class OntologyResponderV2 extends Responder {
         for {
             cacheData <- getCacheData
 
+            classIrisForCache = standoffClassIris.map(makeEntityIriForCache)
+            propertyIrisForCache = standoffPropertyIris.map(makeEntityIriForCache)
+
+            classDefsAvailable: Map[SmartIri, ReadClassInfoV2] = cacheData.classDefs.filterKeys(cacheData.standoffClasses).filterKeys(standoffClassIris)
+            propertyDefsAvailable: Map[SmartIri, ReadPropertyInfoV2] = cacheData.propertyDefs.filterKeys(cacheData.standoffProperties).filterKeys(standoffPropertyIris)
+
+            missingClassDefs = classIrisForCache -- classDefsAvailable.keySet
+            missingPropertyDefs = propertyIrisForCache -- propertyDefsAvailable.keySet
+
+            _ = if (missingClassDefs.nonEmpty) {
+                throw NotFoundException(s"Some requested standoff classes were not found: ${missingClassDefs.mkString(", ")}")
+            }
+
+            _ = if (missingPropertyDefs.nonEmpty) {
+                throw NotFoundException(s"Some requested standoff properties were not found: ${missingPropertyDefs.mkString(", ")}")
+            }
+
             response = StandoffEntityInfoGetResponseV2(
-                standoffClassInfoMap = cacheData.classDefs.filterKeys(cacheData.standoffClasses).filterKeys(standoffClassIris),
-                standoffPropertyInfoMap = cacheData.propertyDefs.filterKeys(cacheData.standoffProperties).filterKeys(standoffPropertyIris)
+                standoffClassInfoMap = new ErrorHandlingMap(classDefsAvailable, { key => s"Resource class $key not found" }),
+                standoffPropertyInfoMap = new ErrorHandlingMap(propertyDefsAvailable, { key => s"Property $key not found" })
             )
         } yield response
     }
@@ -873,13 +902,13 @@ class OntologyResponderV2 extends Responder {
         for {
             cacheData <- getCacheData
 
-            _ = if (!(cacheData.ontologyNonStandoffClasses.contains(namedGraphIri) || cacheData.ontologyNonStandoffProperties.contains(namedGraphIri))) {
+            _ = if (!(cacheData.ontologyNonStandoffClasses.contains(namedGraphIri) || cacheData.ontologyProperties.contains(namedGraphIri))) {
                 throw NotFoundException(s"Ontology not found: $namedGraphIri")
             }
 
         } yield OntologyKnoraEntitiesIriInfoV2(
             ontologyIri = namedGraphIri,
-            propertyIris = cacheData.ontologyNonStandoffProperties.getOrElse(namedGraphIri, Set.empty[SmartIri]).filter {
+            propertyIris = cacheData.ontologyProperties.getOrElse(namedGraphIri, Set.empty[SmartIri]).filter {
                 propertyIri => isKnoraResourceProperty(propertyIri, cacheData)
             },
             classIris = cacheData.ontologyNonStandoffClasses.getOrElse(namedGraphIri, Set.empty[SmartIri]),
@@ -903,21 +932,18 @@ class OntologyResponderV2 extends Responder {
             filteredNamedGraphInfos = namedGraphInfos.filterNot(_.id == OntologyConstants.KnoraBase.KnoraBaseOntologyIri)
             returnAllOntologies: Boolean = projectIris.isEmpty
 
-            namedGraphsToReturn = if (returnAllOntologies) {
-                filteredNamedGraphInfos
+            ontologyMetadata: Set[OntologyMetadataV2] = if (returnAllOntologies) {
+                cacheData.ontologyMetadata.values.toSet
             } else {
-                filteredNamedGraphInfos.filter(namedGraphInfo => projectIriStrs.contains(namedGraphInfo.project_id))
+                filteredNamedGraphInfos.filter(namedGraphInfo => projectIriStrs.contains(namedGraphInfo.project_id)).map {
+                    namedGraphInfo =>
+                        val ontologyIri = namedGraphInfo.id.toSmartIri
+                        cacheData.ontologyMetadata.getOrElse(ontologyIri, throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri has no metadata"))
+                }.toSet
             }
 
-            ontologyMetadata: Set[OntologyMetadataV2] = namedGraphsToReturn.map {
-                namedGraphInfo =>
-                    val ontologyIri = namedGraphInfo.id.toSmartIri
-                    cacheData.ontologyMetadata.getOrElse(ontologyIri, throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri has no metadata"))
-            }.toSet
-
             response = ReadOntologyMetadataV2(
-                ontologies = ontologyMetadata,
-                includeKnoraApi = returnAllOntologies
+                ontologies = ontologyMetadata
             )
         } yield response
     }
@@ -956,7 +982,7 @@ class OntologyResponderV2 extends Responder {
                 ontologyIri =>
                     val ontologyIriForCache = makeOntologyIriForCache(ontologyIri)
 
-                    if (!(cacheData.ontologyNonStandoffClasses.contains(ontologyIriForCache) || cacheData.ontologyNonStandoffProperties.contains(ontologyIriForCache))) {
+                    if (!(OntologyConstants.ConstantOntologies.contains(ontologyIri.toString) || cacheData.ontologyMetadata.contains(ontologyIriForCache))) {
                         throw NotFoundException(s"Ontology not found: $ontologyIriForCache")
                     }
 
@@ -965,7 +991,7 @@ class OntologyResponderV2 extends Responder {
                         classes = cacheData.ontologyNonStandoffClasses.getOrElse(ontologyIriForCache, Set.empty[SmartIri]).map {
                             classIri => classIri -> cacheData.classDefs(classIri)
                         }.toMap,
-                        properties = cacheData.ontologyNonStandoffProperties.getOrElse(ontologyIriForCache, Set.empty[SmartIri]).map {
+                        properties = cacheData.ontologyProperties.getOrElse(ontologyIriForCache, Set.empty[SmartIri]).map {
                             propertyIri => propertyIri -> cacheData.propertyDefs(propertyIri)
                         }.toMap,
                         individuals = cacheData.ontologyIndividuals.getOrElse(ontologyIriForCache, Set.empty[SmartIri]).map {
@@ -2065,10 +2091,11 @@ class OntologyResponderV2 extends Responder {
         // Check that the class is a subclass of all the classes that are subject class constraints of the Knora resource properties in its cardinalities.
 
         val knoraResourcePropertyIris = cardinalitiesForClassWithInheritance.keySet.filter {
-            propertyIri => isKnoraResourceProperty(
-                propertyIri = propertyIri,
-                cacheData = cacheData
-            )
+            propertyIri =>
+                isKnoraResourceProperty(
+                    propertyIri = propertyIri,
+                    cacheData = cacheData
+                )
         }
 
         knoraResourcePropertyIris.foreach {
@@ -3282,18 +3309,18 @@ class OntologyResponderV2 extends Responder {
       * Checks whether a property is a subproperty of `knora-base:resourceProperty`.
       *
       * @param propertyIri the property IRI.
-      * @param cacheData the ontology cache.
+      * @param cacheData   the ontology cache.
       * @return `true` if the property is a subproperty of `knora-base:resourceProperty`.
       */
     private def isKnoraResourceProperty(propertyIri: SmartIri, cacheData: OntologyCacheData): Boolean = {
-      propertyIri.isKnoraEntityIri && cacheData.propertyDefs(propertyIri).isKnoraResourceProp
+        propertyIri.isKnoraEntityIri && cacheData.propertyDefs(propertyIri).isKnoraResourceProp
     }
 
     /**
       * Checks whether a property is a subproperty of `knora-base:hasLinkTo`.
       *
       * @param propertyIri the property IRI.
-      * @param cacheData the ontology cache.
+      * @param cacheData   the ontology cache.
       * @return `true` if the property is a subproperty of `knora-base:hasLinkTo`.
       */
     private def isLinkProp(propertyIri: SmartIri, cacheData: OntologyCacheData): Boolean = {
@@ -3304,7 +3331,7 @@ class OntologyResponderV2 extends Responder {
       * Checks whether a property is a subproperty of `knora-base:hasLinkToValue`.
       *
       * @param propertyIri the property IRI.
-      * @param cacheData the ontology cache.
+      * @param cacheData   the ontology cache.
       * @return `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
       */
     private def isLinkValueProp(propertyIri: SmartIri, cacheData: OntologyCacheData): Boolean = {
@@ -3315,7 +3342,7 @@ class OntologyResponderV2 extends Responder {
       * Checks whether a property is a subproperty of `knora-base:hasFileValue`.
       *
       * @param propertyIri the property IRI.
-      * @param cacheData the ontology cache.
+      * @param cacheData   the ontology cache.
       * @return `true` if the property is a subproperty of `knora-base:hasFileValue`.
       */
     private def isFileValueProp(propertyIri: SmartIri, cacheData: OntologyCacheData): Boolean = {
