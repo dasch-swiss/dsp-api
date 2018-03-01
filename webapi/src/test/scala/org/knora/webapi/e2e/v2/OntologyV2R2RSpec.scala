@@ -74,6 +74,8 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val knoraApiOntologySimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiOntologySimple.json")))
     private val knoraApiWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiWithValueObjects.json")))
     private val salsahGui: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/salsahGuiOntology.json")))
+    private val standoffSimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/standoffOntologySimple.json")))
+    private val standoffWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/standoffOntologyWithValueObjects.json")))
     private val incunabulaOntologySimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaOntologySimple.json")))
     private val incunabulaOntologyWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaOntologyWithValueObjects.json")))
     private val knoraApiDate: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiDate.json")))
@@ -157,6 +159,20 @@ class OntologyV2R2RSpec extends R2RSpec {
             Get("/ontology/salsah-gui/v2") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
                 assert(responseJson == salsahGui)
+            }
+        }
+
+        "serve the standoff ontology as JSON-LD via the /ontology route using the simple schema" in {
+            Get("/ontology/standoff/simple/v2") ~> ontologiesPath ~> check {
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                assert(responseJson == standoffSimple)
+            }
+        }
+
+        "serve the standoff ontology as JSON-LD via the /ontology route using the value object schema" in {
+            Get("/ontology/standoff/v2") ~> ontologiesPath ~> check {
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                assert(responseJson == standoffWithValueObjects)
             }
         }
 
