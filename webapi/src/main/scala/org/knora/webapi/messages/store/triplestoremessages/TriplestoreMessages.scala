@@ -291,9 +291,18 @@ case class BooleanLiteralV2(value: Boolean) extends LiteralV2 {
 /**
   * Represents an integer value.
   *
-  * @param value the boolean value.
+  * @param value the integer value.
   */
 case class IntLiteralV2(value: Int) extends LiteralV2 {
+    override def toString: String = value.toString
+}
+
+/**
+  * Represents an Decimal value.
+  *
+  * @param value the decimal value.
+  */
+case class DecimalLiteralV2(value: BigDecimal) extends LiteralV2 {
     override def toString: String = value.toString
 }
 
