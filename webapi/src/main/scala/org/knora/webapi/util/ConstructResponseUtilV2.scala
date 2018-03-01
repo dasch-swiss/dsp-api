@@ -482,12 +482,12 @@ object ConstructResponseUtilV2 {
 
             case OntologyConstants.KnoraBase.ListValue =>
 
-                val listNodeName: String = valueObject.listNode.get(OntologyConstants.Rdfs.Label) match {
-                    case Some(nodeName: String) => nodeName
+                val listNodeLabel: String = valueObject.listNode.get(OntologyConstants.Rdfs.Label) match {
+                    case Some(nodeLabel: String) => nodeLabel
                     case None => throw InconsistentTriplestoreDataException(s"Expected ${OntologyConstants.Rdfs.Label} in assertions for a value object of type list value.")
                 }
 
-                HierarchicalListValueContentV2(valueHasString = valueObjectValueHasString, valueHasListNode = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasListNode), listNodeName = listNodeName, comment = valueCommentOption)
+                HierarchicalListValueContentV2(valueHasString = valueObjectValueHasString, valueHasListNode = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasListNode), listNodeLabel = listNodeLabel, comment = valueCommentOption)
 
             case OntologyConstants.KnoraBase.IntervalValue =>
                 IntervalValueContentV2(valueHasString = valueObjectValueHasString, valueHasIntervalStart = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalStart)), valueHasIntervalEnd = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalEnd)), comment = valueCommentOption)

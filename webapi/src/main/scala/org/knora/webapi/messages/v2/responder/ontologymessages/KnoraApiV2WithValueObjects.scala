@@ -1861,7 +1861,7 @@ object KnoraApiV2WithValueObjects {
         ),
         directCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNode -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNodeName -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNodeLabel -> Cardinality.MustHaveOne
         ),
         inheritedCardinalities = Value.allCardinalities,
         isValueClass = true
@@ -1889,8 +1889,8 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val HierarchicalListValueAsListNodeName: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNodeName,
+    val HierarchicalListValueAsListNodeLabel: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNodeLabel,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.ListValue),
@@ -2583,7 +2583,7 @@ object KnoraApiV2WithValueObjects {
         IntervalValueHasStart,
         IntervalValueHasEnd,
         HierarchicalListValueAsListNode,
-        HierarchicalListValueAsListNodeName,
+        HierarchicalListValueAsListNodeLabel,
         ColorValueAsColor,
         UriValueAsUri,
         GeonameValueAsGeonameCode,

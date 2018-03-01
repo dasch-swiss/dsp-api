@@ -344,10 +344,10 @@ case class IntervalValueContentV2(valueHasString: String, valueHasIntervalStart:
   *
   * @param valueHasString   the string representation of the hierarchical list node value.
   * @param valueHasListNode the IRI of the hierarchical list node pointed to.
-  * @param listNodeName     the name of the hierarchical list node pointed to.
+  * @param listNodeLabel    the label of the hierarchical list node pointed to.
   * @param comment          a comment on this `HierarchicalListValueContentV2`, if any.
   */
-case class HierarchicalListValueContentV2(valueHasString: String, valueHasListNode: IRI, listNodeName: String, comment: Option[String]) extends ValueContentV2 {
+case class HierarchicalListValueContentV2(valueHasString: String, valueHasListNode: IRI, listNodeLabel: String, comment: Option[String]) extends ValueContentV2 {
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.ListValue
 
@@ -357,7 +357,7 @@ case class HierarchicalListValueContentV2(valueHasString: String, valueHasListNo
         JsonLDObject(
             Map(
                 OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNode -> JsonLDString(valueHasListNode),
-                OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNodeName -> JsonLDString(listNodeName)
+                OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNodeLabel -> JsonLDString(listNodeLabel)
             )
         )
     }
