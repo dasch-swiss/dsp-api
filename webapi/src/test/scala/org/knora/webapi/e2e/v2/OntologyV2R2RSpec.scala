@@ -73,6 +73,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val bildWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/bildWithValueObjects.json")))
     private val knoraApiOntologySimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiOntologySimple.json")))
     private val knoraApiWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiWithValueObjects.json")))
+    private val salsahGui: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/salsahGuiOntology.json")))
     private val incunabulaOntologySimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaOntologySimple.json")))
     private val incunabulaOntologyWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaOntologyWithValueObjects.json")))
     private val knoraApiDate: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiDate.json")))
@@ -149,6 +150,13 @@ class OntologyV2R2RSpec extends R2RSpec {
             Get("/ontology/knora-api/v2") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
                 assert(responseJson == knoraApiWithValueObjects)
+            }
+        }
+
+        "serve the salsah-gui ontology as JSON-LD via the /ontology route" in {
+            Get("/ontology/salsah-gui/v2") ~> ontologiesPath ~> check {
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                assert(responseJson == salsahGui)
             }
         }
 
