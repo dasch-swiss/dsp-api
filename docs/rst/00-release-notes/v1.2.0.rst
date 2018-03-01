@@ -16,9 +16,9 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-***************************************
-v1.2.0 Release Notes (not released yet)
-***************************************
+********************
+v1.2.0 Release Notes
+********************
 
 See the `release`_ and closed tickets on the `v1.2.0 milestone`_ on Github.
 
@@ -115,6 +115,10 @@ Then replace the contents of your ontology's named graph in the triplestore with
 of the transformed Turtle file, and restart the Knora API server. Be sure to test this on a test
 installation using a copy of your data and ontologies, before updating the ontology used by a
 live server.
+
+Also, you have to replace the `salsah-gui` ontology that you have in the triplestore with the one
+in `salsah-gui.ttl`.
+
 
 New features:
 -------------
