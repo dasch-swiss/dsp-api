@@ -20,6 +20,7 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
+import java.time.Instant
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.util.ErrorHandlingMap
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, TriplestoreResponseException}
@@ -293,6 +294,15 @@ case class BooleanLiteralV2(value: Boolean) extends LiteralV2 {
   * @param value the boolean value.
   */
 case class IntLiteralV2(value: Int) extends LiteralV2 {
+    override def toString: String = value.toString
+}
+
+/**
+  * Represents a timestamp.
+  *
+  * @param value the timestamp value.
+  */
+case class DateTimeLiteralV2(value: Instant) extends LiteralV2 {
     override def toString: String = value.toString
 }
 

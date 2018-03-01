@@ -482,9 +482,9 @@ object ConstructResponseUtilV2 {
 
             case OntologyConstants.KnoraBase.ListValue =>
 
-                val listNodeName: String = valueObject.listNode.get(OntologyConstants.KnoraBase.ListNodeName) match {
+                val listNodeName: String = valueObject.listNode.get(OntologyConstants.Rdfs.Label) match {
                     case Some(nodeName: String) => nodeName
-                    case None => throw InconsistentTriplestoreDataException(s"Expected ${OntologyConstants.KnoraBase.ListNodeName} in assertions for a value object of type list value.")
+                    case None => throw InconsistentTriplestoreDataException(s"Expected ${OntologyConstants.Rdfs.Label} in assertions for a value object of type list value.")
                 }
 
                 HierarchicalListValueContentV2(valueHasString = valueObjectValueHasString, valueHasListNode = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasListNode), listNodeName = listNodeName, comment = valueCommentOption)
