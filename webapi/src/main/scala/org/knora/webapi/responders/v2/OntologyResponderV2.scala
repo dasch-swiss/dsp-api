@@ -927,25 +927,26 @@ class OntologyResponderV2 extends Responder {
     private def getOntologyMetadataForProjectsV2(projectIris: Set[SmartIri], userProfile: UserProfileV1): Future[ReadOntologyMetadataV2] = {
         for {
             cacheData <- getCacheData
-            projectIriStrs = projectIris.map(_.toString)
-            namedGraphInfos: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
-            filteredNamedGraphInfos = namedGraphInfos.filterNot(_.id == OntologyConstants.KnoraBase.KnoraBaseOntologyIri)
             returnAllOntologies: Boolean = projectIris.isEmpty
 
-            ontologyMetadata: Set[OntologyMetadataV2] = if (returnAllOntologies) {
-                cacheData.ontologyMetadata.values.toSet
+            ontologyMetadata: Set[OntologyMetadataV2] <- if (returnAllOntologies) {
+                FastFuture.successful(cacheData.ontologyMetadata.values.toSet)
             } else {
-                filteredNamedGraphInfos.filter(namedGraphInfo => projectIriStrs.contains(namedGraphInfo.project_id)).map {
-                    namedGraphInfo =>
-                        val ontologyIri = namedGraphInfo.id.toSmartIri
-                        cacheData.ontologyMetadata.getOrElse(ontologyIri, throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri has no metadata"))
-                }.toSet
-            }
+                for {
+                    namedGraphInfos: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
+                    filteredNamedGraphInfos = namedGraphInfos.filterNot(_.id == OntologyConstants.KnoraBase.KnoraBaseOntologyIri)
+                    projectIriStrs = projectIris.map(_.toString)
 
-            response = ReadOntologyMetadataV2(
-                ontologies = ontologyMetadata
-            )
-        } yield response
+                    projectOntologyMetadata = filteredNamedGraphInfos.filter(namedGraphInfo => projectIriStrs.contains(namedGraphInfo.project_id)).map {
+                        namedGraphInfo =>
+                            val ontologyIri = namedGraphInfo.id.toSmartIri
+                            cacheData.ontologyMetadata.getOrElse(ontologyIri, throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri has no metadata"))
+                    }.toSet
+                } yield projectOntologyMetadata
+            }
+        } yield ReadOntologyMetadataV2(
+            ontologies = ontologyMetadata
+        )
     }
 
     /**
