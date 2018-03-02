@@ -262,7 +262,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             }
         }
 
-        "serve two project-specific classes and their properties as JSON-LD using the value object schema" in {
+        "serve two project-specific classes as JSON-LD using the value object schema" in {
             val pageIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/v2#page", "UTF-8")
             val bookIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/v2#book", "UTF-8")
 

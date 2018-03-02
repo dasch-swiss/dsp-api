@@ -856,20 +856,16 @@ case class PropertiesGetRequestV2(propertyIris: Set[SmartIri], allLanguages: Boo
 /**
   * Represents the contents of an ontology to be returned in an API response.
   *
-  * @param ontologyMetadata   metadata about the ontology.
-  * @param classes            information about non-standoff classes.
-  * @param properties         information about non-standoff properties.
-  * @param standoffClasses    information about standoff classes.
-  * @param standoffProperties information about standoff properties.
-  * @param userLang           the preferred language in which the information should be returned, or [[None]] if information
-  *                           should be returned in all available languages.
+  * @param ontologyMetadata metadata about the ontology.
+  * @param classes          information about classes.
+  * @param properties       information about properties.
+  * @param userLang         the preferred language in which the information should be returned, or [[None]] if information
+  *                         should be returned in all available languages.
   */
 case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
                           classes: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2],
                           properties: Map[SmartIri, ReadPropertyInfoV2] = Map.empty[SmartIri, ReadPropertyInfoV2],
                           individuals: Map[SmartIri, ReadIndividualInfoV2] = Map.empty[SmartIri, ReadIndividualInfoV2],
-                          standoffClasses: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2],
-                          standoffProperties: Map[SmartIri, ReadPropertyInfoV2] = Map.empty[SmartIri, ReadPropertyInfoV2],
                           userLang: Option[String] = None) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -902,12 +898,6 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
             properties = convertedProperties,
             individuals = individuals.map {
                 case (individualIri, readIndividualInfo) => individualIri.toOntologySchema(targetSchema) -> readIndividualInfo.toOntologySchema(targetSchema)
-            },
-            standoffClasses = standoffClasses.map {
-                case (classIri, readClassInfo) => classIri.toOntologySchema(targetSchema) -> readClassInfo.toOntologySchema(targetSchema)
-            },
-            standoffProperties = standoffProperties.map {
-                case (propertyIri, readPropertyInfo) => propertyIri.toOntologySchema(targetSchema) -> readPropertyInfo.toOntologySchema(targetSchema)
             }
         )
     }
@@ -945,32 +935,32 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
 
         val jsonClasses: Map[IRI, JsonLDObject] = classesToJsonLD(classes)
         val jsonProperties: Map[IRI, JsonLDObject] = propertiesToJsonLD(properties)
-        val jsonStandoffClasses: Map[IRI, JsonLDObject] = classesToJsonLD(standoffClasses)
-        val jsonStandoffProperties: Map[IRI, JsonLDObject] = propertiesToJsonLD(standoffProperties)
 
         // Assemble the JSON-LD.
 
-        val hasClassesProp = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasClasses
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasClasses
+        val maybeHasClassesStatement = if (classes.nonEmpty) {
+            val hasClassesProp = targetSchema match {
+                case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasClasses
+                case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasClasses
+            }
+
+            Some(hasClassesProp -> JsonLDObject(jsonClasses))
+        } else {
+            None
         }
 
-        val hasPropertiesProp = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasProperties
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasProperties
+        val maybeHasPropertiesStatement = if (properties.nonEmpty) {
+            val hasPropertiesProp = targetSchema match {
+                case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasProperties
+                case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasProperties
+            }
+
+            Some(hasPropertiesProp -> JsonLDObject(jsonProperties))
+        } else {
+            None
         }
 
-        val hasStandoffClassesProp = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasStandoffClasses
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffClasses
-        }
-
-        val hasStandoffPropertiesProp = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasStandoffProperties
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffProperties
-        }
-
-        val maybeIndividualsStatement = if (individuals.nonEmpty) {
+        val maybeHasIndividualsStatement = if (individuals.nonEmpty) {
             val jsonIndividuals: Map[IRI, JsonLDObject] = individuals.map {
                 case (individualIri, individualInfo) =>
                     val individualJson = userLang match {
@@ -992,11 +982,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
         }
 
         JsonLDObject(
-            ontologyMetadata.toJsonLD(targetSchema) ++ maybeIndividualsStatement +
-                (hasClassesProp -> JsonLDObject(jsonClasses)) +
-                (hasPropertiesProp -> JsonLDObject(jsonProperties)) +
-                (hasStandoffClassesProp -> JsonLDObject(jsonStandoffClasses)) +
-                (hasStandoffPropertiesProp -> JsonLDObject(jsonStandoffProperties))
+            ontologyMetadata.toJsonLD(targetSchema) ++ maybeHasClassesStatement ++ maybeHasPropertiesStatement ++ maybeHasIndividualsStatement
         )
     }
 }
@@ -1268,7 +1254,7 @@ case class ReadOntologiesV2(ontologies: Seq[ReadOntologyV2]) extends KnoraRespon
         // To make prefix labels, we need the ontologies of all entities mentioned in all the ontologies
         // to be returned. First, get the ontologies of all entities mentioned in class definitions.
 
-        val allClasses = ontologies.flatMap(ontology => ontology.classes ++ ontology.standoffClasses).toMap
+        val allClasses = ontologies.flatMap(ontology => ontology.classes).toMap
 
         val ontologiesFromClasses: Set[SmartIri] = allClasses.values.flatMap {
             classInfo =>
@@ -1286,7 +1272,7 @@ case class ReadOntologiesV2(ontologies: Seq[ReadOntologyV2]) extends KnoraRespon
 
         // Get the ontologies of all entities mentioned in property definitions.
 
-        val allProperties = ontologies.flatMap(ontology => ontology.properties ++ ontology.standoffProperties).toMap
+        val allProperties = ontologies.flatMap(ontology => ontology.properties).toMap
 
         val ontologiesFromProperties: Set[SmartIri] = allProperties.values.flatMap {
             property =>
@@ -1354,7 +1340,7 @@ case class ReadOntologiesV2(ontologies: Seq[ReadOntologyV2]) extends KnoraRespon
 /**
   * Returns metadata about Knora ontologies.
   *
-  * @param ontologies      the metadata to be returned.
+  * @param ontologies the metadata to be returned.
   */
 case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends KnoraResponseV2 {
 
@@ -1905,8 +1891,10 @@ sealed trait ReadEntityInfoV2 {
   * Represents an OWL class definition as returned in an API response.
   *
   * @param entityInfoContent       a [[ReadClassInfoV2]] providing information about the class.
-  * @param canBeInstantiated       `true` if the class can be instantiated via the API.
+  * @param isResourceClass         `true` if this is a subclass of `knora-base:Resource`.
+  * @param isStandoffClass         `true` if this is a subclass of `knora-base:StandoffTag`.
   * @param isValueClass            `true` if the class is a Knora value class.
+  * @param canBeInstantiated       `true` if the class is a Knora resource class that can be instantiated via the API.
   * @param inheritedCardinalities  a [[Map]] of properties to [[Cardinality.Value]] objects representing the class's
   *                                inherited cardinalities on those properties.
   * @param standoffDataType        if this is a standoff tag class, the standoff datatype tag class (if any) that it
@@ -1919,8 +1907,10 @@ sealed trait ReadEntityInfoV2 {
   *                                that point to `FileValue` objects.
   */
 case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
-                           canBeInstantiated: Boolean = false,
+                           isResourceClass: Boolean = false,
+                           isStandoffClass: Boolean = false,
                            isValueClass: Boolean = false,
+                           canBeInstantiated: Boolean = false,
                            inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = Map.empty[SmartIri, KnoraCardinalityInfo],
                            standoffDataType: Option[StandoffDataTypeClasses.Value] = None,
                            knoraResourceProperties: Set[SmartIri] = Set.empty[SmartIri],
@@ -1935,7 +1925,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
     /**
       * All the class's cardinalities for subproperties of `knora-base:resourceProperty`.
       */
-    lazy val allKnoraResourceCardinalities: Map[SmartIri, KnoraCardinalityInfo] = allCardinalities.filter {
+    lazy val allResourcePropertyCardinalities: Map[SmartIri, KnoraCardinalityInfo] = allCardinalities.filter {
         case (propertyIri, _) => knoraResourceProperties.contains(propertyIri)
     }
 
@@ -1998,8 +1988,8 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
         // schema.
         val completedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = if (!entityInfoContent.classIri.isKnoraBuiltInDefinitionIri) {
             targetSchema match {
-                case ApiV2Simple => allKnoraResourceCardinalities ++ KnoraApiV2Simple.Resource.allCardinalities
-                case ApiV2WithValueObjects => allKnoraResourceCardinalities ++ KnoraApiV2WithValueObjects.Resource.allCardinalities
+                case ApiV2Simple => allResourcePropertyCardinalities ++ KnoraApiV2Simple.Resource.allCardinalities
+                case ApiV2WithValueObjects => allResourcePropertyCardinalities ++ KnoraApiV2WithValueObjects.Resource.allCardinalities
             }
         } else {
             // Otherwise, this is a built-in class specifically defined for the schema, so return all the cardinalities.
@@ -2074,6 +2064,18 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
             None
         }
 
+        val isKnoraResourceClassStatement: Option[(IRI, JsonLDBoolean)] = if (isResourceClass && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsResourceClass -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
+        val isStandoffClassStatement: Option[(IRI, JsonLDBoolean)] = if (isStandoffClass && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsStandoffClass -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
         val canBeInstantiatedStatement: Option[(IRI, JsonLDBoolean)] = if (canBeInstantiated && targetSchema == ApiV2WithValueObjects) {
             Some(OntologyConstants.KnoraApiV2WithValueObjects.CanBeInstantiated -> JsonLDBoolean(true))
         } else {
@@ -2089,7 +2091,8 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
         Map(
             "@id" -> JsonLDString(entityInfoContent.classIri.toString),
             "@type" -> JsonLDString(entityInfoContent.getRdfType.toString)
-        ) ++ jsonSubClassOfStatement ++ resourceIconStatement ++ canBeInstantiatedStatement ++ isValueClassStatement
+        ) ++ jsonSubClassOfStatement ++ resourceIconStatement ++ isKnoraResourceClassStatement ++
+            isStandoffClassStatement ++ canBeInstantiatedStatement ++ isValueClassStatement
     }
 }
 
@@ -2097,8 +2100,8 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
   * Represents an OWL property definition as returned in an API response.
   *
   * @param entityInfoContent                   a [[PropertyInfoContentV2]] providing information about the property.
+  * @param isResourceProp                      `true` if the property is a subproperty of `knora-base:resourceProperty`.
   * @param isEditable                          `true` if the property's value is editable via the Knora API.
-  * @param isKnoraResourceProp                 `true` if the property is a subproperty of `knora-base:resourceProperty`.
   * @param isLinkProp                          `true` if the property is a subproperty of `knora-base:hasLinkTo`.
   * @param isLinkValueProp                     `true` if the property is a subproperty of `knora-base:hasLinkToValue`.
   * @param isFileValueProp                     `true` if the property is a subproperty of `knora-base:hasFileValue`.
@@ -2106,8 +2109,8 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
   *                                            [[OntologyConstants.KnoraBase.StandoffTagHasInternalReference]].
   */
 case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
+                              isResourceProp: Boolean = false,
                               isEditable: Boolean = false,
-                              isKnoraResourceProp: Boolean = false,
                               isLinkProp: Boolean = false,
                               isLinkValueProp: Boolean = false,
                               isFileValueProp: Boolean = false,
@@ -2154,6 +2157,12 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
             None
         }
 
+        val isResourcePropStatement: Option[(IRI, JsonLDBoolean)] = if (isResourceProp && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsResourceProperty -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
         val isEditableStatement: Option[(IRI, JsonLDBoolean)] = if (isEditable && targetSchema == ApiV2WithValueObjects) {
             Some(OntologyConstants.KnoraApiV2WithValueObjects.IsEditable -> JsonLDBoolean(true))
         } else {
@@ -2175,7 +2184,8 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
         Map(
             "@id" -> JsonLDString(entityInfoContent.propertyIri.toString),
             "@type" -> JsonLDString(entityInfoContent.getRdfType.toString)
-        ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++ isEditableStatement ++ isLinkValuePropertyStatement ++ isLinkPropertyStatement
+        ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++
+            isResourcePropStatement ++ isEditableStatement ++ isLinkValuePropertyStatement ++ isLinkPropertyStatement
     }
 }
 

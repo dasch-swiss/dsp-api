@@ -88,9 +88,6 @@
         } ]
       }
     },
-    "knora-api:hasProperties" : { },
-    "knora-api:hasStandoffClasses" : { },
-    "knora-api:hasStandoffProperties" : { },
     "rdfs:label" : "The images demo ontology"
   },
   "@context" : {

@@ -354,7 +354,7 @@ class ClassInfoV1(classInfoV2: ReadClassInfoV2) extends EntityInfoV1 {
       *                            cardinalities on those properties.
       */
     def knoraResourceCardinalities: Map[IRI, KnoraCardinalityInfo] = {
-        classInfoV2.allKnoraResourceCardinalities.map {
+        classInfoV2.allResourcePropertyCardinalities.map {
             case (smartIri, cardinality) => smartIri.toString -> cardinality
         }
     }

@@ -2,29 +2,11 @@
   "knora-api:hasOntologies" : {
     "@id" : "http://api.knora.org/ontology/standoff/v2",
     "@type" : "owl:Ontology",
-    "knora-api:hasClasses" : { },
-    "knora-api:hasProperties" : {
-      "standoff:standoffHyperlinkTagHasTarget" : {
-        "@id" : "standoff:standoffHyperlinkTagHasTarget",
-        "@type" : "owl:DatatypeProperty",
-        "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
-        "knora-api:subjectType" : "http://api.knora.org/ontology/standoff/v2#StandoffHyperlinkTag",
-        "rdfs:comment" : "describes the target settings of a hyperlink",
-        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#objectCannotBeMarkedAsDeleted"
-      },
-      "standoff:standoffRootTagHasDocumentType" : {
-        "@id" : "standoff:standoffRootTagHasDocumentType",
-        "@type" : "owl:DatatypeProperty",
-        "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
-        "knora-api:subjectType" : "http://api.knora.org/ontology/standoff/v2#StandoffRootTag",
-        "rdfs:comment" : "describes the document type",
-        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#objectCannotBeMarkedAsDeleted"
-      }
-    },
-    "knora-api:hasStandoffClasses" : {
+    "knora-api:hasClasses" : {
       "standoff:StandoffBlockquoteTag" : {
         "@id" : "standoff:StandoffBlockquoteTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a section that is quoted from another source in a text",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -76,6 +58,7 @@
       "standoff:StandoffBoldTag" : {
         "@id" : "standoff:StandoffBoldTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents bold text in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffVisualTag", {
           "@type" : "owl:Restriction",
@@ -127,6 +110,7 @@
       "standoff:StandoffBrTag" : {
         "@id" : "standoff:StandoffBrTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a linebreak",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -178,6 +162,7 @@
       "standoff:StandoffCiteTag" : {
         "@id" : "standoff:StandoffCiteTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents the title of a work in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -229,6 +214,7 @@
       "standoff:StandoffCodeTag" : {
         "@id" : "standoff:StandoffCodeTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a section of computer source code in a text",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -280,6 +266,7 @@
       "standoff:StandoffHeader1Tag" : {
         "@id" : "standoff:StandoffHeader1Tag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a header of level 1 in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -331,6 +318,7 @@
       "standoff:StandoffHeader2Tag" : {
         "@id" : "standoff:StandoffHeader2Tag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a header of level 2 in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -382,6 +370,7 @@
       "standoff:StandoffHeader3Tag" : {
         "@id" : "standoff:StandoffHeader3Tag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a header of level 3 in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -433,6 +422,7 @@
       "standoff:StandoffHeader4Tag" : {
         "@id" : "standoff:StandoffHeader4Tag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a header of level 4 in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -484,6 +474,7 @@
       "standoff:StandoffHeader5Tag" : {
         "@id" : "standoff:StandoffHeader5Tag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a header of level 5 in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -535,6 +526,7 @@
       "standoff:StandoffHeader6Tag" : {
         "@id" : "standoff:StandoffHeader6Tag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a header of level 6 in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -586,6 +578,7 @@
       "standoff:StandoffHyperlinkTag" : {
         "@id" : "standoff:StandoffHyperlinkTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a hyperlink in a text",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#StandoffUriTag", {
           "@type" : "owl:Restriction",
@@ -646,6 +639,7 @@
       "standoff:StandoffItalicTag" : {
         "@id" : "standoff:StandoffItalicTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents italics in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffVisualTag", {
           "@type" : "owl:Restriction",
@@ -697,6 +691,7 @@
       "standoff:StandoffLineTag" : {
         "@id" : "standoff:StandoffLineTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a line to seperate content in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffVisualTag", {
           "@type" : "owl:Restriction",
@@ -748,6 +743,7 @@
       "standoff:StandoffListElementTag" : {
         "@id" : "standoff:StandoffListElementTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a list element in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -799,6 +795,7 @@
       "standoff:StandoffOrderedListTag" : {
         "@id" : "standoff:StandoffOrderedListTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents an ordered list in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -850,6 +847,7 @@
       "standoff:StandoffParagraphTag" : {
         "@id" : "standoff:StandoffParagraphTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a paragraph in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -901,6 +899,7 @@
       "standoff:StandoffPreTag" : {
         "@id" : "standoff:StandoffPreTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a preformatted content in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffVisualTag", {
           "@type" : "owl:Restriction",
@@ -952,6 +951,7 @@
       "standoff:StandoffRootTag" : {
         "@id" : "standoff:StandoffRootTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents the root node if the TextValue has been created from XML",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#StandoffTag", {
           "@type" : "owl:Restriction",
@@ -1007,6 +1007,7 @@
       "standoff:StandoffStrikethroughTag" : {
         "@id" : "standoff:StandoffStrikethroughTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents struck text in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffVisualTag", {
           "@type" : "owl:Restriction",
@@ -1058,6 +1059,7 @@
       "standoff:StandoffStructuralTag" : {
         "@id" : "standoff:StandoffStructuralTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents structural markup information in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#StandoffTag", {
           "@type" : "owl:Restriction",
@@ -1109,6 +1111,7 @@
       "standoff:StandoffSubscriptTag" : {
         "@id" : "standoff:StandoffSubscriptTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents subscript in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffVisualTag", {
           "@type" : "owl:Restriction",
@@ -1160,6 +1163,7 @@
       "standoff:StandoffSuperscriptTag" : {
         "@id" : "standoff:StandoffSuperscriptTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents superscript in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffVisualTag", {
           "@type" : "owl:Restriction",
@@ -1211,6 +1215,7 @@
       "standoff:StandoffTableBodyTag" : {
         "@id" : "standoff:StandoffTableBodyTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a table body in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -1262,6 +1267,7 @@
       "standoff:StandoffTableCellTag" : {
         "@id" : "standoff:StandoffTableCellTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a cell in a table",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -1313,6 +1319,7 @@
       "standoff:StandoffTableRowTag" : {
         "@id" : "standoff:StandoffTableRowTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a row in a table",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -1364,6 +1371,7 @@
       "standoff:StandoffTableTag" : {
         "@id" : "standoff:StandoffTableTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents a table in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -1415,6 +1423,7 @@
       "standoff:StandoffUnderlineTag" : {
         "@id" : "standoff:StandoffUnderlineTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents underlined text in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffVisualTag", {
           "@type" : "owl:Restriction",
@@ -1466,6 +1475,7 @@
       "standoff:StandoffUnorderedListTag" : {
         "@id" : "standoff:StandoffUnorderedListTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents an unordered list in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
@@ -1517,6 +1527,7 @@
       "standoff:StandoffVisualTag" : {
         "@id" : "standoff:StandoffVisualTag",
         "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
         "rdfs:comment" : "Represents visual markup information in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#StandoffTag", {
           "@type" : "owl:Restriction",
@@ -1566,7 +1577,7 @@
         } ]
       }
     },
-    "knora-api:hasStandoffProperties" : {
+    "knora-api:hasProperties" : {
       "standoff:standoffHyperlinkTagHasTarget" : {
         "@id" : "standoff:standoffHyperlinkTagHasTarget",
         "@type" : "owl:DatatypeProperty",

@@ -63,9 +63,6 @@
         } ]
       }
     },
-    "knora-api:hasProperties" : { },
-    "knora-api:hasStandoffClasses" : { },
-    "knora-api:hasStandoffProperties" : { },
     "rdfs:label" : "The default knora-api ontology"
   },
   "@context" : {

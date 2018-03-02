@@ -1466,7 +1466,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     val readClassInfo = ontology.classes(classIri)
                     readClassInfo.entityInfoContent should ===(classInfoContent)
                     readClassInfo.inheritedCardinalities.keySet.contains("http://0.0.0.0:3333/ontology/anything/v2#hasInteger".toSmartIri) should ===(false)
-                    readClassInfo.allKnoraResourceCardinalities.keySet should ===(expectedProperties)
+                    readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
                     val metadata = ontology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
@@ -1524,7 +1524,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     val ontology = externalMsg.ontologies.head
                     val readClassInfo = ontology.classes(classIri)
                     readClassInfo.entityInfoContent should ===(classInfoContent)
-                    readClassInfo.allKnoraResourceCardinalities.keySet should ===(expectedProperties)
+                    readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
                     val metadata = ontology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
@@ -2234,7 +2234,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     val ontology = externalMsg.ontologies.head
                     val readClassInfo = ontology.classes(classIri)
                     readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
-                    readClassInfo.allKnoraResourceCardinalities.keySet should ===(expectedProperties)
+                    readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
                     val metadata = ontology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
@@ -2375,7 +2375,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     val ontology = externalMsg.ontologies.head
                     val readClassInfo = ontology.classes(classIri)
                     readClassInfo.entityInfoContent.directCardinalities should ===(expectedDirectCardinalities)
-                    readClassInfo.allKnoraResourceCardinalities.keySet should ===(expectedProperties)
+                    readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
                     val metadata = ontology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
@@ -2421,7 +2421,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     val ontology = externalMsg.ontologies.head
                     val readClassInfo = ontology.classes(classIri)
                     readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
-                    readClassInfo.allKnoraResourceCardinalities.keySet should ===(expectedProperties)
+                    readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
                     val metadata = ontology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
@@ -2517,7 +2517,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     val ontology = externalMsg.ontologies.head
                     val readClassInfo = ontology.classes(classIri)
                     readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
-                    readClassInfo.allKnoraResourceCardinalities.keySet should ===(expectedProperties)
+                    readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
                     val metadata = ontology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))

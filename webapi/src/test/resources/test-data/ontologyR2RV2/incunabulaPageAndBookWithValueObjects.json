@@ -7,6 +7,7 @@
         "@id" : "incunabula:book",
         "@type" : "owl:Class",
         "knora-api:canBeInstantiated" : true,
+        "knora-api:isResourceClass" : true,
         "knora-api:resourceIcon" : "book.gif",
         "rdfs:comment" : "Diese Resource-Klasse beschreibt ein Buch",
         "rdfs:label" : "Book",
@@ -106,6 +107,7 @@
         "@id" : "incunabula:page",
         "@type" : "owl:Class",
         "knora-api:canBeInstantiated" : true,
+        "knora-api:isResourceClass" : true,
         "knora-api:resourceIcon" : "page.gif",
         "rdfs:comment" : "A page is a part of a book",
         "rdfs:label" : "Page",
@@ -212,9 +214,6 @@
         } ]
       }
     },
-    "knora-api:hasProperties" : { },
-    "knora-api:hasStandoffClasses" : { },
-    "knora-api:hasStandoffProperties" : { },
     "rdfs:label" : "The incunabula ontology"
   },
   "@context" : {

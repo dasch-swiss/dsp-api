@@ -601,8 +601,6 @@
         "rdfs:label" : "Subject type"
       }
     },
-    "knora-api:hasStandoffClasses" : { },
-    "knora-api:hasStandoffProperties" : { },
     "rdfs:label" : "The simplified knora-api ontology"
   },
   "@context" : {

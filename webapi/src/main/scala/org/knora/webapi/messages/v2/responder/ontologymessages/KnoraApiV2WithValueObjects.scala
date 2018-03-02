@@ -38,6 +38,7 @@ object KnoraApiV2WithValueObjects {
 
     val Resource: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Resource,
+        isResourceClass = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -251,6 +252,7 @@ object KnoraApiV2WithValueObjects {
 
     val HasStandoffLinkTo: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo),
         isLinkProp = true,
@@ -278,6 +280,7 @@ object KnoraApiV2WithValueObjects {
 
     val HasStandoffLinkToValue: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue),
         isLinkValueProp = true,
@@ -346,6 +349,7 @@ object KnoraApiV2WithValueObjects {
 
     val IsPartOf: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsPartOf,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
@@ -373,6 +377,7 @@ object KnoraApiV2WithValueObjects {
 
     val IsPartOfValue: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsPartOfValue,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
@@ -400,6 +405,7 @@ object KnoraApiV2WithValueObjects {
 
     val ForbiddenResource: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.ForbiddenResource,
+        isResourceClass = true,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         predicates = Seq(
             makePredicate(
@@ -423,6 +429,7 @@ object KnoraApiV2WithValueObjects {
 
     val Region: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Region,
+        isResourceClass = true,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         canBeInstantiated = true,
         predicates = Seq(
@@ -454,6 +461,7 @@ object KnoraApiV2WithValueObjects {
 
     val IsRegionOf: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsRegionOf,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Region),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
@@ -481,6 +489,7 @@ object KnoraApiV2WithValueObjects {
 
     val IsRegionOfValue: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsRegionOfValue,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Region),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
@@ -508,6 +517,8 @@ object KnoraApiV2WithValueObjects {
 
     val LinkObject: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkObj,
+        isResourceClass = true,
+        canBeInstantiated = true,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         predicates = Seq(
             makePredicate(
@@ -533,6 +544,7 @@ object KnoraApiV2WithValueObjects {
 
     val Representation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.Representation,
+        isResourceClass = true,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         predicates = Seq(
             makePredicate(
@@ -559,6 +571,7 @@ object KnoraApiV2WithValueObjects {
 
     val StillImageRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.StillImageRepresentation,
+        isResourceClass = true,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
             makePredicate(
@@ -585,6 +598,7 @@ object KnoraApiV2WithValueObjects {
 
     val MovingImageRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageRepresentation,
+        isResourceClass = true,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
             makePredicate(
@@ -611,6 +625,7 @@ object KnoraApiV2WithValueObjects {
 
     val AudioRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.AudioRepresentation,
+        isResourceClass = true,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
             makePredicate(
@@ -637,6 +652,7 @@ object KnoraApiV2WithValueObjects {
 
     val DDDRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.DDDRepresentation,
+        isResourceClass = true,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
             makePredicate(
@@ -663,6 +679,7 @@ object KnoraApiV2WithValueObjects {
 
     val TextRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.TextRepresentation,
+        isResourceClass = true,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
             makePredicate(
@@ -689,6 +706,7 @@ object KnoraApiV2WithValueObjects {
 
     val DocumentRepresentation: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.DocumentRepresentation,
+        isResourceClass = true,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         predicates = Seq(
             makePredicate(
@@ -807,6 +825,7 @@ object KnoraApiV2WithValueObjects {
 
     val HasLinkToValue: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue),
         isLinkValueProp = true,
@@ -893,6 +912,7 @@ object KnoraApiV2WithValueObjects {
 
     val HasColor: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasColor,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Region),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.ColorValue),
@@ -927,6 +947,7 @@ object KnoraApiV2WithValueObjects {
 
     val HasGeometry: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasGeometry,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Region),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.GeomValue),
@@ -961,10 +982,12 @@ object KnoraApiV2WithValueObjects {
 
     val HasComment: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasComment,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextValue),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue),
+        isEditable = true,
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
@@ -990,6 +1013,7 @@ object KnoraApiV2WithValueObjects {
 
     val HasFileValue: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Representation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
@@ -1019,6 +1043,7 @@ object KnoraApiV2WithValueObjects {
 
     val HasStillImageFileValue: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.StillImageRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue),
@@ -1049,6 +1074,7 @@ object KnoraApiV2WithValueObjects {
 
     val HasMovingImageFileValue: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasMovingImageFileValue,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue),
@@ -1079,6 +1105,7 @@ object KnoraApiV2WithValueObjects {
 
     val HasAudioImageFileValue: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasAudioFileValue,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.AudioRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValue),
@@ -1109,6 +1136,7 @@ object KnoraApiV2WithValueObjects {
 
     val HasDDDFileValue: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasDDDFileValue,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DDDRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DDDFileValue),
@@ -1139,6 +1167,7 @@ object KnoraApiV2WithValueObjects {
 
     val HasTextFileValue: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasTextFileValue,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextFileValue),
@@ -1169,6 +1198,7 @@ object KnoraApiV2WithValueObjects {
 
     val HasDocumentFileValue: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasDocumentFileValue,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DocumentRepresentation),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DocumentFileValue),
@@ -2601,18 +2631,20 @@ object KnoraApiV2WithValueObjects {
     /**
       * Makes a [[ReadPropertyInfoV2]].
       *
-      * @param propertyIri   the IRI of the property.
-      * @param propertyType  the type of the property (owl:ObjectProperty, owl:DatatypeProperty, or rdf:Property).
-      * @param subPropertyOf the set of direct superproperties of this property.
-      * @param isEditable    true if this is a Knora resource property that can be edited via the Knora API.
-      * @param isLinkValueProp true if the property points to a link value (reification).
-      * @param predicates    the property's predicates.
-      * @param subjectType   the required type of the property's subject.
-      * @param objectType    the required type of the property's object.
+      * @param propertyIri        the IRI of the property.
+      * @param propertyType       the type of the property (owl:ObjectProperty, owl:DatatypeProperty, or rdf:Property).
+      * @param isResourceProp true if this is a subproperty of `knora-api:hasValue` or `knora-api:hasLinkTo`.
+      * @param subPropertyOf      the set of direct superproperties of this property.
+      * @param isEditable         true if this is a Knora resource property that can be edited via the Knora API.
+      * @param isLinkValueProp    true if the property points to a link value (reification).
+      * @param predicates         the property's predicates.
+      * @param subjectType        the required type of the property's subject.
+      * @param objectType         the required type of the property's object.
       * @return a [[ReadPropertyInfoV2]].
       */
     private def makeProperty(propertyIri: IRI,
                              propertyType: IRI,
+                             isResourceProp: Boolean = false,
                              subPropertyOf: Set[IRI] = Set.empty[IRI],
                              isEditable: Boolean = false,
                              isLinkProp: Boolean = false,
@@ -2652,6 +2684,7 @@ object KnoraApiV2WithValueObjects {
                 }.toMap,
                 subPropertyOf = subPropertyOf.map(iri => iri.toSmartIri)
             ),
+            isResourceProp = isResourceProp,
             isEditable = isEditable,
             isLinkProp = isLinkProp,
             isLinkValueProp = isLinkValueProp
@@ -2664,6 +2697,7 @@ object KnoraApiV2WithValueObjects {
       * @param classIri               the IRI of the class.
       * @param subClassOf             the set of direct superclasses of this class.
       * @param predicates             the predicates of the class.
+      * @param isResourceClass        true if this is a subclass of `knora-api:Resource`.
       * @param canBeInstantiated      true if this is a Knora resource class that can be instantiated via the Knora API.
       * @param directCardinalities    the direct cardinalities of the class.
       * @param inheritedCardinalities the inherited cardinalities of the class.
@@ -2672,6 +2706,7 @@ object KnoraApiV2WithValueObjects {
     private def makeClass(classIri: IRI,
                           subClassOf: Set[IRI] = Set.empty[IRI],
                           predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
+                          isResourceClass: Boolean = false,
                           canBeInstantiated: Boolean = false,
                           isValueClass: Boolean = false,
                           directCardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],

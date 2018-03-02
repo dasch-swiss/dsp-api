@@ -108,8 +108,6 @@
         "knora-api:subjectType" : "http://www.w3.org/2002/07/owl#Restriction"
       }
     },
-    "knora-api:hasStandoffClasses" : { },
-    "knora-api:hasStandoffProperties" : { },
     "rdfs:label" : "salsah-gui"
   },
   "@context" : {

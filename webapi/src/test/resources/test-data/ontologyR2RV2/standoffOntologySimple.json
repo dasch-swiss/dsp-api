@@ -2,26 +2,7 @@
   "knora-api:hasOntologies" : {
     "@id" : "http://api.knora.org/ontology/standoff/simple/v2",
     "@type" : "owl:Ontology",
-    "knora-api:hasClasses" : { },
-    "knora-api:hasProperties" : {
-      "standoff:standoffHyperlinkTagHasTarget" : {
-        "@id" : "standoff:standoffHyperlinkTagHasTarget",
-        "@type" : "owl:DatatypeProperty",
-        "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
-        "knora-api:subjectType" : "http://api.knora.org/ontology/standoff/simple/v2#StandoffHyperlinkTag",
-        "rdfs:comment" : "describes the target settings of a hyperlink",
-        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#objectCannotBeMarkedAsDeleted"
-      },
-      "standoff:standoffRootTagHasDocumentType" : {
-        "@id" : "standoff:standoffRootTagHasDocumentType",
-        "@type" : "owl:DatatypeProperty",
-        "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
-        "knora-api:subjectType" : "http://api.knora.org/ontology/standoff/simple/v2#StandoffRootTag",
-        "rdfs:comment" : "describes the document type",
-        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#objectCannotBeMarkedAsDeleted"
-      }
-    },
-    "knora-api:hasStandoffClasses" : {
+    "knora-api:hasClasses" : {
       "standoff:StandoffBlockquoteTag" : {
         "@id" : "standoff:StandoffBlockquoteTag",
         "@type" : "owl:Class",
@@ -1295,7 +1276,7 @@
         } ]
       }
     },
-    "knora-api:hasStandoffProperties" : {
+    "knora-api:hasProperties" : {
       "standoff:standoffHyperlinkTagHasTarget" : {
         "@id" : "standoff:standoffHyperlinkTagHasTarget",
         "@type" : "owl:DatatypeProperty",
