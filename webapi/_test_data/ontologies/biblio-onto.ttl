@@ -886,6 +886,11 @@
 
 :bookHasContentValue rdf:type owl:ObjectProperty ;
 
+                    rdfs:label "Buch-Inhalt"@de ,
+                               "Book Content"@en ;
+
+                    rdfs:comment """Represents content of Book ."""@en ;
+
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
