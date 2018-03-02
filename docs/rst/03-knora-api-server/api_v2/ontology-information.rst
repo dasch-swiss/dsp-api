@@ -476,6 +476,8 @@ default schema, ``http://0.0.0.0:3333/ontology/00FF/images/v2`` (simplified for 
           "knora-api:isResourceProperty" : true,
           "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
           "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+          "salsah-gui:guiAttribute" : [ "rows=10", "width=95%", "wrap=soft" ],
+          "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Textarea",
           "rdfs:label" : "Description",
           "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/description" ]
         },
@@ -486,6 +488,7 @@ default schema, ``http://0.0.0.0:3333/ontology/00FF/images/v2`` (simplified for 
           "knora-api:isResourceProperty" : true,
           "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
           "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+          "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Date",
           "rdfs:label" : "Date of acquisition",
           "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/date" ]
         },
@@ -496,6 +499,8 @@ default schema, ``http://0.0.0.0:3333/ontology/00FF/images/v2`` (simplified for 
           "knora-api:isResourceProperty" : true,
           "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
           "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+          "salsah-gui:guiAttribute" : [ "maxlength=32", "size=32" ],
+          "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
           "rdfs:comment" : "First name of a person",
           "rdfs:label" : "First name",
           "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -507,6 +512,8 @@ default schema, ``http://0.0.0.0:3333/ontology/00FF/images/v2`` (simplified for 
           "knora-api:isResourceProperty" : true,
           "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
           "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+          "salsah-gui:guiAttribute" : [ "maxlength=32", "size=32" ],
+          "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
           "rdfs:comment" : "Last name of a person",
           "rdfs:label" : "Name",
           "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -519,6 +526,8 @@ default schema, ``http://0.0.0.0:3333/ontology/00FF/images/v2`` (simplified for 
           "knora-api:isResourceProperty" : true,
           "knora-api:objectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
           "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+          "salsah-gui:guiAttribute" : "numprops=2",
+          "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
           "rdfs:comment" : "An entity primarily responsible for making the resource. Examples of a Creator include a person, an organization, or a service. Typically, the name of a Creator should be used to indicate the entity.",
           "rdfs:label" : "Creator",
           "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"
@@ -531,10 +540,12 @@ default schema, ``http://0.0.0.0:3333/ontology/00FF/images/v2`` (simplified for 
           "knora-api:isResourceProperty" : true,
           "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
           "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+          "salsah-gui:guiAttribute" : "numprops=2",
+          "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
           "rdfs:comment" : "An entity primarily responsible for making the resource. Examples of a Creator include a person, an organization, or a service. Typically, the name of a Creator should be used to indicate the entity.",
           "rdfs:label" : "Creator",
           "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue"
-        },
+        }
       },
       "rdfs:label" : "The images demo ontology"
     },
