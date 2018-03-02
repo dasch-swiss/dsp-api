@@ -914,6 +914,11 @@
 
 :hasIntroductionValue rdf:type owl:ObjectProperty ;
 
+                    rdfs:label "Einleitung"@de ,
+                               "Introduction"@en ;
+
+                    rdfs:comment """Represents introduction."""@en ;
+
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .

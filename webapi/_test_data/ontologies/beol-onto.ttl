@@ -668,6 +668,11 @@
 
 :hasSectionValue rdf:type owl:ObjectProperty ;
 
+                    rdfs:label "hat Sektion"@de ,
+                               "has section"@en ;
+
+                    rdfs:comment """Repräsentiert ein Sektion"""@de ;
+
                     rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue .
