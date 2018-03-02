@@ -576,7 +576,9 @@ from built-in abstract classes. Knora resource properties whose values can be ed
 ``knora-api:isResourceProperty`` and ``knora-api:isEditable``, to distinguish them from properties whose values
 are maintained automatically by the Knora API server. Link value properties are shown along with link properties,
 because a client that updates links will need the IRIs of their link values. The predicate ``salsah-gui:guiOrder``
-tells a GUI client in what order to display the properties of a class.
+tells a GUI client in what order to display the properties of a class, and the predicates ``salsah-gui:guiElement``
+and ``salsah-gui:guiAttribute`` specify how to configure a GUI element for editing the value of a property.
+For more information on the ``salsah-gui`` ontology, see :ref:`salsah-gui`.
 
 Ontology Updates
 ----------------
