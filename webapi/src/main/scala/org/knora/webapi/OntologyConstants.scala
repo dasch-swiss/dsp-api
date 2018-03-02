@@ -731,6 +731,8 @@ object OntologyConstants {
         val GuiAttribute: IRI = SalsahGuiPrefixExpansion + "guiAttribute"
         val GuiOrder: IRI = SalsahGuiPrefixExpansion + "guiOrder"
         val GuiElementProp: IRI = SalsahGuiPrefixExpansion + "guiElement"
+        val GuiAttributeDefinition: IRI = SalsahGuiPrefixExpansion + "guiAttributeDefinition"
+        val GuiElementClass: IRI = SalsahGuiPrefixExpansion + "Guielement"
     }
 
     object KnoraApiV2Simple {

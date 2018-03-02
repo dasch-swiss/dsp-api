@@ -3244,18 +3244,6 @@ class OntologyResponderV2 extends Responder {
     }
 
     /**
-      * Finds the duplicate IRIs in a vector.
-      *
-      * @param iris the IRIs to check for duplicates.
-      * @return the IRIs that have duplicates.
-      */
-    private def findDuplicateIris(iris: Vector[SmartIri]): Set[SmartIri] = {
-        iris.groupBy(identity).collect {
-            case (x, Vector(_, _, _*)) => x
-        }.toSet
-    }
-
-    /**
       * Recursively walks up an entity hierarchy, collecting the IRIs of all base entities.
       *
       * @param iri             the IRI of an entity.

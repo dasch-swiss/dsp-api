@@ -330,6 +330,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "salsah-gui:guiAttribute" : [ "rows=7", "width=95%", "wrap=soft" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Textarea",
         "rdfs:comment" : "Unstrukturierte Bemerkungen zu einem Objekt",
         "rdfs:label" : "Comment",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasComment"
@@ -341,6 +343,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
+        "salsah-gui:guiAttribute" : [ "cols=60", "rows=3", "wrap=soft" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Textarea",
         "rdfs:comment" : "Stellt einen Verweis dar.",
         "rdfs:label" : "Citation/reference",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -352,6 +356,7 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Richtext",
         "rdfs:comment" : "Description",
         "rdfs:label" : "Description",
         "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/description" ]
@@ -363,6 +368,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "salsah-gui:guiAttribute" : [ "maxlength=255", "size=60" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:comment" : "Erzeuger/Autor",
         "rdfs:label" : "Creator",
         "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/creator" ]
@@ -375,6 +382,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#Sideband",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "salsah-gui:guiAttribute" : "numprops=1",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
         "rdfs:comment" : "Verweis auf einen Randleistentyp",
         "rdfs:label" : "Randleistentyp links",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"
@@ -387,6 +396,7 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
         "rdfs:comment" : "Verweis auf einen Randleistentyp",
         "rdfs:label" : "Randleistentyp links",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue"
@@ -399,6 +409,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#Sideband",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "salsah-gui:guiAttribute" : "numprops=1",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
         "rdfs:comment" : "Verweis auf einen Randleistentyp",
         "rdfs:label" : "Randleistentyp rechts",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"
@@ -411,6 +423,7 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
         "rdfs:comment" : "Verweis auf einen Randleistentyp",
         "rdfs:label" : "Randleistentyp rechts",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue"
@@ -422,6 +435,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "salsah-gui:guiAttribute" : [ "cols=60", "rows=4", "wrap=soft" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Textarea",
         "rdfs:comment" : "Der Ort wo sich das physische Original befindet",
         "rdfs:label" : "Location",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -434,6 +449,7 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#misc",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
         "rdfs:label" : "Verbindung mit einem Buch",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"
       },
@@ -444,6 +460,7 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#ColorValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#misc",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Colorpicker",
         "rdfs:label" : "Farbe",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
       },
@@ -454,6 +471,7 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#GeomValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#misc",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Geometry",
         "rdfs:label" : "Geometrie",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
       },
@@ -464,6 +482,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "salsah-gui:guiAttribute" : [ "cols=60", "rows=3", "wrap=soft" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Textarea",
         "rdfs:comment" : "A note concerning the object",
         "rdfs:label" : "Note",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -475,6 +495,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "salsah-gui:guiAttribute" : [ "maxlength=128", "size=54" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:comment" : "Der originale Dateiname",
         "rdfs:label" : "Original filename",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -486,6 +508,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "salsah-gui:guiAttribute" : [ "rows=7", "width=95%", "wrap=soft" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Textarea",
         "rdfs:comment" : "Unstrukturierte Bemerkungen zu einem Objekt",
         "rdfs:label" : "Comment",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasComment"
@@ -497,6 +521,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "salsah-gui:guiAttribute" : [ "maxlength=8", "size=8" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:comment" : "A distinct identification of a book page",
         "rdfs:label" : "Page identifier",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -509,6 +535,7 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
         "rdfs:comment" : "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches.",
         "rdfs:label" : "is a part of",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#isPartOf"
@@ -521,6 +548,7 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
         "rdfs:comment" : "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches.",
         "rdfs:label" : "is a part of",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#isPartOfValue"
@@ -532,6 +560,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "salsah-gui:guiAttribute" : [ "cols=60", "rows=3", "wrap=soft" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Textarea",
         "rdfs:comment" : "Generelle physische Beschreibung des Objektes wie Material, Grösse etc.",
         "rdfs:label" : "Phyiscal description",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -543,6 +573,7 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Date",
         "rdfs:comment" : "Datum der Herausgabe",
         "rdfs:label" : "Datum der Herausgabe",
         "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/date" ]
@@ -554,6 +585,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "salsah-gui:guiAttribute" : [ "maxlength=255", "size=60" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:comment" : "Publishing is the process of production and dissemination of literature or information – the activity of making information available for public view. In some cases authors may be their own publishers, meaning: originators and developers of content also provide media to deliver and display the content. (Wikipedia http://en.wikipedia.org/wiki/Publisher)",
         "rdfs:label" : "Publisher",
         "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/publisher" ]
@@ -565,6 +598,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "salsah-gui:guiAttribute" : [ "maxlength=100", "size=60" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:comment" : "Ort der Herausgabe",
         "rdfs:label" : "Publication location",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -576,6 +611,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#Sideband",
+        "salsah-gui:guiAttribute" : [ "maxlength=255", "size=80" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:label" : "Title",
         "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/title" ]
       },
@@ -586,6 +623,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#IntValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "salsah-gui:guiAttribute" : [ "max=-1", "min=0" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Spinbox",
         "rdfs:comment" : "This property stands for the position within a set of rdered items (resoucres)",
         "rdfs:label" : "Sequence number",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#seqnum"
@@ -597,6 +636,7 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#Sideband",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Richtext",
         "rdfs:comment" : "Unstrukturierte Bemerkungen zu einem Objekt",
         "rdfs:label" : "Kommentar (Richtext)",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasComment"
@@ -608,6 +648,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "salsah-gui:guiAttribute" : [ "maxlength=255", "size=80" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:comment" : "Titel",
         "rdfs:label" : "Title",
         "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/title" ]
@@ -619,6 +661,7 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Richtext",
         "rdfs:comment" : "Transkription",
         "rdfs:label" : "Transkription",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -630,6 +673,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "salsah-gui:guiAttribute" : [ "maxlength=200", "size=60" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:comment" : "Uniform Resource Identifier",
         "rdfs:label" : "URI",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"

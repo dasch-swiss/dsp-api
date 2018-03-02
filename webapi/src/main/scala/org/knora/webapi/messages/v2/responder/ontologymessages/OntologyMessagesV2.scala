@@ -938,7 +938,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
 
         // Assemble the JSON-LD.
 
-        val maybeHasClassesStatement = if (classes.nonEmpty) {
+        val hasClassesStatement: Option[(IRI, JsonLDObject)] = if (classes.nonEmpty) {
             val hasClassesProp = targetSchema match {
                 case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasClasses
                 case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasClasses
@@ -949,7 +949,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
             None
         }
 
-        val maybeHasPropertiesStatement = if (properties.nonEmpty) {
+        val hasPropertiesStatement: Option[(IRI, JsonLDObject)] = if (properties.nonEmpty) {
             val hasPropertiesProp = targetSchema match {
                 case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.HasProperties
                 case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.HasProperties
@@ -960,7 +960,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
             None
         }
 
-        val maybeHasIndividualsStatement = if (individuals.nonEmpty) {
+        val hasIndividualsStatement: Option[(IRI, JsonLDObject)] = if (individuals.nonEmpty) {
             val jsonIndividuals: Map[IRI, JsonLDObject] = individuals.map {
                 case (individualIri, individualInfo) =>
                     val individualJson = userLang match {
@@ -982,7 +982,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
         }
 
         JsonLDObject(
-            ontologyMetadata.toJsonLD(targetSchema) ++ maybeHasClassesStatement ++ maybeHasPropertiesStatement ++ maybeHasIndividualsStatement
+            ontologyMetadata.toJsonLD(targetSchema) ++ hasClassesStatement ++ hasPropertiesStatement ++ hasIndividualsStatement
         )
     }
 }
@@ -1713,7 +1713,7 @@ sealed trait EntityInfoContentV2 {
     }
 
     /**
-      * Returns all the non-language-specific, non-IRI objects specified for a given predicate.
+      * Returns all the non-language-specific objects specified for a given predicate.
       *
       * @param predicateIri the IRI of the predicate.
       * @return the predicate's objects, or an empty set if this entity doesn't have the specified predicate.
@@ -2175,8 +2175,30 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
             None
         }
 
-        val isLinkPropertyStatement = if (isLinkProp && targetSchema == ApiV2WithValueObjects) {
+        val isLinkPropertyStatement: Option[(IRI, JsonLDBoolean)] = if (isLinkProp && targetSchema == ApiV2WithValueObjects) {
             Some(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkProperty -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
+        val guiElementStatement: Option[(IRI, JsonLDString)] = if (targetSchema == ApiV2WithValueObjects) {
+            entityInfoContent.getPredicateLiteralsWithoutLang(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri) match {
+                case objs if objs.nonEmpty =>
+                    Some(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp -> JsonLDString(objs.head))
+
+                case _ => None
+            }
+        } else {
+            None
+        }
+
+        val guiAttributeStatement = if (targetSchema == ApiV2WithValueObjects) {
+            entityInfoContent.getPredicateLiteralsWithoutLang(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri) match {
+                case objs if objs.nonEmpty =>
+                    Some(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute -> JsonLDArray(objs.toArray.sorted.map(JsonLDString)))
+
+                case _ => None
+            }
         } else {
             None
         }
@@ -2185,7 +2207,8 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
             "@id" -> JsonLDString(entityInfoContent.propertyIri.toString),
             "@type" -> JsonLDString(entityInfoContent.getRdfType.toString)
         ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++
-            isResourcePropStatement ++ isEditableStatement ++ isLinkValuePropertyStatement ++ isLinkPropertyStatement
+            isResourcePropStatement ++ isEditableStatement ++ isLinkValuePropertyStatement ++
+            isLinkPropertyStatement ++ guiElementStatement ++ guiAttributeStatement
     }
 }
 
@@ -2513,7 +2536,9 @@ object PropertyInfoContentV2 {
         OntologyConstants.KnoraApiV2WithValueObjects.ObjectType,
         OntologyConstants.KnoraBase.SubjectClassConstraint,
         OntologyConstants.KnoraBase.ObjectClassConstraint,
-        OntologyConstants.KnoraBase.ObjectDatatypeConstraint
+        OntologyConstants.KnoraBase.ObjectDatatypeConstraint,
+        OntologyConstants.SalsahGui.GuiElementProp,
+        OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp
     )
 
     /**
@@ -2661,11 +2686,11 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
 
     def toJsonLD(targetSchema: ApiV2Schema): Map[String, JsonLDValue] = {
 
-        val maybeLabelStatement: Option[(IRI, JsonLDString)] = label.map {
+        val labelStatement: Option[(IRI, JsonLDString)] = label.map {
             labelStr => OntologyConstants.Rdfs.Label -> JsonLDString(labelStr)
         }
 
-        val maybeLastModDateStatement: Option[(IRI, JsonLDString)] = lastModificationDate.map {
+        val lastModDateStatement: Option[(IRI, JsonLDString)] = lastModificationDate.map {
             lastModDate =>
                 val lastModDateProp = targetSchema match {
                     case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.LastModificationDate
@@ -2677,6 +2702,6 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
 
         Map("@id" -> JsonLDString(ontologyIri.toString),
             "@type" -> JsonLDString(OntologyConstants.Owl.Ontology)
-        ) ++ maybeLabelStatement ++ maybeLastModDateStatement
+        ) ++ labelStatement ++ lastModDateStatement
     }
 }
