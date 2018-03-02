@@ -406,6 +406,7 @@ object KnoraApiV2WithValueObjects {
 
     val HasIncomingLinks: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasIncomingLinks,
+        isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
