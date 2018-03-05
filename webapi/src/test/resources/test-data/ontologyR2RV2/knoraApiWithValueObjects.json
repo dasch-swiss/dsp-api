@@ -1,4 +1,3 @@
-
 {
   "knora-api:hasOntologies" : {
     "@id" : "http://api.knora.org/ontology/knora-api/v2",
@@ -60,6 +59,11 @@
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasAudioFileValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -193,6 +197,11 @@
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasDDDFileValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -361,6 +370,11 @@
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
         }, {
@@ -435,6 +449,11 @@
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasComment"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -588,6 +607,11 @@
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 0,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasComment"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -759,6 +783,11 @@
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
         }, {
           "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
+        }, {
+          "@type" : "owl:Restriction",
           "owl:minCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasMovingImageFileValue"
         }, {
@@ -814,6 +843,11 @@
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
         }, {
@@ -863,6 +897,11 @@
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
         }, {
@@ -896,6 +935,10 @@
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -981,6 +1024,11 @@
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
         }, {
@@ -1057,6 +1105,11 @@
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -1418,6 +1471,17 @@
         "rdfs:comment" : "Represents a geometrical shape.",
         "rdfs:label" : "Geometry",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "knora-api:hasIncomingLinks" : {
+        "@id" : "knora-api:hasIncomingLinks",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkValueProperty" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+        "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
+        "rdfs:comment" : "Indicates that this resource referred to by another resource",
+        "rdfs:label" : "has incoming links",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue"
       },
       "knora-api:hasLinkTo" : {
         "@id" : "knora-api:hasLinkTo",

@@ -640,6 +640,7 @@ object OntologyConstants {
         val ValueHas: IRI = KnoraApiV2PrefixExpansion + "valueHas"
         val HasLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasLinkTo"
         val HasLinkToValue: IRI = KnoraApiV2PrefixExpansion + "hasLinkToValue"
+        val HasIncomingLinks: IRI = KnoraApiV2PrefixExpansion + "hasIncomingLinks"
 
         val IsPartOf: IRI = KnoraApiV2PrefixExpansion + "isPartOf"
         val IsPartOfValue: IRI = KnoraApiV2PrefixExpansion + "isPartOfValue"
@@ -769,6 +770,7 @@ object OntologyConstants {
         val HasValue: IRI = KnoraApiV2PrefixExpansion + "hasValue"
 
         val HasLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasLinkTo"
+        val HasIncomingLinks: IRI = KnoraApiV2PrefixExpansion + "hasIncomingLinks"
 
         val IsPartOf: IRI = KnoraApiV2PrefixExpansion + "isPartOf"
         val IsRegionOf: IRI = KnoraApiV2PrefixExpansion + "isRegionOf"

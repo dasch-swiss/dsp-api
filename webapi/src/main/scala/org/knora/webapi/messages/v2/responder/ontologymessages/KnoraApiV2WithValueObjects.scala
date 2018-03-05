@@ -62,7 +62,8 @@ object KnoraApiV2WithValueObjects {
             OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue -> Cardinality.MayHaveMany,
             OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.CreationDate -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate -> Cardinality.MayHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.HasIncomingLinks -> Cardinality.MayHaveMany
         )
     )
 
@@ -394,6 +395,31 @@ object KnoraApiV2WithValueObjects {
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
                     LanguageCodes.EN -> "Indicates that this resource is part of another resource"
+                )
+            )
+        )
+    )
+
+    val HasIncomingLinks: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasIncomingLinks,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue),
+        isEditable = true,
+        isLinkValueProp = true,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "hat eingehende Verweise",
+                    LanguageCodes.EN -> "has incoming links"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates that this resource referred to by another resource"
                 )
             )
         )
@@ -2541,6 +2567,7 @@ object KnoraApiV2WithValueObjects {
         HasValue,
         HasLinkTo,
         HasLinkToValue,
+        HasIncomingLinks,
         HasStandoffLinkTo,
         HasStandoffLinkToValue,
         CreationDate,
