@@ -64,7 +64,7 @@
             <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
-            <classIri>http://www.knora.org/ontology/beol#StandoffFacsimileTag</classIri>
+            <classIri>http://www.knora.org/ontology/0801/beol#StandoffFacsimileTag</classIri>
             <datatype>
                 <type>http://www.knora.org/ontology/knora-base#StandoffLinkTag</type>
                 <attributeName>src</attributeName>
@@ -80,7 +80,7 @@
             <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
-            <classIri>http://www.knora.org/ontology/beol#StandoffMathTag</classIri>
+            <classIri>http://www.knora.org/ontology/0801/beol#StandoffMathTag</classIri>
         </standoffClass>
     </mappingElement>
 
@@ -132,7 +132,7 @@
             <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
-            <classIri>http://www.knora.org/ontology/beol#StandoffNoWikiTag</classIri>
+            <classIri>http://www.knora.org/ontology/0801/beol#StandoffNoWikiTag</classIri>
         </standoffClass>
     </mappingElement>
 

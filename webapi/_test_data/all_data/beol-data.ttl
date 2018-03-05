@@ -7,19 +7,19 @@
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
-@prefix beol: <http://www.knora.org/ontology/beol#> .
+@prefix beol: <http://www.knora.org/ontology/0801/beol#> .
 
 ###
 ### project and user moved to admin-data.ttl
 ###
 
 ### page resource for R2R standoff tests
-<http://rdfh.ch/beol/page_resource> a <http://www.knora.org/ontology/beol#page> ;
+<http://rdfh.ch/beol/page_resource> a <http://www.knora.org/ontology/0801/beol#page> ;
                                     rdfs:label "Test page" ;
                                     <http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
                                     <http://www.knora.org/ontology/knora-base#creationDate> "2017-09-01T15:21:10.735+02:00"^^xsd:dateTimeStamp ;
                                     <http://www.knora.org/ontology/knora-base#hasPermissions> "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
-                                    <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+                                    <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0801> ;
                                     <http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
 <http://rdfh.ch/beol/page_resource> <http://www.knora.org/ontology/knora-base#hasStillImageFileValue> <http://rdfh.ch/beol/page_resource/values/DX6m0TSuRGesYXA0iQyA9A> .
@@ -59,14 +59,14 @@
 	<http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
 	<http://www.knora.org/ontology/knora-base#valueHasQname> "thumbnail" .
 
-<http://rdfh.ch/beol/page_resource> <http://www.knora.org/ontology/beol#partOf> <http://rdfh.ch/beol/letter_resource> .
+<http://rdfh.ch/beol/page_resource> <http://www.knora.org/ontology/0801/beol#partOf> <http://rdfh.ch/beol/letter_resource> .
 
-<http://rdfh.ch/beol/page_resource> <http://www.knora.org/ontology/beol#partOfValue> <http://rdfh.ch/beol/page_resource/values/dn2rUCg8TNq_qz6i62e51g> .
+<http://rdfh.ch/beol/page_resource> <http://www.knora.org/ontology/0801/beol#partOfValue> <http://rdfh.ch/beol/page_resource/values/dn2rUCg8TNq_qz6i62e51g> .
 
 <http://rdfh.ch/beol/page_resource/values/dn2rUCg8TNq_qz6i62e51g> a <http://www.knora.org/ontology/knora-base#LinkValue> ;
 	<http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
 	rdf:subject <http://rdfh.ch/beol/page_resource> ;
-	rdf:predicate <http://www.knora.org/ontology/beol#partOf> ;
+	rdf:predicate <http://www.knora.org/ontology/0801/beol#partOf> ;
 	rdf:object <http://rdfh.ch/beol/letter_resource> ;
 	<http://www.knora.org/ontology/knora-base#valueCreationDate> "2017-09-01T15:21:10.735+02:00"^^xsd:dateTimeStamp ;
 	<http://www.knora.org/ontology/knora-base#valueHasOrder> "0"^^xsd:integer ;
@@ -75,7 +75,7 @@
 	<http://www.knora.org/ontology/knora-base#hasPermissions> "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	<http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
-<http://rdfh.ch/beol/page_resource> <http://www.knora.org/ontology/beol#seqnum> <http://rdfh.ch/beol/page_resource/values/f45WI-rpQTigeaJ84KZoBA> .
+<http://rdfh.ch/beol/page_resource> <http://www.knora.org/ontology/0801/beol#seqnum> <http://rdfh.ch/beol/page_resource/values/f45WI-rpQTigeaJ84KZoBA> .
 
 <http://rdfh.ch/beol/page_resource/values/f45WI-rpQTigeaJ84KZoBA> a <http://www.knora.org/ontology/knora-base#IntValue> ;
 	<http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
@@ -87,15 +87,15 @@
 	<http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
 ### letter resource for R2R standoff tests, referred to by <http://rdfh.ch/beol/page_resource>
-<http://rdfh.ch/beol/letter_resource> a <http://www.knora.org/ontology/beol#letter> ;
+<http://rdfh.ch/beol/letter_resource> a <http://www.knora.org/ontology/0801/beol#letter> ;
 	rdfs:label "Test letter" ;
 	<http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
 	<http://www.knora.org/ontology/knora-base#creationDate> "2017-09-01T14:15:04.846+02:00"^^xsd:dateTimeStamp ;
 	<http://www.knora.org/ontology/knora-base#lastModificationDate> "2017-09-01T15:21:16.480+02:00"^^xsd:dateTimeStamp ;
 	<http://www.knora.org/ontology/knora-base#hasPermissions> "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
-	<http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+	<http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0801> ;
 	<http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
-	<http://www.knora.org/ontology/beol#title> <http://rdfh.ch/beol/letter_resource/values/naiFCtV2S5C6GIe_eKGTGQ> .
+	<http://www.knora.org/ontology/0801/beol#title> <http://rdfh.ch/beol/letter_resource/values/naiFCtV2S5C6GIe_eKGTGQ> .
 
 <http://rdfh.ch/beol/letter_resource/values/naiFCtV2S5C6GIe_eKGTGQ> a <http://www.knora.org/ontology/knora-base#TextValue> ;
 	<http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
@@ -104,3 +104,1206 @@
 	<http://www.knora.org/ontology/knora-base#valueHasString> "Test letter" ;
 	<http://www.knora.org/ontology/knora-base#hasPermissions> "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	<http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
+
+<http://rdfh.ch/lists/0801/subject_index> a knora-base:ListNode ;
+	knora-base:isRootNode true ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0801> ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/mathematics> , <http://rdfh.ch/lists/0801/other_sciences> , <http://rdfh.ch/lists/0801/professional_activity> , <http://rdfh.ch/lists/0801/personal_life> ;
+	rdfs:label "Subject Index"@en .
+
+<http://rdfh.ch/lists/0801/complex_numbers> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/algebra> ;
+	knora-base:listNodeName "Complex numbers" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Complex numbers"@en .
+
+<http://rdfh.ch/lists/0801/5th-degree_equations> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/algebraic_equations> ;
+	knora-base:listNodeName "5th-degree equations" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "5th-degree equations"@en .
+
+<http://rdfh.ch/lists/0801/factorisation_fundamental_theorem_of_algebra> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/algebraic_equations> ;
+	knora-base:listNodeName "Factorisation, Fundamental Theorem of Algebra" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Factorisation, Fundamental Theorem of Algebra"@en .
+
+<http://rdfh.ch/lists/0801/algebraic_equations> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/algebra> ;
+	knora-base:listNodeName "Algebraic equations" ;
+	knora-base:listNodePosition 1 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/5th-degree_equations> , <http://rdfh.ch/lists/0801/factorisation_fundamental_theorem_of_algebra> ;
+	rdfs:label "Algebraic equations"@en .
+
+<http://rdfh.ch/lists/0801/rational_interpolation> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/algebra> ;
+	knora-base:listNodeName "Rational interpolation" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Rational interpolation"@en .
+
+<http://rdfh.ch/lists/0801/algebra> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/mathematics> ;
+	knora-base:listNodeName "Algebra" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/complex_numbers> , <http://rdfh.ch/lists/0801/algebraic_equations> , <http://rdfh.ch/lists/0801/rational_interpolation> ;
+	rdfs:label "Algebra"@en .
+
+<http://rdfh.ch/lists/0801/triangular_numbers> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/elementary_number_theory> ;
+	knora-base:listNodeName "Triangular numbers" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Triangular numbers"@en .
+
+<http://rdfh.ch/lists/0801/figurate_polygonal_numbers> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/elementary_number_theory> ;
+	knora-base:listNodeName "Figurate (polygonal) numbers" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Figurate (polygonal) numbers"@en .
+
+<http://rdfh.ch/lists/0801/representation_of_squares_and_triangular_numbers> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/elementary_number_theory> ;
+	knora-base:listNodeName "Representation of squares and triangular numbers" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Representation of squares and triangular numbers"@en .
+
+<http://rdfh.ch/lists/0801/perfect_numbers> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/divisibility> ;
+	knora-base:listNodeName "Perfect numbers" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Perfect numbers"@en .
+
+<http://rdfh.ch/lists/0801/fermats_little_theorem> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/divisibility> ;
+	knora-base:listNodeName "Fermat's ''Little Theorem''" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Fermat's ''Little Theorem''"@en .
+
+<http://rdfh.ch/lists/0801/sums_of_divisors_partitions_pentagonal_number_theorem> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/divisibility> ;
+	knora-base:listNodeName "Sums of divisors, partitions, Pentagonal Number Theorem" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Sums of divisors, partitions, Pentagonal Number Theorem"@en .
+
+<http://rdfh.ch/lists/0801/divisibility> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/elementary_number_theory> ;
+	knora-base:listNodeName "Divisibility" ;
+	knora-base:listNodePosition 3 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/perfect_numbers> , <http://rdfh.ch/lists/0801/fermats_little_theorem> , <http://rdfh.ch/lists/0801/sums_of_divisors_partitions_pentagonal_number_theorem> ;
+	rdfs:label "Divisibility"@en .
+
+<http://rdfh.ch/lists/0801/quadratic_residues> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/elementary_number_theory> ;
+	knora-base:listNodeName "Quadratic residues" ;
+	knora-base:listNodePosition 4 ;
+	rdfs:label "Quadratic residues"@en .
+
+<http://rdfh.ch/lists/0801/elementary_number_theory> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/number_theory> ;
+	knora-base:listNodeName "Elementary number theory" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/triangular_numbers> , <http://rdfh.ch/lists/0801/figurate_polygonal_numbers> , <http://rdfh.ch/lists/0801/representation_of_squares_and_triangular_numbers> , <http://rdfh.ch/lists/0801/divisibility> , <http://rdfh.ch/lists/0801/quadratic_residues> ;
+	rdfs:label "Elementary number theory"@en .
+
+<http://rdfh.ch/lists/0801/fermat_numbers> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/distribution_of_primes> ;
+	knora-base:listNodeName "Fermat numbers" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Fermat numbers"@en .
+
+<http://rdfh.ch/lists/0801/mersenne_primes> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/distribution_of_primes> ;
+	knora-base:listNodeName "Mersenne primes" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Mersenne primes"@en .
+
+<http://rdfh.ch/lists/0801/twin_primes_primes_with_given_difference> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/distribution_of_primes> ;
+	knora-base:listNodeName "Twin primes, primes with given difference" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Twin primes, primes with given difference"@en .
+
+<http://rdfh.ch/lists/0801/representation_of_primes_by_polynomials> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/distribution_of_primes> ;
+	knora-base:listNodeName "Representation of primes by polynomials" ;
+	knora-base:listNodePosition 3 ;
+	rdfs:label "Representation of primes by polynomials"@en .
+
+<http://rdfh.ch/lists/0801/goldbachs_conjecture_and_related_conjectures> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/distribution_of_primes> ;
+	knora-base:listNodeName "Goldbach's Conjecture and related conjectures" ;
+	knora-base:listNodePosition 4 ;
+	rdfs:label "Goldbach's Conjecture and related conjectures"@en .
+
+<http://rdfh.ch/lists/0801/distribution_of_primes> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/number_theory> ;
+	knora-base:listNodeName "Distribution of primes" ;
+	knora-base:listNodePosition 1 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/fermat_numbers> , <http://rdfh.ch/lists/0801/mersenne_primes> , <http://rdfh.ch/lists/0801/twin_primes_primes_with_given_difference> , <http://rdfh.ch/lists/0801/representation_of_primes_by_polynomials> , <http://rdfh.ch/lists/0801/goldbachs_conjecture_and_related_conjectures> ;
+	rdfs:label "Distribution of primes"@en .
+
+<http://rdfh.ch/lists/0801/sums_of_triangular_numbers_and_squares> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/sums_of_powers> ;
+	knora-base:listNodeName "Sums of triangular numbers and squares" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Sums of triangular numbers and squares"@en .
+
+<http://rdfh.ch/lists/0801/sums_of_two_squares_two_squares_theorem> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/sums_of_squares> ;
+	knora-base:listNodeName "Sums of two squares (Two Squares Theorem)" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Sums of two squares (Two Squares Theorem)"@en .
+
+<http://rdfh.ch/lists/0801/sums_of_three_squares> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/sums_of_squares> ;
+	knora-base:listNodeName "Sums of three squares" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Sums of three squares"@en .
+
+<http://rdfh.ch/lists/0801/sums_of_four_squares_four_squares_theorem> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/sums_of_squares> ;
+	knora-base:listNodeName "Sums of four squares (Four Squares Theorem)" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Sums of four squares (Four Squares Theorem)"@en .
+
+<http://rdfh.ch/lists/0801/sums_of_squares> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/sums_of_powers> ;
+	knora-base:listNodeName "Sums of squares" ;
+	knora-base:listNodePosition 1 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/sums_of_two_squares_two_squares_theorem> , <http://rdfh.ch/lists/0801/sums_of_three_squares> , <http://rdfh.ch/lists/0801/sums_of_four_squares_four_squares_theorem> ;
+	rdfs:label "Sums of squares"@en .
+
+<http://rdfh.ch/lists/0801/fermats_theorem_on_figurate_polygonal_numbers> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/sums_of_powers> ;
+	knora-base:listNodeName "Fermat's theorem on figurate (polygonal) numbers" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Fermat's theorem on figurate (polygonal) numbers"@en .
+
+<http://rdfh.ch/lists/0801/pells_equation> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/other_quadratic_forms> ;
+	knora-base:listNodeName "''Pell's Equation''" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "''Pell's Equation''"@en .
+
+<http://rdfh.ch/lists/0801/other_quadratic_forms> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/sums_of_powers> ;
+	knora-base:listNodeName "Other quadratic forms" ;
+	knora-base:listNodePosition 3 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/pells_equation> ;
+	rdfs:label "Other quadratic forms"@en .
+
+<http://rdfh.ch/lists/0801/cubic_and_higher-degree_forms> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/sums_of_powers> ;
+	knora-base:listNodeName "Cubic and higher-degree forms" ;
+	knora-base:listNodePosition 4 ;
+	rdfs:label "Cubic and higher-degree forms"@en .
+
+<http://rdfh.ch/lists/0801/fermats_last_theorem_fermat_conjecture> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/sums_of_powers> ;
+	knora-base:listNodeName "Fermat's ''Last Theorem'' (''Fermat Conjecture'')" ;
+	knora-base:listNodePosition 5 ;
+	rdfs:label "Fermat's ''Last Theorem'' (''Fermat Conjecture'')"@en .
+
+<http://rdfh.ch/lists/0801/sums_of_powers> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/number_theory> ;
+	knora-base:listNodeName "Sums of powers" ;
+	knora-base:listNodePosition 2 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/sums_of_triangular_numbers_and_squares> , <http://rdfh.ch/lists/0801/sums_of_squares> , <http://rdfh.ch/lists/0801/fermats_theorem_on_figurate_polygonal_numbers> , <http://rdfh.ch/lists/0801/other_quadratic_forms> , <http://rdfh.ch/lists/0801/cubic_and_higher-degree_forms> , <http://rdfh.ch/lists/0801/fermats_last_theorem_fermat_conjecture> ;
+	rdfs:label "Sums of powers"@en .
+
+<http://rdfh.ch/lists/0801/other_diophantine_equations> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/number_theory> ;
+	knora-base:listNodeName "Other Diophantine equations" ;
+	knora-base:listNodePosition 3 ;
+	rdfs:label "Other Diophantine equations"@en .
+
+<http://rdfh.ch/lists/0801/quadratic_equations_with_rational_solutions> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/algebraic_number_theory> ;
+	knora-base:listNodeName "Quadratic equations with rational solutions" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Quadratic equations with rational solutions"@en .
+
+<http://rdfh.ch/lists/0801/cubic_equations_with_rational_solutions> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/algebraic_number_theory> ;
+	knora-base:listNodeName "Cubic equations with rational solutions" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Cubic equations with rational solutions"@en .
+
+<http://rdfh.ch/lists/0801/quartic_equations_with_rational_solutions_parametrisation> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/algebraic_number_theory> ;
+	knora-base:listNodeName "Quartic equations with rational solutions (parametrisation)" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Quartic equations with rational solutions (parametrisation)"@en .
+
+<http://rdfh.ch/lists/0801/rational_algebraic_surd_and_transcendental_numbers> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/algebraic_number_theory> ;
+	knora-base:listNodeName "Rational, algebraic (surd) and transcendental numbers" ;
+	knora-base:listNodePosition 3 ;
+	rdfs:label "Rational, algebraic (surd) and transcendental numbers"@en .
+
+<http://rdfh.ch/lists/0801/irrationality_of_texte> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/algebraic_number_theory> ;
+	knora-base:listNodeName "Irrationality of \(\text{e}\)" ;
+	knora-base:listNodePosition 4 ;
+	rdfs:label "Irrationality of \(\text{e}\)"@en .
+
+<http://rdfh.ch/lists/0801/irrationality_and_transcendence_of_pi__quadrature_of_the_circle_approximation_of_pi_> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/algebraic_number_theory> ;
+	knora-base:listNodeName "Irrationality and transcendence of \(\pi \) (''quadrature of the circle''), approximation of \(\pi \)" ;
+	knora-base:listNodePosition 5 ;
+	rdfs:label "Irrationality and transcendence of \(\pi \) (''quadrature of the circle''), approximation of \(\pi \)"@en .
+
+<http://rdfh.ch/lists/0801/algebraic_number_theory> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/number_theory> ;
+	knora-base:listNodeName "Algebraic number theory" ;
+	knora-base:listNodePosition 4 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/quadratic_equations_with_rational_solutions> , <http://rdfh.ch/lists/0801/cubic_equations_with_rational_solutions> , <http://rdfh.ch/lists/0801/quartic_equations_with_rational_solutions_parametrisation> , <http://rdfh.ch/lists/0801/rational_algebraic_surd_and_transcendental_numbers> , <http://rdfh.ch/lists/0801/irrationality_of_texte> , <http://rdfh.ch/lists/0801/irrationality_and_transcendence_of_pi__quadrature_of_the_circle_approximation_of_pi_> ;
+	rdfs:label "Algebraic number theory"@en .
+
+<http://rdfh.ch/lists/0801/series_defined_by_arithmetic_properties> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/analytic_number_theory> ;
+	knora-base:listNodeName "Series defined by arithmetic properties" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Series defined by arithmetic properties"@en .
+
+<http://rdfh.ch/lists/0801/zeta_function> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/analytic_number_theory> ;
+	knora-base:listNodeName "Zeta function" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Zeta function"@en .
+
+<http://rdfh.ch/lists/0801/multi-zeta_values> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/analytic_number_theory> ;
+	knora-base:listNodeName "Multi-zeta values" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Multi-zeta values"@en .
+
+<http://rdfh.ch/lists/0801/generating_functions> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/analytic_number_theory> ;
+	knora-base:listNodeName "Generating functions" ;
+	knora-base:listNodePosition 3 ;
+	rdfs:label "Generating functions"@en .
+
+<http://rdfh.ch/lists/0801/product_developments> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/analytic_number_theory> ;
+	knora-base:listNodeName "Product developments" ;
+	knora-base:listNodePosition 4 ;
+	rdfs:label "Product developments"@en .
+
+<http://rdfh.ch/lists/0801/analytic_number_theory> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/number_theory> ;
+	knora-base:listNodeName "Analytic number theory" ;
+	knora-base:listNodePosition 5 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/series_defined_by_arithmetic_properties> , <http://rdfh.ch/lists/0801/zeta_function> , <http://rdfh.ch/lists/0801/multi-zeta_values> , <http://rdfh.ch/lists/0801/generating_functions> , <http://rdfh.ch/lists/0801/product_developments> ;
+	rdfs:label "Analytic number theory"@en .
+
+<http://rdfh.ch/lists/0801/number_theory> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/mathematics> ;
+	knora-base:listNodeName "Number theory" ;
+	knora-base:listNodePosition 1 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/elementary_number_theory> , <http://rdfh.ch/lists/0801/distribution_of_primes> , <http://rdfh.ch/lists/0801/sums_of_powers> , <http://rdfh.ch/lists/0801/other_diophantine_equations> , <http://rdfh.ch/lists/0801/algebraic_number_theory> , <http://rdfh.ch/lists/0801/analytic_number_theory> ;
+	rdfs:label "Number theory"@en .
+
+<http://rdfh.ch/lists/0801/logarithms> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/elementary_analysis> ;
+	knora-base:listNodeName "Logarithms" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Logarithms"@en .
+
+<http://rdfh.ch/lists/0801/calculation_of_compound_interest> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/elementary_analysis> ;
+	knora-base:listNodeName "Calculation of compound interest" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Calculation of compound interest"@en .
+
+<http://rdfh.ch/lists/0801/elementary_analysis> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/analysis> ;
+	knora-base:listNodeName "Elementary analysis" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/logarithms> , <http://rdfh.ch/lists/0801/calculation_of_compound_interest> ;
+	rdfs:label "Elementary analysis"@en .
+
+<http://rdfh.ch/lists/0801/recursively_defined_recurrent_sequences_fibonacci_sequences> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/series_and_sequences> ;
+	knora-base:listNodeName "Recursively defined (recurrent) sequences, Fibonacci sequences" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Recursively defined (recurrent) sequences, Fibonacci sequences"@en .
+
+<http://rdfh.ch/lists/0801/gamma_function> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/interpolation_of_sequences> ;
+	knora-base:listNodeName "Gamma function" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Gamma function"@en .
+
+<http://rdfh.ch/lists/0801/interpolation_of_sequences> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/series_and_sequences> ;
+	knora-base:listNodeName "Interpolation of sequences" ;
+	knora-base:listNodePosition 1 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/gamma_function> ;
+	rdfs:label "Interpolation of sequences"@en .
+
+<http://rdfh.ch/lists/0801/beta_function> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/series_and_sequences> ;
+	knora-base:listNodeName "Beta function" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Beta function"@en .
+
+<http://rdfh.ch/lists/0801/summation_by_integration> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/series_and_sequences> ;
+	knora-base:listNodeName "Summation by integration" ;
+	knora-base:listNodePosition 3 ;
+	rdfs:label "Summation by integration"@en .
+
+<http://rdfh.ch/lists/0801/summation_by_symmetric_functions> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/series_and_sequences> ;
+	knora-base:listNodeName "Summation by symmetric functions" ;
+	knora-base:listNodePosition 4 ;
+	rdfs:label "Summation by symmetric functions"@en .
+
+<http://rdfh.ch/lists/0801/bernoulli_numbers> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/euler-maclaurin_summation_formula> ;
+	knora-base:listNodeName "Bernoulli numbers" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Bernoulli numbers"@en .
+
+<http://rdfh.ch/lists/0801/euler-maclaurin_summation_formula> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/series_and_sequences> ;
+	knora-base:listNodeName "Euler-MacLaurin summation formula" ;
+	knora-base:listNodePosition 5 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/bernoulli_numbers> ;
+	rdfs:label "Euler-MacLaurin summation formula"@en .
+
+<http://rdfh.ch/lists/0801/trigonometric_series> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/series_and_sequences> ;
+	knora-base:listNodeName "Trigonometric series" ;
+	knora-base:listNodePosition 6 ;
+	rdfs:label "Trigonometric series"@en .
+
+<http://rdfh.ch/lists/0801/divergent_series> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/series_and_sequences> ;
+	knora-base:listNodeName "Divergent series" ;
+	knora-base:listNodePosition 7 ;
+	rdfs:label "Divergent series"@en .
+
+<http://rdfh.ch/lists/0801/series_development_of_irrational_powers> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/series_and_sequences> ;
+	knora-base:listNodeName "Series development of irrational powers" ;
+	knora-base:listNodePosition 8 ;
+	rdfs:label "Series development of irrational powers"@en .
+
+<http://rdfh.ch/lists/0801/series_development_of_roots_lambert_series> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/series_and_sequences> ;
+	knora-base:listNodeName "Series development of roots, Lambert series" ;
+	knora-base:listNodePosition 9 ;
+	rdfs:label "Series development of roots, Lambert series"@en .
+
+<http://rdfh.ch/lists/0801/series_and_sequences> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/analysis> ;
+	knora-base:listNodeName "Series and sequences" ;
+	knora-base:listNodePosition 1 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/recursively_defined_recurrent_sequences_fibonacci_sequences> , <http://rdfh.ch/lists/0801/interpolation_of_sequences> , <http://rdfh.ch/lists/0801/beta_function> , <http://rdfh.ch/lists/0801/summation_by_integration> , <http://rdfh.ch/lists/0801/summation_by_symmetric_functions> , <http://rdfh.ch/lists/0801/euler-maclaurin_summation_formula> , <http://rdfh.ch/lists/0801/trigonometric_series> , <http://rdfh.ch/lists/0801/divergent_series> , <http://rdfh.ch/lists/0801/series_development_of_irrational_powers> , <http://rdfh.ch/lists/0801/series_development_of_roots_lambert_series> ;
+	rdfs:label "Series and sequences"@en .
+
+<http://rdfh.ch/lists/0801/infinite_products> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/analysis> ;
+	knora-base:listNodeName "Infinite products" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Infinite products"@en .
+
+<http://rdfh.ch/lists/0801/continued_fractions> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/analysis> ;
+	knora-base:listNodeName "Continued fractions" ;
+	knora-base:listNodePosition 3 ;
+	rdfs:label "Continued fractions"@en .
+
+<http://rdfh.ch/lists/0801/approximation_newton-raphson_method> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/analysis> ;
+	knora-base:listNodeName "Approximation (Newton-Raphson method)" ;
+	knora-base:listNodePosition 4 ;
+	rdfs:label "Approximation (Newton-Raphson method)"@en .
+
+<http://rdfh.ch/lists/0801/representation_of_sequences_by_integration> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/integral_calculus> ;
+	knora-base:listNodeName "Representation of sequences by integration" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Representation of sequences by integration"@en .
+
+<http://rdfh.ch/lists/0801/partial_fraction_decomposition> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/integration_of_rational_functions> ;
+	knora-base:listNodeName "Partial fraction decomposition" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Partial fraction decomposition"@en .
+
+<http://rdfh.ch/lists/0801/integration_of_rational_functions> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/integral_calculus> ;
+	knora-base:listNodeName "Integration of rational functions" ;
+	knora-base:listNodePosition 1 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/partial_fraction_decomposition> ;
+	rdfs:label "Integration of rational functions"@en .
+
+<http://rdfh.ch/lists/0801/rationalisation_of_algebraic_differentials> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/integral_calculus> ;
+	knora-base:listNodeName "Rationalisation of algebraic differentials" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Rationalisation of algebraic differentials"@en .
+
+<http://rdfh.ch/lists/0801/elliptic_integrals> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/integral_calculus> ;
+	knora-base:listNodeName "Elliptic integrals" ;
+	knora-base:listNodePosition 3 ;
+	rdfs:label "Elliptic integrals"@en .
+
+<http://rdfh.ch/lists/0801/definite_integrals_of_algebraic_functions> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/integral_calculus> ;
+	knora-base:listNodeName "Definite integrals of algebraic functions" ;
+	knora-base:listNodePosition 4 ;
+	rdfs:label "Definite integrals of algebraic functions"@en .
+
+<http://rdfh.ch/lists/0801/integral_calculus> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/analysis> ;
+	knora-base:listNodeName "Integral calculus" ;
+	knora-base:listNodePosition 5 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/representation_of_sequences_by_integration> , <http://rdfh.ch/lists/0801/integration_of_rational_functions> , <http://rdfh.ch/lists/0801/rationalisation_of_algebraic_differentials> , <http://rdfh.ch/lists/0801/elliptic_integrals> , <http://rdfh.ch/lists/0801/definite_integrals_of_algebraic_functions> ;
+	rdfs:label "Integral calculus"@en .
+
+<http://rdfh.ch/lists/0801/riccati_equation> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/differential_equations> ;
+	knora-base:listNodeName "Riccati equation" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Riccati equation"@en .
+
+<http://rdfh.ch/lists/0801/algebraically_integrable_differential_equations> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/differential_equations> ;
+	knora-base:listNodeName "Algebraically integrable differential equations" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Algebraically integrable differential equations"@en .
+
+<http://rdfh.ch/lists/0801/solution_of_differential_equations_by_differentiation_singular_solutions> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/differential_equations> ;
+	knora-base:listNodeName "Solution of differential equations by differentiation (singular solutions)" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Solution of differential equations by differentiation (singular solutions)"@en .
+
+<http://rdfh.ch/lists/0801/differential_equations> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/analysis> ;
+	knora-base:listNodeName "Differential equations" ;
+	knora-base:listNodePosition 6 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/riccati_equation> , <http://rdfh.ch/lists/0801/algebraically_integrable_differential_equations> , <http://rdfh.ch/lists/0801/solution_of_differential_equations_by_differentiation_singular_solutions> ;
+	rdfs:label "Differential equations"@en .
+
+<http://rdfh.ch/lists/0801/analysis> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/mathematics> ;
+	knora-base:listNodeName "Analysis" ;
+	knora-base:listNodePosition 2 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/elementary_analysis> , <http://rdfh.ch/lists/0801/series_and_sequences> , <http://rdfh.ch/lists/0801/infinite_products> , <http://rdfh.ch/lists/0801/continued_fractions> , <http://rdfh.ch/lists/0801/approximation_newton-raphson_method> , <http://rdfh.ch/lists/0801/integral_calculus> , <http://rdfh.ch/lists/0801/differential_equations> ;
+	rdfs:label "Analysis"@en .
+
+<http://rdfh.ch/lists/0801/quadrilaterals> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/elementary_cartesian_geometry> ;
+	knora-base:listNodeName "Quadrilaterals" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Quadrilaterals"@en .
+
+<http://rdfh.ch/lists/0801/squareable_lunes_squareable_circular_sectors_keplers_problem> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/elementary_cartesian_geometry> ;
+	knora-base:listNodeName "Squareable lunes, squareable circular sectors (Kepler's problem)" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Squareable lunes, squareable circular sectors (Kepler's problem)"@en .
+
+<http://rdfh.ch/lists/0801/stereometry_volume_of_polyhedra> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/elementary_cartesian_geometry> ;
+	knora-base:listNodeName "Stereometry, volume of polyhedra" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Stereometry, volume of polyhedra"@en .
+
+<http://rdfh.ch/lists/0801/elementary_cartesian_geometry> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/geometry> ;
+	knora-base:listNodeName "Elementary Cartesian geometry" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/quadrilaterals> , <http://rdfh.ch/lists/0801/squareable_lunes_squareable_circular_sectors_keplers_problem> , <http://rdfh.ch/lists/0801/stereometry_volume_of_polyhedra> ;
+	rdfs:label "Elementary Cartesian geometry"@en .
+
+<http://rdfh.ch/lists/0801/curves_of_constant_secant_length> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/differential_geometry> ;
+	knora-base:listNodeName "Curves of constant secant length" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Curves of constant secant length"@en .
+
+<http://rdfh.ch/lists/0801/logarithmic_curves> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/differential_geometry> ;
+	knora-base:listNodeName "Logarithmic curves" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Logarithmic curves"@en .
+
+<http://rdfh.ch/lists/0801/dragging_motion_pursuit_curves_tractrix_construction> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/differential_geometry> ;
+	knora-base:listNodeName "Dragging motion, pursuit curves, tractrix construction" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Dragging motion, pursuit curves, tractrix construction"@en .
+
+<http://rdfh.ch/lists/0801/pairs_of_curves_with_rectifiable_arcs> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/differential_geometry> ;
+	knora-base:listNodeName "Pairs of curves with rectifiable arcs" ;
+	knora-base:listNodePosition 3 ;
+	rdfs:label "Pairs of curves with rectifiable arcs"@en .
+
+<http://rdfh.ch/lists/0801/catoptric_problem_curves_with_closed_reflection_paths> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/differential_geometry> ;
+	knora-base:listNodeName "Catoptric problem (curves with closed reflection paths)" ;
+	knora-base:listNodePosition 4 ;
+	rdfs:label "Catoptric problem (curves with closed reflection paths)"@en .
+
+<http://rdfh.ch/lists/0801/differential_geometry> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/geometry> ;
+	knora-base:listNodeName "Differential geometry" ;
+	knora-base:listNodePosition 1 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/curves_of_constant_secant_length> , <http://rdfh.ch/lists/0801/logarithmic_curves> , <http://rdfh.ch/lists/0801/dragging_motion_pursuit_curves_tractrix_construction> , <http://rdfh.ch/lists/0801/pairs_of_curves_with_rectifiable_arcs> , <http://rdfh.ch/lists/0801/catoptric_problem_curves_with_closed_reflection_paths> ;
+	rdfs:label "Differential geometry"@en .
+
+<http://rdfh.ch/lists/0801/fractal_geometry> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/geometry> ;
+	knora-base:listNodeName "''Fractal'' geometry" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "''Fractal'' geometry"@en .
+
+<http://rdfh.ch/lists/0801/geometry> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/mathematics> ;
+	knora-base:listNodeName "Geometry" ;
+	knora-base:listNodePosition 3 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/elementary_cartesian_geometry> , <http://rdfh.ch/lists/0801/differential_geometry> , <http://rdfh.ch/lists/0801/fractal_geometry> ;
+	rdfs:label "Geometry"@en .
+
+<http://rdfh.ch/lists/0801/dissection_of_polygons_into_triangles_catalan_numbers> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/topology> ;
+	knora-base:listNodeName "Dissection of polygons into triangles (''Catalan numbers'')" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Dissection of polygons into triangles (''Catalan numbers'')"@en .
+
+<http://rdfh.ch/lists/0801/eulers_polyhedron_formula> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/topology> ;
+	knora-base:listNodeName "Euler's Polyhedron Formula" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Euler's Polyhedron Formula"@en .
+
+<http://rdfh.ch/lists/0801/knights_tour> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/topology> ;
+	knora-base:listNodeName "Knight's tour" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Knight's tour"@en .
+
+<http://rdfh.ch/lists/0801/topology> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/other_topics_in_mathematics> ;
+	knora-base:listNodeName "Topology" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/dissection_of_polygons_into_triangles_catalan_numbers> , <http://rdfh.ch/lists/0801/eulers_polyhedron_formula> , <http://rdfh.ch/lists/0801/knights_tour> ;
+	rdfs:label "Topology"@en .
+
+<http://rdfh.ch/lists/0801/cryptography> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/other_topics_in_mathematics> ;
+	knora-base:listNodeName "Cryptography" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Cryptography"@en .
+
+<http://rdfh.ch/lists/0801/calculating_prodigy> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/other_topics_in_mathematics> ;
+	knora-base:listNodeName "Calculating prodigy" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Calculating prodigy"@en .
+
+<http://rdfh.ch/lists/0801/mathematical_notation> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/other_topics_in_mathematics> ;
+	knora-base:listNodeName "Mathematical notation" ;
+	knora-base:listNodePosition 3 ;
+	rdfs:label "Mathematical notation"@en .
+
+<http://rdfh.ch/lists/0801/other_topics_in_mathematics> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/mathematics> ;
+	knora-base:listNodeName "Other topics in mathematics" ;
+	knora-base:listNodePosition 4 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/topology> , <http://rdfh.ch/lists/0801/cryptography> , <http://rdfh.ch/lists/0801/calculating_prodigy> , <http://rdfh.ch/lists/0801/mathematical_notation> ;
+	rdfs:label "Other topics in mathematics"@en .
+
+<http://rdfh.ch/lists/0801/mathematics> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/subject_index> ;
+	knora-base:listNodeName "Mathematics" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/algebra> , <http://rdfh.ch/lists/0801/number_theory> , <http://rdfh.ch/lists/0801/analysis> , <http://rdfh.ch/lists/0801/geometry> , <http://rdfh.ch/lists/0801/other_topics_in_mathematics> ;
+	rdfs:label "Mathematics"@en .
+
+<http://rdfh.ch/lists/0801/gravitation> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/principles_of_mechanics> ;
+	knora-base:listNodeName "Gravitation" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Gravitation"@en .
+
+<http://rdfh.ch/lists/0801/three-body_problem> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/principles_of_mechanics> ;
+	knora-base:listNodeName "Three-body problem" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Three-body problem"@en .
+
+<http://rdfh.ch/lists/0801/principles_of_mechanics> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/physics_natural_philosophy> ;
+	knora-base:listNodeName "Principles of mechanics" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/gravitation> , <http://rdfh.ch/lists/0801/three-body_problem> ;
+	rdfs:label "Principles of mechanics"@en .
+
+<http://rdfh.ch/lists/0801/monads_mind-matter_problem> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/physics_natural_philosophy> ;
+	knora-base:listNodeName "Monads, mind-matter problem" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Monads, mind-matter problem"@en .
+
+<http://rdfh.ch/lists/0801/magnetism> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/physics_natural_philosophy> ;
+	knora-base:listNodeName "Magnetism" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Magnetism"@en .
+
+<http://rdfh.ch/lists/0801/physics_natural_philosophy> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/other_sciences> ;
+	knora-base:listNodeName "Physics, natural philosophy" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/principles_of_mechanics> , <http://rdfh.ch/lists/0801/monads_mind-matter_problem> , <http://rdfh.ch/lists/0801/magnetism> ;
+	rdfs:label "Physics, natural philosophy"@en .
+
+<http://rdfh.ch/lists/0801/eclipses> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/astronomy> ;
+	knora-base:listNodeName "Eclipses" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Eclipses"@en .
+
+<http://rdfh.ch/lists/0801/lunar_theory_tables> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/astronomy> ;
+	knora-base:listNodeName "Lunar theory, tables" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Lunar theory, tables"@en .
+
+<http://rdfh.ch/lists/0801/planets> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/astronomy> ;
+	knora-base:listNodeName "Planets" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Planets"@en .
+
+<http://rdfh.ch/lists/0801/comets> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/astronomy> ;
+	knora-base:listNodeName "Comets" ;
+	knora-base:listNodePosition 3 ;
+	rdfs:label "Comets"@en .
+
+<http://rdfh.ch/lists/0801/astronomy> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/other_sciences> ;
+	knora-base:listNodeName "Astronomy" ;
+	knora-base:listNodePosition 1 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/eclipses> , <http://rdfh.ch/lists/0801/lunar_theory_tables> , <http://rdfh.ch/lists/0801/planets> , <http://rdfh.ch/lists/0801/comets> ;
+	rdfs:label "Astronomy"@en .
+
+<http://rdfh.ch/lists/0801/perpetuum_mobile> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/technology> ;
+	knora-base:listNodeName "perpetuum mobile" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "perpetuum mobile"@en .
+
+<http://rdfh.ch/lists/0801/achromatic_compound_lenses> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/technology> ;
+	knora-base:listNodeName "Achromatic compound lenses" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Achromatic compound lenses"@en .
+
+<http://rdfh.ch/lists/0801/burning_mirrors> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/technology> ;
+	knora-base:listNodeName "Burning mirrors" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Burning mirrors"@en .
+
+<http://rdfh.ch/lists/0801/technology> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/other_sciences> ;
+	knora-base:listNodeName "Technology" ;
+	knora-base:listNodePosition 2 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/perpetuum_mobile> , <http://rdfh.ch/lists/0801/achromatic_compound_lenses> , <http://rdfh.ch/lists/0801/burning_mirrors> ;
+	rdfs:label "Technology"@en .
+
+<http://rdfh.ch/lists/0801/music_theory> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/other_sciences> ;
+	knora-base:listNodeName "Music theory" ;
+	knora-base:listNodePosition 3 ;
+	rdfs:label "Music theory"@en .
+
+<http://rdfh.ch/lists/0801/erythrocytes> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/anatomy> ;
+	knora-base:listNodeName "Erythrocytes" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Erythrocytes"@en .
+
+<http://rdfh.ch/lists/0801/anatomy> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/other_sciences> ;
+	knora-base:listNodeName "Anatomy" ;
+	knora-base:listNodePosition 4 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/erythrocytes> ;
+	rdfs:label "Anatomy"@en .
+
+<http://rdfh.ch/lists/0801/other_sciences> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/subject_index> ;
+	knora-base:listNodeName "Other sciences" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/physics_natural_philosophy> , <http://rdfh.ch/lists/0801/astronomy> , <http://rdfh.ch/lists/0801/technology> , <http://rdfh.ch/lists/0801/music_theory> , <http://rdfh.ch/lists/0801/anatomy> ;
+	rdfs:label "Other sciences"@en .
+
+<http://rdfh.ch/lists/0801/eulers_career> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/career> ;
+	knora-base:listNodeName "Euler's career" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Euler's career"@en .
+
+<http://rdfh.ch/lists/0801/goldbachs_career> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/career> ;
+	knora-base:listNodeName "Goldbach's career" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Goldbach's career"@en .
+
+<http://rdfh.ch/lists/0801/career> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/professional_activity> ;
+	knora-base:listNodeName "Career" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/eulers_career> , <http://rdfh.ch/lists/0801/goldbachs_career> ;
+	rdfs:label "Career"@en .
+
+<http://rdfh.ch/lists/0801/petersburg_academy_conflicts> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/petersburg_academy> ;
+	knora-base:listNodeName "Petersburg Academy Conflicts" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Petersburg Academy Conflicts"@en .
+
+<http://rdfh.ch/lists/0801/petersburg_academy_buildings> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/petersburg_academy> ;
+	knora-base:listNodeName "Petersburg Academy Buildings" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Petersburg Academy Buildings"@en .
+
+<http://rdfh.ch/lists/0801/petersburg_academy_prize_competitions> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/petersburg_academy> ;
+	knora-base:listNodeName "Petersburg Academy Prize competitions" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Petersburg Academy Prize competitions"@en .
+
+<http://rdfh.ch/lists/0801/petersburg_academy> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/academies> ;
+	knora-base:listNodeName "Petersburg Academy" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/petersburg_academy_conflicts> , <http://rdfh.ch/lists/0801/petersburg_academy_buildings> , <http://rdfh.ch/lists/0801/petersburg_academy_prize_competitions> ;
+	rdfs:label "Petersburg Academy"@en .
+
+<http://rdfh.ch/lists/0801/berlin_academy_buildings> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/berlin_academy> ;
+	knora-base:listNodeName "Berlin Academy Buildings" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Berlin Academy Buildings"@en .
+
+<http://rdfh.ch/lists/0801/berlin_academy_prize_competitions> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/berlin_academy> ;
+	knora-base:listNodeName "Berlin Academy Prize competitions" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Berlin Academy Prize competitions"@en .
+
+<http://rdfh.ch/lists/0801/berlin_academy> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/academies> ;
+	knora-base:listNodeName "Berlin Academy" ;
+	knora-base:listNodePosition 1 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/berlin_academy_buildings> , <http://rdfh.ch/lists/0801/berlin_academy_prize_competitions> ;
+	rdfs:label "Berlin Academy"@en .
+
+<http://rdfh.ch/lists/0801/paris_academy_prize_competitions> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/paris_academy> ;
+	knora-base:listNodeName "Paris Academy Prize competitions" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Paris Academy Prize competitions"@en .
+
+<http://rdfh.ch/lists/0801/paris_academy> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/academies> ;
+	knora-base:listNodeName "Paris Academy" ;
+	knora-base:listNodePosition 2 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/paris_academy_prize_competitions> ;
+	rdfs:label "Paris Academy"@en .
+
+<http://rdfh.ch/lists/0801/academies> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/professional_activity> ;
+	knora-base:listNodeName "Academies" ;
+	knora-base:listNodePosition 1 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/petersburg_academy> , <http://rdfh.ch/lists/0801/berlin_academy> , <http://rdfh.ch/lists/0801/paris_academy> ;
+	rdfs:label "Academies"@en .
+
+<http://rdfh.ch/lists/0801/reviews> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/eulers_publications> ;
+	knora-base:listNodeName "Reviews" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Reviews"@en .
+
+<http://rdfh.ch/lists/0801/eulers_publications> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/publications> ;
+	knora-base:listNodeName "Euler's publications" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/reviews> ;
+	rdfs:label "Euler's publications"@en .
+
+<http://rdfh.ch/lists/0801/goldbachs_publications> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/publications> ;
+	knora-base:listNodeName "Goldbach's publications" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Goldbach's publications"@en .
+
+<http://rdfh.ch/lists/0801/other_authors_publications> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/publications> ;
+	knora-base:listNodeName "Other authors' publications" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Other authors' publications"@en .
+
+<http://rdfh.ch/lists/0801/publications> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/professional_activity> ;
+	knora-base:listNodeName "Publications" ;
+	knora-base:listNodePosition 2 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/eulers_publications> , <http://rdfh.ch/lists/0801/goldbachs_publications> , <http://rdfh.ch/lists/0801/other_authors_publications> ;
+	rdfs:label "Publications"@en .
+
+<http://rdfh.ch/lists/0801/teaching> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/professional_activity> ;
+	knora-base:listNodeName "Teaching" ;
+	knora-base:listNodePosition 3 ;
+	rdfs:label "Teaching"@en .
+
+<http://rdfh.ch/lists/0801/controversies> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/professional_activity> ;
+	knora-base:listNodeName "Controversies" ;
+	knora-base:listNodePosition 4 ;
+	rdfs:label "Controversies"@en .
+
+<http://rdfh.ch/lists/0801/cartography> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/for_the_academies_administration> ;
+	knora-base:listNodeName "Cartography" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Cartography"@en .
+
+<http://rdfh.ch/lists/0801/for_the_academies_administration> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/other_professional_tasks> ;
+	knora-base:listNodeName "for the Academies' administration" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/cartography> ;
+	rdfs:label "for the Academies' administration"@en .
+
+<http://rdfh.ch/lists/0801/goldbachs_work_as_a_russian_civil_servant> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/other_professional_tasks> ;
+	knora-base:listNodeName "Goldbach's work as a Russian civil servant" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Goldbach's work as a Russian civil servant"@en .
+
+<http://rdfh.ch/lists/0801/other_professional_tasks> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/professional_activity> ;
+	knora-base:listNodeName "Other professional tasks" ;
+	knora-base:listNodePosition 5 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/for_the_academies_administration> , <http://rdfh.ch/lists/0801/goldbachs_work_as_a_russian_civil_servant> ;
+	rdfs:label "Other professional tasks"@en .
+
+<http://rdfh.ch/lists/0801/professional_activity> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/subject_index> ;
+	knora-base:listNodeName "Professional activity" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/career> , <http://rdfh.ch/lists/0801/academies> , <http://rdfh.ch/lists/0801/publications> , <http://rdfh.ch/lists/0801/teaching> , <http://rdfh.ch/lists/0801/controversies> , <http://rdfh.ch/lists/0801/other_professional_tasks> ;
+	rdfs:label "Professional activity"@en .
+
+<http://rdfh.ch/lists/0801/eulers_youth> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/youth> ;
+	knora-base:listNodeName "Euler's youth" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Euler's youth"@en .
+
+<http://rdfh.ch/lists/0801/goldbachs_youth> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/youth> ;
+	knora-base:listNodeName "Goldbach's youth" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Goldbach's youth"@en .
+
+<http://rdfh.ch/lists/0801/youth> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/personal_life> ;
+	knora-base:listNodeName "Youth" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/eulers_youth> , <http://rdfh.ch/lists/0801/goldbachs_youth> ;
+	rdfs:label "Youth"@en .
+
+<http://rdfh.ch/lists/0801/eulers_contacts_with_goldbach> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/personal_contact> ;
+	knora-base:listNodeName "Euler's contacts with Goldbach" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Euler's contacts with Goldbach"@en .
+
+<http://rdfh.ch/lists/0801/recommendations> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/eulers_contacts_with_other_colleagues> ;
+	knora-base:listNodeName "Recommendations" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Recommendations"@en .
+
+<http://rdfh.ch/lists/0801/eulers_contacts_with_other_colleagues> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/personal_contact> ;
+	knora-base:listNodeName "Euler's contacts with other colleagues" ;
+	knora-base:listNodePosition 1 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/recommendations> ;
+	rdfs:label "Euler's contacts with other colleagues"@en .
+
+<http://rdfh.ch/lists/0801/eulers_contacts_with_officials_and_patrons> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/personal_contact> ;
+	knora-base:listNodeName "Euler's contacts with officials and patrons" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Euler's contacts with officials and patrons"@en .
+
+<http://rdfh.ch/lists/0801/eulers_contacts_with_visitors_in_berlin> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/personal_contact> ;
+	knora-base:listNodeName "Euler's contacts with visitors in Berlin" ;
+	knora-base:listNodePosition 3 ;
+	rdfs:label "Euler's contacts with visitors in Berlin"@en .
+
+<http://rdfh.ch/lists/0801/goldbachs_contacts> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/personal_contact> ;
+	knora-base:listNodeName "Goldbach's contacts" ;
+	knora-base:listNodePosition 4 ;
+	rdfs:label "Goldbach's contacts"@en .
+
+<http://rdfh.ch/lists/0801/personal_contact> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/personal_life> ;
+	knora-base:listNodeName "Personal contact" ;
+	knora-base:listNodePosition 1 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/eulers_contacts_with_goldbach> , <http://rdfh.ch/lists/0801/eulers_contacts_with_other_colleagues> , <http://rdfh.ch/lists/0801/eulers_contacts_with_officials_and_patrons> , <http://rdfh.ch/lists/0801/eulers_contacts_with_visitors_in_berlin> , <http://rdfh.ch/lists/0801/goldbachs_contacts> ;
+	rdfs:label "Personal contact"@en .
+
+<http://rdfh.ch/lists/0801/transmission_and_physical_description_of_the_manuscripts> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/between_euler_and_goldbach> ;
+	knora-base:listNodeName "Transmission and physical description of the manuscripts" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Transmission and physical description of the manuscripts"@en .
+
+<http://rdfh.ch/lists/0801/linguistic_characteristics> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/between_euler_and_goldbach> ;
+	knora-base:listNodeName "Linguistic characteristics" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Linguistic characteristics"@en .
+
+<http://rdfh.ch/lists/0801/prior_editions_ph_fu_1843_yushkevich-winter_1965> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/between_euler_and_goldbach> ;
+	knora-base:listNodeName "Prior editions (P.H. Fuß  1843, Yushkevich-Winter 1965)" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Prior editions (P.H. Fuß  1843, Yushkevich-Winter 1965)"@en .
+
+<http://rdfh.ch/lists/0801/editorial_principles> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/between_euler_and_goldbach> ;
+	knora-base:listNodeName "Editorial principles" ;
+	knora-base:listNodePosition 3 ;
+	rdfs:label "Editorial principles"@en .
+
+<http://rdfh.ch/lists/0801/between_euler_and_goldbach> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/correspondence> ;
+	knora-base:listNodeName "between Euler and Goldbach" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/transmission_and_physical_description_of_the_manuscripts> , <http://rdfh.ch/lists/0801/linguistic_characteristics> , <http://rdfh.ch/lists/0801/prior_editions_ph_fu_1843_yushkevich-winter_1965> , <http://rdfh.ch/lists/0801/editorial_principles> ;
+	rdfs:label "between Euler and Goldbach"@en .
+
+<http://rdfh.ch/lists/0801/between_euler_and_others> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/correspondence> ;
+	knora-base:listNodeName "between Euler and others" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "between Euler and others"@en .
+
+<http://rdfh.ch/lists/0801/between_goldbach_and_others> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/correspondence> ;
+	knora-base:listNodeName "between Goldbach and others" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "between Goldbach and others"@en .
+
+<http://rdfh.ch/lists/0801/devices_for_medals_and_prize_papers> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/errands> ;
+	knora-base:listNodeName "Devices for medals and prize papers" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Devices for medals and prize papers"@en .
+
+<http://rdfh.ch/lists/0801/errands> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/correspondence> ;
+	knora-base:listNodeName "Errands" ;
+	knora-base:listNodePosition 3 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/devices_for_medals_and_prize_papers> ;
+	rdfs:label "Errands"@en .
+
+<http://rdfh.ch/lists/0801/mail_forwarded> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/correspondence> ;
+	knora-base:listNodeName "Mail forwarded" ;
+	knora-base:listNodePosition 4 ;
+	rdfs:label "Mail forwarded"@en .
+
+<http://rdfh.ch/lists/0801/postal_service_postage> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/correspondence> ;
+	knora-base:listNodeName "Postal service, postage" ;
+	knora-base:listNodePosition 5 ;
+	rdfs:label "Postal service, postage"@en .
+
+<http://rdfh.ch/lists/0801/correspondence> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/personal_life> ;
+	knora-base:listNodeName "Correspondence" ;
+	knora-base:listNodePosition 2 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/between_euler_and_goldbach> , <http://rdfh.ch/lists/0801/between_euler_and_others> , <http://rdfh.ch/lists/0801/between_goldbach_and_others> , <http://rdfh.ch/lists/0801/errands> , <http://rdfh.ch/lists/0801/mail_forwarded> , <http://rdfh.ch/lists/0801/postal_service_postage> ;
+	rdfs:label "Correspondence"@en .
+
+<http://rdfh.ch/lists/0801/book_trade_orders> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/books> ;
+	knora-base:listNodeName "Book trade, orders" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Book trade, orders"@en .
+
+<http://rdfh.ch/lists/0801/books> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/personal_life> ;
+	knora-base:listNodeName "Books" ;
+	knora-base:listNodePosition 3 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/book_trade_orders> ;
+	rdfs:label "Books"@en .
+
+<http://rdfh.ch/lists/0801/church_membership> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/living_circumstances> ;
+	knora-base:listNodeName "Church membership" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Church membership"@en .
+
+<http://rdfh.ch/lists/0801/johann_albrecht_euler> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/eulers_family> ;
+	knora-base:listNodeName "Johann Albrecht Euler" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Johann Albrecht Euler"@en .
+
+<http://rdfh.ch/lists/0801/eulers_family> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/family> ;
+	knora-base:listNodeName "Euler's family" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/johann_albrecht_euler> ;
+	rdfs:label "Euler's family"@en .
+
+<http://rdfh.ch/lists/0801/goldbachs_family> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/family> ;
+	knora-base:listNodeName "Goldbach's family" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Goldbach's family"@en .
+
+<http://rdfh.ch/lists/0801/family> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/living_circumstances> ;
+	knora-base:listNodeName "Family" ;
+	knora-base:listNodePosition 1 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/eulers_family> , <http://rdfh.ch/lists/0801/goldbachs_family> ;
+	rdfs:label "Family"@en .
+
+<http://rdfh.ch/lists/0801/finances> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/living_circumstances> ;
+	knora-base:listNodeName "Finances" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Finances"@en .
+
+<http://rdfh.ch/lists/0801/eulers_health> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/health> ;
+	knora-base:listNodeName "Euler's health" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Euler's health"@en .
+
+<http://rdfh.ch/lists/0801/goldbachs_health> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/health> ;
+	knora-base:listNodeName "Goldbach's health" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Goldbach's health"@en .
+
+<http://rdfh.ch/lists/0801/health> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/living_circumstances> ;
+	knora-base:listNodeName "Health" ;
+	knora-base:listNodePosition 3 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/eulers_health> , <http://rdfh.ch/lists/0801/goldbachs_health> ;
+	rdfs:label "Health"@en .
+
+<http://rdfh.ch/lists/0801/eulers_living_quarters> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/living_quarters> ;
+	knora-base:listNodeName "Euler's living quarters" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Euler's living quarters"@en .
+
+<http://rdfh.ch/lists/0801/goldbachs_living_quarters> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/living_quarters> ;
+	knora-base:listNodeName "Goldbach's living quarters" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Goldbach's living quarters"@en .
+
+<http://rdfh.ch/lists/0801/living_quarters> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/living_circumstances> ;
+	knora-base:listNodeName "Living quarters" ;
+	knora-base:listNodePosition 4 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/eulers_living_quarters> , <http://rdfh.ch/lists/0801/goldbachs_living_quarters> ;
+	rdfs:label "Living quarters"@en .
+
+<http://rdfh.ch/lists/0801/plans_for_the_future> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/living_circumstances> ;
+	knora-base:listNodeName "Plans for the future" ;
+	knora-base:listNodePosition 5 ;
+	rdfs:label "Plans for the future"@en .
+
+<http://rdfh.ch/lists/0801/politics_warfare_silesian_wars> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/living_circumstances> ;
+	knora-base:listNodeName "Politics, warfare (Silesian Wars)" ;
+	knora-base:listNodePosition 6 ;
+	rdfs:label "Politics, warfare (Silesian Wars)"@en .
+
+<http://rdfh.ch/lists/0801/eulers_travels> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/travel> ;
+	knora-base:listNodeName "Euler's travels" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Euler's travels"@en .
+
+<http://rdfh.ch/lists/0801/goldbachs_travels> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/travel> ;
+	knora-base:listNodeName "Goldbach's travels" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "Goldbach's travels"@en .
+
+<http://rdfh.ch/lists/0801/travel> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/living_circumstances> ;
+	knora-base:listNodeName "Travel" ;
+	knora-base:listNodePosition 7 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/eulers_travels> , <http://rdfh.ch/lists/0801/goldbachs_travels> ;
+	rdfs:label "Travel"@en .
+
+<http://rdfh.ch/lists/0801/living_circumstances> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/personal_life> ;
+	knora-base:listNodeName "Living circumstances" ;
+	knora-base:listNodePosition 4 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/church_membership> , <http://rdfh.ch/lists/0801/family> , <http://rdfh.ch/lists/0801/finances> , <http://rdfh.ch/lists/0801/health> , <http://rdfh.ch/lists/0801/living_quarters> , <http://rdfh.ch/lists/0801/plans_for_the_future> , <http://rdfh.ch/lists/0801/politics_warfare_silesian_wars> , <http://rdfh.ch/lists/0801/travel> ;
+	rdfs:label "Living circumstances"@en .
+
+<http://rdfh.ch/lists/0801/chess> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/miscellanea> ;
+	knora-base:listNodeName "Chess" ;
+	knora-base:listNodePosition 0 ;
+	rdfs:label "Chess"@en .
+
+<http://rdfh.ch/lists/0801/french_grammar_and_prose_style> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/miscellanea> ;
+	knora-base:listNodeName "French grammar and prose style" ;
+	knora-base:listNodePosition 1 ;
+	rdfs:label "French grammar and prose style"@en .
+
+<http://rdfh.ch/lists/0801/horoscopy> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/miscellanea> ;
+	knora-base:listNodeName "Horoscopy" ;
+	knora-base:listNodePosition 2 ;
+	rdfs:label "Horoscopy"@en .
+
+<http://rdfh.ch/lists/0801/miscellanea> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/personal_life> ;
+	knora-base:listNodeName "Miscellanea" ;
+	knora-base:listNodePosition 5 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/chess> , <http://rdfh.ch/lists/0801/french_grammar_and_prose_style> , <http://rdfh.ch/lists/0801/horoscopy> ;
+	rdfs:label "Miscellanea"@en .
+
+<http://rdfh.ch/lists/0801/personal_life> a knora-base:ListNode ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0801/subject_index> ;
+	knora-base:listNodeName "Personal life" ;
+	knora-base:listNodePosition 0 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/youth> , <http://rdfh.ch/lists/0801/personal_contact> , <http://rdfh.ch/lists/0801/correspondence> , <http://rdfh.ch/lists/0801/books> , <http://rdfh.ch/lists/0801/living_circumstances> , <http://rdfh.ch/lists/0801/miscellanea> ;
+	rdfs:label "Personal life"@en .
+

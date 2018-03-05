@@ -1455,7 +1455,7 @@ class ResourcesResponderV1 extends Responder {
             propertyObjectClassConstraintChecks: Seq[Unit] <- Future.sequence {
                 values.foldLeft(Vector.empty[Future[Unit]]) {
                     case (acc, (propertyIri, valuesWithComments)) =>
-                        val propertyInfo = propertyInfoMap(propertyIri)
+                        val propertyInfo = propertyInfoMap.getOrElse(propertyIri, throw NotFoundException(s"Property not found: $propertyIri"))
                         val propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
                             throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
                         }
