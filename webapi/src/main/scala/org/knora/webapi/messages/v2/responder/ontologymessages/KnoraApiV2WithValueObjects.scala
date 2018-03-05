@@ -1886,7 +1886,8 @@ object KnoraApiV2WithValueObjects {
             )
         ),
         directCardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNode -> Cardinality.MustHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNode -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNodeLabel -> Cardinality.MustHaveOne
         ),
         inheritedCardinalities = Value.allCardinalities,
         isValueClass = true
@@ -1909,6 +1910,28 @@ object KnoraApiV2WithValueObjects {
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
                     LanguageCodes.EN -> "Represents a reference to a hierarchical list node."
+                )
+            )
+        )
+    )
+
+    val HierarchicalListValueAsListNodeLabel: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNodeLabel,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.ListValue),
+        objectType = Some(OntologyConstants.Xsd.String),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Hierarchical list value as list node name"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents the name of the list node pointed to."
                 )
             )
         )
@@ -2587,6 +2610,7 @@ object KnoraApiV2WithValueObjects {
         IntervalValueHasStart,
         IntervalValueHasEnd,
         HierarchicalListValueAsListNode,
+        HierarchicalListValueAsListNodeLabel,
         ColorValueAsColor,
         UriValueAsUri,
         GeonameValueAsGeonameCode,

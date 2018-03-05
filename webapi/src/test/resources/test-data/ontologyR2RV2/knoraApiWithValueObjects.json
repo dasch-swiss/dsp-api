@@ -699,6 +699,10 @@
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hierarchicalListValueAsListNode"
         }, {
           "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hierarchicalListValueAsListNodeLabel"
+        }, {
+          "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:maxCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#valueAsString"
@@ -1568,6 +1572,15 @@
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#ListValue",
         "rdfs:comment" : "Represents a reference to a hierarchical list node.",
         "rdfs:label" : "Hierarchical list value as list node",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#valueHas"
+      },
+      "knora-api:hierarchicalListValueAsListNodeLabel" : {
+        "@id" : "knora-api:hierarchicalListValueAsListNodeLabel",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
+        "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#ListValue",
+        "rdfs:comment" : "Represents the name of the list node pointed to.",
+        "rdfs:label" : "Hierarchical list value as list node name",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#valueHas"
       },
       "knora-api:intValueAsInt" : {
