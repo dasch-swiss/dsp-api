@@ -1114,6 +1114,9 @@
 ### beol:manuscriptHasArchiveValue
 
 :manuscriptHasArchiveValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "Archive of Manuscript"@en ;
+
+                    rdfs:comment """Represents the archive where manuscript is stored."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -1215,11 +1218,11 @@
 
               rdfs:subPropertyOf knora-base:hasLinkTo ;
 
-              rdfs:label "Der Brief ist publiziert "@de ,
+              rdfs:label "Der Brief ist publiziert"@de ,
                          "Letter is published"@en ;
 
-              rdfs:label "Der Brief ist publiziert "@de ,
-                         "Letter is published"@en ;
+              rdfs:comment "Der Brief ist publiziert"@de ,
+                           "Letter is published"@en ;
 
               knora-base:subjectClassConstraint :letter ;
 
@@ -1239,7 +1242,7 @@
 
                    rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
-                   rdfs:label "Der Brief ist publiziert "@de ,
+                   rdfs:label "Der Brief ist publiziert"@de ,
                               "Letter is published"@en ;
 
                    rdfs:comment """Der Brief ist publiziert"""@de ,
