@@ -625,11 +625,12 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
         ).r
 
-    // In XML import data, a property from another ontology is referred to as prefixLabel__localName. This regex parses
-    // that pattern.
+    // In XML import data, a property from another ontology is referred to as prefixLabel__localName. The prefix label
+    // may start with a project ID (prefixed with 'p') and a hyphen. This regex parses that pattern.
     private val PropertyFromOtherOntologyInXmlImportRegex: Regex = (
-        "^(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
-        ).r
+
+            "^(p(" + ProjectIDPattern + ")-)?(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
+            ).r
 
     // In XML import data, a standoff link tag that refers to a resource described in the import must have the
     // form defined by this regex.
@@ -1834,16 +1835,24 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     }
 
     /**
-      * In XML import data, a property from another ontology is referred to as `prefixLabel__localName`. This function
-      * attempts to parse a property name in that format.
+      * In XML import data, a property from another ontology is referred to as `prefixLabel__localName`. The prefix label
+      * may start with a project ID (prefixed with 'p') and a hyphen. This function attempts to parse a property name in
+      * that format.
       *
       * @param prefixLabelAndLocalName a string that may refer to a property in the format `prefixLabel__localName`.
       * @return if successful, a `Some` containing the entity's internal IRI, otherwise `None`.
       */
     def toPropertyIriFromOtherOntologyInXmlImport(prefixLabelAndLocalName: String): Option[IRI] = {
         prefixLabelAndLocalName match {
-            case PropertyFromOtherOntologyInXmlImportRegex(prefixLabel, localName) =>
-                Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}$prefixLabel#$localName")
+            case PropertyFromOtherOntologyInXmlImportRegex(_, Optional(maybeProjectID), prefixLabel, localName) =>
+                maybeProjectID match {
+                    case Some(projectID) =>
+                        Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}$projectID/$prefixLabel#$localName")
+
+                    case None =>
+                        Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}$prefixLabel#$localName")
+                }
+
             case _ => None
         }
     }
