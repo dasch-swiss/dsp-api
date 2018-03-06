@@ -640,6 +640,7 @@ object OntologyConstants {
         val ValueHas: IRI = KnoraApiV2PrefixExpansion + "valueHas"
         val HasLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasLinkTo"
         val HasLinkToValue: IRI = KnoraApiV2PrefixExpansion + "hasLinkToValue"
+        val HasIncomingLinks: IRI = KnoraApiV2PrefixExpansion + "hasIncomingLinks"
 
         val IsPartOf: IRI = KnoraApiV2PrefixExpansion + "isPartOf"
         val IsPartOfValue: IRI = KnoraApiV2PrefixExpansion + "isPartOfValue"
@@ -703,6 +704,7 @@ object OntologyConstants {
         val BooleanValueAsBoolean: IRI = KnoraApiV2PrefixExpansion + "booleanValueAsBoolean"
 
         val HierarchicalListValueAsListNode: IRI = KnoraApiV2PrefixExpansion + "hierarchicalListValueAsListNode"
+        val HierarchicalListValueAsListNodeLabel: IRI = KnoraApiV2PrefixExpansion + "hierarchicalListValueAsListNodeLabel"
 
         val ColorValueAsColor: IRI = KnoraApiV2PrefixExpansion + "colorValueAsColor"
 
@@ -768,6 +770,7 @@ object OntologyConstants {
         val HasValue: IRI = KnoraApiV2PrefixExpansion + "hasValue"
 
         val HasLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasLinkTo"
+        val HasIncomingLinks: IRI = KnoraApiV2PrefixExpansion + "hasIncomingLinks"
 
         val IsPartOf: IRI = KnoraApiV2PrefixExpansion + "isPartOf"
         val IsRegionOf: IRI = KnoraApiV2PrefixExpansion + "isRegionOf"
