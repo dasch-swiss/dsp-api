@@ -312,16 +312,18 @@ class OntologyResponderV2 extends Responder {
         // Construct a ReadIndividualV2 for each OWL named individual.
         val readIndividualInfos = makeReadIndividualInfos(allIndividuals)
 
-        // Construct the ontology cache.
-
+        // A set of the IRIs of all standoff classes.
         val standoffClasses: Set[SmartIri] = readClassInfos.filter {
             case (_, readClassInfo) => readClassInfo.isStandoffClass
         }.keySet
 
+        // A set of the IRIs of all standoff classes that have a datatype (i.e. are subclasses of any of the classes
+        // in org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses).
         val standoffClassesWithDataType: Set[SmartIri] = readClassInfos.filterKeys(standoffClasses).filter {
             case (_, readClassInfo) => readClassInfo.standoffDataType.isDefined
         }.keySet
 
+        // A set of the IRIs of all properties used in cardinalities in standoff classes.
         val propertiesUsedInStandoffCardinalities: Set[SmartIri] = readClassInfos.flatMap {
             case (_, readClassInfo) =>
                 if (readClassInfo.isStandoffClass) {
@@ -331,18 +333,21 @@ class OntologyResponderV2 extends Responder {
                 }
         }.toSet
 
+        // A ReadOntologyV2 for the KnoraApiV2Simple ontology.
         val readOntologyForApiV2Simple = ReadOntologyV2(
             ontologyMetadata = KnoraApiV2Simple.OntologyMetadata,
             classes = KnoraApiV2Simple.Classes,
             properties = KnoraApiV2Simple.Properties
         )
 
+        // A ReadOntologyV2 for the KnoraApiV2WithValueObjects ontology.
         val readOntologyForApiV2WithValueObjects = ReadOntologyV2(
             ontologyMetadata = KnoraApiV2WithValueObjects.OntologyMetadata,
             classes = KnoraApiV2WithValueObjects.Classes,
             properties = KnoraApiV2WithValueObjects.Properties
         )
 
+        // A ReadOntologyV2 for each ontology to be cached.
         val readOntologies: Map[SmartIri, ReadOntologyV2] = allOntologyMetadata.map {
             case (ontologyIri, ontologyMetadata) =>
                 ontologyIri -> ReadOntologyV2(
@@ -360,8 +365,7 @@ class OntologyResponderV2 extends Responder {
         } + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri -> readOntologyForApiV2Simple) +
             (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri -> readOntologyForApiV2WithValueObjects)
 
-        // Cache all the data.
-
+        // Construct the ontology cache data.
         val ontologyCacheData: OntologyCacheData = OntologyCacheData(
             ontologies = new ErrorHandlingMap[SmartIri, ReadOntologyV2](readOntologies, { key => s"Ontology not found: $key" }),
             subClassOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSubClassOfRelations, { key => s"Class not found: $key" }),
@@ -373,6 +377,7 @@ class OntologyResponderV2 extends Responder {
             propertiesUsedInStandoffCardinalities = propertiesUsedInStandoffCardinalities
         )
 
+        // Update the cache.
         storeCacheData(ontologyCacheData)
     }
 
@@ -506,7 +511,8 @@ class OntologyResponderV2 extends Responder {
                         propertyIri -> Cardinality.owlCardinality2KnoraCardinality(propertyIri = propertyIri.toString, owlCardinality = owlCardinalityInfo)
                 }
 
-                // Get the class's standoff data type, if any.
+                // Get the class's standoff data type, if any. A standoff class that has a datatype is a subclass of one of the classes
+                // in org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses.
 
                 val standoffDataType: Set[SmartIri] = allSubClassOfRelations(classIri).intersect(StandoffDataTypeClasses.getStandoffClassIris.map(_.toKnoraInternalSmartIri))
 
@@ -518,6 +524,10 @@ class OntologyResponderV2 extends Responder {
                 val isKnoraResourceClass = allSubClassOfRelations(classIri).contains(OntologyConstants.KnoraBase.Resource.toKnoraInternalSmartIri)
                 val isStandoffClass = !isKnoraResourceClass && allSubClassOfRelations(classIri).contains(OntologyConstants.KnoraBase.StandoffTag.toKnoraInternalSmartIri)
                 val isValueClass = !(isKnoraResourceClass || isStandoffClass) && allSubClassOfRelations(classIri).contains(OntologyConstants.KnoraBase.Value.toKnoraInternalSmartIri)
+
+                // TODO: For now, any class defined in a project-specific ontology can be instantiated. But there are also classes
+                // that can be instantiated in knora-base. This doesn't matter yet, because knora-base is not served. Later, if we
+                // generate knora-api from knora-base, we should actually put a predicate isAbstract in the triplestore.
                 val canBeInstantiated = isKnoraResourceClass && !ontologyIri.isKnoraBuiltInDefinitionIri
 
                 val readClassInfo = ReadClassInfoV2(
@@ -1399,10 +1409,6 @@ class OntologyResponderV2 extends Responder {
                 inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = cardinalitiesForClassWithInheritance.filterNot {
                     case (propertyIri, _) => internalClassDef.directCardinalities.contains(propertyIri)
                 }
-
-                // TODO: For now, any class defined in a project-specific ontology can be instantiated. But there are also classes
-                // that can be instantiated in knora-base. This doesn't matter yet, because knora-base is not served. Later, if we
-                // generate knora-api from knora-base, we should actually put a predicate isAbstract in the triplestore.
 
                 readClassInfo = ReadClassInfoV2(
                     entityInfoContent = unescapedInputClassDef,
