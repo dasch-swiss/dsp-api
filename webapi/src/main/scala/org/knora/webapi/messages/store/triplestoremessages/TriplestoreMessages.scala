@@ -122,7 +122,7 @@ case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
   * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
   * [[SparqlExtendedConstructResponse]].
   *
-  * @param sparql       the SPARQL string.
+  * @param sparql the SPARQL string.
   */
 case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreRequest
 
@@ -283,6 +283,7 @@ case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
   */
 case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2 with Ordered[StringLiteralV2] {
     override def toString: String = value
+
     def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
 }
 
@@ -298,13 +299,26 @@ case class BooleanLiteralV2(value: Boolean) extends LiteralV2 {
 /**
   * Represents an integer value.
   *
-  * @param value the boolean value.
+  * @param value the integer value.
   */
 case class IntLiteralV2(value: Int) extends LiteralV2 {
     override def toString: String = value.toString
 }
 
 /**
+  * <<<<<<< HEAD
+  * =======
+  * Represents an Decimal value.
+  *
+  *
+  * @param value the decimal value.
+  */
+case class DecimalLiteralV2(value: BigDecimal) extends LiteralV2 {
+    override def toString: String = value.toString
+}
+
+/**
+  * >>>>>>> develop
   * Represents a timestamp.
   *
   * @param value the timestamp value.

@@ -17,7 +17,7 @@
 <http://rdfh.ch/beol/page_resource> a <http://www.knora.org/ontology/0801/beol#page> ;
                                     rdfs:label "Test page" ;
                                     <http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
-                                    <http://www.knora.org/ontology/knora-base#creationDate> "2017-09-01T15:21:10.735+02:00"^^xsd:dateTime ;
+                                    <http://www.knora.org/ontology/knora-base#creationDate> "2017-09-01T15:21:10.735+02:00"^^xsd:dateTimeStamp ;
                                     <http://www.knora.org/ontology/knora-base#hasPermissions> "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
                                     <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0801> ;
                                     <http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
@@ -33,7 +33,7 @@
 	<http://www.knora.org/ontology/knora-base#originalFilename> "808205.tif" ;
 	<http://www.knora.org/ontology/knora-base#originalMimeType> "image/tiff" ;
 	<http://www.knora.org/ontology/knora-base#qualityLevel> "100"^^xsd:integer ;
-	<http://www.knora.org/ontology/knora-base#valueCreationDate> "2017-09-01T15:21:10.735+02:00"^^xsd:dateTime ;
+	<http://www.knora.org/ontology/knora-base#valueCreationDate> "2017-09-01T15:21:10.735+02:00"^^xsd:dateTimeStamp ;
 	<http://www.knora.org/ontology/knora-base#valueHasOrder> "0"^^xsd:integer ;
 	<http://www.knora.org/ontology/knora-base#valueHasString> "808205.tif" ;
 	<http://www.knora.org/ontology/knora-base#hasPermissions> "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
@@ -52,7 +52,7 @@
 	<http://www.knora.org/ontology/knora-base#originalFilename> "808205.tif" ;
 	<http://www.knora.org/ontology/knora-base#originalMimeType> "image/tiff" ;
 	<http://www.knora.org/ontology/knora-base#qualityLevel> "10"^^xsd:integer ;
-	<http://www.knora.org/ontology/knora-base#valueCreationDate> "2017-09-01T15:21:10.735+02:00"^^xsd:dateTime ;
+	<http://www.knora.org/ontology/knora-base#valueCreationDate> "2017-09-01T15:21:10.735+02:00"^^xsd:dateTimeStamp ;
 	<http://www.knora.org/ontology/knora-base#valueHasOrder> "1"^^xsd:integer ;
 	<http://www.knora.org/ontology/knora-base#valueHasString> "808205.tif" ;
 	<http://www.knora.org/ontology/knora-base#hasPermissions> "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
@@ -68,7 +68,7 @@
 	rdf:subject <http://rdfh.ch/beol/page_resource> ;
 	rdf:predicate <http://www.knora.org/ontology/0801/beol#partOf> ;
 	rdf:object <http://rdfh.ch/beol/letter_resource> ;
-	<http://www.knora.org/ontology/knora-base#valueCreationDate> "2017-09-01T15:21:10.735+02:00"^^xsd:dateTime ;
+	<http://www.knora.org/ontology/knora-base#valueCreationDate> "2017-09-01T15:21:10.735+02:00"^^xsd:dateTimeStamp ;
 	<http://www.knora.org/ontology/knora-base#valueHasOrder> "0"^^xsd:integer ;
 	<http://www.knora.org/ontology/knora-base#valueHasRefCount> "1"^^xsd:integer ;
 	<http://www.knora.org/ontology/knora-base#valueHasString> "http://rdfh.ch/beol/letter_resource" ;
@@ -79,7 +79,7 @@
 
 <http://rdfh.ch/beol/page_resource/values/f45WI-rpQTigeaJ84KZoBA> a <http://www.knora.org/ontology/knora-base#IntValue> ;
 	<http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
-	<http://www.knora.org/ontology/knora-base#valueCreationDate> "2017-09-01T15:21:10.735+02:00"^^xsd:dateTime ;
+	<http://www.knora.org/ontology/knora-base#valueCreationDate> "2017-09-01T15:21:10.735+02:00"^^xsd:dateTimeStamp ;
 	<http://www.knora.org/ontology/knora-base#valueHasInteger> "0"^^xsd:integer ;
 	<http://www.knora.org/ontology/knora-base#valueHasOrder> "0"^^xsd:integer ;
 	<http://www.knora.org/ontology/knora-base#valueHasString> "0" ;
@@ -90,8 +90,8 @@
 <http://rdfh.ch/beol/letter_resource> a <http://www.knora.org/ontology/0801/beol#letter> ;
 	rdfs:label "Test letter" ;
 	<http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
-	<http://www.knora.org/ontology/knora-base#creationDate> "2017-09-01T14:15:04.846+02:00"^^xsd:dateTime ;
-	<http://www.knora.org/ontology/knora-base#lastModificationDate> "2017-09-01T15:21:16.480+02:00"^^xsd:dateTime ;
+	<http://www.knora.org/ontology/knora-base#creationDate> "2017-09-01T14:15:04.846+02:00"^^xsd:dateTimeStamp ;
+	<http://www.knora.org/ontology/knora-base#lastModificationDate> "2017-09-01T15:21:16.480+02:00"^^xsd:dateTimeStamp ;
 	<http://www.knora.org/ontology/knora-base#hasPermissions> "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	<http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0801> ;
 	<http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
@@ -99,7 +99,7 @@
 
 <http://rdfh.ch/beol/letter_resource/values/naiFCtV2S5C6GIe_eKGTGQ> a <http://www.knora.org/ontology/knora-base#TextValue> ;
 	<http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
-	<http://www.knora.org/ontology/knora-base#valueCreationDate> "2017-09-01T14:15:04.846+02:00"^^xsd:dateTime ;
+	<http://www.knora.org/ontology/knora-base#valueCreationDate> "2017-09-01T14:15:04.846+02:00"^^xsd:dateTimeStamp ;
 	<http://www.knora.org/ontology/knora-base#valueHasOrder> "0"^^xsd:integer ;
 	<http://www.knora.org/ontology/knora-base#valueHasString> "Test letter" ;
 	<http://www.knora.org/ontology/knora-base#hasPermissions> "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;

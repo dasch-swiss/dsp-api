@@ -241,18 +241,20 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @return a [[SparqlExtendedConstructResponse]]
       */
     private def sparqlHttpExtendedConstruct(sparql: String): Future[SparqlExtendedConstructResponse] = {
+
         // println(logDelimiter + sparql)
 
         /**
           * Converts a graph in parsed Turtle to a [[SparqlExtendedConstructResponse]].
           */
         class ConstructResponseTurtleHandler extends RDFHandler {
+
+            private val stringFormatter = StringFormatter.getGeneralInstance
+
             /**
               * A collection of all the statements in the input file, grouped and sorted by subject IRI.
               */
             private var statements = Map.empty[SubjectV2, Map[IRI, Seq[LiteralV2]]]
-
-            private val stringFormatter = StringFormatter.getGeneralInstance
 
             override def handleComment(comment: IRI): Unit = {}
 
@@ -281,6 +283,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                         case OntologyConstants.Xsd.String => StringLiteralV2(value = literal.stringValue, language = None)
                         case OntologyConstants.Xsd.Boolean => BooleanLiteralV2(value = literal.booleanValue)
                         case OntologyConstants.Xsd.Int | OntologyConstants.Xsd.Integer | OntologyConstants.Xsd.NonNegativeInteger => IntLiteralV2(value = literal.intValue)
+                        case OntologyConstants.Xsd.Decimal => DecimalLiteralV2(value = literal.decimalValue)
                         case OntologyConstants.Xsd.DateTimeStamp => DateTimeLiteralV2(stringFormatter.toInstant(literal.stringValue, throw InconsistentTriplestoreDataException(s"Invalid xsd:dateTimeStamp: ${literal.stringValue}")))
                         case unknown => throw NotImplementedException(s"The literal type '$unknown' is not implemented.")
                     }
