@@ -162,12 +162,8 @@ object OntologyUpdateHelper {
 
         // The request must contain exactly one class definition, and no property definitions.
 
-        if (inputOntologyV2.properties.nonEmpty || inputOntologyV2.standoffProperties.nonEmpty) {
-            throw BadRequestException(s"A property definition cannot be submitted when creating or modifying a class")
-        }
-
-        if (inputOntologyV2.standoffClasses.nonEmpty) {
-            throw NotImplementedException(s"Standoff classes cannot yet be created or modified")
+        if (inputOntologyV2.properties.nonEmpty || inputOntologyV2.individuals.nonEmpty) {
+            throw BadRequestException(s"A property or individual definition cannot be submitted when creating or modifying a class")
         }
 
         if (inputOntologyV2.classes.size != 1) {
@@ -227,12 +223,8 @@ object OntologyUpdateHelper {
 
         // The request must contain exactly one property definition, and no class definitions.
 
-        if (inputOntologyV2.classes.nonEmpty || inputOntologyV2.standoffClasses.nonEmpty) {
-            throw BadRequestException(s"A class definition cannot be submitted when creating or modifying a property")
-        }
-
-        if (inputOntologyV2.standoffProperties.nonEmpty) {
-            throw NotImplementedException(s"Standoff properties cannot yet be created or modified")
+        if (inputOntologyV2.classes.nonEmpty || inputOntologyV2.individuals.nonEmpty) {
+            throw BadRequestException(s"A class or individual definition cannot be submitted when creating or modifying a property")
         }
 
         if (inputOntologyV2.properties.size != 1) {
@@ -1055,14 +1047,12 @@ object InputOntologiesV2 {
   * @param ontologyMetadata   metadata about the ontology.
   * @param classes            information about classes in the ontology.
   * @param properties         information about properties in the ontology.
-  * @param standoffClasses    information about standoff classes in the ontology.
-  * @param standoffProperties information about standoff properties in the ontology.
+  * @param individuals    information about OWL named individuals in the ontology.
   */
 case class InputOntologyV2(ontologyMetadata: OntologyMetadataV2,
                            classes: Map[SmartIri, ClassInfoContentV2] = Map.empty[SmartIri, ClassInfoContentV2],
                            properties: Map[SmartIri, PropertyInfoContentV2] = Map.empty[SmartIri, PropertyInfoContentV2],
-                           standoffClasses: Map[SmartIri, ClassInfoContentV2] = Map.empty[SmartIri, ClassInfoContentV2],
-                           standoffProperties: Map[SmartIri, PropertyInfoContentV2] = Map.empty[SmartIri, PropertyInfoContentV2]) {
+                           individuals: Map[SmartIri, IndividualInfoContentV2] = Map.empty[SmartIri, IndividualInfoContentV2]) {
 
     /**
       * Converts this [[InputOntologyV2]] to the specified Knora API v2 schema.
@@ -1079,11 +1069,8 @@ case class InputOntologyV2(ontologyMetadata: OntologyMetadataV2,
             properties = properties.map {
                 case (propertyIri, propertyInfoContent) => propertyIri.toOntologySchema(targetSchema) -> propertyInfoContent.toOntologySchema(targetSchema)
             },
-            standoffClasses = standoffClasses.map {
-                case (classIri, classInfoContent) => classIri.toOntologySchema(targetSchema) -> classInfoContent.toOntologySchema(targetSchema)
-            },
-            standoffProperties = standoffProperties.map {
-                case (propertyIri, propertyInfoContent) => propertyIri.toOntologySchema(targetSchema) -> propertyInfoContent.toOntologySchema(targetSchema)
+            individuals = individuals.map {
+                case (individualIri, individualInfoContent) => individualIri.toOntologySchema(targetSchema) -> individualInfoContent.toOntologySchema(targetSchema)
             }
         )
     }
@@ -1104,11 +1091,8 @@ case class InputOntologyV2(ontologyMetadata: OntologyMetadataV2,
             properties = properties.map {
                 case (propertyIri, propertyDef) => propertyIri -> propertyDef.unescape
             },
-            standoffClasses = standoffClasses.map {
-                case (classIri, classDef) => classIri -> classDef.unescape
-            },
-            standoffProperties = standoffProperties.map {
-                case (propertyIri, propertyDef) => propertyIri -> propertyDef.unescape
+            individuals = individuals.map {
+                case (individualIri, individualDef) => individualIri -> individualDef.unescape
             }
         )
     }
@@ -1164,6 +1148,29 @@ object InputOntologyV2 {
         }
     }
 
+    def jsonLDObjectToIndividuals(maybeJsonLDObject: Option[JsonLDObject], ignoreExtraData: Boolean): Map[SmartIri, IndividualInfoContentV2] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        maybeJsonLDObject match {
+            case Some(jsonLDObject: JsonLDObject) =>
+                jsonLDObject.value.map {
+                    case (individualIriStr, jsonIndividualDef: JsonLDObject) =>
+                        val individualIri = individualIriStr.toSmartIri
+                        val individualInfoContent = IndividualInfoContentV2.fromJsonLDObject(jsonIndividualDef)
+
+                        if (individualIri != individualInfoContent.individualIri) {
+                            throw BadRequestException(s"OWL named individual IRIs do not match: $individualIri and ${individualInfoContent.individualIri}")
+                        }
+
+                        individualIri -> individualInfoContent
+
+                    case (individualIriStr, _) => throw BadRequestException(s"The definition of OWL named individual $individualIriStr is invalid")
+                }
+
+            case None => Map.empty[SmartIri, IndividualInfoContentV2]
+        }
+    }
+
     /**
       * Constructs an [[InputOntologyV2]] based on a JSON-LD object.
       *
@@ -1195,21 +1202,17 @@ object InputOntologyV2 {
         val maybeHasProperties: Option[JsonLDObject] = ontologyObj.maybeObject(OntologyConstants.KnoraApiV2Simple.HasProperties).
             orElse(ontologyObj.maybeObject(OntologyConstants.KnoraApiV2WithValueObjects.HasProperties))
 
-        val maybeHasStandoffClasses: Option[JsonLDObject] = ontologyObj.maybeObject(OntologyConstants.KnoraApiV2Simple.HasStandoffClasses).
-            orElse(ontologyObj.maybeObject(OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffClasses))
-
-        val maybeHasStandoffProperties: Option[JsonLDObject] = ontologyObj.maybeObject(OntologyConstants.KnoraApiV2Simple.HasStandoffProperties).
-            orElse(ontologyObj.maybeObject(OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffProperties))
+        val maybeHasIndividuals: Option[JsonLDObject] = ontologyObj.maybeObject(OntologyConstants.KnoraApiV2Simple.HasIndividuals).
+            orElse(ontologyObj.maybeObject(OntologyConstants.KnoraApiV2WithValueObjects.HasIndividuals))
 
         val classes: Map[SmartIri, ClassInfoContentV2] = jsonLDObjectToClasses(maybeHasClasses, ignoreExtraData)
         val properties: Map[SmartIri, PropertyInfoContentV2] = jsonLDObjectToProperties(maybeHasProperties, ignoreExtraData)
-        val standoffClasses: Map[SmartIri, ClassInfoContentV2] = jsonLDObjectToClasses(maybeHasStandoffClasses, ignoreExtraData)
-        val standoffProperties: Map[SmartIri, PropertyInfoContentV2] = jsonLDObjectToProperties(maybeHasStandoffProperties, ignoreExtraData)
+        val individuals: Map[SmartIri, IndividualInfoContentV2] = jsonLDObjectToIndividuals(maybeHasIndividuals, ignoreExtraData)
 
         // Check whether any entities are in the wrong ontology.
 
         val entityIris: Iterable[SmartIri] = classes.values.map(_.classIri) ++ properties.values.map(_.propertyIri) ++
-            standoffClasses.values.map(_.classIri) ++ standoffProperties.values.map(_.propertyIri)
+            individuals.values.map(_.individualIri)
 
         val entityIrisInWrongOntology = entityIris.filter(_.getOntologyFromEntity != externalOntologyIri)
 
@@ -1221,8 +1224,7 @@ object InputOntologyV2 {
             ontologyMetadata = ontologyMetadata,
             classes = classes,
             properties = properties,
-            standoffClasses = standoffClasses,
-            standoffProperties = standoffProperties
+            individuals = individuals
         )
     }
 }
@@ -2524,7 +2526,9 @@ object PropertyInfoContentV2 {
         OntologyConstants.KnoraApiV2WithValueObjects.ObjectType,
         OntologyConstants.Rdfs.SubPropertyOf,
         OntologyConstants.Rdfs.Label,
-        OntologyConstants.Rdfs.Comment
+        OntologyConstants.Rdfs.Comment,
+        OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp,
+        OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute
     )
 
     // A set of property predicates that are used in API v2 requests and responses and whose objects are known to be
@@ -2610,6 +2614,10 @@ case class IndividualInfoContentV2(individualIri: SmartIri,
             ),
             ontologySchema = targetSchema
         )
+    }
+
+    def unescape: IndividualInfoContentV2 = {
+        copy(predicates = unescapePredicateObjects)
     }
 }
 

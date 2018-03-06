@@ -272,7 +272,6 @@ object InputOntologiesV2Spec {
     )))
 
     val ClassDef = InputOntologiesV2(ontologies = Vector(InputOntologyV2(
-        standoffProperties = Map(),
         classes = Map("http://0.0.0.0:3333/ontology/anything/v2#WildThing".toSmartIri -> ClassInfoContentV2(
             predicates = Map(
                 "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
@@ -297,7 +296,6 @@ object InputOntologiesV2Spec {
             ontologyIri = "http://0.0.0.0:3333/ontology/anything/v2".toSmartIri,
             lastModificationDate = Some(Instant.parse("2017-12-19T15:23:42.166Z"))
         ),
-        standoffClasses = Map(),
         properties = Map()
     )))
 }

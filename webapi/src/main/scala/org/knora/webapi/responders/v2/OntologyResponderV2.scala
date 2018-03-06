@@ -571,7 +571,8 @@ class OntologyResponderV2 extends Responder {
 
                 validateGuiAttributes(
                     propertyInfoContent = propertyInfoContent,
-                    allGuiAttributeDefinitions = allGuiAttributeDefinitions
+                    allGuiAttributeDefinitions = allGuiAttributeDefinitions,
+                    errorFun = { msg: String => throw InconsistentTriplestoreDataException(msg) }
                 )
 
                 // TODO: For now, any property defined in a project-specific ontology is editable. But there are also editable properties
@@ -642,8 +643,9 @@ class OntologyResponderV2 extends Responder {
       *
       * @param propertyInfoContent        the property definition.
       * @param allGuiAttributeDefinitions the GUI attribute definitions for each GUI element.
+      * @param errorFun                   a function that throws an exception. It will be passed the message to be included in the exception.
       */
-    private def validateGuiAttributes(propertyInfoContent: PropertyInfoContentV2, allGuiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]]): Unit = {
+    private def validateGuiAttributes(propertyInfoContent: PropertyInfoContentV2, allGuiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]], errorFun: String => Nothing): Unit = {
         val propertyIri = propertyInfoContent.propertyIri
         val predicates = propertyInfoContent.predicates
 
@@ -653,7 +655,7 @@ class OntologyResponderV2 extends Responder {
         // Get that Guielement's attribute definitions, if any.
         val guiAttributeDefs: Set[SalsahGuiAttributeDefinition] = maybeGuiElementIri match {
             case Some(guiElementIri) =>
-                allGuiAttributeDefinitions.getOrElse(guiElementIri.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has salsah-gui:guiElement $guiElementIri, which doesn't exist"))
+                allGuiAttributeDefinitions.getOrElse(guiElementIri.toSmartIri, errorFun(s"Property $propertyIri has salsah-gui:guiElement $guiElementIri, which doesn't exist"))
 
             case None => Set.empty[SalsahGuiAttributeDefinition]
         }
@@ -661,10 +663,10 @@ class OntologyResponderV2 extends Responder {
         // If the property has the predicate salsah-gui:guiAttribute, syntactically validate the objects of that predicate.
         val guiAttributes: Set[SalsahGuiAttribute] = predicates.get(OntologyConstants.SalsahGui.GuiAttribute.toSmartIri) match {
             case Some(guiAttributePred) =>
-                val guiElementIri = maybeGuiElementIri.getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has salsah-gui:guiAttribute, but no salsah-gui:guiElement"))
+                val guiElementIri = maybeGuiElementIri.getOrElse(errorFun(s"Property $propertyIri has salsah-gui:guiAttribute, but no salsah-gui:guiElement"))
 
                 if (guiAttributeDefs.isEmpty) {
-                    throw InconsistentTriplestoreDataException(s"Property $propertyIri has salsah-gui:guiAttribute, but $guiElementIri has no salsah-gui:guiAttributeDefinition")
+                    errorFun(s"Property $propertyIri has salsah-gui:guiAttribute, but $guiElementIri has no salsah-gui:guiAttributeDefinition")
                 }
 
                 // Syntactically validate each attribute.
@@ -673,7 +675,7 @@ class OntologyResponderV2 extends Responder {
                         stringFormatter.toSalsahGuiAttribute(
                             s = guiAttributeObj,
                             attributeDefs = guiAttributeDefs,
-                            errorFun = throw InconsistentTriplestoreDataException(s"Property $propertyIri contains an invalid salsah-gui:guiAttribute: $guiAttributeObj")
+                            errorFun = errorFun(s"Property $propertyIri contains an invalid salsah-gui:guiAttribute: $guiAttributeObj")
                         )
                 }
 
@@ -686,7 +688,7 @@ class OntologyResponderV2 extends Responder {
         val missingAttributeNames: Set[String] = requiredAttributeNames -- providedAttributeNames
 
         if (missingAttributeNames.nonEmpty) {
-            throw InconsistentTriplestoreDataException(s"Property $propertyIri has one or more missing objects of salsah-gui:guiAttribute: ${missingAttributeNames.mkString(", ")}")
+            errorFun(s"Property $propertyIri has one or more missing objects of salsah-gui:guiAttribute: ${missingAttributeNames.mkString(", ")}")
         }
     }
 
@@ -922,7 +924,7 @@ class OntologyResponderV2 extends Responder {
       * Gets the [[OntologyKnoraEntitiesIriInfoV2]] for an ontology.
       *
       * @param ontologyIri the IRI of the ontology to query
-      * @param userProfile   the profile of the user making the request.
+      * @param userProfile the profile of the user making the request.
       * @return an [[OntologyKnoraEntitiesIriInfoV2]].
       */
     private def getKnoraEntityIrisInNamedGraphV2(ontologyIri: SmartIri, userProfile: UserProfileV1): Future[OntologyKnoraEntitiesIriInfoV2] = {
@@ -2214,6 +2216,13 @@ class OntologyResponderV2 extends Responder {
                     throw BadRequestException("New link value properties cannot be created directly. Create a link property instead.")
                 }
 
+                // Check the property's salsah-gui:guiElement and salsah-gui:guiAttribute.
+                _ = validateGuiAttributes(
+                    propertyInfoContent = internalPropertyDef,
+                    allGuiAttributeDefinitions = cacheData.guiAttributeDefinitions,
+                    errorFun = { msg: String => throw BadRequestException(msg) }
+                )
+
                 // If we're creating a link property, make the definition of the corresponding link value property.
                 maybeLinkValuePropertyDef: Option[PropertyInfoContentV2] = if (isLinkProp) {
                     val linkValuePropertyDef = linkPropertyDefToLinkValuePropertyDef(internalPropertyDef)
@@ -3316,7 +3325,7 @@ class OntologyResponderV2 extends Responder {
       *
       * @param classIri the class IRI.
       * @return `true` if the class IRI refers to a Knora resource class, or `false` if the class
-      *        does not exist or is not a Knora internal resource class.
+      *         does not exist or is not a Knora internal resource class.
       */
     private def isKnoraInternalResourceClass(classIri: SmartIri, cacheData: OntologyCacheData): Boolean = {
         classIri.isKnoraInternalEntityIri &&

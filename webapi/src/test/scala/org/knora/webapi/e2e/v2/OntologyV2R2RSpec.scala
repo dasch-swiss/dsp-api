@@ -405,7 +405,9 @@ class OntologyV2R2RSpec extends R2RSpec {
                   |          "@language" : "de",
                   |          "@value" : "hat Namen"
                   |        } ],
-                  |        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://schema.org/name" ]
+                  |        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://schema.org/name" ],
+                  |        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
+                  |        "salsah-gui:guiAttribute" : [ "size=80", "maxlength=100" ]
                   |      }
                   |    },
                   |    "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
@@ -413,6 +415,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                   |  "@context" : {
                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                  |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
                   |    "owl" : "http://www.w3.org/2002/07/owl#",
                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",

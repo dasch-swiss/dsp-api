@@ -595,8 +595,6 @@ object OntologyConstants {
         val HasClasses: IRI = KnoraApiV2PrefixExpansion + "hasClasses"
         val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
         val HasIndividuals: IRI = KnoraApiV2PrefixExpansion + "hasIndividuals"
-        val HasStandoffClasses: IRI = KnoraApiV2PrefixExpansion + "hasStandoffClasses"
-        val HasStandoffProperties: IRI = KnoraApiV2PrefixExpansion + "hasStandoffProperties"
 
         val ValueAsString: IRI = KnoraApiV2PrefixExpansion + "valueAsString"
         val ValueCreationDate: IRI = KnoraApiV2PrefixExpansion + "valueCreationDate"
@@ -786,8 +784,6 @@ object OntologyConstants {
         val HasClasses: IRI = KnoraApiV2PrefixExpansion + "hasClasses"
         val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
         val HasIndividuals: IRI = KnoraApiV2PrefixExpansion + "hasIndividuals"
-        val HasStandoffClasses: IRI = KnoraApiV2PrefixExpansion + "hasStandoffClasses"
-        val HasStandoffProperties: IRI = KnoraApiV2PrefixExpansion + "hasStandoffProperties"
 
         val HasValue: IRI = KnoraApiV2PrefixExpansion + "hasValue"
 

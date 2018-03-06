@@ -891,13 +891,16 @@ Creating a Property
              "@language" : "LANGUAGE_CODE",
              "@value" : "COMMENT"
            },
-           "rdfs:subPropertyOf" : "BASE_PROPERTY_IRI"
+           "rdfs:subPropertyOf" : "BASE_PROPERTY_IRI",
+           "salsah-gui:guiElement" : "GUI_ELEMENT_IRI",
+           "salsah-gui:guiAttribute" : [ "GUI_ATTRIBUTE" ]
          }
        },
        "knora-api:lastModificationDate" : "ONTOLOGY_LAST_MODIFICATION_DATE"
      },
      "@context" : {
        "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
        "owl" : "http://www.w3.org/2002/07/owl#",
        "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
        "xsd" : "http://www.w3.org/2001/XMLSchema#"
@@ -919,6 +922,11 @@ be a subclass of ``knora-api:Resource``.
 
 To improve consistency checking, it is recommended, but not required, to provide ``knora-api:subjectType``,
 which must be a subclass of ``knora-api:Resource``.
+
+The predicates ``salsah-gui:guiElement`` and ``salsah-gui:guiAttribute`` are optional. If provided, the object of
+``guiElement`` must be one of the OWL named individuals defined in :ref:`salsah-gui-individuals`. Some GUI elements take
+required or optional attributes, which are provided as objects of ``salsah-gui:guiAttribute``; see :ref:`salsah-gui`
+for details.
 
 A successful response will be a JSON-LD document containing ``knora-api:hasOntologies``,
 providing the new property definition (but not any of the other entities in the ontology).

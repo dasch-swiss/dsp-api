@@ -1323,6 +1323,122 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
+        "not create a property with an invalid salsah-gui:guiAttribute (invalid integer)" in {
+
+            val propertyIri = AnythingOntologyIri.makeEntityIri("wrongProperty")
+
+            val propertyInfoContent = PropertyInfoContentV2(
+                propertyIri = propertyIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.ObjectProperty)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                        objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                        objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.TextValue)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wrong property"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "An invalid property definition"
+                        )
+                    ),
+                    OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+                        objects = Set("http://api.knora.org/ontology/salsah-gui/v2#Textarea")
+                    ),
+                    OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri,
+                        objects = Set("rows=10", "cols=80.5")
+                    )
+                ),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreatePropertyRequestV2(
+                propertyInfoContent = propertyInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a property with an invalid salsah-gui:guiAttribute (wrong enumerated value)" in {
+
+            val propertyIri = AnythingOntologyIri.makeEntityIri("wrongProperty")
+
+            val propertyInfoContent = PropertyInfoContentV2(
+                propertyIri = propertyIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Set(OntologyConstants.Owl.ObjectProperty)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                        objects = Set(AnythingOntologyIri.makeEntityIri("Thing").toString)
+                    ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                        objects = Set(OntologyConstants.KnoraApiV2WithValueObjects.TextValue)
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "wrong property"
+                        )
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objectsWithLang = Map(
+                            "en" -> "An invalid property definition"
+                        )
+                    ),
+                    OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+                        objects = Set("http://api.knora.org/ontology/salsah-gui/v2#Textarea")
+                    ),
+                    OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri,
+                        objects = Set("rows=10", "cols=80", "wrap=wrong")
+                    )
+                ),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreatePropertyRequestV2(
+                propertyInfoContent = propertyInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
         "change the labels of a property" in {
             val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
 
@@ -1975,6 +2091,10 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                             "en" -> "Indicates whether a Nothing has nothingness",
                             "de" -> "Anzeigt, ob ein Nichts Nichtsein hat"
                         )
+                    ),
+                    OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+                        objects = Set("http://api.knora.org/ontology/salsah-gui/v2#Checkbox")
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
