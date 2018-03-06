@@ -592,7 +592,7 @@
                   rdfs:label "Text"@de ,
                              "texte"@fr ,
                              "testo"@it ,
-                             "text"@en ;
+                             "Text"@en ;
 
                   rdfs:comment """Text"""@de ,
                                """Text"""@en ;
