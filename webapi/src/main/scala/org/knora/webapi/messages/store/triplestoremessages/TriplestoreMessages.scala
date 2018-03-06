@@ -306,10 +306,7 @@ case class IntLiteralV2(value: Int) extends LiteralV2 {
 }
 
 /**
-  * <<<<<<< HEAD
-  * =======
-  * Represents an Decimal value.
-  *
+  * Represents a decimal value.
   *
   * @param value the decimal value.
   */
@@ -318,7 +315,6 @@ case class DecimalLiteralV2(value: BigDecimal) extends LiteralV2 {
 }
 
 /**
-  * >>>>>>> develop
   * Represents a timestamp.
   *
   * @param value the timestamp value.
