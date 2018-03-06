@@ -39,7 +39,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.FakeTriplestore
+import org.knora.webapi.util.{FakeTriplestore, StringFormatter}
 import org.knora.webapi.util.SparqlResultProtocol._
 import spray.json._
 
@@ -241,12 +241,16 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @return a [[SparqlExtendedConstructResponse]]
       */
     private def sparqlHttpExtendedConstruct(sparql: String): Future[SparqlExtendedConstructResponse] = {
+
         // println(logDelimiter + sparql)
 
         /**
           * Converts a graph in parsed Turtle to a [[SparqlExtendedConstructResponse]].
           */
         class ConstructResponseTurtleHandler extends RDFHandler {
+
+            private val stringFormatter = StringFormatter.getGeneralInstance
+
             /**
               * A collection of all the statements in the input file, grouped and sorted by subject IRI.
               */
@@ -279,6 +283,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                         case OntologyConstants.Xsd.String => StringLiteralV2(value = literal.stringValue, language = None)
                         case OntologyConstants.Xsd.Boolean => BooleanLiteralV2(value = literal.booleanValue)
                         case OntologyConstants.Xsd.Integer | OntologyConstants.Xsd.NonNegativeInteger => IntLiteralV2(value = literal.intValue)
+                        case OntologyConstants.Xsd.Decimal => DecimalLiteralV2(value = literal.decimalValue)
+                        case OntologyConstants.Xsd.DateTimeStamp => DateTimeLiteralV2(stringFormatter.toInstant(literal.stringValue, throw InconsistentTriplestoreDataException(s"Invalid xsd:dateTimeStamp: ${literal.stringValue}")))
                         case unknown => throw NotImplementedException(s"The literal type '$unknown' is not implemented.")
                     }
 
