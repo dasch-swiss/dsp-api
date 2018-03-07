@@ -2782,6 +2782,7 @@ object KnoraApiV2WithValueObjects {
             ),
             inheritedCardinalities = inheritedCardinalities,
             canBeInstantiated = canBeInstantiated,
+            isResourceClass = isResourceClass,
             isValueClass = isValueClass
         )
     }

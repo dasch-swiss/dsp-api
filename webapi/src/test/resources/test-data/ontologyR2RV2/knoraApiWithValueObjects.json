@@ -48,6 +48,7 @@
       "knora-api:AudioRepresentation" : {
         "@id" : "knora-api:AudioRepresentation",
         "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "A Resource containing audio data",
         "rdfs:label" : "Representation (Audio)",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Representation", {
@@ -186,6 +187,7 @@
       "knora-api:DDDRepresentation" : {
         "@id" : "knora-api:DDDRepresentation",
         "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "A Resource containing 3D data",
         "rdfs:label" : "Representation (3D)",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Representation", {
@@ -356,6 +358,7 @@
       "knora-api:DocumentRepresentation" : {
         "@id" : "knora-api:DocumentRepresentation",
         "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "A Resource containing documents",
         "rdfs:label" : "Representation (Document)",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Representation", {
@@ -437,6 +440,7 @@
       "knora-api:ForbiddenResource" : {
         "@id" : "knora-api:ForbiddenResource",
         "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.",
         "rdfs:label" : "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Resource", {
@@ -596,6 +600,7 @@
         "@id" : "knora-api:LinkObj",
         "@type" : "owl:Class",
         "knora-api:canBeInstantiated" : true,
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "Represents a generic link object.",
         "rdfs:label" : "Link Object",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Resource", {
@@ -774,6 +779,7 @@
       "knora-api:MovingImageRepresentation" : {
         "@id" : "knora-api:MovingImageRepresentation",
         "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "A Resource containing moving image data",
         "rdfs:label" : "Representation (Movie)",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Representation", {
@@ -821,6 +827,7 @@
         "@id" : "knora-api:Region",
         "@type" : "owl:Class",
         "knora-api:canBeInstantiated" : true,
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "Represents a geometric region of a resource. The geometry is represented currently as JSON string.",
         "rdfs:label" : "Region",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Resource", {
@@ -883,6 +890,7 @@
       "knora-api:Representation" : {
         "@id" : "knora-api:Representation",
         "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "A Resource that can store one or more FileValues",
         "rdfs:label" : "Representation",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Resource", {
@@ -929,6 +937,7 @@
       "knora-api:Resource" : {
         "@id" : "knora-api:Resource",
         "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "Represents a Knora resource.",
         "rdfs:label" : "Resource",
         "rdfs:subClassOf" : [ {
@@ -1014,6 +1023,7 @@
       "knora-api:StillImageRepresentation" : {
         "@id" : "knora-api:StillImageRepresentation",
         "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "A Resource that can contain two-dimensional still image files",
         "rdfs:label" : "Representation (Image)",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Representation", {
@@ -1098,6 +1108,7 @@
       "knora-api:TextRepresentation" : {
         "@id" : "knora-api:TextRepresentation",
         "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "A Resource containing text files",
         "rdfs:label" : "Representation (Text)",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Representation", {
