@@ -19,6 +19,7 @@
 
 @import org.knora.webapi._
 @import org.knora.webapi.messages.v2.responder.ontologymessages._
+@import org.knora.webapi.util.StringFormatter
 
 @*
  * Called by createProperty.scala.txt to generate INSERT statements for creating a property.
@@ -27,26 +28,37 @@
  *@
 @(propertyDef: PropertyInfoContentV2)
 
-@for(predicate <- propertyDef.predicates.values) {
+@defining(StringFormatter.getGeneralInstance) { stringFormatter =>
 
-    @* In a property definition, all objects that don't have languages must be IRIs (#668). *@
+    @for(predicate <- propertyDef.predicates.values) {
 
-    @for(obj <- predicate.objects) {
+        @* TODO: change this when PredicateInfoV2 knows the types of its objects (#738). *@
 
-        <@propertyDef.propertyIri> <@predicate.predicateIri> <@obj> .
+        @for(obj <- predicate.objects) {
+
+            @if(stringFormatter.isIri(obj)) {
+
+                <@propertyDef.propertyIri> <@predicate.predicateIri> <@obj> .
+
+            } else {
+
+                <@propertyDef.propertyIri> <@predicate.predicateIri> """@obj"""^^xsd:string .
+
+            }
+
+        }
+
+        @for((lang, text) <- predicate.objectsWithLang) {
+
+            <@propertyDef.propertyIri> <@predicate.predicateIri> """@text"""@@@lang .
+
+        }
 
     }
 
-    @for((lang, text) <- predicate.objectsWithLang) {
+    @for(superProp <- propertyDef.subPropertyOf) {
 
-        <@propertyDef.propertyIri> <@predicate.predicateIri> """@text"""@@@lang .
+        <@propertyDef.propertyIri> rdfs:subPropertyOf <@superProp> .
 
     }
-
-}
-
-@for(superProp <- propertyDef.subPropertyOf) {
-
-    <@propertyDef.propertyIri> rdfs:subPropertyOf <@superProp> .
-
 }

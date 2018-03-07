@@ -20,6 +20,7 @@
 package org.knora.webapi.messages.store.triplestoremessages
 
 import java.time.Instant
+
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.util.ErrorHandlingMap
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, TriplestoreResponseException}
@@ -120,7 +121,7 @@ case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
   * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
   * [[SparqlExtendedConstructResponse]].
   *
-  * @param sparql       the SPARQL string.
+  * @param sparql the SPARQL string.
   */
 case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreRequest
 
@@ -235,10 +236,16 @@ case class RdfDataObject(path: String, name: String)
   */
 sealed trait SubjectV2
 
+/**
+  * Represents an IRI used as the subject of a statement.
+  */
 case class IriSubjectV2(value: IRI) extends SubjectV2 {
     override def toString: IRI = value
 }
 
+/**
+  * Represents a blank node identifier used as the subject of a statement.
+  */
 case class BlankNodeSubjectV2(value: String) extends SubjectV2 {
     override def toString: String = value
 }
@@ -275,6 +282,7 @@ case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
   */
 case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2 with Ordered[StringLiteralV2] {
     override def toString: String = value
+
     def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
 }
 
@@ -297,7 +305,7 @@ case class IntLiteralV2(value: Int) extends LiteralV2 {
 }
 
 /**
-  * Represents an Decimal value.
+  * Represents a decimal value.
   *
   * @param value the decimal value.
   */

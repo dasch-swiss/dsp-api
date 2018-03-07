@@ -75,6 +75,8 @@ object OntologyConstants {
             MinCardinality,
             MaxCardinality
         )
+
+        val NamedIndividual: IRI = OwlPrefixExpansion + "NamedIndividual"
     }
 
     object Xsd {
@@ -82,6 +84,7 @@ object OntologyConstants {
 
         val String: IRI = XsdPrefixExpansion + "string"
         val Boolean: IRI = XsdPrefixExpansion + "boolean"
+        val Int: IRI = XsdPrefixExpansion + "int"
         val Integer: IRI = XsdPrefixExpansion + "integer"
         val NonNegativeInteger: IRI = XsdPrefixExpansion + "nonNegativeInteger"
         val Decimal: IRI = XsdPrefixExpansion + "decimal"
@@ -396,6 +399,7 @@ object OntologyConstants {
 
         /* Standoff */
 
+        val StandoffTag: IRI = KnoraBasePrefixExpansion + "StandoffTag"
         val StandoffTagHasStart: IRI = KnoraBasePrefixExpansion + "standoffTagHasStart"
         val StandoffTagHasEnd: IRI = KnoraBasePrefixExpansion + "standoffTagHasEnd"
         val StandoffTagHasStartIndex: IRI = KnoraBasePrefixExpansion + "standoffTagHasStartIndex"
@@ -485,8 +489,10 @@ object OntologyConstants {
         val SalsahGuiPrefixExpansion: IRI = SalsahGuiOntologyIri + "#"
 
         val GuiAttribute: IRI = SalsahGuiPrefixExpansion + "guiAttribute"
+        val GuiAttributeDefinition: IRI = SalsahGuiPrefixExpansion + "guiAttributeDefinition"
         val GuiOrder: IRI = SalsahGuiPrefixExpansion + "guiOrder"
-        val GuiElement: IRI = SalsahGuiPrefixExpansion + "guiElement"
+        val GuiElementProp: IRI = SalsahGuiPrefixExpansion + "guiElement"
+        val GuiElementClass: IRI = SalsahGuiPrefixExpansion + "Guielement"
         val SimpleText: IRI = SalsahGuiPrefixExpansion + "SimpleText"
         val Textarea: IRI = SalsahGuiPrefixExpansion + "Textarea"
         val Pulldown: IRI = SalsahGuiPrefixExpansion + "Pulldown"
@@ -576,6 +582,9 @@ object OntologyConstants {
         val IsEditable: IRI = KnoraApiV2PrefixExpansion + "isEditable"
         val IsLinkProperty: IRI = KnoraApiV2PrefixExpansion + "isLinkProperty"
         val IsLinkValueProperty: IRI = KnoraApiV2PrefixExpansion + "isLinkValueProperty"
+        val IsResourceClass: IRI = KnoraApiV2PrefixExpansion + "isResourceClass"
+        val IsResourceProperty: IRI = KnoraApiV2PrefixExpansion + "isResourceProperty"
+        val IsStandoffClass: IRI = KnoraApiV2PrefixExpansion + "isStandoffClass"
         val CanBeInstantiated: IRI = KnoraApiV2PrefixExpansion + "canBeInstantiated"
         val IsValueClass: IRI = KnoraApiV2PrefixExpansion + "isValueClass"
         val IsInherited: IRI = KnoraApiV2PrefixExpansion + "isInherited"
@@ -584,8 +593,7 @@ object OntologyConstants {
 
         val HasClasses: IRI = KnoraApiV2PrefixExpansion + "hasClasses"
         val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
-        val HasStandoffClasses: IRI = KnoraApiV2PrefixExpansion + "hasStandoffClasses"
-        val HasStandoffProperties: IRI = KnoraApiV2PrefixExpansion + "hasStandoffProperties"
+        val HasIndividuals: IRI = KnoraApiV2PrefixExpansion + "hasIndividuals"
 
         val ValueAsString: IRI = KnoraApiV2PrefixExpansion + "valueAsString"
         val ValueCreationDate: IRI = KnoraApiV2PrefixExpansion + "valueCreationDate"
@@ -715,6 +723,17 @@ object OntologyConstants {
 
     }
 
+    object SalsahGuiApiV2WithValueObjects {
+        val SalsahGuiOntologyIri: IRI = KnoraApi.ApiOntologyStart + SalsahGui.SalsahGuiOntologyLabel + KnoraApiV2WithValueObjects.VersionSegment
+        val SalsahGuiPrefixExpansion: IRI = SalsahGuiOntologyIri + "#"
+
+        val GuiAttribute: IRI = SalsahGuiPrefixExpansion + "guiAttribute"
+        val GuiOrder: IRI = SalsahGuiPrefixExpansion + "guiOrder"
+        val GuiElementProp: IRI = SalsahGuiPrefixExpansion + "guiElement"
+        val GuiAttributeDefinition: IRI = SalsahGuiPrefixExpansion + "guiAttributeDefinition"
+        val GuiElementClass: IRI = SalsahGuiPrefixExpansion + "Guielement"
+    }
+
     object KnoraApiV2Simple {
 
         val VersionSegment = "/simple/v2"
@@ -763,8 +782,7 @@ object OntologyConstants {
 
         val HasClasses: IRI = KnoraApiV2PrefixExpansion + "hasClasses"
         val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
-        val HasStandoffClasses: IRI = KnoraApiV2PrefixExpansion + "hasStandoffClasses"
-        val HasStandoffProperties: IRI = KnoraApiV2PrefixExpansion + "hasStandoffProperties"
+        val HasIndividuals: IRI = KnoraApiV2PrefixExpansion + "hasIndividuals"
 
         val HasValue: IRI = KnoraApiV2PrefixExpansion + "hasValue"
 
@@ -836,11 +854,13 @@ object OntologyConstants {
     val CorrespondingPredicates: Map[(OntologySchema, OntologySchema), Map[IRI, IRI]] = Map(
         (InternalSchema, ApiV2Simple) -> Map(
             OntologyConstants.KnoraBase.SubjectClassConstraint -> OntologyConstants.KnoraApiV2Simple.SubjectType,
-            OntologyConstants.KnoraBase.ObjectClassConstraint -> OntologyConstants.KnoraApiV2Simple.ObjectType
+            OntologyConstants.KnoraBase.ObjectClassConstraint -> OntologyConstants.KnoraApiV2Simple.ObjectType,
+            OntologyConstants.KnoraBase.ObjectDatatypeConstraint -> OntologyConstants.KnoraApiV2Simple.ObjectType
         ),
         (InternalSchema, ApiV2WithValueObjects) -> Map(
             OntologyConstants.KnoraBase.SubjectClassConstraint -> OntologyConstants.KnoraApiV2WithValueObjects.SubjectType,
-            OntologyConstants.KnoraBase.ObjectClassConstraint -> OntologyConstants.KnoraApiV2WithValueObjects.ObjectType
+            OntologyConstants.KnoraBase.ObjectClassConstraint -> OntologyConstants.KnoraApiV2WithValueObjects.ObjectType,
+            OntologyConstants.KnoraBase.ObjectDatatypeConstraint -> OntologyConstants.KnoraApiV2WithValueObjects.ObjectType
         ),
         (ApiV2Simple, InternalSchema) -> Map(
             OntologyConstants.KnoraApiV2Simple.SubjectType -> OntologyConstants.KnoraBase.SubjectClassConstraint,

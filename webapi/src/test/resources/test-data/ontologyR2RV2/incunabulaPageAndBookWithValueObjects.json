@@ -7,6 +7,7 @@
         "@id" : "incunabula:book",
         "@type" : "owl:Class",
         "knora-api:canBeInstantiated" : true,
+        "knora-api:isResourceClass" : true,
         "knora-api:resourceIcon" : "book.gif",
         "rdfs:comment" : "Diese Resource-Klasse beschreibt ein Buch",
         "rdfs:label" : "Book",
@@ -44,7 +45,7 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 1,
@@ -111,6 +112,7 @@
         "@id" : "incunabula:page",
         "@type" : "owl:Class",
         "knora-api:canBeInstantiated" : true,
+        "knora-api:isResourceClass" : true,
         "knora-api:resourceIcon" : "page.gif",
         "rdfs:comment" : "A page is a part of a book",
         "rdfs:label" : "Page",
@@ -153,7 +155,7 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 1,
@@ -222,16 +224,13 @@
         } ]
       }
     },
-    "knora-api:hasProperties" : { },
-    "knora-api:hasStandoffClasses" : { },
-    "knora-api:hasStandoffProperties" : { },
     "rdfs:label" : "The incunabula ontology"
   },
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
-    "salsah-gui" : "http://www.knora.org/ontology/salsah-gui#",
+    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
     "incunabula" : "http://0.0.0.0:3333/ontology/incunabula/v2#",
     "xsd" : "http://www.w3.org/2001/XMLSchema#"

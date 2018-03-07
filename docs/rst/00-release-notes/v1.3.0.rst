@@ -25,10 +25,22 @@ See the `release`_ and closed tickets on the `v1.3.0 milestone`_ on Github.
 Required changes to existing data:
 ----------------------------------
 
+1. Replace salsah-gui ontology
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You must replace the ``salsah-gui`` ontology that you have in the triplestore with the one
+in ``salsah-gui.ttl``.
 
 New features:
 -------------
 
+1. More support for salsah-gui elements and attributes in ontologies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Serve the ``salsah-gui`` ontology in API v2 in the default schema.
+- Show ``salsah-gui:guiElement`` and ``salsah-gui:guiAttribute`` when serving ontologies in API v2 in the default schema.
+- Allow ``salsah-gui:guiElement`` and ``salsah-gui:guiAttribute`` to be included in new property definitions created via API v2.
+- Change ``salsah-gui`` so that GraphDB's consistency checker can check the use of ``guiElement`` and ``guiAttribute``.
 
 Bugfixes:
 ---------

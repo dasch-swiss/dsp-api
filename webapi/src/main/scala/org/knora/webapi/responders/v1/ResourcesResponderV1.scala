@@ -632,7 +632,7 @@ class ResourcesResponderV1 extends Responder {
 
             // Collect all property IRIs and their cardinalities for the queried resource's type, except the ones that point to LinkValue objects or FileValue objects,
             // which are not relevant in this API operation.
-            propsAndCardinalities: Map[IRI, KnoraCardinalityInfo] = resourceTypeEntityInfo.cardinalities.filterNot {
+            propsAndCardinalities: Map[IRI, KnoraCardinalityInfo] = resourceTypeEntityInfo.knoraResourceCardinalities.filterNot {
                 case (propertyIri, _) =>
                     resourceTypeEntityInfo.linkValueProperties(propertyIri) || resourceTypeEntityInfo.fileValueProperties(propertyIri)
             }
@@ -659,7 +659,7 @@ class ResourcesResponderV1 extends Responder {
             emptyProps: Set[PropertyV1] = emptyPropsIris.map {
                 propertyIri =>
                     val propertyEntityInfo: PropertyInfoV1 = emptyPropsInfoResponse.propertyInfoMap(propertyIri)
-                    val guiOrder = resourceTypeEntityInfo.cardinalities(propertyIri).guiOrder
+                    val guiOrder = resourceTypeEntityInfo.knoraResourceCardinalities(propertyIri).guiOrder
 
                     if (propertyEntityInfo.isLinkProp) {
                         // It is a linking prop: its valuetype_id is knora-base:LinkValue.
@@ -670,7 +670,7 @@ class ResourcesResponderV1 extends Responder {
                             pid = propertyIri,
                             valuetype_id = Some(OntologyConstants.KnoraBase.LinkValue),
                             guiorder = guiOrder,
-                            guielement = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
+                            guielement = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
                             label = propertyEntityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
                             occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
                             attributes = (propertyEntityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))).mkString(";"),
@@ -682,7 +682,7 @@ class ResourcesResponderV1 extends Responder {
                             pid = propertyIri,
                             valuetype_id = propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint),
                             guiorder = guiOrder,
-                            guielement = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
+                            guielement = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
                             label = propertyEntityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)),
                             occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
                             attributes = propertyEntityInfo.getPredicateObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute).mkString(";"),
@@ -1138,7 +1138,7 @@ class ResourcesResponderV1 extends Responder {
                     for {
                         resourceClassInfoResponse <- (responderManager ? EntityInfoGetRequestV1(resourceClassIris = Set(resourceClass), userProfile = userProfile)).mapTo[EntityInfoGetResponseV1]
 
-                        cardinalities: Map[IRI, KnoraCardinalityInfo] = resourceClassInfoResponse.resourceClassInfoMap(resourceClass).cardinalities
+                        cardinalities: Map[IRI, KnoraCardinalityInfo] = resourceClassInfoResponse.resourceClassInfoMap(resourceClass).knoraResourceCardinalities
 
                         searchResultRow: ResourceSearchResultRowV1 = if (numberOfProps > 1) {
                             // The client requested more than one property per resource that was found.
@@ -1254,7 +1254,7 @@ class ResourcesResponderV1 extends Responder {
 
             allPropertyIris: Set[IRI] = resourceClassesEntityInfoResponse.resourceClassInfoMap.flatMap {
                 case (_, resourceEntityInfo) =>
-                    resourceEntityInfo.cardinalities.keySet
+                    resourceEntityInfo.knoraResourceCardinalities.keySet
             }.toSet
 
             propertyEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
@@ -1265,7 +1265,7 @@ class ResourcesResponderV1 extends Responder {
 
             propertyEntityInfoMapsPerResource: Map[IRI, Map[IRI, PropertyInfoV1]] = resourceClassesEntityInfoResponse.resourceClassInfoMap.map {
                 case (resourceClassIri, resourceEntityInfo) =>
-                    val propertyEntityInfoMapForResource: Map[IRI, PropertyInfoV1] = resourceEntityInfo.cardinalities.keySet.map {
+                    val propertyEntityInfoMapForResource: Map[IRI, PropertyInfoV1] = resourceEntityInfo.knoraResourceCardinalities.keySet.map {
                         propertyIri =>
                             (propertyIri, propertyEntityInfoResponse.propertyInfoMap(propertyIri))
                     }.toMap
@@ -1513,7 +1513,7 @@ class ResourcesResponderV1 extends Responder {
 
             _ = values.foreach {
                 case (propertyIri, valuesForProperty) =>
-                    val cardinalityInfo = resourceClassInfo.cardinalities.getOrElse(propertyIri, throw OntologyConstraintException(s"Resource class $resourceClassIri has no cardinality for property $propertyIri"))
+                    val cardinalityInfo = resourceClassInfo.knoraResourceCardinalities.getOrElse(propertyIri, throw OntologyConstraintException(s"Resource class $resourceClassIri has no cardinality for property $propertyIri"))
 
                     if ((cardinalityInfo.cardinality == Cardinality.MayHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveOne) && valuesForProperty.size > 1) {
                         throw OntologyConstraintException(s"Resource class $resourceClassIri does not allow more than one value for property $propertyIri")
@@ -1524,7 +1524,7 @@ class ResourcesResponderV1 extends Responder {
             _ = if (resourceClassInfo.fileValueProperties.size > 1) throw BadRequestException(s"The given resource type $resourceClassIri requires more than on file value. This is not supported for API V1")
 
             // Check that no required values are missing.
-            requiredProps: Set[IRI] = resourceClassInfo.cardinalities.filter {
+            requiredProps: Set[IRI] = resourceClassInfo.knoraResourceCardinalities.filter {
                 case (propIri, cardinalityInfo) => cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveSome
             }.keySet -- resourceClassInfo.linkValueProperties -- resourceClassInfo.fileValueProperties // exclude link value and file value properties from checking
 
@@ -1720,7 +1720,7 @@ class ResourcesResponderV1 extends Responder {
 
             propertyEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
                 resourceClassIris = Set.empty[IRI],
-                propertyIris = resourceClassInfo.cardinalities.keySet,
+                propertyIris = resourceClassInfo.knoraResourceCardinalities.keySet,
                 userProfile = userProfile
             )).mapTo[EntityInfoGetResponseV1]
 
@@ -2163,7 +2163,7 @@ class ResourcesResponderV1 extends Responder {
                         resourceTypeEntityInfo = resourceEntityInfoMap(resourceTypeIri)
 
                         // all properties and their cardinalities for the queried resource's type, except the ones that point to LinkValue objects
-                        propsAndCardinalities: Map[IRI, KnoraCardinalityInfo] = resourceTypeEntityInfo.cardinalities.filterNot {
+                        propsAndCardinalities: Map[IRI, KnoraCardinalityInfo] = resourceTypeEntityInfo.knoraResourceCardinalities.filterNot {
                             case (propertyIri, _) =>
                                 resourceTypeEntityInfo.linkValueProperties(propertyIri)
                         }
@@ -2376,7 +2376,7 @@ class ResourcesResponderV1 extends Responder {
                         }
                 },
                 guiorder = propertyCardinality.flatMap(_.guiOrder),
-                guielement = propertyEntityInfo.flatMap(_.getPredicateObject(OntologyConstants.SalsahGui.GuiElement).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri))),
+                guielement = propertyEntityInfo.flatMap(_.getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri))),
                 label = propertyEntityInfo.flatMap(_.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage))),
                 occurrence = propertyCardinality.map(_.cardinality.toString),
                 attributes = propertyEntityInfo match {

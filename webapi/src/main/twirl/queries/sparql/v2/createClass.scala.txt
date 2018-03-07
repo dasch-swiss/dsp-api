@@ -59,7 +59,7 @@ DELETE {
 
         @for(predicate <- classDef.predicates.values) {
 
-            @* In a class definition, all objects that don't have languages must be IRIs (#668). *@
+            @* TODO: In a class definition, all objects that don't have languages must be IRIs. Change this when PredicateInfoV2 knows the types of its objects (#738). *@
 
             @for(obj <- predicate.objects) {
 

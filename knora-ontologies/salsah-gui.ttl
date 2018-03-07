@@ -36,29 +36,38 @@
 
 ###  http://www.knora.org/ontology/salsah-gui#guiOrder
 
-:guiOrder rdf:type owl:AnnotationProperty ;
+:guiOrder rdf:type owl:DatatypeProperty ;
+
+          knora-base:subjectClassConstraint owl:Restriction ;
 
           knora-base:objectDatatypeConstraint xsd:nonNegativeInteger .
 
 
+
 ###  http://www.knora.org/ontology/salsah-gui#guiElement
 
-:guiElement rdf:type owl:AnnotationProperty .
+:guiElement rdf:type owl:ObjectProperty ;
+
+          knora-base:subjectClassConstraint owl:ObjectProperty .
 
 
 
 ###  http://www.knora.org/ontology/salsah-gui#guiAttribute
 
-:guiAttribute rdf:type owl:AnnotationProperty .
+:guiAttribute rdf:type owl:DatatypeProperty ;
+
+          knora-base:subjectClassConstraint owl:ObjectProperty ;
+
+          knora-base:objectDatatypeConstraint xsd:string .
 
 
 
 ###  http://www.knora.org/ontology/salsah-gui#guiAttributeDefinition
 
-:guiAttributeDefinition rdf:type owl:AnnotationProperty ;
-                        
+:guiAttributeDefinition rdf:type owl:DatatypeProperty ;
+
                         knora-base:subjectClassConstraint :Guielement ;
-                        
+
                         knora-base:objectDatatypeConstraint xsd:string .
 
 
@@ -91,7 +100,7 @@
 
 :Colorpicker rdf:type :Guielement ,
                       owl:NamedIndividual ;
-             
+
              :guiAttributeDefinition "ncolors:integer" .
 
 
@@ -135,7 +144,7 @@
 
 :List rdf:type :Guielement ,
                owl:NamedIndividual  ;
-          
+
           :guiAttributeDefinition "hlist(required):iri" .
 
 
@@ -144,7 +153,7 @@
 
 :Pulldown rdf:type :Guielement ,
                    owl:NamedIndividual ;
-          
+
           :guiAttributeDefinition "hlist(required):iri" .
 
 
@@ -153,7 +162,7 @@
 
 :Radio rdf:type :Guielement ,
                 owl:NamedIndividual ;
-       
+
        :guiAttributeDefinition "hlist(required):iri" .
 
 
@@ -169,7 +178,7 @@
 
 :Searchbox rdf:type :Guielement ,
                     owl:NamedIndividual ;
-           
+
            :guiAttributeDefinition "numprops:integer" .
 
 
@@ -178,7 +187,7 @@
 
 :SimpleText rdf:type :Guielement ,
                      owl:NamedIndividual ;
-            
+
             :guiAttributeDefinition "size:integer" ,
                                     "maxlength:integer" .
 
@@ -188,7 +197,7 @@
 
 :Slider rdf:type :Guielement ,
                  owl:NamedIndividual ;
-        
+
         :guiAttributeDefinition "max(required):decimal" ,
                                 "min(required):decimal" .
 
@@ -198,7 +207,7 @@
 
 :Spinbox rdf:type :Guielement ,
                   owl:NamedIndividual ;
-         
+
          :guiAttributeDefinition "max:decimal" ,
                                  "min:decimal" .
 
@@ -208,7 +217,7 @@
 
 :Textarea rdf:type :Guielement ,
                    owl:NamedIndividual ;
-          
+
           :guiAttributeDefinition "cols:integer" ,
                                   "rows:integer" ,
                                   "width:percent" ,
