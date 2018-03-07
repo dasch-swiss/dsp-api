@@ -39,9 +39,8 @@ object KnoraApiV2Simple {
 
     val Resource: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.Resource,
-        subClassOf = Set(OntologyConstants.SchemaOrg.Thing),
         directCardinalities = Map(
-            OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
+            OntologyConstants.Rdfs.Label -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2Simple.HasStandoffLinkTo -> Cardinality.MayHaveMany,
             OntologyConstants.KnoraApiV2Simple.CreationDate -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2Simple.LastModificationDate -> Cardinality.MayHaveOne,

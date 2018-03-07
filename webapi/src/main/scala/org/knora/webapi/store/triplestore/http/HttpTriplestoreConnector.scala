@@ -282,7 +282,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                         case OntologyConstants.Rdf.LangString => StringLiteralV2(value = literal.stringValue, language = literal.getLanguage.asScala)
                         case OntologyConstants.Xsd.String => StringLiteralV2(value = literal.stringValue, language = None)
                         case OntologyConstants.Xsd.Boolean => BooleanLiteralV2(value = literal.booleanValue)
-                        case OntologyConstants.Xsd.Integer | OntologyConstants.Xsd.NonNegativeInteger => IntLiteralV2(value = literal.intValue)
+                        case OntologyConstants.Xsd.Int | OntologyConstants.Xsd.Integer | OntologyConstants.Xsd.NonNegativeInteger => IntLiteralV2(value = literal.intValue)
                         case OntologyConstants.Xsd.Decimal => DecimalLiteralV2(value = literal.decimalValue)
                         case OntologyConstants.Xsd.DateTimeStamp => DateTimeLiteralV2(stringFormatter.toInstant(literal.stringValue, throw InconsistentTriplestoreDataException(s"Invalid xsd:dateTimeStamp: ${literal.stringValue}")))
                         case unknown => throw NotImplementedException(s"The literal type '$unknown' is not implemented.")

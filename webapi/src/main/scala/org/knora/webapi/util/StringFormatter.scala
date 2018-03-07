@@ -122,7 +122,8 @@ object StringFormatter {
     case class SalsahGuiAttributeDefinition(attributeName: String,
                                             isRequired: Boolean,
                                             allowedType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value,
-                                            enumeratedValues: Set[String] = Set.empty[String])
+                                            enumeratedValues: Set[String] = Set.empty[String],
+                                            unparsedString: String)
 
     /**
       * Represents a parsed object of the property `salsah-gui:guiAttribute`.
@@ -1450,7 +1451,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                     attributeName = attributeName,
                     isRequired = maybeRequired.nonEmpty,
                     allowedType = allowedType,
-                    enumeratedValues = enumeratedValues
+                    enumeratedValues = enumeratedValues,
+                    unparsedString = s
                 )
 
             case _ => errorFun

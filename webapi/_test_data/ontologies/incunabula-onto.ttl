@@ -452,8 +452,6 @@
 
                       knora-base:subjectClassConstraint :page ;
 
-                      salsah-gui:guiOrder "10"^^xsd:integer ;
-
                       salsah-gui:guiElement salsah-gui:Searchbox .
 
 
