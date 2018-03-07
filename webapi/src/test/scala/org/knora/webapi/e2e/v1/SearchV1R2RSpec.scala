@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -31,7 +30,7 @@ import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManag
 import org.knora.webapi.routing.v1.SearchRouteV1
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.{InvalidApiJsonException, LiveActorMaker, R2RSpec, SharedTestDataV1}
-import spray.json.{JsNumber, JsValue, _}
+import spray.json.{JsValue, _}
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}
