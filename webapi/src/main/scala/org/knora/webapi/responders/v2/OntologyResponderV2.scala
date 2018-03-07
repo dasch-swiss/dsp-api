@@ -78,8 +78,6 @@ class OntologyResponderV2 extends Responder {
                                          superClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                          subPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
                                          guiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]],
-                                         standoffClasses: Set[SmartIri],
-                                         standoffClassesWithDataType: Set[SmartIri],
                                          propertiesUsedInStandoffCardinalities: Set[SmartIri])
 
     def receive = {
@@ -312,17 +310,6 @@ class OntologyResponderV2 extends Responder {
         // Construct a ReadIndividualV2 for each OWL named individual.
         val readIndividualInfos = makeReadIndividualInfos(allIndividuals)
 
-        // A set of the IRIs of all standoff classes.
-        val standoffClasses: Set[SmartIri] = readClassInfos.filter {
-            case (_, readClassInfo) => readClassInfo.isStandoffClass
-        }.keySet
-
-        // A set of the IRIs of all standoff classes that have a datatype (i.e. are subclasses of any of the classes
-        // in org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses).
-        val standoffClassesWithDataType: Set[SmartIri] = readClassInfos.filterKeys(standoffClasses).filter {
-            case (_, readClassInfo) => readClassInfo.standoffDataType.isDefined
-        }.keySet
-
         // A set of the IRIs of all properties used in cardinalities in standoff classes.
         val propertiesUsedInStandoffCardinalities: Set[SmartIri] = readClassInfos.flatMap {
             case (_, readClassInfo) =>
@@ -372,8 +359,6 @@ class OntologyResponderV2 extends Responder {
             superClassOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSuperClassOfRelations, { key => s"Class not found: $key" }),
             subPropertyOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSubPropertyOfRelations, { key => s"Property not found: $key" }),
             guiAttributeDefinitions = new ErrorHandlingMap[SmartIri, Set[SalsahGuiAttributeDefinition]](allGuiAttributeDefinitions, { key => s"salsah-gui:Guielement not found: $key" }),
-            standoffClasses = standoffClasses,
-            standoffClassesWithDataType = standoffClassesWithDataType,
             propertiesUsedInStandoffCardinalities = propertiesUsedInStandoffCardinalities
         )
 
@@ -824,11 +809,15 @@ class OntologyResponderV2 extends Responder {
             propertyOntologies: Iterable[ReadOntologyV2] = cacheData.ontologies.filterKeys(propertyIrisForCache.map(_.getOntologyFromEntity)).values
 
             classDefsAvailable: Map[SmartIri, ReadClassInfoV2] = classOntologies.flatMap {
-                ontology => ontology.classes.filterKeys(standoffClassIris).filterKeys(cacheData.standoffClasses)
+                ontology => ontology.classes.filter {
+                    case (classIri, classDef) => classDef.isStandoffClass && standoffClassIris.contains(classIri)
+                }
             }.toMap
 
             propertyDefsAvailable: Map[SmartIri, ReadPropertyInfoV2] = propertyOntologies.flatMap {
-                ontology => ontology.properties.filterKeys(standoffPropertyIris).filterKeys(cacheData.propertiesUsedInStandoffCardinalities)
+                ontology => ontology.properties.filter {
+                    case (propertyIri, _) => standoffPropertyIris.contains(propertyIri) && cacheData.propertiesUsedInStandoffCardinalities.contains(propertyIri)
+                }
             }.toMap
 
             missingClassDefs = classIrisForCache -- classDefsAvailable.keySet
@@ -860,7 +849,9 @@ class OntologyResponderV2 extends Responder {
             cacheData <- getCacheData
         } yield StandoffClassesWithDataTypeGetResponseV2(
             standoffClassInfoMap = cacheData.ontologies.values.flatMap {
-                ontology => ontology.classes.filterKeys(cacheData.standoffClassesWithDataType)
+                ontology => ontology.classes.filter {
+                    case (_, classDef) => classDef.isStandoffClass && classDef.standoffDataType.isDefined
+                }
             }.toMap
         )
     }
@@ -946,8 +937,12 @@ class OntologyResponderV2 extends Responder {
             propertyIris = ontology.properties.keySet.filter {
                 propertyIri => isKnoraResourceProperty(propertyIri, cacheData)
             },
-            classIris = ontology.classes.keySet,
-            standoffClassIris = ontology.classes.keySet.filter(cacheData.standoffClasses),
+            classIris = ontology.classes.filter {
+                case (_, classDef) => classDef.isResourceClass
+            }.keySet,
+            standoffClassIris = ontology.classes.filter {
+                case (_, classDef) => classDef.isStandoffClass
+            }.keySet,
             standoffPropertyIris = ontology.properties.keySet.filter(cacheData.propertiesUsedInStandoffCardinalities)
         )
     }
