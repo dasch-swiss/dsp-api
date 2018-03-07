@@ -1,3 +1,22 @@
+/*
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.knora.webapi.util
 
 import scala.io.Source
@@ -8,22 +27,29 @@ import org.knora.webapi.twirl.Contributor
 import spray.json._
 import java.io.File
 
+/**
+  * Generates the file Contributors.md, using the GitHub API. Takes one argument, which is a GitHub API key.
+  */
 object GenerateContributorsFile extends App {
-
-
 
     // Configuration
 
-    val ContributorsUrl = "https://api.github.com/repos/dhlab-basel/Knora/contributors"
-    val GitHubApiToken = "3b18dcf6858e9c1e1bb8038ad87e43aad511386d"
+    val contributorsUrl = "https://api.github.com/repos/dhlab-basel/Knora/contributors"
 
-    val Headers: Map[String, String] = Map(
-        "Authorization" -> s"token $GitHubApiToken"
+    if (args.isEmpty) {
+        println("Usage: GenerateContributorsFile TOKEN")
+        System.exit(1)
+    }
+
+    val gitHubApiToken = args(0)
+
+    val headers: Map[String, String] = Map(
+        "Authorization" -> s"token $gitHubApiToken"
     )
 
     // Get the list of contributors.
 
-    val contributorsJson = getFromGitHubApi(ContributorsUrl)
+    val contributorsJson = getFromGitHubApi(contributorsUrl)
 
     val contributors: Vector[Contributor] = contributorsJson.asInstanceOf[JsArray].elements.map {
         case elem: JsObject =>
@@ -66,7 +92,7 @@ object GenerateContributorsFile extends App {
     private def getFromGitHubApi(url: String): JsValue = {
         val connection: URLConnection = new URL(url).openConnection
 
-        Headers.foreach({
+        headers.foreach({
             case (name, value) => connection.setRequestProperty(name, value)
         })
 
