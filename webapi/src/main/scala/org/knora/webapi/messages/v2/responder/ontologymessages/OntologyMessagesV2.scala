@@ -25,6 +25,7 @@ import java.time.Instant
 import java.util.UUID
 
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.{IriLiteralV2, LiteralV2, StringLiteralV2}
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
@@ -289,16 +290,15 @@ object OntologyUpdateHelper {
         val predicateInfoToUpdate = predicatesWithNewData.values.head
         val predicateToUpdate = predicateInfoToUpdate.predicateIri
 
-        if (!LabelAndCommentPredicates(predicateToUpdate.toString)) {
+        if (!LabelAndCommentPredicates.contains(predicateToUpdate.toString)) {
             throw BadRequestException(s"Invalid predicate: $predicateToUpdate")
         }
 
-        if (predicateInfoToUpdate.objects.nonEmpty) {
+        if (!predicateInfoToUpdate.objects.forall {
+            case StringLiteralV2(_, Some(_)) => true
+            case _ => false
+        }) {
             throw BadRequestException(s"Missing language code in rdfs:label or rdfs:comment")
-        }
-
-        if (predicateInfoToUpdate.objectsWithLang.isEmpty) {
-            throw BadRequestException(s"An rdfs:label or rdfs:comment with at least one object is required")
         }
 
         predicateInfoToUpdate
@@ -346,7 +346,7 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
 
         propertyInfoContent.predicates.get(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri).foreach {
             subjectTypePred =>
-                val subjectType = subjectTypePred.objects.headOption.getOrElse(throw BadRequestException(s"No object provided for predicate knora-api:subjectType")).toSmartIri
+                val subjectType = subjectTypePred.requireIriObject(throw BadRequestException(s"No object provided for predicate knora-api:subjectType"))
 
                 if (!(subjectType.isKnoraApiV2EntityIri && subjectType.getOntologySchema.contains(ApiV2WithValueObjects))) {
                     throw BadRequestException(s"Invalid knora-api:subjectType: $subjectType")
@@ -550,9 +550,9 @@ sealed trait ChangeLabelsOrCommentsRequest {
     val predicateToUpdate: SmartIri
 
     /**
-      * The new objects of the predicate (a map of language codes to literals).
+      * The new objects of the predicate.
       */
-    val newObjects: Map[String, String]
+    val newObjects: Set[StringLiteralV2]
 }
 
 /**
@@ -560,14 +560,14 @@ sealed trait ChangeLabelsOrCommentsRequest {
   *
   * @param propertyIri          the IRI of the property.
   * @param predicateToUpdate    `rdfs:label` or `rdfs:comment`.
-  * @param newObjects           the property's new labels or comments (a map of language codes to literals).
+  * @param newObjects           the property's new labels or comments.
   * @param lastModificationDate the ontology's last modification date.
   * @param apiRequestID         the ID of the API request.
   * @param userProfile          the profile of the user making the request.
   */
 case class ChangePropertyLabelsOrCommentsRequestV2(propertyIri: SmartIri,
                                                    predicateToUpdate: SmartIri,
-                                                   newObjects: Map[String, String],
+                                                   newObjects: Set[StringLiteralV2],
                                                    lastModificationDate: Instant,
                                                    apiRequestID: UUID,
                                                    userProfile: UserProfileV1) extends OntologiesResponderRequestV2 with ChangeLabelsOrCommentsRequest
@@ -598,7 +598,9 @@ object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV
         ChangePropertyLabelsOrCommentsRequestV2(
             propertyIri = propertyInfoContent.propertyIri,
             predicateToUpdate = predicateInfoToUpdate.predicateIri,
-            newObjects = predicateInfoToUpdate.objectsWithLang,
+            newObjects = predicateInfoToUpdate.objects.collect {
+                case strLiteral: StringLiteralV2 => strLiteral
+            },
             lastModificationDate = lastModificationDate,
             apiRequestID = apiRequestID,
             userProfile = userProfile
@@ -611,14 +613,14 @@ object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV
   *
   * @param classIri             the IRI of the property.
   * @param predicateToUpdate    `rdfs:label` or `rdfs:comment`.
-  * @param newObjects           the class's new labels or comments (a map of language codes to literals).
+  * @param newObjects           the class's new labels or comments.
   * @param lastModificationDate the ontology's last modification date.
   * @param apiRequestID         the ID of the API request.
   * @param userProfile          the profile of the user making the request.
   */
 case class ChangeClassLabelsOrCommentsRequestV2(classIri: SmartIri,
                                                 predicateToUpdate: SmartIri,
-                                                newObjects: Map[String, String],
+                                                newObjects: Set[StringLiteralV2],
                                                 lastModificationDate: Instant,
                                                 apiRequestID: UUID,
                                                 userProfile: UserProfileV1) extends OntologiesResponderRequestV2 with ChangeLabelsOrCommentsRequest
@@ -647,7 +649,9 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
         ChangeClassLabelsOrCommentsRequestV2(
             classIri = classInfoContent.classIri,
             predicateToUpdate = predicateInfoToUpdate.predicateIri,
-            newObjects = predicateInfoToUpdate.objectsWithLang,
+            newObjects = predicateInfoToUpdate.objects.collect {
+                case strLiteral: StringLiteralV2 => strLiteral
+            },
             lastModificationDate = lastModificationDate,
             apiRequestID = apiRequestID,
             userProfile = userProfile
@@ -858,7 +862,8 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
                           classes: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2],
                           properties: Map[SmartIri, ReadPropertyInfoV2] = Map.empty[SmartIri, ReadPropertyInfoV2],
                           individuals: Map[SmartIri, ReadIndividualInfoV2] = Map.empty[SmartIri, ReadIndividualInfoV2],
-                          userLang: Option[String] = None) {
+                          userLang: Option[String] = None,
+                          gaga: Boolean = false) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
@@ -890,7 +895,8 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
             properties = convertedProperties,
             individuals = individuals.map {
                 case (individualIri, readIndividualInfo) => individualIri.toOntologySchema(targetSchema) -> readIndividualInfo.toOntologySchema(targetSchema)
-            }
+            },
+            gaga = true
         )
     }
 
@@ -1044,10 +1050,10 @@ object InputOntologiesV2 {
   * the case of a test). This information is necessarily less complete than the information in a [[ReadOntologyV2]],
   * which takes advantage of additional knowledge that is available from the triplestore.
   *
-  * @param ontologyMetadata   metadata about the ontology.
-  * @param classes            information about classes in the ontology.
-  * @param properties         information about properties in the ontology.
-  * @param individuals    information about OWL named individuals in the ontology.
+  * @param ontologyMetadata metadata about the ontology.
+  * @param classes          information about classes in the ontology.
+  * @param properties       information about properties in the ontology.
+  * @param individuals      information about OWL named individuals in the ontology.
   */
 case class InputOntologyV2(ontologyMetadata: OntologyMetadataV2,
                            classes: Map[SmartIri, ClassInfoContentV2] = Map.empty[SmartIri, ClassInfoContentV2],
@@ -1393,46 +1399,43 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends K
 /**
   * Represents a predicate that is asserted about a given ontology entity, and the objects of that predicate.
   *
-  * @param predicateIri    the IRI of the predicate.
-  * @param objects         the objects of the predicate that have no language codes.
-  * @param objectsWithLang the objects of the predicate that have language codes: a Map of language codes to literals.
+  * @param predicateIri the IRI of the predicate.
+  * @param objects      the objects of the predicate.
   */
 case class PredicateInfoV2(predicateIri: SmartIri,
-                           objects: Set[String] = Set.empty[String],
-                           objectsWithLang: Map[String, String] = Map.empty[String, String]) {
-    // TODO: Refactor this class to use org.knora.webapi.messages.store.triplestoremessages.LiteralV2.
-
+                           objects: Set[LiteralV2] = Set.empty[LiteralV2]) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
-      * Converts this [[PredicateInfoV2]] to another ontology schema, without converting its objects.
-      * d
+      * Converts this [[PredicateInfoV2]] to another ontology schema.
       *
       * @param targetSchema the target schema.
       * @return the converted [[PredicateInfoV2]].
       */
-    def justPredicateToOntologySchema(targetSchema: OntologySchema): PredicateInfoV2 = {
+    def toOntologySchema(targetSchema: OntologySchema): PredicateInfoV2 = {
         copy(
-            predicateIri = predicateIri.toOntologySchema(targetSchema)
+            predicateIri = predicateIri.toOntologySchema(targetSchema),
+            objects = objects.map {
+                case IriLiteralV2(iriStr) => IriLiteralV2(iriStr.toSmartIri.toOntologySchema(targetSchema).toString)
+                case other => other
+            }
         )
     }
 
     /**
-      * Converts this [[PredicateInfoV2]] and all its objects (which must all be non-language-specific)
-      * from one ontology schema to another. May be used only if the predicate is known to have IRIs as objects.
+      * Requires this predicate to have a single IRI object, and returns that object.
       *
-      * @param targetSchema the target schema.
-      * @return the converted [[PredicateInfoV2]].
+      * @param errorFun a function that throws an error. It will be called if the predicate does not have a single
+      *                 IRI object.
+      * @return the predicate's IRI object.
       */
-    def predicateAndObjectsToOntologySchema(targetSchema: OntologySchema): PredicateInfoV2 = {
-        if (objectsWithLang.nonEmpty) {
-            throw DataConversionException(s"The objects of $predicateIri cannot be converted to schema $targetSchema, because they are not IRIs")
-        }
+    def requireIriObject(errorFun: => Nothing): SmartIri = {
+        if (objects.size != 1) errorFun
 
-        copy(
-            predicateIri = predicateIri.toOntologySchema(targetSchema),
-            objects = objects.map(_.toSmartIri.toOntologySchema(targetSchema).toString)
-        )
+        objects.head match {
+            case iriLiteral: IriLiteralV2 => iriLiteral.value.toSmartIri
+            case _ => errorFun
+        }
     }
 
     /**
@@ -1444,9 +1447,9 @@ case class PredicateInfoV2(predicateIri: SmartIri,
       */
     def unescape: PredicateInfoV2 = {
         copy(
-            objects = objects.map(obj => stringFormatter.fromSparqlEncodedString(obj)),
-            objectsWithLang = objectsWithLang.map {
-                case (lang, obj) => lang -> stringFormatter.fromSparqlEncodedString(obj)
+            objects = objects.map {
+                case StringLiteralV2(str, lang) => StringLiteralV2(stringFormatter.fromSparqlEncodedString(str), lang)
+                case other => other
             }
         )
     }
@@ -1585,7 +1588,7 @@ sealed trait EntityInfoContentV2 {
     protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
-      * Checks that a predicate is present in this [[EntityInfoContentV2]] and that its object is an IRI, and
+      * Checks that a predicate is present in this [[EntityInfoContentV2]] and that it has a single IRI object, and
       * returns the object as a [[SmartIri]].
       *
       * @param predicateIri the IRI of the predicate.
@@ -1593,7 +1596,7 @@ sealed trait EntityInfoContentV2 {
       * @return a [[SmartIri]] representing the predicate's object.
       */
     def requireIriPredicate(predicateIri: SmartIri, errorFun: => Nothing): SmartIri = {
-        predicates.get(predicateIri).flatMap(pred => pred.objects.headOption).getOrElse(errorFun).toSmartIri
+        predicates.getOrElse(predicateIri, errorFun).requireIriObject(errorFun)
     }
 
     /**
@@ -1618,38 +1621,14 @@ sealed trait EntityInfoContentV2 {
     }
 
     /**
-      * Converts this entity's predicates from one ontology schema to another. Each predicate's IRI is converted,
-      * and its objects are also optionally converted.
-      *
-      * @param predsWithKnoraDefinitionIriObjs a set of the predicates whose objects are known to be Knora definition IRIs.
-      *                                        The objects of these predicates will be converted.
-      * @param targetSchema                    the target schema.
-      * @return a map of converted predicate IRIs to converted [[PredicateInfoV2]] objects.
-      */
-    protected def convertPredicates(predsWithKnoraDefinitionIriObjs: Set[SmartIri], targetSchema: OntologySchema): Map[SmartIri, PredicateInfoV2] = {
-        predicates.map {
-            case (predicateIri, predicateInfo) =>
-                val convertedPredicateIri = predicateIri.toOntologySchema(targetSchema)
-
-                val convertedPredicateInfo = if (predsWithKnoraDefinitionIriObjs.contains(predicateIri)) {
-                    predicateInfo.predicateAndObjectsToOntologySchema(targetSchema)
-                } else {
-                    predicateInfo.justPredicateToOntologySchema(targetSchema)
-                }
-
-                convertedPredicateIri -> convertedPredicateInfo
-        }
-    }
-
-    /**
       * Gets a predicate and its object from an entity in a specific language.
       *
       * @param predicateIri the IRI of the predicate.
       * @param userLang     the language in which the object should to be returned.
       * @return the requested predicate and object.
       */
-    def getPredicateAndObjectWithLang(predicateIri: SmartIri, settings: SettingsImpl, userLang: String): Option[(SmartIri, String)] = {
-        getPredicateLiteralObject(
+    def getPredicateAndStringLiteralObjectWithLang(predicateIri: SmartIri, settings: SettingsImpl, userLang: String): Option[(SmartIri, String)] = {
+        getPredicateStringLiteralObject(
             predicateIri = predicateIri,
             preferredLangs = Some(userLang, settings.fallbackLanguage)
         ).map(obj => predicateIri -> obj)
@@ -1664,29 +1643,34 @@ sealed trait EntityInfoContentV2 {
       * @return an object for the predicate, or [[None]] if this entity doesn't have the specified predicate, or
       *         if the predicate has no objects.
       */
-    def getPredicateLiteralObject(predicateIri: SmartIri, preferredLangs: Option[(String, String)] = None): Option[String] = {
+    def getPredicateStringLiteralObject(predicateIri: SmartIri, preferredLangs: Option[(String, String)] = None): Option[String] = {
         // Does the predicate exist?
         predicates.get(predicateIri) match {
             case Some(predicateInfo) =>
-                // Yes. Were preferred languages specified?
+                // Yes. Make a map of optional language codes to string values.
+                val objMap: Map[Option[String], String] = predicateInfo.objects.collect {
+                    case StringLiteralV2(str, maybeLang) => maybeLang -> str
+                }.toMap
+
+                // Were preferred languages specified?
                 preferredLangs match {
                     case Some((userLang, defaultLang)) =>
                         // Yes. Is the object available in the user's preferred language?
-                        predicateInfo.objectsWithLang.get(userLang) match {
+                        objMap.get(Some(userLang)) match {
                             case Some(objectInUserLang) =>
                                 // Yes.
                                 Some(objectInUserLang)
                             case None =>
                                 // The object is not available in the user's preferred language. Is it available
                                 // in the system default language?
-                                predicateInfo.objectsWithLang.get(defaultLang) match {
+                                objMap.get(Some(defaultLang)) match {
                                     case Some(objectInDefaultLang) =>
                                         // Yes.
                                         Some(objectInDefaultLang)
                                     case None =>
                                         // The object is not available in the system default language. Is it available
                                         // without a language tag?
-                                        predicateInfo.objects.headOption match {
+                                        objMap.get(None) match {
                                             case Some(objectWithoutLang) =>
                                                 // Yes.
                                                 Some(objectWithoutLang)
@@ -1695,7 +1679,7 @@ sealed trait EntityInfoContentV2 {
                                                 // available objects by language code to get a deterministic result,
                                                 // and return the object in the language with the lowest sort
                                                 // order.
-                                                predicateInfo.objectsWithLang.toVector.sortBy {
+                                                objMap.toVector.sortBy {
                                                     case (lang, _) => lang
                                                 }.headOption.map {
                                                     case (_, obj) => obj
@@ -1705,8 +1689,11 @@ sealed trait EntityInfoContentV2 {
                         }
 
                     case None =>
-                        // Preferred languages were not specified. Take the first object without a language tag.
-                        predicateInfo.objects.headOption
+                        // Preferred languages were not specified. Take the first object.
+                        predicateInfo.objects.headOption match {
+                            case Some(StringLiteralV2(str, _)) => Some(str)
+                            case _ => None
+                        }
 
                 }
 
@@ -1715,14 +1702,17 @@ sealed trait EntityInfoContentV2 {
     }
 
     /**
-      * Returns all the non-language-specific objects specified for a given predicate.
+      * Returns all the non-language-specific string objects specified for a given predicate.
       *
       * @param predicateIri the IRI of the predicate.
       * @return the predicate's objects, or an empty set if this entity doesn't have the specified predicate.
       */
-    def getPredicateLiteralsWithoutLang(predicateIri: SmartIri): Set[String] = {
+    def getPredicateStringLiteralObjectsWithoutLang(predicateIri: SmartIri): Set[String] = {
         predicates.get(predicateIri) match {
-            case Some(predicateInfo) => predicateInfo.objects
+            case Some(predicateInfo) => predicateInfo.objects.collect {
+                case StringLiteralV2(str, None) => str
+            }
+
             case None => Set.empty[String]
         }
     }
@@ -1734,9 +1724,21 @@ sealed trait EntityInfoContentV2 {
       * @return the predicate's IRI objects, or an empty set if this entity doesn't have the specified predicate.
       */
     def getPredicateIriObjects(predicateIri: SmartIri): Set[SmartIri] = {
-        getPredicateLiteralsWithoutLang(predicateIri).map(_.toSmartIri)
+        predicates.get(predicateIri) match {
+            case Some(predicateInfo) => predicateInfo.objects.collect {
+                case IriLiteralV2(iriStr) => iriStr.toSmartIri
+            }
+
+            case None => Set.empty[SmartIri]
+        }
     }
 
+    /**
+      * Returns the first object specified as a string without a language tag for the given predicate.
+      *
+      * @param predicateIri the IRI of the predicate.
+      * @return the predicate's object, if given.
+      */
     def getPredicateIriObject(predicateIri: SmartIri): Option[SmartIri] = getPredicateIriObjects(predicateIri).headOption
 
     /**
@@ -1747,7 +1749,10 @@ sealed trait EntityInfoContentV2 {
       */
     def getPredicateObjectsWithLangs(predicateIri: SmartIri): Map[String, String] = {
         predicates.get(predicateIri) match {
-            case Some(predicateInfo) => predicateInfo.objectsWithLang
+            case Some(predicateInfo) => predicateInfo.objects.collect {
+                case StringLiteralV2(str, Some(lang)) => lang -> str
+            }.toMap
+
             case None => Map.empty[String, String]
         }
     }
@@ -1757,6 +1762,18 @@ sealed trait EntityInfoContentV2 {
   * Processes predicates from a JSON-LD class or property definition.
   */
 object EntityInfoContentV2 {
+    private def stringToLiteral(str: String): LiteralV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val sparqlEncodedString = stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid predicate object: $str"))
+
+        if (stringFormatter.isIri(sparqlEncodedString)) {
+            IriLiteralV2(sparqlEncodedString)
+        } else {
+            StringLiteralV2(sparqlEncodedString)
+        }
+    }
+
     /**
       * Processes predicates from a JSON-LD class or property definition. Converts `@type` to `rdf:type`. Ignores
       * `\@id`, `rdfs:subClassOf` and `rdfs:subPropertyOf`.
@@ -1771,7 +1788,7 @@ object EntityInfoContentV2 {
 
         val rdfType: (SmartIri, PredicateInfoV2) = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Set(entityType.toString)
+            objects = Set(IriLiteralV2(entityType.toString))
         )
 
         val predicates = jsonLDObject.value - "@id" - "@type" - OntologyConstants.Rdfs.SubClassOf - OntologyConstants.Rdfs.SubPropertyOf
@@ -1784,13 +1801,13 @@ object EntityInfoContentV2 {
                     case JsonLDString(objStr) =>
                         PredicateInfoV2(
                             predicateIri = predicateIri,
-                            objects = Set(stringFormatter.toSparqlEncodedString(objStr, throw BadRequestException(s"Invalid predicate object: $objStr")))
+                            objects = Set(stringToLiteral(objStr))
                         )
 
                     case objObj: JsonLDObject =>
                         PredicateInfoV2(
                             predicateIri = predicateIri,
-                            objectsWithLang = JsonLDArray(Seq(objObj)).toObjsWithLang
+                            objects = JsonLDArray(Seq(objObj)).toObjsWithLang
                         )
 
                     case objArray: JsonLDArray =>
@@ -1802,14 +1819,14 @@ object EntityInfoContentV2 {
                             PredicateInfoV2(
                                 predicateIri = predicateIri,
                                 objects = objArray.value.map {
-                                    case JsonLDString(objStr) => stringFormatter.toSparqlEncodedString(objStr, throw BadRequestException(s"Invalid predicate object: $objStr"))
+                                    case JsonLDString(objStr) => stringToLiteral(objStr)
                                     case other => throw AssertionException(s"Invalid object for predicate $predicateIriStr: $other")
                                 }.toSet
                             )
                         } else if (objArray.value.forall(_.isInstanceOf[JsonLDObject])) {
                             PredicateInfoV2(
                                 predicateIri = predicateIri,
-                                objectsWithLang = objArray.toObjsWithLang
+                                objects = objArray.toObjsWithLang
                             )
                         } else {
                             throw BadRequestException(s"Invalid object for predicate $predicateIriStr: $predicateValue")
@@ -1850,11 +1867,11 @@ sealed trait ReadEntityInfoV2 {
       * @return a JSON-LD object representing the entity.
       */
     def toJsonLDWithSingleLanguage(targetSchema: ApiV2Schema, userLang: String, settings: SettingsImpl): JsonLDObject = {
-        val label: Option[(IRI, JsonLDString)] = entityInfoContent.getPredicateAndObjectWithLang(OntologyConstants.Rdfs.Label.toSmartIri, settings, userLang).map {
+        val label: Option[(IRI, JsonLDString)] = entityInfoContent.getPredicateAndStringLiteralObjectWithLang(OntologyConstants.Rdfs.Label.toSmartIri, settings, userLang).map {
             case (k: SmartIri, v: String) => (k.toString, JsonLDString(v))
         }
 
-        val comment: Option[(IRI, JsonLDString)] = entityInfoContent.getPredicateAndObjectWithLang(OntologyConstants.Rdfs.Comment.toSmartIri, settings, userLang).map {
+        val comment: Option[(IRI, JsonLDString)] = entityInfoContent.getPredicateAndStringLiteralObjectWithLang(OntologyConstants.Rdfs.Comment.toSmartIri, settings, userLang).map {
             case (k: SmartIri, v: String) => (k.toString, JsonLDString(v))
         }
 
@@ -2041,7 +2058,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
             case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.ResourceIcon
         }
 
-        val resourceIconStatement: Option[(IRI, JsonLDString)] = entityInfoContent.getPredicateLiteralsWithoutLang(OntologyConstants.KnoraBase.ResourceIcon.toSmartIri).headOption.map {
+        val resourceIconStatement: Option[(IRI, JsonLDString)] = entityInfoContent.getPredicateStringLiteralObjectsWithoutLang(resourceIconPred.toSmartIri).headOption.map {
             resIcon => resourceIconPred -> JsonLDString(resIcon)
         }
 
@@ -2184,18 +2201,15 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
         }
 
         val guiElementStatement: Option[(IRI, JsonLDString)] = if (targetSchema == ApiV2WithValueObjects) {
-            entityInfoContent.getPredicateLiteralsWithoutLang(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri) match {
-                case objs if objs.nonEmpty =>
-                    Some(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp -> JsonLDString(objs.head))
-
-                case _ => None
+            entityInfoContent.getPredicateIriObject(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri).map {
+                obj => OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp -> JsonLDString(obj.toString)
             }
         } else {
             None
         }
 
         val guiAttributeStatement = if (targetSchema == ApiV2WithValueObjects) {
-            entityInfoContent.getPredicateLiteralsWithoutLang(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri) match {
+            entityInfoContent.getPredicateStringLiteralObjectsWithoutLang(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri) match {
                 case objs if objs.nonEmpty =>
                     Some(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute -> JsonLDArray(objs.toArray.sorted.map(JsonLDString)))
 
@@ -2228,7 +2242,12 @@ case class ReadIndividualInfoV2(entityInfoContent: IndividualInfoContentV2) exte
         val jsonLDPredicates: Map[IRI, JsonLDValue] = entityInfoContent.predicates.foldLeft(Map.empty[IRI, JsonLDValue]) {
             case (acc, (predicateIri, predicateInfo)) =>
                 if (predicateInfo.objects.nonEmpty) {
-                    acc + (predicateIri.toString -> JsonLDArray(predicateInfo.objects.map(JsonLDString).toSeq))
+                    val nonLanguageSpecificObjectsAsJson: Seq[JsonLDString] = predicateInfo.objects.collect {
+                        case StringLiteralV2(str, None) => JsonLDString(str)
+                        case IriLiteralV2(str) => JsonLDString(str)
+                    }.toSeq
+
+                    acc + (predicateIri.toString -> JsonLDArray(nonLanguageSpecificObjectsAsJson))
                 } else {
                     acc
                 }
@@ -2263,7 +2282,9 @@ case class ClassInfoContentV2(classIri: SmartIri,
     override def toOntologySchema(targetSchema: OntologySchema): ClassInfoContentV2 = {
         copy(
             classIri = classIri.toOntologySchema(targetSchema),
-            predicates = predicates,
+            predicates = predicates.map {
+                case (predicateIri, predicate) => predicateIri.toOntologySchema(targetSchema) -> predicate.toOntologySchema(targetSchema)
+            },
             directCardinalities = directCardinalities.map {
                 case (propertyIri, cardinality) => propertyIri.toOntologySchema(targetSchema) -> cardinality
             },
@@ -2273,7 +2294,7 @@ case class ClassInfoContentV2(classIri: SmartIri,
     }
 
     override def getRdfType: SmartIri = {
-        predicates.get(OntologyConstants.Rdf.Type.toSmartIri).flatMap(pred => pred.objects.headOption).getOrElse(throw InconsistentTriplestoreDataException(s"Class $classIri has no rdf:type")).toSmartIri
+        requireIriPredicate(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"Class $classIri has no rdf:type"))
     }
 
     /**
@@ -2308,7 +2329,8 @@ object ClassInfoContentV2 {
         OntologyConstants.Owl.Cardinality,
         OntologyConstants.Owl.MinCardinality,
         OntologyConstants.Owl.MaxCardinality,
-        OntologyConstants.Owl.OnProperty
+        OntologyConstants.Owl.OnProperty,
+        OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiOrder
     )
 
     /**
@@ -2385,7 +2407,7 @@ object ClassInfoContentV2 {
                             }
 
                             val onProperty = restriction.requireString(OntologyConstants.Owl.OnProperty, stringFormatter.toSmartIriWithErr)
-                            val guiOrder = restriction.maybeInt(OntologyConstants.SalsahGui.GuiOrder).map(_.value)
+                            val guiOrder = restriction.maybeInt(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiOrder).map(_.value)
 
                             val owlCardinalityInfo = OwlCardinalityInfo(
                                 owlCardinalityIri = owlCardinalityIri,
@@ -2430,8 +2452,6 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
                                  subPropertyOf: Set[SmartIri] = Set.empty[SmartIri],
                                  ontologySchema: OntologySchema) extends EntityInfoContentV2 with KnoraContentV2[PropertyInfoContentV2] {
 
-    import PropertyInfoContentV2._
-
     override def toOntologySchema(targetSchema: OntologySchema): PropertyInfoContentV2 = {
 
         // Are we converting from the internal schema to the API v2 simple schema?
@@ -2462,7 +2482,7 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
                                     (predicates - rdfTypeIri) +
                                         (rdfTypeIri -> PredicateInfoV2(
                                             predicateIri = rdfTypeIri,
-                                            objects = Set(OntologyConstants.Owl.DatatypeProperty)
+                                            objects = Set(IriLiteralV2(OntologyConstants.Owl.DatatypeProperty))
                                         ))
                                 } else {
                                     predicates
@@ -2479,25 +2499,18 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
             predicates
         }
 
-        // Make a copy of this PredicateInfoContentV2 with the adjusted rdf:type, so we can call convertPredicates() on it.
-        val copyWithAdjustedPredicates = copy(
+        copy(
             propertyIri = propertyIri.toOntologySchema(targetSchema),
-            predicates = predicatesWithAdjustedRdfType,
+            predicates = predicatesWithAdjustedRdfType.map {
+                case (predicateIri, predicate) => predicateIri.toOntologySchema(targetSchema) -> predicate.toOntologySchema(targetSchema)
+            },
             subPropertyOf = subPropertyOf.map(_.toOntologySchema(targetSchema)),
             ontologySchema = targetSchema
-        )
-
-        // Call its convertPredicates() method to convert the rest of the predicates.
-        copyWithAdjustedPredicates.copy(
-            predicates = copyWithAdjustedPredicates.convertPredicates(
-                predsWithKnoraDefinitionIriObjs = PredicatesWithIriObjects.map(iri => iri.toSmartIri),
-                targetSchema = targetSchema
-            )
         )
     }
 
     override def getRdfType: SmartIri = {
-        predicates.get(OntologyConstants.Rdf.Type.toSmartIri).flatMap(pred => pred.objects.headOption).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdf:type")).toSmartIri
+        requireIriPredicate(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdf:type"))
     }
 
     /**
@@ -2529,20 +2542,6 @@ object PropertyInfoContentV2 {
         OntologyConstants.Rdfs.Comment,
         OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp,
         OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute
-    )
-
-    // A set of property predicates that are used in API v2 requests and responses and whose objects are known to be
-    // Knora definition IRIs.
-    private val PredicatesWithIriObjects = Set(
-        OntologyConstants.KnoraApiV2Simple.SubjectType,
-        OntologyConstants.KnoraApiV2Simple.ObjectType,
-        OntologyConstants.KnoraApiV2WithValueObjects.SubjectType,
-        OntologyConstants.KnoraApiV2WithValueObjects.ObjectType,
-        OntologyConstants.KnoraBase.SubjectClassConstraint,
-        OntologyConstants.KnoraBase.ObjectClassConstraint,
-        OntologyConstants.KnoraBase.ObjectDatatypeConstraint,
-        OntologyConstants.SalsahGui.GuiElementProp,
-        OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp
     )
 
     /**
@@ -2600,18 +2599,25 @@ case class IndividualInfoContentV2(individualIri: SmartIri,
                                    predicates: Map[SmartIri, PredicateInfoV2],
                                    ontologySchema: OntologySchema) extends EntityInfoContentV2 with KnoraContentV2[IndividualInfoContentV2] {
     override def getRdfType: SmartIri = {
-        predicates.get(OntologyConstants.Rdf.Type.toSmartIri).flatMap {
-            pred => pred.objects.find(_ != OntologyConstants.Owl.NamedIndividual)
-        }.getOrElse(throw InconsistentTriplestoreDataException(s"Named individual $individualIri has no rdf:type other than owl:NamedIndividual")).toSmartIri
+        val rdfTypePred = predicates.getOrElse(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"OWL named individual $individualIri has no rdf:type"))
+
+        val nonIndividualTypes: Set[SmartIri] = rdfTypePred.objects.collect {
+            case IriLiteralV2(iriStr) if iriStr != OntologyConstants.Owl.NamedIndividual => iriStr.toSmartIri
+        }
+
+        if (nonIndividualTypes.size != 1) {
+            throw InconsistentTriplestoreDataException(s"OWL named individual $individualIri has too many objects for rdf:type: ${rdfTypePred.objects.mkString(", ")}")
+        }
+
+        nonIndividualTypes.head
     }
 
     override def toOntologySchema(targetSchema: OntologySchema): IndividualInfoContentV2 = {
         copy(
             individualIri = individualIri.toOntologySchema(targetSchema),
-            predicates = convertPredicates(
-                predsWithKnoraDefinitionIriObjs = Set(OntologyConstants.Rdf.Type.toSmartIri),
-                targetSchema = targetSchema
-            ),
+            predicates = predicates.map {
+                case (predicateIri, predicate) => predicateIri.toOntologySchema(targetSchema) -> predicate.toOntologySchema(targetSchema)
+            },
             ontologySchema = targetSchema
         )
     }

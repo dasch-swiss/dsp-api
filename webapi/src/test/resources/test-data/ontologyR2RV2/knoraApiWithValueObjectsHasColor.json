@@ -10,6 +10,8 @@
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#ColorValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Region",
+        "salsah-gui:guiAttribute" : "ncolors=8",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Colorpicker",
         "rdfs:comment" : "Specifies the color of a Region",
         "rdfs:label" : "Color",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
