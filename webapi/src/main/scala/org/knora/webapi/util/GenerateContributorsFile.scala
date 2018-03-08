@@ -19,33 +19,31 @@
 
 package org.knora.webapi.util
 
-import scala.io.Source
+import java.io.File
 import java.net.{URL, URLConnection}
 
 import org.knora.webapi.AssertionException
 import org.knora.webapi.twirl.Contributor
+import org.rogach.scallop._
 import spray.json._
-import java.io.File
+
+import scala.io.Source
 
 /**
-  * Generates the file Contributors.md, using the GitHub API. Takes one argument, which is a GitHub API key.
+  * Generates the file Contributors.md, using the GitHub API.
   */
 object GenerateContributorsFile extends App {
 
     // Configuration
 
     val contributorsUrl = "https://api.github.com/repos/dhlab-basel/Knora/contributors"
+    val defaultOutputFile = "../Contributors.md"
 
-    if (args.isEmpty) {
-        println("Usage: GenerateContributorsFile TOKEN")
-        System.exit(1)
-    }
+    // Command-line args
 
-    val gitHubApiToken = args(0)
-
-    val headers: Map[String, String] = Map(
-        "Authorization" -> s"token $gitHubApiToken"
-    )
+    private val conf = new GenerateContributorsFileConf(args)
+    private val token = conf.token.toOption
+    private val outputFile = new File(conf.output())
 
     // Get the list of contributors.
 
@@ -81,7 +79,7 @@ object GenerateContributorsFile extends App {
     val contributorsText: String = queries.util.txt.generateContributorsMarkdown(contributorsSorted).toString
 
     // Write Contributors.md.
-    FileUtil.writeTextFile(new File("../Contributors.md"), contributorsText)
+    FileUtil.writeTextFile(outputFile, contributorsText)
 
     /**
       * Makes an HTTP GET connection to the GitHub API.
@@ -92,9 +90,12 @@ object GenerateContributorsFile extends App {
     private def getFromGitHubApi(url: String): JsValue = {
         val connection: URLConnection = new URL(url).openConnection
 
-        headers.foreach({
-            case (name, value) => connection.setRequestProperty(name, value)
-        })
+        token match {
+            case Some(tokenStr) =>
+                connection.setRequestProperty("Authorization", s"token $tokenStr")
+
+            case None => ()
+        }
 
         val responseStr: String = Source.fromInputStream(connection.getInputStream).mkString
 
@@ -102,4 +103,21 @@ object GenerateContributorsFile extends App {
 
         JsonParser(responseStr)
     }
+
+    /**
+      * Parses command-line arguments.
+      */
+    private class GenerateContributorsFileConf(arguments: Seq[String]) extends ScallopConf(arguments) {
+        banner(
+            s"""
+               |Generates a file listing the contributors to Knora.
+               |
+               |Usage: org.knora.webapi.util.GenerateContributorsFile [ -t TOKEN ] [ -o OUTPUT ]
+            """.stripMargin)
+
+        val token: ScallopOption[String] = opt[String](descr = "GitHub API token")
+        val output: ScallopOption[String] = opt[String](descr = s"Output Turtle file (defaults to $defaultOutputFile)", default = Some(defaultOutputFile))
+        verify()
+    }
+
 }
