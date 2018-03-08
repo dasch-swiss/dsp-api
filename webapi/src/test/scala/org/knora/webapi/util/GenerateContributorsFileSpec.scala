@@ -28,7 +28,7 @@ import org.knora.webapi.CoreSpec
   */
 class GenerateContributorsFileSpec extends CoreSpec() {
     "The GenerateContributorsFile utility" should {
-        "generate a contributors file" in {
+        "generate a contributors file" ignore { // GitHub returns an HTTP 403 (Forbidden) error when this is run on Travis without a GitHub API key.
             val tmpContributorsFile = File.createTempFile("TestContributors", ".md")
             tmpContributorsFile.deleteOnExit()
             GenerateContributorsFile.main(Array("-o", s"${tmpContributorsFile.getAbsolutePath}"))
