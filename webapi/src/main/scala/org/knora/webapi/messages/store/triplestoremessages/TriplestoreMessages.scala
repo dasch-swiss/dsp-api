@@ -23,8 +23,8 @@ package org.knora.webapi.messages.store.triplestoremessages
 import java.time.Instant
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.util.ErrorHandlingMap
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, TriplestoreResponseException}
+import org.knora.webapi.util.{ErrorHandlingMap, SmartIri}
+import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologySchema, TriplestoreResponseException}
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsObject, JsString, JsValue, JsonFormat, NullOptions, RootJsonFormat, _}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -258,12 +258,28 @@ case class BlankNodeSubjectV2(value: String) extends SubjectV2 {
 sealed trait LiteralV2
 
 /**
-  * Represents an object IRI.
+  * Represents a literal read from an ontology in the triplestore.
+  */
+sealed trait OntologyLiteralV2
+
+/**
+  * Represents an IRI literal.
   *
   * @param value the IRI.
   */
 case class IriLiteralV2(value: IRI) extends LiteralV2 {
     override def toString: IRI = value
+}
+
+/**
+  * Represents an IRI literal as a [[SmartIri]].
+
+  * @param value the IRI.
+  */
+case class SmartIriLiteralV2(value: SmartIri) extends OntologyLiteralV2 {
+    override def toString: IRI = value.toString
+
+    def toOntologySchema(targetSchema: OntologySchema) = SmartIriLiteralV2(value.toOntologySchema(targetSchema))
 }
 
 /**
@@ -281,7 +297,7 @@ case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
   * @param value    the string value.
   * @param language the optional language tag.
   */
-case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2 with Ordered[StringLiteralV2] {
+case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2 with OntologyLiteralV2 with Ordered[StringLiteralV2] {
     override def toString: String = value
 
     def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
@@ -292,7 +308,7 @@ case class StringLiteralV2(value: String, language: Option[String] = None) exten
   *
   * @param value the boolean value.
   */
-case class BooleanLiteralV2(value: Boolean) extends LiteralV2 {
+case class BooleanLiteralV2(value: Boolean) extends LiteralV2 with OntologyLiteralV2 {
     override def toString: String = value.toString
 }
 

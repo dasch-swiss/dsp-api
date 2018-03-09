@@ -38,9 +38,9 @@
 
         @obj match {
 
-            case IriLiteralV2(iriStr) => {
+            case SmartIriLiteralV2(iri) => {
 
-                <@entityIri> <@predicate.predicateIri> <@iriStr> .
+                <@entityIri> <@predicate.predicateIri> <@iri> .
 
             }
 
@@ -56,36 +56,11 @@
 
             }
 
-            case IntLiteralV2(intVal) => {
-
-                <@entityIri> <@predicate.predicateIri> "@intVal"^^xsd:integer .
-
-            }
-
-            case DecimalLiteralV2(decimalVal) => {
-
-                <@entityIri> <@predicate.predicateIri> "@decimalVal"^^xsd:decimal .
-
-            }
-
             case BooleanLiteralV2(booleanVal) => {
 
                 <@entityIri> <@predicate.predicateIri> "@booleanVal"^^xsd:boolean .
 
             }
-
-            case DateTimeLiteralV2(dateTimeVal) => {
-
-                <@entityIri> <@predicate.predicateIri> "@dateTimeVal"^^xsd:dateTimeStamp .
-
-            }
-
-            case blank: BlankNodeLiteralV2 => {
-
-                @{throw SparqlGenerationException("Blank nodes are not supported as objects in PredicateInfoV2"); ()}
-
-            }
-
         }
 
     }

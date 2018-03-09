@@ -21,7 +21,7 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{IriLiteralV2, LiteralV2, StringLiteralV2}
+import org.knora.webapi.messages.store.triplestoremessages.{OntologyLiteralV2, SmartIriLiteralV2, StringLiteralV2}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
@@ -1136,7 +1136,7 @@ object KnoraApiV2Simple {
       * @return a [[PredicateInfoV2]].
       */
     private def makePredicate(predicateIri: IRI,
-                              objects: Set[LiteralV2] = Set.empty[LiteralV2],
+                              objects: Seq[OntologyLiteralV2] = Seq.empty[OntologyLiteralV2],
                               objectsWithLang: Map[String, String] = Map.empty[String, String]): PredicateInfoV2 = {
         PredicateInfoV2(
             predicateIri = predicateIri.toSmartIri,
@@ -1165,14 +1165,14 @@ object KnoraApiV2Simple {
                              objectType: Option[IRI] = None): ReadPropertyInfoV2 = {
         val propTypePred = makePredicate(
             predicateIri = OntologyConstants.Rdf.Type,
-            objects = Set(IriLiteralV2(propertyType))
+            objects = Seq(SmartIriLiteralV2(propertyType.toSmartIri))
         )
 
         val maybeSubjectTypePred = subjectType.map {
             subjType =>
                 makePredicate(
                     predicateIri = OntologyConstants.KnoraApiV2Simple.SubjectType,
-                    objects = Set(IriLiteralV2(subjType))
+                    objects = Seq(SmartIriLiteralV2(subjType.toSmartIri))
                 )
         }
 
@@ -1180,7 +1180,7 @@ object KnoraApiV2Simple {
             objType =>
                 makePredicate(
                     predicateIri = OntologyConstants.KnoraApiV2Simple.ObjectType,
-                    objects = Set(IriLiteralV2(objType))
+                    objects = Seq(SmartIriLiteralV2(objType.toSmartIri))
                 )
         }
 
@@ -1216,7 +1216,7 @@ object KnoraApiV2Simple {
 
         val rdfType = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Set(IriLiteralV2(OntologyConstants.Owl.Class))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
         )
 
         ReadClassInfoV2(
@@ -1253,7 +1253,7 @@ object KnoraApiV2Simple {
 
         val rdfType = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Set(IriLiteralV2(OntologyConstants.Rdfs.Datatype))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Rdfs.Datatype.toSmartIri))
         )
 
         ReadClassInfoV2(

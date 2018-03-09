@@ -247,7 +247,7 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
       *
       * @return a map of language keys to values.
       */
-    def toObjsWithLang: Set[LiteralV2] = {
+    def toObjsWithLang: Seq[StringLiteralV2] = {
         value.map {
             case obj: JsonLDObject =>
                 val lang = obj.requireString("@language", stringFormatter.toSparqlEncodedString)
@@ -261,7 +261,7 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
 
             case other => throw BadRequestException(s"Expected JSON-LD object: $other")
         }
-    }.toSet
+    }
 }
 
 /**

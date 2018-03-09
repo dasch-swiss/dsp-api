@@ -627,7 +627,7 @@ class OntologyResponderV2 extends Responder {
 
                             case other =>
                                 throw InconsistentTriplestoreDataException(s"Invalid salsah-gui:guiAttributeDefinition in $guiElementIri: $other")
-                        }
+                        }.toSet
 
                     case None => Set.empty[SalsahGuiAttributeDefinition]
                 }
@@ -679,7 +679,7 @@ class OntologyResponderV2 extends Responder {
 
                     case other =>
                         errorFun(s"Property $propertyIri contains an invalid salsah-gui:guiAttribute: $other")
-                }
+                }.toSet
 
             case None => Set.empty[SalsahGuiAttribute]
         }
@@ -2430,7 +2430,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the new labels/comments are different from the current ones.
 
-                currentLabelsOrComments: Set[LiteralV2] = currentReadPropertyInfo.entityInfoContent.predicates.getOrElse(
+                currentLabelsOrComments: Seq[OntologyLiteralV2] = currentReadPropertyInfo.entityInfoContent.predicates.getOrElse(
                     changePropertyLabelsOrCommentsRequest.predicateToUpdate,
                     throw InconsistentTriplestoreDataException(s"Property $internalPropertyIri has no ${changePropertyLabelsOrCommentsRequest.predicateToUpdate}")
                 ).objects
@@ -2477,9 +2477,7 @@ class OntologyResponderV2 extends Responder {
 
                 unescapedNewLabelOrCommentPredicate: PredicateInfoV2 = PredicateInfoV2(
                     predicateIri = changePropertyLabelsOrCommentsRequest.predicateToUpdate,
-                    objects = changePropertyLabelsOrCommentsRequest.newObjects.map {
-                        obj: LiteralV2 => obj
-                    }
+                    objects = changePropertyLabelsOrCommentsRequest.newObjects
                 ).unescape
 
                 unescapedNewPropertyDef: PropertyInfoContentV2 = currentReadPropertyInfo.entityInfoContent.copy(
@@ -2593,7 +2591,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the new labels/comments are different from the current ones.
 
-                currentLabelsOrComments = currentReadClassInfo.entityInfoContent.predicates.getOrElse(
+                currentLabelsOrComments: Seq[OntologyLiteralV2] = currentReadClassInfo.entityInfoContent.predicates.getOrElse(
                     changeClassLabelsOrCommentsRequest.predicateToUpdate,
                     throw InconsistentTriplestoreDataException(s"Class $internalClassIri has no ${changeClassLabelsOrCommentsRequest.predicateToUpdate}")
                 ).objects
@@ -2630,9 +2628,7 @@ class OntologyResponderV2 extends Responder {
 
                 unescapedNewLabelOrCommentPredicate = PredicateInfoV2(
                     predicateIri = changeClassLabelsOrCommentsRequest.predicateToUpdate,
-                    objects = changeClassLabelsOrCommentsRequest.newObjects.map {
-                        obj: LiteralV2 => obj
-                    }
+                    objects = changeClassLabelsOrCommentsRequest.newObjects
                 ).unescape
 
                 unescapedNewClassDef: ClassInfoContentV2 = currentReadClassInfo.entityInfoContent.copy(
@@ -2752,7 +2748,11 @@ class OntologyResponderV2 extends Responder {
 
                 val predicateInfo = PredicateInfoV2(
                     predicateIri = predicateIri,
-                    objects = predObjs.toSet
+                    objects = predObjs.map {
+                        case IriLiteralV2(iriStr) => SmartIriLiteralV2(iriStr.toSmartIri)
+                        case ontoLiteral: OntologyLiteralV2 => ontoLiteral
+                        case other => throw InconsistentTriplestoreDataException(s"Predicate $predicateIri has an invalid object: $other")
+                    }
                 )
 
                 predicateIri -> predicateInfo
@@ -3150,7 +3150,7 @@ class OntologyResponderV2 extends Responder {
         val newPredicates: Map[SmartIri, PredicateInfoV2] = (internalPropertyDef.predicates - OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri) +
             (OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri -> PredicateInfoV2(
                 predicateIri = OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
-                objects = Set(IriLiteralV2(OntologyConstants.KnoraBase.LinkValue))
+                objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraBase.LinkValue.toSmartIri))
             ))
 
         internalPropertyDef.copy(

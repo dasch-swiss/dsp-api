@@ -22,7 +22,7 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import java.time.Instant
 
-import org.knora.webapi.messages.store.triplestoremessages.{IriLiteralV2, StringLiteralV2}
+import org.knora.webapi.messages.store.triplestoremessages.{SmartIriLiteralV2, StringLiteralV2}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
@@ -239,26 +239,26 @@ object InputOntologiesV2Spec {
             predicates = Map(
                 "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
                     predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                    objects = Set(IriLiteralV2("http://www.w3.org/2002/07/owl#ObjectProperty")),
+                    objects = Seq(SmartIriLiteralV2("http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
                 ),
                 "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
                     predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-                    objects = Set(IriLiteralV2("http://0.0.0.0:3333/ontology/anything/v2#Thing")),
+                    objects = Seq(SmartIriLiteralV2("http://0.0.0.0:3333/ontology/anything/v2#Thing".toSmartIri)),
                 ),
                 "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
                     predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
-                    objects = Set(IriLiteralV2("http://api.knora.org/ontology/knora-api/v2#TextValue")),
+                    objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri)),
                 ),
                 "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
                     predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-                    objects = Set(
+                    objects = Seq(
                         StringLiteralV2("has name", Some("en")),
                         StringLiteralV2("hat Namen", Some("de"))
                     )
                 ),
                 "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
                     predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-                    objects = Set(
+                    objects = Seq(
                         StringLiteralV2("The name of a 'Thing'", Some("en")),
                         StringLiteralV2("Der Name eines Dinges", Some("de"))
                     )
@@ -277,15 +277,15 @@ object InputOntologiesV2Spec {
             predicates = Map(
                 "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
                     predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                    objects = Set(IriLiteralV2("http://www.w3.org/2002/07/owl#Class"))
+                    objects = Seq(SmartIriLiteralV2("http://www.w3.org/2002/07/owl#Class".toSmartIri))
                 ),
                 "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
                     predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-                    objects = Set(StringLiteralV2("wild thing", Some("en")))
+                    objects = Seq(StringLiteralV2("wild thing", Some("en")))
                 ),
                 "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
                     predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-                    objects = Set(StringLiteralV2("A thing that is wild", Some("en")))
+                    objects = Seq(StringLiteralV2("A thing that is wild", Some("en")))
                 )
             ),
             classIri = "http://0.0.0.0:3333/ontology/anything/v2#WildThing".toSmartIri,

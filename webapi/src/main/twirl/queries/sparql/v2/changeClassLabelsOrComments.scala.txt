@@ -41,7 +41,7 @@
   ontologyIri: SmartIri,
   classIri: SmartIri,
   predicateToUpdate: SmartIri,
-  newObjects: Set[StringLiteralV2],
+  newObjects: Seq[StringLiteralV2],
   lastModificationDate: Instant,
   currentTime: Instant)
 

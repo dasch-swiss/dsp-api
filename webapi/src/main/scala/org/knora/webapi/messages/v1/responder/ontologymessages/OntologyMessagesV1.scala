@@ -284,7 +284,7 @@ class PredicateInfoV1(predicateInfoV2: PredicateInfoV2) {
     def objects: Set[String] = predicateInfoV2.objects.filter {
         case StringLiteralV2(_, Some(_)) => false
         case _ => true
-    }.map(_.toString)
+    }.map(_.toString).toSet
 
     /**
       * Returns the objects of the predicate that have language codes: a Map of language codes to literals.
@@ -337,7 +337,7 @@ sealed trait EntityInfoV1 {
       * @return the predicate's objects, or an empty set if this entity doesn't have the specified predicate.
       */
     def getPredicateStringObjectsWithoutLang(predicateIri: IRI): Set[String] = {
-        entityInfoContent.getPredicateStringLiteralObjectsWithoutLang(predicateIri.toSmartIri)
+        entityInfoContent.getPredicateStringLiteralObjectsWithoutLang(predicateIri.toSmartIri).toSet
     }
 }
 

@@ -24,8 +24,9 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 import java.time.Instant
 import java.util.UUID
 
+import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{IriLiteralV2, LiteralV2, StringLiteralV2}
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
@@ -552,7 +553,7 @@ sealed trait ChangeLabelsOrCommentsRequest {
     /**
       * The new objects of the predicate.
       */
-    val newObjects: Set[StringLiteralV2]
+    val newObjects: Seq[StringLiteralV2]
 }
 
 /**
@@ -567,7 +568,7 @@ sealed trait ChangeLabelsOrCommentsRequest {
   */
 case class ChangePropertyLabelsOrCommentsRequestV2(propertyIri: SmartIri,
                                                    predicateToUpdate: SmartIri,
-                                                   newObjects: Set[StringLiteralV2],
+                                                   newObjects: Seq[StringLiteralV2],
                                                    lastModificationDate: Instant,
                                                    apiRequestID: UUID,
                                                    userProfile: UserProfileV1) extends OntologiesResponderRequestV2 with ChangeLabelsOrCommentsRequest
@@ -620,7 +621,7 @@ object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV
   */
 case class ChangeClassLabelsOrCommentsRequestV2(classIri: SmartIri,
                                                 predicateToUpdate: SmartIri,
-                                                newObjects: Set[StringLiteralV2],
+                                                newObjects: Seq[StringLiteralV2],
                                                 lastModificationDate: Instant,
                                                 apiRequestID: UUID,
                                                 userProfile: UserProfileV1) extends OntologiesResponderRequestV2 with ChangeLabelsOrCommentsRequest
@@ -1403,7 +1404,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends K
   * @param objects      the objects of the predicate.
   */
 case class PredicateInfoV2(predicateIri: SmartIri,
-                           objects: Set[LiteralV2] = Set.empty[LiteralV2]) {
+                           objects: Seq[OntologyLiteralV2] = Seq.empty[OntologyLiteralV2]) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
@@ -1416,7 +1417,7 @@ case class PredicateInfoV2(predicateIri: SmartIri,
         copy(
             predicateIri = predicateIri.toOntologySchema(targetSchema),
             objects = objects.map {
-                case IriLiteralV2(iriStr) => IriLiteralV2(iriStr.toSmartIri.toOntologySchema(targetSchema).toString)
+                case smartIriLiteral: SmartIriLiteralV2 => smartIriLiteral.toOntologySchema(targetSchema)
                 case other => other
             }
         )
@@ -1430,10 +1431,8 @@ case class PredicateInfoV2(predicateIri: SmartIri,
       * @return the predicate's IRI object.
       */
     def requireIriObject(errorFun: => Nothing): SmartIri = {
-        if (objects.size != 1) errorFun
-
-        objects.head match {
-            case iriLiteral: IriLiteralV2 => iriLiteral.value.toSmartIri
+        objects match {
+            case Seq(SmartIriLiteralV2(iri)) => iri
             case _ => errorFun
         }
     }
@@ -1452,6 +1451,22 @@ case class PredicateInfoV2(predicateIri: SmartIri,
                 case other => other
             }
         )
+    }
+
+    override def hashCode(): Int = {
+        // Ignore the order of predicate objects when generating hash codes for this class.
+        new HashCodeBuilder(17, 37).append(predicateIri).append(objects.toSet).hashCode()
+    }
+
+    override def equals(that: scala.Any): Boolean = {
+        // Ignore the order of predicate objects when testing equality for this class.
+        that match {
+            case otherPred: PredicateInfoV2 =>
+                predicateIri == otherPred.predicateIri &&
+                    objects.toSet == otherPred.objects.toSet
+
+            case _ => false
+        }
     }
 }
 
@@ -1707,13 +1722,13 @@ sealed trait EntityInfoContentV2 {
       * @param predicateIri the IRI of the predicate.
       * @return the predicate's objects, or an empty set if this entity doesn't have the specified predicate.
       */
-    def getPredicateStringLiteralObjectsWithoutLang(predicateIri: SmartIri): Set[String] = {
+    def getPredicateStringLiteralObjectsWithoutLang(predicateIri: SmartIri): Seq[String] = {
         predicates.get(predicateIri) match {
             case Some(predicateInfo) => predicateInfo.objects.collect {
                 case StringLiteralV2(str, None) => str
             }
 
-            case None => Set.empty[String]
+            case None => Seq.empty[String]
         }
     }
 
@@ -1723,13 +1738,13 @@ sealed trait EntityInfoContentV2 {
       * @param predicateIri the IRI of the predicate.
       * @return the predicate's IRI objects, or an empty set if this entity doesn't have the specified predicate.
       */
-    def getPredicateIriObjects(predicateIri: SmartIri): Set[SmartIri] = {
+    def getPredicateIriObjects(predicateIri: SmartIri): Seq[SmartIri] = {
         predicates.get(predicateIri) match {
             case Some(predicateInfo) => predicateInfo.objects.collect {
-                case IriLiteralV2(iriStr) => iriStr.toSmartIri
+                case SmartIriLiteralV2(iri) => iri
             }
 
-            case None => Set.empty[SmartIri]
+            case None => Seq.empty[SmartIri]
         }
     }
 
@@ -1762,13 +1777,13 @@ sealed trait EntityInfoContentV2 {
   * Processes predicates from a JSON-LD class or property definition.
   */
 object EntityInfoContentV2 {
-    private def stringToLiteral(str: String): LiteralV2 = {
+    private def stringToLiteral(str: String): OntologyLiteralV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val sparqlEncodedString = stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid predicate object: $str"))
 
         if (stringFormatter.isIri(sparqlEncodedString)) {
-            IriLiteralV2(sparqlEncodedString)
+            SmartIriLiteralV2(sparqlEncodedString.toSmartIri)
         } else {
             StringLiteralV2(sparqlEncodedString)
         }
@@ -1788,7 +1803,7 @@ object EntityInfoContentV2 {
 
         val rdfType: (SmartIri, PredicateInfoV2) = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Set(IriLiteralV2(entityType.toString))
+            objects = Seq(SmartIriLiteralV2(entityType))
         )
 
         val predicates = jsonLDObject.value - "@id" - "@type" - OntologyConstants.Rdfs.SubClassOf - OntologyConstants.Rdfs.SubPropertyOf
@@ -1801,7 +1816,7 @@ object EntityInfoContentV2 {
                     case JsonLDString(objStr) =>
                         PredicateInfoV2(
                             predicateIri = predicateIri,
-                            objects = Set(stringToLiteral(objStr))
+                            objects = Seq(stringToLiteral(objStr))
                         )
 
                     case objObj: JsonLDObject =>
@@ -1821,7 +1836,7 @@ object EntityInfoContentV2 {
                                 objects = objArray.value.map {
                                     case JsonLDString(objStr) => stringToLiteral(objStr)
                                     case other => throw AssertionException(s"Invalid object for predicate $predicateIriStr: $other")
-                                }.toSet
+                                }
                             )
                         } else if (objArray.value.forall(_.isInstanceOf[JsonLDObject])) {
                             PredicateInfoV2(
@@ -2244,8 +2259,8 @@ case class ReadIndividualInfoV2(entityInfoContent: IndividualInfoContentV2) exte
                 if (predicateInfo.objects.nonEmpty) {
                     val nonLanguageSpecificObjectsAsJson: Seq[JsonLDString] = predicateInfo.objects.collect {
                         case StringLiteralV2(str, None) => JsonLDString(str)
-                        case IriLiteralV2(str) => JsonLDString(str)
-                    }.toSeq
+                        case SmartIriLiteralV2(iri) => JsonLDString(iri.toString)
+                    }
 
                     acc + (predicateIri.toString -> JsonLDArray(nonLanguageSpecificObjectsAsJson))
                 } else {
@@ -2482,7 +2497,7 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
                                     (predicates - rdfTypeIri) +
                                         (rdfTypeIri -> PredicateInfoV2(
                                             predicateIri = rdfTypeIri,
-                                            objects = Set(IriLiteralV2(OntologyConstants.Owl.DatatypeProperty))
+                                            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.DatatypeProperty.toSmartIri))
                                         ))
                                 } else {
                                     predicates
@@ -2601,8 +2616,8 @@ case class IndividualInfoContentV2(individualIri: SmartIri,
     override def getRdfType: SmartIri = {
         val rdfTypePred = predicates.getOrElse(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"OWL named individual $individualIri has no rdf:type"))
 
-        val nonIndividualTypes: Set[SmartIri] = rdfTypePred.objects.collect {
-            case IriLiteralV2(iriStr) if iriStr != OntologyConstants.Owl.NamedIndividual => iriStr.toSmartIri
+        val nonIndividualTypes: Seq[SmartIri] = rdfTypePred.objects.collect {
+            case SmartIriLiteralV2(iri) if iri != OntologyConstants.Owl.NamedIndividual.toSmartIri => iri
         }
 
         if (nonIndividualTypes.size != 1) {
