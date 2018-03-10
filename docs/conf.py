@@ -50,8 +50,8 @@ master_doc = 'rst/index'
 
 # General information about the project.
 project = u'Knora'
-copyright = u'2015-2018, Lukas Rosenthaler, Benjamin Geer, Ivan Subotic, Tobias Schweizer, André Kilchenmann, and Sepideh Alassi'
-author = u'Lukas Rosenthaler, Benjamin Geer, Ivan Subotic, Tobias Schweizer, André Kilchenmann, and Sepideh Alassi'
+copyright = u'2015-2018 the contributors (see Contributors.md)'
+author = u'the contributors (see Contributors.md)'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
