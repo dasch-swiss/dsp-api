@@ -23,7 +23,8 @@ env:
     - secure: "Sj0D8wR3Vx0J0h+LBUIh9t1PWjLJ2NEiKILf3JO5nuGdlU7dPhbFomR4w08q85O4d60km38ml7zpapC4noDQnbAFQHC6XeOe5CWPYFXCxkw7ueBoxhy/vkfSzypXp0UTNUX3S7+RcGJcTxLaZcUC9u+UaoWB0LMkmOcIlrKIDuzm3HcefMsml8gYX1xhS2TQJ8P7ZerzBmm0kERYLUabhxTnj5WAvue0d1xbUtzCzT1LpignOfsUZ9kHTagQEA15JsU0iNrMCvlDcxRWj8OzLhHRoHui4bJPQQfKEA8oMnTkPyzBRLmqafqHvmGcNQp9iGhuU04gb+FkF4gubBkLrxEvgTL/D5vIin3BHQvnZna9zSnUguZS+jw4sfEYcjZgYRzgMRPma/630ZM08FSZZ/qjSTCut4Cjua5aw2Vf9pYhf+Aad5rR0T2JmVYKp6Ik92aLhPOF9U40MacKRPPT54RIjCYcakZlmU4vl+kK37l3sYjvD57LeSs3PlqvkpSxwJzaQDhZFOZ+c7ICo+zU7DcQnWkN7k+ErKBOE7r0mIqvYuBYhdteBVKfo8a4rpDzYJDXaWzBdjc8ZKiEFQvFHngnZjR2UtKc0CAc6Y7ieCWIvBZYdMoHhKsBwFDaO1iuWwDLW3cswXaPEqENonlVAnXePu7KkQeB2acwDzPkhlI=" #DOCKER_USER
     - secure: "iM3Wjt3f5yUaU16yKstwBEEFA8WKx8qcTVnOwF+o9+sooD1SZ39nYJDPgpHHNwFZ1aSkre5ATPEw+dfslr7SnnwYQeYHjYldcqudB+7pq4dmY5U3rCTsjZCH1XmLnnLO45CZRy05pIAUSxWpIiX5khWoHZd704UlDncqIU/6paWWNkywPb2P4UBZ5Xeai1NTS1URHRz0A4aD+dqwKS6P+baq4CyKLC/AqjsTDI+TV4C26FXXTgS0Ly9VfBVZ55D+SdVHgCZXJaHerAixjSX6zvenfkd/87GR6NEAgJ9QofF2nDEXBZZm4jPv5d285Cc4iUvRo1HLbI1VlALya3qUA9Prbno8QQaChNdjRS7mSplkCxZZKzBItpjvI009NPl20zX6GROb/JCjWHRZ4R358cebFKKqE4W1GBArS0piVbdqZyWA/t5KANouQIdrh+lepAf/Xq5JRcDP9r+Rk2hHLk2Rmj97gv001eRf9GjSEC1Qo1kwu1FabZok1UIemJHpY7yWO4d3ZKSOCyQ0WdW6rLMFGkouoByrFVfNPBVxLqDJ3YVL/4x5jc0Q9+G5jm6omqNwQSsn60nUizZJp1fuLGQRUNj8EDvRhxLgVkOJqFf4P/4qRas47k1wkWBk2iBlpNp2eQTY42IZovPIyT+NCfbdg0yyZRyHThpfc+KfTeg=" #DOCKER_PASS
     - WEBAPI_REPO=dhlabbasel/webapi
-    - SALSAH_REPO=dhlabbasel/salsah1
+    - SALSAH1_REPO=dhlabbasel/salsah1
+    - SALSAH2_REPO=dhlabbasel/salsah2
     - SIPI_REPO=dhlabbasel/sipi
     - DOCKERHOST=$(ip route get 8.8.8.8 | awk '{print $NF; exit}')
     - CHROME_BIN=google-chrome-stable
@@ -87,15 +88,15 @@ jobs:
     #    - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test.sh
     #    # start the sipi container (with test config)
     #    - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop /sipi/local/bin/sipi --config=/sipi/config/sipi.knora-test-docker-config.lua
-    #    # start the webapi and salsah server
+    #    # start the webapi and salsah1 server
     #    - cd $TRAVIS_BUILD_DIR/webapi/ && sbt "run allowReloadOverHTTP" &
-    #    - cd $TRAVIS_BUILD_DIR/salsah/ && sbt run &
+    #    - cd $TRAVIS_BUILD_DIR/salsah1/ && sbt run &
     #    # wait for the webapi server to start before we proceed with running the salsah tests
     #    - until netstat -an 2>/dev/null | grep '3333.*LISTEN'; do true; done
     #    # unzip chromedriver
-    #    - cd $TRAVIS_BUILD_DIR/salsah/lib/chromedriver/ && unzip chromedriver_linux64.zip
-    #    # start built-in salsah browser tests
-    #    - cd $TRAVIS_BUILD_DIR/salsah/ && sbt headless:test
+    #    - cd $TRAVIS_BUILD_DIR/salsah1/lib/chromedriver/ && unzip chromedriver_linux64.zip
+    #    # start built-in salsah1 browser tests
+    #    - cd $TRAVIS_BUILD_DIR/salsah1/ && sbt headless:test
     - stage: publish
       script:
         - docker login -u $DOCKER_USER -p $DOCKER_PASS
@@ -103,10 +104,10 @@ jobs:
         - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:develop
         - docker tag $WEBAPI_REPO:develop $WEBAPI_REPO:latest
         - docker push $WEBAPI_REPO
-        # salsah
-        - docker build $TRAVIS_BUILD_DIR/salsah/ -t $SALSAH_REPO:develop
-        - docker tag $SALSAH_REPO:develop $SALSAH_REPO:latest
-        - docker push $SALSAH_REPO
+        # salsah1
+        - docker build $TRAVIS_BUILD_DIR/salsah1/ -t $SALSAH1_REPO:develop
+        - docker tag $SALSAH1_REPO:develop $SALSAH1_REPO:latest
+        - docker push $SALSAH1_REPO
         # sipi: get the develop sipi and tag it as 'develop-knora' so we know that this version is tested (only on the develop branch)
         - docker pull $SIPI_REPO:develop
         - docker tag $SIPI_REPO:develop $SIPI_REPO:knora-develop
