@@ -1,26 +1,41 @@
 ### STAGE 1: Build ###
 
 # We label our stage as 'builder'
-FROM node:8-alpine as build-stage
+FROM node:9-wheezy as builder
 
-COPY package.json package-lock.json ./
+MAINTAINER Ivan Subotic "ivan.subotic@unibas.ch"
 
-RUN npm set progress=false && npm config set depth 0 && npm cache clean --force
+# Install.
+RUN \
+  sed -i 's/# \(.*multiverse$\)/\1/g' /etc/apt/sources.list && \
+  apt-get -qq update && \
+  apt-get -y install git
+
+RUN git clone -b develop --single-branch --depth=1 https://github.com/dhlab-basel/Salsah.git /salsah
+
+RUN cp /salsah/package.json /salsah/yarn.lock ./
+
+RUN yarn config set no-progress && yarn cache clean
 
 ## Storing node modules on a separate layer will prevent unnecessary npm installs at each build
-RUN npm i && mkdir /ng-app && cp -R ./node_modules ./ng-app
+RUN yarn && mkdir /ng-app && cp -R ./node_modules ./ng-app
 
 WORKDIR /ng-app
 
-COPY . .
+## Copy the source
+RUN cp -R /salsah/. .
+
+## Copy our custom environment.ts
+## COPY ./environments/environment.prod.ts ./src/environments/environment.prod.ts
 
 ## Build the angular app in production mode and store the artifacts in dist folder
-RUN $(npm bin)/ng build --prod --build-optimizer
+## should be: $(npm bin)/ng build --prod --env=prod --build-optimizer
+RUN $(npm bin)/ng build --env=prod
 
 
 ### STAGE 2: Setup ###
 
-FROM nginx:1.13.3-alpine
+FROM nginx:1.13.9-alpine
 
 ## Copy our default nginx config
 COPY nginx/default.conf /etc/nginx/conf.d/
@@ -29,8 +44,8 @@ COPY nginx/default.conf /etc/nginx/conf.d/
 RUN rm -rf /usr/share/nginx/html/*
 
 ## From 'builder' stage copy over the artifacts in dist folder to default nginx public folder
-COPY --from=build-stage /ng-app/dist /usr/share/nginx/html
+COPY --from=builder /ng-app/dist /usr/share/nginx/html
 
-EXPOSE
+EXPOSE 4200
 
 CMD ["nginx", "-g", "daemon off;"]
