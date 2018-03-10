@@ -1,33 +1,22 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
  * This file is part of Knora.
+ *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * Knora is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
+ *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
-/*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
- * This file is part of Knora.
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
- */
+
 /******************************************************************************
  * Generic definitions
  * ===================
@@ -292,17 +281,20 @@ code {
   font-family: Courrier, monospace;
 }
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
  * This file is part of Knora.
+ *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * Knora is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
+ *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -424,17 +416,20 @@ body {
   border-bottom: 1px solid #999;
 }
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
  * This file is part of Knora.
+ *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * Knora is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
+ *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -606,17 +601,20 @@ body {
   border-bottom-width: 1px;
 }
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
  * This file is part of Knora.
+ *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * Knora is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
+ *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -833,17 +831,20 @@ input.disp_csv {
   background: url('icons/sets/view/csv_icon&16.png') no-repeat top left;
 }
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
  * This file is part of Knora.
+ *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * Knora is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
+ *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -888,17 +889,20 @@ input.disp_csv {
   opacity: 0.5;
 }
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
  * This file is part of Knora.
+ *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * Knora is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
+ *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -944,17 +948,20 @@ input.disp_csv {
   border-bottom: 1px solid #000;
 }
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
  * This file is part of Knora.
+ *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * Knora is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
+ *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -1300,17 +1307,20 @@ table.chartable td {
   border: 1px solid #000000;
 }
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
  * This file is part of Knora.
+ *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * Knora is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
+ *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */

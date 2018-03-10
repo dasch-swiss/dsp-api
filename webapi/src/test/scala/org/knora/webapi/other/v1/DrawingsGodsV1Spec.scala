@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published

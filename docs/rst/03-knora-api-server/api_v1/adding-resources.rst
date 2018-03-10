@@ -1,5 +1,4 @@
-.. Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
-   Tobias Schweizer, Sepideh Alassi, André Kilchenmann, and Sepideh Alassi.
+.. Copyright © 2015-2018 the contributors (see Contributors.md).
 
    This file is part of Knora.
 
