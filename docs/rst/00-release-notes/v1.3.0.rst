@@ -45,5 +45,8 @@ New features:
 Bugfixes:
 ---------
 
+- When API v2 served ``knora-api`` (default schema), ``salsah-gui:guiElement`` and ``salsah-gui:guiAttribute`` were not shown in properties in that ontology.
+- The predicate ``salsah-gui:guiOrder`` was not accepted when creating a property via API v2.
+
 .. _release: https://github.com/dhlab-basel/Knora/releases/tag/v1.3.0
 .. _v1.3.0 milestone: https://github.com/dhlab-basel/Knora/milestone/7
