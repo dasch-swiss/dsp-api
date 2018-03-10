@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -33,7 +32,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeC
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
-import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, _}
+import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.IriConversions._
@@ -619,12 +618,15 @@ class OntologyResponderV2 extends Responder {
                 val attributeDefs: Set[SalsahGuiAttributeDefinition] = guiElementIndividual.predicates.get(OntologyConstants.SalsahGui.GuiAttributeDefinition.toSmartIri) match {
                     case Some(predicateInfo) =>
                         predicateInfo.objects.map {
-                            attributeDefStr =>
+                            case StringLiteralV2(attributeDefStr, None) =>
                                 stringFormatter.toSalsahGuiAttributeDefinition(
                                     attributeDefStr,
                                     throw InconsistentTriplestoreDataException(s"Invalid salsah-gui:guiAttributeDefinition in $guiElementIri: $attributeDefStr")
                                 )
-                        }
+
+                            case other =>
+                                throw InconsistentTriplestoreDataException(s"Invalid salsah-gui:guiAttributeDefinition in $guiElementIri: $other")
+                        }.toSet
 
                     case None => Set.empty[SalsahGuiAttributeDefinition]
                 }
@@ -645,12 +647,13 @@ class OntologyResponderV2 extends Responder {
         val predicates = propertyInfoContent.predicates
 
         // Find out which salsah-gui:Guielement the property uses, if any.
-        val maybeGuiElementIri: Option[IRI] = predicates.get(OntologyConstants.SalsahGui.GuiElementProp.toSmartIri).flatMap(_.objects.headOption)
+        val maybeGuiElementPred: Option[PredicateInfoV2] = predicates.get(OntologyConstants.SalsahGui.GuiElementProp.toSmartIri)
+        val maybeGuiElementIri: Option[SmartIri] = maybeGuiElementPred.map(_.requireIriObject(throw InconsistentTriplestoreDataException(s"Property $propertyIri has an invalid object for ${OntologyConstants.SalsahGui.GuiElementProp}")))
 
         // Get that Guielement's attribute definitions, if any.
         val guiAttributeDefs: Set[SalsahGuiAttributeDefinition] = maybeGuiElementIri match {
             case Some(guiElementIri) =>
-                allGuiAttributeDefinitions.getOrElse(guiElementIri.toSmartIri, errorFun(s"Property $propertyIri has salsah-gui:guiElement $guiElementIri, which doesn't exist"))
+                allGuiAttributeDefinitions.getOrElse(guiElementIri, errorFun(s"Property $propertyIri has salsah-gui:guiElement $guiElementIri, which doesn't exist"))
 
             case None => Set.empty[SalsahGuiAttributeDefinition]
         }
@@ -666,13 +669,16 @@ class OntologyResponderV2 extends Responder {
 
                 // Syntactically validate each attribute.
                 guiAttributePred.objects.map {
-                    guiAttributeObj =>
+                    case StringLiteralV2(guiAttributeObj, None) =>
                         stringFormatter.toSalsahGuiAttribute(
                             s = guiAttributeObj,
                             attributeDefs = guiAttributeDefs,
                             errorFun = errorFun(s"Property $propertyIri contains an invalid salsah-gui:guiAttribute: $guiAttributeObj")
                         )
-                }
+
+                    case other =>
+                        errorFun(s"Property $propertyIri contains an invalid salsah-gui:guiAttribute: $other")
+                }.toSet
 
             case None => Set.empty[SalsahGuiAttribute]
         }
@@ -910,7 +916,7 @@ class OntologyResponderV2 extends Responder {
 
                     SubClassInfoV2(
                         id = subClassIri,
-                        label = classInfo.entityInfoContent.getPredicateLiteralObject(
+                        label = classInfo.entityInfoContent.getPredicateStringLiteralObject(
                             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
                             preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)
                         ).getOrElse(throw InconsistentTriplestoreDataException(s"Resource class $subClassIri has no rdfs:label"))
@@ -2114,7 +2120,7 @@ class OntologyResponderV2 extends Responder {
 
                 propertyDef.predicates.get(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri) match {
                     case Some(subjectClassConstraintPred) =>
-                        val subjectClassConstraint = subjectClassConstraintPred.objects.head.toSmartIri
+                        val subjectClassConstraint = subjectClassConstraintPred.requireIriObject(throw InconsistentTriplestoreDataException(s"Property $propertyIri has an invalid object for ${OntologyConstants.KnoraBase.SubjectClassConstraint}"))
 
                         if (!allBaseClassIris.contains(subjectClassConstraint)) {
                             val hasOrWouldInherit = if (internalClassDef.directCardinalities.contains(propertyIri)) {
@@ -2239,7 +2245,8 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the subject class constraint, if provided, designates a Knora resource class that exists.
 
-                maybeSubjectClassConstraint: Option[SmartIri] = internalPropertyDef.predicates.get(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri).flatMap(_.objects.headOption.map(_.toSmartIri))
+                maybeSubjectClassConstraintPred: Option[PredicateInfoV2] = internalPropertyDef.predicates.get(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri)
+                maybeSubjectClassConstraint = maybeSubjectClassConstraintPred.map(_.requireIriObject(throw BadRequestException("Invalid knora-api:subjectType")))
 
                 _ = maybeSubjectClassConstraint.foreach {
                     subjectClassConstraint =>
@@ -2422,7 +2429,10 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the new labels/comments are different from the current ones.
 
-                currentLabelsOrComments: Map[String, String] = currentReadPropertyInfo.entityInfoContent.predicates.getOrElse(changePropertyLabelsOrCommentsRequest.predicateToUpdate, throw InconsistentTriplestoreDataException(s"Property $internalPropertyIri has no ${changePropertyLabelsOrCommentsRequest.predicateToUpdate}")).objectsWithLang
+                currentLabelsOrComments: Seq[OntologyLiteralV2] = currentReadPropertyInfo.entityInfoContent.predicates.getOrElse(
+                    changePropertyLabelsOrCommentsRequest.predicateToUpdate,
+                    throw InconsistentTriplestoreDataException(s"Property $internalPropertyIri has no ${changePropertyLabelsOrCommentsRequest.predicateToUpdate}")
+                ).objects
 
                 _ = if (currentLabelsOrComments == changePropertyLabelsOrCommentsRequest.newObjects) {
                     throw BadRequestException(s"The submitted objects of ${changePropertyLabelsOrCommentsRequest.propertyIri} are the same as the current ones in property ${changePropertyLabelsOrCommentsRequest.propertyIri}")
@@ -2466,7 +2476,7 @@ class OntologyResponderV2 extends Responder {
 
                 unescapedNewLabelOrCommentPredicate: PredicateInfoV2 = PredicateInfoV2(
                     predicateIri = changePropertyLabelsOrCommentsRequest.predicateToUpdate,
-                    objectsWithLang = changePropertyLabelsOrCommentsRequest.newObjects
+                    objects = changePropertyLabelsOrCommentsRequest.newObjects
                 ).unescape
 
                 unescapedNewPropertyDef: PropertyInfoContentV2 = currentReadPropertyInfo.entityInfoContent.copy(
@@ -2580,7 +2590,10 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the new labels/comments are different from the current ones.
 
-                currentLabelsOrComments = currentReadClassInfo.entityInfoContent.predicates.getOrElse(changeClassLabelsOrCommentsRequest.predicateToUpdate, throw InconsistentTriplestoreDataException(s"Class $internalClassIri has no ${changeClassLabelsOrCommentsRequest.predicateToUpdate}")).objectsWithLang
+                currentLabelsOrComments: Seq[OntologyLiteralV2] = currentReadClassInfo.entityInfoContent.predicates.getOrElse(
+                    changeClassLabelsOrCommentsRequest.predicateToUpdate,
+                    throw InconsistentTriplestoreDataException(s"Class $internalClassIri has no ${changeClassLabelsOrCommentsRequest.predicateToUpdate}")
+                ).objects
 
                 _ = if (currentLabelsOrComments == changeClassLabelsOrCommentsRequest.newObjects) {
                     throw BadRequestException(s"The submitted objects of ${changeClassLabelsOrCommentsRequest.predicateToUpdate} are the same as the current ones in class ${changeClassLabelsOrCommentsRequest.classIri}")
@@ -2614,7 +2627,7 @@ class OntologyResponderV2 extends Responder {
 
                 unescapedNewLabelOrCommentPredicate = PredicateInfoV2(
                     predicateIri = changeClassLabelsOrCommentsRequest.predicateToUpdate,
-                    objectsWithLang = changeClassLabelsOrCommentsRequest.newObjects
+                    objects = changeClassLabelsOrCommentsRequest.newObjects
                 ).unescape
 
                 unescapedNewClassDef: ClassInfoContentV2 = currentReadClassInfo.entityInfoContent.copy(
@@ -2728,34 +2741,17 @@ class OntologyResponderV2 extends Responder {
       * @return a map of smart IRIs to [[PredicateInfoV2]] objects.
       */
     private def getEntityPredicatesFromConstructResponse(entityDefMap: Map[IRI, Seq[LiteralV2]]): Map[SmartIri, PredicateInfoV2] = {
-        // TODO: when refactoring PredicateInfoV2 to use LiteralV2, rewrite this method accordingly.
-
         entityDefMap.map {
             case (predIriStr: IRI, predObjs: Seq[LiteralV2]) =>
                 val predicateIri = predIriStr.toSmartIri
 
-                val objectsWithLang: Map[String, String] = predObjs.collect {
-                    case StringLiteralV2(value, Some(language)) => (language, value)
-                }.toMap
-
-                val objectsWithoutLang = predObjs.foldLeft(Set.empty[String]) {
-                    case (acc, obj) =>
-                        obj match {
-                            case stringLiteral: StringLiteralV2 =>
-                                if (stringLiteral.language.isEmpty) {
-                                    acc + stringLiteral.value
-                                } else {
-                                    acc
-                                }
-
-                            case otherLiteral => acc + otherLiteral.toString
-                        }
-                }
-
                 val predicateInfo = PredicateInfoV2(
                     predicateIri = predicateIri,
-                    objects = objectsWithoutLang,
-                    objectsWithLang = objectsWithLang
+                    objects = predObjs.map {
+                        case IriLiteralV2(iriStr) => SmartIriLiteralV2(iriStr.toSmartIri)
+                        case ontoLiteral: OntologyLiteralV2 => ontoLiteral
+                        case other => throw InconsistentTriplestoreDataException(s"Predicate $predicateIri has an invalid object: $other")
+                    }
                 )
 
                 predicateIri -> predicateInfo
@@ -3002,7 +2998,7 @@ class OntologyResponderV2 extends Responder {
             // make a map of superproperty IRIs to superproperty constraint values.
             superPropertyConstraintValues: Map[SmartIri, SmartIri] = superPropertyInfos.flatMap {
                 superPropertyInfo =>
-                    superPropertyInfo.entityInfoContent.predicates.get(constraintPredicateIri).flatMap(_.objects.headOption.map(_.toSmartIri)).map {
+                    superPropertyInfo.entityInfoContent.predicates.get(constraintPredicateIri).map(_.requireIriObject(throw InconsistentTriplestoreDataException(s"Property ${superPropertyInfo.entityInfoContent.propertyIri} has an invalid object for $constraintPredicateIri"))).map {
                         superPropertyConstraintValue => superPropertyInfo.entityInfoContent.propertyIri -> superPropertyConstraintValue
                     }
             }.toMap
@@ -3153,7 +3149,7 @@ class OntologyResponderV2 extends Responder {
         val newPredicates: Map[SmartIri, PredicateInfoV2] = (internalPropertyDef.predicates - OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri) +
             (OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri -> PredicateInfoV2(
                 predicateIri = OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
-                objects = Set(OntologyConstants.KnoraBase.LinkValue)
+                objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraBase.LinkValue.toSmartIri))
             ))
 
         internalPropertyDef.copy(
