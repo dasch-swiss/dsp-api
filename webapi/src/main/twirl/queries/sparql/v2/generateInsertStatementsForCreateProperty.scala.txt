@@ -30,30 +30,11 @@
 
 @defining(StringFormatter.getGeneralInstance) { stringFormatter =>
 
-    @for(predicate <- propertyDef.predicates.values) {
-
-        @* TODO: change this when PredicateInfoV2 knows the types of its objects (#738). *@
-
-        @for(obj <- predicate.objects) {
-
-            @if(stringFormatter.isIri(obj)) {
-
-                <@propertyDef.propertyIri> <@predicate.predicateIri> <@obj> .
-
-            } else {
-
-                <@propertyDef.propertyIri> <@predicate.predicateIri> """@obj"""^^xsd:string .
-
-            }
-
-        }
-
-        @for((lang, text) <- predicate.objectsWithLang) {
-
-            <@propertyDef.propertyIri> <@predicate.predicateIri> """@text"""@@@lang .
-
-        }
-
+    @{
+        queries.sparql.v2.txt.generateInsertStatementsForPredicates(
+            entityIri = propertyDef.propertyIri,
+            predicates = propertyDef.predicates.values
+        )
     }
 
     @for(superProp <- propertyDef.subPropertyOf) {

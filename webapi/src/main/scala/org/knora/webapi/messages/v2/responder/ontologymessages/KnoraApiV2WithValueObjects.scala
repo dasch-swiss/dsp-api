@@ -20,6 +20,7 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.{OntologyLiteralV2, SmartIriLiteralV2, StringLiteralV2}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
@@ -946,12 +947,12 @@ object KnoraApiV2WithValueObjects {
         isEditable = true,
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
-                objects = Set(OntologyConstants.SalsahGui.Colorpicker)
+                predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp,
+                objects = Seq(SmartIriLiteralV2(OntologyConstants.SalsahGuiApiV2WithValueObjects.Colorpicker.toSmartIri))
             ),
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiAttribute,
-                objects = Set("ncolors=8")
+                predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute,
+                objects = Seq(StringLiteralV2("ncolors=8"))
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -981,12 +982,12 @@ object KnoraApiV2WithValueObjects {
         isEditable = true,
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
-                objects = Set(OntologyConstants.SalsahGui.Geometry)
+                predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp,
+                objects = Seq(SmartIriLiteralV2(OntologyConstants.SalsahGuiApiV2WithValueObjects.Geometry.toSmartIri))
             ),
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiAttribute,
-                objects = Set("width=95%;rows=4;wrap=soft")
+                predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute,
+                objects = Seq(StringLiteralV2("width=95%;rows=4;wrap=soft"))
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -1016,8 +1017,8 @@ object KnoraApiV2WithValueObjects {
         isEditable = true,
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
-                objects = Set(OntologyConstants.SalsahGui.Richtext)
+                predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp,
+                objects = Seq(SmartIriLiteralV2(OntologyConstants.SalsahGuiApiV2WithValueObjects.Richtext.toSmartIri))
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -1046,8 +1047,8 @@ object KnoraApiV2WithValueObjects {
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue),
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
-                objects = Set(OntologyConstants.SalsahGui.Fileupload)
+                predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp,
+                objects = Seq(SmartIriLiteralV2(OntologyConstants.SalsahGuiApiV2WithValueObjects.Fileupload.toSmartIri))
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -1077,8 +1078,8 @@ object KnoraApiV2WithValueObjects {
         isEditable = true,
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
-                objects = Set(OntologyConstants.SalsahGui.Fileupload)
+                predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp,
+                objects = Seq(SmartIriLiteralV2(OntologyConstants.SalsahGuiApiV2WithValueObjects.Fileupload.toSmartIri))
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -1108,8 +1109,8 @@ object KnoraApiV2WithValueObjects {
         isEditable = true,
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
-                objects = Set(OntologyConstants.SalsahGui.Fileupload)
+                predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp,
+                objects = Seq(SmartIriLiteralV2(OntologyConstants.SalsahGuiApiV2WithValueObjects.Fileupload.toSmartIri))
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -1139,8 +1140,8 @@ object KnoraApiV2WithValueObjects {
         isEditable = true,
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
-                objects = Set(OntologyConstants.SalsahGui.Fileupload)
+                predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp,
+                objects = Seq(SmartIriLiteralV2(OntologyConstants.SalsahGuiApiV2WithValueObjects.Fileupload.toSmartIri))
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -1170,8 +1171,8 @@ object KnoraApiV2WithValueObjects {
         isEditable = true,
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
-                objects = Set(OntologyConstants.SalsahGui.Fileupload)
+                predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp,
+                objects = Seq(SmartIriLiteralV2(OntologyConstants.SalsahGuiApiV2WithValueObjects.Fileupload.toSmartIri))
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -1201,8 +1202,8 @@ object KnoraApiV2WithValueObjects {
         isEditable = true,
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
-                objects = Set(OntologyConstants.SalsahGui.Fileupload)
+                predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp,
+                objects = Seq(SmartIriLiteralV2(OntologyConstants.SalsahGuiApiV2WithValueObjects.Fileupload.toSmartIri))
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -1232,8 +1233,8 @@ object KnoraApiV2WithValueObjects {
         isEditable = true,
         predicates = Seq(
             makePredicate(
-                predicateIri = OntologyConstants.SalsahGui.GuiElementProp,
-                objects = Set(OntologyConstants.SalsahGui.Fileupload)
+                predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp,
+                objects = Seq(SmartIriLiteralV2(OntologyConstants.SalsahGuiApiV2WithValueObjects.Fileupload.toSmartIri))
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -2670,12 +2671,13 @@ object KnoraApiV2WithValueObjects {
       * @return a [[PredicateInfoV2]].
       */
     private def makePredicate(predicateIri: IRI,
-                              objects: Set[String] = Set.empty[String],
+                              objects: Seq[OntologyLiteralV2] = Seq.empty[OntologyLiteralV2],
                               objectsWithLang: Map[String, String] = Map.empty[String, String]): PredicateInfoV2 = {
         PredicateInfoV2(
             predicateIri = predicateIri.toSmartIri,
-            objects = objects,
-            objectsWithLang = objectsWithLang
+            objects = objects ++ objectsWithLang.map {
+                case (lang, str) => StringLiteralV2(str, Some(lang))
+            }
         )
     }
 
@@ -2705,14 +2707,14 @@ object KnoraApiV2WithValueObjects {
                              objectType: Option[IRI] = None): ReadPropertyInfoV2 = {
         val propTypePred = makePredicate(
             predicateIri = OntologyConstants.Rdf.Type,
-            objects = Set(propertyType)
+            objects = Seq(SmartIriLiteralV2(propertyType.toSmartIri))
         )
 
         val maybeSubjectTypePred = subjectType.map {
             subjType =>
                 makePredicate(
                     predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType,
-                    objects = Set(subjType)
+                    objects = Seq(SmartIriLiteralV2(subjType.toSmartIri))
                 )
         }
 
@@ -2720,7 +2722,7 @@ object KnoraApiV2WithValueObjects {
             objType =>
                 makePredicate(
                     predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType,
-                    objects = Set(objType)
+                    objects = Seq(SmartIriLiteralV2(objType.toSmartIri))
                 )
         }
 
@@ -2764,7 +2766,7 @@ object KnoraApiV2WithValueObjects {
                           inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = Map.empty[SmartIri, KnoraCardinalityInfo]): ReadClassInfoV2 = {
         val rdfType = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Set(OntologyConstants.Owl.Class)
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
         )
 
         ReadClassInfoV2(

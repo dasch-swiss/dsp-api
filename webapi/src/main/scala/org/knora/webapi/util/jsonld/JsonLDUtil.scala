@@ -21,6 +21,7 @@ package org.knora.webapi.util.jsonld
 
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
+import org.knora.webapi.messages.store.triplestoremessages.{LiteralV2, StringLiteralV2}
 import org.knora.webapi.util.{JavaUtil, SmartIri, StringFormatter}
 import org.knora.webapi.{BadRequestException, IRI, LanguageCodes}
 
@@ -240,12 +241,12 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
 
     /**
       * Tries to interpret the elements of this array as JSON-LD objects containing `@language` and `@value`,
-      * and returns the results as a map of language codes to values. Throws [[BadRequestException]]
+      * and returns the results as a set of [[StringLiteralV2]]. Throws [[BadRequestException]]
       * if the array can't be interpreted in this way.
       *
       * @return a map of language keys to values.
       */
-    def toObjsWithLang: Map[String, String] = {
+    def toObjsWithLang: Seq[StringLiteralV2] = {
         value.map {
             case obj: JsonLDObject =>
                 val lang = obj.requireString("@language", stringFormatter.toSparqlEncodedString)
@@ -255,11 +256,11 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
                 }
 
                 val text = obj.requireString("@value", stringFormatter.toSparqlEncodedString)
-                lang -> text
+                StringLiteralV2(text, Some(lang))
 
             case other => throw BadRequestException(s"Expected JSON-LD object: $other")
         }
-    }.toMap
+    }
 }
 
 /**

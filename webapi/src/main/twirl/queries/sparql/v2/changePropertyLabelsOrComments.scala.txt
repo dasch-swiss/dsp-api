@@ -17,7 +17,9 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
+@import org.knora.webapi.SparqlGenerationException
 @import org.knora.webapi.util.SmartIri
+@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 @import java.time.Instant
 
 @*
@@ -39,7 +41,7 @@
   propertyIri: SmartIri,
   maybeLinkValuePropertyIri: Option[SmartIri],
   predicateToUpdate: SmartIri,
-  newObjects: Map[String, String],
+  newObjects: Seq[StringLiteralV2],
   lastModificationDate: Instant,
   currentTime: Instant)
 
@@ -70,9 +72,9 @@ DELETE {
     GRAPH ?ontologyNamedGraph {
         ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
 
-        @for((newObjLang, newObjText) <- newObjects) {
+        @for(newObject <- newObjects) {
 
-            ?property <@predicateToUpdate> """@newObjText"""@@@newObjLang .
+            ?property <@predicateToUpdate> """@{newObject.value}"""@@@{newObject.language.getOrElse(throw SparqlGenerationException("No language code given in object of predicate $predicateToUpdate: $newObject"))} .
 
         }
 
@@ -80,9 +82,9 @@ DELETE {
 
             case Some(linkValuePropertyIri) => {
 
-                @for((newObjLang, newObjText) <- newObjects) {
+                @for(newObject <- newObjects) {
 
-                    <@linkValuePropertyIri> <@predicateToUpdate> """@newObjText"""@@@newObjLang .
+                    <@linkValuePropertyIri> <@predicateToUpdate> """@{newObject.value}"""@@@{newObject.language.getOrElse(throw SparqlGenerationException("No language code given in object of predicate $predicateToUpdate: $newObject"))} .
 
                 }
 
