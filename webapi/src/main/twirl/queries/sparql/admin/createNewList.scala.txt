@@ -1,0 +1,100 @@
+@*
+ * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
+ * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.IRI
+@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+
+@*
+ * Creates a new project.
+ *
+ * @param dataNamedGraph the name of the graph into which the new list will be created.
+ * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
+                      results from the WHERE clause of the update.
+ * @param listIri the IRI of the new list.
+ * @param projectIri the IRI of the new list's project.
+ * @param listClassIri the IRI of the OWL class that the new list should belong to.
+ * @param labels the new list's labels.
+ * @param maybeComments the new project's comments.
+ *
+ *@
+@(dataNamedGraph: IRI,
+  triplestore: String,
+  listIri: IRI,
+  projectIri: IRI,
+  listClassIri: IRI,
+  maybeLabels: Seq[StringLiteralV2],
+  maybeComments: Seq[StringLiteralV2])
+
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+INSERT {
+    GRAPH ?dataNamedGraph {
+        ?listIri rdf:type ?listClassIri .
+
+        ?listIri knora-base:attachedToProject ?projectIri .
+
+        @if(maybeLabels.nonEmpty) {
+            @for(label <- maybeLabels) {
+                @if(label.language.nonEmpty) {
+                    ?listIri rdfs:label """@label.value"""@@@{label.language.get} .
+                } else {
+                    ?listIri rdfs:label """@label.value"""^^xsd:string .
+                }
+            }
+        }
+
+        @if(maybeComments.nonEmpty) {
+            @for(comment <- maybeComments) {
+                @if(comment.language.nonEmpty) {
+                    ?listIri rdfs:comment """@comment.value"""@@@{comment.language.get} .
+                } else {
+                    ?listIri rdfs:comment """@comment.value"""^^xsd:string .
+                }
+            }
+        }
+    }
+}
+@*
+
+GraphDB's consistency checking requires reasoning, but reasoning interferes with certain things
+in the WHERE clauses of our SPARQL updates, so we set a GraphDB-specific flag to return only
+explicit statements in the WHERE clause here.
+
+*@
+@triplestore match {
+    case "graphdb" | "graphdb-free" => {
+        USING <http://www.ontotext.com/explicit>
+    }
+
+    case other => {}
+}
+WHERE {
+    BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
+    BIND(IRI("@listIri") AS ?listIri)
+    BIND(IRI("@projectIri") AS ?projectIri)
+    BIND(IRI("@listClassIri") AS ?listClassIri)
+
+    FILTER NOT EXISTS { ?listIri rdf:type ?listClassIri . }
+}

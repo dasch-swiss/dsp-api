@@ -1,4 +1,3 @@
-
 {
   "knora-api:hasOntologies" : {
     "@id" : "http://api.knora.org/ontology/knora-api/v2",
@@ -7,9 +6,9 @@
       "knora-api:AudioFileValue" : {
         "@id" : "knora-api:AudioFileValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents an audio file value.",
         "rdfs:label" : "Audio file value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#FileValue", {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -49,6 +48,7 @@
       "knora-api:AudioRepresentation" : {
         "@id" : "knora-api:AudioRepresentation",
         "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "A Resource containing audio data",
         "rdfs:label" : "Representation (Audio)",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Representation", {
@@ -60,6 +60,11 @@
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasAudioFileValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -84,15 +89,15 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:BooleanValue" : {
         "@id" : "knora-api:BooleanValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents a boolean value.",
         "rdfs:label" : "Boolean value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -117,9 +122,9 @@
       "knora-api:ColorValue" : {
         "@id" : "knora-api:ColorValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents a color value.",
         "rdfs:label" : "Color value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -144,9 +149,9 @@
       "knora-api:DDDFileValue" : {
         "@id" : "knora-api:DDDFileValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents a 3D file value.",
         "rdfs:label" : "3D file value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#FileValue", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -182,6 +187,7 @@
       "knora-api:DDDRepresentation" : {
         "@id" : "knora-api:DDDRepresentation",
         "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "A Resource containing 3D data",
         "rdfs:label" : "Representation (3D)",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Representation", {
@@ -193,6 +199,11 @@
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasDDDFileValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -217,15 +228,15 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:DateValue" : {
         "@id" : "knora-api:DateValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents a date as a period with different possible precisions.",
         "rdfs:label" : "Date value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "owl:maxCardinality" : 1,
@@ -282,9 +293,9 @@
       "knora-api:DecimalValue" : {
         "@id" : "knora-api:DecimalValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents a decimal value.",
         "rdfs:label" : "Decimal value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -309,9 +320,9 @@
       "knora-api:DocumentFileValue" : {
         "@id" : "knora-api:DocumentFileValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents a document file value.",
         "rdfs:label" : "Document file value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#FileValue", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -347,6 +358,7 @@
       "knora-api:DocumentRepresentation" : {
         "@id" : "knora-api:DocumentRepresentation",
         "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "A Resource containing documents",
         "rdfs:label" : "Representation (Document)",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Representation", {
@@ -358,6 +370,11 @@
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasDocumentFileValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -382,15 +399,15 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:FileValue" : {
         "@id" : "knora-api:FileValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents a file value.",
         "rdfs:label" : "File value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -423,7 +440,7 @@
       "knora-api:ForbiddenResource" : {
         "@id" : "knora-api:ForbiddenResource",
         "@type" : "owl:Class",
-        "knora-api:canBeInstantiated" : true,
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.",
         "rdfs:label" : "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Resource", {
@@ -435,6 +452,11 @@
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasComment"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -459,15 +481,15 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:GeomValue" : {
         "@id" : "knora-api:GeomValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents a geometry value.",
         "rdfs:label" : "Geometry value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -492,9 +514,9 @@
       "knora-api:GeonameValue" : {
         "@id" : "knora-api:GeonameValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents a Geoname value.",
         "rdfs:label" : "Geoname value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -519,9 +541,9 @@
       "knora-api:IntValue" : {
         "@id" : "knora-api:IntValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents an integer value.",
         "rdfs:label" : "Integer value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -546,9 +568,9 @@
       "knora-api:IntervalValue" : {
         "@id" : "knora-api:IntervalValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents a time interval.",
         "rdfs:label" : "Interval value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -577,6 +599,8 @@
       "knora-api:LinkObj" : {
         "@id" : "knora-api:LinkObj",
         "@type" : "owl:Class",
+        "knora-api:canBeInstantiated" : true,
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "Represents a generic link object.",
         "rdfs:label" : "Link Object",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Resource", {
@@ -588,6 +612,11 @@
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 0,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasComment"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -620,15 +649,15 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:LinkValue" : {
         "@id" : "knora-api:LinkValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents a link from one resource to another.",
         "rdfs:label" : "Link value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -661,9 +690,9 @@
       "knora-api:ListValue" : {
         "@id" : "knora-api:ListValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents a value in a hierarchical list.",
         "rdfs:label" : "List value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -673,6 +702,10 @@
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hierarchicalListValueAsListNode"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hierarchicalListValueAsListNodeLabel"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -688,9 +721,9 @@
       "knora-api:MovingImageFileValue" : {
         "@id" : "knora-api:MovingImageFileValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents a moving image file value.",
         "rdfs:label" : "Moving image file value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#FileValue", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -746,6 +779,7 @@
       "knora-api:MovingImageRepresentation" : {
         "@id" : "knora-api:MovingImageRepresentation",
         "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "A Resource containing moving image data",
         "rdfs:label" : "Representation (Movie)",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Representation", {
@@ -753,6 +787,11 @@
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 1,
@@ -781,13 +820,14 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:Region" : {
         "@id" : "knora-api:Region",
         "@type" : "owl:Class",
         "knora-api:canBeInstantiated" : true,
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "Represents a geometric region of a resource. The geometry is represented currently as JSON string.",
         "rdfs:label" : "Region",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Resource", {
@@ -807,6 +847,11 @@
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasGeometry"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -839,12 +884,13 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:Representation" : {
         "@id" : "knora-api:Representation",
         "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "A Resource that can store one or more FileValues",
         "rdfs:label" : "Representation",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Resource", {
@@ -859,6 +905,11 @@
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
         }, {
@@ -880,18 +931,23 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:Resource" : {
         "@id" : "knora-api:Resource",
         "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "Represents a Knora resource.",
         "rdfs:label" : "Resource",
-        "rdfs:subClassOf" : [ "http://schema.org/Thing", {
+        "rdfs:subClassOf" : [ {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
@@ -911,15 +967,15 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:StillImageFileValue" : {
         "@id" : "knora-api:StillImageFileValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents a still image file value.",
         "rdfs:label" : "Still image file value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#FileValue", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -967,6 +1023,7 @@
       "knora-api:StillImageRepresentation" : {
         "@id" : "knora-api:StillImageRepresentation",
         "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "A Resource that can contain two-dimensional still image files",
         "rdfs:label" : "Representation (Image)",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Representation", {
@@ -974,6 +1031,11 @@
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -1002,15 +1064,15 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:TextFileValue" : {
         "@id" : "knora-api:TextFileValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents a text file value.",
         "rdfs:label" : "Text file value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#FileValue", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -1046,6 +1108,7 @@
       "knora-api:TextRepresentation" : {
         "@id" : "knora-api:TextRepresentation",
         "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
         "rdfs:comment" : "A Resource containing text files",
         "rdfs:label" : "Representation (Text)",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Representation", {
@@ -1053,6 +1116,11 @@
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -1081,15 +1149,15 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:TextValue" : {
         "@id" : "knora-api:TextValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents text with optional markup.",
         "rdfs:label" : "Text value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -1122,9 +1190,9 @@
       "knora-api:UriValue" : {
         "@id" : "knora-api:UriValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents a URI value.",
         "rdfs:label" : "URI value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -1351,6 +1419,7 @@
         "@id" : "knora-api:hasAudioFileValue",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#AudioFileValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#AudioRepresentation",
         "rdfs:comment" : "Connects a Representation to an audio file",
@@ -1361,6 +1430,7 @@
         "@id" : "knora-api:hasColor",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#ColorValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Region",
         "rdfs:comment" : "Specifies the color of a Region",
@@ -1370,6 +1440,8 @@
       "knora-api:hasComment" : {
         "@id" : "knora-api:hasComment",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
         "rdfs:comment" : "Represents a comment on a Resource",
@@ -1380,6 +1452,7 @@
         "@id" : "knora-api:hasDDDFileValue",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DDDFileValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#DDDRepresentation",
         "rdfs:comment" : "Connects a Representation to a 3D file",
@@ -1390,6 +1463,7 @@
         "@id" : "knora-api:hasDocumentFileValue",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DocumentFileValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#DocumentRepresentation",
         "rdfs:comment" : "Connects a Representation to a document",
@@ -1399,6 +1473,7 @@
       "knora-api:hasFileValue" : {
         "@id" : "knora-api:hasFileValue",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#FileValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Representation",
         "rdfs:comment" : "Connects a Representation to a file",
@@ -1409,11 +1484,24 @@
         "@id" : "knora-api:hasGeometry",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#GeomValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Region",
         "rdfs:comment" : "Represents a geometrical shape.",
         "rdfs:label" : "Geometry",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "knora-api:hasIncomingLinks" : {
+        "@id" : "knora-api:hasIncomingLinks",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkValueProperty" : true,
+        "knora-api:isResourceProperty" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+        "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
+        "rdfs:comment" : "Indicates that this resource referred to by another resource",
+        "rdfs:label" : "has incoming links",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue"
       },
       "knora-api:hasLinkTo" : {
         "@id" : "knora-api:hasLinkTo",
@@ -1428,6 +1516,7 @@
         "@id" : "knora-api:hasLinkToValue",
         "@type" : "owl:ObjectProperty",
         "knora-api:isLinkValueProperty" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
         "rdfs:comment" : "Represents a direct connection between two resources",
@@ -1438,6 +1527,7 @@
         "@id" : "knora-api:hasMovingImageFileValue",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#MovingImageFileValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#MovingImageRepresentation",
         "rdfs:comment" : "Connects a Representation to a moving image file",
@@ -1455,6 +1545,7 @@
         "@id" : "knora-api:hasStandoffLinkTo",
         "@type" : "owl:ObjectProperty",
         "knora-api:isLinkProperty" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
         "rdfs:comment" : "Represents a direct connection between two resources, generated by standoff markup",
@@ -1465,6 +1556,7 @@
         "@id" : "knora-api:hasStandoffLinkToValue",
         "@type" : "owl:ObjectProperty",
         "knora-api:isLinkValueProperty" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
         "rdfs:comment" : "Represents a direct connection between two resources, generated by standoff markup",
@@ -1475,6 +1567,7 @@
         "@id" : "knora-api:hasStillImageFileValue",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#StillImageFileValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#StillImageRepresentation",
         "rdfs:comment" : "Connects a Representation to an image file",
@@ -1485,6 +1578,7 @@
         "@id" : "knora-api:hasTextFileValue",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextFileValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#TextRepresentation",
         "rdfs:comment" : "Connects a Representation to a text file",
@@ -1504,6 +1598,15 @@
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#ListValue",
         "rdfs:comment" : "Represents a reference to a hierarchical list node.",
         "rdfs:label" : "Hierarchical list value as list node",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#valueHas"
+      },
+      "knora-api:hierarchicalListValueAsListNodeLabel" : {
+        "@id" : "knora-api:hierarchicalListValueAsListNodeLabel",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
+        "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#ListValue",
+        "rdfs:comment" : "Represents the name of the list node pointed to.",
+        "rdfs:label" : "Hierarchical list value as list node name",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#valueHas"
       },
       "knora-api:intValueAsInt" : {
@@ -1567,6 +1670,7 @@
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
         "knora-api:isLinkProperty" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
         "rdfs:comment" : "Indicates that this resource is part of another resource",
@@ -1578,6 +1682,7 @@
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
         "knora-api:isLinkValueProperty" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
         "rdfs:comment" : "Indicates that this resource is part of another resource",
@@ -1589,6 +1694,7 @@
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
         "knora-api:isLinkProperty" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#Representation",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Region",
         "rdfs:comment" : "Indicates which representation a region refers to",
@@ -1600,6 +1706,7 @@
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
         "knora-api:isLinkValueProperty" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Region",
         "rdfs:comment" : "Indicates which representation a region refers to",
@@ -1802,14 +1909,13 @@
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Value"
       }
     },
-    "knora-api:hasStandoffClasses" : { },
-    "knora-api:hasStandoffProperties" : { },
     "rdfs:label" : "The default knora-api ontology"
   },
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
+    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
     "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }

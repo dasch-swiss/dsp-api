@@ -27,9 +27,10 @@ import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
+import org.knora.webapi.http.ApiStatusCodesV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingRequestV1, GetMappingResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.responder.{ApiStatusCodesV1, KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagsV1
 import spray.json.{JsNumber, JsObject}

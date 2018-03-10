@@ -42,8 +42,8 @@ before_install:
 
 stages:
   - test
-  - name: publish # generally, only publish if we are on 'develop'
-    if: branch = develop
+  - name: publish # generally, only publish if we are on 'develop' or tagged
+    if: branch = develop OR tag IS present
 
 jobs:
   include:
@@ -60,6 +60,8 @@ jobs:
         - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
         # start the built-in webapi server tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt graphdb:test
+        # test sbt stage
+        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt stage
     - stage: test
       script:
         # prepare needed graphdb-se files
@@ -99,18 +101,21 @@ jobs:
     #    - cd $TRAVIS_BUILD_DIR/salsah1/ && sbt headless:test
     - stage: publish
       script:
+        # login into docker hub, build image, and push but only when on the "develop" branch or tagged
+        # when on 'develop' then $TRAVIS_BRANCH = develop
+        # when on 'tag' then $TRAVIS_BRANCH = tag, e.g., v1.2.0
         - docker login -u $DOCKER_USER -p $DOCKER_PASS
         # webapi
-        - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:develop
-        - docker tag $WEBAPI_REPO:develop $WEBAPI_REPO:latest
+        - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:$TRAVIS_BRANCH
+        - docker tag $WEBAPI_REPO:$TRAVIS_BRANCH $WEBAPI_REPO:latest
         - docker push $WEBAPI_REPO
         # salsah1
-        - docker build $TRAVIS_BUILD_DIR/salsah1/ -t $SALSAH1_REPO:develop
-        - docker tag $SALSAH1_REPO:develop $SALSAH1_REPO:latest
+        - docker build $TRAVIS_BUILD_DIR/salsah/ -t $SALSAH1_REPO:$TRAVIS_BRANCH
+        - docker tag $SALSAH1_REPO:$TRAVIS_BRANCH $SALSAH1_REPO:latest
         - docker push $SALSAH1_REPO
         # sipi: get the develop sipi and tag it as 'develop-knora' so we know that this version is tested (only on the develop branch)
         - docker pull $SIPI_REPO:develop
-        - docker tag $SIPI_REPO:develop $SIPI_REPO:knora-develop
+        - docker tag $SIPI_REPO:develop $SIPI_REPO:knora-$TRAVIS_BRANCH
         - docker push $SIPI_REPO
 
 notifications:

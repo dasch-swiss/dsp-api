@@ -21,7 +21,7 @@
 package org.knora.webapi.util
 
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
+import org.knora.webapi.messages.store.triplestoremessages.{LiteralV2, SparqlConstructResponse}
 import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
@@ -29,6 +29,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, Kn
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
+
 
 
 object ConstructResponseUtilV2 {
@@ -47,8 +48,9 @@ object ConstructResponseUtilV2 {
       * @param incomingLink     indicates if it is an incoming or outgoing link in case of a link value.
       * @param assertions       the value objects assertions.
       * @param standoff         standoff assertions, if any.
+      * @param listNode         assertions about the referred list node, if the value points to a list node.
       */
-    case class ValueRdfData(valueObjectIri: IRI, valueObjectClass: IRI, nestedResource: Option[ResourceWithValueRdfData] = None, incomingLink: Boolean = false, assertions: Map[IRI, String], standoff: Map[IRI, Map[IRI, String]])
+    case class ValueRdfData(valueObjectIri: IRI, valueObjectClass: IRI, nestedResource: Option[ResourceWithValueRdfData] = None, incomingLink: Boolean = false, assertions: Map[IRI, String], standoff: Map[IRI, Map[IRI, String]], listNode: Map[IRI, String])
 
     /**
       * Represents a resource and its values.
@@ -165,6 +167,16 @@ object ConstructResponseUtilV2 {
                         }.flatMap {
                             valObjIri: IRI =>
 
+                                // get all list node Iris possibly belonging to this value object
+                                val listNodeIris: Set[IRI] = nonResourceStatements(valObjIri).filter {
+                                    case (pred: IRI, _) =>
+                                        pred == OntologyConstants.KnoraBase.ValueHasListNode
+                                }.map {
+                                    case (_, obj: IRI) =>
+                                        // we are only interested in the list node IRI
+                                        obj
+                                }.toSet
+
                                 // get all the standoff node Iris possibly belonging to this value object
                                 // do so by accessing the non resource statements using the value object IRI as a key
                                 val standoffNodeIris: Set[IRI] = nonResourceStatements(valObjIri).filter {
@@ -176,9 +188,15 @@ object ConstructResponseUtilV2 {
                                         obj
                                 }.toSet
 
+                                // given the list node Iris, get the list node assertions
+                                val (listNodeAssertions: Map[IRI, Seq[(IRI, String)]], valueAssertionsWithStandoff: Map[IRI, Seq[(IRI, String)]]) = nonResourceStatements.partition {
+                                    case (subjIri: IRI, _) =>
+                                        listNodeIris(subjIri)
+                                }
+
                                 // given the standoff node Iris, get the standoff assertions
                                 // do so by accessing the non resource statements using the standoff node IRI as a key
-                                val (standoffAssertions: Map[IRI, Seq[(IRI, String)]], valueAssertions: Map[IRI, Seq[(IRI, String)]]) = nonResourceStatements.partition {
+                                val (standoffAssertions: Map[IRI, Seq[(IRI, String)]], valueAssertions: Map[IRI, Seq[(IRI, String)]]) = valueAssertionsWithStandoff.partition {
                                     case (subjIri: IRI, _) =>
                                         standoffNodeIris(subjIri)
                                 }
@@ -201,10 +219,9 @@ object ConstructResponseUtilV2 {
                                             valueObjectIri = valObjIri,
                                             valueObjectClass = valueObjectClass,
                                             assertions = predicateMapForValueAssertions,
-                                            standoff = standoffAssertions.map {
-                                                case (standoffNodeIri: IRI, standoffAssertions: Seq[(IRI, String)]) =>
-                                                    (standoffNodeIri, standoffAssertions.toMap)
-                                            }))
+                                            standoff = Map.empty[IRI, Map[IRI, String]], // link value does not contain standoff
+                                            listNode = Map.empty[IRI, String] // link value cannot point to a list node
+                                            ))
                                     } else {
                                         // Return None for the removed link value; it will be filtered out by flatMap.
                                         None
@@ -220,6 +237,10 @@ object ConstructResponseUtilV2 {
                                         standoff = standoffAssertions.map {
                                             case (standoffNodeIri: IRI, standoffAssertions: Seq[(IRI, String)]) =>
                                                 (standoffNodeIri, standoffAssertions.toMap)
+                                        },
+                                        listNode = listNodeAssertions.flatMap {
+                                            case (listNodeIri: IRI, assertions: Seq[(IRI, String)]) =>
+                                                assertions.toMap
                                         }))
                                 }
                         }
@@ -460,7 +481,13 @@ object ConstructResponseUtilV2 {
                 GeonameValueContentV2(valueHasString = valueObjectValueHasString, valueHasGeonameCode = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasGeonameCode), comment = valueCommentOption)
 
             case OntologyConstants.KnoraBase.ListValue =>
-                HierarchicalListValueContentV2(valueHasString = valueObjectValueHasString, valueHasListNode = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasListNode), comment = valueCommentOption)
+
+                val listNodeLabel: String = valueObject.listNode.get(OntologyConstants.Rdfs.Label) match {
+                    case Some(nodeLabel: String) => nodeLabel
+                    case None => throw InconsistentTriplestoreDataException(s"Expected ${OntologyConstants.Rdfs.Label} in assertions for a value object of type list value.")
+                }
+
+                HierarchicalListValueContentV2(valueHasString = valueObjectValueHasString, valueHasListNode = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasListNode), listNodeLabel = listNodeLabel, comment = valueCommentOption)
 
             case OntologyConstants.KnoraBase.IntervalValue =>
                 IntervalValueContentV2(valueHasString = valueObjectValueHasString, valueHasIntervalStart = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalStart)), valueHasIntervalEnd = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalEnd)), comment = valueCommentOption)

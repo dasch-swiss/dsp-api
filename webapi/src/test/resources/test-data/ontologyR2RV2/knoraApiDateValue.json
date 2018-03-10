@@ -1,4 +1,3 @@
-
 {
   "knora-api:hasOntologies" : {
     "@id" : "http://api.knora.org/ontology/knora-api/v2",
@@ -7,9 +6,9 @@
       "knora-api:DateValue" : {
         "@id" : "knora-api:DateValue",
         "@type" : "owl:Class",
+        "knora-api:isValueClass" : true,
         "rdfs:comment" : "Represents a date as a period with different possible precisions.",
         "rdfs:label" : "Date value",
-        "knora-api:isValueClass" : true,
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
           "owl:maxCardinality" : 1,
@@ -64,15 +63,13 @@
         } ]
       }
     },
-    "knora-api:hasProperties" : { },
-    "knora-api:hasStandoffClasses" : { },
-    "knora-api:hasStandoffProperties" : { },
     "rdfs:label" : "The default knora-api ontology"
   },
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
+    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
     "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }

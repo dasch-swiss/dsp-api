@@ -22,6 +22,7 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import java.time.Instant
 
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.jsonld.JsonLDUtil
@@ -271,7 +272,6 @@ object InputOntologiesV2Spec {
     )))
 
     val ClassDef = InputOntologiesV2(ontologies = Vector(InputOntologyV2(
-        standoffProperties = Map(),
         classes = Map("http://0.0.0.0:3333/ontology/anything/v2#WildThing".toSmartIri -> ClassInfoContentV2(
             predicates = Map(
                 "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
@@ -289,14 +289,13 @@ object InputOntologiesV2Spec {
             ),
             classIri = "http://0.0.0.0:3333/ontology/anything/v2#WildThing".toSmartIri,
             ontologySchema = ApiV2WithValueObjects,
-            directCardinalities = Map("http://0.0.0.0:3333/ontology/anything/v2#hasName".toSmartIri -> Cardinality.MayHaveOne),
+            directCardinalities = Map("http://0.0.0.0:3333/ontology/anything/v2#hasName".toSmartIri -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
             subClassOf = Set("http://0.0.0.0:3333/ontology/anything/v2#Thing".toSmartIri)
         )),
         ontologyMetadata = OntologyMetadataV2(
             ontologyIri = "http://0.0.0.0:3333/ontology/anything/v2".toSmartIri,
             lastModificationDate = Some(Instant.parse("2017-12-19T15:23:42.166Z"))
         ),
-        standoffClasses = Map(),
         properties = Map()
     )))
 }

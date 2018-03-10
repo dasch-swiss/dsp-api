@@ -29,4 +29,7 @@ and reused.
 .. toctree::
    :maxdepth: 2
 
+   introduction
    knora-base
+   salsah-gui
+

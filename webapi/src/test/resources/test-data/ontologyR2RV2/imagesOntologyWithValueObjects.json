@@ -7,82 +7,20 @@
         "@id" : "p00FF-images:bild",
         "@type" : "owl:Class",
         "knora-api:canBeInstantiated" : true,
+        "knora-api:isResourceClass" : true,
         "knora-api:resourceIcon" : "bild.png",
         "rdfs:comment" : "An image of the demo image collection",
         "rdfs:label" : "Image",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#StillImageRepresentation", {
           "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bearbeiter"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildnr"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#copyright"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#copyrightValue"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#description"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#erfassungsdatum"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#hatBildformat"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#hatBildformatValue"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#jahr_exakt"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:minCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#jahreszeit"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#jahrzehnt"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#mutationsdatum"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#negativnummer"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#signatur"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#titel"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#urheber"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#urheberValue"
-        }, {
-          "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -112,60 +50,111 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 0,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#titel"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 1,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#signatur"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 2,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildnr"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 3,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#description"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 4,
+          "owl:minCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#jahreszeit"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 5,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#jahrzehnt"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 6,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#jahr_exakt"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 7,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#hatBildformat"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 7,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#hatBildformatValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 8,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#erfassungsdatum"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 9,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#mutationsdatum"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 10,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bearbeiter"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 11,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#negativnummer"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 12,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#urheber"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 12,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#urheberValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 13,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#copyright"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 13,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#copyrightValue"
         } ]
       },
       "p00FF-images:bildformat" : {
         "@id" : "p00FF-images:bildformat",
         "@type" : "owl:Class",
         "knora-api:canBeInstantiated" : true,
+        "knora-api:isResourceClass" : true,
         "knora-api:resourceIcon" : "bildformat.png",
         "rdfs:label" : "Image format",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Resource", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildart"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#comment"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#eingangsdatum"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#erwerbsdatum"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#format"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#lieferant"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#lieferantValue"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#preis"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#zugangsart"
-        }, {
-          "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -190,53 +179,77 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 0,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildart"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 1,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#erwerbsdatum"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 2,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#format"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 3,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#lieferant"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 3,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#lieferantValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 4,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 5,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#zugangsart"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 6,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#preis"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 7,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#eingangsdatum"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 8,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#comment"
         } ]
       },
       "p00FF-images:person" : {
         "@id" : "p00FF-images:person",
         "@type" : "owl:Class",
         "knora-api:canBeInstantiated" : true,
+        "knora-api:isResourceClass" : true,
         "knora-api:resourceIcon" : "person.png",
         "rdfs:comment" : "Person",
         "rdfs:label" : "Person",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Resource", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#address"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#city"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#email"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#fax"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#firstname"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#institution"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#lastname"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#zipcode"
-        }, {
-          "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -261,7 +274,52 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 0,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#lastname"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 1,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#firstname"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 2,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#institution"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 3,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#address"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 4,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#city"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 5,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#zipcode"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 6,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#phone"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 7,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#fax"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 8,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#email"
         } ]
       }
     },
@@ -270,8 +328,11 @@
         "@id" : "p00FF-images:address",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "salsah-gui:guiAttribute" : [ "maxlength=64", "size=64" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:comment" : "Adresse (Strassenname, Nummer etc.)",
         "rdfs:label" : "Address",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -280,8 +341,11 @@
         "@id" : "p00FF-images:bearbeiter",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "salsah-gui:guiAttribute" : [ "maxlength=32", "size=32" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:label" : "Editor",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
       },
@@ -289,8 +353,11 @@
         "@id" : "p00FF-images:bildart",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#ListValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "salsah-gui:guiAttribute" : "hlist=<http://rdfh.ch/lists/00FF/6cce4ce5>",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Pulldown",
         "rdfs:label" : "Image type",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
       },
@@ -298,8 +365,11 @@
         "@id" : "p00FF-images:bildnr",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "salsah-gui:guiAttribute" : [ "maxlength=6", "size=6" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:label" : "Picture ID",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
       },
@@ -307,8 +377,11 @@
         "@id" : "p00FF-images:city",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "salsah-gui:guiAttribute" : [ "maxlength=64", "size=64" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:label" : "City",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
       },
@@ -316,8 +389,11 @@
         "@id" : "p00FF-images:comment",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "salsah-gui:guiAttribute" : [ "rows=7", "width=95%", "wrap=soft" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Textarea",
         "rdfs:comment" : "Unstrukturierte Bemerkungen zu einem Objekt",
         "rdfs:label" : "Comment",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -327,8 +403,11 @@
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
         "knora-api:isLinkProperty" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "salsah-gui:guiAttribute" : "numprops=2",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
         "rdfs:comment" : "Copyright",
         "rdfs:label" : "Copyright",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"
@@ -338,8 +417,11 @@
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
         "knora-api:isLinkValueProperty" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "salsah-gui:guiAttribute" : "numprops=2",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
         "rdfs:comment" : "Copyright",
         "rdfs:label" : "Copyright",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue"
@@ -348,8 +430,11 @@
         "@id" : "p00FF-images:description",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "salsah-gui:guiAttribute" : [ "rows=10", "width=95%", "wrap=soft" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Textarea",
         "rdfs:label" : "Description",
         "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/description" ]
       },
@@ -357,8 +442,10 @@
         "@id" : "p00FF-images:eingangsdatum",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Date",
         "rdfs:label" : "Date of receipt",
         "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/date" ]
       },
@@ -366,8 +453,11 @@
         "@id" : "p00FF-images:email",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "salsah-gui:guiAttribute" : [ "maxlength=128", "size=128" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:label" : "Email",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
       },
@@ -375,8 +465,10 @@
         "@id" : "p00FF-images:erfassungsdatum",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Date",
         "rdfs:label" : "Date of acquisition",
         "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/date" ]
       },
@@ -384,8 +476,10 @@
         "@id" : "p00FF-images:erwerbsdatum",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Date",
         "rdfs:label" : "Date of acquisition",
         "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/date" ]
       },
@@ -393,8 +487,11 @@
         "@id" : "p00FF-images:fax",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "salsah-gui:guiAttribute" : [ "maxlength=32", "size=32" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:comment" : "Fax",
         "rdfs:label" : "Fax",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -403,8 +500,11 @@
         "@id" : "p00FF-images:firstname",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "salsah-gui:guiAttribute" : [ "maxlength=32", "size=32" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:comment" : "First name of a person",
         "rdfs:label" : "First name",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -413,8 +513,11 @@
         "@id" : "p00FF-images:format",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "salsah-gui:guiAttribute" : [ "maxlength=32", "size=32" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:label" : "Format",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
       },
@@ -423,8 +526,11 @@
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
         "knora-api:isLinkProperty" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "salsah-gui:guiAttribute" : "numprops=1",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
         "rdfs:comment" : "Image format",
         "rdfs:label" : "Bildformat",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"
@@ -434,8 +540,11 @@
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
         "knora-api:isLinkValueProperty" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "salsah-gui:guiAttribute" : "numprops=1",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
         "rdfs:comment" : "Image format",
         "rdfs:label" : "Bildformat",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue"
@@ -444,8 +553,11 @@
         "@id" : "p00FF-images:institution",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "salsah-gui:guiAttribute" : [ "maxlength=64", "size=64" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:comment" : "Institution",
         "rdfs:label" : "Institution",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -454,8 +566,11 @@
         "@id" : "p00FF-images:jahr_exakt",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "salsah-gui:guiAttribute" : [ "maxlength=8", "size=8" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:label" : "Year",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
       },
@@ -463,8 +578,11 @@
         "@id" : "p00FF-images:jahreszeit",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#ListValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "salsah-gui:guiAttribute" : "hlist=<http://rdfh.ch/lists/00FF/d19af9ab>",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Radio",
         "rdfs:label" : "Season",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
       },
@@ -472,8 +590,10 @@
         "@id" : "p00FF-images:jahrzehnt",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Date",
         "rdfs:label" : "Decade",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
       },
@@ -481,8 +601,11 @@
         "@id" : "p00FF-images:lastname",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "salsah-gui:guiAttribute" : [ "maxlength=32", "size=32" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:comment" : "Last name of a person",
         "rdfs:label" : "Name",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -492,8 +615,11 @@
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
         "knora-api:isLinkProperty" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "salsah-gui:guiAttribute" : "numprops=2",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
         "rdfs:label" : "Supplier",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"
       },
@@ -502,8 +628,11 @@
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
         "knora-api:isLinkValueProperty" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "salsah-gui:guiAttribute" : "numprops=2",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
         "rdfs:label" : "Supplier",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue"
       },
@@ -511,8 +640,10 @@
         "@id" : "p00FF-images:mutationsdatum",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DateValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Date",
         "rdfs:label" : "Mutation date",
         "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://purl.org/dc/terms/date" ]
       },
@@ -520,17 +651,35 @@
         "@id" : "p00FF-images:negativnummer",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "salsah-gui:guiAttribute" : [ "maxlength=32", "size=32" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:label" : "Number of negative",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+      },
+      "p00FF-images:phone" : {
+        "@id" : "p00FF-images:phone",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "salsah-gui:guiAttribute" : [ "maxlength=32", "size=32" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
+        "rdfs:label" : "Telefon",
+        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://xmlns.com/foaf/0.1/phone" ]
       },
       "p00FF-images:preis" : {
         "@id" : "p00FF-images:preis",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "salsah-gui:guiAttribute" : [ "maxlength=16", "size=16" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:label" : "Price",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
       },
@@ -538,8 +687,11 @@
         "@id" : "p00FF-images:signatur",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "salsah-gui:guiAttribute" : [ "maxlength=16", "size=16" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:comment" : "Die spezielle Signatur",
         "rdfs:label" : "Signature",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -548,8 +700,11 @@
         "@id" : "p00FF-images:stueckzahl",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#IntValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "salsah-gui:guiAttribute" : [ "max=99", "min=0" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Spinbox",
         "rdfs:label" : "No. of items",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
       },
@@ -557,8 +712,11 @@
         "@id" : "p00FF-images:titel",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#ListValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "salsah-gui:guiAttribute" : "hlist=<http://rdfh.ch/lists/00FF/73d0ec0302>",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#List",
         "rdfs:label" : "Title",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
       },
@@ -567,8 +725,11 @@
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
         "knora-api:isLinkProperty" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "salsah-gui:guiAttribute" : "numprops=2",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
         "rdfs:comment" : "An entity primarily responsible for making the resource. Examples of a Creator include a person, an organization, or a service. Typically, the name of a Creator should be used to indicate the entity.",
         "rdfs:label" : "Creator",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"
@@ -578,8 +739,11 @@
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
         "knora-api:isLinkValueProperty" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bild",
+        "salsah-gui:guiAttribute" : "numprops=2",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
         "rdfs:comment" : "An entity primarily responsible for making the resource. Examples of a Creator include a person, an organization, or a service. Typically, the name of a Creator should be used to indicate the entity.",
         "rdfs:label" : "Creator",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue"
@@ -588,8 +752,11 @@
         "@id" : "p00FF-images:zipcode",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#person",
+        "salsah-gui:guiAttribute" : [ "maxlength=16", "size=16" ],
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
         "rdfs:comment" : "Postleitzajl",
         "rdfs:label" : "ZIP-Code",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
@@ -598,15 +765,16 @@
         "@id" : "p00FF-images:zugangsart",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#ListValue",
         "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat",
+        "salsah-gui:guiAttribute" : "hlist=<http://rdfh.ch/lists/00FF/0702a01e01>",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Radio",
         "rdfs:comment" : "Die Art und Weise, wie ein Objekt in den Besitz gelangt ist.",
         "rdfs:label" : "Type of acquisition",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
       }
     },
-    "knora-api:hasStandoffClasses" : { },
-    "knora-api:hasStandoffProperties" : { },
     "rdfs:label" : "The images demo ontology"
   },
   "@context" : {
@@ -614,6 +782,7 @@
     "p00FF-images" : "http://0.0.0.0:3333/ontology/00FF/images/v2#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
+    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
     "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }

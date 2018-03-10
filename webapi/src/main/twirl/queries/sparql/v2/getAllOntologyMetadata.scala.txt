@@ -20,29 +20,27 @@
 
 @import org.knora.webapi.IRI
 
-@**
- * Gets all the property definitions.
+@*
+ * Gets the predicates and objects of an ontology IRI.
  *
  * @param triplestore the name of the triplestore being used.
  *@
 @(triplestore: String)
 
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?graph ?prop ?propPred ?propObj ?propObjLang
+SELECT ?ontologyGraph ?ontologyIri ?ontologyPred ?ontologyObj
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    GRAPH ?graph {
-        ?prop rdf:type owl:ObjectProperty .
+    GRAPH ?ontologyGraph {
+        ?ontologyIri rdf:type owl:Ontology ;
+            ?ontologyPred ?ontologyObj .
     }
-
-    ?prop rdfs:subPropertyOf* knora-base:resourceProperty .
-    ?prop ?propPred ?propObj .
-    BIND(lang(?propObj) as ?propObjLang)
 }

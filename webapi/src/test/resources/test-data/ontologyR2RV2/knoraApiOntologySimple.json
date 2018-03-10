@@ -26,6 +26,10 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLinks"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"
         }, {
           "@type" : "owl:Restriction",
@@ -34,7 +38,7 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:Color" : {
@@ -73,6 +77,10 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLinks"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"
         }, {
           "@type" : "owl:Restriction",
@@ -81,7 +89,7 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:Date" : {
@@ -120,6 +128,10 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLinks"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"
         }, {
           "@type" : "owl:Restriction",
@@ -128,7 +140,7 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:File" : {
@@ -154,6 +166,10 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLinks"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"
         }, {
           "@type" : "owl:Restriction",
@@ -162,7 +178,7 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:Geom" : {
@@ -213,6 +229,10 @@
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasComment"
         }, {
           "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLinks"
+        }, {
+          "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo"
         }, {
@@ -226,7 +246,7 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:MovingImageFile" : {
@@ -247,6 +267,10 @@
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#creationDate"
         }, {
           "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLinks"
+        }, {
+          "@type" : "owl:Restriction",
           "owl:minCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasMovingImageFile"
         }, {
@@ -260,7 +284,7 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:Region" : {
@@ -287,6 +311,10 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLinks"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"
         }, {
           "@type" : "owl:Restriction",
@@ -299,7 +327,7 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:Representation" : {
@@ -318,24 +346,7 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#lastModificationDate"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
-        } ]
-      },
-      "knora-api:Resource" : {
-        "@id" : "knora-api:Resource",
-        "@type" : "owl:Class",
-        "rdfs:subClassOf" : [ "http://schema.org/Thing", {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#creationDate"
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLinks"
         }, {
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 0,
@@ -347,7 +358,32 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
+        } ]
+      },
+      "knora-api:Resource" : {
+        "@id" : "knora-api:Resource",
+        "@type" : "owl:Class",
+        "rdfs:subClassOf" : [ {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLinks"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#lastModificationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:StillImageFile" : {
@@ -369,6 +405,10 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLinks"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"
         }, {
           "@type" : "owl:Restriction",
@@ -381,7 +421,7 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       },
       "knora-api:TextFile" : {
@@ -403,6 +443,10 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLinks"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"
         }, {
           "@type" : "owl:Restriction",
@@ -415,7 +459,7 @@
         }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
         } ]
       }
     },
@@ -497,6 +541,15 @@
         "rdfs:comment" : "Represents a geometrical shape.",
         "rdfs:label" : "Geometry",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#hasValue"
+      },
+      "knora-api:hasIncomingLinks" : {
+        "@id" : "knora-api:hasIncomingLinks",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Resource",
+        "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Resource",
+        "rdfs:comment" : "Indicates that this resource referred to by another resource",
+        "rdfs:label" : "has incoming links",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo"
       },
       "knora-api:hasLinkTo" : {
         "@id" : "knora-api:hasLinkTo",
@@ -601,8 +654,6 @@
         "rdfs:label" : "Subject type"
       }
     },
-    "knora-api:hasStandoffClasses" : { },
-    "knora-api:hasStandoffProperties" : { },
     "rdfs:label" : "The simplified knora-api ontology"
   },
   "@context" : {

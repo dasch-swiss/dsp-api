@@ -21,6 +21,7 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import org.knora.webapi._
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
@@ -38,12 +39,12 @@ object KnoraApiV2Simple {
 
     val Resource: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.Resource,
-        subClassOf = Set(OntologyConstants.SchemaOrg.Thing),
         directCardinalities = Map(
-            OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
+            OntologyConstants.Rdfs.Label -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2Simple.HasStandoffLinkTo -> Cardinality.MayHaveMany,
             OntologyConstants.KnoraApiV2Simple.CreationDate -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2Simple.LastModificationDate -> Cardinality.MayHaveOne
+            OntologyConstants.KnoraApiV2Simple.LastModificationDate -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2Simple.HasIncomingLinks -> Cardinality.MayHaveMany,
         )
     )
 
@@ -232,6 +233,29 @@ object KnoraApiV2Simple {
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
                     LanguageCodes.EN -> "Indicates that this resource is part of another resource"
+                )
+            )
+        )
+    )
+
+    val HasIncomingLinks: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Simple.HasIncomingLinks,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),
+        objectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.HasLinkTo),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "hat eingehende Verweise",
+                    LanguageCodes.EN -> "has incoming links"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates that this resource referred to by another resource"
                 )
             )
         )
@@ -1083,6 +1107,7 @@ object KnoraApiV2Simple {
         ObjectType,
         ResourceIcon,
         IsPartOf,
+        HasIncomingLinks,
         IsRegionOf,
         HasGeometry,
         HasColor,
@@ -1185,7 +1210,7 @@ object KnoraApiV2Simple {
                           subClassOf: Set[IRI] = Set.empty[IRI],
                           predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
                           directCardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
-                          inheritedCardinalities: Map[SmartIri, Cardinality.Value] = Map.empty[SmartIri, Cardinality.Value]): ReadClassInfoV2 = {
+                          inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = Map.empty[SmartIri, KnoraCardinalityInfo]): ReadClassInfoV2 = {
 
         val rdfType = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
@@ -1199,7 +1224,7 @@ object KnoraApiV2Simple {
                     pred => pred.predicateIri -> pred
                 }.toMap + rdfType,
                 directCardinalities = directCardinalities.map {
-                    case (propertyIri, cardinality) => propertyIri.toSmartIri -> cardinality
+                    case (propertyIri, cardinality) => propertyIri.toSmartIri -> KnoraCardinalityInfo(cardinality)
                 },
                 subClassOf = subClassOf.map(_.toSmartIri),
                 ontologySchema = ApiV2Simple

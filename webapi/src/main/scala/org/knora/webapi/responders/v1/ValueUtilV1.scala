@@ -629,7 +629,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @return an attribute string to be included in the attributes for the GUI
       */
     def makeAttributeRestype(resourceClass: IRI) = {
-        OntologyConstants.SalsahGui.attributeNames.resourceClass + OntologyConstants.SalsahGui.attributeNames.assignmentOperator + resourceClass
+        "restypeid=" + resourceClass
     }
 
     /**

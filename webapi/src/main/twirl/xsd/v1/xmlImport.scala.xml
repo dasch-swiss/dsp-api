@@ -87,7 +87,7 @@
                                     <xs:element ref="@{knoraXmlImportNamespacePrefixLabel}:file" minOccurs="1" maxOccurs="1"/>
                                 }
 
-                                @for((propertyIri, cardinality) <- resourceClassInfo.cardinalities.toVector.sortBy(_._1)) {
+                                @for((propertyIri, cardinalityInfo) <- resourceClassInfo.knoraResourceCardinalities.toVector.sortBy(_._1)) {
 
                                     @defining(propertyInfoMap.getOrElse(propertyIri, throw AssertionException(s"The definition of the property $propertyIri is needed but was not read"))) { propertyInfo =>
 
@@ -108,7 +108,7 @@
 
                                                 }
 
-                                                @cardinality match {
+                                                @cardinalityInfo.cardinality match {
 
                                                     case Cardinality.MayHaveOne => {
 
