@@ -2027,7 +2027,6 @@ object GraphDBConsistencyCheckingSpec {
           |            rdfs:comment "A property used only in tests"@en ;
           |            knora-base:subjectClassConstraint incunabula:book ;
           |            knora-base:objectClassConstraint knora-base:TextValue ;
-          |            salsah-gui:guiOrder "1"^^xsd:integer ;
           |            salsah-gui:guiElement salsah-gui:SimpleText ;
           |            salsah-gui:guiAttribute "min=4" ,
           |                                    "max=8" .

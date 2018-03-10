@@ -14,5 +14,5 @@
 
 
 #### Basel range - `0800` to `08FF`
-
+   - beol: `0801`
    - webern: `08AE`

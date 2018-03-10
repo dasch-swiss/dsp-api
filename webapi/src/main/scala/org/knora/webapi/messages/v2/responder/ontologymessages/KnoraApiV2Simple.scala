@@ -39,12 +39,12 @@ object KnoraApiV2Simple {
 
     val Resource: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2Simple.Resource,
-        subClassOf = Set(OntologyConstants.SchemaOrg.Thing),
         directCardinalities = Map(
-            OntologyConstants.SchemaOrg.Name -> Cardinality.MustHaveOne,
+            OntologyConstants.Rdfs.Label -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2Simple.HasStandoffLinkTo -> Cardinality.MayHaveMany,
             OntologyConstants.KnoraApiV2Simple.CreationDate -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraApiV2Simple.LastModificationDate -> Cardinality.MayHaveOne
+            OntologyConstants.KnoraApiV2Simple.LastModificationDate -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2Simple.HasIncomingLinks -> Cardinality.MayHaveMany,
         )
     )
 
@@ -233,6 +233,29 @@ object KnoraApiV2Simple {
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
                     LanguageCodes.EN -> "Indicates that this resource is part of another resource"
+                )
+            )
+        )
+    )
+
+    val HasIncomingLinks: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Simple.HasIncomingLinks,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),
+        objectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.HasLinkTo),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "hat eingehende Verweise",
+                    LanguageCodes.EN -> "has incoming links"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates that this resource referred to by another resource"
                 )
             )
         )
@@ -1084,6 +1107,7 @@ object KnoraApiV2Simple {
         ObjectType,
         ResourceIcon,
         IsPartOf,
+        HasIncomingLinks,
         IsRegionOf,
         HasGeometry,
         HasColor,

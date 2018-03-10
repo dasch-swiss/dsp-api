@@ -403,7 +403,7 @@ object SharedTestDataV1 {
     /** BEOL                            **/
     /** **********************************/
 
-    val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+    val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/0801"
 
     def beolProjectInfo = ProjectInfoV1(
         id = BEOL_PROJECT_IRI,
@@ -414,7 +414,7 @@ object SharedTestDataV1 {
         keywords = None,
         logo = None,
         institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/beol"),
+        ontologies = Seq("http://www.knora.org/ontology/0801/beol"),
         status = true,
         selfjoin = false
     )
