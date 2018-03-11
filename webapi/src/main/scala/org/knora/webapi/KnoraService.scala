@@ -181,6 +181,12 @@ trait KnoraService {
 
         CacheUtil.createCaches(settings.caches)
 
+        // which repository are we using
+        println(s"DB Server: ${settings.triplestoreHost}, DB Port: ${settings.triplestorePort}")
+        println(s"Repository: ${settings.triplestoreDatabaseName}")
+        println(s"DB User: ${settings.triplestoreUsername}")
+        println(s"DB Password: ${settings.triplestorePassword}")
+
         // get loadDemoData value from application state actor
         val loadDemoData = Await.result(applicationStateActor ? GetLoadDemoDataState(), 1.second).asInstanceOf[Boolean]
 
@@ -226,7 +232,6 @@ trait KnoraService {
         }
 
 
-
         // Either HTTP or HTTPs, or both, must be enabled.
         if (!(settings.knoraApiUseHttp || settings.knoraApiUseHttps)) {
             throw HttpConfigurationException("Neither HTTP nor HTTPS is enabled")
@@ -235,7 +240,7 @@ trait KnoraService {
         // Activate HTTP if enabled.
         if (settings.knoraApiUseHttp) {
             Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.knoraApiHost, settings.knoraApiHttpPort)
-            println(s"Knora API Server using HTTP at http://${settings.knoraApiHost}:${settings.knoraApiHttpPort}.")
+            println(s"Knora API Server stated at http://${settings.knoraApiHost}:${settings.knoraApiHttpPort}.")
         }
 
         // Activate HTTPS if enabled.
@@ -257,7 +262,7 @@ trait KnoraService {
             val https = ConnectionContext.https(sslContext)
 
             Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.knoraApiHost, settings.knoraApiHttpsPort, connectionContext = https)
-            println(s"Knora API Server using HTTPS at https://${settings.knoraApiHost}:${settings.knoraApiHttpsPort}.")
+            println(s"Knora API Server started at https://${settings.knoraApiHost}:${settings.knoraApiHttpsPort}.")
         }
     }
 
