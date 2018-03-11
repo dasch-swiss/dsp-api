@@ -73,6 +73,9 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val bildWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/bildWithValueObjects.json")))
     private val knoraApiOntologySimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiOntologySimple.json")))
     private val knoraApiWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiWithValueObjects.json")))
+    private val salsahGui: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/salsahGuiOntology.json")))
+    private val standoffSimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/standoffOntologySimple.json")))
+    private val standoffWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/standoffOntologyWithValueObjects.json")))
     private val incunabulaOntologySimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaOntologySimple.json")))
     private val incunabulaOntologyWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaOntologyWithValueObjects.json")))
     private val knoraApiDate: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiDate.json")))
@@ -149,6 +152,27 @@ class OntologyV2R2RSpec extends R2RSpec {
             Get("/ontology/knora-api/v2") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
                 assert(responseJson == knoraApiWithValueObjects)
+            }
+        }
+
+        "serve the salsah-gui ontology as JSON-LD via the /ontology route" in {
+            Get("/ontology/salsah-gui/v2") ~> ontologiesPath ~> check {
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                assert(responseJson == salsahGui)
+            }
+        }
+
+        "serve the standoff ontology as JSON-LD via the /ontology route using the simple schema" in {
+            Get("/ontology/standoff/simple/v2") ~> ontologiesPath ~> check {
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                assert(responseJson == standoffSimple)
+            }
+        }
+
+        "serve the standoff ontology as JSON-LD via the /ontology route using the value object schema" in {
+            Get("/ontology/standoff/v2") ~> ontologiesPath ~> check {
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                assert(responseJson == standoffWithValueObjects)
             }
         }
 
@@ -238,7 +262,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             }
         }
 
-        "serve two project-specific classes and their properties as JSON-LD using the value object schema" in {
+        "serve two project-specific classes as JSON-LD using the value object schema" in {
             val pageIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/v2#page", "UTF-8")
             val bookIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/v2#book", "UTF-8")
 
@@ -381,7 +405,9 @@ class OntologyV2R2RSpec extends R2RSpec {
                   |          "@language" : "de",
                   |          "@value" : "hat Namen"
                   |        } ],
-                  |        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://schema.org/name" ]
+                  |        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://schema.org/name" ],
+                  |        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
+                  |        "salsah-gui:guiAttribute" : [ "size=80", "maxlength=100" ]
                   |      }
                   |    },
                   |    "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
@@ -389,6 +415,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                   |  "@context" : {
                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                  |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
                   |    "owl" : "http://www.w3.org/2002/07/owl#",
                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
@@ -462,7 +489,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 // Comvert the response to an InputOntologiesV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
                 assert(responseAsInput.ontologies.size == 1)
-                responseAsInput.ontologies.head.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objectsWithLang should ===(paramsAsInput.ontologies.head.properties.head._2.predicates.head._2.objectsWithLang)
+                responseAsInput.ontologies.head.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(paramsAsInput.ontologies.head.properties.head._2.predicates.head._2.objects)
 
                 // Check that the ontology's last modification date was updated.
                 val newAnythingLastModDate = responseAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get
@@ -517,7 +544,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 // Comvert the response to an InputOntologiesV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
                 assert(responseAsInput.ontologies.size == 1)
-                responseAsInput.ontologies.head.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objectsWithLang should ===(paramsAsInput.ontologies.head.properties.head._2.predicates.head._2.objectsWithLang)
+                responseAsInput.ontologies.head.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(paramsAsInput.ontologies.head.properties.head._2.predicates.head._2.objects)
 
                 // Check that the ontology's last modification date was updated.
                 val newAnythingLastModDate = responseAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get
@@ -550,7 +577,8 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |            {
                    |                "@type": "http://www.w3.org/2002/07/owl#Restriction",
                    |                "owl:maxCardinality": 1,
-                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/anything/v2#hasName"
+                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/anything/v2#hasName",
+                   |                "salsah-gui:guiOrder": 1
                    |            }
                    |        ]
                    |      }
@@ -560,6 +588,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |  "@context" : {
                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
                    |    "owl" : "http://www.w3.org/2002/07/owl#",
                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
@@ -715,7 +744,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 // Comvert the response to an InputOntologiesV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
                 assert(responseAsInput.ontologies.size == 1)
-                responseAsInput.ontologies.head.classes.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objectsWithLang should ===(paramsAsInput.ontologies.head.classes.head._2.predicates.head._2.objectsWithLang)
+                responseAsInput.ontologies.head.classes.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(paramsAsInput.ontologies.head.classes.head._2.predicates.head._2.objects)
 
                 // Check that the ontology's last modification date was updated.
                 val newAnythingLastModDate = responseAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get
@@ -739,7 +768,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |          "@language" : "en",
                    |          "@value" : "Represents nothing"
                    |        }, {
-                   |          "@language" : "en",
+                   |          "@language" : "fr",
                    |          "@value" : "ne représente rien"
                    |        } ]
                    |      }
@@ -767,7 +796,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 // Comvert the response to an InputOntologiesV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
                 assert(responseAsInput.ontologies.size == 1)
-                responseAsInput.ontologies.head.classes.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objectsWithLang should ===(paramsAsInput.ontologies.head.classes.head._2.predicates.head._2.objectsWithLang)
+                responseAsInput.ontologies.head.classes.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(paramsAsInput.ontologies.head.classes.head._2.predicates.head._2.objects)
 
                 // Check that the ontology's last modification date was updated.
                 val newAnythingLastModDate = responseAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get

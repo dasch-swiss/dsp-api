@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -403,7 +402,7 @@ object SharedTestDataV1 {
     /** BEOL                            **/
     /** **********************************/
 
-    val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+    val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/0801"
 
     def beolProjectInfo = ProjectInfoV1(
         id = BEOL_PROJECT_IRI,
@@ -414,7 +413,7 @@ object SharedTestDataV1 {
         keywords = None,
         logo = None,
         institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/beol"),
+        ontologies = Seq("http://www.knora.org/ontology/0801/beol"),
         status = true,
         selfjoin = false
     )

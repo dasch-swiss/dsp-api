@@ -1,6 +1,5 @@
 @*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -18,7 +17,10 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
+@import org.knora.webapi.SparqlGenerationException
 @import org.knora.webapi.util.SmartIri
+@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+
 @import java.time.Instant
 
 @*
@@ -38,7 +40,7 @@
   ontologyIri: SmartIri,
   classIri: SmartIri,
   predicateToUpdate: SmartIri,
-  newObjects: Map[String, String],
+  newObjects: Seq[StringLiteralV2],
   lastModificationDate: Instant,
   currentTime: Instant)
 
@@ -57,9 +59,9 @@ DELETE {
     GRAPH ?ontologyNamedGraph {
         ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
 
-        @for((newObjLang, newObjText) <- newObjects) {
+        @for(newObject <- newObjects) {
 
-            ?class <@predicateToUpdate> """@newObjText"""@@@newObjLang .
+            ?class <@predicateToUpdate> """@{newObject.value}"""@@@{newObject.language.getOrElse(throw SparqlGenerationException("No language code given in object of predicate $predicateToUpdate: $newObject"))} .
 
         }
     }

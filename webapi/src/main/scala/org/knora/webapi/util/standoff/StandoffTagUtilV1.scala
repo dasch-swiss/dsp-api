@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -323,7 +322,7 @@ object StandoffTagUtilV1 {
                 val standoffClassIri: IRI = standoffDefFromMapping.standoffClassIri
 
                 // get the cardinalities of the current standoff class
-                val cardinalities: Map[IRI, KnoraCardinalityInfo] = standoffEntities.standoffClassInfoMap.getOrElse(standoffClassIri, throw NotFoundException(s"information about standoff class $standoffClassIri was not found in ontology")).cardinalities
+                val cardinalities: Map[IRI, KnoraCardinalityInfo] = standoffEntities.standoffClassInfoMap.getOrElse(standoffClassIri, throw NotFoundException(s"information about standoff class $standoffClassIri was not found in ontology")).allCardinalities
 
                 // create a standoff base tag with the information available from standoff util
                 val standoffBaseTagV1: StandoffTagV1 = standoffNodeFromXML match {

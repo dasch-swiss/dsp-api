@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -139,7 +138,13 @@ class ResourceCreationSpec extends SalsahSpec {
 
             val resource1Label: WebElement = page.getFormFieldByName("__LABEL__")
 
-            resource1Label.sendKeys("Testding")
+            try {
+                resource1Label.sendKeys("Testding")
+            } catch {
+                case _: org.openqa.selenium.StaleElementReferenceException =>
+                    val resource1Label: WebElement = page.getFormFieldByName("__LABEL__")
+                    resource1Label.sendKeys("Testding")
+            }
 
             val resource1FloatVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDecimal")
 

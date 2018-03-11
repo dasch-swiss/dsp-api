@@ -2,28 +2,28 @@
   "knora-api:hasOntologies" : {
     "@id" : "http://api.knora.org/ontology/knora-api/v2",
     "@type" : "owl:Ontology",
-    "knora-api:hasClasses" : { },
     "knora-api:hasProperties" : {
       "knora-api:hasColor" : {
         "@id" : "knora-api:hasColor",
         "@type" : "owl:ObjectProperty",
         "knora-api:isEditable" : true,
+        "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#ColorValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Region",
+        "salsah-gui:guiAttribute" : "ncolors=8",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Colorpicker",
         "rdfs:comment" : "Specifies the color of a Region",
         "rdfs:label" : "Color",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
       }
     },
-    "knora-api:hasStandoffClasses" : { },
-    "knora-api:hasStandoffProperties" : { },
     "rdfs:label" : "The default knora-api ontology"
   },
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
-    "salsah-gui" : "http://www.knora.org/ontology/salsah-gui#",
+    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
     "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }

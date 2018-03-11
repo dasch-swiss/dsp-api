@@ -1,5 +1,4 @@
-.. Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
-   Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+.. Copyright © 2015-2018 the contributors (see Contributors.md).
 
    This file is part of Knora.
 
@@ -65,10 +64,15 @@ Properties
 
       percent = integer, "%" ;
 
+      iri = "<", string, ">" ;
+
+   The attributes used with each GUI element are described below under :ref:`salsah-gui-individuals`.
+
 ``guiAttributeDefinition``
-   Used only in the ``salsah-gui`` ontology itself, as a predicate attached to instances of ``Guielement``,
-   to specify the attributes that can be given as objects of ``guiAttribute`` when a given ``Guielement``.
-   is used. The objects of this predicate are written in a DSL with the following syntax:
+   Used only in the ``salsah-gui`` ontology itself, as a predicate attached to instances of ``Guielement``
+   (see :ref:`salsah-gui-individuals`), to specify the attributes that can be given as objects of
+   ``guiAttribute`` when a given ``Guielement``. is used. The objects of this predicate are written in a DSL
+   with the following syntax:
 
    .. code-block:: ebnf
 
@@ -93,6 +97,8 @@ Classes
 
 ``Guielement``
    The instances of this class are individuals representing SALSAH GUI elements for data entry.
+
+.. _salsah-gui-individuals:
 
 Individuals
 ===========
@@ -181,4 +187,3 @@ Individuals
 
 .. _Geonames: http://www.geonames.org/
 .. _wrap: https://www.w3.org/TR/html5/sec-forms.html#element-attrdef-textarea-wrap
-

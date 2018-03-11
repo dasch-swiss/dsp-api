@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -20,9 +19,11 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
+import java.time.Instant
+
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.util.ErrorHandlingMap
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, TriplestoreResponseException}
+import org.knora.webapi.util.{ErrorHandlingMap, SmartIri}
+import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologySchema, TriplestoreResponseException}
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsObject, JsString, JsValue, JsonFormat, NullOptions, RootJsonFormat, _}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +121,7 @@ case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
   * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
   * [[SparqlExtendedConstructResponse]].
   *
-  * @param sparql       the SPARQL string.
+  * @param sparql the SPARQL string.
   */
 case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreRequest
 
@@ -235,10 +236,16 @@ case class RdfDataObject(path: String, name: String)
   */
 sealed trait SubjectV2
 
+/**
+  * Represents an IRI used as the subject of a statement.
+  */
 case class IriSubjectV2(value: IRI) extends SubjectV2 {
     override def toString: IRI = value
 }
 
+/**
+  * Represents a blank node identifier used as the subject of a statement.
+  */
 case class BlankNodeSubjectV2(value: String) extends SubjectV2 {
     override def toString: String = value
 }
@@ -250,12 +257,28 @@ case class BlankNodeSubjectV2(value: String) extends SubjectV2 {
 sealed trait LiteralV2
 
 /**
-  * Represents an object IRI.
+  * Represents a literal read from an ontology in the triplestore.
+  */
+sealed trait OntologyLiteralV2
+
+/**
+  * Represents an IRI literal.
   *
   * @param value the IRI.
   */
 case class IriLiteralV2(value: IRI) extends LiteralV2 {
     override def toString: IRI = value
+}
+
+/**
+  * Represents an IRI literal as a [[SmartIri]].
+
+  * @param value the IRI.
+  */
+case class SmartIriLiteralV2(value: SmartIri) extends OntologyLiteralV2 {
+    override def toString: IRI = value.toString
+
+    def toOntologySchema(targetSchema: OntologySchema) = SmartIriLiteralV2(value.toOntologySchema(targetSchema))
 }
 
 /**
@@ -273,8 +296,9 @@ case class BlankNodeLiteralV2(value: String) extends LiteralV2 {
   * @param value    the string value.
   * @param language the optional language tag.
   */
-case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2 with Ordered[StringLiteralV2] {
+case class StringLiteralV2(value: String, language: Option[String] = None) extends LiteralV2 with OntologyLiteralV2 with Ordered[StringLiteralV2] {
     override def toString: String = value
+
     def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
 }
 
@@ -283,16 +307,34 @@ case class StringLiteralV2(value: String, language: Option[String] = None) exten
   *
   * @param value the boolean value.
   */
-case class BooleanLiteralV2(value: Boolean) extends LiteralV2 {
+case class BooleanLiteralV2(value: Boolean) extends LiteralV2 with OntologyLiteralV2 {
     override def toString: String = value.toString
 }
 
 /**
   * Represents an integer value.
   *
-  * @param value the boolean value.
+  * @param value the integer value.
   */
 case class IntLiteralV2(value: Int) extends LiteralV2 {
+    override def toString: String = value.toString
+}
+
+/**
+  * Represents a decimal value.
+  *
+  * @param value the decimal value.
+  */
+case class DecimalLiteralV2(value: BigDecimal) extends LiteralV2 {
+    override def toString: String = value.toString
+}
+
+/**
+  * Represents a timestamp.
+  *
+  * @param value the timestamp value.
+  */
+case class DateTimeLiteralV2(value: Instant) extends LiteralV2 {
     override def toString: String = value.toString
 }
 

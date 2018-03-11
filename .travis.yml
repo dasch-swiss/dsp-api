@@ -42,8 +42,8 @@ before_install:
 
 stages:
   - test
-  - name: publish # generally, only publish if we are on 'develop'
-    if: branch = develop
+  - name: publish # generally, only publish if we are on 'develop' or tagged
+    if: branch = develop OR tag IS present
 
 jobs:
   include:
@@ -103,18 +103,21 @@ jobs:
     #    - cd $TRAVIS_BUILD_DIR/salsah/ && sbt headless:test
     - stage: publish
       script:
+        # login into docker hub, build image, and push but only when on the "develop" branch or tagged
+        # when on 'develop' then $TRAVIS_BRANCH = develop
+        # when on 'tag' then $TRAVIS_BRANCH = tag, e.g., v1.2.0
         - docker login -u $DOCKER_USER -p $DOCKER_PASS
         # webapi
-        - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:develop
-        - docker tag $WEBAPI_REPO:develop $WEBAPI_REPO:latest
+        - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:$TRAVIS_BRANCH
+        - docker tag $WEBAPI_REPO:$TRAVIS_BRANCH $WEBAPI_REPO:latest
         - docker push $WEBAPI_REPO
         # salsah
-        - docker build $TRAVIS_BUILD_DIR/salsah/ -t $SALSAH_REPO:develop
-        - docker tag $SALSAH_REPO:develop $SALSAH_REPO:latest
+        - docker build $TRAVIS_BUILD_DIR/salsah/ -t $SALSAH_REPO:$TRAVIS_BRANCH
+        - docker tag $SALSAH_REPO:$TRAVIS_BRANCH $SALSAH_REPO:latest
         - docker push $SALSAH_REPO
         # sipi: get the develop sipi and tag it as 'develop-knora' so we know that this version is tested (only on the develop branch)
         - docker pull $SIPI_REPO:develop
-        - docker tag $SIPI_REPO:develop $SIPI_REPO:knora-develop
+        - docker tag $SIPI_REPO:develop $SIPI_REPO:knora-$TRAVIS_BRANCH
         - docker push $SIPI_REPO
 
 notifications:

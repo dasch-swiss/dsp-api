@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -22,6 +21,7 @@ package org.knora.webapi.messages.v1.responder.ontologymessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
@@ -280,12 +280,17 @@ class PredicateInfoV1(predicateInfoV2: PredicateInfoV2) {
     /**
       * Returns the objects of the predicate that have no language codes.
       */
-    def objects: Set[String] = predicateInfoV2.objects
+    def objects: Set[String] = predicateInfoV2.objects.filter {
+        case StringLiteralV2(_, Some(_)) => false
+        case _ => true
+    }.map(_.toString).toSet
 
     /**
       * Returns the objects of the predicate that have language codes: a Map of language codes to literals.
       */
-    def objectsWithLang: Map[String, String] = predicateInfoV2.objectsWithLang
+    def objectsWithLang: Map[String, String] = predicateInfoV2.objects.collect {
+        case StringLiteralV2(str, Some(lang)) => lang -> str
+    }.toMap
 }
 
 /**
@@ -299,7 +304,7 @@ sealed trait EntityInfoV1 {
     /**
       * Returns a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
       */
-    def predicates: Map[IRI, PredicateInfoV1] = {
+    lazy val predicates: Map[IRI, PredicateInfoV1] = {
         entityInfoContent.predicates.map {
             case (smartIri, predicateInfoV2) => smartIri.toString -> new PredicateInfoV1(predicateInfoV2)
         }
@@ -315,20 +320,23 @@ sealed trait EntityInfoV1 {
       *         if the predicate has no objects.
       */
     def getPredicateObject(predicateIri: IRI, preferredLangs: Option[(String, String)] = None): Option[String] = {
-        entityInfoContent.getPredicateLiteralObject(
+        entityInfoContent.getPredicateStringLiteralObject(
             predicateIri = predicateIri.toSmartIri,
             preferredLangs = preferredLangs
-        )
+        ) match {
+            case Some(obj) => Some(obj)
+            case None => predicates.get(predicateIri).flatMap(_.objects.headOption)
+        }
     }
 
     /**
-      * Returns all the objects specified for a given predicate.
+      * Returns all the string (non-IRI) objects specified without language tags for a given predicate.
       *
       * @param predicateIri the IRI of the predicate.
       * @return the predicate's objects, or an empty set if this entity doesn't have the specified predicate.
       */
-    def getPredicateObjectsWithoutLang(predicateIri: IRI): Set[String] = {
-        entityInfoContent.getPredicateLiteralsWithoutLang(predicateIri.toSmartIri)
+    def getPredicateStringObjectsWithoutLang(predicateIri: IRI): Set[String] = {
+        entityInfoContent.getPredicateStringLiteralObjectsWithoutLang(predicateIri.toSmartIri).toSet
     }
 }
 
@@ -343,12 +351,18 @@ class ClassInfoV1(classInfoV2: ReadClassInfoV2) extends EntityInfoV1 {
       */
     def resourceClassIri: IRI = classInfoV2.entityInfoContent.classIri.toString
 
+    def allCardinalities: Map[IRI, KnoraCardinalityInfo] = {
+        classInfoV2.allCardinalities.map {
+            case (smartIri, cardinality) => smartIri.toString -> cardinality
+        }
+    }
+
     /**
       * Returns a [[Map]] of properties to [[Cardinality.Value]] objects representing the resource class's
       *                            cardinalities on those properties.
       */
-    def cardinalities: Map[IRI, KnoraCardinalityInfo] = {
-        classInfoV2.allCardinalities.map {
+    def knoraResourceCardinalities: Map[IRI, KnoraCardinalityInfo] = {
+        classInfoV2.allResourcePropertyCardinalities.map {
             case (smartIri, cardinality) => smartIri.toString -> cardinality
         }
     }
