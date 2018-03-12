@@ -2260,7 +2260,7 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
         val subjectTypeStatement: Option[(IRI, JsonLDString)] = maybeSubjectType.map(subjectTypeObj => (subjectTypePred, JsonLDString(subjectTypeObj.toString)))
         val objectTypeStatement: Option[(IRI, JsonLDString)] = maybeObjectType.map(objectTypeObj => (objectTypePred, JsonLDString(objectTypeObj.toString)))
 
-        val jsonSubPropertyOf: Seq[JsonLDString] = entityInfoContent.subPropertyOf.filter(_ != OntologyConstants.KnoraBase.ObjectCannotBeMarkedAsDeleted).toSeq.map {
+        val jsonSubPropertyOf: Seq[JsonLDString] = entityInfoContent.subPropertyOf.toSeq.map {
             superProperty => JsonLDString(superProperty.toString)
         }
 
@@ -2624,12 +2624,21 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
             predicates
         }
 
+        // Remove any references to base properties that don't exist in the target schema.
+        val subPropertyOfFilteredForSchema = subPropertyOf.filterNot {
+            baseProperty =>
+                targetSchema match {
+                    case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraBasePropertiesToRemove.contains(baseProperty)
+                    case _ => false // TODO: handle the simple schema.
+                }
+        }
+
         copy(
             propertyIri = propertyIri.toOntologySchema(targetSchema),
             predicates = predicatesWithAdjustedRdfType.map {
                 case (predicateIri, predicate) => predicateIri.toOntologySchema(targetSchema) -> predicate.toOntologySchema(targetSchema)
             },
-            subPropertyOf = subPropertyOf.map(_.toOntologySchema(targetSchema)),
+            subPropertyOf = subPropertyOfFilteredForSchema.map(_.toOntologySchema(targetSchema)),
             ontologySchema = targetSchema
         )
     }

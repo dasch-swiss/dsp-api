@@ -701,6 +701,7 @@ object OntologyConstants {
         val TextValueAsHtml: IRI = KnoraApiV2PrefixExpansion + "textValueAsHtml"
         val TextValueAsXml: IRI = KnoraApiV2PrefixExpansion + "textValueAsXml"
         val TextValueHasMapping: IRI = KnoraApiV2PrefixExpansion + "textValueHasMapping"
+        val StandoffTag: IRI = KnoraApiV2PrefixExpansion + "StandoffTag"
 
         val IntValueAsInt: IRI = KnoraApiV2PrefixExpansion + "intValueAsInt"
 

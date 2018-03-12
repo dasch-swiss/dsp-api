@@ -384,6 +384,28 @@ object KnoraApiV2WithValueObjects {
 
     )
 
+    val TextValueHasStandoff: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasStandoff,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextValue),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "text value has standoff"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Standoff markup attached to a text value."
+                )
+            )
+        )
+    )
+
     val TextValueAsXml: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1255,7 +1277,6 @@ object KnoraApiV2WithValueObjects {
             OntologyConstants.KnoraBase.HasSubListNode,
             OntologyConstants.KnoraBase.ListNodeName,
             OntologyConstants.KnoraBase.ListNodePosition,
-            OntologyConstants.KnoraBase.ValueHas,
             OntologyConstants.KnoraBase.ValueHasMapping,
             OntologyConstants.KnoraBase.ValueHasCalendar,
             OntologyConstants.KnoraBase.ValueHasColor,
@@ -1411,6 +1432,7 @@ object KnoraApiV2WithValueObjects {
         HasIncomingLinks,
         SubjectType,
         ObjectType,
+        TextValueHasStandoff,
         TextValueAsXml,
         TextValueAsHtml,
         DateValueHasStartYear,
