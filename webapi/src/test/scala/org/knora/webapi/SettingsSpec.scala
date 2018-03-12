@@ -35,9 +35,26 @@ class SettingsSpec extends CoreSpec("SettingsActorTestSystem", SettingsSpec.conf
 
     "The Settings Object" should {
 
-        "provide access to all config values" ignore {
+        "provide access to all config values" in {
 
-            settings.triplestoreType should ===("fuseki")
+            settings.internalKnoraApiHost should be ("0.0.0.0")
+            settings.internalKnoraApiPort should be (3333)
+            settings.internalKnoraApiBaseUrl should be ("http://0.0.0.0:3333")
+
+            settings.externalKnoraApiProtocol should be ("http")
+            settings.externalKnoraApiHost should be ("0.0.0.0")
+            settings.externalKnoraApiPort should be (3333)
+            settings.externalKnoraApiBaseUrl should be ("http://0.0.0.0:3333")
+
+            settings.internalSipiProtocol should be ("http")
+            settings.internalSipiHost should be ("localhost")
+            settings.internalSipiPort should be (1024)
+            settings.internalSipiBaseUrl should be ("http://localhost:1024")
+
+            settings.externalSipiProtocol should be ("http")
+            settings.externalSipiHost should be ("localhost")
+            settings.externalSipiPort should be (1024)
+            settings.externalSipiBaseUrl should be ("http://localhost:1024")
 
         }
     }

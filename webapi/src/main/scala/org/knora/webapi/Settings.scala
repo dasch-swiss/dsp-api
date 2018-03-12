@@ -61,12 +61,12 @@ class SettingsImpl(config: Config) extends Extension {
     val internalSipiProtocol: String = config.getString("app.sipi.internal-protocol")
     val internalSipiHost: String = config.getString("app.sipi.internal-host")
     val internalSipiPort: Int = config.getInt("app.sipi.internal-port")
-    val internalSipiBaseUrl: String = internalSipiProtocol + "://" + internalSipiHost + ":" + (if (internalSipiPort != 80) ":" + internalSipiPort else "")
+    val internalSipiBaseUrl: String = internalSipiProtocol + "://" + internalSipiHost + (if (internalSipiPort != 80) ":" + internalSipiPort else "")
 
     val externalSipiProtocol: String = config.getString("app.sipi.external-protocol")
     val externalSipiHost: String = config.getString("app.sipi.external-host")
     val externalSipiPort: Int = config.getInt("app.sipi.external-port")
-    val externalSipiBaseUrl: String = externalSipiProtocol + "://" + externalSipiHost + ":" + (if (externalSipiPort != 80) ":" + externalSipiPort else "")
+    val externalSipiBaseUrl: String = externalSipiProtocol + "://" + externalSipiHost + (if (externalSipiPort != 80) ":" + externalSipiPort else "")
 
 
     val sipiPrefix: String = config.getString("app.sipi.prefix")
