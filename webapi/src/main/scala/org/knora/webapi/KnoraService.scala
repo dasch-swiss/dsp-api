@@ -231,39 +231,8 @@ trait KnoraService {
             Kamon.addReporter(new Jaeger()) // tracing
         }
 
-
-        // Either HTTP or HTTPs, or both, must be enabled.
-        if (!(settings.knoraApiUseHttp || settings.knoraApiUseHttps)) {
-            throw HttpConfigurationException("Neither HTTP nor HTTPS is enabled")
-        }
-
-        // Activate HTTP if enabled.
-        if (settings.knoraApiUseHttp) {
-            Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.knoraApiHost, settings.knoraApiHttpPort)
-            println(s"Knora API Server stated at http://${settings.knoraApiHost}:${settings.knoraApiHttpPort}.")
-        }
-
-        // Activate HTTPS if enabled.
-        if (settings.knoraApiUseHttps) {
-            val keystorePassword: Array[Char] = settings.httpsKeystorePassword.toCharArray
-            val keystore: KeyStore = KeyStore.getInstance("JKS")
-            val keystoreFile: InputStream = getClass.getClassLoader.getResourceAsStream(settings.httpsKeystore)
-            require(keystoreFile != null, s"Could not load keystore ${settings.httpsKeystore}")
-            keystore.load(keystoreFile, keystorePassword)
-
-            val keyManagerFactory: KeyManagerFactory = KeyManagerFactory.getInstance("SunX509")
-            keyManagerFactory.init(keystore, keystorePassword)
-
-            val trustManagerFactory: TrustManagerFactory = TrustManagerFactory.getInstance("SunX509")
-            trustManagerFactory.init(keystore)
-
-            val sslContext: SSLContext = SSLContext.getInstance("TLS")
-            sslContext.init(keyManagerFactory.getKeyManagers, trustManagerFactory.getTrustManagers, new SecureRandom)
-            val https = ConnectionContext.https(sslContext)
-
-            Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.knoraApiHost, settings.knoraApiHttpsPort, connectionContext = https)
-            println(s"Knora API Server started at https://${settings.knoraApiHost}:${settings.knoraApiHttpsPort}.")
-        }
+        Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
+        println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}.")
     }
 
     /**

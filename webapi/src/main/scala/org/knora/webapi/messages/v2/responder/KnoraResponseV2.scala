@@ -471,7 +471,7 @@ case class StillImageFileValueContentV2(valueHasString: String,
       * @return the path to file value as an absolute URL.
       */
     def toURL(settings: SettingsImpl): String = {
-        s"${settings.sipiIIIFGetUrl}/$internalFilename/full/$dimX,$dimY/0/default.jpg"
+        s"${settings.externalSipiIIIFGetUrl}/$internalFilename/full/$dimX,$dimY/0/default.jpg"
     }
 
     def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
@@ -485,7 +485,7 @@ case class StillImageFileValueContentV2(valueHasString: String,
             OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimX -> JsonLDInt(dimX),
             OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimY -> JsonLDInt(dimY),
             OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> JsonLDString(internalFilename),
-            OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl -> JsonLDString(settings.sipiIIIFGetUrl)
+            OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl -> JsonLDString(settings.externalSipiIIIFGetUrl)
         ))
     }
 
@@ -515,7 +515,7 @@ case class TextFileValueContentV2(valueHasString: String, internalMimeType: Stri
       * @return the path to file value as an absolute URL.
       */
     def toURL(settings: SettingsImpl): String = {
-        s"${settings.sipiFileServerGetUrl}/$internalFilename"
+        s"${settings.externalSipiFileServerGetUrl}/$internalFilename"
     }
 
     def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {

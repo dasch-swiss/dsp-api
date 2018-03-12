@@ -44,7 +44,7 @@ object ResourcesResponderV1SpecContextData {
     // The file contains a placeholder, RESTYPE_ICONSRC, which we replace here with the correct value.
     private val expectedBookResourceContextResponseStr = FileUtil.readTextFile(new File("src/test/resources/test-data/expectedBookContextResponse.json")).replace(
         "RESTYPE_ICONSRC",
-        settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"
+        settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"
     )
 
     val expectedBookResourceContextResponse = JsonParser(expectedBookResourceContextResponseStr)
@@ -60,7 +60,7 @@ object ResourcesResponderV1SpecContextData {
                 locdata = None,
                 locations = None,
                 preview = None,
-                restype_iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"),
+                restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
                 restype_description = Some("Diese Resource-Klasse beschreibt ein Buch"),
                 restype_label = Some("Buch"),
                 restype_name = Some("http://www.knora.org/ontology/incunabula#book"),
@@ -167,7 +167,7 @@ object ResourcesResponderV1SpecContextData {
                     origname = "ad+s167_druck1=0001.tif",
                     format_name = "JPEG"
                 )),
-                restype_iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/page.gif"),
+                restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
                 restype_description = Some("Eine Seite ist ein Teil eines Buchs"),
                 restype_label = Some("Seite"),
                 restype_name = Some("http://www.knora.org/ontology/incunabula#page"),

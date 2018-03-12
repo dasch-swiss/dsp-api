@@ -29,6 +29,7 @@ env:
     - DOCKERHOST=$(ip route get 8.8.8.8 | awk '{print $NF; exit}')
     - CHROME_BIN=google-chrome-stable
     - GDB_HEAP_SIZE="4G"
+    - TAG=${TRAVIS_BRANCH//\//-}
 
 cache:
   directories:
@@ -62,6 +63,11 @@ jobs:
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt graphdb:test
         # test sbt stage
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt stage
+        # only uncomment if docker image is needed for this branch. remove before merging into develop
+        - docker login -u $DOCKER_USER -p $DOCKER_PASS
+        - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:$TAG
+        - docker push $WEBAPI_REPO
+
     - stage: test
       script:
         # prepare needed graphdb-se files

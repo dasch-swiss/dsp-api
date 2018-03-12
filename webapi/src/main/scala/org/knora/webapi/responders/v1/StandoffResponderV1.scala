@@ -95,6 +95,10 @@ class StandoffResponderV1 extends Responder {
                 case textRepr: ResourceFullResponseV1 if textRepr.resinfo.isDefined && textRepr.resinfo.get.restype_id == OntologyConstants.KnoraBase.XSLTransformation =>
                     val locations: Seq[LocationV1] = textRepr.resinfo.get.locations.getOrElse(throw BadRequestException(s"no location given for $xslTransformationIri"))
 
+                    // need to only get the filename and then construct the correct path to sipi by using
+                    // the internal hostname and port
+                    println("StandoffResponderV1 - getXSLTransformation - locations: {}", locations)
+
                     locations.headOption.getOrElse(throw BadRequestException(s"no location given for $xslTransformationIri"))
 
                 case other => throw BadRequestException(s"$xslTransformationIri is not an ${OntologyConstants.KnoraBase.XSLTransformation}")
@@ -114,6 +118,8 @@ class StandoffResponderV1 extends Responder {
 
             // check if the XSL transformation is in the cache
             textLocation <- recoveredTextLocationFuture
+
+            _ = println("StandoffResponderV1 - getXSLTransformation - textLocation: {}", textLocation)
 
             xsltMaybe: Option[String] = CacheUtil.get[String](cacheName = xsltCacheName, key = textLocation.path)
 

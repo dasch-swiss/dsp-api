@@ -35,21 +35,21 @@ import scala.concurrent.duration._
   * Reads application settings that come from `application.conf`.
   */
 class SettingsImpl(config: Config) extends Extension {
-    val httpsKeystore: String = config.getString("app.http.https.keystore")
-    val httpsKeystorePassword: String = config.getString("app.http.https.keystore-password")
 
-    val knoraApiHost: String = config.getString("app.http.knora-api.host")
-    val knoraApiHttpPort: Int = config.getInt("app.http.knora-api.http-port")
-    val knoraApiHttpUrlStart: String = "http://" + knoraApiHost + (if (knoraApiHttpPort != 80) ":" + knoraApiHttpPort else "")
-    val knoraApiHttpsPort: Int = config.getInt("app.http.knora-api.https-port")
-    val knoraApiUseHttp: Boolean = config.getBoolean("app.http.knora-api.use-http")
-    val knoraApiUseHttps: Boolean = config.getBoolean("app.http.knora-api.use-https")
-    val knoraApiHttpsBaseUrl: String = s"https://$knoraApiHost:$knoraApiHttpsPort"
-    val knoraApiHttpBaseUrl: String = s"http://$knoraApiHost:$knoraApiHttpPort"
-    val knoraApiDefaultBaseUrl: String = if (knoraApiUseHttps) knoraApiHttpsBaseUrl else knoraApiHttpBaseUrl
+    // used for communication inside the knora stack
+    val internalKnoraApiHost: String = config.getString("app.knora-api.internal-host")
+    val internalKnoraApiPort: Int = config.getInt("app.knora-api.internal-port")
+    val internalKnoraApiBaseUrl: String = "http://" + internalKnoraApiHost + ":" + (if (internalKnoraApiPort != 80) ":" + internalKnoraApiPort else "")
 
-    val salsahBaseUrl: String = config.getString("app.http.salsah.base-url")
-    val salsahProjectIconsBasePath: String = config.getString("app.http.salsah.project-icons-basepath")
+    // used for communication between the outside and the knora stack, e.g., browser
+    val externalKnoraApiProtocol: String = config.getString("app.knora-api.external-protocol")
+    val externalKnoraApiHost: String = config.getString("app.knora-api.external-host")
+    val externalKnoraApiPort: Int = config.getInt("app.knora-api.external-port")
+    val externalKnoraApiBaseUrl: String = externalKnoraApiProtocol + "://" + externalKnoraApiHost + ":" + (if (externalKnoraApiPort != 80) ":" + externalKnoraApiPort else "")
+
+
+    val salsah1BaseUrl: String = config.getString("app.salsah1.base-url")
+    val salsah1ProjectIconsBasePath: String = config.getString("app.salsah1.project-icons-basepath")
 
     val tmpDataDir: String = config.getString("app.tmp-datadir")
     val dataDir: String = config.getString("app.datadir")
@@ -58,13 +58,27 @@ class SettingsImpl(config: Config) extends Extension {
         (mType: ConfigValue) => mType.unwrapped.toString
     }.toVector
 
-    val sipiBaseUrl: String = config.getString("app.sipi.url")
-    val sipiPort: Int = config.getInt("app.sipi.port")
+    val internalSipiProtocol: String = config.getString("app.sipi.internal-protocol")
+    val internalSipiHost: String = config.getString("app.sipi.internal-host")
+    val internalSipiPort: Int = config.getInt("app.sipi.internal-port")
+    val internalSipiBaseUrl: String = internalSipiProtocol + "://" + internalSipiHost + ":" + (if (internalSipiPort != 80) ":" + internalSipiPort else "")
+
+    val externalSipiProtocol: String = config.getString("app.sipi.external-protocol")
+    val externalSipiHost: String = config.getString("app.sipi.external-host")
+    val externalSipiPort: Int = config.getInt("app.sipi.external-port")
+    val externalSipiBaseUrl: String = externalSipiProtocol + "://" + externalSipiHost + ":" + (if (externalSipiPort != 80) ":" + externalSipiPort else "")
+
+
     val sipiPrefix: String = config.getString("app.sipi.prefix")
-    val sipiIIIFGetUrl: String = s"$sipiBaseUrl:$sipiPort/$sipiPrefix"
     val sipiFileServerPrefix: String = config.getString("app.sipi.file-server-path")
-    val sipiFileServerGetUrl: String = s"$sipiBaseUrl:$sipiPort/$sipiFileServerPrefix/$sipiPrefix"
-    val sipiImageConversionUrl: String = s"$sipiBaseUrl:$sipiPort"
+
+    val externalSipiIIIFGetUrl: String = s"$externalSipiBaseUrl/$sipiPrefix"
+
+    val internalSipiFileServerGetUrl: String = s"$internalSipiBaseUrl/$sipiFileServerPrefix/$sipiPrefix"
+    val externalSipiFileServerGetUrl: String = s"$externalSipiBaseUrl/$sipiFileServerPrefix/$sipiPrefix"
+
+    val internalSipiImageConversionUrl: String = s"$internalSipiBaseUrl"
+
     val sipiPathConversionRoute: String = config.getString("app.sipi.path-conversion-route")
     val sipiFileConversionRoute: String = config.getString("app.sipi.file-conversion-route")
 

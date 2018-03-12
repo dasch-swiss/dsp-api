@@ -68,18 +68,8 @@ trait KnoraFakeService {
         // needed for startup flags and the future map/flatmap in the end
         implicit val executionContext = system.dispatcher
 
-        // Either HTTP or HTTPs, or both, must be enabled.
-        if (!(settings.knoraApiUseHttp || settings.knoraApiUseHttps)) {
-            throw HttpConfigurationException("Neither HTTP nor HTTPS is enabled")
-        }
-
-        // Activate HTTP if enabled.
-        if (settings.knoraApiUseHttp) {
-            Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.knoraApiHost, settings.knoraApiHttpPort)
-            println(s"Knora API Server using HTTP at http://${settings.knoraApiHost}:${settings.knoraApiHttpPort}.")
-        }
-
-        // HTTPS not supported for integration testing
+        Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
+        println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}.")
     }
 
     /**
