@@ -161,8 +161,7 @@ class OntologyResponderV2 extends Responder {
         val classIrisPerOntology: Map[SmartIri, Set[SmartIri]] = getEntityIrisFromOntologyGraphs(
             ontologyGraphs = ontologyGraphs,
             entityTypes = Set(OntologyConstants.Owl.Class)
-        ) + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2Simple.Classes.keySet) +
-            (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2WithValueObjects.Classes.keySet)
+        ) + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2Simple.Classes.keySet) // TODO: get rid of this when we can generate it.
 
         // A map of ontology IRIs to property IRIs in each ontology.
         val propertyIrisPerOntology: Map[SmartIri, Set[SmartIri]] = getEntityIrisFromOntologyGraphs(
@@ -173,8 +172,7 @@ class OntologyResponderV2 extends Responder {
                 OntologyConstants.Owl.AnnotationProperty,
                 OntologyConstants.Rdf.Property
             )
-        ) + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2Simple.Properties.keySet) +
-            (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2WithValueObjects.Properties.keySet)
+        ) + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2Simple.Properties.keySet) // TODO: get rid of this when we can generate it.
 
         // A map of ontology IRIs to named individual IRIs in each ontology.
         val individualIrisPerOntology: Map[SmartIri, Set[SmartIri]] = getEntityIrisFromOntologyGraphs(
@@ -319,18 +317,11 @@ class OntologyResponderV2 extends Responder {
                 }
         }.toSet
 
-        // A ReadOntologyV2 for the KnoraApiV2Simple ontology.
+        // A ReadOntologyV2 for the KnoraApiV2Simple ontology. TODO: get rid of this when we can generate it.
         val readOntologyForApiV2Simple = ReadOntologyV2(
             ontologyMetadata = KnoraApiV2Simple.OntologyMetadata,
             classes = KnoraApiV2Simple.Classes,
             properties = KnoraApiV2Simple.Properties
-        )
-
-        // A ReadOntologyV2 for the KnoraApiV2WithValueObjects ontology.
-        val readOntologyForApiV2WithValueObjects = ReadOntologyV2(
-            ontologyMetadata = KnoraApiV2WithValueObjects.OntologyMetadata,
-            classes = KnoraApiV2WithValueObjects.Classes,
-            properties = KnoraApiV2WithValueObjects.Properties
         )
 
         // A ReadOntologyV2 for each ontology to be cached.
@@ -348,8 +339,7 @@ class OntologyResponderV2 extends Responder {
                         case (individualIri, _) => individualIri.getOntologyFromEntity == ontologyIri
                     }
                 )
-        } + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri -> readOntologyForApiV2Simple) +
-            (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri -> readOntologyForApiV2WithValueObjects)
+        } + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri -> readOntologyForApiV2Simple) // TODO: get rid of this when we can generate it.
 
         // Construct the ontology cache data.
         val ontologyCacheData: OntologyCacheData = OntologyCacheData(
@@ -505,9 +495,10 @@ class OntologyResponderV2 extends Responder {
                 }
 
                 val ontologyIri = classIri.getOntologyFromEntity
-                val isKnoraResourceClass = allSubClassOfRelations(classIri).contains(OntologyConstants.KnoraBase.Resource.toKnoraInternalSmartIri)
-                val isStandoffClass = !isKnoraResourceClass && allSubClassOfRelations(classIri).contains(OntologyConstants.KnoraBase.StandoffTag.toKnoraInternalSmartIri)
-                val isValueClass = !(isKnoraResourceClass || isStandoffClass) && allSubClassOfRelations(classIri).contains(OntologyConstants.KnoraBase.Value.toKnoraInternalSmartIri)
+                val allBaseClasses = allSubClassOfRelations(classIri)
+                val isKnoraResourceClass = allBaseClasses.contains(OntologyConstants.KnoraBase.Resource.toKnoraInternalSmartIri)
+                val isStandoffClass = !isKnoraResourceClass && allBaseClasses.contains(OntologyConstants.KnoraBase.StandoffTag.toKnoraInternalSmartIri)
+                val isValueClass = !(isKnoraResourceClass || isStandoffClass) && allBaseClasses.contains(OntologyConstants.KnoraBase.Value.toKnoraInternalSmartIri)
 
                 // TODO: For now, any class defined in a project-specific ontology can be instantiated. But there are also classes
                 // that can be instantiated in knora-base. This doesn't matter yet, because knora-base is not served. Later, if we
@@ -516,6 +507,7 @@ class OntologyResponderV2 extends Responder {
 
                 val readClassInfo = ReadClassInfoV2(
                     entityInfoContent = classDef,
+                    allBaseClasses = allBaseClasses,
                     isResourceClass = isKnoraResourceClass,
                     isStandoffClass = isStandoffClass,
                     isValueClass = isValueClass,
@@ -725,7 +717,8 @@ class OntologyResponderV2 extends Responder {
       * @return the IRI of the corresponding cached entity.
       */
     private def makeEntityIriForCache(entityIri: SmartIri): SmartIri = {
-        if (OntologyConstants.ConstantOntologies.contains(entityIri.getOntologyFromEntity.toString)) {
+        // TODO: get rid of this method when we can generate knora-api simple.
+        if (entityIri.getOntologyFromEntity.toString == OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri) {
             // The client is asking about an entity in a constant ontology, so don't translate its IRI.
             entityIri
         } else {
@@ -743,7 +736,8 @@ class OntologyResponderV2 extends Responder {
       * @return the IRI of the corresponding cached ontology.
       */
     def makeOntologyIriForCache(ontologyIri: SmartIri): SmartIri = {
-        if (OntologyConstants.ConstantOntologies.contains(ontologyIri.toString)) {
+        // TODO: get rid of this method when we can generate knora-api simple.
+        if (ontologyIri.toString == OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri) {
             // The client is asking about a constant ontology, so don't translate its IRI.
             ontologyIri
         } else {

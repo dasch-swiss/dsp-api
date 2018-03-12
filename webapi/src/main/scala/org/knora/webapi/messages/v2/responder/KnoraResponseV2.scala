@@ -355,8 +355,8 @@ case class HierarchicalListValueContentV2(valueHasString: String, valueHasListNo
 
         JsonLDObject(
             Map(
-                OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNode -> JsonLDString(valueHasListNode),
-                OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNodeLabel -> JsonLDString(listNodeLabel)
+                OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNode -> JsonLDString(valueHasListNode),
+                OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNodeLabel -> JsonLDString(listNodeLabel)
             )
         )
     }

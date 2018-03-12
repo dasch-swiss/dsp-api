@@ -29,7 +29,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{Cardinality, KnoraCardinalityInfo, OwlCardinalityInfo}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
@@ -862,8 +862,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
                           classes: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2],
                           properties: Map[SmartIri, ReadPropertyInfoV2] = Map.empty[SmartIri, ReadPropertyInfoV2],
                           individuals: Map[SmartIri, ReadIndividualInfoV2] = Map.empty[SmartIri, ReadIndividualInfoV2],
-                          userLang: Option[String] = None,
-                          gaga: Boolean = false) {
+                          userLang: Option[String] = None) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
@@ -874,7 +873,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
       */
     def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyV2 = {
         // If we're converting to the API v2 simple schema, filter out link value properties.
-        val filteredProperties = targetSchema match {
+        val propertiesConsideringLinkValueProps = targetSchema match {
             case ApiV2Simple =>
                 properties.filterNot {
                     case (_, propertyInfo) => propertyInfo.isLinkValueProp
@@ -883,20 +882,82 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
             case _ => properties
         }
 
-        val convertedProperties = filteredProperties.map {
+        // If we're converting knora-base to knora-api, filter classes and properties that don't exist in the target
+        // schema.
+
+        val classesFilteredForSchema = if (ontologyMetadata.ontologyIri == OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri) {
+            targetSchema match {
+                case ApiV2WithValueObjects =>
+                    classes.filterNot {
+                        case (classIri, _) => KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraBaseClassesToRemove.contains(classIri)
+                    }
+
+                case _ => classes // TODO: handle the simple schema.
+            }
+        } else {
+            classes
+        }
+
+        val propsFilteredForSchema = if (ontologyMetadata.ontologyIri == OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri) {
+            targetSchema match {
+                case ApiV2WithValueObjects =>
+                    propertiesConsideringLinkValueProps.filterNot {
+                        case (propertyIri, _) => KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraBasePropertiesToRemove.contains(propertyIri)
+                    }
+
+                case _ => propertiesConsideringLinkValueProps // TODO: handle the simple schema.
+            }
+        } else {
+            propertiesConsideringLinkValueProps
+        }
+
+        // Convert everything to the target schema.
+
+        val ontologyMetadataInTargetSchema = if (ontologyMetadata.ontologyIri == OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri) {
+            targetSchema match {
+                case ApiV2WithValueObjects =>
+                    KnoraApiV2WithValueObjects.OntologyMetadata
+
+                case _ => ontologyMetadata.toOntologySchema(targetSchema) // TODO: handle the simple schema.
+            }
+        } else {
+            ontologyMetadata.toOntologySchema(targetSchema)
+        }
+
+        val classesInTargetSchema = classesFilteredForSchema.map {
+            case (classIri, readClassInfo) => classIri.toOntologySchema(targetSchema) -> readClassInfo.toOntologySchema(targetSchema)
+        }
+
+        val propertiesInTargetSchema = propsFilteredForSchema.map {
             case (propertyIri, readPropertyInfo) => propertyIri.toOntologySchema(targetSchema) -> readPropertyInfo.toOntologySchema(targetSchema)
         }
 
+        val individualsInTargetSchema = individuals.map {
+            case (individualIri, readIndividualInfo) => individualIri.toOntologySchema(targetSchema) -> readIndividualInfo.toOntologySchema(targetSchema)
+        }
+
+        // If we're converting knora-base to knora-api, add classes and properties that exist in the target schema but
+        // not in the source schema.
+
+        val classesWithExtraOnesForSchema = ontologyMetadataInTargetSchema.ontologyIri.toString match {
+            case OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri =>
+                classesInTargetSchema ++ KnoraApiV2WithValueObjects.Classes
+
+            case _ => classesInTargetSchema // TODO: handle the simple schema.
+        }
+
+        val propertiesWithExtraOnesForSchema = ontologyMetadataInTargetSchema.ontologyIri.toString match {
+            case OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri =>
+                propertiesInTargetSchema ++ KnoraApiV2WithValueObjects.Properties
+
+            case _ => propertiesInTargetSchema // TODO: handle the simple schema.
+        }
+
         copy(
-            ontologyMetadata = ontologyMetadata.toOntologySchema(targetSchema),
-            classes = classes.map {
-                case (classIri, readClassInfo) => classIri.toOntologySchema(targetSchema) -> readClassInfo.toOntologySchema(targetSchema)
-            },
-            properties = convertedProperties,
-            individuals = individuals.map {
-                case (individualIri, readIndividualInfo) => individualIri.toOntologySchema(targetSchema) -> readIndividualInfo.toOntologySchema(targetSchema)
-            },
-            gaga = true
+            ontologyMetadata = ontologyMetadataInTargetSchema,
+            classes = classesWithExtraOnesForSchema,
+            properties = propertiesWithExtraOnesForSchema,
+            individuals = individualsInTargetSchema
         )
     }
 
@@ -916,15 +977,9 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
         def propertiesToJsonLD(propertyDefs: Map[SmartIri, ReadPropertyInfoV2]): Map[IRI, JsonLDObject] = {
             propertyDefs.map {
                 case (propertyIri, propertyInfo) =>
-                    // If this is a knora-api property, use its constant definition, otherwise use the one we were given.
-                    val schemaPropertyInfo = targetSchema match {
-                        case ApiV2Simple => KnoraApiV2Simple.Properties.getOrElse(propertyIri, propertyInfo)
-                        case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.Properties.getOrElse(propertyIri, propertyInfo)
-                    }
-
                     val propJson: JsonLDObject = userLang match {
-                        case Some(lang) => schemaPropertyInfo.toJsonLDWithSingleLanguage(targetSchema = targetSchema, userLang = lang, settings = settings)
-                        case None => schemaPropertyInfo.toJsonLDWithAllLanguages(targetSchema = targetSchema)
+                        case Some(lang) => propertyInfo.toJsonLDWithSingleLanguage(targetSchema = targetSchema, userLang = lang, settings = settings)
+                        case None => propertyInfo.toJsonLDWithAllLanguages(targetSchema = targetSchema)
                     }
 
                     propertyIri.toString -> propJson
@@ -1924,6 +1979,7 @@ sealed trait ReadEntityInfoV2 {
   * Represents an OWL class definition as returned in an API response.
   *
   * @param entityInfoContent       a [[ReadClassInfoV2]] providing information about the class.
+  * @param allBaseClasses          a set of the IRIs of all the base classes of the class.
   * @param isResourceClass         `true` if this is a subclass of `knora-base:Resource`.
   * @param isStandoffClass         `true` if this is a subclass of `knora-base:StandoffTag`.
   * @param isValueClass            `true` if the class is a Knora value class.
@@ -1940,6 +1996,7 @@ sealed trait ReadEntityInfoV2 {
   *                                that point to `FileValue` objects.
   */
 case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
+                           allBaseClasses: Set[SmartIri] = Set.empty[SmartIri],
                            isResourceClass: Boolean = false,
                            isStandoffClass: Boolean = false,
                            isValueClass: Boolean = false,
@@ -1965,7 +2022,13 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
     def toOntologySchema(targetSchema: ApiV2Schema): ReadClassInfoV2 = {
         // If we're converting to the simplified API v2 schema, remove references to link value properties.
 
-        val filteredInheritedCardinalities = if (targetSchema == ApiV2Simple) {
+        val linkValuePropsForSchema = if (targetSchema == ApiV2Simple) {
+            Set.empty[SmartIri]
+        } else {
+            linkValueProperties
+        }
+
+        val inheritedCardinalitiesConsideringLinkValueProps = if (targetSchema == ApiV2Simple) {
             inheritedCardinalities.filterNot {
                 case (propertyIri, _) => linkValueProperties.contains(propertyIri)
             }
@@ -1973,7 +2036,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
             inheritedCardinalities
         }
 
-        val filteredDirectCardinalities = if (targetSchema == ApiV2Simple) {
+        val directCardinalitiesConsideringLinkValueProps = if (targetSchema == ApiV2Simple) {
             entityInfoContent.directCardinalities.filterNot {
                 case (propertyIri, _) => linkValueProperties.contains(propertyIri)
             }
@@ -1981,33 +2044,61 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
             entityInfoContent.directCardinalities
         }
 
-        val filteredKnoraResourceProperties = if (targetSchema == ApiV2Simple) {
+        val knoraResourcePropertiesConsideringLinkValueProps = if (targetSchema == ApiV2Simple) {
             knoraResourceProperties -- linkValueProperties
         } else {
             knoraResourceProperties
         }
 
-        val filteredLinkValueProperties = if (targetSchema == ApiV2Simple) {
-            Set.empty[SmartIri]
-        } else {
-            linkValueProperties
+        // Remove inherited cardinalities for knora-base properties that don't exist in the target schema.
+
+        val knoraBasePropertiesToRemove: Set[SmartIri] = targetSchema match {
+            case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraBasePropertiesToRemove
+            case _ => Set.empty[SmartIri] // TODO: handle simple schema
         }
 
-        // Make a copy of the ClassInfoContentV2 without the filtered direct cardinalities, so we can then call
-        // toOntologySchema() on it.
-        val entityInfoContentWithFilteredCardinalities = entityInfoContent.copy(
-            directCardinalities = filteredDirectCardinalities
-        )
+        val inheritedCardinalitiesFilteredForSchema: Map[SmartIri, KnoraCardinalityInfo] = inheritedCardinalitiesConsideringLinkValueProps.filterNot {
+            case (propertyIri, _) => knoraBasePropertiesToRemove.contains(propertyIri)
+        }
+
+        // Convert all IRIs to the target schema.
+
+        val entityInfoContentInTargetSchema = entityInfoContent.copy(
+            directCardinalities = directCardinalitiesConsideringLinkValueProps
+        ).toOntologySchema(targetSchema)
+
+        val inheritedCardinalitiesInTargetSchema: Map[SmartIri, KnoraCardinalityInfo] = inheritedCardinalitiesFilteredForSchema.map {
+            case (propertyIri, cardinality) => propertyIri.toOntologySchema(targetSchema) -> cardinality
+        }
+
+        val knoraResourcePropertiesInTargetSchema = knoraResourcePropertiesConsideringLinkValueProps.map(_.toOntologySchema(targetSchema))
+        val linkPropertiesInTargetSchema = linkProperties.map(_.toOntologySchema(targetSchema))
+        val linkValuePropertiesInTargetSchema = linkValuePropsForSchema.map(_.toOntologySchema(targetSchema))
+        val fileValuePropertiesInTargetSchema = fileValueProperties.map(_.toOntologySchema(targetSchema))
+
+        // Add cardinalities that this class inherits in the target schema but not in the source schema.
+
+        val baseClassesInTargetSchema = allBaseClasses.map(_.toOntologySchema(targetSchema))
+
+        val inheritedCardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo] = targetSchema match {
+            case ApiV2WithValueObjects =>
+                baseClassesInTargetSchema.flatMap {
+                    baseClassIri =>
+                        KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiCardinalitiesToAdd.getOrElse(baseClassIri, Map.empty[SmartIri, KnoraCardinalityInfo])
+                }.toMap
+
+            case _ => Map.empty[SmartIri, KnoraCardinalityInfo] // TODO: handle simple schema
+        }
+
+        val inheritedCardinalitiesWithExtraOnesForSchema: Map[SmartIri, KnoraCardinalityInfo] = inheritedCardinalitiesInTargetSchema ++ inheritedCardinalitiesToAdd
 
         copy(
-            entityInfoContent = entityInfoContentWithFilteredCardinalities.toOntologySchema(targetSchema),
-            inheritedCardinalities = filteredInheritedCardinalities.map {
-                case (propertyIri, cardinality) => propertyIri.toOntologySchema(targetSchema) -> cardinality
-            },
-            knoraResourceProperties = filteredKnoraResourceProperties.map(_.toOntologySchema(targetSchema)),
-            linkProperties = filteredLinkValueProperties.map(_.toOntologySchema(targetSchema)),
-            linkValueProperties = filteredLinkValueProperties.map(_.toOntologySchema(targetSchema)),
-            fileValueProperties = fileValueProperties.map(_.toOntologySchema(targetSchema))
+            entityInfoContent = entityInfoContentInTargetSchema,
+            inheritedCardinalities = inheritedCardinalitiesWithExtraOnesForSchema,
+            knoraResourceProperties = knoraResourcePropertiesInTargetSchema,
+            linkProperties = linkPropertiesInTargetSchema,
+            linkValueProperties = linkValuePropertiesInTargetSchema,
+            fileValueProperties = fileValuePropertiesInTargetSchema
         )
     }
 
@@ -2016,21 +2107,10 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
             throw DataConversionException(s"ReadClassInfoV2 for class ${entityInfoContent.classIri} is not in schema $targetSchema")
         }
 
-        // If this is a project-specific class, return the cardinalities for Knora resource properties, plus the standard cardinalities
-        // from knora-api:Resource for the target schema. That way, we only show cardinalities that are appropriate for the
-        // schema.
-        val completedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = if (!entityInfoContent.classIri.isKnoraBuiltInDefinitionIri) {
-            targetSchema match {
-                case ApiV2Simple => allResourcePropertyCardinalities ++ KnoraApiV2Simple.Resource.allCardinalities
-                case ApiV2WithValueObjects => allResourcePropertyCardinalities ++ KnoraApiV2WithValueObjects.Resource.allCardinalities
-            }
-        } else {
-            // Otherwise, this is a built-in class specifically defined for the schema, so return all the cardinalities.
-            allCardinalities
-        }
+        // TODO: remove cardinalities that are not appropriate for the schema.
 
         // Convert OWL cardinalities to JSON-LD.
-        val owlCardinalities: Seq[JsonLDObject] = completedCardinalities.toArray.sortBy {
+        val owlCardinalities: Seq[JsonLDObject] = allCardinalities.toArray.sortBy {
             case (propertyIri, _) => propertyIri
         }.sortBy {
             case (_, cardinalityInfo: KnoraCardinalityInfo) => cardinalityInfo.guiOrder
@@ -2294,14 +2374,45 @@ case class ClassInfoContentV2(classIri: SmartIri,
                               subClassOf: Set[SmartIri] = Set.empty[SmartIri],
                               ontologySchema: OntologySchema) extends EntityInfoContentV2 with KnoraContentV2[ClassInfoContentV2] {
     override def toOntologySchema(targetSchema: OntologySchema): ClassInfoContentV2 = {
+        val classIriInTargetSchema = classIri.toOntologySchema(targetSchema)
+
+        // Remove cardinalities for knora-base properties that don't exist in the target schema.
+
+        val knoraBasePropertiesToRemove: Set[SmartIri] = targetSchema match {
+            case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraBasePropertiesToRemove
+            case _ => Set.empty[SmartIri] // TODO: handle simple schema
+        }
+
+        val directCardinalitiesFilteredForSchema: Map[SmartIri, KnoraCardinalityInfo] = directCardinalities.filterNot {
+            case (propertyIri, _) => knoraBasePropertiesToRemove.contains(propertyIri)
+        }
+
+        // Convert the property IRIs of the remaining cardinalities to the target schema.
+
+        val directCardinalitiesInTargetSchema: Map[SmartIri, KnoraCardinalityInfo] = directCardinalitiesFilteredForSchema.map {
+            case (propertyIri, cardinality) => propertyIri.toOntologySchema(targetSchema) -> cardinality
+        }
+
+        // Add any cardinalities that this class has in knora-api but not in knora-base.
+
+        val cardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo] = targetSchema match {
+            case ApiV2WithValueObjects =>
+                KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiCardinalitiesToAdd.getOrElse(
+                    classIriInTargetSchema,
+                    Map.empty[SmartIri, KnoraCardinalityInfo]
+                )
+
+            case _ => Map.empty[SmartIri, KnoraCardinalityInfo] // TODO: handle simple schema
+        }
+
+        val directCardinalitiesWithExtraOnesForSchema: Map[SmartIri, KnoraCardinalityInfo] = directCardinalitiesInTargetSchema ++ cardinalitiesToAdd
+
         copy(
-            classIri = classIri.toOntologySchema(targetSchema),
+            classIri = classIriInTargetSchema,
             predicates = predicates.map {
                 case (predicateIri, predicate) => predicateIri.toOntologySchema(targetSchema) -> predicate.toOntologySchema(targetSchema)
             },
-            directCardinalities = directCardinalities.map {
-                case (propertyIri, cardinality) => propertyIri.toOntologySchema(targetSchema) -> cardinality
-            },
+            directCardinalities = directCardinalitiesWithExtraOnesForSchema,
             subClassOf = subClassOf.map(_.toOntologySchema(targetSchema)),
             ontologySchema = targetSchema
         )

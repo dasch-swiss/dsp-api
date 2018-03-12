@@ -44,7 +44,7 @@ object KnoraApiV2Simple {
             OntologyConstants.KnoraApiV2Simple.HasStandoffLinkTo -> Cardinality.MayHaveMany,
             OntologyConstants.KnoraApiV2Simple.CreationDate -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraApiV2Simple.LastModificationDate -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2Simple.HasIncomingLinks -> Cardinality.MayHaveMany,
+            OntologyConstants.KnoraApiV2Simple.HasIncomingLink -> Cardinality.MayHaveMany,
         )
     )
 
@@ -239,7 +239,7 @@ object KnoraApiV2Simple {
     )
 
     val HasIncomingLinks: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2Simple.HasIncomingLinks,
+        propertyIri = OntologyConstants.KnoraApiV2Simple.HasIncomingLink,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),
         objectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),

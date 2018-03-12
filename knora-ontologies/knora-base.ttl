@@ -65,14 +65,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#name
-
-:name rdf:type owl:DatatypeProperty ;
-
-      rdfs:subPropertyOf foaf:name, :objectCannotBeMarkedAsDeleted .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#resourceIcon
 
 :resourceIcon rdf:type owl:DatatypeProperty ;
@@ -958,18 +950,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#description
-
-:description rdf:type owl:DatatypeProperty ;
-
-             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-             rdfs:comment "A description of a resource class or a property class"@en ;
-
-             :objectDatatypeConstraint xsd:string .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#dimX
 
 :dimX rdf:type owl:DatatypeProperty ;
@@ -1486,18 +1466,6 @@
                 :subjectClassConstraint :Value ;
 
                 :objectDatatypeConstraint xsd:string .
-
-
-
-###  http://www.knora.org/ontology/knora-base#website
-
-:website rdf:type owl:DatatypeProperty ;
-
-         rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-         rdfs:comment "The URL of a web site"@en ;
-
-         :objectDatatypeConstraint xsd:anyURI .
 
 
 
