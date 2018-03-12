@@ -45,6 +45,7 @@ class SettingsImpl(config: Config) extends Extension {
     val externalKnoraApiProtocol: String = config.getString("app.knora-api.external-protocol")
     val externalKnoraApiHost: String = config.getString("app.knora-api.external-host")
     val externalKnoraApiPort: Int = config.getInt("app.knora-api.external-port")
+    val externalKnoraApiHostPort: String = externalKnoraApiHost + (if (externalKnoraApiPort != 80) ":" + externalKnoraApiPort else "")
     val externalKnoraApiBaseUrl: String = externalKnoraApiProtocol + "://" + externalKnoraApiHost + (if (externalKnoraApiPort != 80) ":" + externalKnoraApiPort else "")
 
 

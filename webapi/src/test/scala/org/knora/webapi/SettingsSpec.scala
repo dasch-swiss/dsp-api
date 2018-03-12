@@ -56,6 +56,17 @@ class SettingsSpec extends CoreSpec("SettingsActorTestSystem", SettingsSpec.conf
             settings.externalSipiPort should be (1024)
             settings.externalSipiBaseUrl should be ("http://localhost:1024")
 
+            settings.sipiPrefix should be ("knora")
+            settings.sipiFileServerPrefix should be ("server")
+
+            settings.externalSipiIIIFGetUrl should be ("http://localhost:1024/knora")
+
+            settings.internalSipiFileServerGetUrl should be ("http://localhost:1024/server/knora")
+            settings.externalSipiFileServerGetUrl should be ("http://localhost:1024/server/knora")
+
+            settings.internalSipiImageConversionUrl should be ("http://localhost:1024")
+
+
         }
     }
 }
