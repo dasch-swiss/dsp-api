@@ -39,13 +39,13 @@ class SettingsImpl(config: Config) extends Extension {
     // used for communication inside the knora stack
     val internalKnoraApiHost: String = config.getString("app.knora-api.internal-host")
     val internalKnoraApiPort: Int = config.getInt("app.knora-api.internal-port")
-    val internalKnoraApiBaseUrl: String = "http://" + internalKnoraApiHost + ":" + (if (internalKnoraApiPort != 80) ":" + internalKnoraApiPort else "")
+    val internalKnoraApiBaseUrl: String = "http://" + internalKnoraApiHost + (if (internalKnoraApiPort != 80) ":" + internalKnoraApiPort else "")
 
     // used for communication between the outside and the knora stack, e.g., browser
     val externalKnoraApiProtocol: String = config.getString("app.knora-api.external-protocol")
     val externalKnoraApiHost: String = config.getString("app.knora-api.external-host")
     val externalKnoraApiPort: Int = config.getInt("app.knora-api.external-port")
-    val externalKnoraApiBaseUrl: String = externalKnoraApiProtocol + "://" + externalKnoraApiHost + ":" + (if (externalKnoraApiPort != 80) ":" + externalKnoraApiPort else "")
+    val externalKnoraApiBaseUrl: String = externalKnoraApiProtocol + "://" + externalKnoraApiHost + (if (externalKnoraApiPort != 80) ":" + externalKnoraApiPort else "")
 
 
     val salsah1BaseUrl: String = config.getString("app.salsah1.base-url")

@@ -56,7 +56,7 @@ class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeService w
     implicit lazy val log: LoggingAdapter = akka.event.Logging(system, "ITSpec")
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
-    protected val baseSipiUrl: String = s"${settings.internalSipiBaseUrl}:${settings.internalSipiPort}"
+    protected val baseSipiUrl: String = s"${settings.internalSipiBaseUrl}"
 
     override def beforeAll: Unit = {
         /* Set the startup flags and start the Knora Server */

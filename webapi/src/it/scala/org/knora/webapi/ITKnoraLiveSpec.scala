@@ -56,7 +56,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
     implicit lazy val log: LoggingAdapter = akka.event.Logging(system, "ITSpec")
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
-    protected val baseSipiUrl: String = s"${settings.internalSipiBaseUrl}:${settings.internalSipiPort}"
+    protected val baseSipiUrl: String = s"${settings.internalSipiBaseUrl}"
 
     implicit protected val postfix: postfixOps = scala.language.postfixOps
 
