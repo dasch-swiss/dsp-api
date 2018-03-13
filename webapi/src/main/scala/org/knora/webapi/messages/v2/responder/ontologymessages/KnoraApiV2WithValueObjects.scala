@@ -37,7 +37,7 @@ object KnoraApiV2WithValueObjects {
         label = Some("The default knora-api ontology")
     )
 
-    val Result: ReadPropertyInfoV2 = makeProperty(
+    private val Result: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.Result,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         predicates = Seq(
@@ -60,7 +60,7 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.String)
     )
 
-    val IsEditable: ReadPropertyInfoV2 = makeProperty(
+    private val IsEditable: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsEditable,
         propertyType = OntologyConstants.Owl.AnnotationProperty,
         predicates = Seq(
@@ -81,7 +81,7 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.Boolean)
     )
 
-    val IsLinkProperty: ReadPropertyInfoV2 = makeProperty(
+    private val IsLinkProperty: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsLinkProperty,
         propertyType = OntologyConstants.Owl.AnnotationProperty,
         predicates = Seq(
@@ -102,7 +102,7 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.Boolean)
     )
 
-    val IsLinkValueProperty: ReadPropertyInfoV2 = makeProperty(
+    private val IsLinkValueProperty: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsLinkValueProperty,
         propertyType = OntologyConstants.Owl.AnnotationProperty,
         predicates = Seq(
@@ -123,7 +123,7 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.Boolean)
     )
 
-    val IsInherited: ReadPropertyInfoV2 = makeProperty(
+    private val IsInherited: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsInherited,
         propertyType = OntologyConstants.Owl.AnnotationProperty,
         predicates = Seq(
@@ -144,7 +144,7 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.Boolean)
     )
 
-    val CanBeInstantiated: ReadPropertyInfoV2 = makeProperty(
+    private val CanBeInstantiated: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.CanBeInstantiated,
         propertyType = OntologyConstants.Owl.AnnotationProperty,
         predicates = Seq(
@@ -164,7 +164,7 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.Boolean)
     )
 
-    val HasOntologies: ReadPropertyInfoV2 = makeProperty(
+    private val HasOntologies: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasOntologies,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         predicates = Seq(
@@ -183,7 +183,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val HasClasses: ReadPropertyInfoV2 = makeProperty(
+    private val HasClasses: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasClasses,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         predicates = Seq(
@@ -203,7 +203,7 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Owl.Class)
     )
 
-    val HasProperties: ReadPropertyInfoV2 = makeProperty(
+    private val HasProperties: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasProperties,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         predicates = Seq(
@@ -223,7 +223,7 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Rdf.Property)
     )
 
-    val HasIndividuals: ReadPropertyInfoV2 = makeProperty(
+    private val HasIndividuals: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasIndividuals,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         predicates = Seq(
@@ -243,7 +243,7 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Owl.NamedIndividual)
     )
 
-    val OntologyName: ReadPropertyInfoV2 = makeProperty(
+    private val OntologyName: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.OntologyName,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         predicates = Seq(
@@ -263,7 +263,7 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.String)
     )
 
-    val ProjectIri: ReadPropertyInfoV2 = makeProperty(
+    private val ProjectIri: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ProjectIri,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         predicates = Seq(
@@ -283,7 +283,7 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.Uri)
     )
 
-    val HasIncomingLinks: ReadPropertyInfoV2 = makeProperty(
+    private val HasIncomingLink: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasIncomingLink,
         isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
@@ -309,7 +309,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val ForbiddenResource: ReadClassInfoV2 = makeClass(
+    private val ForbiddenResource: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraApiV2WithValueObjects.ForbiddenResource,
         isResourceClass = true,
         subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
@@ -332,7 +332,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val ValueAsString: ReadPropertyInfoV2 = makeProperty(
+    private val ValueAsString: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         predicates = Seq(
@@ -345,7 +345,7 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.String)
     )
 
-    val SubjectType: ReadPropertyInfoV2 = makeProperty(
+    private val SubjectType: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType,
         propertyType = OntologyConstants.Rdf.Property,
         predicates = Seq(
@@ -364,7 +364,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val ObjectType: ReadPropertyInfoV2 = makeProperty(
+    private val ObjectType: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType,
         propertyType = OntologyConstants.Rdf.Property,
         predicates = Seq(
@@ -384,7 +384,7 @@ object KnoraApiV2WithValueObjects {
 
     )
 
-    val TextValueHasStandoff: ReadPropertyInfoV2 = makeProperty(
+    private val TextValueHasStandoff: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasStandoff,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -406,7 +406,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val TextValueAsXml: ReadPropertyInfoV2 = makeProperty(
+    private val TextValueAsXml: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -428,7 +428,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val TextValueAsHtml: ReadPropertyInfoV2 = makeProperty(
+    private val TextValueAsHtml: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -450,7 +450,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val DateValueHasStartYear: ReadPropertyInfoV2 = makeProperty(
+    private val DateValueHasStartYear: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -472,7 +472,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val DateValueHasEndYear: ReadPropertyInfoV2 = makeProperty(
+    private val DateValueHasEndYear: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -494,7 +494,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val DateValueHasStartMonth: ReadPropertyInfoV2 = makeProperty(
+    private val DateValueHasStartMonth: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -516,7 +516,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val DateValueHasEndMonth: ReadPropertyInfoV2 = makeProperty(
+    private val DateValueHasEndMonth: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -538,7 +538,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val DateValueHasStartDay: ReadPropertyInfoV2 = makeProperty(
+    private val DateValueHasStartDay: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -560,7 +560,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val DateValueHasEndDay: ReadPropertyInfoV2 = makeProperty(
+    private val DateValueHasEndDay: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -582,7 +582,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val DateValueHasStartEra: ReadPropertyInfoV2 = makeProperty(
+    private val DateValueHasStartEra: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -604,7 +604,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val DateValueHasEndEra: ReadPropertyInfoV2 = makeProperty(
+    private val DateValueHasEndEra: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -625,7 +625,8 @@ object KnoraApiV2WithValueObjects {
             )
         )
     )
-    val DateValueHasCalendar: ReadPropertyInfoV2 = makeProperty(
+
+    private val DateValueHasCalendar: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -647,7 +648,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val LinkValueHasTarget: ReadPropertyInfoV2 = makeProperty(
+    private val LinkValueHasTarget: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTarget,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -669,7 +670,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val LinkValueHasTargetIri: ReadPropertyInfoV2 = makeProperty(
+    private val LinkValueHasTargetIri: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -691,7 +692,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val IntValueAsInt: ReadPropertyInfoV2 = makeProperty(
+    private val IntValueAsInt: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -713,7 +714,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val DecimalValueAsDecimal: ReadPropertyInfoV2 = makeProperty(
+    private val DecimalValueAsDecimal: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -735,7 +736,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val BooleanValueAsBoolean: ReadPropertyInfoV2 = makeProperty(
+    private val BooleanValueAsBoolean: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.BooleanValueAsBoolean,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -757,7 +758,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val GeometryValueAsGeometry: ReadPropertyInfoV2 = makeProperty(
+    private val GeometryValueAsGeometry: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -779,7 +780,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val ListValueAsListNode: ReadPropertyInfoV2 = makeProperty(
+    private val ListValueAsListNode: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNode,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -801,7 +802,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val ListValueAsListNodeLabel: ReadPropertyInfoV2 = makeProperty(
+    private val ListValueAsListNodeLabel: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNodeLabel,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -823,7 +824,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val ColorValueAsColor: ReadPropertyInfoV2 = makeProperty(
+    private val ColorValueAsColor: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ColorValueAsColor,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -845,7 +846,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val UriValueAsUri: ReadPropertyInfoV2 = makeProperty(
+    private val UriValueAsUri: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.UriValueAsUri,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -867,7 +868,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val GeonameValueAsGeonameCode: ReadPropertyInfoV2 = makeProperty(
+    private val GeonameValueAsGeonameCode: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -889,7 +890,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val FileValueIsPreview: ReadPropertyInfoV2 = makeProperty(
+    private val FileValueIsPreview: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -911,7 +912,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val FileValueAsUrl: ReadPropertyInfoV2 = makeProperty(
+    private val FileValueAsUrl: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -933,7 +934,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val FileValueHasFilename: ReadPropertyInfoV2 = makeProperty(
+    private val FileValueHasFilename: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -955,7 +956,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val StillImageFileValueHasDimX: ReadPropertyInfoV2 = makeProperty(
+    private val StillImageFileValueHasDimX: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimX,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -977,7 +978,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val StillImageFileValueHasDimY: ReadPropertyInfoV2 = makeProperty(
+    private val StillImageFileValueHasDimY: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimY,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -999,7 +1000,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val StillImageFileValueHasIIIFBaseUrl: ReadPropertyInfoV2 = makeProperty(
+    private val StillImageFileValueHasIIIFBaseUrl: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -1021,7 +1022,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val MovingImageFileValueHasDimX: ReadPropertyInfoV2 = makeProperty(
+    private val MovingImageFileValueHasDimX: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasDimX,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -1043,7 +1044,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val MovingImageFileValueHasDimY: ReadPropertyInfoV2 = makeProperty(
+    private val MovingImageFileValueHasDimY: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasDimY,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -1065,7 +1066,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val MovingImageFileValueHasFps: ReadPropertyInfoV2 = makeProperty(
+    private val MovingImageFileValueHasFps: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasFps,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -1087,7 +1088,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val MovingImageFileValueHasQualityLevel: ReadPropertyInfoV2 = makeProperty(
+    private val MovingImageFileValueHasQualityLevel: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasQualityLevel,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -1109,7 +1110,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val MovingImageFileValueHasDuration: ReadPropertyInfoV2 = makeProperty(
+    private val MovingImageFileValueHasDuration: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValueHasDuration,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -1131,7 +1132,7 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    val AudioFileValueHasDuration: ReadPropertyInfoV2 = makeProperty(
+    private val AudioFileValueHasDuration: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValueHasDuration,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
@@ -1312,7 +1313,10 @@ object KnoraApiV2WithValueObjects {
             OntologyConstants.KnoraBase.ExtResAccessInfo,
             OntologyConstants.KnoraBase.ExtResId,
             OntologyConstants.KnoraBase.ExtResProvider,
-            OntologyConstants.KnoraBase.ForProject,
+            OntologyConstants.KnoraBase.MapEntryKey,
+            OntologyConstants.KnoraBase.MapEntryValue,
+            OntologyConstants.KnoraBase.IsInMap,
+            OntologyConstants.KnoraBase.ForProject, // TODO: remove admin stuff from here when it's moved to a separate ontology.
             OntologyConstants.KnoraBase.ForGroup,
             OntologyConstants.KnoraBase.ForResourceClass,
             OntologyConstants.KnoraBase.ForProperty,
@@ -1344,10 +1348,7 @@ object KnoraApiV2WithValueObjects {
             OntologyConstants.KnoraBase.HasSelfJoinEnabled,
             OntologyConstants.KnoraBase.GroupName,
             OntologyConstants.KnoraBase.GroupDescription,
-            OntologyConstants.KnoraBase.BelongsToProject,
-            OntologyConstants.KnoraBase.MapEntryKey,
-            OntologyConstants.KnoraBase.MapEntryValue,
-            OntologyConstants.KnoraBase.IsInMap
+            OntologyConstants.KnoraBase.BelongsToProject
 
         ).map(_.toSmartIri)
 
@@ -1355,9 +1356,7 @@ object KnoraApiV2WithValueObjects {
           * Classes to remove from `knora-base` before converting it to the [[ApiV2WithValueObjects]] schema.
           */
         val KnoraBaseClassesToRemove: Set[SmartIri] = Set(
-            OntologyConstants.KnoraBase.Permission,
-            OntologyConstants.KnoraBase.UserGroup,
-            OntologyConstants.KnoraBase.Institution,
+            OntologyConstants.KnoraBase.DefaultObjectAccessPermission,
             OntologyConstants.KnoraBase.XSLTransformation,
             OntologyConstants.KnoraBase.MappingElement,
             OntologyConstants.KnoraBase.MappingComponent,
@@ -1366,10 +1365,12 @@ object KnoraApiV2WithValueObjects {
             OntologyConstants.KnoraBase.XMLToStandoffMapping,
             OntologyConstants.KnoraBase.ExternalResource,
             OntologyConstants.KnoraBase.ExternalResValue,
-            OntologyConstants.KnoraBase.AdministrativePermission,
-            OntologyConstants.KnoraBase.DefaultObjectAccessPermission,
             OntologyConstants.KnoraBase.Map,
-            OntologyConstants.KnoraBase.MapEntry
+            OntologyConstants.KnoraBase.MapEntry,
+            OntologyConstants.KnoraBase.Permission, // TODO: remove admin stuff from here when it's moved to a separate ontology.
+            OntologyConstants.KnoraBase.UserGroup,
+            OntologyConstants.KnoraBase.Institution,
+            OntologyConstants.KnoraBase.AdministrativePermission
         ).map(_.toSmartIri)
 
         /**
@@ -1401,75 +1402,75 @@ object KnoraApiV2WithValueObjects {
                         propertyIri.toSmartIri.toOntologySchema(ApiV2WithValueObjects) -> Cardinality.KnoraCardinalityInfo(cardinality)
                 }
         }
+
+        /**
+          * Classes that need to be added to `knora-base`, after converting it to the [[ApiV2WithValueObjects]] schema, to obtain `knora-api`.
+          */
+        val KnoraApiClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Set(
+            ForbiddenResource
+        ).map {
+            classInfo => classInfo.entityInfoContent.classIri -> classInfo
+        }.toMap
+
+        /**
+          * Properties that need to be added to `knora-base`, after converting it to the [[ApiV2WithValueObjects]] schema, to obtain `knora-api`.
+          */
+        val KnoraApiPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
+            HasOntologies,
+            HasClasses,
+            HasProperties,
+            HasIndividuals,
+            Result,
+            IsEditable,
+            IsLinkProperty,
+            IsLinkValueProperty,
+            IsInherited,
+            CanBeInstantiated,
+            OntologyName,
+            ProjectIri,
+            ValueAsString,
+            HasIncomingLink,
+            SubjectType,
+            ObjectType,
+            TextValueHasStandoff,
+            TextValueAsXml,
+            TextValueAsHtml,
+            DateValueHasStartYear,
+            DateValueHasEndYear,
+            DateValueHasStartMonth,
+            DateValueHasEndMonth,
+            DateValueHasStartDay,
+            DateValueHasEndDay,
+            DateValueHasStartEra,
+            DateValueHasEndEra,
+            DateValueHasCalendar,
+            LinkValueHasTarget,
+            LinkValueHasTargetIri,
+            IntValueAsInt,
+            DecimalValueAsDecimal,
+            BooleanValueAsBoolean,
+            GeometryValueAsGeometry,
+            ListValueAsListNode,
+            ListValueAsListNodeLabel,
+            ColorValueAsColor,
+            UriValueAsUri,
+            GeonameValueAsGeonameCode,
+            FileValueIsPreview,
+            FileValueAsUrl,
+            FileValueHasFilename,
+            StillImageFileValueHasDimX,
+            StillImageFileValueHasDimY,
+            StillImageFileValueHasIIIFBaseUrl,
+            MovingImageFileValueHasDimX,
+            MovingImageFileValueHasDimY,
+            MovingImageFileValueHasFps,
+            MovingImageFileValueHasQualityLevel,
+            MovingImageFileValueHasDuration,
+            AudioFileValueHasDuration
+        ).map {
+            propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
+        }.toMap
     }
-
-    /**
-      * All the classes in the `knora-api` v2 ontology in the [[ApiV2WithValueObjects]] schema.
-      */
-    val Classes: Map[SmartIri, ReadClassInfoV2] = Set(
-        ForbiddenResource
-    ).map {
-        classInfo => classInfo.entityInfoContent.classIri -> classInfo
-    }.toMap
-
-    /**
-      * All the properties in the `knora-api` v2 ontology in the [[ApiV2WithValueObjects]] schema.
-      */
-    val Properties: Map[SmartIri, ReadPropertyInfoV2] = Set(
-        HasOntologies,
-        HasClasses,
-        HasProperties,
-        HasIndividuals,
-        Result,
-        IsEditable,
-        IsLinkProperty,
-        IsLinkValueProperty,
-        IsInherited,
-        CanBeInstantiated,
-        OntologyName,
-        ProjectIri,
-        ValueAsString,
-        HasIncomingLinks,
-        SubjectType,
-        ObjectType,
-        TextValueHasStandoff,
-        TextValueAsXml,
-        TextValueAsHtml,
-        DateValueHasStartYear,
-        DateValueHasEndYear,
-        DateValueHasStartMonth,
-        DateValueHasEndMonth,
-        DateValueHasStartDay,
-        DateValueHasEndDay,
-        DateValueHasStartEra,
-        DateValueHasEndEra,
-        DateValueHasCalendar,
-        LinkValueHasTarget,
-        LinkValueHasTargetIri,
-        IntValueAsInt,
-        DecimalValueAsDecimal,
-        BooleanValueAsBoolean,
-        GeometryValueAsGeometry,
-        ListValueAsListNode,
-        ListValueAsListNodeLabel,
-        ColorValueAsColor,
-        UriValueAsUri,
-        GeonameValueAsGeonameCode,
-        FileValueIsPreview,
-        FileValueAsUrl,
-        FileValueHasFilename,
-        StillImageFileValueHasDimX,
-        StillImageFileValueHasDimY,
-        StillImageFileValueHasIIIFBaseUrl,
-        MovingImageFileValueHasDimX,
-        MovingImageFileValueHasDimY,
-        MovingImageFileValueHasFps,
-        MovingImageFileValueHasQualityLevel,
-        MovingImageFileValueHasDuration,
-        AudioFileValueHasDuration
-    ).map {
-        propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
-    }.toMap
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Convenience functions for building ontology entities, to make the code above more concise.

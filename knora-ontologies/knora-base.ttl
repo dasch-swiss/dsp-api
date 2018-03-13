@@ -2060,7 +2060,7 @@
                            "Répresentation"@fr ,
                            "Rappresentazione"@it ;
 
-                rdfs:comment "A resource that can store one or more FileValues"@en .
+                rdfs:comment "A resource that can store one or more files"@en .
 
 
 
@@ -2172,7 +2172,7 @@
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
 
-          rdfs:comment "Represents a standoff tag in a TextValue"@en .
+          rdfs:comment "Represents a standoff markup tag"@en .
 
 
 

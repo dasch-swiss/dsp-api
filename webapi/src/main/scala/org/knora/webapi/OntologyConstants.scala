@@ -219,6 +219,7 @@ object OntologyConstants {
         val Fps: IRI = KnoraBasePrefixExpansion + "fps"
         val QualityLevel: IRI = KnoraBasePrefixExpansion + "qualityLevel"
 
+        val ValueBase: IRI = KnoraBasePrefixExpansion + "ValueBase"
         val DateBase: IRI = KnoraBasePrefixExpansion + "DateBase"
         val UriBase: IRI = KnoraBasePrefixExpansion + "UriBase"
         val BooleanBase: IRI = KnoraBasePrefixExpansion + "BooleanBase"
@@ -781,6 +782,8 @@ object OntologyConstants {
 
         val IsMainResource: IRI = KnoraApiV2PrefixExpansion + "isMainResource"
 
+        val ResourceProperty: IRI = KnoraApiV2PrefixExpansion + "resourceProperty"
+
         val Region: IRI = KnoraApiV2PrefixExpansion + "Region"
         val Representation: IRI = KnoraApiV2PrefixExpansion + "Representation"
         val StillImageRepresentation: IRI = KnoraApiV2PrefixExpansion + "StillImageRepresentation"
@@ -836,13 +839,6 @@ object OntologyConstants {
 
         val File: IRI = KnoraApiV2PrefixExpansion + "File"
 
-        val StillImageFile: IRI = KnoraApiV2PrefixExpansion + "StillImageFile"
-        val MovingImageFile: IRI = KnoraApiV2PrefixExpansion + "MovingImageFile"
-        val AudioFile: IRI = KnoraApiV2PrefixExpansion + "AudioFile"
-        val DDDFile: IRI = KnoraApiV2PrefixExpansion + "DDDFile"
-        val TextFile: IRI = KnoraApiV2PrefixExpansion + "TextFile"
-        val DocumentFile: IRI = KnoraApiV2PrefixExpansion + "DocumentFile"
-
         val HasStandoffLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasStandoffLinkTo"
         val CreationDate: IRI = KnoraApiV2PrefixExpansion + "creationDate"
         val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
@@ -863,12 +859,12 @@ object OntologyConstants {
             KnoraBase.IntervalValue -> Interval,
             KnoraBase.GeonameValue -> Geoname,
             KnoraBase.FileValue -> File,
-            KnoraBase.StillImageFileValue -> StillImageFile,
-            KnoraBase.MovingImageFileValue -> MovingImageFile,
-            KnoraBase.AudioFileValue -> AudioFile,
-            KnoraBase.DDDFileValue -> DDDFile,
-            KnoraBase.TextFileValue -> TextFile,
-            KnoraBase.DocumentFileValue -> DocumentFile
+            KnoraBase.StillImageFileValue -> File,
+            KnoraBase.MovingImageFileValue -> File,
+            KnoraBase.AudioFileValue -> File,
+            KnoraBase.DDDFileValue -> File,
+            KnoraBase.TextFileValue -> File,
+            KnoraBase.DocumentFileValue -> File
         )
 
         /**
