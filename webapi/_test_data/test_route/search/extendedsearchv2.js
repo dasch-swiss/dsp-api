@@ -11,7 +11,7 @@ let queryArr = [];
 
 // search for all the letters exchanged between two persons
 queryArr.push(`
-    PREFIX beol: <http://0.0.0.0:3333/ontology/beol/simple/v2#>
+    PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
     PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
     
     CONSTRUCT {
@@ -68,7 +68,7 @@ queryArr.push(`
 
 // search for a letter that has the given title and mentions Isaac Newton
 queryArr.push(`
-      PREFIX beol: <http://0.0.0.0:3333/ontology/beol/simple/v2#>
+      PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
       PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
       
       CONSTRUCT {
@@ -108,7 +108,7 @@ queryArr.push(`
 
 // search for a letter that has the given title and mentions Isaac Newton using a var as a value prop pred
 queryArr.push(`
-      PREFIX beol: <http://0.0.0.0:3333/ontology/beol/simple/v2#>
+      PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
       PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
       
       CONSTRUCT {
@@ -149,7 +149,7 @@ queryArr.push(`
 
 // search for a letter with the given title that links to another letter via standoff that is authored by a person with IAF id "120379260" and has the title "1708-03-11_Scheuchzer_Johannes-Bernoulli_Johann_I"
 queryArr.push(`
-PREFIX beol: <http://0.0.0.0:3333/ontology/beol/simple/v2#>
+PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 
 CONSTRUCT {
@@ -245,7 +245,7 @@ queryArr.push(`
 
 queryArr.push(`
     PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-    PREFIX beol: <http://0.0.0.0:3333/ontology/beol/simple/v2#>
+    PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
     
     CONSTRUCT {
         ?letter knora-api:isMainResource true .
@@ -269,7 +269,7 @@ queryArr.push(`
 
 // search for foaf:person with the foaf:name "Euler"
 queryArr.push(`
-      PREFIX beol: <http://0.0.0.0:3333/ontology/beol/simple/v2#>
+      PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
       PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
       PREFIX foaf: <http://xmlns.com/foaf/0.1/>
       
