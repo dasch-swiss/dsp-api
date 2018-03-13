@@ -95,12 +95,6 @@ class StandoffResponderV1 extends Responder {
                 case textRepr: ResourceFullResponseV1 if textRepr.resinfo.isDefined && textRepr.resinfo.get.restype_id == OntologyConstants.KnoraBase.XSLTransformation =>
                     val locations: Seq[LocationV1] = textRepr.resinfo.get.locations.getOrElse(throw BadRequestException(s"no location given for $xslTransformationIri"))
 
-                    println(MessageUtil.toSource(textRepr))
-
-                    // need to only get the filename and then construct the correct path to sipi by using
-                    // the internal hostname and port
-                    println("StandoffResponderV1 - getXSLTransformation - locations: {}", locations)
-
                     locations.headOption.getOrElse(throw BadRequestException(s"no location given for $xslTransformationIri"))
 
                 case other => throw BadRequestException(s"$xslTransformationIri is not an ${OntologyConstants.KnoraBase.XSLTransformation}")
@@ -121,9 +115,12 @@ class StandoffResponderV1 extends Responder {
             // check if the XSL transformation is in the cache
             textLocation <- recoveredTextLocationFuture
 
-            _ = println("StandoffResponderV1 - getXSLTransformation - textLocation: {}", textLocation)
+            // for PI to be able to communicate with SIPI, we need to use SIPI's internal url
+            internalTextLocationPath = textLocation.path.replace(settings.externalSipiBaseUrl, settings.internalSipiBaseUrl)
+            _ = println("StandoffResponderV1 - getXSLTransformation - original textLocation.path: {}", textLocation.path)
+            _ = println("StandoffResponderV1 - getXSLTransformation - internalTextLocationPath: {}", internalTextLocationPath)
 
-            xsltMaybe: Option[String] = CacheUtil.get[String](cacheName = xsltCacheName, key = textLocation.path)
+            xsltMaybe: Option[String] = CacheUtil.get[String](cacheName = xsltCacheName, key = internalTextLocationPath)
 
             xslt: String <- if (xsltMaybe.nonEmpty) {
                 // XSL transformation is cached
@@ -132,13 +129,11 @@ class StandoffResponderV1 extends Responder {
                 // ask SIPI to return the XSL transformation
                 val sipiResponseFuture: Future[HttpResponse] = for {
 
-                    textLocation <- textLocationFuture
-
                     // ask Sipi to return the XSL transformation file
                     response: HttpResponse <- Http().singleRequest(
                         HttpRequest(
                             method = HttpMethods.GET,
-                            uri = textLocation.path
+                            uri = internalTextLocationPath
                         )
                     )
 

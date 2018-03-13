@@ -97,6 +97,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * Creates a URL for accessing a text file via Sipi.
       *
       * @param textFileValue the text file value representing the text file.
+      * @param external a flag denoting the type of URL that should be generated.
       * @return a Sipi URL.
       */
     def makeSipiTextFileGetUrlFromFilename(textFileValue: TextFileValueV1, external: Boolean = true): String = {
@@ -106,8 +107,6 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         } else {
             s"${settings.internalSipiFileServerGetUrl}/${textFileValue.internalFilename}"
         }
-
-
     }
 
     // A Map of MIME types to Knora API v1 binary format name.
