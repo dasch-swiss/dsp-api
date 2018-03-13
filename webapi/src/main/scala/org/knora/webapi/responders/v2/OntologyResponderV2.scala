@@ -714,50 +714,44 @@ class OntologyResponderV2 extends Responder {
         for {
             cacheData <- getCacheData
 
-            // Convert the external entity IRIs to internal ones, remembering the original external IRIs, which we'll need in a moment.
+            // See if any of the requested entities are hard-coded for knora-api.
 
-            classInternalToExternalIris: Map[SmartIri, SmartIri] = classIris.map(externalIri => externalIri.toOntologySchema(InternalSchema) -> externalIri).toMap
-            propertyInternalToExternalIris: Map[SmartIri, SmartIri] = propertyIris.map(externalIri => externalIri.toOntologySchema(InternalSchema) -> externalIri).toMap
+            hardCodedKnoraApiClassesAvailable: Map[SmartIri, ReadClassInfoV2] = KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraApiClassesToAdd.filterKeys(classIris) ++
+                KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiClassesToAdd.filterKeys(classIris)
 
-            classIrisForCache = classInternalToExternalIris.keySet
-            propertyIrisForCache = propertyInternalToExternalIris.keySet
+            hardCodedKnoraApiPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] = KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraApiPropertiesToAdd.filterKeys(propertyIris) ++
+                KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiPropertiesToAdd.filterKeys(propertyIris)
+
+            // Convert the remaining external entity IRIs to internal ones.
+
+            internalToExternalClassIris: Map[SmartIri, SmartIri] = (classIris -- hardCodedKnoraApiClassesAvailable.keySet).map(externalIri => externalIri.toOntologySchema(InternalSchema) -> externalIri).toMap
+            internalToExternalPropertyIris: Map[SmartIri, SmartIri] = (propertyIris -- hardCodedKnoraApiPropertiesAvailable.keySet).map(externalIri => externalIri.toOntologySchema(InternalSchema) -> externalIri).toMap
+
+            classIrisForCache = internalToExternalClassIris.keySet
+            propertyIrisForCache = internalToExternalPropertyIris.keySet
 
             // Get the entities that are available in the ontology cache.
 
-            classOntologies: Iterable[ReadOntologyV2] = cacheData.ontologies.filterKeys(classIrisForCache.map(_.getOntologyFromEntity)).values
-            propertyOntologies: Iterable[ReadOntologyV2] = cacheData.ontologies.filterKeys(propertyIrisForCache.map(_.getOntologyFromEntity)).values
+            classOntologiesForCache: Iterable[ReadOntologyV2] = cacheData.ontologies.filterKeys(classIrisForCache.map(_.getOntologyFromEntity)).values
+            propertyOntologiesForCache: Iterable[ReadOntologyV2] = cacheData.ontologies.filterKeys(propertyIrisForCache.map(_.getOntologyFromEntity)).values
 
-            classesAvailableFromCache: Map[SmartIri, ReadClassInfoV2] = classOntologies.flatMap {
+            classesAvailableFromCache: Map[SmartIri, ReadClassInfoV2] = classOntologiesForCache.flatMap {
                 ontology => ontology.classes.filterKeys(classIrisForCache)
             }.toMap
 
-            propertiesAvailableFromCache: Map[SmartIri, ReadPropertyInfoV2] = propertyOntologies.flatMap {
+            propertiesAvailableFromCache: Map[SmartIri, ReadPropertyInfoV2] = propertyOntologiesForCache.flatMap {
                 ontology => ontology.properties.filterKeys(propertyIrisForCache)
             }.toMap
-
-            // If any entities aren't found in the cache, see if they're available with their original external IRIs as hard-coded knora-api entities.
-
-            classIrisNotInCache = classIrisForCache -- classesAvailableFromCache.keySet
-            propertyIrisNotInCache = propertyIrisForCache -- propertiesAvailableFromCache.keySet
-
-            knoraApiClassIrisNotInCache: Set[SmartIri] = classIrisNotInCache.filter(_.getOntologyName == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel).map(classInternalToExternalIris)
-            knoraApiPropertyIrisNotInCache: Set[SmartIri] = propertyIrisNotInCache.filter(_.getOntologyName == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel).map(propertyInternalToExternalIris)
-
-            hardCodedKnoraApiClassesAvailable: Map[SmartIri, ReadClassInfoV2] = KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraApiClassesToAdd.filterKeys(knoraApiClassIrisNotInCache) ++
-                KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiClassesToAdd.filterKeys(knoraApiClassIrisNotInCache)
-
-            hardCodedKnoraApiPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] = KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraApiPropertiesToAdd.filterKeys(knoraApiPropertyIrisNotInCache) ++
-                KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiPropertiesToAdd.filterKeys(knoraApiPropertyIrisNotInCache)
-
-            // See if any entities are still missing.
 
             allClassesAvailable: Map[SmartIri, ReadClassInfoV2] = classesAvailableFromCache ++ hardCodedKnoraApiClassesAvailable
             allPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] = propertiesAvailableFromCache ++ hardCodedKnoraApiPropertiesAvailable
 
+            // See if any entities are missing.
+
             allExternalClassIrisAvailable: Set[SmartIri] = allClassesAvailable.keySet.map {
                 classIri =>
                     if (classIri.getOntologySchema.contains(InternalSchema)) {
-                        classInternalToExternalIris(classIri)
+                        internalToExternalClassIris(classIri)
                     } else {
                         classIri
                     }
@@ -766,7 +760,7 @@ class OntologyResponderV2 extends Responder {
             allExternalPropertyIrisAvailable = allPropertiesAvailable.keySet.map {
                 propertyIri =>
                     if (propertyIri.getOntologySchema.contains(InternalSchema)) {
-                        propertyInternalToExternalIris(propertyIri)
+                        internalToExternalPropertyIris(propertyIri)
                     } else {
                         propertyIri
                     }
