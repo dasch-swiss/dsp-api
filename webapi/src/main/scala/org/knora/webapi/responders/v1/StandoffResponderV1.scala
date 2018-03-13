@@ -44,7 +44,7 @@ import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, Map
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.XMLTagItem
 import org.knora.webapi.util.standoff._
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, StringFormatter}
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, MessageUtil, StringFormatter}
 import org.knora.webapi.{BadRequestException, _}
 import org.xml.sax.SAXException
 
@@ -94,6 +94,8 @@ class StandoffResponderV1 extends Responder {
             textLocation: LocationV1 = textRepresentationResponse match {
                 case textRepr: ResourceFullResponseV1 if textRepr.resinfo.isDefined && textRepr.resinfo.get.restype_id == OntologyConstants.KnoraBase.XSLTransformation =>
                     val locations: Seq[LocationV1] = textRepr.resinfo.get.locations.getOrElse(throw BadRequestException(s"no location given for $xslTransformationIri"))
+
+                    println(MessageUtil.toSource(textRepr))
 
                     // need to only get the filename and then construct the correct path to sipi by using
                     // the internal hostname and port
