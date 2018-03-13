@@ -115,10 +115,10 @@ class StandoffResponderV1 extends Responder {
             // check if the XSL transformation is in the cache
             textLocation <- recoveredTextLocationFuture
 
-            // for PI to be able to communicate with SIPI, we need to use SIPI's internal url
+            // for \\PI to be able to communicate with SIPI, we need to use SIPI's internal url
             internalTextLocationPath = textLocation.path.replace(settings.externalSipiBaseUrl, settings.internalSipiBaseUrl)
-            _ = println("StandoffResponderV1 - getXSLTransformation - original textLocation.path: {}", textLocation.path)
-            _ = println("StandoffResponderV1 - getXSLTransformation - internalTextLocationPath: {}", internalTextLocationPath)
+            // _ = println("StandoffResponderV1 - getXSLTransformation - original textLocation.path: {}", textLocation.path)
+            // _ = println("StandoffResponderV1 - getXSLTransformation - internalTextLocationPath: {}", internalTextLocationPath)
 
             xsltMaybe: Option[String] = CacheUtil.get[String](cacheName = xsltCacheName, key = internalTextLocationPath)
 
