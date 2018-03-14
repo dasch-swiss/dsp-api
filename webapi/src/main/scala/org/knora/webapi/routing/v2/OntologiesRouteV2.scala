@@ -64,7 +64,7 @@ object OntologiesRouteV2 extends Authenticator {
                     val requestedOntologyStr: IRI = if (stringFormatter.isBuiltInApiV2OntologyUrlPath(urlPath)) {
                         OntologyConstants.KnoraApi.ApiOntologyHostname + urlPath
                     } else if (stringFormatter.isProjectSpecificApiV2OntologyUrlPath(urlPath)) {
-                        settings.knoraApiHttpBaseUrl + urlPath
+                        settings.externalKnoraApiBaseUrl + urlPath
                     } else {
                         throw BadRequestException(s"Invalid or unknown URL path for external ontology: $urlPath")
                     }

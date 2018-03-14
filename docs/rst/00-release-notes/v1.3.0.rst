@@ -41,6 +41,48 @@ New features:
 - Show ``salsah-gui:guiElement`` and ``salsah-gui:guiAttribute`` when serving ontologies in API v2 in the default schema.
 - Allow ``salsah-gui:guiElement`` and ``salsah-gui:guiAttribute`` to be included in new property definitions created via API v2.
 - Change ``salsah-gui`` so that GraphDB's consistency checker can check the use of ``guiElement`` and ``guiAttribute``.
+- Changes to ``application.conf``. The ``sipi`` and ``web-api`` sections have received a big update, adding separate settings
+  for internal and external host settings:
+
+::
+
+    app {
+        knora-api {
+            // relevant for direct communication inside the knora stack
+            internal-host = "0.0.0.0"
+            internal-port = 3333
+
+            // relevant for the client, i.e. browser
+            external-protocol = "http" // optional ssl termination needs to be done by the proxy
+            external-host = "0.0.0.0"
+            external-port = 3333
+        }
+
+        sipi {
+            // relevant for direct communication inside the knora stack
+            internal-protocol = "http"
+            internal-host = "localhost"
+            internal-port = 1024
+
+            // relevant for the client, i.e. browser
+            external-protocol = "http"
+            external-host = "localhost"
+            external-port = 1024
+
+            prefix = "knora"
+            file-server-path = "server"
+            path-conversion-route = "convert_from_binaries"
+            file-conversion-route = "convert_from_file"
+            image-mime-types = ["image/tiff", "image/jpeg", "image/png", "image/jp2"]
+            movie-mime-types = []
+            sound-mime-types = []
+        }
+
+        salsah1 {
+            base-url = "http://localhost:3335/"
+            project-icons-basepath = "project-icons/"
+        }
+    }
 
 Bugfixes:
 ---------
