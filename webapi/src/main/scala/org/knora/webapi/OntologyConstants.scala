@@ -554,6 +554,7 @@ object OntologyConstants {
                 }
             }
         }
+
     }
 
     object Ontotext {
@@ -873,18 +874,38 @@ object OntologyConstants {
         /**
           * A map of simplified API types to internal knora-base value types.
           */
-        val SimplifiedTypesToValueClasses: Map[IRI, IRI] = ValueClassesToSimplifiedTypes.map(_.swap)
-
+        val SimplifiedTypesToValueClasses: Map[IRI, IRI] = Map(
+            Xsd.String -> KnoraBase.TextValue,
+            Xsd.Integer -> KnoraBase.IntValue,
+            Xsd.Boolean -> KnoraBase.BooleanValue,
+            Xsd.Uri -> KnoraBase.UriValue,
+            Xsd.Decimal -> KnoraBase.DecimalValue,
+            Date -> KnoraBase.DateValue,
+            Color -> KnoraBase.ColorValue,
+            Geom -> KnoraBase.GeomValue,
+            Xsd.String -> KnoraBase.ListValue,
+            Interval -> KnoraBase.IntervalValue,
+            Geoname -> KnoraBase.GeonameValue,
+            File -> KnoraBase.FileValue
+        )
     }
 
     /**
-      * A map of predicates in each possible source schema to the corresponding predicates in each possible target schema.
+      * A map of IRIs in each possible source schema to the corresponding IRIs in each possible target schema, for the
+      * cases where this can't be done formally by [[org.knora.webapi.util.SmartIri]].
       */
-    val CorrespondingPredicates: Map[(OntologySchema, OntologySchema), Map[IRI, IRI]] = Map(
+    val CorrespondingIris: Map[(OntologySchema, OntologySchema), Map[IRI, IRI]] = Map(
         (InternalSchema, ApiV2Simple) -> Map(
             OntologyConstants.KnoraBase.SubjectClassConstraint -> OntologyConstants.KnoraApiV2Simple.SubjectType,
             OntologyConstants.KnoraBase.ObjectClassConstraint -> OntologyConstants.KnoraApiV2Simple.ObjectType,
-            OntologyConstants.KnoraBase.ObjectDatatypeConstraint -> OntologyConstants.KnoraApiV2Simple.ObjectType
+            OntologyConstants.KnoraBase.ObjectDatatypeConstraint -> OntologyConstants.KnoraApiV2Simple.ObjectType,
+            OntologyConstants.KnoraBase.HasFileValue -> OntologyConstants.KnoraApiV2Simple.HasFile,
+            OntologyConstants.KnoraBase.HasStillImageFileValue -> OntologyConstants.KnoraApiV2Simple.HasStillImageFile,
+            OntologyConstants.KnoraBase.HasMovingImageFileValue -> OntologyConstants.KnoraApiV2Simple.HasMovingImageFile,
+            OntologyConstants.KnoraBase.HasAudioFileValue -> OntologyConstants.KnoraApiV2Simple.HasAudioFile,
+            OntologyConstants.KnoraBase.HasDDDFileValue -> OntologyConstants.KnoraApiV2Simple.HasDDDFile,
+            OntologyConstants.KnoraBase.HasTextFileValue -> OntologyConstants.KnoraApiV2Simple.HasTextFile,
+            OntologyConstants.KnoraBase.HasDocumentFileValue -> OntologyConstants.KnoraApiV2Simple.HasDocumentFile
         ),
         (InternalSchema, ApiV2WithValueObjects) -> Map(
             OntologyConstants.KnoraBase.SubjectClassConstraint -> OntologyConstants.KnoraApiV2WithValueObjects.SubjectType,
@@ -893,7 +914,15 @@ object OntologyConstants {
         ),
         (ApiV2Simple, InternalSchema) -> Map(
             OntologyConstants.KnoraApiV2Simple.SubjectType -> OntologyConstants.KnoraBase.SubjectClassConstraint,
-            OntologyConstants.KnoraApiV2Simple.ObjectType -> OntologyConstants.KnoraBase.ObjectClassConstraint
+            OntologyConstants.KnoraApiV2Simple.ObjectType -> OntologyConstants.KnoraBase.ObjectClassConstraint,
+            OntologyConstants.KnoraApiV2Simple.HasFile -> OntologyConstants.KnoraBase.HasFileValue,
+            OntologyConstants.KnoraApiV2Simple.HasStillImageFile -> OntologyConstants.KnoraBase.HasStillImageFileValue,
+            OntologyConstants.KnoraApiV2Simple.HasMovingImageFile -> OntologyConstants.KnoraBase.HasMovingImageFileValue,
+            OntologyConstants.KnoraApiV2Simple.HasAudioFile -> OntologyConstants.KnoraBase.HasAudioFileValue,
+            OntologyConstants.KnoraApiV2Simple.HasDDDFile -> OntologyConstants.KnoraBase.HasDDDFileValue,
+            OntologyConstants.KnoraApiV2Simple.HasTextFile -> OntologyConstants.KnoraBase.HasTextFileValue,
+            OntologyConstants.KnoraApiV2Simple.HasDocumentFile -> OntologyConstants.KnoraBase.HasDocumentFileValue
+
         ),
         (ApiV2WithValueObjects, InternalSchema) -> Map(
             OntologyConstants.KnoraApiV2WithValueObjects.SubjectType -> OntologyConstants.KnoraBase.SubjectClassConstraint,

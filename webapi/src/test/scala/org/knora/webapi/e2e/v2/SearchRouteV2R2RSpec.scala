@@ -1089,7 +1089,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 <http://data.knora.org/50e7460a7203> knora-api:seqnum ?seqnum .
 
-                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFileValue ?file .
+                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFile ?file .
 
             } WHERE {
 
@@ -1111,10 +1111,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 ?seqnum a xsd:integer .
 
-                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFileValue ?file .
-                knora-api:hasStillImageFileValue knora-api:objectType knora-api:StillImageFile .
+                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFile ?file .
+                knora-api:hasStillImageFile knora-api:objectType knora-api:File .
 
-                ?file a knora-api:StillImageFile .
+                ?file a knora-api:File .
 
             } OFFSET 0
             """.stripMargin
@@ -1166,10 +1166,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 ?seqnum a xsd:integer .
 
-                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFileValue ?file .
-                knora-api:hasStillImageFileValue knora-api:objectType knora-api:StillImageFile .
+                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFile ?file .
+                knora-api:hasStillImageFile knora-api:objectType knora-api:File .
 
-                ?file a knora-api:StillImageFile .
+                ?file a knora-api:File .
 
             } OFFSET 0
             """.stripMargin

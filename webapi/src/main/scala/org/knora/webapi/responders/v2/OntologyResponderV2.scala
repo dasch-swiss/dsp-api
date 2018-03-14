@@ -971,14 +971,13 @@ class OntologyResponderV2 extends Responder {
             returnAllOntologies: Boolean = projectIris.isEmpty
 
             ontologyMetadata: Set[OntologyMetadataV2] <- if (returnAllOntologies) {
-                FastFuture.successful((cacheData.ontologies - OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toKnoraInternalSmartIri).values.map(_.ontologyMetadata).toSet)
+                FastFuture.successful(cacheData.ontologies.values.map(_.ontologyMetadata).toSet)
             } else {
                 for {
                     namedGraphInfos: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
-                    filteredNamedGraphInfos = namedGraphInfos.filterNot(_.id == OntologyConstants.KnoraBase.KnoraBaseOntologyIri)
                     projectIriStrs = projectIris.map(_.toString)
 
-                    projectOntologyMetadata = filteredNamedGraphInfos.filter(namedGraphInfo => projectIriStrs.contains(namedGraphInfo.project_id)).map {
+                    projectOntologyMetadata = namedGraphInfos.filter(namedGraphInfo => projectIriStrs.contains(namedGraphInfo.project_id)).map {
                         namedGraphInfo =>
                             val ontologyIri = namedGraphInfo.id.toSmartIri
                             cacheData.ontologies.get(ontologyIri).map(_.ontologyMetadata).getOrElse(throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri has no metadata"))

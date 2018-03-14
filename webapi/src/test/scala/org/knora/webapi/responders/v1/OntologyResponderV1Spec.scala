@@ -383,7 +383,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     valuetype_id = "http://www.knora.org/ontology/knora-base#ColorValue",
                     occurrence = "1",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
-                    description = Some("Represents a color."),
+                    description = Some("Specifies the color of a region."),
                     label = Some("Farbe"),
                     name = "http://www.knora.org/ontology/knora-base#hasColor",
                     id = "http://www.knora.org/ontology/knora-base#hasColor"
@@ -596,6 +596,10 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             ),
             ResourceTypeV1(
                 properties = Vector(
+                    PropertyTypeV1(
+                        label = "Verbindung mit einem Buch",
+                        id = "http://www.knora.org/ontology/incunabula#miscHasBook"
+                    ),
                     PropertyTypeV1(
                         label = "Farbe",
                         id = "http://www.knora.org/ontology/incunabula#miscHasColor"

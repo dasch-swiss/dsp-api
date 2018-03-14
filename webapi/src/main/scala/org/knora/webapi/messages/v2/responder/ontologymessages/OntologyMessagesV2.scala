@@ -2884,9 +2884,20 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
                               label: Option[String] = None,
                               lastModificationDate: Option[Instant] = None) extends KnoraContentV2[OntologyMetadataV2] {
     override def toOntologySchema(targetSchema: OntologySchema): OntologyMetadataV2 = {
-        copy(
-            ontologyIri = ontologyIri.toOntologySchema(targetSchema)
-        )
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        if (ontologyIri == OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri) {
+            targetSchema match {
+                case InternalSchema => this
+                case ApiV2Simple => KnoraApiV2Simple.OntologyMetadata
+                case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.OntologyMetadata
+            }
+        } else {
+            copy(
+                ontologyIri = ontologyIri.toOntologySchema(targetSchema)
+            )
+
+        }
     }
 
     /**

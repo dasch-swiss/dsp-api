@@ -516,6 +516,7 @@ object KnoraApiV2Simple {
             OntologyConstants.KnoraBase.HasPermissions,
             OntologyConstants.KnoraBase.AttachedToUser,
             OntologyConstants.KnoraBase.AttachedToProject,
+            OntologyConstants.KnoraBase.HasFileValue,
             OntologyConstants.KnoraBase.HasAudioFileValue,
             OntologyConstants.KnoraBase.HasDDDFileValue,
             OntologyConstants.KnoraBase.HasDocumentFileValue,

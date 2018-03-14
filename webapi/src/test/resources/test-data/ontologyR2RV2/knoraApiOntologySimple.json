@@ -329,10 +329,6 @@
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#creationDate"
         }, {
           "@type" : "owl:Restriction",
-          "owl:minCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasFileValue"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:minCardinality" : 0,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink"
         }, {
@@ -928,15 +924,6 @@
       "knora-api:hasFile" : {
         "@id" : "knora-api:hasFile",
         "@type" : "owl:ObjectProperty",
-        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#File",
-        "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Representation",
-        "rdfs:comment" : "Connects a Representation to a file",
-        "rdfs:label" : "has file",
-        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#hasValue"
-      },
-      "knora-api:hasFileValue" : {
-        "@id" : "knora-api:hasFileValue",
-        "@type" : "owl:DatatypeProperty",
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#File",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Representation",
         "rdfs:comment" : "Connects a Representation to a file",
