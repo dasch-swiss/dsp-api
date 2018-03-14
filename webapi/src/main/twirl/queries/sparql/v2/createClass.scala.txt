@@ -1,6 +1,5 @@
 @*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -22,6 +21,7 @@
 @import org.knora.webapi.util.SmartIri
 @import org.knora.webapi.messages.v2.responder.ontologymessages._
 @import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
+@import org.knora.webapi.messages.store.triplestoremessages._
 @import java.time.Instant
 
 @*
@@ -58,22 +58,11 @@ DELETE {
 
         @* Insert the class. *@
 
-        @for(predicate <- classDef.predicates.values) {
-
-            @* TODO: In a class definition, all objects that don't have languages must be IRIs. Change this when PredicateInfoV2 knows the types of its objects (#738). *@
-
-            @for(obj <- predicate.objects) {
-
-                <@classDef.classIri> <@predicate.predicateIri> <@obj> .
-
-            }
-
-            @for((lang, text) <- predicate.objectsWithLang) {
-
-                <@classDef.classIri> <@predicate.predicateIri> """@text"""@@@lang .
-
-            }
-
+        @{
+            queries.sparql.v2.txt.generateInsertStatementsForPredicates(
+                entityIri = classDef.classIri,
+                predicates = classDef.predicates.values
+            )
         }
 
         @for(baseClass <- classDef.subClassOf) {
