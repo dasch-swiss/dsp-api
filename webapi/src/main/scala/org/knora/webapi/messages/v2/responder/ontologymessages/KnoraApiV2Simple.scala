@@ -511,6 +511,8 @@ object KnoraApiV2Simple {
           * Properties to remove from `knora-base` before converting it to the [[ApiV2Simple]] schema.
           */
         val KnoraBasePropertiesToRemove: Set[SmartIri] = Set(
+            OntologyConstants.KnoraBase.IsEditable,
+            OntologyConstants.KnoraBase.CanBeInstantiated,
             OntologyConstants.KnoraBase.HasPermissions,
             OntologyConstants.KnoraBase.AttachedToUser,
             OntologyConstants.KnoraBase.AttachedToProject,

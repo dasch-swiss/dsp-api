@@ -73,11 +73,11 @@ object KnoraApiV2WithValueObjects {
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "Indicates whether a property of a Knora resource class be edited via the Knora API"
+                    LanguageCodes.EN -> "Indicates whether a property's values can be updated via the Knora API."
                 )
             )
         ),
-        subjectType = Some(OntologyConstants.Owl.ObjectProperty),
+        subjectType = Some(OntologyConstants.Rdf.Property),
         objectType = Some(OntologyConstants.Xsd.Boolean)
     )
 
@@ -141,26 +141,6 @@ object KnoraApiV2WithValueObjects {
             )
         ),
         subjectType = Some(OntologyConstants.Owl.Restriction),
-        objectType = Some(OntologyConstants.Xsd.Boolean)
-    )
-
-    private val CanBeInstantiated: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.CanBeInstantiated,
-        propertyType = OntologyConstants.Owl.AnnotationProperty,
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "can be instantiated"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Indicates whether a class is a Knora resource class that can be instantiated via the Knora API"
-                )
-            )
-        ),
         objectType = Some(OntologyConstants.Xsd.Boolean)
     )
 
@@ -290,7 +270,6 @@ object KnoraApiV2WithValueObjects {
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue),
-        isEditable = true,
         isLinkValueProp = true,
         predicates = Seq(
             makePredicate(
@@ -1425,7 +1404,6 @@ object KnoraApiV2WithValueObjects {
             IsLinkProperty,
             IsLinkValueProperty,
             IsInherited,
-            CanBeInstantiated,
             OntologyName,
             ProjectIri,
             ValueAsString,

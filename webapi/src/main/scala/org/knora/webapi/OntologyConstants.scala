@@ -124,6 +124,9 @@ object OntologyConstants {
         val KnoraBasePrefix: String = KnoraBaseOntologyLabel + ":"
         val KnoraBasePrefixExpansion: IRI = KnoraBaseOntologyIri + "#"
 
+        val CanBeInstantiated: IRI = KnoraBasePrefixExpansion + "canBeInstantiated"
+        val IsEditable: IRI = KnoraBasePrefixExpansion + "isEditable"
+
         val Resource: IRI = KnoraBasePrefixExpansion + "Resource"
         val Representation: IRI = KnoraBasePrefixExpansion + "Representation"
         val AudioRepresentation: IRI = KnoraBasePrefixExpansion + "AudioRepresentation"

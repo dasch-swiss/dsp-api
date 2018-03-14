@@ -6,6 +6,7 @@
       "knora-api:Annotation" : {
         "@id" : "knora-api:Annotation",
         "@type" : "owl:Class",
+        "knora-api:canBeInstantiated" : true,
         "knora-api:isResourceClass" : true,
         "rdfs:comment" : "A generic class for representing annotations",
         "rdfs:label" : "Annotation",
@@ -868,6 +869,7 @@
       "knora-api:LinkObj" : {
         "@id" : "knora-api:LinkObj",
         "@type" : "owl:Class",
+        "knora-api:canBeInstantiated" : true,
         "knora-api:isResourceClass" : true,
         "knora-api:resourceIcon" : "link.gif",
         "rdfs:comment" : "Represents a generic link object",
@@ -1151,6 +1153,7 @@
       "knora-api:Region" : {
         "@id" : "knora-api:Region",
         "@type" : "owl:Class",
+        "knora-api:canBeInstantiated" : true,
         "knora-api:isResourceClass" : true,
         "knora-api:resourceIcon" : "region.gif",
         "rdfs:comment" : "Represents a geometric region of a resource. The geometry is represented currently as JSON string.",
@@ -2308,7 +2311,8 @@
         "@id" : "knora-api:canBeInstantiated",
         "@type" : "owl:AnnotationProperty",
         "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#boolean",
-        "rdfs:comment" : "Indicates whether a class is a Knora resource class that can be instantiated via the Knora API",
+        "knora-api:subjectType" : "http://www.w3.org/2002/07/owl#Class",
+        "rdfs:comment" : "Indicates whether a resource class can be instantiated via the Knora API.",
         "rdfs:label" : "can be instantiated"
       },
       "knora-api:colorValueAsColor" : {
@@ -2465,6 +2469,7 @@
       "knora-api:hasAudioFileValue" : {
         "@id" : "knora-api:hasAudioFileValue",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#AudioFileValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#AudioRepresentation",
@@ -2483,18 +2488,20 @@
       "knora-api:hasColor" : {
         "@id" : "knora-api:hasColor",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#ColorValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Region",
         "salsah-gui:guiAttribute" : "ncolors=8",
         "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Colorpicker",
-        "rdfs:comment" : "Represents a color.",
+        "rdfs:comment" : "Specifies the color of a region.",
         "rdfs:label" : "Color",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
       },
       "knora-api:hasComment" : {
         "@id" : "knora-api:hasComment",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
@@ -2506,6 +2513,7 @@
       "knora-api:hasDDDFileValue" : {
         "@id" : "knora-api:hasDDDFileValue",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DDDFileValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#DDDRepresentation",
@@ -2517,6 +2525,7 @@
       "knora-api:hasDocumentFileValue" : {
         "@id" : "knora-api:hasDocumentFileValue",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#DocumentFileValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#DocumentRepresentation",
@@ -2539,6 +2548,7 @@
       "knora-api:hasGeometry" : {
         "@id" : "knora-api:hasGeometry",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#GeomValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Region",
@@ -2550,7 +2560,6 @@
       "knora-api:hasIncomingLink" : {
         "@id" : "knora-api:hasIncomingLink",
         "@type" : "owl:ObjectProperty",
-        "knora-api:isEditable" : true,
         "knora-api:isLinkValueProperty" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
@@ -2569,6 +2578,7 @@
       "knora-api:hasLinkTo" : {
         "@id" : "knora-api:hasLinkTo",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
         "knora-api:isLinkProperty" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
@@ -2580,6 +2590,7 @@
       "knora-api:hasLinkToValue" : {
         "@id" : "knora-api:hasLinkToValue",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
         "knora-api:isLinkValueProperty" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
@@ -2591,6 +2602,7 @@
       "knora-api:hasMovingImageFileValue" : {
         "@id" : "knora-api:hasMovingImageFileValue",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#MovingImageFileValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#MovingImageRepresentation",
@@ -2617,18 +2629,10 @@
         "rdfs:comment" : "Points to information about one or more properties",
         "rdfs:label" : "has properties"
       },
-      "knora-api:hasRegionValue" : {
-        "@id" : "knora-api:hasRegionValue",
-        "@type" : "owl:ObjectProperty",
-        "knora-api:isLinkValueProperty" : true,
-        "knora-api:isResourceProperty" : true,
-        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-        "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
-        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue"
-      },
       "knora-api:hasRepresentation" : {
         "@id" : "knora-api:hasRepresentation",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
         "knora-api:isLinkProperty" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#Representation",
@@ -2640,6 +2644,7 @@
       "knora-api:hasRepresentationValue" : {
         "@id" : "knora-api:hasRepresentationValue",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
         "knora-api:isLinkValueProperty" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
@@ -2671,6 +2676,7 @@
       "knora-api:hasStillImageFileValue" : {
         "@id" : "knora-api:hasStillImageFileValue",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#StillImageFileValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#StillImageRepresentation",
@@ -2682,6 +2688,7 @@
       "knora-api:hasTextFileValue" : {
         "@id" : "knora-api:hasTextFileValue",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextFileValue",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/v2#TextRepresentation",
@@ -2710,6 +2717,7 @@
       "knora-api:isAnnotationOf" : {
         "@id" : "knora-api:isAnnotationOf",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
         "knora-api:isLinkProperty" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#Resource",
@@ -2720,6 +2728,7 @@
       "knora-api:isAnnotationOfValue" : {
         "@id" : "knora-api:isAnnotationOfValue",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
         "knora-api:isLinkValueProperty" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
@@ -2730,8 +2739,8 @@
         "@id" : "knora-api:isEditable",
         "@type" : "owl:AnnotationProperty",
         "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#boolean",
-        "knora-api:subjectType" : "http://www.w3.org/2002/07/owl#ObjectProperty",
-        "rdfs:comment" : "Indicates whether a property of a Knora resource class be edited via the Knora API",
+        "knora-api:subjectType" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property",
+        "rdfs:comment" : "Indicates whether a property's values can be updated via the Knora API.",
         "rdfs:label" : "is editable"
       },
       "knora-api:isInherited" : {
@@ -2788,6 +2797,7 @@
       "knora-api:isRegionOf" : {
         "@id" : "knora-api:isRegionOf",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
         "knora-api:isLinkProperty" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#Representation",
@@ -2799,6 +2809,7 @@
       "knora-api:isRegionOfValue" : {
         "@id" : "knora-api:isRegionOfValue",
         "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
         "knora-api:isLinkValueProperty" : true,
         "knora-api:isResourceProperty" : true,
         "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",

@@ -6,9 +6,9 @@
       "knora-api:hasColor" : {
         "@id" : "knora-api:hasColor",
         "@type" : "owl:DatatypeProperty",
-        "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Color",
         "knora-api:subjectType" : "http://api.knora.org/ontology/knora-api/simple/v2#Region",
-        "rdfs:comment" : "Specifies the color of a Region",
+        "rdfs:comment" : "Specifies the color of a region.",
         "rdfs:label" : "Color",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#hasValue"
       }

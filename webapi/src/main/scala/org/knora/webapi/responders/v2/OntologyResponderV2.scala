@@ -494,10 +494,16 @@ class OntologyResponderV2 extends Responder {
                 val isStandoffClass = !isKnoraResourceClass && allBaseClasses.contains(OntologyConstants.KnoraBase.StandoffTag.toKnoraInternalSmartIri)
                 val isValueClass = !(isKnoraResourceClass || isStandoffClass) && allBaseClasses.contains(OntologyConstants.KnoraBase.Value.toKnoraInternalSmartIri)
 
-                // TODO: For now, any class defined in a project-specific ontology can be instantiated. But there are also classes
-                // that can be instantiated in knora-base. This doesn't matter yet, because knora-base is not served. Later, if we
-                // generate knora-api from knora-base, we should actually put a predicate canBeInstantiated in the triplestore.
-                val canBeInstantiated = isKnoraResourceClass && !ontologyIri.isKnoraBuiltInDefinitionIri
+                // A class can be instantiated if it's in a built-in ontology and marked with knora-base:canBeInstantiated, or if it's
+                // a resource class in a project-specific ontology.
+                val canBeInstantiated = if (ontologyIri.isKnoraBuiltInDefinitionIri) {
+                    classDef.predicates.get(OntologyConstants.KnoraBase.CanBeInstantiated.toSmartIri).flatMap(_.objects.headOption) match {
+                        case Some(booleanLiteral: BooleanLiteralV2) => booleanLiteral.value
+                        case _ => false
+                    }
+                } else {
+                    isKnoraResourceClass
+                }
 
                 val readClassInfo = ReadClassInfoV2(
                     entityInfoContent = classDef,
@@ -546,23 +552,31 @@ class OntologyResponderV2 extends Responder {
                                       allLinkValueProps: Set[SmartIri],
                                       allFileValueProps: Set[SmartIri]): Map[SmartIri, ReadPropertyInfoV2] = {
         propertyDefs.map {
-            case (propertyIri, propertyInfoContent) =>
+            case (propertyIri, propertyDef) =>
                 val ontologyIri = propertyIri.getOntologyFromEntity
 
                 validateGuiAttributes(
-                    propertyInfoContent = propertyInfoContent,
+                    propertyInfoContent = propertyDef,
                     allGuiAttributeDefinitions = allGuiAttributeDefinitions,
                     errorFun = { msg: String => throw InconsistentTriplestoreDataException(msg) }
                 )
 
-                // TODO: For now, any property defined in a project-specific ontology is editable. But there are also editable properties
-                // in knora-base. This doesn't matter yet, because knora-base is not served. Later, if we generate knora-api
-                // from knora-base, we should actually put a predicate isEditable in the triplestore.
-                val isEditable = !ontologyIri.isKnoraBuiltInDefinitionIri
+                val isResourceProp = allKnoraResourceProps.contains(propertyIri)
+
+                // A property can be instantiated if it's in a built-in ontology and marked with knora-base:isEditable,
+                // or if it's a resource property in a project-specific ontology.
+                val isEditable = if (ontologyIri.isKnoraBuiltInDefinitionIri) {
+                    propertyDef.predicates.get(OntologyConstants.KnoraBase.IsEditable.toSmartIri).flatMap(_.objects.headOption) match {
+                        case Some(booleanLiteral: BooleanLiteralV2) => booleanLiteral.value
+                        case _ => false
+                    }
+                } else {
+                    isResourceProp
+                }
 
                 val propertyEntityInfo = ReadPropertyInfoV2(
-                    entityInfoContent = propertyInfoContent,
-                    isResourceProp = allKnoraResourceProps.contains(propertyIri),
+                    entityInfoContent = propertyDef,
+                    isResourceProp = isResourceProp,
                     isEditable = isEditable,
                     isLinkProp = allLinkProps.contains(propertyIri),
                     isLinkValueProp = allLinkValueProps.contains(propertyIri),

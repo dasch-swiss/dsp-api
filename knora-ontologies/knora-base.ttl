@@ -69,6 +69,8 @@
 
 :resourceIcon rdf:type owl:DatatypeProperty ;
 
+              rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
               :subjectClassConstraint owl:Class ;
 
               :objectDatatypeConstraint xsd:string .
@@ -101,6 +103,34 @@
 
 
 
+###  http://www.knora.org/ontology/knora-base#isEditable
+
+:isEditable rdf:type owl:AnnotationProperty ;
+
+    :subjectClassConstraint owl:ObjectProperty ;
+
+    :objectDatatypeConstraint xsd:boolean ;
+
+    rdfs:label "is editable"@en ;
+
+    rdfs:comment "Indicates whether a property's values can be updated via the Knora API."@en .
+
+
+
+###  http://www.knora.org/ontology/knora-base#canBeInstantiated
+
+:canBeInstantiated rdf:type owl:AnnotationProperty ;
+
+    :subjectClassConstraint owl:Class ;
+
+    :objectDatatypeConstraint xsd:boolean ;
+
+    rdfs:label "can be instantiated"@en ;
+
+    rdfs:comment "Indicates whether a resource class can be instantiated via the Knora API."@en .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#hasColor
 
 :hasColor rdf:type owl:ObjectProperty ;
@@ -110,7 +140,7 @@
                      "Couleur"@fr ,
                      "Colore"@it ;
 
-          rdfs:comment """Represents a color."""@en ;
+          rdfs:comment """Specifies the color of a region."""@en ;
 
           salsah-gui:guiAttribute "ncolors=8"^^xsd:string ;
 
@@ -119,6 +149,8 @@
           :subjectClassConstraint :Region ;
 
           rdfs:subPropertyOf :hasValue ;
+
+          :isEditable true ;
 
           salsah-gui:guiElement salsah-gui:Colorpicker .
 
@@ -138,6 +170,8 @@
             :subjectClassConstraint :Resource ;
 
             :objectClassConstraint :TextValue ;
+
+            :isEditable true ;
 
             salsah-gui:guiElement salsah-gui:Richtext ;
 
@@ -171,8 +205,8 @@
                          "has file"@en ,
                          "a fichier"@fr ,
                          "ha file"@it ;
-              
-              rdfs:comment "Connects a Representation to a file"@en ;    
+
+              rdfs:comment "Connects a Representation to a file"@en ;
 
               salsah-gui:guiElement salsah-gui:Fileupload ;
 
@@ -191,13 +225,15 @@
                          "a fichier d'image"@fr ,
                          "ha file imagine"@it ;
 
-              rdfs:comment "Connects a Representation to an image file"@en ;              
+              rdfs:comment "Connects a Representation to an image file"@en ;
 
               :objectClassConstraint :StillImageFileValue ;
 
               :subjectClassConstraint :StillImageRepresentation ;
 
-			  salsah-gui:guiElement salsah-gui:Fileupload ;
+              :isEditable true ;
+
+              salsah-gui:guiElement salsah-gui:Fileupload ;
 
               rdfs:subPropertyOf :hasFileValue .
 
@@ -211,12 +247,14 @@
                          "has movie file"@en ,
                          "a fichier de film"@fr ,
                          "ha file film"@it ;
-              
+
               rdfs:comment "Connects a Representation to a movie file"@en ;
 
               :objectClassConstraint :MovingImageFileValue ;
 
               :subjectClassConstraint :MovingImageRepresentation ;
+
+              :isEditable true ;
 
               salsah-gui:guiElement salsah-gui:Fileupload ;
 
@@ -239,6 +277,8 @@
 
               :subjectClassConstraint :AudioRepresentation ;
 
+              :isEditable true ;
+
               salsah-gui:guiElement salsah-gui:Fileupload ;
 
               rdfs:subPropertyOf :hasFileValue .
@@ -255,10 +295,12 @@
                          "ha file 3D"@it ;
 
               rdfs:comment "Connects a Representation to a 3D-file"@en ;
-              
+
               :objectClassConstraint :DDDFileValue ;
 
               :subjectClassConstraint :DDDRepresentation ;
+
+              :isEditable true ;
 
               salsah-gui:guiElement salsah-gui:Fileupload ;
 
@@ -274,12 +316,14 @@
                          "has text file"@en ,
                          "a fichier de texte"@fr ,
                          "ha file testo"@it ;
-              
+
               rdfs:comment "Connects a Representation to a text file"@en ;
 
               :objectClassConstraint :TextFileValue ;
 
               :subjectClassConstraint :TextRepresentation ;
+
+              :isEditable true ;
 
               salsah-gui:guiElement salsah-gui:Fileupload ;
 
@@ -297,10 +341,12 @@
                          "ha documento"@it ;
 
               rdfs:comment "Connects a Representation to a document"@en ;
-              
+
               :objectClassConstraint :DocumentFileValue ;
 
               :subjectClassConstraint :DocumentRepresentation ;
+
+              :isEditable true ;
 
               salsah-gui:guiElement salsah-gui:Fileupload ;
 
@@ -317,11 +363,13 @@
                         "Géometrie"@fr ,
                         "Geometria"@it ;
 
-             rdfs:comment """Represents a geometrical shape."""@en ;    
+             rdfs:comment """Represents a geometrical shape."""@en ;
 
              rdfs:subPropertyOf :hasValue ;
 
              salsah-gui:guiElement salsah-gui:Geometry ;
+
+             :isEditable true ;
 
              :objectClassConstraint :GeomValue ;
 
@@ -339,8 +387,10 @@
                       "has Link to"@en ,
                       "a lien vers"@fr ,
                       "ha Link verso"@it ;
-           
+
            rdfs:comment "Represents a direct connection between two resources"@en ;
+
+           :isEditable true ;
 
            :objectClassConstraint :Resource ;
 
@@ -361,23 +411,13 @@
 
                 rdfs:comment "Represents a direct connection between two resources"@en ;
 
+                :isEditable true ;
+
                 :objectClassConstraint :LinkValue ;
 
                 :subjectClassConstraint :Resource ;
 
                 rdfs:subPropertyOf :hasValue .
-
-
-
-###  http://www.knora.org/ontology/knora-base#hasRegionValue
-
-:hasRegionValue rdf:type owl:ObjectProperty ;
-
-                :objectClassConstraint :LinkValue ;
-
-                :subjectClassConstraint :Resource ;
-
-                rdfs:subPropertyOf :hasLinkToValue .
 
 
 
@@ -396,6 +436,8 @@
 
                    :subjectClassConstraint :Resource ;
 
+                   :isEditable true ;
+
                    rdfs:subPropertyOf :hasLinkTo .
 
 
@@ -407,6 +449,8 @@
                         :objectClassConstraint :LinkValue ;
 
                         :subjectClassConstraint :Resource ;
+
+                        :isEditable true ;
 
                         rdfs:subPropertyOf :hasLinkToValue .
 
@@ -424,7 +468,7 @@
 
                    rdfs:comment "Repräsentiert einen Link im Standoff Markup von einer Ressource zu einer anderen"@de ,
                                 "Represents a link in standoff markup from one resource to another."@en ;
-                   
+
                    :objectClassConstraint :Resource ;
 
                    :subjectClassConstraint :Resource ;
@@ -585,10 +629,12 @@
                            "is Annotation of"@en ,
                            "est Annotation de"@fr ,
                            "è Annotation di"@it ;
-                
+
                 :subjectClassConstraint :Annotation ;
 
                 :objectClassConstraint :Resource ;
+
+                :isEditable true ;
 
                 rdfs:subPropertyOf :hasLinkTo .
 
@@ -601,6 +647,8 @@
                :objectClassConstraint :LinkValue ;
 
                :subjectClassConstraint :Annotation ;
+
+               :isEditable true ;
 
                rdfs:subPropertyOf :hasLinkToValue .
 
@@ -652,6 +700,8 @@
 
             :objectClassConstraint :Representation ;
 
+            :isEditable true ;
+
             rdfs:subPropertyOf :hasLinkTo .
 
 
@@ -670,6 +720,8 @@
                  :objectClassConstraint :LinkValue ;
 
                  :subjectClassConstraint :Region ;
+
+                 :isEditable true ;
 
                  rdfs:subPropertyOf :hasLinkToValue .
 
@@ -1509,6 +1561,8 @@
                        "Annotation"@fr ,
                        "Annotation"@it ;
 
+            :canBeInstantiated true ;
+
             rdfs:comment "A generic class for representing annotations"@en .
 
 
@@ -1882,6 +1936,8 @@
 
          :resourceIcon "link.gif"^^xsd:string ;
 
+         :canBeInstantiated true ;
+
          rdfs:comment "Verknüpfung mehrerer Resourcen"@de ,
                       "Represents a generic link object"@en .
 
@@ -2040,6 +2096,8 @@
                         ] ;
 
         :resourceIcon "region.gif"^^xsd:string ;
+
+        :canBeInstantiated true ;
 
         rdfs:comment "Represents a geometric region of a resource. The geometry is represented currently as JSON string."@en .
 
