@@ -70,8 +70,6 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
     /* needed by the core trait */
     implicit lazy val log: LoggingAdapter = akka.event.Logging(system, "PerfSpec")
 
-    if (!settings.knoraApiUseHttp) throw HttpConfigurationException("PerfSpec tests currently require HTTP")
-
     // needs to be overridden in subclass
     val rdfDataObjects: Seq[RdfDataObject]
 

@@ -44,7 +44,7 @@ import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, Map
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.XMLTagItem
 import org.knora.webapi.util.standoff._
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, StringFormatter}
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, MessageUtil, StringFormatter}
 import org.knora.webapi.{BadRequestException, _}
 import org.xml.sax.SAXException
 
@@ -115,7 +115,12 @@ class StandoffResponderV1 extends Responder {
             // check if the XSL transformation is in the cache
             textLocation <- recoveredTextLocationFuture
 
-            xsltMaybe: Option[String] = CacheUtil.get[String](cacheName = xsltCacheName, key = textLocation.path)
+            // for \\PI to be able to communicate with SIPI, we need to use SIPI's internal url
+            internalTextLocationPath = textLocation.path.replace(settings.externalSipiBaseUrl, settings.internalSipiBaseUrl)
+            // _ = println("StandoffResponderV1 - getXSLTransformation - original textLocation.path: {}", textLocation.path)
+            // _ = println("StandoffResponderV1 - getXSLTransformation - internalTextLocationPath: {}", internalTextLocationPath)
+
+            xsltMaybe: Option[String] = CacheUtil.get[String](cacheName = xsltCacheName, key = internalTextLocationPath)
 
             xslt: String <- if (xsltMaybe.nonEmpty) {
                 // XSL transformation is cached
@@ -124,13 +129,11 @@ class StandoffResponderV1 extends Responder {
                 // ask SIPI to return the XSL transformation
                 val sipiResponseFuture: Future[HttpResponse] = for {
 
-                    textLocation <- textLocationFuture
-
                     // ask Sipi to return the XSL transformation file
                     response: HttpResponse <- Http().singleRequest(
                         HttpRequest(
                             method = HttpMethods.GET,
-                            uri = textLocation.path
+                            uri = internalTextLocationPath
                         )
                     )
 
