@@ -55,10 +55,8 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
     /* needed by the core trait */
     implicit lazy val log: LoggingAdapter = akka.event.Logging(system, "ITSpec")
 
-    if (!settings.knoraApiUseHttp) throw HttpConfigurationException("Integration tests currently require HTTP")
-
-    protected val baseApiUrl: String = settings.knoraApiHttpBaseUrl
-    protected val baseSipiUrl: String = s"${settings.sipiBaseUrl}:${settings.sipiPort}"
+    protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
+    protected val baseSipiUrl: String = settings.internalSipiBaseUrl
 
     implicit protected val postfix: postfixOps = scala.language.postfixOps
 

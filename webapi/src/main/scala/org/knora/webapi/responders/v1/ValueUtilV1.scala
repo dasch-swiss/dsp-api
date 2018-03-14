@@ -73,7 +73,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     def makeSipiImagePreviewGetUrlFromFilename(filename: String): String = {
-        s"${settings.sipiIIIFGetUrl}/$filename/full/full/0/default.jpg"
+        s"${settings.externalSipiIIIFGetUrl}/$filename/full/full/0/default.jpg"
     }
 
     /**
@@ -86,7 +86,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         if (!imageFileValueV1.isPreview) {
             // not a thumbnail
             // calculate the correct size from the source image depending on the given dimensions
-            s"${settings.sipiIIIFGetUrl}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
+            s"${settings.externalSipiIIIFGetUrl}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
         } else {
             // thumbnail
             makeSipiImagePreviewGetUrlFromFilename(imageFileValueV1.internalFilename)
@@ -97,10 +97,16 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * Creates a URL for accessing a text file via Sipi.
       *
       * @param textFileValue the text file value representing the text file.
+      * @param external a flag denoting the type of URL that should be generated.
       * @return a Sipi URL.
       */
-    def makeSipiTextFileGetUrlFromFilename(textFileValue: TextFileValueV1): String = {
-        s"${settings.sipiFileServerGetUrl}/${textFileValue.internalFilename}"
+    def makeSipiTextFileGetUrlFromFilename(textFileValue: TextFileValueV1, external: Boolean = true): String = {
+
+        if (external) {
+            s"${settings.externalSipiFileServerGetUrl}/${textFileValue.internalFilename}"
+        } else {
+            s"${settings.internalSipiFileServerGetUrl}/${textFileValue.internalFilename}"
+        }
     }
 
     // A Map of MIME types to Knora API v1 binary format name.
@@ -171,7 +177,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         val ontologyName = resourceClassIri.substring(resourceClassIri.lastIndexOf('/') + 1, resourceClassIri.lastIndexOf('#'))
 
         // create URL: combine salsah-address and port, project icons base path, ontology name, icon name
-        settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + ontologyName + '/' + iconsSrc
+        settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + ontologyName + '/' + iconsSrc
     }
 
     /**
