@@ -883,7 +883,6 @@ object OntologyConstants {
             Date -> KnoraBase.DateValue,
             Color -> KnoraBase.ColorValue,
             Geom -> KnoraBase.GeomValue,
-            Xsd.String -> KnoraBase.ListValue,
             Interval -> KnoraBase.IntervalValue,
             Geoname -> KnoraBase.GeonameValue,
             File -> KnoraBase.FileValue
