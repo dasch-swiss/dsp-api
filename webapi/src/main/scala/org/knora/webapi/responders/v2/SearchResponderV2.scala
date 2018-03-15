@@ -84,6 +84,9 @@ object SearchResponderV2Constants {
         val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
         val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
 
+        val listNode: QueryVariable = QueryVariable("listNode")
+        val listNodeLabel: QueryVariable = QueryVariable("listNodeLabel")
+
         val forbiddenResourceIri: IRI = s"http://${KnoraIdUtil.IriDomain}/permissions/forbiddenResource"
 
     }
@@ -1952,14 +1955,28 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
                 )
 
+                // WHERE patterns for list node pointed to by value objects (if any)
+                val wherePatternsForListNode = Seq(
+                    ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri))),
+                    StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.ListValue.toSmartIri)),
+                    StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri), obj = listNode),
+                    StatementPattern.makeExplicit(subj = listNode, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), obj = listNodeLabel)
+                )
+
+                // return list node assertions
+                val constructPatternsForListNode = Seq(
+                    StatementPattern(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri), obj = listNode),
+                    StatementPattern(subj = listNode, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), obj = listNodeLabel)
+                )
+
                 ConstructQuery(
                     constructClause = ConstructClause(
-                        statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues ++ constructPatternsForStandoff
+                        statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues ++ constructPatternsForStandoff ++ constructPatternsForListNode
                     ),
                     whereClause = WhereClause(
                         Seq(
                             UnionPattern(
-                                Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff)
+                                Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff, wherePatternsForListNode)
                             )
                         )
                     )
@@ -2128,7 +2145,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 // create the main query
                 // it is a Union of two sets: the main resources and the dependent resources
-                val mainQuery = createMainQuery(
+                val mainQuery: ConstructQuery = createMainQuery(
                     mainResourceIris = mainResourceIris.map(iri => IriRef(iri.toSmartIri)).toSet,
                     dependentResourceIris = allDependentResourceIris.map(iri => IriRef(iri.toSmartIri)),
                     valueObjectIris = allValueObjectIris
@@ -2153,7 +2170,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 val triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
                 //println("++++++++")
-                //println(triplestoreSpecificQuery.toSparql)
+                // println(triplestoreSpecificQuery.toSparql)
 
                 for {
                     searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
