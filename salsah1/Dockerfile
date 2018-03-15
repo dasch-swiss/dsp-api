@@ -20,6 +20,9 @@ RUN \
 # starting second stage
 FROM openjdk:8-jre-alpine
 
+## need bash for the webapi start script
+RUN apk add --no-cache bash
+
 COPY --from=build-stage /salsah /salsah
 
 # Expose the salsah default port
