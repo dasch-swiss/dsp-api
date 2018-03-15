@@ -1,3 +1,0 @@
-[submodule "webapi/_test_data/ontologies/nie-ine-ontologies"]
-	path = webapi/_test_data/ontologies/nie-ine-ontologies
-	url = https://github.com/nie-ine/Ontologies.git
