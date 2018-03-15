@@ -57,8 +57,6 @@ jobs:
         - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/data:/opt/graphdb/home -v $TRAVIS_BUILD_DIR/graphdb:/graphdb ontotext/graphdb:8.2.0-se
         - sleep 15
         - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
-        # start NIE-INE ontology tests
-        - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-free-init-knora-test.sh
         # start the built-in webapi server tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt graphdb:test
     - stage: test
