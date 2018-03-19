@@ -19,6 +19,8 @@
 
 package org.knora.webapi
 
+import org.knora.webapi.OntologyConstants.KnoraBase.KnoraBasePrefixExpansion
+
 /**
   * Contains string constants for IRIs from ontologies used by the application.
   */
@@ -286,13 +288,7 @@ object OntologyConstants {
             TextFileValue
         )
 
-        val ListNode: IRI = KnoraBasePrefixExpansion + "ListNode"
-        val ListNodeName: IRI = KnoraBasePrefixExpansion + "listNodeName"
-        val IsRootNode: IRI = KnoraBasePrefixExpansion + "isRootNode"
-        val HasRootNode: IRI = KnoraBasePrefixExpansion + "hasRootNode"
-        val HasSubListNode: IRI = KnoraBasePrefixExpansion + "hasSubListNode"
-        val ListNodePosition: IRI = KnoraBasePrefixExpansion + "listNodePosition"
-
+        /* General deleted flag used in knora-base and knora-admin */
         val IsDeleted: IRI = KnoraBasePrefixExpansion + "isDeleted"
 
         /* Resource creator */
@@ -301,51 +297,99 @@ object OntologyConstants {
         /* Resource's and list's project */
         val AttachedToProject: IRI = KnoraBasePrefixExpansion + "attachedToProject"
 
+        /* Standoff */
+
+        val StandoffTag: IRI = KnoraBasePrefixExpansion + "StandoffTag"
+        val StandoffTagHasStart: IRI = KnoraBasePrefixExpansion + "standoffTagHasStart"
+        val StandoffTagHasEnd: IRI = KnoraBasePrefixExpansion + "standoffTagHasEnd"
+        val StandoffTagHasStartIndex: IRI = KnoraBasePrefixExpansion + "standoffTagHasStartIndex"
+        val StandoffTagHasEndIndex: IRI = KnoraBasePrefixExpansion + "standoffTagHasEndIndex"
+        val StandoffTagHasStartParent: IRI = KnoraBasePrefixExpansion + "standoffTagHasStartParent"
+        val StandoffTagHasEndParent: IRI = KnoraBasePrefixExpansion + "standoffTagHasEndParent"
+        val StandoffTagHasUUID: IRI = KnoraBasePrefixExpansion + "standoffTagHasUUID"
+        val StandoffTagHasOriginalXMLID: IRI = KnoraBasePrefixExpansion + "standoffTagHasOriginalXMLID"
+        val StandoffTagHasInternalReference: IRI = KnoraBasePrefixExpansion + "standoffTagHasInternalReference"
+
+        val StandoffTagHasLink: IRI = KnoraBasePrefixExpansion + "standoffTagHasLink"
+        val HasStandoffLinkTo: IRI = KnoraBasePrefixExpansion + "hasStandoffLinkTo"
+        val HasStandoffLinkToValue: IRI = KnoraBasePrefixExpansion + "hasStandoffLinkToValue"
+
+        val StandoffDateTag: IRI = KnoraBasePrefixExpansion + "StandoffDateTag"
+        val StandoffColorTag: IRI = KnoraBasePrefixExpansion + "StandoffColorTag"
+        val StandoffIntegerTag: IRI = KnoraBasePrefixExpansion + "StandoffIntegerTag"
+        val StandoffDecimalTag: IRI = KnoraBasePrefixExpansion + "StandoffDecimalTag"
+        val StandoffIntervalTag: IRI = KnoraBasePrefixExpansion + "StandoffIntervalTag"
+        val StandoffBooleanTag: IRI = KnoraBasePrefixExpansion + "StandoffBooleanTag"
+        val StandoffLinkTag: IRI = KnoraBasePrefixExpansion + "StandoffLinkTag"
+        val StandoffUriTag: IRI = KnoraBasePrefixExpansion + "StandoffUriTag"
+        val StandoffInternalReferenceTag: IRI = KnoraBasePrefixExpansion + "StandoffInternalReferenceTag"
+
+        val StandardMapping: IRI = "http://rdfh.ch/standoff/mappings/StandardMapping"
+
+        val CreationDate: IRI = KnoraBasePrefixExpansion + "creationDate"
+        val ValueCreationDate: IRI = KnoraBasePrefixExpansion + "valueCreationDate"
+
+        val Map: IRI = KnoraBasePrefixExpansion + "Map"
+        val MapEntry: IRI = KnoraBasePrefixExpansion + "MapEntry"
+        val MapEntryKey: IRI = KnoraBasePrefixExpansion + "mapEntryKey"
+        val MapEntryValue: IRI = KnoraBasePrefixExpansion + "mapEntryValue"
+
+        val LastModificationDate: IRI = KnoraBasePrefixExpansion + "lastModificationDate"
+    }
+
+    object KnoraAdmin {
+
+        val KnoraAdminOntologyLabel: String = "knora-admin"
+        val KnoraAdminOntologyIri: IRI = KnoraInternal.InternalOntologyStart + KnoraAdminOntologyLabel
+
+        val KnoraAdminPrefix: String = KnoraAdminOntologyLabel + ":"
+        val KnoraAdminPrefixExpansion: IRI = KnoraAdminOntologyIri + "#"
+
         /* User */
-        val User: IRI = KnoraBasePrefixExpansion + "User"
-        val Email: IRI = KnoraBasePrefixExpansion + "email"
-        val GivenName: IRI = KnoraBasePrefixExpansion + "givenName"
-        val FamilyName: IRI = KnoraBasePrefixExpansion + "familyName"
-        val Password: IRI = KnoraBasePrefixExpansion + "password"
-        val UsersActiveProject: IRI = KnoraBasePrefixExpansion + "currentproject"
-        val Status: IRI = KnoraBasePrefixExpansion + "status"
-        val PreferredLanguage: IRI = KnoraBasePrefixExpansion + "preferredLanguage"
-        val IsInProject: IRI = KnoraBasePrefixExpansion + "isInProject"
-        val IsInProjectAdminGroup: IRI = KnoraBasePrefixExpansion + "isInProjectAdminGroup"
-        val IsInGroup: IRI = KnoraBasePrefixExpansion + "isInGroup"
-        val IsInSystemAdminGroup: IRI = KnoraBasePrefixExpansion + "isInSystemAdminGroup"
+        val User: IRI = KnoraAdminPrefixExpansion + "User"
+        val Email: IRI = KnoraAdminPrefixExpansion + "email"
+        val GivenName: IRI = KnoraAdminPrefixExpansion + "givenName"
+        val FamilyName: IRI = KnoraAdminPrefixExpansion + "familyName"
+        val Password: IRI = KnoraAdminPrefixExpansion + "password"
+        val UsersActiveProject: IRI = KnoraAdminPrefixExpansion + "currentproject"
+        val Status: IRI = KnoraAdminPrefixExpansion + "status"
+        val PreferredLanguage: IRI = KnoraAdminPrefixExpansion + "preferredLanguage"
+        val IsInProject: IRI = KnoraAdminPrefixExpansion + "isInProject"
+        val IsInProjectAdminGroup: IRI = KnoraAdminPrefixExpansion + "isInProjectAdminGroup"
+        val IsInGroup: IRI = KnoraAdminPrefixExpansion + "isInGroup"
+        val IsInSystemAdminGroup: IRI = KnoraAdminPrefixExpansion + "isInSystemAdminGroup"
 
         /* Project */
-        val KnoraProject: IRI = KnoraBasePrefixExpansion + "knoraProject"
-        val ProjectShortname: IRI = KnoraBasePrefixExpansion + "projectShortname"
-        val ProjectShortcode: IRI = KnoraBasePrefixExpansion + "projectShortcode"
-        val ProjectLongname: IRI = KnoraBasePrefixExpansion + "projectLongname"
-        val ProjectDescription: IRI = KnoraBasePrefixExpansion + "projectDescription"
-        val ProjectKeyword: IRI = KnoraBasePrefixExpansion + "projectKeyword"
-        val ProjectLogo: IRI = KnoraBasePrefixExpansion + "projectLogo"
-        val BelongsToInstitution: IRI = KnoraBasePrefixExpansion + "belongsToInstitution"
-        val ProjectOntology: IRI = KnoraBasePrefixExpansion + "projectOntology"
-        val HasSelfJoinEnabled: IRI = KnoraBasePrefixExpansion + "hasSelfJoinEnabled"
+        val KnoraProject: IRI = KnoraAdminPrefixExpansion + "knoraProject"
+        val ProjectShortname: IRI = KnoraAdminPrefixExpansion + "projectShortname"
+        val ProjectShortcode: IRI = KnoraAdminPrefixExpansion + "projectShortcode"
+        val ProjectLongname: IRI = KnoraAdminPrefixExpansion + "projectLongname"
+        val ProjectDescription: IRI = KnoraAdminPrefixExpansion + "projectDescription"
+        val ProjectKeyword: IRI = KnoraAdminPrefixExpansion + "projectKeyword"
+        val ProjectLogo: IRI = KnoraAdminPrefixExpansion + "projectLogo"
+        val BelongsToInstitution: IRI = KnoraAdminPrefixExpansion + "belongsToInstitution"
+        val ProjectOntology: IRI = KnoraAdminPrefixExpansion + "projectOntology"
+        val HasSelfJoinEnabled: IRI = KnoraAdminPrefixExpansion + "hasSelfJoinEnabled"
 
         /* Group */
-        val UserGroup: IRI = KnoraBasePrefixExpansion + "UserGroup"
-        val GroupName: IRI = KnoraBasePrefixExpansion + "groupName"
-        val GroupDescription: IRI = KnoraBasePrefixExpansion + "groupDescription"
-        val BelongsToProject: IRI = KnoraBasePrefixExpansion + "belongsToProject"
+        val UserGroup: IRI = KnoraAdminPrefixExpansion + "UserGroup"
+        val GroupName: IRI = KnoraAdminPrefixExpansion + "groupName"
+        val GroupDescription: IRI = KnoraAdminPrefixExpansion + "groupDescription"
+        val BelongsToProject: IRI = KnoraAdminPrefixExpansion + "belongsToProject"
 
         /* Built-In Groups */
-        val UnknownUser: IRI = KnoraBasePrefixExpansion + "UnknownUser"
-        val KnownUser: IRI = KnoraBasePrefixExpansion + "KnownUser"
-        val ProjectMember: IRI = KnoraBasePrefixExpansion + "ProjectMember"
-        val Creator: IRI = KnoraBasePrefixExpansion + "Creator"
-        val SystemAdmin: IRI = KnoraBasePrefixExpansion + "SystemAdmin"
-        val ProjectAdmin: IRI = KnoraBasePrefixExpansion + "ProjectAdmin"
+        val UnknownUser: IRI = KnoraAdminPrefixExpansion + "UnknownUser"
+        val KnownUser: IRI = KnoraAdminPrefixExpansion + "KnownUser"
+        val ProjectMember: IRI = KnoraAdminPrefixExpansion + "ProjectMember"
+        val Creator: IRI = KnoraAdminPrefixExpansion + "Creator"
+        val SystemAdmin: IRI = KnoraAdminPrefixExpansion + "SystemAdmin"
+        val ProjectAdmin: IRI = KnoraAdminPrefixExpansion + "ProjectAdmin"
 
         /* Institution */
-        val Institution: IRI = KnoraBasePrefixExpansion + "Institution"
+        val Institution: IRI = KnoraAdminPrefixExpansion + "Institution"
 
         /* Permissions */
-        val HasPermissions: IRI = KnoraBasePrefixExpansion + "hasPermissions"
+        val HasPermissions: IRI = KnoraAdminPrefixExpansion + "hasPermissions"
 
         val PermissionListDelimiter: Char = '|'
         val GroupListDelimiter: Char = ','
@@ -383,11 +427,11 @@ object OntologyConstants {
             ProjectAdminOntologyAllPermission
         )
 
-        val HasDefaultRestrictedViewPermission: IRI = KnoraBasePrefixExpansion + "hasDefaultRestrictedViewPermission"
-        val HasDefaultViewPermission: IRI = KnoraBasePrefixExpansion + "hasDefaultViewPermission"
-        val HasDefaultModifyPermission: IRI = KnoraBasePrefixExpansion + "hasDefaultModifyPermission"
-        val HasDefaultDeletePermission: IRI = KnoraBasePrefixExpansion + "hasDefaultDeletePermission"
-        val HasDefaultChangeRightsPermission: IRI = KnoraBasePrefixExpansion + "hasDefaultChangeRightsPermission"
+        val HasDefaultRestrictedViewPermission: IRI = KnoraAdminPrefixExpansion + "hasDefaultRestrictedViewPermission"
+        val HasDefaultViewPermission: IRI = KnoraAdminPrefixExpansion + "hasDefaultViewPermission"
+        val HasDefaultModifyPermission: IRI = KnoraAdminPrefixExpansion + "hasDefaultModifyPermission"
+        val HasDefaultDeletePermission: IRI = KnoraAdminPrefixExpansion + "hasDefaultDeletePermission"
+        val HasDefaultChangeRightsPermission: IRI = KnoraAdminPrefixExpansion + "hasDefaultChangeRightsPermission"
 
         val DefaultPermissionProperties: Set[IRI] = Set(
             HasDefaultRestrictedViewPermission,
@@ -397,64 +441,38 @@ object OntologyConstants {
             HasDefaultChangeRightsPermission
         )
 
-        /* Standoff */
+        val AdministrativePermission: IRI = KnoraAdminPrefixExpansion + "AdministrativePermission"
+        val DefaultObjectAccessPermission: IRI = KnoraAdminPrefixExpansion + "DefaultObjectAccessPermission"
+        val ForProject: IRI = KnoraAdminPrefixExpansion + "forProject"
+        val ForGroup: IRI = KnoraAdminPrefixExpansion + "forGroup"
+        val ForResourceClass: IRI = KnoraAdminPrefixExpansion + "forResourceClass"
+        val ForProperty: IRI = KnoraAdminPrefixExpansion + "forProperty"
 
-        val StandoffTag: IRI = KnoraBasePrefixExpansion + "StandoffTag"
-        val StandoffTagHasStart: IRI = KnoraBasePrefixExpansion + "standoffTagHasStart"
-        val StandoffTagHasEnd: IRI = KnoraBasePrefixExpansion + "standoffTagHasEnd"
-        val StandoffTagHasStartIndex: IRI = KnoraBasePrefixExpansion + "standoffTagHasStartIndex"
-        val StandoffTagHasEndIndex: IRI = KnoraBasePrefixExpansion + "standoffTagHasEndIndex"
-        val StandoffTagHasStartParent: IRI = KnoraBasePrefixExpansion + "standoffTagHasStartParent"
-        val StandoffTagHasEndParent: IRI = KnoraBasePrefixExpansion + "standoffTagHasEndParent"
-        val StandoffTagHasUUID: IRI = KnoraBasePrefixExpansion + "standoffTagHasUUID"
-        val StandoffTagHasOriginalXMLID: IRI = KnoraBasePrefixExpansion + "standoffTagHasOriginalXMLID"
-        val StandoffTagHasInternalReference: IRI = KnoraBasePrefixExpansion + "standoffTagHasInternalReference"
+        /* Lists */
 
-        val StandoffTagHasLink: IRI = KnoraBasePrefixExpansion + "standoffTagHasLink"
-        val HasStandoffLinkTo: IRI = KnoraBasePrefixExpansion + "hasStandoffLinkTo"
-        val HasStandoffLinkToValue: IRI = KnoraBasePrefixExpansion + "hasStandoffLinkToValue"
+        val ListNode: IRI = KnoraAdminPrefixExpansion + "ListNode"
+        val ListNodeName: IRI = KnoraAdminPrefixExpansion + "listNodeName"
+        val IsRootNode: IRI = KnoraAdminPrefixExpansion + "isRootNode"
+        val HasRootNode: IRI = KnoraAdminPrefixExpansion + "hasRootNode"
+        val HasSubListNode: IRI = KnoraAdminPrefixExpansion + "hasSubListNode"
+        val ListNodePosition: IRI = KnoraAdminPrefixExpansion + "listNodePosition"
 
-        val StandoffDateTag: IRI = KnoraBasePrefixExpansion + "StandoffDateTag"
-        val StandoffColorTag: IRI = KnoraBasePrefixExpansion + "StandoffColorTag"
-        val StandoffIntegerTag: IRI = KnoraBasePrefixExpansion + "StandoffIntegerTag"
-        val StandoffDecimalTag: IRI = KnoraBasePrefixExpansion + "StandoffDecimalTag"
-        val StandoffIntervalTag: IRI = KnoraBasePrefixExpansion + "StandoffIntervalTag"
-        val StandoffBooleanTag: IRI = KnoraBasePrefixExpansion + "StandoffBooleanTag"
-        val StandoffLinkTag: IRI = KnoraBasePrefixExpansion + "StandoffLinkTag"
-        val StandoffUriTag: IRI = KnoraBasePrefixExpansion + "StandoffUriTag"
-        val StandoffInternalReferenceTag: IRI = KnoraBasePrefixExpansion + "StandoffInternalReferenceTag"
 
-        val StandardMapping: IRI = "http://rdfh.ch/standoff/mappings/StandardMapping"
 
-        val AdministrativePermission: IRI = KnoraBasePrefixExpansion + "AdministrativePermission"
-        val DefaultObjectAccessPermission: IRI = KnoraBasePrefixExpansion + "DefaultObjectAccessPermission"
-        val ForProject: IRI = KnoraBasePrefixExpansion + "forProject"
-        val ForGroup: IRI = KnoraBasePrefixExpansion + "forGroup"
-        val ForResourceClass: IRI = KnoraBasePrefixExpansion + "forResourceClass"
-        val ForProperty: IRI = KnoraBasePrefixExpansion + "forProperty"
+        /* Admin Instances */
 
-        val SystemProject: IRI = KnoraBasePrefixExpansion + "SystemProject"
+        val SystemProject: IRI = KnoraAdminPrefixExpansion + "SystemProject"
 
         /**
           * The system user is the owner of objects that are created by the system, rather than directly by the user,
           * such as link values for standoff resource references.
           */
-        val SystemUser: IRI = KnoraBasePrefixExpansion + "SystemUser"
+        val SystemUser: IRI = KnoraAdminPrefixExpansion + "SystemUser"
 
         /**
           * Every user not logged-in is per default an anonymous user.
           */
-        val AnonymousUser: IRI = KnoraBasePrefixExpansion + "AnonymousUser"
-
-        val CreationDate: IRI = KnoraBasePrefixExpansion + "creationDate"
-        val ValueCreationDate: IRI = KnoraBasePrefixExpansion + "valueCreationDate"
-
-        val Map: IRI = KnoraBasePrefixExpansion + "Map"
-        val MapEntry: IRI = KnoraBasePrefixExpansion + "MapEntry"
-        val MapEntryKey: IRI = KnoraBasePrefixExpansion + "mapEntryKey"
-        val MapEntryValue: IRI = KnoraBasePrefixExpansion + "mapEntryValue"
-
-        val LastModificationDate: IRI = KnoraBasePrefixExpansion + "lastModificationDate"
+        val AnonymousUser: IRI = KnoraAdminPrefixExpansion + "AnonymousUser"
     }
 
     object Standoff {

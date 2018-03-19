@@ -54,7 +54,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
         "return administrative permissions" in {
             val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
-            val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraBase.ProjectMember, "utf-8")
+            val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
 
             val request = Get(baseApiUrl + s"/admin/permissions/$projectIri/$groupIri")
             val response = singleAwaitingRequest(request, 1.seconds)

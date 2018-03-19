@@ -58,10 +58,10 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
     val permissionLiteral = "RV knora-base:UnknownUser|V knora-base:KnownUser|M knora-base:ProjectMember|CR knora-base:Creator"
 
     val parsedPermissionLiteral = Map(
-        "RV" -> Set(OntologyConstants.KnoraBase.UnknownUser),
-        "V" -> Set(OntologyConstants.KnoraBase.KnownUser),
-        "M" -> Set(OntologyConstants.KnoraBase.ProjectMember),
-        "CR" -> Set(OntologyConstants.KnoraBase.Creator)
+        "RV" -> Set(OntologyConstants.KnoraAdmin.UnknownUser),
+        "V" -> Set(OntologyConstants.KnoraAdmin.KnownUser),
+        "M" -> Set(OntologyConstants.KnoraAdmin.ProjectMember),
+        "CR" -> Set(OntologyConstants.KnoraAdmin.Creator)
     )
 
     "PermissionUtil " should {
@@ -130,7 +130,7 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             val assertions: Seq[(IRI, String)] = Seq(
                 (OntologyConstants.KnoraBase.AttachedToUser, "http://rdfh.ch/users/91e19f1e01"),
                 (OntologyConstants.KnoraBase.AttachedToProject, SharedTestDataV1.INCUNABULA_PROJECT_IRI),
-                (OntologyConstants.KnoraBase.HasPermissions, permissionLiteral)
+                (OntologyConstants.KnoraAdmin.HasPermissions, permissionLiteral)
             )
             PermissionUtilADM.getUserPermissionV1FromAssertions(
                 subjectIri = "http://rdfh.ch/00014b43f902",
@@ -153,11 +153,11 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             val hasPermissionsString = "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser,http://rdfh.ch/groups/customgroup|RV knora-base:UnknownUser"
 
             val permissionsSet = Set(
-                PermissionADM.modifyPermission(OntologyConstants.KnoraBase.Creator),
-                PermissionADM.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                PermissionADM.viewPermission(OntologyConstants.KnoraBase.KnownUser),
+                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.Creator),
+                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
                 PermissionADM.viewPermission("http://rdfh.ch/groups/customgroup"),
-                PermissionADM.restrictedViewPermission(OntologyConstants.KnoraBase.UnknownUser)
+                PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
             )
 
             PermissionUtilADM.parsePermissionsWithType(Some(hasPermissionsString), PermissionType.OAP) should contain allElementsOf permissionsSet
@@ -178,7 +178,7 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
         "build a 'PermissionV1' object" in {
             PermissionUtilADM.buildPermissionObject(
-                name = OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission,
+                name = OntologyConstants.KnoraAdmin.ProjectResourceCreateRestrictedPermission,
                 iris = Set("1", "2", "3")
             ) should equal(
                 Set(
@@ -236,9 +236,9 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             val permissions = Set(
                 PermissionADM.changeRightsPermission("1"),
                 PermissionADM.deletePermission("2"),
-                PermissionADM.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                PermissionADM.modifyPermission(OntologyConstants.KnoraBase.ProjectMember),
-                PermissionADM.viewPermission(OntologyConstants.KnoraBase.KnownUser)
+                PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
+                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser)
             )
 
             val permissionsString = "CR knora-base:Creator,1|D 2|M knora-base:ProjectMember|V knora-base:KnownUser"

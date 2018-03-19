@@ -55,7 +55,7 @@ class OntologiesADME2ESpec extends E2ESpec(OntologiesADME2ESpec.config) with Tri
 
         "return ontologies" in {
             val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
-            val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraBase.ProjectMember, "utf-8")
+            val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
 
             val request = Get(baseApiUrl + s"/admin/ontologies")
             val response = singleAwaitingRequest(request, 1.seconds)

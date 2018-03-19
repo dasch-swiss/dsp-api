@@ -86,7 +86,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
             groups: Seq[Future[GroupADM]] = statements.map {
                 case (groupIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
-                    val projectIri: IRI = propsMap.getOrElse(OntologyConstants.KnoraBase.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")).head.asInstanceOf[IriLiteralV2].value
+                    val projectIri: IRI = propsMap.getOrElse(OntologyConstants.KnoraAdmin.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")).head.asInstanceOf[IriLiteralV2].value
 
                     for {
                         maybeProjectADM: Option[ProjectADM] <- (responderManager ? ProjectGetADM(maybeIri = Some(projectIri), maybeShortname = None, maybeShortcode = None, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
@@ -97,11 +97,11 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
 
                         group = GroupADM(
                             id = groupIri.toString,
-                            name = propsMap.getOrElse(OntologyConstants.KnoraBase.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no name attached")).head.asInstanceOf[StringLiteralV2].value,
-                            description = propsMap.getOrElse(OntologyConstants.KnoraBase.GroupDescription, throw InconsistentTriplestoreDataException(s"Group $groupIri has no description attached")).head.asInstanceOf[StringLiteralV2].value,
+                            name = propsMap.getOrElse(OntologyConstants.KnoraAdmin.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no name attached")).head.asInstanceOf[StringLiteralV2].value,
+                            description = propsMap.getOrElse(OntologyConstants.KnoraAdmin.GroupDescription, throw InconsistentTriplestoreDataException(s"Group $groupIri has no description attached")).head.asInstanceOf[StringLiteralV2].value,
                             project = projectADM,
-                            status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Group $groupIri has no status attached")).head.asInstanceOf[BooleanLiteralV2].value,
-                            selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Group $groupIri has no status attached")).head.asInstanceOf[BooleanLiteralV2].value
+                            status = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Status, throw InconsistentTriplestoreDataException(s"Group $groupIri has no status attached")).head.asInstanceOf[BooleanLiteralV2].value,
+                            selfjoin = propsMap.getOrElse(OntologyConstants.KnoraAdmin.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Group $groupIri has no status attached")).head.asInstanceOf[BooleanLiteralV2].value
                         )
 
                     } yield group
@@ -265,7 +265,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 groupIri = groupIri,
-                groupClassIri = OntologyConstants.KnoraBase.UserGroup,
+                groupClassIri = OntologyConstants.KnoraAdmin.UserGroup,
                 name = createRequest.name,
                 maybeDescription = createRequest.description,
                 projectIri = createRequest.project,
@@ -454,7 +454,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
 
         log.debug("statements2GroupADM - groupIri: {}", groupIri)
 
-        val maybeProjectIri = propsMap.get(OntologyConstants.KnoraBase.BelongsToProject)
+        val maybeProjectIri = propsMap.get(OntologyConstants.KnoraAdmin.BelongsToProject)
         val projectIriFuture: Future[IRI] = maybeProjectIri match {
             case Some(iri) => FastFuture.successful(iri.head.asInstanceOf[IriLiteralV2].value)
             case None => FastFuture.failed(throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached"))
@@ -468,11 +468,11 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
 
                 groupADM: GroupADM = GroupADM(
                     id = groupIri,
-                    name = propsMap.getOrElse(OntologyConstants.KnoraBase.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no groupName attached")).head.asInstanceOf[StringLiteralV2].value,
-                    description = propsMap.getOrElse(OntologyConstants.KnoraBase.GroupDescription, throw InconsistentTriplestoreDataException(s"Group $groupIri has no description attached")).head.asInstanceOf[StringLiteralV2].value,
+                    name = propsMap.getOrElse(OntologyConstants.KnoraAdmin.GroupName, throw InconsistentTriplestoreDataException(s"Group $groupIri has no groupName attached")).head.asInstanceOf[StringLiteralV2].value,
+                    description = propsMap.getOrElse(OntologyConstants.KnoraAdmin.GroupDescription, throw InconsistentTriplestoreDataException(s"Group $groupIri has no description attached")).head.asInstanceOf[StringLiteralV2].value,
                     project = project,
-                    status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Group $groupIri has no status attached")).head.asInstanceOf[BooleanLiteralV2].value,
-                    selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Group $groupIri has no selfJoin attached")).head.asInstanceOf[BooleanLiteralV2].value
+                    status = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Status, throw InconsistentTriplestoreDataException(s"Group $groupIri has no status attached")).head.asInstanceOf[BooleanLiteralV2].value,
+                    selfjoin = propsMap.getOrElse(OntologyConstants.KnoraAdmin.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Group $groupIri has no selfJoin attached")).head.asInstanceOf[BooleanLiteralV2].value
                 )
             } yield Some(groupADM)
         } else {

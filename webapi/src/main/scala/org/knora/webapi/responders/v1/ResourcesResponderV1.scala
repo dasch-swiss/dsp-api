@@ -328,7 +328,7 @@ class ResourcesResponderV1 extends Responder {
                 subjectPermissionLiteral = startNode.nodePermissions,
                 userProfile = graphDataGetRequest.userProfile
             ).isEmpty) {
-                val userID = graphDataGetRequest.userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+                val userID = graphDataGetRequest.userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraAdmin.UnknownUser)
                 throw ForbiddenException(s"User $userID does not have permission to view resource ${graphDataGetRequest.resourceIri}")
             }
 
@@ -417,7 +417,7 @@ class ResourcesResponderV1 extends Responder {
                     rights = userPermissions
                 )
             case None =>
-                val userID = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+                val userID = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraAdmin.UnknownUser)
                 throw ForbiddenException(s"User $userID does not have permission to view resource $resourceIri")
         }
     }
@@ -721,7 +721,7 @@ class ResourcesResponderV1 extends Responder {
                     access = "OK"
                 )
             } else {
-                val userID = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+                val userID = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraAdmin.UnknownUser)
                 throw ForbiddenException(s"User $userID does not have permission to query resource $resourceIri")
             }
         } yield resFullResponse
@@ -828,7 +828,7 @@ class ResourcesResponderV1 extends Responder {
             )
         }
 
-        val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+        val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraAdmin.UnknownUser)
 
         for {
             // Get the resource info even if the user didn't ask for it, so we can check its permissions.
@@ -1895,7 +1895,7 @@ class ResourcesResponderV1 extends Responder {
                 // Check that the user has permission to delete the resource.
                 (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceDeleteRequest.resourceIri, userProfile = resourceDeleteRequest.userProfile, queryOntology = false)
 
-                _ = if (!PermissionUtilADM.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.DeletePermission)) {
+                _ = if (!PermissionUtilADM.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraAdmin.DeletePermission)) {
                     throw ForbiddenException(s"User $userIri does not have permission to mark resource ${resourceDeleteRequest.resourceIri} as deleted")
                 }
 
@@ -1970,8 +1970,8 @@ class ResourcesResponderV1 extends Responder {
             // Check that the user has permission to view the resource.
             (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceIri, userProfile = userProfile, queryOntology = false)
 
-            _ = if (!PermissionUtilADM.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission)) {
-                val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
+            _ = if (!PermissionUtilADM.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraAdmin.RestrictedViewPermission)) {
+                val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraAdmin.UnknownUser)
                 throw ForbiddenException(s"User $userIri does not have permission to view resource $resourceIri")
             }
 
@@ -2004,7 +2004,7 @@ class ResourcesResponderV1 extends Responder {
                 (permissionCode, resourceInfo) <- getResourceInfoV1(resourceIri = resourceIri, userProfile = userProfile, queryOntology = false)
 
                 // check if the given user may change its label
-                _ = if (!PermissionUtilADM.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission)) {
+                _ = if (!PermissionUtilADM.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraAdmin.ModifyPermission)) {
                     throw ForbiddenException(s"User $userIri does not have permission to change the label of resource $resourceIri")
                 }
 
@@ -2225,7 +2225,7 @@ class ResourcesResponderV1 extends Responder {
                             subjectProject = Some(resourceProject),
                             userProfile = userProfile
                         )
-                        PermissionUtilADM.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission)
+                        PermissionUtilADM.impliesV1(userHasPermissionCode = permissionCode, userNeedsPermission = OntologyConstants.KnoraAdmin.RestrictedViewPermission)
                 }
 
                 // Convert the ValueProps objects into FileValueV1 objects

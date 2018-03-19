@@ -546,12 +546,12 @@ case class UserADM(id: IRI,
 
     /* Is the user a member of the SystemAdmin group */
     def isSystemAdmin: Boolean = {
-        permissions.groupsPerProject.getOrElse(OntologyConstants.KnoraBase.SystemProject, List.empty[IRI]).contains(OntologyConstants.KnoraBase.SystemAdmin)
+        permissions.groupsPerProject.getOrElse(OntologyConstants.KnoraAdmin.SystemProject, List.empty[IRI]).contains(OntologyConstants.KnoraAdmin.SystemAdmin)
     }
 
-    def isSystemUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraBase.SystemUser)
+    def isSystemUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.SystemUser)
 
-    def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraBase.AnonymousUser)
+    def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.AnonymousUser)
 
     def fullname: String = givenName + " " + familyName
 
@@ -596,7 +596,7 @@ case class UserADM(id: IRI,
 
             val v1Groups: Seq[IRI] = groups.map(_.id)
 
-            val projectesWithoutSystemProject = projects.filter(_.id != OntologyConstants.KnoraBase.SystemProject)
+            val projectesWithoutSystemProject = projects.filter(_.id != OntologyConstants.KnoraAdmin.SystemProject)
             val projectInfosV1 = projectesWithoutSystemProject.map(_.asProjectInfoV1)
             val projects_info_v1: Map[IRI, ProjectInfoV1] = projectInfosV1.map(_.id).zip(projectInfosV1).toMap[IRI, ProjectInfoV1]
 

@@ -40,13 +40,13 @@ import scala.concurrent.Future
 object ListsResponderADM {
 
     val LIST_IRI_MISSING_ERROR = "List IRI cannot be empty."
-    val LIST_IRI_INVALID_ERROR = "List IRI cannot be empty."
+    val LIST_IRI_INVALID_ERROR = "List IRI is invalid."
     val PROJECT_IRI_MISSING_ERROR = "Project IRI cannot be empty."
     val PROJECT_IRI_INVALID_ERROR = "Project IRI is invalid."
     val LABEL_MISSING_ERROR = "At least one label needs to be supplied."
     val LIST_CREATE_PERMISSION_ERROR = "A list can only be created by the project or system administrator."
     val LIST_CHANGE_PERMISSION_ERROR = "A list can only be changed by the project or system administrator."
-    val REQUEST_NOT_CHANGING_DATA_ERROR = "No data would be changed."
+    val REQUEST_REMOVING_ALL_LABELS_ERROR = "Request would remove all labels, but at least one label is required."
 }
 
 /**
@@ -259,10 +259,10 @@ class ListsResponderADM extends Responder {
                 case (nodeIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
                     ListNodeInfoADM (
                         id = nodeIri.toString,
-                        name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
+                        name = propsMap.get(OntologyConstants.KnoraAdmin.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
                         labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
                         comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
-                        position = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.asInstanceOf[IntLiteralV2].value)
+                        position = propsMap.get(OntologyConstants.KnoraAdmin.ListNodePosition).map(_.head.asInstanceOf[IntLiteralV2].value)
                     )
             }
 
@@ -517,7 +517,7 @@ class ListsResponderADM extends Responder {
                 triplestore = settings.triplestoreType,
                 listIri = listIri,
                 projectIri = project.id,
-                listClassIri = OntologyConstants.KnoraBase.ListNode,
+                listClassIri = OntologyConstants.KnoraAdmin.ListNode,
                 maybeLabels = createListRequest.labels,
                 maybeComments = createListRequest.comments
             ).toString
@@ -550,8 +550,7 @@ class ListsResponderADM extends Responder {
           */
         def listInfoChangeTask(listIri: IRI, changeListRequest: ChangeListInfoApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
             // check if required information is supplied
-            _ <- Future(if (changeListRequest.labels.isEmpty && changeListRequest.comments.isEmpty) throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR))
-            _ = if (!listIri.equals(changeListRequest.listIri)) throw BadRequestException("List IRI in path and payload don't match.")
+            _ <- Future(if (changeListRequest.labels.isEmpty) throw BadRequestException(REQUEST_REMOVING_ALL_LABELS_ERROR))
 
             // check if the requesting user is allowed to perform operation
             _ <- Future(
@@ -585,7 +584,7 @@ class ListsResponderADM extends Responder {
                 triplestore = settings.triplestoreType,
                 listIri = listIri,
                 projectIri = project.id,
-                listClassIri = OntologyConstants.KnoraBase.ListNode,
+                listClassIri = OntologyConstants.KnoraAdmin.ListNode,
                 maybeLabels = changeListRequest.labels,
                 maybeComments = changeListRequest.comments
             ).toString

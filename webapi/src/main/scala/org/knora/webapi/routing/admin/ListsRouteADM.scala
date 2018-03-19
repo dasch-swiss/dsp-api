@@ -27,6 +27,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi.messages.admin.responder.listsmessages._
+import org.knora.webapi.responders.admin.ListsResponderADM.{LIST_IRI_INVALID_ERROR, LIST_IRI_MISSING_ERROR}
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, IRI, NotImplementedException, SettingsImpl}
@@ -137,6 +138,15 @@ object ListsRouteADM extends Authenticator with ListADMJsonProtocol {
                 entity(as[ChangeListInfoApiRequestADM]) { apiRequest =>
                     requestContext =>
                         val requestingUser = getUserADM(requestContext)
+
+                        if (iri.isEmpty) {
+                            throw BadRequestException(LIST_IRI_MISSING_ERROR)
+                        }
+
+                        if (!stringFormatter.isKnoraListIriStr(iri)) {
+                            throw BadRequestException(LIST_IRI_INVALID_ERROR)
+                        }
+
                         val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                         val requestMessage = ListInfoChangeRequestADM(

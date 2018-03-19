@@ -250,7 +250,7 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
 
             val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
 
-            thrown.getMessage should equal (REQUEST_NOT_CHANGING_DATA_ERROR)
+            thrown.getMessage should equal (REQUEST_REMOVING_ALL_LABELS_ERROR)
 
         }
 

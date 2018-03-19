@@ -112,7 +112,7 @@
     <!-- Admin -->
     <logger name="org.knora.webapi.responders.admin.ListsAdminResponderSpec" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.UsersResponderADMSpec" level="INFO"/>
-    <logger name="org.knora.webapi.e2e.admin.ListsADME2ESpec" level="INFO"/>
+    <logger name="org.knora.webapi.e2e.admin.ListsADME2ESpec" level="DEBUG"/>
     <logger name="org.knora.webapi.e2e.admin.ProjectsADME2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.UsersADME2ESpecE2E" level="INFO"/>
 

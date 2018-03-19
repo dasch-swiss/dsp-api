@@ -195,7 +195,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             "return AdministrativePermission for project and group" in {
                 actorUnderTest ! AdministrativePermissionForProjectGroupGetRequestADM(
                     projectIri = IMAGES_PROJECT_IRI,
-                    groupIri = OntologyConstants.KnoraBase.ProjectMember,
+                    groupIri = OntologyConstants.KnoraAdmin.ProjectMember,
                     requestingUser = rootUser
                 )
                 expectMsg(AdministrativePermissionForProjectGroupGetResponseADM(perm002_a1.p))
@@ -225,13 +225,13 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     newAdministrativePermission = NewAdministrativePermissionADM(
                         iri = iri,
                         forProject = IMAGES_PROJECT_IRI,
-                        forGroup = OntologyConstants.KnoraBase.ProjectMember,
+                        forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
                         hasOldPermissions = Set.empty[PermissionADM],
                         hasNewPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
                     ),
                     requestingUser = rootUser
                 )
-                expectMsg(Failure(DuplicateValueException(s"Permission for project: '${IMAGES_PROJECT_IRI}' and group: '${OntologyConstants.KnoraBase.ProjectMember}' combination already exists.")))
+                expectMsg(Failure(DuplicateValueException(s"Permission for project: '${IMAGES_PROJECT_IRI}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists.")))
             }
 
             "create and return an administrative permission " ignore {}
@@ -276,7 +276,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             "return DefaultObjectAccessPermission for project and group" in {
                 actorUnderTest ! DefaultObjectAccessPermissionGetRequestADM(
                     projectIRI = INCUNABULA_PROJECT_IRI,
-                    groupIRI = Some(OntologyConstants.KnoraBase.ProjectMember),
+                    groupIRI = Some(OntologyConstants.KnoraAdmin.ProjectMember),
                     resourceClassIRI = None,
                     propertyIRI = None,
                     requestingUser = rootUser
@@ -465,11 +465,11 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             }
 
             "return a combined and max set of permissions (default object access permissions) defined on the supplied groups (helper method used in queries before)" in {
-                val groups = List("http://rdfh.ch/groups/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
+                val groups = List("http://rdfh.ch/groups/images-reviewer", s"${OntologyConstants.KnoraAdmin.ProjectMember}", s"${OntologyConstants.KnoraAdmin.ProjectAdmin}")
                 val expected = Set(
-                        PermissionADM.changeRightsPermission(OntologyConstants.KnoraBase.Creator),
-                        PermissionADM.viewPermission(OntologyConstants.KnoraBase.KnownUser),
-                        PermissionADM.modifyPermission(OntologyConstants.KnoraBase.ProjectMember)
+                        PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
+                        PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
+                        PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
                     )
                 val result: Set[PermissionADM] = Await.result(underlyingActorUnderTest.defaultObjectAccessPermissionsForGroupsGetADM(IMAGES_PROJECT_IRI, groups), 1.seconds)
                 result should equal(expected)

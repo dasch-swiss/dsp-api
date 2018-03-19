@@ -37,7 +37,7 @@ object SharedTestDataADM {
     /** System Admin Data                **/
     /** ***********************************/
 
-    val SYSTEM_PROJECT_IRI = OntologyConstants.KnoraBase.SystemProject // built-in project
+    val SYSTEM_PROJECT_IRI = OntologyConstants.KnoraAdmin.SystemProject // built-in project
 
     /* represents the user profile of 'root' as found in admin-data.ttl */
     def rootUser = UserADM(
@@ -54,7 +54,7 @@ object SharedTestDataADM {
         sessionId = None,
         permissions = PermissionsDataADM(
             groupsPerProject = Map(
-                SYSTEM_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.SystemAdmin}")
+                SYSTEM_PROJECT_IRI -> List(s"${OntologyConstants.KnoraAdmin.SystemAdmin}")
             ),
             administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionADM]]
         )
@@ -75,7 +75,7 @@ object SharedTestDataADM {
         sessionId = None,
         permissions = PermissionsDataADM(
             groupsPerProject = Map(
-                SYSTEM_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.SystemAdmin}")
+                SYSTEM_PROJECT_IRI -> List(s"${OntologyConstants.KnoraAdmin.SystemAdmin}")
             )
         )
     )
@@ -131,8 +131,8 @@ object SharedTestDataADM {
         sessionId = None,
         permissions = PermissionsDataADM(
             groupsPerProject = Map(
-                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}"),
-                IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
+                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}", s"${OntologyConstants.KnoraAdmin.ProjectAdmin}"),
+                IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer", s"${OntologyConstants.KnoraAdmin.ProjectMember}", s"${OntologyConstants.KnoraAdmin.ProjectAdmin}")
             ),
             administrativePermissionsPerProject = Map(
                 INCUNABULA_PROJECT_IRI -> Set(
@@ -173,7 +173,7 @@ object SharedTestDataADM {
         sessionId = None,
         permissions = PermissionsDataADM(
             groupsPerProject = Map(
-                IMAGES_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
+                IMAGES_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember, OntologyConstants.KnoraAdmin.ProjectAdmin)
             ),
             administrativePermissionsPerProject = Map(
                 IMAGES_PROJECT_IRI -> Set(
@@ -199,7 +199,7 @@ object SharedTestDataADM {
         sessionId = None,
         permissions = PermissionsDataADM(
             groupsPerProject = Map(
-                IMAGES_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember)
+                IMAGES_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember)
             ),
             administrativePermissionsPerProject = Map(
                 IMAGES_PROJECT_IRI -> Set(
@@ -224,7 +224,7 @@ object SharedTestDataADM {
         sessionId = None,
         permissions = PermissionsDataADM(
             groupsPerProject = Map(
-                IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer", s"${OntologyConstants.KnoraBase.ProjectMember}")
+                IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer", s"${OntologyConstants.KnoraAdmin.ProjectMember}")
             ),
             administrativePermissionsPerProject = Map(
                 IMAGES_PROJECT_IRI -> Set(
@@ -304,7 +304,7 @@ object SharedTestDataADM {
         sessionId = None,
         permissions = PermissionsDataADM(
             groupsPerProject = Map(
-                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}", s"${OntologyConstants.KnoraBase.ProjectAdmin}")
+                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}", s"${OntologyConstants.KnoraAdmin.ProjectAdmin}")
             ),
             administrativePermissionsPerProject = Map(
                 INCUNABULA_PROJECT_IRI -> Set(
@@ -330,7 +330,7 @@ object SharedTestDataADM {
         sessionId = None,
         permissions = PermissionsDataADM(
             groupsPerProject = Map(
-                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}")
             ),
             administrativePermissionsPerProject = Map(
                 INCUNABULA_PROJECT_IRI -> Set(
@@ -355,7 +355,7 @@ object SharedTestDataADM {
         sessionId = None,
         permissions = PermissionsDataADM(
             groupsPerProject = Map(
-                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+                INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}")
             ),
             administrativePermissionsPerProject = Map(
                 INCUNABULA_PROJECT_IRI -> Set(
@@ -402,7 +402,7 @@ object SharedTestDataADM {
         sessionId = None,
         permissions = PermissionsDataADM(
             groupsPerProject = Map(
-                ANYTHING_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+                ANYTHING_PROJECT_IRI -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}")
             ),
             administrativePermissionsPerProject = Map(
                 ANYTHING_PROJECT_IRI -> Set(
@@ -427,7 +427,7 @@ object SharedTestDataADM {
         sessionId = None,
         permissions = PermissionsDataADM(
             groupsPerProject = Map(
-                ANYTHING_PROJECT_IRI -> List(s"${OntologyConstants.KnoraBase.ProjectMember}")
+                ANYTHING_PROJECT_IRI -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}")
             ),
             administrativePermissionsPerProject = Map(
                 ANYTHING_PROJECT_IRI -> Set(
