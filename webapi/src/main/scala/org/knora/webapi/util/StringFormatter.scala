@@ -235,7 +235,7 @@ object StringFormatter {
         this.synchronized {
             generalInstance match {
                 case Some(_) => ()
-                case None => generalInstance = Some(new StringFormatter(Some(s"${settings.knoraApiHost}:${settings.knoraApiHttpPort}")))
+                case None => generalInstance = Some(new StringFormatter(Some(settings.externalKnoraApiHostPort)))
             }
         }
     }

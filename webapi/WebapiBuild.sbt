@@ -118,7 +118,9 @@ lazy val webapi = (project in file(".")).
                 // copy the configuration files to config directory
                 contentOf("configs").toMap.mapValues("config/" + _) ++
                 // copy configuration files to config directory
-                contentOf("src/main/resources").toMap.mapValues("config/" + _)
+                contentOf("src/main/resources").toMap.mapValues("config/" + _) ++
+                // copy the aspectj weaver jar
+                contentOf("vendor").toMap.mapValues("aspectjweaver/" + _)
             },
             // the bash scripts classpath only needs the fat jar
             scriptClasspath := Seq( (assemblyJarName in assembly).value ),
@@ -199,8 +201,8 @@ lazy val webApiLibs = Seq(
 lazy val library =
     new {
         object Version {
-            val akkaBase = "2.5.9"
-            val akkaHttp = "10.1.0-RC2"
+            val akkaBase = "2.5.11"
+            val akkaHttp = "10.1.0"
             val jena = "3.4.0"
             val aspectj = "1.8.13"
             val kamon = "1.0.0"
@@ -279,7 +281,7 @@ lazy val library =
         val scalaJava8Compat       = "org.scala-lang.modules"        % "scala-java8-compat_2.12"  % "0.8.0"
 
         // provides akka jackson (json) support
-        val akkaHttpCirce          = "de.heikoseeberger"            %% "akka-http-circe"          % "1.20.0-RC1"
+        val akkaHttpCirce          = "de.heikoseeberger"            %% "akka-http-circe"          % "1.20.0"
         val jacksonScala           = "com.fasterxml.jackson.module" %% "jackson-module-scala"     % "2.9.4"
 
         val jsonldJava             = "com.github.jsonld-java"        % "jsonld-java"              % "0.11.1"
