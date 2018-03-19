@@ -655,41 +655,6 @@ knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
 
 
 
-:Map rdf:type owl:Class ;
-
-    rdfs:subClassOf [ rdf:type owl:Restriction ;
-                      owl:onProperty :lastModificationDate ;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                    ] ;
-
-    rdfs:comment "Represents a simple map of key-value pairs"@en .
-
-
-
-:MapEntry rdf:type owl:Class ;
-
-    rdfs:subClassOf [ rdf:type owl:Restriction ;
-                      owl:onProperty :isInMap ;
-                      owl:cardinality "1"^^xsd:nonNegativeInteger
-                    ],
-                    [ rdf:type owl:Restriction ;
-                      owl:onProperty :mapEntryKey ;
-                      owl:cardinality "1"^^xsd:nonNegativeInteger
-                    ],
-                    [ rdf:type owl:Restriction ;
-                      owl:onProperty :mapEntryValue ;
-                      owl:cardinality "1"^^xsd:nonNegativeInteger
-                    ],
-                    [ rdf:type owl:Restriction ;
-                      owl:onProperty :lastModificationDate ;
-                      owl:cardinality "1"^^xsd:nonNegativeInteger
-                    ];
-
-    rdfs:comment "Represents a key-value pair in a Map"@en .
-
-
-
-
 #################################################################
 #
 #    Individuals
