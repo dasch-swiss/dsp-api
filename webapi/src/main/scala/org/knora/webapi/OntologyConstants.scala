@@ -891,6 +891,9 @@ object OntologyConstants {
             KnoraBase.ObjectDatatypeConstraint -> KnoraApiV2WithValueObjects.ObjectType
         ),
         (ApiV2Simple, InternalSchema) -> Map(
+            // Not all types in ApiV2Simple can be converted here to types in KnoraBase. For example,
+            // to know whether an xsd:string corresponds to a knora-base:TextValue, or whether it should remain
+            // an xsd:string, we would need to know the context in which it is used, which we don't have here.
             KnoraApiV2Simple.SubjectType -> KnoraBase.SubjectClassConstraint,
             KnoraApiV2Simple.ObjectType -> KnoraBase.ObjectClassConstraint,
             KnoraApiV2Simple.Date -> KnoraBase.DateValue,
