@@ -2657,7 +2657,7 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
                     case Some(objectTypeObj) =>
                         // Yes. Is there a corresponding type in the API v2 simple ontology?
                         if (OntologyConstants.CorrespondingIris((InternalSchema, ApiV2Simple)).get(objectTypeObj.toString).nonEmpty) {
-                            // Yes. Make this a datatype property.
+                            // Yes. The corresponding type must be a datatype, so make this a datatype property.
                             (predicates - rdfTypeIri) +
                                 (rdfTypeIri -> PredicateInfoV2(
                                     predicateIri = rdfTypeIri,
