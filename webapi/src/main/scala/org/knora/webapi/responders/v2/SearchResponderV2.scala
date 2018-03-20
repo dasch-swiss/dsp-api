@@ -1926,9 +1926,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             if (valueObjectIris.nonEmpty) {
                 // value objects are to be queried
 
+                val mainAndDependentResourcesValueObjectsValuePattern = ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri)))
+
                 // WHERE patterns for statements about the main and dependent resources' values
                 val wherePatternsForMainAndDependentResourcesValues = Seq(
-                    ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri))),
                     StatementPattern.makeInferred(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri), obj = mainAndDependentResourceValueObject),
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceVar, pred = mainAndDependentResourceValueProp, obj = mainAndDependentResourceValueObject),
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)),
@@ -1944,7 +1945,6 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 // WHERE patterns for standoff belonging to value objects (if any)
                 val wherePatternsForStandoff = Seq(
-                    ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri))),
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
                     StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
                 )
@@ -1957,7 +1957,6 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 // WHERE patterns for list node pointed to by value objects (if any)
                 val wherePatternsForListNode = Seq(
-                    ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri))),
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.ListValue.toSmartIri)),
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri), obj = listNode),
                     StatementPattern.makeExplicit(subj = listNode, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), obj = listNodeLabel)
@@ -1975,6 +1974,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     ),
                     whereClause = WhereClause(
                         Seq(
+                            mainAndDependentResourcesValueObjectsValuePattern, // put VALUES pattern for main and dependent resource value objects outer scope so it can be referred to in the UNION blocks
                             UnionPattern(
                                 Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff, wherePatternsForListNode)
                             )
@@ -2170,7 +2170,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 val triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
                 //println("++++++++")
-                // println(triplestoreSpecificQuery.toSparql)
+                //println(triplestoreSpecificQuery.toSparql)
 
                 for {
                     searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
