@@ -2656,27 +2656,15 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
                 maybeObjectType match {
                     case Some(objectTypeObj) =>
                         // Yes. Is there a corresponding type in the API v2 simple ontology?
-                        OntologyConstants.KnoraApiV2Simple.ValueClassesToSimplifiedTypes.get(objectTypeObj.toString) match {
-                            case Some(simplifiedType) =>
-                                // Yes. Is it a datatype?
-                                val isDatatype = simplifiedType.startsWith(OntologyConstants.Xsd.XsdPrefixExpansion) ||
-                                    (KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraApiClassesToAdd.get(simplifiedType.toSmartIri) match {
-                                        case Some(simpleClass: ReadClassInfoV2) if simpleClass.entityInfoContent.getRdfType.toString == OntologyConstants.Rdfs.Datatype => true
-                                        case _ => false
-                                    })
-
-                                if (isDatatype) {
-                                    // Yes. Make this a datatype property.
-                                    (predicates - rdfTypeIri) +
-                                        (rdfTypeIri -> PredicateInfoV2(
-                                            predicateIri = rdfTypeIri,
-                                            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.DatatypeProperty.toSmartIri))
-                                        ))
-                                } else {
-                                    predicates
-                                }
-
-                            case None => predicates
+                        if (OntologyConstants.CorrespondingIris((InternalSchema, ApiV2Simple)).get(objectTypeObj.toString).nonEmpty) {
+                            // Yes. Make this a datatype property.
+                            (predicates - rdfTypeIri) +
+                                (rdfTypeIri -> PredicateInfoV2(
+                                    predicateIri = rdfTypeIri,
+                                    objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.DatatypeProperty.toSmartIri))
+                                ))
+                        } else {
+                            predicates
                         }
                     case None => predicates
                 }

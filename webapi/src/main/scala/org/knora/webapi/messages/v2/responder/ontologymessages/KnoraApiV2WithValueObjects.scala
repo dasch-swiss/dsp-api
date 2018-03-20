@@ -288,29 +288,6 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
-    private val ForbiddenResource: ReadClassInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2WithValueObjects.ForbiddenResource,
-        isResourceClass = true,
-        subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."
-                )
-            )
-        ),
-        directCardinalities = Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.HasComment -> Cardinality.MustHaveSome
-        )
-    )
-
     private val ValueAsString: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString,
         propertyType = OntologyConstants.Owl.ObjectProperty,
@@ -1385,11 +1362,7 @@ object KnoraApiV2WithValueObjects {
         /**
           * Classes that need to be added to `knora-base`, after converting it to the [[ApiV2WithValueObjects]] schema, to obtain `knora-api`.
           */
-        val KnoraApiClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Set(
-            ForbiddenResource
-        ).map {
-            classInfo => classInfo.entityInfoContent.classIri -> classInfo
-        }.toMap
+        val KnoraApiClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2]
 
         /**
           * Properties that need to be added to `knora-base`, after converting it to the [[ApiV2WithValueObjects]] schema, to obtain `knora-api`.

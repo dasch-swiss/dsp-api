@@ -130,7 +130,7 @@ object OntologyConstants {
         val Resource: IRI = KnoraBasePrefixExpansion + "Resource"
         val Representation: IRI = KnoraBasePrefixExpansion + "Representation"
         val AudioRepresentation: IRI = KnoraBasePrefixExpansion + "AudioRepresentation"
-        val DDDRepresentation: IRI = KnoraBasePrefixExpansion + "DDDrepresentation"
+        val DDDRepresentation: IRI = KnoraBasePrefixExpansion + "DDDRepresentation"
         val DocumentRepresentation: IRI = KnoraBasePrefixExpansion + "DocumentRepresentation"
         val MovingImageRepresentation: IRI = KnoraBasePrefixExpansion + "MovingImageRepresentation"
         val StillImageRepresentation: IRI = KnoraBasePrefixExpansion + "StillImageRepresentation"
@@ -846,47 +846,6 @@ object OntologyConstants {
         val HasStandoffLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasStandoffLinkTo"
         val CreationDate: IRI = KnoraApiV2PrefixExpansion + "creationDate"
         val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
-
-        /**
-          * A map of internal knora-base value types to the types that represent them in the simplified API.
-          */
-        val ValueClassesToSimplifiedTypes: Map[IRI, IRI] = Map(
-            KnoraBase.TextValue -> Xsd.String,
-            KnoraBase.IntValue -> Xsd.Integer,
-            KnoraBase.BooleanValue -> Xsd.Boolean,
-            KnoraBase.UriValue -> Xsd.Uri,
-            KnoraBase.DecimalValue -> Xsd.Decimal,
-            KnoraBase.DateValue -> Date,
-            KnoraBase.ColorValue -> Color,
-            KnoraBase.GeomValue -> Geom,
-            KnoraBase.ListValue -> Xsd.String,
-            KnoraBase.IntervalValue -> Interval,
-            KnoraBase.GeonameValue -> Geoname,
-            KnoraBase.FileValue -> File,
-            KnoraBase.StillImageFileValue -> File,
-            KnoraBase.MovingImageFileValue -> File,
-            KnoraBase.AudioFileValue -> File,
-            KnoraBase.DDDFileValue -> File,
-            KnoraBase.TextFileValue -> File,
-            KnoraBase.DocumentFileValue -> File
-        )
-
-        /**
-          * A map of simplified API types to internal knora-base value types.
-          */
-        val SimplifiedTypesToValueClasses: Map[IRI, IRI] = Map(
-            Xsd.String -> KnoraBase.TextValue,
-            Xsd.Integer -> KnoraBase.IntValue,
-            Xsd.Boolean -> KnoraBase.BooleanValue,
-            Xsd.Uri -> KnoraBase.UriValue,
-            Xsd.Decimal -> KnoraBase.DecimalValue,
-            Date -> KnoraBase.DateValue,
-            Color -> KnoraBase.ColorValue,
-            Geom -> KnoraBase.GeomValue,
-            Interval -> KnoraBase.IntervalValue,
-            Geoname -> KnoraBase.GeonameValue,
-            File -> KnoraBase.FileValue
-        )
     }
 
     /**
@@ -895,37 +854,63 @@ object OntologyConstants {
       */
     val CorrespondingIris: Map[(OntologySchema, OntologySchema), Map[IRI, IRI]] = Map(
         (InternalSchema, ApiV2Simple) -> Map(
-            OntologyConstants.KnoraBase.SubjectClassConstraint -> OntologyConstants.KnoraApiV2Simple.SubjectType,
-            OntologyConstants.KnoraBase.ObjectClassConstraint -> OntologyConstants.KnoraApiV2Simple.ObjectType,
-            OntologyConstants.KnoraBase.ObjectDatatypeConstraint -> OntologyConstants.KnoraApiV2Simple.ObjectType,
-            OntologyConstants.KnoraBase.HasFileValue -> OntologyConstants.KnoraApiV2Simple.HasFile,
-            OntologyConstants.KnoraBase.HasStillImageFileValue -> OntologyConstants.KnoraApiV2Simple.HasStillImageFile,
-            OntologyConstants.KnoraBase.HasMovingImageFileValue -> OntologyConstants.KnoraApiV2Simple.HasMovingImageFile,
-            OntologyConstants.KnoraBase.HasAudioFileValue -> OntologyConstants.KnoraApiV2Simple.HasAudioFile,
-            OntologyConstants.KnoraBase.HasDDDFileValue -> OntologyConstants.KnoraApiV2Simple.HasDDDFile,
-            OntologyConstants.KnoraBase.HasTextFileValue -> OntologyConstants.KnoraApiV2Simple.HasTextFile,
-            OntologyConstants.KnoraBase.HasDocumentFileValue -> OntologyConstants.KnoraApiV2Simple.HasDocumentFile
+            // All the values of this map must be either properties or datatypes. PropertyInfoContentV2.toOntologySchema
+            // relies on this assumption.
+            KnoraBase.SubjectClassConstraint -> KnoraApiV2Simple.SubjectType,
+            KnoraBase.ObjectClassConstraint -> KnoraApiV2Simple.ObjectType,
+            KnoraBase.ObjectDatatypeConstraint -> KnoraApiV2Simple.ObjectType,
+            KnoraBase.TextValue -> Xsd.String,
+            KnoraBase.IntValue -> Xsd.Integer,
+            KnoraBase.BooleanValue -> Xsd.Boolean,
+            KnoraBase.UriValue -> Xsd.Uri,
+            KnoraBase.DecimalValue -> Xsd.Decimal,
+            KnoraBase.DateValue -> KnoraApiV2Simple.Date,
+            KnoraBase.ColorValue -> KnoraApiV2Simple.Color,
+            KnoraBase.GeomValue -> KnoraApiV2Simple.Geom,
+            KnoraBase.ListValue -> Xsd.String,
+            KnoraBase.IntervalValue -> KnoraApiV2Simple.Interval,
+            KnoraBase.GeonameValue -> KnoraApiV2Simple.Geoname,
+            KnoraBase.FileValue -> KnoraApiV2Simple.File,
+            KnoraBase.StillImageFileValue -> KnoraApiV2Simple.File,
+            KnoraBase.MovingImageFileValue -> KnoraApiV2Simple.File,
+            KnoraBase.AudioFileValue -> KnoraApiV2Simple.File,
+            KnoraBase.DDDFileValue -> KnoraApiV2Simple.File,
+            KnoraBase.TextFileValue -> KnoraApiV2Simple. File,
+            KnoraBase.DocumentFileValue -> KnoraApiV2Simple.File,
+            KnoraBase.HasFileValue -> KnoraApiV2Simple.HasFile,
+            KnoraBase.HasStillImageFileValue -> KnoraApiV2Simple.HasStillImageFile,
+            KnoraBase.HasMovingImageFileValue -> KnoraApiV2Simple.HasMovingImageFile,
+            KnoraBase.HasAudioFileValue -> KnoraApiV2Simple.HasAudioFile,
+            KnoraBase.HasDDDFileValue -> KnoraApiV2Simple.HasDDDFile,
+            KnoraBase.HasTextFileValue -> KnoraApiV2Simple.HasTextFile,
+            KnoraBase.HasDocumentFileValue -> KnoraApiV2Simple.HasDocumentFile
         ),
         (InternalSchema, ApiV2WithValueObjects) -> Map(
-            OntologyConstants.KnoraBase.SubjectClassConstraint -> OntologyConstants.KnoraApiV2WithValueObjects.SubjectType,
-            OntologyConstants.KnoraBase.ObjectClassConstraint -> OntologyConstants.KnoraApiV2WithValueObjects.ObjectType,
-            OntologyConstants.KnoraBase.ObjectDatatypeConstraint -> OntologyConstants.KnoraApiV2WithValueObjects.ObjectType
+            KnoraBase.SubjectClassConstraint -> KnoraApiV2WithValueObjects.SubjectType,
+            KnoraBase.ObjectClassConstraint -> KnoraApiV2WithValueObjects.ObjectType,
+            KnoraBase.ObjectDatatypeConstraint -> KnoraApiV2WithValueObjects.ObjectType
         ),
         (ApiV2Simple, InternalSchema) -> Map(
-            OntologyConstants.KnoraApiV2Simple.SubjectType -> OntologyConstants.KnoraBase.SubjectClassConstraint,
-            OntologyConstants.KnoraApiV2Simple.ObjectType -> OntologyConstants.KnoraBase.ObjectClassConstraint,
-            OntologyConstants.KnoraApiV2Simple.HasFile -> OntologyConstants.KnoraBase.HasFileValue,
-            OntologyConstants.KnoraApiV2Simple.HasStillImageFile -> OntologyConstants.KnoraBase.HasStillImageFileValue,
-            OntologyConstants.KnoraApiV2Simple.HasMovingImageFile -> OntologyConstants.KnoraBase.HasMovingImageFileValue,
-            OntologyConstants.KnoraApiV2Simple.HasAudioFile -> OntologyConstants.KnoraBase.HasAudioFileValue,
-            OntologyConstants.KnoraApiV2Simple.HasDDDFile -> OntologyConstants.KnoraBase.HasDDDFileValue,
-            OntologyConstants.KnoraApiV2Simple.HasTextFile -> OntologyConstants.KnoraBase.HasTextFileValue,
-            OntologyConstants.KnoraApiV2Simple.HasDocumentFile -> OntologyConstants.KnoraBase.HasDocumentFileValue
+            KnoraApiV2Simple.SubjectType -> KnoraBase.SubjectClassConstraint,
+            KnoraApiV2Simple.ObjectType -> KnoraBase.ObjectClassConstraint,
+            KnoraApiV2Simple.Date -> KnoraBase.DateValue,
+            KnoraApiV2Simple.Color -> KnoraBase.ColorValue,
+            KnoraApiV2Simple.Geom -> KnoraBase.GeomValue,
+            KnoraApiV2Simple.Interval -> KnoraBase.IntervalValue,
+            KnoraApiV2Simple.Geoname -> KnoraBase.GeonameValue,
+            KnoraApiV2Simple.File -> KnoraBase.FileValue,
+            KnoraApiV2Simple.HasFile -> KnoraBase.HasFileValue,
+            KnoraApiV2Simple.HasStillImageFile -> KnoraBase.HasStillImageFileValue,
+            KnoraApiV2Simple.HasMovingImageFile -> KnoraBase.HasMovingImageFileValue,
+            KnoraApiV2Simple.HasAudioFile -> KnoraBase.HasAudioFileValue,
+            KnoraApiV2Simple.HasDDDFile -> KnoraBase.HasDDDFileValue,
+            KnoraApiV2Simple.HasTextFile -> KnoraBase.HasTextFileValue,
+            KnoraApiV2Simple.HasDocumentFile -> KnoraBase.HasDocumentFileValue
 
         ),
         (ApiV2WithValueObjects, InternalSchema) -> Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.SubjectType -> OntologyConstants.KnoraBase.SubjectClassConstraint,
-            OntologyConstants.KnoraApiV2WithValueObjects.ObjectType -> OntologyConstants.KnoraBase.ObjectClassConstraint
+            KnoraApiV2WithValueObjects.SubjectType -> KnoraBase.SubjectClassConstraint,
+            KnoraApiV2WithValueObjects.ObjectType -> KnoraBase.ObjectClassConstraint
         )
     )
 

@@ -37,28 +37,6 @@ object KnoraApiV2Simple {
         label = Some("The simplified knora-api ontology")
     )
 
-    private val ForbiddenResource: ReadClassInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraApiV2Simple.ForbiddenResource,
-        subClassOf = Set(OntologyConstants.KnoraApiV2Simple.Resource),
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see."
-                )
-            )
-        ),
-        directCardinalities = Map(
-            OntologyConstants.KnoraApiV2Simple.HasComment -> Cardinality.MustHaveSome
-        )
-    )
-
     private val Result: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2Simple.Result,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -180,181 +158,6 @@ object KnoraApiV2Simple {
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
                     LanguageCodes.EN -> "Specifies the required type of the objects of a property"
-                )
-            )
-        )
-    )
-
-    private val HasFile: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2Simple.HasFile,
-        propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2Simple.Representation),
-        objectType = Some(OntologyConstants.KnoraApiV2Simple.File),
-        subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.HasValue),
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.DE -> "hat Datei",
-                    LanguageCodes.EN -> "has file",
-                    LanguageCodes.FR -> "a fichier",
-                    LanguageCodes.IT -> "ha file"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Connects a Representation to a file"
-                )
-            )
-        )
-    )
-
-    private val HasStillImageFile: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2Simple.HasStillImageFile,
-        propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2Simple.StillImageRepresentation),
-        objectType = Some(OntologyConstants.KnoraApiV2Simple.File),
-        subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.HasFile),
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.DE -> "hat Bilddatei",
-                    LanguageCodes.EN -> "has image file",
-                    LanguageCodes.FR -> "a fichier d'image",
-                    LanguageCodes.IT -> "ha file immagine"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Connects a Representation to an image file"
-                )
-            )
-        )
-    )
-
-    private val HasMovingImageFile: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2Simple.HasMovingImageFile,
-        propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2Simple.MovingImageRepresentation),
-        objectType = Some(OntologyConstants.KnoraApiV2Simple.File),
-        subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.HasFile),
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.DE -> "hat Filmdatei",
-                    LanguageCodes.EN -> "has movie file",
-                    LanguageCodes.FR -> "a fichier de film",
-                    LanguageCodes.IT -> "ha file film"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Connects a Representation to a moving image file"
-                )
-            )
-        )
-    )
-
-    private val HasAudioFile: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2Simple.HasAudioFile,
-        propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2Simple.AudioRepresentation),
-        objectType = Some(OntologyConstants.KnoraApiV2Simple.File),
-        subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.HasFile),
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.DE -> "hat Audiodatei",
-                    LanguageCodes.EN -> "has audio file",
-                    LanguageCodes.FR -> "a fichier d'audio",
-                    LanguageCodes.IT -> "ha file audio"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Connects a Representation to an audio file"
-                )
-            )
-        )
-    )
-
-    private val HasDDDFile: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2Simple.HasDDDFile,
-        propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2Simple.DDDRepresentation),
-        objectType = Some(OntologyConstants.KnoraApiV2Simple.File),
-        subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.HasFile),
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.DE -> "hat 3D-Datei",
-                    LanguageCodes.EN -> "has 3D file",
-                    LanguageCodes.FR -> "a fichier 3D",
-                    LanguageCodes.IT -> "ha file 3D"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Connects a Representation to a 3D file"
-                )
-            )
-        )
-    )
-
-    private val HasTextFile: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2Simple.HasTextFile,
-        propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2Simple.TextRepresentation),
-        objectType = Some(OntologyConstants.KnoraApiV2Simple.File),
-        subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.HasFile),
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.DE -> "hat Textdatei",
-                    LanguageCodes.EN -> "has text file",
-                    LanguageCodes.FR -> "a fichier de texte",
-                    LanguageCodes.IT -> "ha file testo"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Connects a Representation to a text file"
-                )
-            )
-        )
-    )
-
-    private val HasDocumentFile: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2Simple.HasDocumentFile,
-        propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraApiV2Simple.DocumentRepresentation),
-        objectType = Some(OntologyConstants.KnoraApiV2Simple.File),
-        subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.HasFile),
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.DE -> "hat Dokument",
-                    LanguageCodes.EN -> "has document",
-                    LanguageCodes.FR -> "a document",
-                    LanguageCodes.IT -> "ha documento"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Connects a Representation to a document"
                 )
             )
         )
@@ -483,30 +286,6 @@ object KnoraApiV2Simple {
             OntologyConstants.KnoraApiV2Simple.HasIncomingLink -> Cardinality.MayHaveMany
         )
 
-        private val AudioRepresentationCardinalities = Map(
-            OntologyConstants.KnoraApiV2Simple.HasAudioFile -> Cardinality.MustHaveSome
-        )
-
-        private val DDDRepresentationCardinalities = Map(
-            OntologyConstants.KnoraApiV2Simple.HasDDDFile -> Cardinality.MustHaveSome
-        )
-
-        private val DocumentRepresentationCardinalities = Map(
-            OntologyConstants.KnoraApiV2Simple.HasDocumentFile -> Cardinality.MustHaveSome
-        )
-
-        private val MovingImageRepresentationCardinalities = Map(
-            OntologyConstants.KnoraApiV2Simple.HasMovingImageFile -> Cardinality.MustHaveSome
-        )
-
-        private val StillImageRepresentationCardinalities = Map(
-            OntologyConstants.KnoraApiV2Simple.HasStillImageFile -> Cardinality.MustHaveSome
-        )
-
-        private val TextRepresentationCardinalities = Map(
-            OntologyConstants.KnoraApiV2Simple.HasTextFile -> Cardinality.MustHaveSome
-        )
-
         /**
           * Properties to remove from `knora-base` before converting it to the [[ApiV2Simple]] schema.
           */
@@ -516,13 +295,6 @@ object KnoraApiV2Simple {
             OntologyConstants.KnoraBase.HasPermissions,
             OntologyConstants.KnoraBase.AttachedToUser,
             OntologyConstants.KnoraBase.AttachedToProject,
-            OntologyConstants.KnoraBase.HasFileValue,
-            OntologyConstants.KnoraBase.HasAudioFileValue,
-            OntologyConstants.KnoraBase.HasDDDFileValue,
-            OntologyConstants.KnoraBase.HasDocumentFileValue,
-            OntologyConstants.KnoraBase.HasMovingImageFileValue,
-            OntologyConstants.KnoraBase.HasStillImageFileValue,
-            OntologyConstants.KnoraBase.HasTextFileValue,
             OntologyConstants.KnoraBase.IsDeleted,
             OntologyConstants.KnoraBase.DeleteDate,
             OntologyConstants.KnoraBase.DeleteComment,
@@ -651,12 +423,6 @@ object KnoraApiV2Simple {
             OntologyConstants.KnoraBase.LinkValue,
             OntologyConstants.KnoraBase.GeonameValue,
             OntologyConstants.KnoraBase.FileValue,
-            OntologyConstants.KnoraBase.AudioFileValue,
-            OntologyConstants.KnoraBase.DDDFileValue,
-            OntologyConstants.KnoraBase.DocumentFileValue,
-            OntologyConstants.KnoraBase.StillImageFileValue,
-            OntologyConstants.KnoraBase.MovingImageFileValue,
-            OntologyConstants.KnoraBase.TextFileValue,
             OntologyConstants.KnoraBase.DefaultObjectAccessPermission,
             OntologyConstants.KnoraBase.XSLTransformation,
             OntologyConstants.KnoraBase.MappingElement,
@@ -682,13 +448,7 @@ object KnoraApiV2Simple {
           * added to the specified classes to obtain `knora-api`.
           */
         val KnoraApiCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map(
-            OntologyConstants.KnoraBase.Resource -> ResourceCardinalites,
-            OntologyConstants.KnoraBase.AudioRepresentation -> AudioRepresentationCardinalities,
-            OntologyConstants.KnoraBase.DDDRepresentation -> DDDRepresentationCardinalities,
-            OntologyConstants.KnoraBase.DocumentRepresentation -> DocumentRepresentationCardinalities,
-            OntologyConstants.KnoraBase.MovingImageRepresentation -> MovingImageRepresentationCardinalities,
-            OntologyConstants.KnoraBase.StillImageRepresentation -> StillImageRepresentationCardinalities,
-            OntologyConstants.KnoraBase.TextRepresentation -> TextRepresentationCardinalities
+            OntologyConstants.KnoraBase.Resource -> ResourceCardinalites
         ).map {
             case (classIri, cardinalities) =>
                 classIri.toSmartIri.toOntologySchema(ApiV2Simple) -> cardinalities.map {
@@ -701,7 +461,6 @@ object KnoraApiV2Simple {
           * Classes that need to be added to `knora-base`, after converting it to the [[ApiV2Simple]] schema, to obtain `knora-api`.
           */
         val KnoraApiClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Set(
-            ForbiddenResource,
             File,
             Date,
             Color,
@@ -721,14 +480,7 @@ object KnoraApiV2Simple {
             HasValue,
             ResourceProperty,
             SubjectType,
-            ObjectType,
-            HasFile,
-            HasStillImageFile,
-            HasMovingImageFile,
-            HasAudioFile,
-            HasDDDFile,
-            HasTextFile,
-            HasDocumentFile
+            ObjectType
         ).map {
             propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
         }.toMap
