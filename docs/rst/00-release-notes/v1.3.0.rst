@@ -37,8 +37,8 @@ New features:
 1. More support for salsah-gui elements and attributes in ontologies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- Serve the ``salsah-gui`` ontology in API v2 in the default schema.
-- Show ``salsah-gui:guiElement`` and ``salsah-gui:guiAttribute`` when serving ontologies in API v2 in the default schema.
+- Serve the ``salsah-gui`` ontology in API v2 in the complex schema.
+- Show ``salsah-gui:guiElement`` and ``salsah-gui:guiAttribute`` when serving ontologies in API v2 in the complex schema.
 - Allow ``salsah-gui:guiElement`` and ``salsah-gui:guiAttribute`` to be included in new property definitions created via API v2.
 - Change ``salsah-gui`` so that GraphDB's consistency checker can check the use of ``guiElement`` and ``guiAttribute``.
 - Changes to ``application.conf``. The ``sipi`` and ``web-api`` sections have received a big update, adding separate settings
@@ -87,7 +87,7 @@ New features:
 Bugfixes:
 ---------
 
-- When API v2 served ``knora-api`` (default schema), ``salsah-gui:guiElement`` and ``salsah-gui:guiAttribute`` were not shown in properties in that ontology.
+- When API v2 served ``knora-api`` (complex schema), ``salsah-gui:guiElement`` and ``salsah-gui:guiAttribute`` were not shown in properties in that ontology.
 - The predicate ``salsah-gui:guiOrder`` was not accepted when creating a property via API v2.
 
 .. _release: https://github.com/dhlab-basel/Knora/releases/tag/v1.3.0
