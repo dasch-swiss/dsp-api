@@ -1974,7 +1974,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     ),
                     whereClause = WhereClause(
                         Seq(
-                            mainAndDependentResourcesValueObjectsValuePattern, // put VALUES pattern for main and dependent resource value objects outer scope so it can be referred to in the UNION blocks
+                            mainAndDependentResourcesValueObjectsValuePattern, // put VALUES pattern for main and dependent resource value objects in the WHERE clause's scope so it can be referred to in the UNION blocks
                             UnionPattern(
                                 Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff, wherePatternsForListNode)
                             )
