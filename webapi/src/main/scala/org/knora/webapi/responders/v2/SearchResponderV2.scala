@@ -44,6 +44,8 @@ import scala.concurrent.Future
   */
 object SearchResponderV2Constants {
 
+    val forbiddenResourceIri: IRI = s"http://${KnoraIdUtil.IriDomain}/permissions/forbiddenResource"
+
     /**
       * Constants for fulltext query.
       */
@@ -86,8 +88,6 @@ object SearchResponderV2Constants {
 
         val listNode: QueryVariable = QueryVariable("listNode")
         val listNodeLabel: QueryVariable = QueryVariable("listNodeLabel")
-
-        val forbiddenResourceIri: IRI = s"http://${KnoraIdUtil.IriDomain}/permissions/forbiddenResource"
 
     }
 
@@ -1141,7 +1141,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @return the forbidden resource.
       */
     private def getForbiddenResource(userProfile: UserProfileV1) = {
-        import SearchResponderV2Constants.ExtendedSearchConstants.forbiddenResourceIri
+        import SearchResponderV2Constants.forbiddenResourceIri
 
         for {
 
