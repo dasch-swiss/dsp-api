@@ -598,27 +598,35 @@ class OntologyV2R2RSpec extends R2RSpec {
             """.stripMargin
 
             val expectedProperties: Set[SmartIri] = Set(
-                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherThingValue",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasBlueThing",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasThingPicture",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasDate",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasBoolean",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasThingPictureValue",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasText",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasColor",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasInterval",
-                "http://0.0.0.0:3333/ontology/anything/v2#isPartOfOtherThing",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasDecimal",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherThing",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasBlueThingValue",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasInteger",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasListItem",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasRichtext",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasUri",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasName",
-                "http://0.0.0.0:3333/ontology/anything/v2#isPartOfOtherThingValue",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherListItem"
-            ).map(_.toSmartIri) ++ KnoraApiV2WithValueObjects.Resource.allCardinalities.keySet
+                "http://0.0.0.0:3333/ontology/anything/v2#hasBlueThing".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasName".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasInterval".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherThingValue".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasThingPicture".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherListItem".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasListItem".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherThing".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasThingPictureValue".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#isPartOfOtherThingValue".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasDate".toSmartIri,
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#lastModificationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#creationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#isPartOfOtherThing".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasText".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasDecimal".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasBoolean".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasColor".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasBlueThingValue".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasRichtext".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasUri".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasInteger".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
+            )
 
             // Convert the submitted JSON-LD to an InputOntologiesV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -677,7 +685,16 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |}
             """.stripMargin
 
-            val expectedProperties: Set[SmartIri] = KnoraApiV2WithValueObjects.Resource.allCardinalities.keySet
+            val expectedProperties: Set[SmartIri] = Set(
+                "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#lastModificationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#creationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
+            )
 
             // Convert the submitted JSON-LD to an InputOntologiesV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -894,8 +911,17 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |}
             """.stripMargin
 
-            val expectedProperties: Set[SmartIri] = KnoraApiV2WithValueObjects.Resource.allCardinalities.keySet +
-                "http://0.0.0.0:3333/ontology/anything/v2#hasNothingness".toSmartIri
+            val expectedProperties: Set[SmartIri] = Set(
+                "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasNothingness".toSmartIri,
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#lastModificationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#creationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
+            )
 
             // Convert the submitted JSON-LD to an InputOntologiesV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -1008,8 +1034,17 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |}
             """.stripMargin
 
-            val expectedProperties: Set[SmartIri] = KnoraApiV2WithValueObjects.Resource.allCardinalities.keySet +
-                "http://0.0.0.0:3333/ontology/anything/v2#hasEmptiness".toSmartIri
+            val expectedProperties: Set[SmartIri] = Set(
+                "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#lastModificationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#creationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasEmptiness".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
+            )
 
             // Convert the submitted JSON-LD to an InputOntologiesV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -1074,7 +1109,16 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |}
             """.stripMargin
 
-            val expectedProperties: Set[SmartIri] = KnoraApiV2WithValueObjects.Resource.allCardinalities.keySet
+            val expectedProperties: Set[SmartIri] = Set(
+                "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#lastModificationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#creationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
+            )
 
             Put("/v2/ontologies/cardinalities", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)

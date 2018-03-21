@@ -67,14 +67,14 @@ object ResponseCheckerR2RV2 {
       */
     private def compareValues(expectedValue: Map[IRI, Any], receivedValue: Map[IRI, Any]) = {
 
-        assert(expectedValue == receivedValue)
+        assert(expectedValue == receivedValue, s"expected $expectedValue, received $receivedValue")
 
         // TODO: recurse over target resource if it is a LinkValue
 
     }
 
     /**
-      * Compares the reveied resource to the expected.
+      * Compares the received resource to the expected.
       *
       * @param expectedResource the expected resource.
       * @param receivedResource the received resource.
@@ -87,7 +87,7 @@ object ResponseCheckerR2RV2 {
 
         assert(expectedResource(name) == receivedResource(name), s"$name did not match for ${receivedResource(jsonldId)}")
 
-        assert(expectedResource.keySet -- noPropertyKeys == receivedResource.keySet -- noPropertyKeys, s"property Iris are different for resource ${receivedResource(jsonldId)}")
+        assert(expectedResource.keySet -- noPropertyKeys == receivedResource.keySet -- noPropertyKeys, s"property Iris are different for resource ${receivedResource(jsonldId)}: expected ${expectedResource.keySet -- noPropertyKeys}, received ${receivedResource.keySet -- noPropertyKeys}")
 
         (expectedResource -- noPropertyKeys).foreach {
             case (propIri: IRI, expectedValuesForProp: Any) =>
@@ -126,7 +126,7 @@ object ResponseCheckerR2RV2 {
     }
 
     /**
-      * Compares the reveived to the expected response.
+      * Compares the received to the expected response.
       *
       * @param expectedResponseAsScala expected response.
       * @param receivedResponseAsScala received response.

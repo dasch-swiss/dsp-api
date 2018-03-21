@@ -353,7 +353,7 @@ object ConstructResponseUtilV2 {
                 }
 
                 // create a virtual property representing an incoming link
-                val incomingProps: (IRI, Seq[ValueRdfData]) = OntologyConstants.KnoraBase.HasIncomingLinks -> incomingValueProps.values.toSeq.flatten.map {
+                val incomingProps: (IRI, Seq[ValueRdfData]) = OntologyConstants.KnoraBase.HasIncomingLink -> incomingValueProps.values.toSeq.flatten.map {
                     (linkValue: ValueRdfData) =>
 
                         // get the source of the link value (it points to the resource that is currently processed)
