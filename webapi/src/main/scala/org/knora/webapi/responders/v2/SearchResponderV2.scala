@@ -48,47 +48,90 @@ object SearchResponderV2Constants {
 
     /**
       * Constants for fulltext query.
+      *
+      * These constants are used to create SPARQL queries to be executed by the triplstore and to process the results that are returned.
       */
     object FullTextSearchConstants {
+
+        // SPARQL variable representing the concatenated IRIs of value objects matching the search criteria
+        val valueObjectConcatVar: QueryVariable = QueryVariable("valueObjectConcat")
+
+        // SPARQL variable representing the resources matching the search criteria
         val resourceVar: QueryVariable = QueryVariable("resource")
+
+        // SPARQL variable representing the predicates of a resource
         val resourcePropVar: QueryVariable = QueryVariable("resourceProp")
+
+        // SPARQL variable representing the objects of a resource
         val resourceObjectVar: QueryVariable = QueryVariable("resourceObj")
-        val resourceValueObject: QueryVariable = QueryVariable("resourceValueObject")
+
+        // SPARQL variable representing the property pointing to a value object from a resource
         val resourceValueProp: QueryVariable = QueryVariable("resourceValueProp")
+
+        // SPARQL variable representing the value objects of a resource
+        val resourceValueObject: QueryVariable = QueryVariable("resourceValueObject")
+
+        // SPARQL variable representing the predicates of a value object
         val resourceValueObjectProp: QueryVariable = QueryVariable("resourceValueObjectProp")
+
+        // SPARQL variable representing the objects of a value object
         val resourceValueObjectObj: QueryVariable = QueryVariable("resourceValueObjectObj")
 
+        // SPARQL variable representing the standoff nodes of a (text) value object
         val standoffNodeVar: QueryVariable = QueryVariable("standoffNode")
-        val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
-        val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
 
-        val valueObjectConcatVar: QueryVariable = QueryVariable("valueObjectConcat")
+        // SPARQL variable representing the predicates of a standoff node of a (text) value object
+        val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
+
+        // SPARQL variable representing the objects of a standoff node of a (text) value object
+        val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
     }
 
     /**
       * Constants for extended search.
+      *
+      * These constants are used to create SPARQL queries to be executed by the triplstore and to process the results that are returned.
       */
     object ExtendedSearchConstants {
 
-        // variables representing the main resource and its properties
+        // SPARQL variable representing the main resource and its properties
         val mainResourceVar: QueryVariable = QueryVariable("mainResourceVar")
 
-        // variables representing main and dependent resources. direct assertions about them as well as their values
+        // SPARQL variable representing main and dependent resources
         val mainAndDependentResourceVar: QueryVariable = QueryVariable("mainAndDependentResource")
+
+        // SPARQL variable representing the predicates of the main and dependent resources
         val mainAndDependentResourcePropVar: QueryVariable = QueryVariable("mainAndDependentResourceProp")
+
+        // SPARQL variable representing the objects of the main and dependent resources
         val mainAndDependentResourceObjectVar: QueryVariable = QueryVariable("mainAndDependentResourceObj")
+
+        // SPARQL variable representing the value objects of the main and dependent resources
         val mainAndDependentResourceValueObject: QueryVariable = QueryVariable("mainAndDependentResourceValueObject")
+
+        // SPARQL variable representing the properties pointing to value objects from the main and dependent resources
         val mainAndDependentResourceValueProp: QueryVariable = QueryVariable("mainAndDependentResourceValueProp")
+
+        // SPARQL variable representing the predicates of value objects of the main and dependent resources
         val mainAndDependentResourceValueObjectProp: QueryVariable = QueryVariable("mainAndDependentResourceValueObjectProp")
+
+        // SPARQL variable representing the objects of value objects of the main and dependent resources
         val mainAndDependentResourceValueObjectObj: QueryVariable = QueryVariable("mainAndDependentResourceValueObjectObj")
 
+        // SPARQL variable representing the standoff nodes of a (text) value object
         val standoffNodeVar: QueryVariable = QueryVariable("standoffNode")
+
+        // SPARQL variable representing the predicates of a standoff node of a (text) value object
         val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
+
+        // SPARQL variable representing the objects of a standoff node of a (text) value object
         val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
 
+        // SPARQL variable representing a list node pointed to by a (list) value object
         val listNode: QueryVariable = QueryVariable("listNode")
-        val listNodeLabel: QueryVariable = QueryVariable("listNodeLabel")
 
+        // SPARQL variable representing the label of a list node pointed to by a (list) value object
+        val listNodeLabel: QueryVariable = QueryVariable("listNodeLabel")
     }
 
 }
