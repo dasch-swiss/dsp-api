@@ -1630,9 +1630,9 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#DDDrepresentation
+###  http://www.knora.org/ontology/knora-base#DDDRepresentation
 
-:DDDrepresentation rdf:type owl:Class ;
+:DDDRepresentation rdf:type owl:Class ;
 
                    rdfs:subClassOf :Representation  ,
                                 [ rdf:type owl:Restriction ;

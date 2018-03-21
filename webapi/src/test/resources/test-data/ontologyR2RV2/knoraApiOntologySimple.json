@@ -82,8 +82,8 @@
           }
         }
       },
-      "knora-api:DDDrepresentation" : {
-        "@id" : "knora-api:DDDrepresentation",
+      "knora-api:DDDRepresentation" : {
+        "@id" : "knora-api:DDDRepresentation",
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a file containg 3D data",
         "rdfs:label" : "Representation (3D)",
