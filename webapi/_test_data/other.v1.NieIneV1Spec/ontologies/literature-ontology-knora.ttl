@@ -1,0 +1,125 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix frbroo: <http://iflastandards.info/ns/fr/frbr/frbroo/>.
+@prefix event: <http://www.knora.org/ontology/event#>.
+@prefix human: <http://www.knora.org/ontology/human#>.
+@prefix lang: <http://www.knora.org/ontology/language#>.
+@prefix concept: <http://www.knora.org/ontology/concept#>.
+@prefix text: <http://www.knora.org/ontology/text#>.
+@prefix infocar: <http://www.knora.org/ontology/information-carrier#>.
+@prefix publish: <http://www.knora.org/ontology/publishing#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#>.
+@prefix litera: <http://www.knora.org/ontology/literature#>.
+
+<http://www.knora.org/ontology/literature>
+	a owl:Ontology;
+	dct:title "An ontology about literature"@en;
+	dct:description """Formal description of literature, its general subclasses, related classes and properties."""@en;
+	dct:creator "Hans Cools, software developer, NIE-INE, Basel University, Switzerland"@en;
+	dct:contributor "Roberta Padlina, NIE-INE, Basel University, Switzerland"@en;
+	dct:publisher "Basel University, Switzerland"@en.
+
+#
+# CLASSES
+#
+
+litera:Literature
+	a owl:Class;
+	rdfs:label "literature"@en, "Literatur"@de;
+	rdfs:comment """Written text expression as art."""@en;
+	rdfs:subClassOf text:Expression, text:WrittenText.
+
+litera:Lyric
+	a owl:Class;
+	rdfs:label "lyric"@en, "Lyrik"@de; # synonyms: poetry - Poetik, Poesie, Dichtung
+	rdfs:comment """Literature in vers"""@en;
+	rdfs:subClassOf litera:Literature, [
+		a owl:Restriction; owl:onProperty text:hasStructure; owl:someValuesFrom text:Verse], [
+		a owl:Restriction; owl:onProperty text:hasStructure; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text:hasStructureValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+litera:Epic
+	a owl:Class;
+	rdfs:label "epic"@en, "Epik"@de;  # synonyms: prose - Prosa
+	rdfs:comment """Narrative literature without metrical structure."""@en;
+	rdfs:subClassOf litera:Literature.
+
+# litera:Drama - Dramatik
+
+litera:Fiction
+	a owl:Class;
+	rdfs:label "literary fiction"@en, "literarische Fiktion"@de;
+	rdfs:comment """Literature having content derived from imagination."""@en;
+	rdfs:subClassOf litera:Literature, concept:Fiction.
+
+litera:NonFiction
+	a owl:Class;
+	rdfs:label "literary non-fiction"@en, "sachliche Literatur"@de;
+	rdfs:comment """Literature having content based on fact."""@en;
+	rdfs:subClassOf litera:Literature, concept:NonFiction.
+
+litera:Poem
+	a owl:Class;
+	rdfs:label "poem"@en, "Gedicht"@de;
+	rdfs:comment """Lyric expression."""@en, """lyrische Expression."""@de; #*
+	rdfs:subClassOf litera:Lyric.
+
+litera:VerseNovel
+	a owl:Class;
+	rdfs:label "verse novel"@en, "Versroman"@de;
+	rdfs:comment """Epic in verse and with novel-length."""@en;
+	rdfs:subClassOf litera:Epic, litera:Fiction, [
+		a owl:Restriction; owl:onProperty text:hasStructure; owl:someValuesFrom text:Verse], [
+		a owl:Restriction; owl:onProperty text:hasStructure; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text:hasStructureValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+litera:Novel
+	a owl:Class;
+	rdfs:label "novel"@en, "Roman"@de;
+	rdfs:comment """Fiction epic in prose."""@en;
+	rdfs:subClassOf litera:Epic, litera:Fiction, [
+		a owl:Restriction; owl:onProperty text:hasStructure; owl:someValuesFrom text:Prose], [
+		a owl:Restriction; owl:onProperty text:hasStructure; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text:hasStructureValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+litera:Poet
+	a owl:Class;
+	rdfs:label "poet"@en, "Dichter"@de;
+	rdfs:comment """Author of a poem."""@en;
+	rdfs:subClassOf text:Author.
+
+litera:Novelist
+	a owl:Class;
+	rdfs:label "novelist"@en, "Romanschriftsteller"@de;
+	rdfs:comment """Author of a novel."""@en;
+	rdfs:subClassOf text:Author.
+
+# Atharvaveda: Pada-Text - text:Strophe -> litera:Hymne -> Buch
+
+#
+# PROPERTIES
+#
+
+litera:hasPoet
+	a owl:ObjectProperty;
+	rdfs:label "has poet"@en, "hat Dichter"@de;
+	rdfs:comment """Relating a poem to a person who authored it."""@en;
+#	rdfs:domain litera:Poem;
+#	rdfs:range [rdfs:subClassOf human:Person, [a owl:Restriction; owl:onProperty event:hasRole; owl:someValuesFrom litera:Poet]];
+	rdfs:subPropertyOf text:hasAuthor;
+	knora-base:subjectClassConstraint litera:Poem;
+	knora-base:objectClassConstraint human:Person.
+
+litera:hasPoetValue
+	a owl:ObjectProperty;
+	rdfs:label "has poet - statement"@en, "hat Dichter - Festlegung"@de;
+	rdfs:comment """Relating a poem to a reification statement of the relation between the poem and a person who authored it."""@en;
+	rdfs:subPropertyOf text:hasAuthorValue;
+	knora-base:subjectClassConstraint litera:Poem;
+	knora-base:objectClassConstraint knora-base:LinkValue.

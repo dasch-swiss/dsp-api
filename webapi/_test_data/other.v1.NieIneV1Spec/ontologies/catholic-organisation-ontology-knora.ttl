@@ -1,0 +1,48 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix event: <http://www.knora.org/ontology/event#>.
+@prefix human: <http://www.knora.org/ontology/human#>.
+@prefix org: <http://www.knora.org/ontology/organisation#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+@prefix cathorg: <http://www.knora.org/ontology/catholic-organisation#>.
+
+<http://www.knora.org/ontology/catholic-organisation>
+	a owl:Ontology;
+	dct:title "An ontology about catholic organisation"@en;
+	dct:description """Formal description of catholic organisation, general subclasses, related classes, properties, and instances."""@en;
+	dct:creator "Hans Cools, software developer, NIE-INE, Basel University, Switzerland"@en;
+	dct:contributor "Prof. Dr. Ueli Zahnd, Faculty of Theology, University of Basel, Switzerland"@en, "Gabriel Müller, Faculty of Theology, University of Basel, Switzerland"@en.
+
+#
+# CLASSES
+#
+
+#* Is the catholic community as a whole an organisation?
+
+cathorg:Organisation
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/catholic-organisation#>;
+	rdfs:label "catholic organisation"@en;
+	rdfs:comment """Organisation following a catholic belief."""@en;
+	rdfs:subClassOf org:ReligiousOrganisation.
+
+cathorg:Order #* ? all Roman Catholic Church
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/catholic-organisation#>;
+	rdfs:label "catholic order"@en, "katholische Orden"@de;
+	rdfs:comment """Catholic organisation whose member is male and celibatarian, founded by... ."""@en; #*
+	rdfs:subClassOf cathorg:Organisation.
+
+cathorg:SecularClergy
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/catholic-organisation#>;
+	rdfs:label "secular clergy"@en;
+	rdfs:comment """Catholic organisation whose member does not belong to a catholic order."""@en;
+	rdfs:subClassOf cathorg:Organisation.
+
+#
+# PROPERTIES
+#
