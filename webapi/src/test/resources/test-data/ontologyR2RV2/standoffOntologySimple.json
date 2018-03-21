@@ -9,10 +9,6 @@
         "rdfs:comment" : "Represents a section that is quoted from another source in a text",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
         }, {
@@ -50,10 +46,6 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents bold text in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffVisualTag", {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
@@ -93,10 +85,6 @@
         "rdfs:comment" : "Represents a linebreak",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
         }, {
@@ -134,10 +122,6 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents the title of a work in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
@@ -177,10 +161,6 @@
         "rdfs:comment" : "Represents a section of computer source code in a text",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
         }, {
@@ -218,10 +198,6 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a header of level 1 in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
@@ -261,10 +237,6 @@
         "rdfs:comment" : "Represents a header of level 2 in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
         }, {
@@ -302,10 +274,6 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a header of level 3 in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
@@ -345,10 +313,6 @@
         "rdfs:comment" : "Represents a header of level 4 in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
         }, {
@@ -386,10 +350,6 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a header of level 5 in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
@@ -429,10 +389,6 @@
         "rdfs:comment" : "Represents a header of level 6 in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
         }, {
@@ -471,10 +427,6 @@
         "rdfs:comment" : "Represents a hyperlink in a text",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/simple/v2#StandoffUriTag", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
         }, {
@@ -507,10 +459,6 @@
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasUUID"
         }, {
           "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#valueHasUri"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:maxCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/standoff/simple/v2#standoffHyperlinkTagHasTarget"
         } ]
@@ -520,10 +468,6 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents italics in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffVisualTag", {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
@@ -563,10 +507,6 @@
         "rdfs:comment" : "Represents a line to seperate content in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffVisualTag", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
         }, {
@@ -604,10 +544,6 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a list element in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
@@ -647,10 +583,6 @@
         "rdfs:comment" : "Represents an ordered list in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
         }, {
@@ -688,10 +620,6 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a paragraph in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
@@ -731,10 +659,6 @@
         "rdfs:comment" : "Represents a preformatted content in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffVisualTag", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
         }, {
@@ -772,10 +696,6 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents the root node if the TextValue has been created from XML",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/simple/v2#StandoffTag", {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
@@ -819,10 +739,6 @@
         "rdfs:comment" : "Represents struck text in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffVisualTag", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
         }, {
@@ -860,10 +776,6 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents structural markup information in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/simple/v2#StandoffTag", {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
@@ -903,10 +815,6 @@
         "rdfs:comment" : "Represents subscript in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffVisualTag", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
         }, {
@@ -944,10 +852,6 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents superscript in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffVisualTag", {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
@@ -987,10 +891,6 @@
         "rdfs:comment" : "Represents a table body in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
         }, {
@@ -1028,10 +928,6 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a cell in a table",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
@@ -1071,10 +967,6 @@
         "rdfs:comment" : "Represents a row in a table",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
         }, {
@@ -1112,10 +1004,6 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents a table in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
@@ -1155,10 +1043,6 @@
         "rdfs:comment" : "Represents underlined text in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffVisualTag", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
         }, {
@@ -1197,10 +1081,6 @@
         "rdfs:comment" : "Represents an unordered list in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/simple/v2#StandoffStructuralTag", {
           "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
-          "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
         }, {
@@ -1238,10 +1118,6 @@
         "@type" : "owl:Class",
         "rdfs:comment" : "Represents visual markup information in a TextValue",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/simple/v2#StandoffTag", {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffParentClassConstraint"
-        }, {
           "@type" : "owl:Restriction",
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#standoffTagHasEnd"
@@ -1282,16 +1158,14 @@
         "@type" : "owl:DatatypeProperty",
         "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
         "knora-api:subjectType" : "http://api.knora.org/ontology/standoff/simple/v2#StandoffHyperlinkTag",
-        "rdfs:comment" : "describes the target settings of a hyperlink",
-        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#objectCannotBeMarkedAsDeleted"
+        "rdfs:comment" : "describes the target settings of a hyperlink"
       },
       "standoff:standoffRootTagHasDocumentType" : {
         "@id" : "standoff:standoffRootTagHasDocumentType",
         "@type" : "owl:DatatypeProperty",
         "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
         "knora-api:subjectType" : "http://api.knora.org/ontology/standoff/simple/v2#StandoffRootTag",
-        "rdfs:comment" : "describes the document type",
-        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/simple/v2#objectCannotBeMarkedAsDeleted"
+        "rdfs:comment" : "describes the document type"
       }
     },
     "rdfs:label" : "standoff"
