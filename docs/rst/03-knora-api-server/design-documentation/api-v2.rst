@@ -48,7 +48,7 @@ API Schemas
 The types used in the triplestore are not exposed directly in the API. Instead, they are
 mapped onto API 'schemas'. Two schemas are currently provided.
 
-- A default schema, which is suitable both for reading and for editing data. The default schema
+- A complex schema, which is suitable both for reading and for editing data. The complex schema
   represents values primarily as complex objects.
 
 - A simple schema, which is suitable for reading data but not for editing it. The simple schema

@@ -17,7 +17,7 @@
         }
       }
     },
-    "rdfs:label" : "The simplified knora-api ontology"
+    "rdfs:label" : "The knora-api ontology in the simple schema"
   },
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

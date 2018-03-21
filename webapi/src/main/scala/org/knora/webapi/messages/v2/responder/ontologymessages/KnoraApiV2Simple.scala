@@ -34,7 +34,7 @@ object KnoraApiV2Simple {
 
     val OntologyMetadata = OntologyMetadataV2(
         ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri,
-        label = Some("The simplified knora-api ontology")
+        label = Some("The knora-api ontology in the simple schema")
     )
 
     private val Result: ReadPropertyInfoV2 = makeProperty(
