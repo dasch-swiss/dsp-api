@@ -15,8 +15,7 @@
 # You should have received a copy of the GNU Affero General Public
 # License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-@prefix : <http://www.knora.org/ontology/knora-admin#> .
-@prefix knora-base <http://www.knora.org/ontology/knora-base#> .
+@prefix : <http://www.knora.org/ontology/knora-base#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -24,11 +23,9 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix foaf:<http://xmlns.com/foaf/0.1/> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
-@base <http://www.knora.org/ontology/knora-admin> .
+@base <http://www.knora.org/ontology/knora-base> .
 
-<http://www.knora.org/ontology/knora-admin> rdf:type owl:Ontology ;
-            rdfs:label "The knora admin ontology" ;
-            knora-base:lastModificationDate "2018-03-19T14:58:00Z"^^xsd:dateTimeStamp .
+<http://www.knora.org/ontology/knora-base> rdf:type owl:Ontology .
 
 #################################################################
 #
@@ -38,151 +35,151 @@
 
 
 
-###  http://www.knora.org/ontology/knora-admin#attachedToProject
+###  http://www.knora.org/ontology/knora-base#attachedToProject
 
 :attachedToProject rdf:type owl:ObjectProperty ;
 
-                   rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+                   rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                    rdfs:comment "Connects a Resource or a ListNode (only the root node) to a project"@en ;
 
-                   knora-base:objectClassConstraint :knoraProject .
+                   :objectClassConstraint :knoraProject .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#attachedToUser
+###  http://www.knora.org/ontology/knora-base#attachedToUser
 
 :attachedToUser rdf:type owl:ObjectProperty ;
 
-                rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                 rdfs:comment "Connects a Resource or a Value to a user"@en ;
 
-                knora-base:objectClassConstraint :User .
+                :objectClassConstraint :User .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#belongsToInstitution
+###  http://www.knora.org/ontology/knora-base#belongsToInstitution
 
 :belongsToInstitution rdf:type owl:ObjectProperty ;
 
-               rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+               rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                rdfs:comment "Indicates which Institution a knoraProject belongs to"@en ;
 
-               knora-base:subjectClassConstraint :knoraProject ;
+               :subjectClassConstraint :knoraProject ;
 
-               knora-baseknora-base:objectClassConstraint :Institution .
+               :objectClassConstraint :Institution .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#belongsToProject
+###  http://www.knora.org/ontology/knora-base#belongsToProject
 
 :belongsToProject rdf:type owl:ObjectProperty ;
 
-                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                   rdfs:comment "Indicates which knoraProject a UserGroup belongs to"@en ;
 
-                  knora-base:subjectClassConstraint :UserGroup ;
+                  :subjectClassConstraint :UserGroup ;
 
-                  knora-base:objectClassConstraint :knoraProject .
+                  :objectClassConstraint :knoraProject .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#currentproject
+###  http://www.knora.org/ontology/knora-base#currentproject
 
 :currentproject rdf:type owl:ObjectProperty ;
 
-                rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                 rdfs:comment "This property indicates, which is the \"current project\" of a given user. A user can be part of any number of projects, but only one can be the active project."@en ;
 
-                knora-base:subjectClassConstraint :User ;
+                :subjectClassConstraint :User ;
 
-                knora-base:objectClassConstraint :knoraProject .
+                :objectClassConstraint :knoraProject .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#isInGroup
+###  http://www.knora.org/ontology/knora-base#isInGroup
 
 :isInGroup rdf:type owl:ObjectProperty ;
 
-           rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+           rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
            rdfs:comment "The given User is part of the given UserGroup"@en ;
 
            rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> ;
 
-           knora-base:subjectClassConstraint :User ;
+           :subjectClassConstraint :User ;
 
-           knora-base:objectClassConstraint :UserGroup .
+           :objectClassConstraint :UserGroup .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#isInProject
+###  http://www.knora.org/ontology/knora-base#isInProject
 
 :isInProject rdf:type owl:ObjectProperty ;
 
-             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
              rdfs:comment "The given User is part of the given knoraProject"@en ;
 
              rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> ;
 
-             knora-base:subjectClassConstraint :User ;
+             :subjectClassConstraint :User ;
 
-             knora-base:objectClassConstraint :knoraProject .
+             :objectClassConstraint :knoraProject .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#isAdminForProject
+###  http://www.knora.org/ontology/knora-base#isAdminForProject
 
 :isInProjectAdminGroup rdf:type owl:ObjectProperty ;
 
-                       rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+                       rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                        rdfs:comment "The given User is part of the given Project's ProjectAdmin group"@en ;
 
                        rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> ;
 
-                       knora-base:subjectClassConstraint :User ;
+                       :subjectClassConstraint :User ;
 
-                       knora-base:objectClassConstraint :knoraProject .
+                       :objectClassConstraint :knoraProject .
 
 
 
-knora-base:isInMap rdf:type owl:ObjectProperty ;
+:isInMap rdf:type owl:ObjectProperty ;
 
-    rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+    rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-    knora-base:subjectClassConstraint knora-base:MapEntry;
+    :subjectClassConstraint :MapEntry;
 
-    knora-base:objectClassConstraint knora-base:Map ;
+    :objectClassConstraint :Map ;
 
     rdfs:comment "Associates a MapEntry with a Map"@en .
 
 
 
-knora-base:mapEntryKey rdf:type owl:DatatypeProperty ;
+:mapEntryKey rdf:type owl:DatatypeProperty ;
 
-    rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+    rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-    knora-base:subjectClassConstraint knora-base:MapEntry;
+    :subjectClassConstraint :MapEntry;
 
-    knora-base:objectDatatypeConstraint xsd:string ;
+    :objectDatatypeConstraint xsd:string ;
 
     rdfs:comment "Represents the key of a MapEntry"@en .
 
 
 
-knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
+:mapEntryValue rdf:type owl:DatatypeProperty ;
 
-    rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+    rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-    knora-base:subjectClassConstraint knora-base:MapEntry;
+    :subjectClassConstraint :MapEntry;
 
-    knora-base:objectDatatypeConstraint xsd:string ;
+    :objectDatatypeConstraint xsd:string ;
 
     rdfs:comment "Represents the value of a MapEntry"@en .
 
@@ -197,15 +194,15 @@ knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
 
 
 
-###  http://www.knora.org/ontology/knora-admin#groupName
+###  http://www.knora.org/ontology/knora-base#groupName
 
 :groupName rdf:type owl:DatatypeProperty ;
 
-             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
              rdfs:comment "The group's name"@en ;
 
-             knora-base:subjectClassConstraint :UserGroup ;
+             :subjectClassConstraint :UserGroup ;
 
              :objectDatatypeConstraint xsd:string ;
 
@@ -213,131 +210,131 @@ knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
 
 
 
-###  http://www.knora.org/ontology/knora-admin#groupDescription
+###  http://www.knora.org/ontology/knora-base#groupDescription
 
 :groupDescription rdf:type owl:DatatypeProperty ;
 
-             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
              rdfs:comment "A description of a user group"@en ;
 
              rdfs:subPropertyOf :description ;
 
-             knora-base:subjectClassConstraint :UserGroup ;
+             :subjectClassConstraint :UserGroup ;
 
              :objectDatatypeConstraint xsd:string .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#hasSelfJoinEnabled
+###  http://www.knora.org/ontology/knora-base#hasSelfJoinEnabled
 
 :hasSelfJoinEnabled rdf:type owl:DatatypeProperty ;
 
-            rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
             rdfs:comment "Exists and is true if users can add themselves to the project or group"@en ;
 
-            # No knora-base:subjectClassConstraint, because this can be used with :knoraProject or :UserGroup.
+            # No :subjectClassConstraint, because this can be used with :knoraProject or :UserGroup.
 
             :objectDatatypeConstraint xsd:boolean .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#institutionName
+###  http://www.knora.org/ontology/knora-base#institutionName
 
 :institutionName rdf:type owl:DatatypeProperty ;
 
-             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
              rdfs:comment "The institutions's name"@en ;
 
              rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> ;
 
-             knora-base:subjectClassConstraint :Institution ;
+             :subjectClassConstraint :Institution ;
 
              :objectDatatypeConstraint xsd:string .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#institutionDescription
+###  http://www.knora.org/ontology/knora-base#institutionDescription
 
 :institutionDescription rdf:type owl:DatatypeProperty ;
 
-            rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
             rdfs:comment "A description of a user group"@en ;
 
             rdfs:subPropertyOf :description ;
 
-            knora-base:subjectClassConstraint :Institution ;
+            :subjectClassConstraint :Institution ;
 
             :objectDatatypeConstraint xsd:string .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#institutionWebsite
+###  http://www.knora.org/ontology/knora-base#institutionWebsite
 
 :institutionWebsite rdf:type owl:DatatypeProperty ;
 
-            rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
             rdfs:comment "The URL of a web site"@en ;
 
-            knora-base:subjectClassConstraint :Institution ;
+            :subjectClassConstraint :Institution ;
 
             :objectDatatypeConstraint xsd:anyURI .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#isActiveUser
+###  http://www.knora.org/ontology/knora-base#isActiveUser
 
 :isInSystemAdminGroup rdf:type owl:DatatypeProperty ;
 
-          rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+          rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
           rdfs:comment "Exists and is true if the user is a member of the SystemAdmin group."@en ;
 
-          knora-base:subjectClassConstraint :User ;
+          :subjectClassConstraint :User ;
 
           :objectDatatypeConstraint xsd:boolean .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#givenName
+###  http://www.knora.org/ontology/knora-base#givenName
 
 :givenName rdf:type owl:DatatypeProperty ;
 
-      rdfs:subPropertyOf foaf:givenName, knora-base:objectCannotBeMarkedAsDeleted .
+      rdfs:subPropertyOf foaf:givenName, :objectCannotBeMarkedAsDeleted .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#familyName
+###  http://www.knora.org/ontology/knora-base#familyName
 
 :familyName rdf:type owl:DatatypeProperty ;
 
-      rdfs:subPropertyOf foaf:familyName, knora-base:objectCannotBeMarkedAsDeleted .
+      rdfs:subPropertyOf foaf:familyName, :objectCannotBeMarkedAsDeleted .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#password
+###  http://www.knora.org/ontology/knora-base#password
 
 :password rdf:type owl:DatatypeProperty ;
 
-          rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+          rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
           rdfs:comment "An encrypted credential for access"@en ;
 
-          knora-base:subjectClassConstraint foaf:Person ;
+          :subjectClassConstraint foaf:Person ;
 
           :objectDatatypeConstraint xsd:string .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#phone
+###  http://www.knora.org/ontology/knora-base#phone
 
 :phone rdf:type owl:DatatypeProperty ;
 
-       rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+       rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
        rdfs:comment "Phone number of a person, institution, etc."@en ;
 
@@ -345,11 +342,11 @@ knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
 
 
 
-###  http://www.knora.org/ontology/knora-admin#preferredLanguage
+###  http://www.knora.org/ontology/knora-base#preferredLanguage
 
 :preferredLanguage rdf:type owl:DatatypeProperty ;
 
-                   rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+                   rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
                    rdfs:comment "Language (\"en\", \"de\", \"fr\", \"it\", \"gr\", etc.)"@en ;
 
@@ -357,132 +354,132 @@ knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
 
 
 
-###  http://www.knora.org/ontology/knora-admin#projectDescription
+###  http://www.knora.org/ontology/knora-base#projectDescription
 
 :projectDescription rdf:type owl:DatatypeProperty ;
 
-            rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
             rdfs:comment "A description of a Knora project"@en ;
 
             rdfs:subPropertyOf :description ;
 
-            knora-base:subjectClassConstraint :knoraProject ;
+            :subjectClassConstraint :knoraProject ;
 
             :objectDatatypeConstraint xsd:string .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#projectKeyword
+###  http://www.knora.org/ontology/knora-base#projectKeyword
 
 :projectKeyword rdf:type owl:DatatypeProperty ;
 
-             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
              rdfs:comment "A keyword describing a project"@en ;
 
-             knora-base:subjectClassConstraint :knoraProject ;
+             :subjectClassConstraint :knoraProject ;
 
              :objectDatatypeConstraint xsd:string .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#projectLongname
+###  http://www.knora.org/ontology/knora-base#projectLongname
 
 :projectLongname rdf:type owl:DatatypeProperty ;
 
-             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
              rdfs:comment "The longname of a Knora project"@en ;
 
              rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> ;
 
-             knora-base:subjectClassConstraint :knoraProject ;
+             :subjectClassConstraint :knoraProject ;
 
              :objectDatatypeConstraint xsd:string .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#projectLogo
+###  http://www.knora.org/ontology/knora-base#projectLogo
 
 :projectLogo rdf:type owl:DatatypeProperty ;
 
-             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
              rdfs:comment "Path to the projects logo"@en ;
 
-             knora-base:subjectClassConstraint :knoraProject ;
+             :subjectClassConstraint :knoraProject ;
 
              :objectDatatypeConstraint xsd:string .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#projectOntology
+###  http://www.knora.org/ontology/knora-base#projectOntology
 
 :projectOntology rdf:type owl:DatatypeProperty ;
 
-            rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
             rdfs:comment "The IRI of the project specific ontology"@en ;
 
-            knora-base:subjectClassConstraint :knoraProject ;
+            :subjectClassConstraint :knoraProject ;
 
             :objectDatatypeConstraint xsd:anyURI .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#projectShortname
+###  http://www.knora.org/ontology/knora-base#projectShortname
 
 :projectShortname rdf:type owl:DatatypeProperty ;
 
-             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
              rdfs:comment "The unique shortname of a Knora project."@en ;
 
              rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> ;
 
-             knora-base:subjectClassConstraint :knoraProject ;
+             :subjectClassConstraint :knoraProject ;
 
              :objectDatatypeConstraint xsd:string .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#projectShortcode
+###  http://www.knora.org/ontology/knora-base#projectShortcode
 
 :projectShortcode rdf:type owl:DatatypeProperty ;
 
-             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
              rdfs:comment "The unique short code of a Knora project."@en ;
 
              rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> ;
 
-             knora-base:subjectClassConstraint :knoraProject ;
+             :subjectClassConstraint :knoraProject ;
 
              :objectDatatypeConstraint xsd:string .
 
 
 
 
-###  http://www.knora.org/ontology/knora-admin#email
+###  http://www.knora.org/ontology/knora-base#email
 
 :email rdf:type owl:DatatypeProperty ;
 
-        rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+        rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
         rdfs:comment "The email address and login name of a user of Knora"@en ;
 
-        knora-base:subjectClassConstraint :User ;
+        :subjectClassConstraint :User ;
 
         :objectDatatypeConstraint xsd:string .
 
 
 
-###  http://www.knora.org/ontology/knora-admin#status
+###  http://www.knora.org/ontology/knora-base#status
 
 :status rdf:type owl:DatatypeProperty ;
 
-          rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+          rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
           rdfs:comment "The status of the user / group / project. It is false if the entity has been deactivated (deleted)"@en ;
 
@@ -498,7 +495,7 @@ knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
 
 
 
-###  http://www.knora.org/ontology/knora-admin#Institution
+###  http://www.knora.org/ontology/knora-base#Institution
 
 :Institution rdf:type owl:Class ;
 
@@ -532,7 +529,7 @@ knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
 
 
 
-###  http://www.knora.org/ontology/knora-admin#User
+###  http://www.knora.org/ontology/knora-base#User
 
 :User rdf:type owl:Class ;
 
@@ -578,7 +575,7 @@ knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
 
 
 
-###  http://www.knora.org/ontology/knora-admin#UserGroup
+###  http://www.knora.org/ontology/knora-base#UserGroup
 
 :UserGroup rdf:type owl:Class ;
 
@@ -605,7 +602,7 @@ knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
 
 
 
-###  http://www.knora.org/ontology/knora-admin#knoraProject
+###  http://www.knora.org/ontology/knora-base#knoraProject
 
 :knoraProject rdf:type owl:Class ;
 
@@ -616,7 +613,7 @@ knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectShortcode ;
-                                owl:cardinality "1"^^xsd:nonNegativeInteger
+                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectLongname ;
@@ -655,45 +652,80 @@ knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
 
 
 
+:Map rdf:type owl:Class ;
+
+    rdfs:subClassOf [ rdf:type owl:Restriction ;
+                      owl:onProperty :lastModificationDate ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                    ] ;
+
+    rdfs:comment "Represents a simple map of key-value pairs"@en .
+
+
+
+:MapEntry rdf:type owl:Class ;
+
+    rdfs:subClassOf [ rdf:type owl:Restriction ;
+                      owl:onProperty :isInMap ;
+                      owl:cardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :mapEntryKey ;
+                      owl:cardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :mapEntryValue ;
+                      owl:cardinality "1"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                      owl:onProperty :lastModificationDate ;
+                      owl:cardinality "1"^^xsd:nonNegativeInteger
+                    ];
+
+    rdfs:comment "Represents a key-value pair in a Map"@en .
+
+
+
+
 #################################################################
 #
 #    Individuals
 #
 #################################################################
 
-###  http://www.knora.org/ontology/knora-admin#UnknownUser
+###  http://www.knora.org/ontology/knora-base#UnknownUser
 :UnknownUser rdf:type :UserGroup ;
              :groupName "UnknownUser" ;
              :status "true"^^xsd:boolean .
 
-###  http://www.knora.org/ontology/knora-admin#KnownUser
+###  http://www.knora.org/ontology/knora-base#KnownUser
 :KnownUser rdf:type :UserGroup ;
            :groupName "KnownUser" ;
            :status "true"^^xsd:boolean .
 
-###  http://www.knora.org/ontology/knora-admin#Creator
+###  http://www.knora.org/ontology/knora-base#Creator
 :Creator rdf:type :UserGroup ;
          :groupName  "Creator" ;
          :status "true"^^xsd:boolean .
 
-###  http://www.knora.org/ontology/knora-admin#ProjectMember
+###  http://www.knora.org/ontology/knora-base#ProjectMember
 :ProjectMember rdf:type :UserGroup ;
                :groupName "ProjectMember" ;
                :status "true"^^xsd:boolean .
 
-###  http://www.knora.org/ontology/knora-admin#ProjectAdmin
+###  http://www.knora.org/ontology/knora-base#ProjectAdmin
 :ProjectAdmin rdf:type :UserGroup ;
               :groupName "ProjectAdmin" ;
               :status "true"^^xsd:boolean .
 
-###  http://www.knora.org/ontology/knora-admin#SystemAdmin
+###  http://www.knora.org/ontology/knora-base#SystemAdmin
 :SystemAdmin rdf:type :UserGroup ;
              :groupName "SystemAdmin" ;
-             :belongsToProject <http://www.knora.org/ontology/knora-admin#SystemProject> ;
+             :belongsToProject <http://www.knora.org/ontology/knora-base#SystemProject> ;
              :status "true"^^xsd:boolean ;
              :hasSelfJoinEnabled "false"^^xsd:boolean .
 
-###  http://www.knora.org/ontology/knora-admin#SystemUser
+###  http://www.knora.org/ontology/knora-base#SystemUser
 :SystemUser rdf:type :User ;
             rdfs:comment "A built-in system user."@en ;
             :email "system@localhost" ;
@@ -704,7 +736,7 @@ knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
             :preferredLanguage "en" ;
             :isInSystemAdminGroup "false"^^xsd:boolean .
 
-###  http://www.knora.org/ontology/knora-admin#AnonymousUser
+###  http://www.knora.org/ontology/knora-base#AnonymousUser
 :AnonymousUser rdf:type :User ;
             rdfs:comment "A built-in anonymous user."@en ;
             :email "anonymous@localhost" ;
@@ -715,7 +747,7 @@ knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
             :preferredLanguage "en" ;
             :isInSystemAdminGroup "false"^^xsd:boolean .
 
-### http://www.knora.org/ontology/knora-admin#SystemProject
+### http://www.knora.org/ontology/knora-base#SystemProject
 :SystemProject rdf:type :knoraProject ;
             rdfs:comment "A built-in project representing the Knora System."@en ;
             :projectShortname "SystemProject" ;
@@ -731,32 +763,32 @@ knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
 ### Permission Class Properties
 ##
 #
-### http://www.knora.org/ontology/knora-admin#forProject
+### http://www.knora.org/ontology/knora-base#forProject
 
 :forProject rdf:type rdf:Property ;
-            rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
             rdfs:comment "Permission property pointing to a knoraProject."@en ;
-            knora-base:subjectClassConstraint :Permission ;
-            knora-base:objectClassConstraint :knoraProject .
+            :subjectClassConstraint :Permission ;
+            :objectClassConstraint :knoraProject .
 
-### http://www.knora.org/ontology/knora-admin#forGroup
+### http://www.knora.org/ontology/knora-base#forGroup
 :forGroup rdf:type rdf:Property ;
-            rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
             rdfs:comment "Permission property pointing to a UserGroup."@en ;
-            knora-base:subjectClassConstraint :Permission ;
-            knora-base:objectClassConstraint :UserGroup .
+            :subjectClassConstraint :Permission ;
+            :objectClassConstraint :UserGroup .
 
-### http://www.knora.org/ontology/knora-admin#forResourceClass
+### http://www.knora.org/ontology/knora-base#forResourceClass
 :forResourceClass rdf:type rdf:Property ;
-            rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
             rdfs:comment "Permission property pointing to a resource class."@en ;
-            knora-base:subjectClassConstraint :Permission .
+            :subjectClassConstraint :Permission .
 
-### http://www.knora.org/ontology/knora-admin#forProperty
+### http://www.knora.org/ontology/knora-base#forProperty
 :forProperty rdf:type rdf:property ;
-            rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
             rdfs:comment "Permission property pointing to a resource property."@en ;
-            knora-base:subjectClassConstraint :Permission .
+            :subjectClassConstraint :Permission .
 
 
 #
@@ -764,17 +796,17 @@ knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
 ### Permission Class and Sub-Classes
 ##
 #
-### http://www.knora.org/ontology/knora-admin#Permission
+### http://www.knora.org/ontology/knora-base#Permission
 :Permission rdf:type owl:Class ;
             rdfs:comment "Base Permission class."@en.
 
 
-### http://www.knora.org/ontology/knora-admin#AdministrativePermission
+### http://www.knora.org/ontology/knora-base#AdministrativePermission
 :AdministrativePermission rdf:type owl:Class ;
             rdfs:comment "Administrative Permission class used to create instances for storing administrative permissions on groups."@en ;
             rdfs:subClassOf :Permission .
 
-### http://www.knora.org/ontology/knora-admin#DefaultObjectAccessPermission
+### http://www.knora.org/ontology/knora-base#DefaultObjectAccessPermission
 :DefaultObjectAccessPermission rdf:type owl:Class ;
             rdfs:comment "Default Object Access Permission class used to create instances for storing default object access permission for a project and either groups, resource classes, or properties."@en ;
             rdfs:subClassOf :Permission .

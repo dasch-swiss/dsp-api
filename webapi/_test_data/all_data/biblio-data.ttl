@@ -8,8 +8,5 @@
 @prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @prefix beol: <http://www.knora.org/ontology/0801/beol#> .
-@prefix biblio: <http://www.knora.org/ontology/biblio#> .
+@prefix biblio: <http://www.knora.org/ontology/0802/biblio#> .
 
-###
-### project and user moved to admin-data.ttl
-###

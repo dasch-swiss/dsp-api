@@ -17,11 +17,16 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi
+package org.knora.webapi.store.datamanagement
 
-package object app {
+import akka.actor.{Actor, ActorLogging}
+import akka.event.LoggingReceive
 
-    val APPLICATION_STATE_ACTOR_NAME = "applicationState"
-    val APPLICATION_STATE_ACTOR_PATH = "/user/" + APPLICATION_STATE_ACTOR_NAME
-
+/**
+  * This actor handles initial repository creation
+  */
+class RepositoryInitializationActor extends Actor with ActorLogging {
+    def receive = LoggingReceive {
+        ???
+    }
 }

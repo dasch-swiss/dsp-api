@@ -65,6 +65,7 @@ class ProjectsResponderADM extends Responder {
         case ProjectChangeRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID) => future2Message(sender(), changeBasicInformationRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID), log)
         case ProjectOntologyAddADM(projectIri, ontologyIri, requestingUser, apiRequestID) => future2Message(sender(), projectOntologyAddADM(projectIri, ontologyIri, requestingUser, apiRequestID), log)
         case ProjectOntologyRemoveADM(projectIri, ontologyIri, requestingUser, apiRequestID) => future2Message(sender(), projectOntologyRemoveADM(projectIri, ontologyIri, requestingUser, apiRequestID), log)
+        case ProjectDataGraphsGetADM(requestingUser) => future2Message(sender(), )
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -687,6 +688,29 @@ class ProjectsResponderADM extends Responder {
             projectOperationResponseV1 = ProjectOperationResponseADM(project = updatedProject)
         } yield projectOperationResponseV1
 
+    }
+
+
+    /**
+      * Returns a list with IRIs representing the project data graphs.
+      *
+      * @param requestingUser the user making the request. Only calls by the SystemUser are accepted.
+      * @return
+      */
+    private def projectDataGraphsGetADM(requestingUser: UserADM): Future[Seq[IRI]] = {
+
+        if (requestingUser.id != OntologyConstants.KnoraAdmin.SystemUser) {
+            throw ForbiddenException(s"Only allowed to be called by the '${OntologyConstants.KnoraAdmin.SystemUser}'.")
+        }
+
+        for {
+
+            projects <- projectsGetADM(requestingUser)
+
+            // get all data graphs
+            graphs: Seq[IRI] = projects.map(stringFormatter.projectDataNamedGraphV2)
+
+        } yield graphs
     }
 
 

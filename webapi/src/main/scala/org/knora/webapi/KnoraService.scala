@@ -19,15 +19,11 @@
 
 package org.knora.webapi
 
-import java.io.InputStream
-import java.security.{KeyStore, SecureRandom}
-import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
-
 import akka.actor.{ActorSystem, _}
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.{ConnectionContext, Http}
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
@@ -184,8 +180,10 @@ trait KnoraService {
         // which repository are we using
         println(s"DB Server: ${settings.triplestoreHost}, DB Port: ${settings.triplestorePort}")
         println(s"Repository: ${settings.triplestoreDatabaseName}")
-        println(s"DB User: ${settings.triplestoreUsername}")
-        println(s"DB Password: ${settings.triplestorePassword}")
+
+        // ToDo: make printing of sensitive information configurable
+        // println(s"DB User: ${settings.triplestoreUsername}")
+        // println(s"DB Password: ${settings.triplestorePassword}")
 
         // get loadDemoData value from application state actor
         val loadDemoData = Await.result(applicationStateActor ? GetLoadDemoDataState(), 1.second).asInstanceOf[Boolean]

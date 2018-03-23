@@ -1,0 +1,44 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+
+
+###################################
+# BEOL                            #
+###################################
+
+<http://rdfh.ch/projects/0801> a knora-base:knoraProject ;
+  knora-base:projectShortname "beol"^^xsd:string ;
+  knora-base:projectShortcode "0801"^^xsd:string ;
+  knora-base:projectLongname "Bernoulli-Euler Online"^^xsd:string ;
+  knora-base:projectDescription "Bernoulli-Euler Online"^^xsd:string ;
+  knora-base:projectOntology <http://www.knora.org/ontology/0801/beol> ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+<http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> a knora-base:User ;
+  knora-base:userid "beol"^^xsd:string ;
+  knora-base:familyName "BEOL"^^xsd:string ;
+  knora-base:givenName "BEOL"^^xsd:string ;
+  knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+  knora-base:email "t.schweizer@unibas.ch"^^xsd:string ;
+  knora-base:preferredLanguage "de"^^xsd:string ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:isInProject <http://rdfh.ch/projects/0801> ;
+  knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+<http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE> a knora-base:User ;
+  knora-base:userid "beol"^^xsd:string ;
+  knora-base:familyName "BEOL"^^xsd:string ;
+  knora-base:givenName "BEOL"^^xsd:string ;
+  knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+  knora-base:email "beol@example.com"^^xsd:string ;
+  knora-base:preferredLanguage "de"^^xsd:string ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:isInProject <http://rdfh.ch/projects/0801> ;
+  knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
+  knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/0801> .

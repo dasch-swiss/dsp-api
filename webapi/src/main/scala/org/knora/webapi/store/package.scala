@@ -27,6 +27,7 @@ package object store {
     val STORE_MANAGER_ACTOR_NAME = "storeManager"
     val STORE_MANAGER_ACTOR_PATH = "/user/" + STORE_MANAGER_ACTOR_NAME
 
+    /* Triplestore Access Actors */
     val TRIPLESTORE_MANAGER_ACTOR_NAME = "triplestoreManager"
     val TRIPLESTORE_MANAGER_ACTOR_PATH = STORE_MANAGER_ACTOR_PATH + "/" + TRIPLESTORE_MANAGER_ACTOR_NAME
 
@@ -34,4 +35,13 @@ package object store {
     val EMBEDDED_JENA_ACTOR_NAME = "embeddedJenaTDB"
     val EMBEDDED_GRAPH_DB_ACTOR_NAME = "embeddedJenaGraphDB"
     val FAKE_TRIPLESTORE_ACTOR_NAME = "fakeTriplestore"
+
+
+    /* Data Management Actors */
+    val DATA_MANAGER_ACTOR_NAME = "dataManager"
+    val DATA_MANAGER_ACTOR_PATH = STORE_MANAGER_ACTOR_PATH + "/" + DATA_MANAGER_ACTOR_NAME
+
+    val REPOSITORY_INIT_ACTOR_NAME = "repositoryInitActor"
+    val DATA_BACKUP_ACTOR_NAME = "dataBackupActor"
+    val DATA_UPGRADE_ACTOR_NAME = "dataUpgradeActor"
 }

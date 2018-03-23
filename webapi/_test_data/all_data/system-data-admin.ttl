@@ -1,0 +1,25 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+
+
+##########################################################
+#
+# SYSTEM USER
+#
+##########################################################
+
+
+<http://rdfh.ch/users/root> rdf:type knora-base:User ;
+knora-base:email "root@example.com"^^xsd:string ;
+knora-base:givenName "System"^^xsd:string ;
+knora-base:familyName "Administrator"^^xsd:string ;
+knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+knora-base:phone "123456"^^xsd:string ;
+knora-base:preferredLanguage "de"^^xsd:string ;
+knora-base:status "true"^^xsd:boolean ;
+knora-base:isInSystemAdminGroup "true"^^xsd:boolean .

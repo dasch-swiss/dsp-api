@@ -298,6 +298,14 @@ case class ProjectOntologyRemoveADM(projectIri: IRI,
                                     requestingUser: UserADM,
                                     apiRequestID: UUID) extends ProjectsResponderRequestADM
 
+
+/**
+  * Requests a list of all project data graphs.
+  *
+  * @param requestingUser the user making the request.
+  */
+case class ProjectDataGraphsGetADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
+
 // Responses
 /**
   * Represents the Knora API ADM JSON response to a request for information about all projects.

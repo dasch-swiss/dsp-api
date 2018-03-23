@@ -1,0 +1,73 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix incunabula: <http://www.knora.org/ontology/incunabula#> .
+
+
+##########################################################
+#
+# Images Demo Project Permissions
+#
+##########################################################
+
+### Administrative Permissions on ProjectMember
+<http://rdfh.ch/permissions/00FF/a1>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/00FF> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
+
+
+### Administrative Permissions on ProjectAdmin
+<http://rdfh.ch/permissions/00FF/a2>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/00FF> ;
+
+                      knora-base:forGroup knora-base:ProjectAdmin ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .
+
+
+### Administrative Permissions on 'images-reviewer'
+<http://rdfh.ch/permissions/00FF/a3>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/00FF> ;
+
+                      knora-base:forGroup <http://rdfh.ch/groups/00FF/images-reviewer> ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/00FF/images#bild,http://www.knora.org/ontology/00FF/images#bildformat"^^xsd:string .
+
+
+### Default Object Access Permissions on ProjectMember Group
+<http://rdfh.ch/permissions/00FF/d1>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/00FF> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"^^xsd:string .
+
+
+### Default Object Access Permissions on ProjectMember Group
+<http://rdfh.ch/permissions/00FF/d2>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/00FF> ;
+
+                      knora-base:forGroup knora-base:KnownUser ;
+
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"^^xsd:string .

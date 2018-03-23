@@ -1,0 +1,34 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+
+
+###################################
+# BIBLIO                          #
+###################################
+
+<http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> a knora-base:knoraProject ;
+  knora-base:projectShortname "biblio"^^xsd:string ;
+  knora-base:projectLongname "Bibliography"^^xsd:string ;
+  knora-base:projectDescription "Bibliography"^^xsd:string ;
+  knora-base:projectOntology <http://www.knora.org/ontology/biblio> ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+
+<http://rdfh.ch/users/Q-6Sssu8TBWrcCGuVJ0lVw> a knora-base:User ;
+  knora-base:userid "biblio"^^xsd:string ;
+  knora-base:familyName "biblio"^^xsd:string ;
+  knora-base:givenName "biblio"^^xsd:string ;
+  knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+  knora-base:email "biblio@example.com"^^xsd:string ;
+  knora-base:preferredLanguage "de"^^xsd:string ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:isInProject <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> ;
+  knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
+  knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> .
+

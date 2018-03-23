@@ -22,7 +22,9 @@ package org.knora.webapi.store
 import akka.actor._
 import akka.event.LoggingReceive
 import akka.pattern._
+import org.knora.webapi.messages.store.datamanagement.DataManagementRequest
 import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse, TriplestoreRequest}
+import org.knora.webapi.store.datamanagement.DataManager
 import org.knora.webapi.store.triplestore.TriplestoreManager
 import org.knora.webapi.{ActorMaker, LiveActorMaker, Settings, UnexpectedMessageException}
 
@@ -43,10 +45,14 @@ class StoreManager extends Actor with ActorLogging {
       * Start the TriplestoreManagerActor
       */
     var triplestoreManager: ActorRef = _
+    var dataManager: ActorRef = _
 
     override def preStart = {
         log.debug("StoreManager: start with preStart")
+
         triplestoreManager = makeActor(Props(new TriplestoreManager with LiveActorMaker), TRIPLESTORE_MANAGER_ACTOR_NAME)
+        dataManager = makeActor(Props(new DataManager with LiveActorMaker), DATA_MANAGER_ACTOR_NAME)
+
         val resultFuture = triplestoreManager ? Initialized()
         val result = Await.result(resultFuture, timeout.duration).asInstanceOf[InitializedResponse]
         log.debug("StoreManager: finished with preStart")
@@ -54,6 +60,7 @@ class StoreManager extends Actor with ActorLogging {
 
     def receive = LoggingReceive {
         case tripleStoreMessage: TriplestoreRequest => triplestoreManager forward tripleStoreMessage
+        case dataManagementMessage: DataManagementRequest => dataManager forward dataManagementMessage
         case other => sender ! Status.Failure(UnexpectedMessageException(s"StoreManager received an unexpected message: $other"))
     }
 }
