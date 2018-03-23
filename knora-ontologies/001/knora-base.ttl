@@ -962,18 +962,6 @@
 #################################################################
 
 
-###  http://www.knora.org/ontology/knora-base#address
-
-:address rdf:type owl:DatatypeProperty ;
-
-         rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-         :objectDatatypeConstraint xsd:string ;
-
-         rdfs:comment "Address of a person or an institution"@en .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#creationDate
 
 :creationDate rdf:type owl:DatatypeProperty ;
@@ -1532,6 +1520,42 @@
 
 ### issue 524
 
+:isInMap rdf:type owl:ObjectProperty ;
+
+    rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+    :subjectClassConstraint :MapEntry;
+
+    :objectClassConstraint :Map ;
+
+    rdfs:comment "Associates a MapEntry with a Map"@en .
+
+
+
+:mapEntryKey rdf:type owl:DatatypeProperty ;
+
+    rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+    :subjectClassConstraint :MapEntry;
+
+    :objectDatatypeConstraint xsd:string ;
+
+    rdfs:comment "Represents the key of a MapEntry"@en .
+
+
+
+:mapEntryValue rdf:type owl:DatatypeProperty ;
+
+    rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+    :subjectClassConstraint :MapEntry;
+
+    :objectDatatypeConstraint xsd:string ;
+
+    rdfs:comment "Represents the value of a MapEntry"@en .
+
+
+
 :Map rdf:type owl:Class ;
 
     rdfs:subClassOf [ rdf:type owl:Restriction ;
@@ -1563,6 +1587,8 @@
                     ];
 
     rdfs:comment "Represents a key-value pair in a Map"@en .
+
+
 
 
 #################################################################

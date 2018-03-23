@@ -336,7 +336,6 @@ object OntologyConstants {
 
         val LastModificationDate: IRI = KnoraBasePrefixExpansion + "lastModificationDate"
 
-        val Address: IRI = KnoraBasePrefixExpansion + "address"
         val DeleteDate: IRI = KnoraBasePrefixExpansion + "deleteDate"
         val DeleteComment: IRI = KnoraBasePrefixExpansion + "deleteComment"
 
@@ -414,6 +413,7 @@ object OntologyConstants {
         val InstitutionDescription: IRI = KnoraAdminPrefixExpansion + "institutionDescription"
         val InstitutionName: IRI = KnoraAdminPrefixExpansion + "institutionName"
         val InstitutionWebsite: IRI = KnoraAdminPrefixExpansion + "institutionWebsite"
+        val Address: IRI = KnoraAdminPrefixExpansion + "address"
         val Phone: IRI = KnoraAdminPrefixExpansion + "phone"
 
         /* Permissions */

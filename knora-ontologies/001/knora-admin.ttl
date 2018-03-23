@@ -152,39 +152,7 @@
 
 
 
-knora-base:isInMap rdf:type owl:ObjectProperty ;
 
-    rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
-
-    knora-base:subjectClassConstraint knora-base:MapEntry;
-
-    knora-base:objectClassConstraint knora-base:Map ;
-
-    rdfs:comment "Associates a MapEntry with a Map"@en .
-
-
-
-knora-base:mapEntryKey rdf:type owl:DatatypeProperty ;
-
-    rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
-
-    knora-base:subjectClassConstraint knora-base:MapEntry;
-
-    knora-base:objectDatatypeConstraint xsd:string ;
-
-    rdfs:comment "Represents the key of a MapEntry"@en .
-
-
-
-knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
-
-    rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
-
-    knora-base:subjectClassConstraint knora-base:MapEntry;
-
-    knora-base:objectDatatypeConstraint xsd:string ;
-
-    rdfs:comment "Represents the value of a MapEntry"@en .
 
 
 
@@ -194,6 +162,16 @@ knora-base:mapEntryValue rdf:type owl:DatatypeProperty ;
 #    Datatype properties
 #
 #################################################################
+
+###  http://www.knora.org/ontology/knora-admin#address
+
+:address rdf:type owl:DatatypeProperty ;
+
+         rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+         :objectDatatypeConstraint xsd:string ;
+
+         rdfs:comment "Address of a person or an institution"@en .
 
 
 
