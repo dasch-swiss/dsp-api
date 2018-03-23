@@ -435,7 +435,7 @@ object TransformData extends App {
 
                         val permissionStatement = valueFactory.createStatement(
                             valueFactory.createIRI(subjectIri),
-                            valueFactory.createIRI(OntologyConstants.KnoraAdmin.HasPermissions),
+                            valueFactory.createIRI(OntologyConstants.KnoraBase.HasPermissions),
                             valueFactory.createLiteral(permissionLiteral)
                         )
 
@@ -833,7 +833,7 @@ object TransformData extends App {
                     val statementsWithoutCreatorOrPermissions = statements.filterNot {
                         (statement: Statement) =>
                             statement.getPredicate.stringValue == OntologyConstants.KnoraBase.AttachedToUser ||
-                                statement.getPredicate.stringValue == OntologyConstants.KnoraAdmin.HasPermissions
+                                statement.getPredicate.stringValue == OntologyConstants.KnoraBase.HasPermissions
                     }
 
                     val creatorStatement = valueFactory.createStatement(
@@ -844,7 +844,7 @@ object TransformData extends App {
 
                     val permissionsStatement = valueFactory.createStatement(
                         valueFactory.createIRI(subjectIri),
-                        valueFactory.createIRI(OntologyConstants.KnoraAdmin.HasPermissions),
+                        valueFactory.createIRI(OntologyConstants.KnoraBase.HasPermissions),
                         valueFactory.createLiteral("CR knora-base:Creator|V knora-base:UnknownUser")
                     )
 
@@ -1111,7 +1111,7 @@ object TransformData extends App {
                         statement =>
                             // If this statement has the 'hasPermissions' predicate, then see if the literal contains
                             // 'knora-base:Owner', and if so, replace with 'knora-base:Creator'.
-                            if (statement.getPredicate.stringValue == OntologyConstants.KnoraAdmin.HasPermissions) {
+                            if (statement.getPredicate.stringValue == OntologyConstants.KnoraBase.HasPermissions) {
 
                                 //log.debug(s"CreatorHandler - ${ScalaPrettyPrinter.prettyPrint(statement)}")
 
@@ -1165,7 +1165,7 @@ object TransformData extends App {
                             statement => turtleWriter.handleStatement(statement)
                         }
                     } else {
-                        val currentPermissions: Set[PermissionADM] = getObject(subjectStatements, OntologyConstants.KnoraAdmin.HasPermissions) match {
+                        val currentPermissions: Set[PermissionADM] = getObject(subjectStatements, OntologyConstants.KnoraBase.HasPermissions) match {
                             case Some(permissionsLiteral) =>
                                 /* parse literal */
                                 val parsedPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(Some(permissionsLiteral), PermissionType.OAP)
@@ -1185,11 +1185,11 @@ object TransformData extends App {
                         /* create statement with new literal */
                         val newHasPermissionsStatement = valueFactory.createStatement(
                             valueFactory.createIRI(subjectIri),
-                            valueFactory.createIRI(OntologyConstants.KnoraAdmin.HasPermissions),
+                            valueFactory.createIRI(OntologyConstants.KnoraBase.HasPermissions),
                             valueFactory.createLiteral(changedPermissionsLiteral)
                         )
 
-                        val subjectStatementsWithChangedPermissions = subjectStatements.filterNot(_.getPredicate.stringValue == OntologyConstants.KnoraAdmin.HasPermissions) :+ newHasPermissionsStatement
+                        val subjectStatementsWithChangedPermissions = subjectStatements.filterNot(_.getPredicate.stringValue == OntologyConstants.KnoraBase.HasPermissions) :+ newHasPermissionsStatement
 
                         subjectStatementsWithChangedPermissions.foreach {
                             statement => turtleWriter.handleStatement(statement)

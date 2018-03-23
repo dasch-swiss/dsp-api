@@ -65,7 +65,7 @@ class ProjectsResponderADM extends Responder {
         case ProjectChangeRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID) => future2Message(sender(), changeBasicInformationRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID), log)
         case ProjectOntologyAddADM(projectIri, ontologyIri, requestingUser, apiRequestID) => future2Message(sender(), projectOntologyAddADM(projectIri, ontologyIri, requestingUser, apiRequestID), log)
         case ProjectOntologyRemoveADM(projectIri, ontologyIri, requestingUser, apiRequestID) => future2Message(sender(), projectOntologyRemoveADM(projectIri, ontologyIri, requestingUser, apiRequestID), log)
-        case ProjectDataGraphsGetADM(requestingUser) => future2Message(sender(), )
+        case ProjectDataGraphsGetADM(requestingUser) => future2Message(sender(), projectDataGraphsGetADM(requestingUser), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 

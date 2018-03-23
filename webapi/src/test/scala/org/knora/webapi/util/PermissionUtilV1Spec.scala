@@ -130,7 +130,7 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
             val assertions: Seq[(IRI, String)] = Seq(
                 (OntologyConstants.KnoraBase.AttachedToUser, "http://rdfh.ch/users/91e19f1e01"),
                 (OntologyConstants.KnoraBase.AttachedToProject, SharedTestDataV1.INCUNABULA_PROJECT_IRI),
-                (OntologyConstants.KnoraAdmin.HasPermissions, permissionLiteral)
+                (OntologyConstants.KnoraBase.HasPermissions, permissionLiteral)
             )
             PermissionUtilADM.getUserPermissionV1FromAssertions(
                 subjectIri = "http://rdfh.ch/00014b43f902",

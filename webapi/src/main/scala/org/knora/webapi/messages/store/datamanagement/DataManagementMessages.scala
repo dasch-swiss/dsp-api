@@ -38,14 +38,43 @@ sealed trait DataBackupRequest extends DataManagementRequest
   */
 sealed trait DataUpgradeRequest extends DataManagementRequest
 
-/**
-  * Initializes the data upgrade process
-  */
-case class DataUpgradeInit(requestingUser: UserADM) extends DataUpgradeRequest
+
+//********************************
+// Requests
+//********************************
 
 /**
-  * Represents the data upgrade process result
+  * Checks to see if a data upgrade is necessary. Response is in the form of [[DataUpgradeCheckResult]]
+  *
+  * @param requestingUser the user making the request. Needs to be knora-admin:SystemUser.
+  */
+case class DataUpgradeCheck(requestingUser: UserADM) extends DataUpgradeRequest
+
+/**
+  * Initializes the data upgrade process. Response is in the form of [[DataUpgradeInitResult]].
+  *
+  * @param liveMode       denotes the mode in which to run. Live = false, no data will be changed. Live = true, change data.
+  * @param requestingUser the user making the request. Needs to be knora-admin:SystemUser.
+  */
+case class DataUpgradeInit(liveMode: Boolean = false, requestingUser: UserADM) extends DataUpgradeRequest
+
+
+//********************************
+// Responses
+//********************************
+
+/**
+  * Represents an response to [[DataUpgradeCheck]].
+  * @param currentDataVersion
+  * @param requiredDataVersion
+  * @param dataUpgradeRequired
+  */
+case class DataUpgradeCheckResult(currentDataVersion: String, requiredDataVersion: String, dataUpgradeRequired: Boolean)
+
+/**
+  * Represents an response to [[DataUpgradeInit]].
+  *
   * @param result
   */
-case class DataUpgradeResult(result: Boolean)
+case class DataUpgradeInitResult(result: Boolean)
 

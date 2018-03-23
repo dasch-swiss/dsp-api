@@ -922,7 +922,7 @@ class ValuesResponderV1 extends Responder {
                         // Give the new version the same permissions as the previous version.
 
                         val valuePermissions = currentValueQueryResult.permissionRelevantAssertions.find {
-                            case (p, o) => p == OntologyConstants.KnoraAdmin.HasPermissions
+                            case (p, o) => p == OntologyConstants.KnoraBase.HasPermissions
                         }.map(_._2).getOrElse(throw InconsistentTriplestoreDataException(s"Value ${changeValueRequest.valueIri} has no permissions"))
 
                         changeOrdinaryValueV1AfterChecks(projectIri = currentValueQueryResult.projectIri,
@@ -1091,7 +1091,7 @@ class ValuesResponderV1 extends Responder {
                     // Give the new version the same permissions as the previous version.
 
                     val valuePermissions: String = currentValueQueryResult.permissionRelevantAssertions.find {
-                        case (p, o) => p == OntologyConstants.KnoraAdmin.HasPermissions
+                        case (p, o) => p == OntologyConstants.KnoraBase.HasPermissions
                     }.map(_._2).getOrElse(throw InconsistentTriplestoreDataException(s"Value ${deleteValueRequest.valueIri} has no permissions"))
 
                     val linkPropertyIri = knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)

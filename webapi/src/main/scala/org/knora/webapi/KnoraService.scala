@@ -34,6 +34,7 @@ import kamon.zipkin.ZipkinReporter
 import org.knora.webapi.app.{ApplicationStateActor, _}
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.app.appmessages._
+import org.knora.webapi.messages.store.datamanagement.{DataUpgradeInit, DataUpgradeInitResult}
 import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
@@ -162,6 +163,7 @@ trait KnoraService {
         // TODO: Check if Sipi is also ready/accessible
         val storeManagerResult = Await.result(storeManager ? Initialized(), 5.seconds).asInstanceOf[InitializedResponse]
         log.info(s"StoreManager ready: $storeManagerResult")
+
         log.info(s"ActorSystem ${system.name} started")
     }
 
@@ -185,6 +187,7 @@ trait KnoraService {
         // println(s"DB User: ${settings.triplestoreUsername}")
         // println(s"DB Password: ${settings.triplestorePassword}")
 
+        // ToDo: This should be removed. Can only work if app started directly from repository and never in production as demo data is not part of the distribution
         // get loadDemoData value from application state actor
         val loadDemoData = Await.result(applicationStateActor ? GetLoadDemoDataState(), 1.second).asInstanceOf[Boolean]
 

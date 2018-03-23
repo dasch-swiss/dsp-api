@@ -60,10 +60,10 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    val log = akka.event.Logging(system, this.getClass())
+    val log = akka.event.Logging(system, this.getClass)
 
     // The default timeout for receiving reply messages from actors.
-    implicit val timeout = 5.seconds
+    implicit val timeout: FiniteDuration = 5.seconds
 
     val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
@@ -233,7 +233,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 actorUnderTest ! ListInfoChangeRequestADM(
                     listIri = newListIri.get,
                     changeListRequest = ChangeListInfoApiRequestADM(
-                        listIri = newListIri.get,
                         projectIri = IMAGES_PROJECT_IRI,
                         labels = Seq(
                             StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
@@ -273,7 +272,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 actorUnderTest ! ListInfoChangeRequestADM(
                     listIri = newListIri.get,
                     changeListRequest = ChangeListInfoApiRequestADM(
-                        listIri = newListIri.get,
                         projectIri = IMAGES_PROJECT_IRI,
                         labels = Seq(
                             StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),

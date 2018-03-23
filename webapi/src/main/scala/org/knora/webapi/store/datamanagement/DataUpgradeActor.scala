@@ -19,14 +19,15 @@ package org.knora.webapi.store.datamanagement
 import akka.actor.{Actor, ActorLogging}
 import akka.event.LoggingReceive
 import akka.pattern._
+import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectDataGraphsGetADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.datamanagement.{DataUpgradeInit, DataUpgradeResult}
+import org.knora.webapi.messages.store.datamanagement.{DataUpgradeCheck, DataUpgradeCheckResult, DataUpgradeInit, DataUpgradeInitResult}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.ActorUtil.future2Message
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 /**
   * This actor handles data upgrade.
@@ -37,13 +38,41 @@ class DataUpgradeActor extends Actor with ActorLogging {
 
     private val settings = Settings(context.system)
 
+    implicit val executionContext: ExecutionContextExecutor = context.system.dispatcher
+
+    // Need to keep an eye on this one. We probably need to tweek it and maybe have
+    // an own property in application.conf
+    implicit val timeout: Timeout = settings.defaultRestoreTimeout
 
     def receive = LoggingReceive {
-        case DataUpgradeInit(requestingUser) => future2Message(sender(), init(requestingUser), log)
+        case DataUpgradeCheck(requestingUser) =>
+        case DataUpgradeInit(liveMode, requestingUser) => future2Message(sender(), init(liveMode, requestingUser), log)
     }
 
 
-    private def init(requestingUser: UserADM): Future[DataUpgradeResult] = {
+    /**
+      * Initiates a data upgrade check.
+      *
+      * @param requestingUser the user making the request. Needs to be knora-admin:SystemAdmin.
+      * @return
+      */
+    private def check(requestingUser: UserADM): Future[DataUpgradeCheckResult] = {
+
+        if (requestingUser.id != OntologyConstants.KnoraAdmin.SystemUser) {
+            throw ForbiddenException(s"Only allowed to be called by the '${OntologyConstants.KnoraAdmin.SystemUser}'.")
+        }
+
+        ???
+    }
+
+    /**
+      * Initiates a data upgrade run.
+      *
+      * @param liveMode the mode of the run.
+      * @param requestingUser the user making the request. Needs to be knora-admin:SystemAdmin.
+      * @return
+      */
+    private def init(liveMode: Boolean, requestingUser: UserADM): Future[DataUpgradeInitResult] = {
 
         if (requestingUser.id != OntologyConstants.KnoraAdmin.SystemUser) {
             throw ForbiddenException(s"Only allowed to be called by the '${OntologyConstants.KnoraAdmin.SystemUser}'.")
@@ -62,8 +91,6 @@ class DataUpgradeActor extends Actor with ActorLogging {
 
         //
 
-        }
-
-        ???
+        } yield ???
     }
 }

@@ -63,7 +63,7 @@ object PermissionUtilADM {
     private val permissionRelevantAssertions = Set(
         OntologyConstants.KnoraBase.AttachedToUser,
         OntologyConstants.KnoraBase.AttachedToProject,
-        OntologyConstants.KnoraAdmin.HasPermissions
+        OntologyConstants.KnoraBase.HasPermissions
     )
 
     /**
@@ -100,7 +100,7 @@ object PermissionUtilADM {
       *                       pertaining to the value, grouped by predicate. The predicates must include
       *                       [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToUser]], and should include
       *                       [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToProject]]
-      *                       and [[org.knora.webapi.OntologyConstants.KnoraAdmin.HasPermissions]]. Other predicates may be
+      *                       and [[org.knora.webapi.OntologyConstants.KnoraBase.HasPermissions]]. Other predicates may be
       *                       included, but they will be ignored, so there is no need to filter them before passing them to
       *                       this function.
       * @param subjectProject if provided, the `knora-base:attachedToProject` of the resource containing the value. Otherwise,
@@ -141,7 +141,7 @@ object PermissionUtilADM {
       * Given the IRI of an RDF property, returns `true` if the property is relevant to calculating permissions. This
       * is the case if the property is [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToUser]],
       * [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToProject]], or
-      * or [[org.knora.webapi.OntologyConstants.KnoraAdmin.HasPermissions]].
+      * or [[org.knora.webapi.OntologyConstants.KnoraBase.HasPermissions]].
       *
       * @param p the IRI of the property.
       * @return `true` if the property is relevant to calculating permissions.
@@ -300,7 +300,7 @@ object PermissionUtilADM {
       *                    pertaining to the subject. The predicates must include
       *                    [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToUser]] and
       *                    [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToProject]], and should include
-      *                    [[org.knora.webapi.OntologyConstants.KnoraAdmin.HasPermissions]].
+      *                    [[org.knora.webapi.OntologyConstants.KnoraBase.HasPermissions]].
       *                    Other predicates may be included, but they will be ignored, so there is no need to filter
       *                    them before passing them to this function.
       * @param userProfile the profile of the user making the request.
@@ -315,7 +315,7 @@ object PermissionUtilADM {
         // Anything with permissions must have an creator and a project.
         val subjectCreator: IRI = assertionMap.getOrElse(OntologyConstants.KnoraBase.AttachedToUser, throw InconsistentTriplestoreDataException(s"Subject $subjectIri has no creator"))
         val subjectProject: IRI = assertionMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Subject $subjectIri has no project"))
-        val subjectPermissionLiteral: String = assertionMap.getOrElse(OntologyConstants.KnoraAdmin.HasPermissions, throw InconsistentTriplestoreDataException(s"Subject $subjectIri has no knora-base:hasPermissions predicate"))
+        val subjectPermissionLiteral: String = assertionMap.getOrElse(OntologyConstants.KnoraBase.HasPermissions, throw InconsistentTriplestoreDataException(s"Subject $subjectIri has no knora-base:hasPermissions predicate"))
 
         getUserPermissionV1(subjectIri = subjectIri, subjectCreator = subjectCreator, subjectProject = subjectProject, subjectPermissionLiteral = subjectPermissionLiteral, userProfile = userProfile)
     }

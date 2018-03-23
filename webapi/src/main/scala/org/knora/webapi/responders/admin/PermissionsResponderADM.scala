@@ -353,7 +353,7 @@ class PermissionsResponderADM extends Responder {
                 case (permissionIri: IRI, propsMap: Map[String, String]) =>
 
                     /* parse permissions */
-                    val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(propsMap.get(OntologyConstants.KnoraAdmin.HasPermissions), PermissionType.AP)
+                    val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(propsMap.get(OntologyConstants.KnoraBase.HasPermissions), PermissionType.AP)
 
                     /* construct permission object */
                     AdministrativePermissionADM(iri = permissionIri, forProject = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentTriplestoreDataException(s"Administrative Permission $permissionIri has no project attached.")), forGroup = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ForGroup, throw InconsistentTriplestoreDataException(s"Administrative Permission $permissionIri has no group attached.")), hasPermissions = hasPermissions)
@@ -399,7 +399,7 @@ class PermissionsResponderADM extends Responder {
             _ = if (groupedPermissionsQueryResponse.isEmpty) throw NotFoundException(s"Administrative permission $administrativePermissionIri could not be found.")
 
             /* extract the permission */
-            hasPermissions = PermissionUtilADM.parsePermissionsWithType(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.HasPermissions).map(_.head), PermissionType.AP)
+            hasPermissions = PermissionUtilADM.parsePermissionsWithType(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.AP)
             //_ = log.debug(s"administrativePermissionForIriGetRequestV1 - hasPermissions: ${MessageUtil.toSource(hasPermissions)}")
 
             /* construct the permission object */
@@ -448,7 +448,7 @@ class PermissionsResponderADM extends Responder {
                 val groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
                 }
-                val hasPermissions = PermissionUtilADM.parsePermissionsWithType(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.HasPermissions).map(_.head), PermissionType.AP)
+                val hasPermissions = PermissionUtilADM.parsePermissionsWithType(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.AP)
                 Some(
                     permissionsmessages.AdministrativePermissionADM(iri = returnedPermissionIri, forProject = projectIri, forGroup = groupIri, hasPermissions = hasPermissions)
                 )
@@ -547,7 +547,7 @@ class PermissionsResponderADM extends Responder {
                 val groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
                 }
-                val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.HasPermissions).map(_.head), PermissionType.OAP)
+                val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
                 Some(
                     ObjectAccessPermissionADM(forResource = Some(resourceIri), forValue = None, hasPermissions = hasPermissions)
                 )
@@ -584,7 +584,7 @@ class PermissionsResponderADM extends Responder {
                 val groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
                 }
-                val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.HasPermissions).map(_.head), PermissionType.OAP)
+                val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
                 Some(
                     ObjectAccessPermissionADM(forResource = None, forValue = Some(valueIri), hasPermissions = hasPermissions)
                 )
@@ -633,7 +633,7 @@ class PermissionsResponderADM extends Responder {
                 case (permissionIri: IRI, propsMap: Map[String, String]) =>
 
                     /* parse permissions */
-                    val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(propsMap.get(OntologyConstants.KnoraAdmin.HasPermissions), PermissionType.OAP)
+                    val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(propsMap.get(OntologyConstants.KnoraBase.HasPermissions), PermissionType.OAP)
 
                     /* construct permission object */
                     DefaultObjectAccessPermissionADM(iri = permissionIri, forProject = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentTriplestoreDataException(s"Permission $permissionIri has no project.")), forGroup = propsMap.get(OntologyConstants.KnoraAdmin.ForGroup), forResourceClass = propsMap.get(OntologyConstants.KnoraAdmin.ForResourceClass), forProperty = propsMap.get(OntologyConstants.KnoraAdmin.ForProperty), hasPermissions = hasPermissions)
@@ -677,7 +677,7 @@ class PermissionsResponderADM extends Responder {
             }
             //_ = log.debug(s"defaultObjectAccessPermissionForIriGetRequestADM - groupedResult: ${MessageUtil.toSource(groupedPermissionsQueryResponse)}")
 
-            hasPermissions = PermissionUtilADM.parsePermissionsWithType(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.HasPermissions).map(_.head), PermissionType.OAP)
+            hasPermissions = PermissionUtilADM.parsePermissionsWithType(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
 
             defaultObjectAccessPermission = permissionsmessages.DefaultObjectAccessPermissionADM(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentTriplestoreDataException(s"Permission $permissionIri has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head), hasPermissions = hasPermissions)
 
@@ -734,7 +734,7 @@ class PermissionsResponderADM extends Responder {
                 val groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
                 }
-                val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.HasPermissions).map(_.head), PermissionType.OAP)
+                val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
                 Some(
                     DefaultObjectAccessPermissionADM(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentTriplestoreDataException(s"Permission has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head), hasPermissions = hasPermissions)
                 )
