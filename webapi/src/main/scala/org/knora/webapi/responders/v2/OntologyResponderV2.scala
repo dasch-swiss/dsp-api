@@ -161,8 +161,7 @@ class OntologyResponderV2 extends Responder {
         val classIrisPerOntology: Map[SmartIri, Set[SmartIri]] = getEntityIrisFromOntologyGraphs(
             ontologyGraphs = ontologyGraphs,
             entityTypes = Set(OntologyConstants.Owl.Class)
-        ) + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2Simple.Classes.keySet) +
-            (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2WithValueObjects.Classes.keySet)
+        )
 
         // A map of ontology IRIs to property IRIs in each ontology.
         val propertyIrisPerOntology: Map[SmartIri, Set[SmartIri]] = getEntityIrisFromOntologyGraphs(
@@ -173,8 +172,7 @@ class OntologyResponderV2 extends Responder {
                 OntologyConstants.Owl.AnnotationProperty,
                 OntologyConstants.Rdf.Property
             )
-        ) + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2Simple.Properties.keySet) +
-            (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri -> KnoraApiV2WithValueObjects.Properties.keySet)
+        )
 
         // A map of ontology IRIs to named individual IRIs in each ontology.
         val individualIrisPerOntology: Map[SmartIri, Set[SmartIri]] = getEntityIrisFromOntologyGraphs(
@@ -292,7 +290,7 @@ class OntologyResponderV2 extends Responder {
             allLinkProps = allLinkProps,
             allLinkValueProps = allLinkValueProps,
             allFileValueProps = allFileValueProps
-        ) ++ KnoraApiV2Simple.Classes ++ KnoraApiV2WithValueObjects.Classes
+        )
 
         // Construct a ReadPropertyInfoV2 for each property definition.
         val readPropertyInfos: Map[SmartIri, ReadPropertyInfoV2] = makeReadPropertyInfos(
@@ -304,7 +302,7 @@ class OntologyResponderV2 extends Responder {
             allLinkProps = allLinkProps,
             allLinkValueProps = allLinkValueProps,
             allFileValueProps = allFileValueProps
-        ) ++ KnoraApiV2Simple.Properties ++ KnoraApiV2WithValueObjects.Properties
+        )
 
         // Construct a ReadIndividualV2 for each OWL named individual.
         val readIndividualInfos = makeReadIndividualInfos(allIndividuals)
@@ -319,20 +317,6 @@ class OntologyResponderV2 extends Responder {
                 }
         }.toSet
 
-        // A ReadOntologyV2 for the KnoraApiV2Simple ontology.
-        val readOntologyForApiV2Simple = ReadOntologyV2(
-            ontologyMetadata = KnoraApiV2Simple.OntologyMetadata,
-            classes = KnoraApiV2Simple.Classes,
-            properties = KnoraApiV2Simple.Properties
-        )
-
-        // A ReadOntologyV2 for the KnoraApiV2WithValueObjects ontology.
-        val readOntologyForApiV2WithValueObjects = ReadOntologyV2(
-            ontologyMetadata = KnoraApiV2WithValueObjects.OntologyMetadata,
-            classes = KnoraApiV2WithValueObjects.Classes,
-            properties = KnoraApiV2WithValueObjects.Properties
-        )
-
         // A ReadOntologyV2 for each ontology to be cached.
         val readOntologies: Map[SmartIri, ReadOntologyV2] = allOntologyMetadata.map {
             case (ontologyIri, ontologyMetadata) =>
@@ -346,10 +330,10 @@ class OntologyResponderV2 extends Responder {
                     },
                     individuals = readIndividualInfos.filter {
                         case (individualIri, _) => individualIri.getOntologyFromEntity == ontologyIri
-                    }
+                    },
+                    isWholeOntology = true
                 )
-        } + (OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri -> readOntologyForApiV2Simple) +
-            (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri -> readOntologyForApiV2WithValueObjects)
+        }
 
         // Construct the ontology cache data.
         val ontologyCacheData: OntologyCacheData = OntologyCacheData(
@@ -505,17 +489,25 @@ class OntologyResponderV2 extends Responder {
                 }
 
                 val ontologyIri = classIri.getOntologyFromEntity
-                val isKnoraResourceClass = allSubClassOfRelations(classIri).contains(OntologyConstants.KnoraBase.Resource.toKnoraInternalSmartIri)
-                val isStandoffClass = !isKnoraResourceClass && allSubClassOfRelations(classIri).contains(OntologyConstants.KnoraBase.StandoffTag.toKnoraInternalSmartIri)
-                val isValueClass = !(isKnoraResourceClass || isStandoffClass) && allSubClassOfRelations(classIri).contains(OntologyConstants.KnoraBase.Value.toKnoraInternalSmartIri)
+                val allBaseClasses = allSubClassOfRelations(classIri)
+                val isKnoraResourceClass = allBaseClasses.contains(OntologyConstants.KnoraBase.Resource.toKnoraInternalSmartIri)
+                val isStandoffClass = !isKnoraResourceClass && allBaseClasses.contains(OntologyConstants.KnoraBase.StandoffTag.toKnoraInternalSmartIri)
+                val isValueClass = !(isKnoraResourceClass || isStandoffClass) && allBaseClasses.contains(OntologyConstants.KnoraBase.Value.toKnoraInternalSmartIri)
 
-                // TODO: For now, any class defined in a project-specific ontology can be instantiated. But there are also classes
-                // that can be instantiated in knora-base. This doesn't matter yet, because knora-base is not served. Later, if we
-                // generate knora-api from knora-base, we should actually put a predicate isAbstract in the triplestore.
-                val canBeInstantiated = isKnoraResourceClass && !ontologyIri.isKnoraBuiltInDefinitionIri
+                // A class can be instantiated if it's in a built-in ontology and marked with knora-base:canBeInstantiated, or if it's
+                // a resource class in a project-specific ontology.
+                val canBeInstantiated = if (ontologyIri.isKnoraBuiltInDefinitionIri) {
+                    classDef.predicates.get(OntologyConstants.KnoraBase.CanBeInstantiated.toSmartIri).flatMap(_.objects.headOption) match {
+                        case Some(booleanLiteral: BooleanLiteralV2) => booleanLiteral.value
+                        case _ => false
+                    }
+                } else {
+                    isKnoraResourceClass
+                }
 
                 val readClassInfo = ReadClassInfoV2(
                     entityInfoContent = classDef,
+                    allBaseClasses = allBaseClasses,
                     isResourceClass = isKnoraResourceClass,
                     isStandoffClass = isStandoffClass,
                     isValueClass = isValueClass,
@@ -560,23 +552,31 @@ class OntologyResponderV2 extends Responder {
                                       allLinkValueProps: Set[SmartIri],
                                       allFileValueProps: Set[SmartIri]): Map[SmartIri, ReadPropertyInfoV2] = {
         propertyDefs.map {
-            case (propertyIri, propertyInfoContent) =>
+            case (propertyIri, propertyDef) =>
                 val ontologyIri = propertyIri.getOntologyFromEntity
 
                 validateGuiAttributes(
-                    propertyInfoContent = propertyInfoContent,
+                    propertyInfoContent = propertyDef,
                     allGuiAttributeDefinitions = allGuiAttributeDefinitions,
                     errorFun = { msg: String => throw InconsistentTriplestoreDataException(msg) }
                 )
 
-                // TODO: For now, any property defined in a project-specific ontology is editable. But there are also editable properties
-                // in knora-base. This doesn't matter yet, because knora-base is not served. Later, if we generate knora-api
-                // from knora-base, we should actually put a predicate isAbstract in the triplestore.
-                val isEditable = !ontologyIri.isKnoraBuiltInDefinitionIri
+                val isResourceProp = allKnoraResourceProps.contains(propertyIri)
+
+                // A property can be instantiated if it's in a built-in ontology and marked with knora-base:isEditable,
+                // or if it's a resource property in a project-specific ontology.
+                val isEditable = if (ontologyIri.isKnoraBuiltInDefinitionIri) {
+                    propertyDef.predicates.get(OntologyConstants.KnoraBase.IsEditable.toSmartIri).flatMap(_.objects.headOption) match {
+                        case Some(booleanLiteral: BooleanLiteralV2) => booleanLiteral.value
+                        case _ => false
+                    }
+                } else {
+                    isResourceProp
+                }
 
                 val propertyEntityInfo = ReadPropertyInfoV2(
-                    entityInfoContent = propertyInfoContent,
-                    isResourceProp = allKnoraResourceProps.contains(propertyIri),
+                    entityInfoContent = propertyDef,
+                    isResourceProp = isResourceProp,
                     isEditable = isEditable,
                     isLinkProp = allLinkProps.contains(propertyIri),
                     isLinkValueProp = allLinkValueProps.contains(propertyIri),
@@ -717,42 +717,6 @@ class OntologyResponderV2 extends Responder {
     }
 
     /**
-      * Given a requested entity IRI, finds the IRI of the corresponding cached entity. This translates external to
-      * internal entity IRIs, except for `knora-api` entities, which are not translated to `knora-base` entities,
-      * because `knora-api` entities are cached separately.
-      *
-      * @param entityIri the requested entity IRI.
-      * @return the IRI of the corresponding cached entity.
-      */
-    private def makeEntityIriForCache(entityIri: SmartIri): SmartIri = {
-        if (OntologyConstants.ConstantOntologies.contains(entityIri.getOntologyFromEntity.toString)) {
-            // The client is asking about an entity in a constant ontology, so don't translate its IRI.
-            entityIri
-        } else {
-            // The client is asking about a non-constant entity. Translate its IRI to an internal entity IRI.
-            entityIri.toOntologySchema(InternalSchema)
-        }
-    }
-
-    /**
-      * Given a requested ontology IRI, finds the IRI of the corresponding cached ontology. This translates external to
-      * internal ontology IRIs, except for `knora-api` ontologies, which are not translated to `knora-base` ontologies,
-      * because `knora-api` ontologies are cached separately.
-      *
-      * @param ontologyIri the requested ontology IRI.
-      * @return the IRI of the corresponding cached ontology.
-      */
-    def makeOntologyIriForCache(ontologyIri: SmartIri): SmartIri = {
-        if (OntologyConstants.ConstantOntologies.contains(ontologyIri.toString)) {
-            // The client is asking about a constant ontology, so don't translate its IRI.
-            ontologyIri
-        } else {
-            // The client is asking about a non-constant ontology. Translate its IRI to an internal ontology IRI.
-            ontologyIri.toOntologySchema(InternalSchema)
-        }
-    }
-
-    /**
       * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV1]] describing both resource and property entities.
       *
       * @param classIris    the IRIs of the resource entities to be queried.
@@ -764,34 +728,72 @@ class OntologyResponderV2 extends Responder {
         for {
             cacheData <- getCacheData
 
-            classIrisForCache = classIris.map(makeEntityIriForCache)
-            propertyIrisForCache = propertyIris.map(makeEntityIriForCache)
+            // See if any of the requested entities are hard-coded for knora-api.
 
-            classOntologies: Iterable[ReadOntologyV2] = cacheData.ontologies.filterKeys(classIrisForCache.map(_.getOntologyFromEntity)).values
-            propertyOntologies: Iterable[ReadOntologyV2] = cacheData.ontologies.filterKeys(propertyIrisForCache.map(_.getOntologyFromEntity)).values
+            hardCodedKnoraApiClassesAvailable: Map[SmartIri, ReadClassInfoV2] = KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraApiClassesToAdd.filterKeys(classIris) ++
+                KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiClassesToAdd.filterKeys(classIris)
 
-            classDefsAvailable: Map[SmartIri, ReadClassInfoV2] = classOntologies.flatMap {
+            hardCodedKnoraApiPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] = KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraApiPropertiesToAdd.filterKeys(propertyIris) ++
+                KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiPropertiesToAdd.filterKeys(propertyIris)
+
+            // Convert the remaining external entity IRIs to internal ones.
+
+            internalToExternalClassIris: Map[SmartIri, SmartIri] = (classIris -- hardCodedKnoraApiClassesAvailable.keySet).map(externalIri => externalIri.toOntologySchema(InternalSchema) -> externalIri).toMap
+            internalToExternalPropertyIris: Map[SmartIri, SmartIri] = (propertyIris -- hardCodedKnoraApiPropertiesAvailable.keySet).map(externalIri => externalIri.toOntologySchema(InternalSchema) -> externalIri).toMap
+
+            classIrisForCache = internalToExternalClassIris.keySet
+            propertyIrisForCache = internalToExternalPropertyIris.keySet
+
+            // Get the entities that are available in the ontology cache.
+
+            classOntologiesForCache: Iterable[ReadOntologyV2] = cacheData.ontologies.filterKeys(classIrisForCache.map(_.getOntologyFromEntity)).values
+            propertyOntologiesForCache: Iterable[ReadOntologyV2] = cacheData.ontologies.filterKeys(propertyIrisForCache.map(_.getOntologyFromEntity)).values
+
+            classesAvailableFromCache: Map[SmartIri, ReadClassInfoV2] = classOntologiesForCache.flatMap {
                 ontology => ontology.classes.filterKeys(classIrisForCache)
             }.toMap
 
-            propertyDefsAvailable: Map[SmartIri, ReadPropertyInfoV2] = propertyOntologies.flatMap {
+            propertiesAvailableFromCache: Map[SmartIri, ReadPropertyInfoV2] = propertyOntologiesForCache.flatMap {
                 ontology => ontology.properties.filterKeys(propertyIrisForCache)
             }.toMap
 
-            missingClassDefs = classIrisForCache -- classDefsAvailable.keySet
-            missingPropertyDefs = propertyIrisForCache -- propertyDefsAvailable.keySet
+            allClassesAvailable: Map[SmartIri, ReadClassInfoV2] = classesAvailableFromCache ++ hardCodedKnoraApiClassesAvailable
+            allPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] = propertiesAvailableFromCache ++ hardCodedKnoraApiPropertiesAvailable
 
-            _ = if (missingClassDefs.nonEmpty) {
-                throw NotFoundException(s"Some requested classes were not found: ${missingClassDefs.mkString(", ")}")
+            // See if any entities are missing.
+
+            allExternalClassIrisAvailable: Set[SmartIri] = allClassesAvailable.keySet.map {
+                classIri =>
+                    if (classIri.getOntologySchema.contains(InternalSchema)) {
+                        internalToExternalClassIris(classIri)
+                    } else {
+                        classIri
+                    }
             }
 
-            _ = if (missingPropertyDefs.nonEmpty) {
-                throw NotFoundException(s"Some requested properties were not found: ${missingPropertyDefs.mkString(", ")}")
+            allExternalPropertyIrisAvailable = allPropertiesAvailable.keySet.map {
+                propertyIri =>
+                    if (propertyIri.getOntologySchema.contains(InternalSchema)) {
+                        internalToExternalPropertyIris(propertyIri)
+                    } else {
+                        propertyIri
+                    }
+            }
+
+            missingClasses = classIris -- allExternalClassIrisAvailable
+            missingProperties = propertyIris -- allExternalPropertyIrisAvailable
+
+            _ = if (missingClasses.nonEmpty) {
+                throw NotFoundException(s"Some requested classes were not found: ${missingClasses.mkString(", ")}")
+            }
+
+            _ = if (missingProperties.nonEmpty) {
+                throw NotFoundException(s"Some requested properties were not found: ${missingProperties.mkString(", ")}")
             }
 
             response = EntityInfoGetResponseV2(
-                classInfoMap = new ErrorHandlingMap(classDefsAvailable, { key => s"Resource class $key not found" }),
-                propertyInfoMap = new ErrorHandlingMap(propertyDefsAvailable, { key => s"Property $key not found" })
+                classInfoMap = new ErrorHandlingMap(allClassesAvailable, { key => s"Resource class $key not found" }),
+                propertyInfoMap = new ErrorHandlingMap(allPropertiesAvailable, { key => s"Property $key not found" })
             )
         } yield response
     }
@@ -808,22 +810,24 @@ class OntologyResponderV2 extends Responder {
         for {
             cacheData <- getCacheData
 
-            classIrisForCache = standoffClassIris.map(makeEntityIriForCache)
-            propertyIrisForCache = standoffPropertyIris.map(makeEntityIriForCache)
+            classIrisForCache = standoffClassIris.map(_.toOntologySchema(InternalSchema))
+            propertyIrisForCache = standoffPropertyIris.map(_.toOntologySchema(InternalSchema))
 
             classOntologies: Iterable[ReadOntologyV2] = cacheData.ontologies.filterKeys(classIrisForCache.map(_.getOntologyFromEntity)).values
             propertyOntologies: Iterable[ReadOntologyV2] = cacheData.ontologies.filterKeys(propertyIrisForCache.map(_.getOntologyFromEntity)).values
 
             classDefsAvailable: Map[SmartIri, ReadClassInfoV2] = classOntologies.flatMap {
-                ontology => ontology.classes.filter {
-                    case (classIri, classDef) => classDef.isStandoffClass && standoffClassIris.contains(classIri)
-                }
+                ontology =>
+                    ontology.classes.filter {
+                        case (classIri, classDef) => classDef.isStandoffClass && standoffClassIris.contains(classIri)
+                    }
             }.toMap
 
             propertyDefsAvailable: Map[SmartIri, ReadPropertyInfoV2] = propertyOntologies.flatMap {
-                ontology => ontology.properties.filter {
-                    case (propertyIri, _) => standoffPropertyIris.contains(propertyIri) && cacheData.propertiesUsedInStandoffCardinalities.contains(propertyIri)
-                }
+                ontology =>
+                    ontology.properties.filter {
+                        case (propertyIri, _) => standoffPropertyIris.contains(propertyIri) && cacheData.propertiesUsedInStandoffCardinalities.contains(propertyIri)
+                    }
             }.toMap
 
             missingClassDefs = classIrisForCache -- classDefsAvailable.keySet
@@ -855,9 +859,10 @@ class OntologyResponderV2 extends Responder {
             cacheData <- getCacheData
         } yield StandoffClassesWithDataTypeGetResponseV2(
             standoffClassInfoMap = cacheData.ontologies.values.flatMap {
-                ontology => ontology.classes.filter {
-                    case (_, classDef) => classDef.isStandoffClass && classDef.standoffDataType.isDefined
-                }
+                ontology =>
+                    ontology.classes.filter {
+                        case (_, classDef) => classDef.isStandoffClass && classDef.standoffDataType.isDefined
+                    }
             }.toMap
         )
     }
@@ -966,14 +971,13 @@ class OntologyResponderV2 extends Responder {
             returnAllOntologies: Boolean = projectIris.isEmpty
 
             ontologyMetadata: Set[OntologyMetadataV2] <- if (returnAllOntologies) {
-                FastFuture.successful((cacheData.ontologies - OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toKnoraInternalSmartIri).values.map(_.ontologyMetadata).toSet)
+                FastFuture.successful(cacheData.ontologies.values.map(_.ontologyMetadata).toSet)
             } else {
                 for {
                     namedGraphInfos: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
-                    filteredNamedGraphInfos = namedGraphInfos.filterNot(_.id == OntologyConstants.KnoraBase.KnoraBaseOntologyIri)
                     projectIriStrs = projectIris.map(_.toString)
 
-                    projectOntologyMetadata = filteredNamedGraphInfos.filter(namedGraphInfo => projectIriStrs.contains(namedGraphInfo.project_id)).map {
+                    projectOntologyMetadata = namedGraphInfos.filter(namedGraphInfo => projectIriStrs.contains(namedGraphInfo.project_id)).map {
                         namedGraphInfo =>
                             val ontologyIri = namedGraphInfo.id.toSmartIri
                             cacheData.ontologies.get(ontologyIri).map(_.ontologyMetadata).getOrElse(throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri has no metadata"))
@@ -1007,7 +1011,7 @@ class OntologyResponderV2 extends Responder {
 
             ontologies = ontologyIris.map {
                 ontologyIri =>
-                    val ontologyIriForCache = makeOntologyIriForCache(ontologyIri)
+                    val ontologyIriForCache = ontologyIri.toOntologySchema(InternalSchema)
 
                     cacheData.ontologies(ontologyIriForCache).copy(
                         userLang = userLang
@@ -1043,7 +1047,7 @@ class OntologyResponderV2 extends Responder {
             classesInOntologies = classInfoResponse.classInfoMap.values.groupBy(_.entityInfoContent.classIri.getOntologyFromEntity).map {
                 case (ontologyIri, classInfos) =>
                     ReadOntologyV2(
-                        ontologyMetadata = cacheData.ontologies(ontologyIri).ontologyMetadata,
+                        ontologyMetadata = cacheData.ontologies(ontologyIri.toOntologySchema(InternalSchema)).ontologyMetadata,
                         classes = classInfos.map {
                             classInfo => classInfo.entityInfoContent.classIri -> classInfo
                         }.toMap,
@@ -2980,8 +2984,7 @@ class OntologyResponderV2 extends Responder {
       * @param newInternalPropertyIri       the internal IRI of the new property.
       * @param constraintPredicateIri       the internal IRI of the constraint, i.e. `knora-base:subjectClassConstraint` or `knora-base:objectClassConstraint`.
       * @param constraintValueInNewProperty the value of the constraint in the new property.
-      * @param allSuperPropertyIris         the IRIs of all the base properties of the new property, including indirect base properties, but not including the new
-      *                                     property itself.
+      * @param allSuperPropertyIris         the IRIs of all the base properties of the new property, including indirect base properties and the new property itself.
       * @return unit, but throws an exception if the new property's constraint value is not valid.
       */
     private def checkPropertyConstraint(newInternalPropertyIri: SmartIri, constraintPredicateIri: SmartIri, constraintValueInNewProperty: SmartIri, allSuperPropertyIris: Set[SmartIri]): Future[Unit] = {
@@ -2989,7 +2992,7 @@ class OntologyResponderV2 extends Responder {
             cacheData <- getCacheData
 
             // Get the definitions of all the superproperties of the new property that are Knora resource properties.
-            superPropertyInfos: Set[ReadPropertyInfoV2] = allSuperPropertyIris.collect {
+            superPropertyInfos: Set[ReadPropertyInfoV2] = (allSuperPropertyIris - newInternalPropertyIri).collect {
                 case superPropertyIri if isKnoraResourceProperty(superPropertyIri, cacheData) =>
                     cacheData.ontologies(superPropertyIri.getOntologyFromEntity).properties(superPropertyIri)
             }

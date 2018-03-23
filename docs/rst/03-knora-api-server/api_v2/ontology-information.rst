@@ -155,7 +155,7 @@ simple schema, ``http://0.0.0.0:3333/ontology/00FF/images/simple/v2`` (simplifie
           }, {
             "@type" : "owl:Restriction",
             "owl:minCardinality" : 1,
-            "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFileValue"
+            "owl:onProperty" : "http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile"
           }, {
             "@type" : "owl:Restriction",
             "owl:maxCardinality" : 1,
