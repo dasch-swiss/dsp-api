@@ -34,7 +34,7 @@ schola:Scholastic
 	rdfs:comment """An adherent of Scholasticism."""@en;
 	skos:note """There are no female scholastics because women were not allowed to universities."""@en;
 	rdfs:subClassOf human:Person, [
-#		a owl:Restriction; owl:onProperty schola:hasRole; owl:someValuesFrom schola:Role], [
+		a owl:Restriction; owl:onProperty schola:hasRole; owl:someValuesFrom schola:Role], [
 		a owl:Restriction; owl:onProperty schola:hasRole; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
 		a owl:Restriction; owl:onProperty schola:hasRoleValue; owl:minCardinality "0"^^xsd:nonNegativeInteger] #, [
 #		a owl:Restriction; owl:onProperty schola:hasReportatorRole; owl:minCardinality "0"^^xsd:nonNegativeInteger], [

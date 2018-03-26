@@ -46,8 +46,8 @@ human:Person
 	rdfs:subClassOf human:Human, frbroo:F10_Person, foaf:Person, [ # frbroo:F10_Person rdfs:subClassOf cidoc:E21_Person rdfs:subClassOf cidoc:E39_Actor
 		a owl:Restriction; owl:onProperty human:hasBirthDate; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
 		a owl:Restriction; owl:onProperty human:hasDeathDate; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
-		a owl:Restriction; owl:onProperty human:hasPersonLife; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
-		a owl:Restriction; owl:onProperty human:hasPersonLifeValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty human:hasLife; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty human:hasLifeValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
 #		a owl:Restriction; owl:onProperty human:hasBiologicalSex; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
 #		a owl:Restriction; owl:onProperty human:hasBiologicalSexValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
 		a owl:Restriction; owl:onProperty human:hasName; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
@@ -56,8 +56,8 @@ human:Person
 		a owl:Restriction; owl:onProperty human:hasPreferredName; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
 		a owl:Restriction; owl:onProperty human:hasAlias; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
 		a owl:Restriction; owl:onProperty human:hasDescription; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
-		a owl:Restriction; owl:onProperty human:personHasRole; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
-		a owl:Restriction; owl:onProperty human:personHasRoleValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty human:hasRole; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty human:hasRoleValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
 		a owl:Restriction; owl:onProperty human:adheringToThought; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
 		a owl:Restriction; owl:onProperty human:adheringToThoughtValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
 		a owl:Restriction; owl:onProperty human:hasFloruit; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
@@ -166,34 +166,21 @@ human:PhysicalCreation
 	rdfs:comment """Person's creation as physical resource."""@en;
 	rdfs:subClassOf human:Creation, physical:Matter. # rdfs:subClassOf cidoc:E24_Physical_Man-Made_Thing rdfs:subClassOf cidoc:E72_Legal_Object: legal aspect TBD
 
-human:Device
-	a owl:Class;
-	rdfs:label "device"@en, "Gerät"@de;
-	rdfs:comment """Physical creation serving a particular purpose."""@en;
-	rdfs:subClassOf human:PhysicalCreation.
-
 #human:Product
 #	a owl:Class;
 #	rdfs:label "product"@en;
 #	rdfs:comment """Physical creation as result of producing."""@en;
 #	rdfs:subClassOf physical:Product.
 
-human:Machine
-	a owl:Class;
-	rdfs:label "machine"@en, "Maschine"@de;
-	rdfs:comment """Device having more than one part, each with a function, and transmitting a force or directing its application to perform a task."""@en;
-	rdfs:subClassOf human:Device.
-
-# human:Computer
-
 human:CreationVersion
 	a owl:Class;
 	rdfs:label "creation version"@en, "Version einer Kreation"@de;
 	rdfs:comment """Person's creation differing in certain respects - e.g. time, extent - from onther e.g. earlier or standard one."""@en;
-	rdfs:subClassOf human:Creation.
+	skos:note """A version is created by the same person or group of persons."""@en;
+	rdfs:subClassOf human:Creation. 
 
 # version: considering:
-# time: first, final, earlier, later
+# time: earlier, later -> infer with rule
 # extent: standard, reduced, extended
 # etc.
 
@@ -219,17 +206,18 @@ human:CreationDerivative
 	a owl:Class;
 	rdfs:label "creation derivative"@en, "Derivat einer Kreation"@de;
 	rdfs:comment """Derivative of a person's creation, e.g. a translation."""@en;
-	rdfs:subClassOf human:Creation.
+	rdfs:subClassOf human:Creation;
+	owl:disjointWith human:CreationVersion.
 
 human:Occupation
 	a owl:Class;
-	rdfs:label "occupation"@en, "Tätigkeit"@de;
+	rdfs:label "occupation"@en, "Beruf"@de; #* Tätigkeit
 	rdfs:comment """Action serving as a person's regular source of livelihood."""@en;
 	rdfs:subClassOf event:Action.
 
 human:OccupationalRole
 	a owl:Class;
-	rdfs:label "occupational role"@en, "Tätigkeitsrolle"@de;
+	rdfs:label "occupational role"@en, "Berufsrolle"@de; #* Tätigkeitsrolle
 	rdfs:comment """Role of a person in an occupation."""@en;
 	rdfs:subClassOf human:Role.
 
@@ -239,6 +227,12 @@ human:Owner #*
 	rdfs:comment """Role of a person having a property."""@en;
 	rdfs:subClassOf human:Role.
 
+human:Giver
+	a owl:Class;
+	rdfs:label "giver"@en, "Geber"@de;
+	rdfs:comment """Role of a person transferring the possession of something to someone."""@en;
+	rdfs:subClassOf human:Role.
+
 human:Floruit #* on which level: agent, body of thought
 	a owl:Class;
 	rdfs:label "person's floruit"@en, "Floruit einer Person"@de;
@@ -246,6 +240,18 @@ human:Floruit #* on which level: agent, body of thought
 	rdfs:subClassOf event:Action, knora-base:Resource. # , [
 #		a owl:Restriction; owl:onProperty event:hasStartDate; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
 #		a owl:Restriction; owl:onProperty event:hasEndDate; owl:minCardinality "0"^^xsd:nonNegativeInteger]
+
+human:Mathematician
+	a owl:Class;
+	rdfs:label "mathematician"@en, "Mathematiker"@de;
+	rdfs:comment """Role of a person educated in mathematics."""@en;
+	rdfs:subClassOf human:Role.
+
+human:Politician
+	a owl:Class;
+	rdfs:label "politician role"@en, "Politiker"@de;
+	rdfs:comment """Occupational role of being professionally involved in politics, especially as a holder of an elected office."""@en;
+	rdfs:subClassOf human:OccupationalRole.
 
 #
 # PROPERTIES
@@ -309,21 +315,21 @@ human:actsInValue
 	knora-base:subjectClassConstraint human:Human;
 	knora-base:objectClassConstraint knora-base:LinkValue.
 
-human:hasPersonLife
+human:hasLife
 	a owl:ObjectProperty;
-	rdfs:label "has person life"@en, "hat Person-Leben"@de;
+	rdfs:label "person has life"@en, "Person hat Leben"@de;
 	rdfs:comment """Relating a person to the person's life."""@en;
-	rdfs:subPropertyOf human:actsIn;
+	rdfs:subPropertyOf event:hasExistence; #, human:actsIn;
 	rdfs:domain human:Person;
 	rdfs:range human:PersonLife;
 	knora-base:subjectClassConstraint human:Person;
 	knora-base:objectClassConstraint human:PersonLife.
 
-human:hasPersonLifeValue
+human:hasLifeValue
 	a owl:ObjectProperty;
-	rdfs:label "has person life - statement"@en, "hat Person-Leben - Festlegung"@de;
+	rdfs:label "person has life - statement"@en, "Person hat Leben - Festlegung"@de;
 	rdfs:comment """Relating a person to a reification statement of the relation between the person and the person's life."""@en;
-	rdfs:subPropertyOf human:actsInValue;
+	rdfs:subPropertyOf event:hasExistenceValue; #, human:actsInValue;
 	knora-base:subjectClassConstraint human:Person;
 	knora-base:objectClassConstraint knora-base:LinkValue.
 
@@ -385,7 +391,7 @@ human:hasDescription
 	knora-base:objectClassConstraint knora-base:TextValue;
 	salsah-gui:guiElement salsah-gui:Richtext.
 
-human:personHasRole
+human:hasRole
 	a owl:ObjectProperty;
 	rdfs:label "person has role"@en, "Person hat Rolle"@de;
 	rdfs:comment """Relating a person to a role the person has."""@en;
@@ -395,7 +401,7 @@ human:personHasRole
 	knora-base:subjectClassConstraint human:Person;
 	knora-base:objectClassConstraint human:Role.
 
-human:personHasRoleValue
+human:hasRoleValue
 	a owl:ObjectProperty;
 	rdfs:label "has role - statement"@en, "hat Rolle - Festlegung"@de;
 	rdfs:comment """Relating a person to a reification statement of the relation between the person and a role the person has."""@en;
@@ -409,7 +415,7 @@ human:hasOccupationalRole
 	rdfs:comment """Relating a person to a current occupational role the person has."""@en;
 	rdfs:domain human:Person;
 	rdfs:range human:OccupationalRole;
-	rdfs:subPropertyOf human:personHasRole;
+	rdfs:subPropertyOf human:hasRole;
 	knora-base:subjectClassConstraint human:Person;
 	knora-base:objectClassConstraint human:OccupationalRole.
 
@@ -417,7 +423,7 @@ human:hasOccupationalRoleValue
 	a owl:ObjectProperty;
 	rdfs:label "has occupational role - statement"@en, "hat Tätigkeitsrolle - Festlegung"@de;
 	rdfs:comment """Relating a person to a reification statement of the relation between the person and a current occupational role the person has."""@en;
-	rdfs:subPropertyOf human:personHasRoleValue;
+	rdfs:subPropertyOf human:hasRoleValue;
 	knora-base:subjectClassConstraint human:Person;
 	knora-base:objectClassConstraint knora-base:LinkValue.
 

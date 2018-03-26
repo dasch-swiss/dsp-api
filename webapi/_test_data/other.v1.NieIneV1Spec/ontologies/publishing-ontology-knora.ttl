@@ -60,8 +60,8 @@ publish:Publishing
 publish:Redactor
 	a owl:Class;
 	rdfs:label "redactor"@en, "Redaktor"@de;
-	rdfs:comment """Role of a person editing *text* for publication."""@en;	# -> expression
-	rdfs:subClassOf human:Creator.
+	rdfs:comment """Role of a person editing *text* for publication."""@en;	#* -> expression
+	rdfs:subClassOf human:Creator. #* textedit:Editor
 
 publish:Publisher
 	a owl:Class;
@@ -79,7 +79,7 @@ publish:Publication
 	a owl:Class;
 	rdfs:label "publication"@en, "Publikation"@de;
 	rdfs:comment """An expression published on a carrier."""@en;
-	rdfs:subClassOf infocar:InformationCarrier, frbroo:F5_Item, [
+	rdfs:subClassOf infocar:Carrier, frbroo:F5_Item, [
 		a owl:Restriction; owl:onProperty publish:hasTitle; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
 		a owl:Restriction; owl:onProperty publish:hasDate; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
 		a owl:Restriction; owl:onProperty publish:hasDescription; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
@@ -141,13 +141,13 @@ publish:NachlassPublication
 	a owl:Class;
 	rdfs:label "nachlass publication"@en, "Nachlassausgabe"@de;
 	rdfs:comment """Publication of a nachlass."""@en;
-	rdfs:subClassOf publish:Publication, infocar:NachlassElement.
+	rdfs:subClassOf publish:Publication, infocar:NachlassElement. #*
 
-#publish:UnauthorizedPublication
-#	a owl:Class;
-#	rdfs:label "unauthorized publication"@en, "nicht-autorisierte Ausgabe"@de;
-#	rdfs:comment """Publication without the author's authorization."""@en;
-#	rdfs:subClassOf publish:Publication.
+publish:UnauthorizedPublication
+	a owl:Class;
+	rdfs:label "unauthorized publication"@en, "nicht-autorisierte Ausgabe"@de;
+	rdfs:comment """Publication without the author's authorization."""@en;
+	rdfs:subClassOf publish:Publication.
 
 #
 # PROPERTIES
@@ -352,9 +352,11 @@ publish:hasPublisher
 	a owl:ObjectProperty;
 	rdfs:label "has publisher"@en, "hat Herausgeber"@de;
 	rdfs:comment "Relating a publication to its publisher."@en;
+	rdfs:domain publish:Publication;
+	rdfs:range [rdfs:subClassOf event:Agent, [a owl:Restriction; owl:onProperty agent:hasRole; owl:someValuesFrom publish:Publisher]];
 	rdfs:subPropertyOf knora-base:hasLinkTo;
 	knora-base:subjectClassConstraint publish:Publication;
-	knora-base:objectClassConstraint event:Agent. # [rdfs:subClassOf foafAgent, [a owl:Restriction; owl:onProperty agent:hasRole; owl:someValuesFrom publish:Publisher]].
+	knora-base:objectClassConstraint event:Agent.
 
 publish:hasPublisherValue
 	a owl:ObjectProperty;

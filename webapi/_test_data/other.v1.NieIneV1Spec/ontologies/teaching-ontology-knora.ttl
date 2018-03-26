@@ -69,7 +69,7 @@ teach:teachingBy
 	rdfs:label "teaching by"@en, "Unterricht von"@de;
 	rdfs:comment """Relating a teaching to a person having the teacher role."""@en;
 	rdfs:domain teach:Teaching;
-	rdfs:range [rdfs:subClassOf human:Person, [a owl:Restriction; owl:onProperty event:hasRole; owl:someValuesFrom teach:Teacher]];
+	rdfs:range [rdfs:subClassOf human:Person, [a owl:Restriction; owl:onProperty human:hasRole; owl:someValuesFrom teach:Teacher]];
 	rdfs:subPropertyOf agent:hasAgent;
 	knora-base:subjectClassConstraint teach:Teaching;
 	knora-base:objectClassConstraint human:Person.
@@ -89,7 +89,7 @@ teach:lectureBy
 	rdfs:label "lecture by"@en, "Vorlesung von"@de;
 	rdfs:comment """Relating a lecture to a person having the lecturer role."""@en;
 	rdfs:domain teach:Lecture;
-	rdfs:range [rdfs:subClassOf human:Person, [a owl:Restriction; owl:onProperty event:hasRole; owl:someValuesFrom teach:Lecturer]];
+	rdfs:range [rdfs:subClassOf human:Person, [a owl:Restriction; owl:onProperty human:hasRole; owl:someValuesFrom teach:Lecturer]];
 	rdfs:subPropertyOf teach:teachingBy;
 	knora-base:subjectClassConstraint teach:Lecture;
 	knora-base:objectClassConstraint human:Person.

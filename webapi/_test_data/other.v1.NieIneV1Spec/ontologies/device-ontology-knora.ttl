@@ -1,0 +1,76 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix unicore: <http://purl.uniprot.org/core/>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix frbroo: <http://iflastandards.info/ns/fr/frbr/frbroo/>.
+@prefix event: <http://www.knora.org/ontology/event#>.
+@prefix physical: <http://www.knora.org/ontology/physical-resource#>.
+@prefix agent: <http://www.knora.org/ontology/agent#>.
+@prefix human: <http://www.knora.org/ontology/human#>.
+@prefix infocar: <http://www.knora.org/ontology/information-carrier#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#>.
+@prefix device: <http://www.knora.org/ontology/device#>.
+
+<http://www.knora.org/ontology/device>
+	a owl:Ontology;
+	dct:title "An ontology about device"@en;
+	dct:description """Formal description of a device, general subclasses, related classes and properties."""@en;
+	dct:creator "Hans Cools, MD, software developer, NIE-INE, Basel University, Switzerland"@en;
+	dct:publisher "Basel University, Switzerland"@en.
+
+#
+# CLASSES
+#
+
+device:Device
+	a owl:Class;
+	rdfs:label "device"@en, "Gerät"@de;
+	rdfs:comment """Physical creation serving a particular purpose."""@en;
+	rdfs:subClassOf human:PhysicalCreation.
+
+device:Machine
+	a owl:Class;
+	rdfs:label "machine"@en, "Maschine"@de;
+	rdfs:comment """Device having more than one part, each with a function, and transmitting a force or directing its application to perform a task."""@en;
+	rdfs:subClassOf device:Device.
+
+device:MechanicalMachine
+	a owl:Class;
+	rdfs:label "mechanical machine"@en, "mechanische Maschine"@de;
+	rdfs:comment """Machine using kinetic energy to perform a task."""@en;
+	rdfs:subClassOf device:Machine.
+
+device:ElectricMachine
+	a owl:Class;
+	rdfs:label "electric machine"@en, "elektrische Maschine"@de;
+	rdfs:comment """Machine using electric potential energy to convert it via electrical current to kinetic energy to perform a task."""@en;
+	rdfs:subClassOf device:Machine.
+
+# device:ElectronicDevice
+#	a owl:Class;
+#	rdfs:label "electronic device"@en, "elektronisches Gerät"@de;
+#	rdfs:comment """Device using electrical current in serving a particular purpose."""@en;
+#	rdfs:subClassOf device:Device.
+
+device:ElectronicMachine
+	a owl:Class;
+	rdfs:label "electronic machine"@en, "elektronische Maschine"@de;
+	rdfs:comment """Electric machine manipulating the motion of electrons in an electrical current in ways that add meaningful information to the current, to perform a task."""@en;
+	rdfs:subClassOf device:ElectricMachine.
+
+device:Computer
+	a owl:Class;
+	rdfs:label "computer"@en, "Rechner"@de;
+	rdfs:comment """Machine using programmed instructions to perform arithmetic and logic operations automatically, to perform a task."""@en;
+	rdfs:subClassOf device:Machine.
+
+device:DigitalComputer
+	a owl:Class;
+	rdfs:label "digital computer"@en, "digitale Rechner"@de;
+	rdfs:comment """Electronic computer using digital software and data to perform a task."""@en;
+	rdfs:subClassOf device:Computer, device:ElectronicMachine, infocar:DigitalCarrier.

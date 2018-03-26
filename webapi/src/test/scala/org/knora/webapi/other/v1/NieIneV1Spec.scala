@@ -42,7 +42,7 @@ object NieIneV1Spec {
 }
 
 /**
-  * Test specification for testing a complex permissions structure of the drawings-gods-project.
+  * Test specification for the NIE-INE ontologies.
   */
 class NieIneV1Spec extends CoreSpec( NieIneV1Spec.config ) with TriplestoreJsonProtocol {
 
@@ -73,7 +73,18 @@ class NieIneV1Spec extends CoreSpec( NieIneV1Spec.config ) with TriplestoreJsonP
     RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/organisation-ontology-knora.ttl", name = "http://www.knora.org/ontology/organisation"),
     RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/literature-ontology-knora.ttl", name = "http://www.knora.org/ontology/literature"),
     RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/teaching-ontology-knora.ttl", name = "http://www.knora.org/ontology/teaching"),
-    RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/political-geography-ontology-knora.ttl", name = "http://www.knora.org/ontology/political-geography")
+    RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/political-geography-ontology-knora.ttl", name = "http://www.knora.org/ontology/political-geography"),
+    RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/catholic-organisation-ontology-knora.ttl", name = "http://www.knora.org/ontology/catholic-organisation"),
+    RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/philosophy-ontology-knora.ttl", name = "http://www.knora.org/ontology/philosophy"),
+    RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/philosophies-ontology-knora.ttl", name = "http://www.knora.org/ontology/philosophies"),
+    RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/catholic-orders-ontology-knora.ttl", name = "http://www.knora.org/ontology/catholic-orders"),
+    RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/text-editing-ontology-knora.ttl", name = "http://www.knora.org/ontology/text-editing"),
+    RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/atharvaveda-ontology-knora.ttl", name = "http://www.knora.org/ontology/atharvaveda"),
+    RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/device-ontology-knora.ttl", name = "http://www.knora.org/ontology/device"),
+    RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/indology-ontology-knora.ttl", name = "http://www.knora.org/ontology/indology"),
+    RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/human-geography-ontology-knora.ttl", name = "http://www.knora.org/ontology/human-geography"),
+    RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/physical-geography-ontology-knora.ttl", name = "http://www.knora.org/ontology/physical-geography"),
+    RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/text-structure-ontology-knora.ttl", name = "http://www.knora.org/ontology/text-structure")
   )
 
   "Load test data" in {

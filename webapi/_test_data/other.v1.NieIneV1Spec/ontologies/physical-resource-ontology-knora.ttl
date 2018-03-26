@@ -1,6 +1,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
 @prefix owl: <http://www.w3.org/2002/07/owl#>.
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>.
 @prefix skos: <http://www.w3.org/2004/02/skos/core#>.
 @prefix dct: <http://purl.org/dc/terms/>.
 @prefix foaf: <http://xmlns.com/foaf/0.1/>.
@@ -8,6 +9,7 @@
 @prefix naproti: <http://sweet.jpl.nasa.gov/2.3/propTime.owl#Time>.
 @prefix naprospadi: <http://sweet.jpl.nasa.gov/2.3/propSpaceDistance.owl#>.
 @prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix phygeo: <http://www.knora.org/ontology/physical-geography#>.
 @prefix text: <http://www.knora.org/ontology/text#>.
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#>.
@@ -28,34 +30,43 @@ physical:Resource
 	a owl:Class;
 	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
 	rdfs:label "physical resource"@en, "physische Entität"@de;
-	rdfs:comment """."""@en;
-	rdfs:subClassOf knora-base:Resource. # cidoc:
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf knora-base:Resource. #* cidoc:
 
 physical:Space
 	a owl:Class;
 	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
 	rdfs:label "space"@en, "Raum"@de;
-	rdfs:comment """."""@en;
-	rdfs:subClassOf physical:Resource, narespa:Space, [
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf physical:Resource, geo:SpatialThing, narespa:Space, [
 		a owl:Restriction; owl:onProperty physical:isPartOf; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
-		a owl:Restriction; owl:onProperty physical:isPartOfValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+		a owl:Restriction; owl:onProperty physical:isPartOfValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty phygeo:hasLatitude; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty phygeo:hasLongitude; owl:minCardinality "0"^^xsd:nonNegativeInteger].
 
 physical:Time
 	a owl:Class;
 	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
 	rdfs:label "time"@en, "Zeit"@de;
-	rdfs:comment """."""@en;
+	rdfs:comment """."""@en; #*
 	rdfs:subClassOf physical:Resource, naproti:Time.
 
 physical:Place
 	a owl:Class;
 	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
 	rdfs:label "place"@en, "Platz"@de;
-	rdfs:comment """Specific part of space."""@en;
+	rdfs:comment """Specific space."""@en;
 	rdfs:subClassOf physical:Space, cidoc:E53_Place, [
 		a owl:Restriction; owl:onProperty physical:placeHasName; owl:minCardinality "0"^^xsd:nonNegativeInteger].
 
 # cidoc:E44_Place_Appellation
+
+physical:Point
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "point"@en, "Punkt"@de;
+	rdfs:comment """Space without dimension."""@en;
+	rdfs:subClassOf physical:Space, geo:Point.
 
 physical:Size
 	a owl:Class;
@@ -168,6 +179,24 @@ physical:hasLengthValue
 	rdfs:comment "Relating a space to a reification statement of the relation between that space and its length."@en;
 	rdfs:subPropertyOf knora-base:hasLinkToValue;
 	knora-base:subjectClassConstraint physical:Space;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+physical:hasLocation
+	a owl:ObjectProperty;
+	rdfs:label "has location"@en, "hat Ort"@de;
+	rdfs:comment """Relating something to its location."""@en;
+	rdfs:domain rdfs:Resource;
+	rdfs:range physical:Space;
+	rdfs:subPropertyOf geo:location, knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint knora-base:Resource; #*
+	knora-base:objectClassConstraint physical:Space.
+
+physical:hasLocationValue
+	a owl:ObjectProperty;
+	rdfs:label "has location - statement"@en, "hat Ort - Festlegung"@de;
+	rdfs:comment """Relating something to a reification statement of the relation between that something and its location."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint knora-base:Resource; #*
 	knora-base:objectClassConstraint knora-base:LinkValue.
 
 physical:placeHasName

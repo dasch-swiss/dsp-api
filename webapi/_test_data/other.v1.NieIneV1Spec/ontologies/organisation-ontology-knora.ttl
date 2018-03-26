@@ -88,46 +88,13 @@ org:MasonicLodge
 	rdfs:comment """Organisational unit of Freemasonry."""@en; #*
 	rdfs:subClassOf org:Organisation.
 
-org:Salon #* to be transferred
+# preserving place: can change -> org, not place
+org:PreservingPlace
 	a owl:Class;
 	rdfs:isDefinedBy <http://www.knora.org/ontology/organisation#>;
-	rdfs:label "salon"@en, "literarischer Salon"@de;
-	rdfs:comment """Sociocultural gathering under the roof of an inspiring host."""@en; #* Zusammentreffen
-	rdfs:subClassOf event:Action, [ #* to be specified
-		a owl:Restriction; owl:onProperty event:hasExistence; owl:allValuesFrom [
-			a event:Existence;
-			knora-base:attachedToProject <http://rdfh.ch/projects/organisation>;
-			knora-base:attachedToUser <http://rdfh.ch/users/hansCools>;
-			knora-base:creationDate "2018-02-14T12:00:00Z"^^xsd:dateTimeStamp;
-			knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string;
-			knora-base:isDeleted "false"^^xsd:boolean;
-			rdfs:label "Existence of salon";
-			event:hasStartDate [
-				a knora-base:DateValue;
-				knora-base:valueCreationDate "2018-02-14T12:00:00Z"^^xsd:dateTimeStamp;
-				knora-base:valueHasString "1601-01-01"^^xsd:string; #*
-				knora-base:attachedToUser <http://rdfh.ch/users/hansCools>;
-				knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string;
-				knora-base:isDeleted "false"^^xsd:boolean;
-				knora-base:valueHasCalendar "GREGORIAN";
-				knora-base:valueHasStartJDN 2305814;
-				knora-base:valueHasStartPrecision "DAY";
-				knora-base:valueHasEndJDN 2305814;
-				knora-base:valueHasEndPrecision "DAY"];
-			event:hasEndDate [
-				a knora-base:DateValue;
-				knora-base:valueCreationDate "2018-02-14T12:00:00Z"^^xsd:dateTimeStamp;
-				knora-base:valueHasString "1949-12-31"^^xsd:string;
-				knora-base:attachedToUser <http://rdfh.ch/users/hansCools>;
-				knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string;
-				knora-base:isDeleted "false"^^xsd:boolean;
-				knora-base:valueHasCalendar "GREGORIAN";
-				knora-base:valueHasStartJDN 2433282;
-				knora-base:valueHasStartPrecision "DAY";
-				knora-base:valueHasEndJDN 2433282;
-				knora-base:valueHasEndPrecision "DAY"]]], [
-		a owl:Restriction; owl:onProperty event:hasExistence; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
-		a owl:Restriction; owl:onProperty event:hasExistenceValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+	rdfs:label "preserving place"@en, "Konservierungsort"@de;
+	rdfs:comment """Organisational unit of Freemasonry."""@en; #*
+	rdfs:subClassOf org:Organisation.
 
 #
 # PROPERTIES

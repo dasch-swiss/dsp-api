@@ -1,0 +1,61 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix narespa: <http://sweet.jpl.nasa.gov/2.3/reprSpace.owl#>.
+@prefix naproti: <http://sweet.jpl.nasa.gov/2.3/propTime.owl#Time>.
+@prefix naprospadi: <http://sweet.jpl.nasa.gov/2.3/propSpaceDistance.owl#>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix physical: <http://www.knora.org/ontology/physical-resource#>.
+@prefix concept: <http://www.knora.org/ontology/concept#>.
+@prefix org: <http://www.knora.org/ontology/organisation#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+@prefix phygeo: <http://www.knora.org/ontology/physical-geography#>.
+
+<http://www.knora.org/ontology/physical-geography>
+	a owl:Ontology;
+	dct:title """Physical Geography"""@en;
+	dct:description """Formal description of physical geography, general subclasses, related classes, and properties."""@en;
+	dct:creator "Hans Cools, software developer, NIE-INE, Basel University, Switzerland"@en;
+	dct:publisher "Basel University, Switzerland"@en;
+	rdfs:seeAlso <https://en.wikipedia.org/wiki/World_Geodetic_System>.
+
+#
+# CLASSES
+#
+
+
+#
+# PROPERTIES
+#
+
+phygeo:hasLatitude
+	a owl:ObjectProperty; #, owl:FunctionalProperty, owl:DatatypeProperty
+	rdfs:label "has latitude"@en;
+	rdfs:comment """Relating a point or space on the Earth's surface to a geographic coordinate specifying the north–south position of that point, based on the  World Geodetic System (WGS) standard. The coordinate is expressed as the angle between the equatorial plane and the normal, for a sphere from the center, to the surface at that point."""@en;
+	skos:note """Points with the same latitude lie on a circle around the Earth parallel to its equator. There are different latitudes, depending on the abstracted shape of the earth as spherical or ellipsoid, and other aspects. The decimal value can be converted to a sexagesimal using an N3 rule stating: [decimal degrees - (decimal degrees modulus (%) 1)]° [decimal degrees % 1 x 60 - decimal degrees % 1 x 60 % 1]' + [decimal degrees % 1 * 60 % 1 * 60]''"""@en;
+	rdfs:domain physical:Space;
+	# rdfs:range xsd:decimal;
+	# owl:propertyChainAxiom (humgeo:hasLatitude knora-base:valueHasDecimal)
+	# rdfs:subPropertyOf geo:lat;
+	rdfs:subPropertyOf knora-base:hasValue;
+	knora-base:subjectClassConstraint physical:Space;
+	knora-base:objectClassConstraint knora-base:DecimalValue.
+
+phygeo:hasLongitude
+	a owl:ObjectProperty; #, owl:FunctionalProperty, owl:DatatypeProperty
+	rdfs:label "has longitude"@en;
+	rdfs:comment """Relating a point or space on the Earth's surface to a geographic coordinate specifying the east-west position of that point, based on the  World Geodetic System (WGS) standard. The coordinate isexpressed as the angle in the equatorial plane between a meridian plane containing the surface point and a by convention allocated prime meridian plane at 0 degrees longitude. The IERS Reference Meridian is used here as prime meridian."""@en;
+	skos:note """Points with the same longitude lie on a meridian or semi-circle between the poles. There are different longitudes, depending on the abstracted shape of the earth as spherical or ellipsoid, and other aspects. The decimal value can be converted to a sexagesimal using an N3 rule stating: [decimal degrees - (decimal degrees modulus (%) 1)]° [decimal degrees % 1 x 60 - decimal degrees % 1 x 60 % 1]' + [decimal degrees % 1 * 60 % 1 * 60]''"""@en;
+	rdfs:domain physical:Space;
+	# rdfs:range xsd:decimal;
+	# owl:propertyChainAxiom (humgeo:hasLongitude knora-base:valueHasDecimal)
+	# rdfs:subPropertyOf geo:long;
+	rdfs:subPropertyOf knora-base:hasValue;
+	knora-base:subjectClassConstraint physical:Space;
+	knora-base:objectClassConstraint knora-base:DecimalValue.
+
+# humgeo:hasAltitude
