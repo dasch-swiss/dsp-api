@@ -64,8 +64,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    private val anythingUser = SharedTestDataV1.anythingUser1
-    private val anythingUserEmail = anythingUser.userData.email.get
+    private val anythingUser = SharedTestDataADM.anythingUser1
+    private val anythingUserEmail = anythingUser.email
 
     private val password = "test"
 
@@ -79,7 +79,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataV1.rootUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataADM.rootUser), 10.seconds)
     }
 
     "The Search v2 Endpoint" should {

@@ -20,10 +20,10 @@
 package org.knora.webapi.util
 
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{LiteralV2, SparqlConstructResponse}
 import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.twirl._
@@ -78,7 +78,8 @@ object ConstructResponseUtilV2 {
       * @param constructQueryResults the results of a SPARQL construct query representing resources and their values.
       * @return a Map[resource IRI -> [[ResourceWithValueRdfData]]].
       */
-    def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlConstructResponse, userProfile: UserProfileV1): Map[IRI, ResourceWithValueRdfData] = {
+    def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlConstructResponse, userProfile: UserADM): Map[IRI, ResourceWithValueRdfData] = {
+        val userProfileV1 = userProfile.asUserProfileV1 // TODO: refactor not to use V1
 
         // split statements about resources and other statements (value objects and standoff)
         // resources are identified by the triple "resourceIri a knora-base:Resource" which is an inferred information returned by the SPARQL Construct query.
@@ -95,7 +96,7 @@ object ConstructResponseUtilV2 {
             case (resIri: IRI, assertions: Seq[(IRI, String)]) =>
                 // filter out those resources that the user has not sufficient permissions to see
                 // please note that this also applies to referred resources
-                PermissionUtilADM.getUserPermissionV1FromAssertions(resIri, assertions, userProfile).isEmpty
+                PermissionUtilADM.getUserPermissionV1FromAssertions(resIri, assertions, userProfileV1).isEmpty
         }
 
         val flatResourcesWithValues: Map[IRI, ResourceWithValueRdfData] = resourceStatementsVisible.map {
@@ -162,7 +163,7 @@ object ConstructResponseUtilV2 {
                                 val resourceProject: String = predicateMap(OntologyConstants.KnoraBase.AttachedToProject)
 
                                 // prepend the resource's project to the value's assertions
-                                PermissionUtilADM.getUserPermissionV1FromAssertions(valObjIri, (OntologyConstants.KnoraBase.AttachedToProject, resourceProject) +: valueObjAssertions, userProfile).nonEmpty
+                                PermissionUtilADM.getUserPermissionV1FromAssertions(valObjIri, (OntologyConstants.KnoraBase.AttachedToProject, resourceProject) +: valueObjAssertions, userProfileV1).nonEmpty
                         }.flatMap {
                             valObjIri: IRI =>
 

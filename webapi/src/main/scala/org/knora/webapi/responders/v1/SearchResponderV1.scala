@@ -132,6 +132,8 @@ class SearchResponderV1 extends Responder {
       */
     private def fulltextSearchV1(searchGetRequest: FulltextSearchGetRequestV1): Future[SearchGetResponseV1] = {
 
+        val userProfileV1 = searchGetRequest.userProfile.asUserProfileV1
+
         val limit = checkLimit(searchGetRequest.showNRows)
 
         val searchTerms = searchGetRequest.searchValue.split(" ")
@@ -143,7 +145,7 @@ class SearchResponderV1 extends Responder {
             searchSparql <- Future(queries.sparql.v1.txt.searchFulltext(
                 triplestore = settings.triplestoreType,
                 searchTerms = searchTerms,
-                preferredLanguage = searchGetRequest.userProfile.userData.lang,
+                preferredLanguage = searchGetRequest.userProfile.lang,
                 fallbackLanguage = settings.fallbackLanguage,
                 projectIriOption = searchGetRequest.filterByProject,
                 restypeIriOption = searchGetRequest.filterByRestype
@@ -184,14 +186,23 @@ class SearchResponderV1 extends Responder {
                     val resourceProject = firstRowMap("resourceProject")
                     val resourcePermissions = firstRowMap("resourcePermissions")
 
-                    val resourcePermissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1(subjectIri = resourceIri, subjectCreator = resourceCreator, subjectProject = resourceProject, subjectPermissionLiteral = resourcePermissions, userProfile = searchGetRequest.userProfile)
+                    val resourcePermissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1(
+                        subjectIri = resourceIri,
+                        subjectCreator = resourceCreator,
+                        subjectProject = resourceProject,
+                        subjectPermissionLiteral = resourcePermissions,
+                        userProfile = userProfileV1
+                    )
 
                     if (resourcePermissionCode.nonEmpty) {
                         // Yes. Get more information about the resource.
 
                         val resourceClassIri = firstRowMap("resourceClass")
                         val resourceEntityInfo: ClassInfoV1 = entityInfoResponse.resourceClassInfoMap(resourceClassIri)
-                        val resourceClassLabel = resourceEntityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage))
+                        val resourceClassLabel = resourceEntityInfo.getPredicateObject(
+                            predicateIri = OntologyConstants.Rdfs.Label,
+                            preferredLangs = Some(searchGetRequest.userProfile.lang, settings.fallbackLanguage)
+                        )
                         val resourceClassIcon = resourceEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
                         val resourceLabel = firstRowMap.getOrElse("resourceLabel", throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no rdfs:label"))
 
@@ -207,13 +218,13 @@ class SearchResponderV1 extends Responder {
                                     subjectIri = valueIri, subjectCreator = valueCreator,
                                     subjectProject = resourceProject,
                                     subjectPermissionLiteral = valuePermissionsLiteral,
-                                    userProfile = searchGetRequest.userProfile
+                                    userProfile = userProfileV1
                                 )
 
                                 val value: Option[(IRI, MatchingValue)] = valuePermissionCode.map {
                                     permissionCode =>
                                         val propertyIri = row.rowMap("resourceProperty")
-                                        val propertyLabel = entityInfoResponse.propertyInfoMap(propertyIri).getPredicateObject(OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage)) match {
+                                        val propertyLabel = entityInfoResponse.propertyInfoMap(propertyIri).getPredicateObject(OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.lang, settings.fallbackLanguage)) match {
                                             case Some(label) => label
                                             case None => throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:label")
                                         }
@@ -301,6 +312,7 @@ class SearchResponderV1 extends Responder {
 
         import org.knora.webapi.util.StringFormatter
 
+        val userProfileV1 = searchGetRequest.userProfile.asUserProfileV1
         val limit = checkLimit(searchGetRequest.showNRows)
 
         for {
@@ -463,7 +475,7 @@ class SearchResponderV1 extends Responder {
             searchSparql = queries.sparql.v1.txt.searchExtended(
                 triplestore = settings.triplestoreType,
                 searchCriteria = searchCriteria,
-                preferredLanguage = searchGetRequest.userProfile.userData.lang,
+                preferredLanguage = searchGetRequest.userProfile.lang,
                 fallbackLanguage = settings.fallbackLanguage,
                 projectIriOption = searchGetRequest.filterByProject,
                 restypeIriOption = searchGetRequest.filterByRestype,
@@ -501,14 +513,20 @@ class SearchResponderV1 extends Responder {
                     val resourceProject = firstRowMap("resourceProject")
                     val resourcePermissions = firstRowMap("resourcePermissions")
 
-                    val resourcePermissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1(subjectIri = resourceIri, subjectCreator = resourceCreator, subjectProject = resourceProject, subjectPermissionLiteral = resourcePermissions, userProfile = searchGetRequest.userProfile)
+                    val resourcePermissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1(
+                        subjectIri = resourceIri,
+                        subjectCreator = resourceCreator,
+                        subjectProject = resourceProject,
+                        subjectPermissionLiteral = resourcePermissions,
+                        userProfile = userProfileV1
+                    )
 
                     if (resourcePermissionCode.nonEmpty) {
                         // Yes. Get more information about the resource.
 
                         val resourceClassIri = firstRowMap("resourceClass")
                         val resourceEntityInfo = entityInfoResponse.resourceClassInfoMap(resourceClassIri)
-                        val resourceClassLabel = resourceEntityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage))
+                        val resourceClassLabel = resourceEntityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.lang, settings.fallbackLanguage))
                         val resourceClassIcon = resourceEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon)
                         val resourceLabel = firstRowMap.getOrElse("resourceLabel", throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no rdfs:label"))
 
@@ -533,7 +551,7 @@ class SearchResponderV1 extends Responder {
                                                     subjectCreator = valueCreator,
                                                     subjectProject = resourceProject,
                                                     subjectPermissionLiteral = valuePermissionLiteral,
-                                                    userProfile = searchGetRequest.userProfile
+                                                    userProfile = userProfileV1
                                                 )
 
                                                 // Get the permission code for the target resource.
@@ -542,7 +560,13 @@ class SearchResponderV1 extends Responder {
                                                 val targetResourceProject = row.rowMap(s"targetResourceProject$index")
                                                 val targetResourcePermissionLiteral = row.rowMap(s"targetResourcePermissions$index")
 
-                                                val targetResourcePermissionCode = PermissionUtilADM.getUserPermissionV1(subjectIri = targetResourceIri, subjectCreator = targetResourceCreator, subjectProject = targetResourceProject, subjectPermissionLiteral = targetResourcePermissionLiteral, userProfile = searchGetRequest.userProfile)
+                                                val targetResourcePermissionCode = PermissionUtilADM.getUserPermissionV1(
+                                                    subjectIri = targetResourceIri,
+                                                    subjectCreator = targetResourceCreator,
+                                                    subjectProject = targetResourceProject,
+                                                    subjectPermissionLiteral = targetResourcePermissionLiteral,
+                                                    userProfile = userProfileV1
+                                                )
 
                                                 // Only allow the user to see the match if they have view permission on both the link value and the target resource.
                                                 Seq(linkValuePermissionCode, targetResourcePermissionCode).min
@@ -553,12 +577,12 @@ class SearchResponderV1 extends Responder {
                                                     subjectCreator = valueCreator,
                                                     subjectProject = resourceProject,
                                                     subjectPermissionLiteral = valuePermissionLiteral,
-                                                    userProfile = searchGetRequest.userProfile
+                                                    userProfile = userProfileV1
                                                 )
                                             }
 
                                             val propertyIri = searchCriterion.propertyIri
-                                            val propertyLabel = propertyInfo.propertyInfoMap(propertyIri).getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.userData.lang, settings.fallbackLanguage)) match {
+                                            val propertyLabel = propertyInfo.propertyInfoMap(propertyIri).getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(searchGetRequest.userProfile.lang, settings.fallbackLanguage)) match {
                                                 case Some(label) => label
                                                 case None => throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:label")
                                             }

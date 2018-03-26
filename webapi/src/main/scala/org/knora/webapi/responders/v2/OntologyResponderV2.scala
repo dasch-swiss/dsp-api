@@ -24,7 +24,8 @@ import java.time.Instant
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectOntologyAddADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectOntologyAddADM, ProjectOntologyRemoveADM}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
@@ -102,6 +103,7 @@ class OntologyResponderV2 extends Responder {
         case createPropertyRequest: CreatePropertyRequestV2 => future2Message(sender(), createProperty(createPropertyRequest), log)
         case changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2 => future2Message(sender(), changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest), log)
         case deletePropertyRequest: DeletePropertyRequestV2 => future2Message(sender(), deleteProperty(deletePropertyRequest), log)
+        case deleteOntologyRequest: DeleteOntologyRequestV2 => future2Message(sender(), deleteOntology(deleteOntologyRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -119,7 +121,7 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[LoadOntologiesResponse]].
       */
-    private def loadOntologies(userProfile: UserProfileV1): Future[SuccessResponseV2] = {
+    private def loadOntologies(userProfile: UserADM): Future[SuccessResponseV2] = {
         // TODO: determine whether the user is authorised to reload the ontologies (depends on pull request #168).
 
         for {
@@ -724,7 +726,7 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile  the profile of the user making the request.
       * @return an [[EntityInfoGetResponseV1]].
       */
-    private def getEntityInfoResponseV2(classIris: Set[SmartIri] = Set.empty[SmartIri], propertyIris: Set[SmartIri] = Set.empty[SmartIri], userProfile: UserProfileV1): Future[EntityInfoGetResponseV2] = {
+    private def getEntityInfoResponseV2(classIris: Set[SmartIri] = Set.empty[SmartIri], propertyIris: Set[SmartIri] = Set.empty[SmartIri], userProfile: UserADM): Future[EntityInfoGetResponseV2] = {
         for {
             cacheData <- getCacheData
 
@@ -806,7 +808,7 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile          the profile of the user making the request.
       * @return an [[EntityInfoGetResponseV1]].
       */
-    private def getStandoffEntityInfoResponseV2(standoffClassIris: Set[SmartIri] = Set.empty[SmartIri], standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri], userProfile: UserProfileV1): Future[StandoffEntityInfoGetResponseV2] = {
+    private def getStandoffEntityInfoResponseV2(standoffClassIris: Set[SmartIri] = Set.empty[SmartIri], standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri], userProfile: UserADM): Future[StandoffEntityInfoGetResponseV2] = {
         for {
             cacheData <- getCacheData
 
@@ -854,7 +856,7 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[StandoffClassesWithDataTypeGetResponseV1]]
       */
-    private def getStandoffStandoffClassesWithDataTypeV2(userProfile: UserProfileV1): Future[StandoffClassesWithDataTypeGetResponseV2] = {
+    private def getStandoffStandoffClassesWithDataTypeV2(userProfile: UserADM): Future[StandoffClassesWithDataTypeGetResponseV2] = {
         for {
             cacheData <- getCacheData
         } yield StandoffClassesWithDataTypeGetResponseV2(
@@ -873,7 +875,7 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[StandoffAllPropertiesGetResponseV1]].
       */
-    private def getAllStandoffPropertyEntitiesV2(userProfile: UserProfileV1): Future[StandoffAllPropertyEntitiesGetResponseV2] = {
+    private def getAllStandoffPropertyEntitiesV2(userProfile: UserADM): Future[StandoffAllPropertyEntitiesGetResponseV2] = {
         for {
             cacheData <- getCacheData
         } yield StandoffAllPropertyEntitiesGetResponseV2(
@@ -890,7 +892,7 @@ class OntologyResponderV2 extends Responder {
       * @param superClassIri the IRI of the resource or value class to check for (whether it is a a super class of `subClassIri` or not).
       * @return a [[CheckSubClassResponseV1]].
       */
-    private def checkSubClassV2(subClassIri: SmartIri, superClassIri: SmartIri, userProfile: UserProfileV1): Future[CheckSubClassResponseV2] = {
+    private def checkSubClassV2(subClassIri: SmartIri, superClassIri: SmartIri, userProfile: UserADM): Future[CheckSubClassResponseV2] = {
         for {
             cacheData <- getCacheData
             response = CheckSubClassResponseV2(
@@ -909,7 +911,7 @@ class OntologyResponderV2 extends Responder {
       * @param classIri the IRI of the class whose subclasses should be returned.
       * @return a [[SubClassesGetResponseV1]].
       */
-    private def getSubClassesV2(classIri: SmartIri, userProfile: UserProfileV1): Future[SubClassesGetResponseV2] = {
+    private def getSubClassesV2(classIri: SmartIri, userProfile: UserADM): Future[SubClassesGetResponseV2] = {
         for {
             cacheData <- getCacheData
 
@@ -923,7 +925,7 @@ class OntologyResponderV2 extends Responder {
                         id = subClassIri,
                         label = classInfo.entityInfoContent.getPredicateStringLiteralObject(
                             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                            preferredLangs = Some(userProfile.userData.lang, settings.fallbackLanguage)
+                            preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
                         ).getOrElse(throw InconsistentTriplestoreDataException(s"Resource class $subClassIri has no rdfs:label"))
                     )
             }
@@ -939,7 +941,7 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return an [[OntologyKnoraEntitiesIriInfoV2]].
       */
-    private def getKnoraEntityIrisInNamedGraphV2(ontologyIri: SmartIri, userProfile: UserProfileV1): Future[OntologyKnoraEntitiesIriInfoV2] = {
+    private def getKnoraEntityIrisInNamedGraphV2(ontologyIri: SmartIri, userProfile: UserADM): Future[OntologyKnoraEntitiesIriInfoV2] = {
         for {
             cacheData <- getCacheData
             ontology = cacheData.ontologies(ontologyIri)
@@ -965,7 +967,7 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[ReadOntologyMetadataV2]].
       */
-    private def getOntologyMetadataForProjectsV2(projectIris: Set[SmartIri], userProfile: UserProfileV1): Future[ReadOntologyMetadataV2] = {
+    private def getOntologyMetadataForProjectsV2(projectIris: Set[SmartIri], userProfile: UserADM): Future[ReadOntologyMetadataV2] = {
         for {
             cacheData <- getCacheData
             returnAllOntologies: Boolean = projectIris.isEmpty
@@ -973,8 +975,10 @@ class OntologyResponderV2 extends Responder {
             ontologyMetadata: Set[OntologyMetadataV2] <- if (returnAllOntologies) {
                 FastFuture.successful(cacheData.ontologies.values.map(_.ontologyMetadata).toSet)
             } else {
+                val userProfileV1 = userProfile.asUserProfileV1 // TODO: implement a way to do this with ADM
+
                 for {
-                    namedGraphInfos: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile)).mapTo[Seq[NamedGraphV1]]
+                    namedGraphInfos: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfileV1)).mapTo[Seq[NamedGraphV1]]
                     projectIriStrs = projectIris.map(_.toString)
 
                     projectOntologyMetadata = namedGraphInfos.filter(namedGraphInfo => projectIriStrs.contains(namedGraphInfo.project_id)).map {
@@ -996,14 +1000,14 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile  the profile of the user making the request.
       * @return a [[ReadOntologiesV2]].
       */
-    private def getOntologyEntitiesV2(ontologyIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadOntologiesV2] = {
+    private def getOntologyEntitiesV2(ontologyIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserADM): Future[ReadOntologiesV2] = {
         for {
             cacheData <- getCacheData
 
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
                 // Just the user's preferred language.
-                Some(userProfile.userData.lang)
+                Some(userProfile.lang)
             } else {
                 // All available languages.
                 None
@@ -1028,7 +1032,7 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[ReadOntologiesV2]].
       */
-    private def getClassDefinitionsV2(classIris: Set[SmartIri], allLanguages: Boolean, userProfile: UserProfileV1): Future[ReadOntologiesV2] = {
+    private def getClassDefinitionsV2(classIris: Set[SmartIri], allLanguages: Boolean, userProfile: UserADM): Future[ReadOntologiesV2] = {
         for {
             cacheData <- getCacheData
 
@@ -1038,7 +1042,7 @@ class OntologyResponderV2 extends Responder {
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
                 // Just the user's preferred language.
-                Some(userProfile.userData.lang)
+                Some(userProfile.lang)
             } else {
                 // All available languages.
                 None
@@ -1065,7 +1069,7 @@ class OntologyResponderV2 extends Responder {
       * @param userProfile  the profile of the user making the request.
       * @return a [[ReadOntologiesV2]].
       */
-    private def getPropertyDefinitionsV2(propertyIris: Set[SmartIri], allLanguages: Boolean, userProfile: UserProfileV1) = {
+    private def getPropertyDefinitionsV2(propertyIris: Set[SmartIri], allLanguages: Boolean, userProfile: UserADM) = {
 
         for {
             cacheData <- getCacheData
@@ -1075,7 +1079,7 @@ class OntologyResponderV2 extends Responder {
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
                 // Just the user's preferred language.
-                Some(userProfile.userData.lang)
+                Some(userProfile.lang)
             } else {
                 // All available languages.
                 None
@@ -1230,7 +1234,7 @@ class OntologyResponderV2 extends Responder {
             projectIri = createOntologyRequest.projectIri
 
             // check if the requesting user is allowed to create an ontology
-            _ = if (!(userProfile.permissionData.isProjectAdmin(projectIri.toString) || userProfile.permissionData.isSystemAdmin)) {
+            _ = if (!(userProfile.permissions.isProjectAdmin(projectIri.toString) || userProfile.permissions.isSystemAdmin)) {
                 // println(s"userProfile: $userProfile")
                 // println(s"userProfile.permissionData.isProjectAdmin(<${projectIri.toString}>): ${userProfile.permissionData.isProjectAdmin(projectIri.toString)}")
                 throw ForbiddenException(s"A new ontology in the project ${createOntologyRequest.projectIri} can only be created by an admin of that project, or by a system admin.")
@@ -2053,6 +2057,88 @@ class OntologyResponderV2 extends Responder {
         } yield taskResult
     }
 
+    def deleteOntology(deleteOntologyRequest: DeleteOntologyRequestV2): Future[SuccessResponseV2] = {
+        def makeTaskFuture(internalOntologyIri: SmartIri, projectIri: IRI): Future[SuccessResponseV2] = {
+            for {
+                cacheData <- getCacheData
+
+                // Check that the ontology exists and has not been updated by another user since the client last read it.
+                _ <- checkOntologyLastModificationDateBeforeUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    expectedLastModificationDate = deleteOntologyRequest.lastModificationDate
+                )
+
+                // Check that none of the entities in the ontology are used in data.
+
+                ontology = cacheData.ontologies(internalOntologyIri)
+
+                isOntologyUsedSparql = queries.sparql.v2.txt.isOntologyUsedInData(
+                    triplestore = settings.triplestoreType,
+                    classIris = ontology.classes.keySet,
+                    propertyIris = ontology.properties.keySet
+                ).toString()
+
+                isOntologyUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isOntologyUsedSparql)).mapTo[SparqlSelectResponse]
+
+                _ = if (isOntologyUsedResponse.results.bindings.nonEmpty) {
+                    throw BadRequestException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} cannot be deleted, because it is used in data")
+                }
+
+                // Delete everything in the ontology's named graph.
+
+                updateSparql = queries.sparql.v2.txt.deleteOntology(
+                    triplestore = settings.triplestoreType,
+                    ontologyNamedGraphIri = internalOntologyIri
+                ).toString()
+
+                _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
+
+                // Check that the ontology has been deleted.
+
+                maybeOntologyMetadata <- loadOntologyMetadata(internalOntologyIri)
+
+                _ = if (maybeOntologyMetadata.nonEmpty) {
+                    throw UpdateNotPerformedException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} was not deleted. Please report this as a possible bug.")
+                }
+
+                removeOntologyFromProjectMsg = ProjectOntologyRemoveADM(
+                    projectIri = projectIri,
+                    ontologyIri = internalOntologyIri.toString,
+                    requestingUser = deleteOntologyRequest.userProfile,
+                    apiRequestID = deleteOntologyRequest.apiRequestID
+                )
+
+                _ <- (responderManager ? removeOntologyFromProjectMsg).mapTo[ProjectADM]
+
+            } yield SuccessResponseV2(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} has been deleted")
+        }
+
+        for {
+            userProfile <- FastFuture.successful(deleteOntologyRequest.userProfile)
+
+            externalOntologyIri = deleteOntologyRequest.ontologyIri
+
+            _ <- checkExternalOntologyIriForUpdate(externalOntologyIri)
+
+            projectIri <- checkPermissionsForOntologyUpdate(
+                internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema),
+                userProfile = userProfile
+            )
+
+            internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+
+            // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID = deleteOntologyRequest.apiRequestID,
+                iri = internalOntologyIri.toString,
+                task = () => makeTaskFuture(
+                    internalOntologyIri = internalOntologyIri,
+                    projectIri = projectIri
+                )
+            )
+        } yield taskResult
+    }
+
     /**
       * Before creating a new class or adding cardinalities to an existing class, checks the validity of the
       * cardinalities directly defined on the class.
@@ -2706,7 +2792,7 @@ class OntologyResponderV2 extends Responder {
       */
     private def checkOntologyAndEntityIrisForUpdate(externalOntologyIri: SmartIri,
                                                     externalEntityIri: SmartIri,
-                                                    userProfile: UserProfileV1): Future[Unit] = {
+                                                    userProfile: UserADM): Future[Unit] = {
         for {
             _ <- checkExternalOntologyIriForUpdate(externalOntologyIri)
             _ <- checkExternalEntityIriForUpdate(externalEntityIri = externalEntityIri)
@@ -3087,22 +3173,23 @@ class OntologyResponderV2 extends Responder {
       *
       * @param internalOntologyIri the internal IRI of the ontology.
       * @param userProfile         the profile of the user making the request.
-      * @return a failed Future if the user doesn't have the necessary permission.
+      * @return the project IRI.
       */
-    private def checkPermissionsForOntologyUpdate(internalOntologyIri: SmartIri, userProfile: UserProfileV1): Future[Unit] = {
+    private def checkPermissionsForOntologyUpdate(internalOntologyIri: SmartIri, userProfile: UserADM): Future[IRI] = {
+        val userProfileV1 = userProfile.asUserProfileV1 // TODO: refactor this not to use V1
+
         for {
             // Get the project that the ontology belongs to.
             projectInfo: ProjectInfoResponseV1 <- (responderManager ? ProjectInfoByOntologyGetRequestV1(
                 internalOntologyIri.toString,
-                Some(userProfile)
+                Some(userProfileV1)
             )).mapTo[ProjectInfoResponseV1]
 
-
-            _ = if (!userProfile.permissionData.isProjectAdmin(projectInfo.project_info.id.toString) && !userProfile.permissionData.isSystemAdmin) {
+            _ = if (!userProfile.permissions.isProjectAdmin(projectInfo.project_info.id.toString) && !userProfile.permissions.isSystemAdmin) {
                 // not a project or system admin
                 throw ForbiddenException("Ontologies can be modified only by a project or system admin.")
             }
-        } yield ()
+        } yield projectInfo.project_info.id
     }
 
 

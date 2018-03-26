@@ -25,13 +25,14 @@ import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.responders.{IriLocker, Responder}
@@ -82,14 +83,14 @@ class ValuesResponderV1 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[ValueGetResponseV1]].
       */
-    private def getValueResponseV1(valueIri: IRI, userProfile: UserProfileV1): Future[ValueGetResponseV1] = {
+    private def getValueResponseV1(valueIri: IRI, userProfile: UserADM): Future[ValueGetResponseV1] = {
         for {
             maybeValueQueryResult <- findValue(valueIri, userProfile)
 
             response <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileTypeV1.RESTRICTED)).mapTo[Option[UserProfileV1]]
+                        maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileTypeV1.RESTRICTED)).mapTo[Option[UserADM]]
                         valueCreatorProfile = maybeValueCreatorProfile match {
                             case Some(up) => up
                             case None => throw NotFoundException(s"User ${valueQueryResult.creatorIri} not found")
@@ -98,8 +99,8 @@ class ValuesResponderV1 extends Responder {
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
                         value = valueQueryResult.value,
-                        valuecreator = valueCreatorProfile.userData.email.get,
-                        valuecreatorname = valueCreatorProfile.userData.fullname.get,
+                        valuecreator = valueCreatorProfile.email,
+                        valuecreatorname = valueCreatorProfile.fullname,
                         valuecreationdate = valueQueryResult.creationDate,
                         comment = valueQueryResult.comment
                     )
@@ -196,7 +197,7 @@ class ValuesResponderV1 extends Responder {
                     projectIri = projectIri,
                     resourceClassIri = resourceClassIri,
                     propertyIri = createValueRequest.propertyIri,
-                    targetUser = createValueRequest.userProfile,
+                    targetUser = createValueRequest.userProfile.asUserProfileV1,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
             }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
@@ -206,7 +207,7 @@ class ValuesResponderV1 extends Responder {
             maybeProjectInfo <- {
                 responderManager ? ProjectInfoByIRIGetV1(
                     iri = projectIri,
-                    userProfileV1 = Some(createValueRequest.userProfile)
+                    userProfileV1 = Some(createValueRequest.userProfile.asUserProfileV1)
                 )
             }.mapTo[Option[ProjectInfoV1]]
 
@@ -240,9 +241,12 @@ class ValuesResponderV1 extends Responder {
 
         for {
             // Don't allow anonymous users to create values.
-            userIri <- createValueRequest.userProfile.userData.user_id match {
-                case Some(iri) => Future(iri)
-                case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to create values"))
+            userIri <- Future {
+                if (createValueRequest.userProfile.isAnonymousUser) {
+                    throw ForbiddenException("Anonymous users aren't allowed to create values")
+                } else {
+                    createValueRequest.userProfile.id
+                }
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
@@ -544,9 +548,12 @@ class ValuesResponderV1 extends Responder {
 
         for {
             // Don't allow anonymous users to create resources.
-            userIri <- createMultipleValuesRequest.userProfile.userData.user_id match {
-                case Some(iri) => Future(iri)
-                case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to create resources"))
+            userIri <- Future {
+                if (createMultipleValuesRequest.userProfile.isAnonymousUser) {
+                    throw ForbiddenException("Anonymous users aren't allowed to create resources")
+                } else {
+                    createMultipleValuesRequest.userProfile.id
+                }
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource.
@@ -868,13 +875,13 @@ class ValuesResponderV1 extends Responder {
                 // Get the resource class of the containing resource
                 resourceClassIri: IRI = resourceFullResponse.resinfo.getOrElse(throw InconsistentTriplestoreDataException(s"Did not find resource info for resource ${findResourceWithValueResult.resourceIri}")).restype_id
 
-                _ = log.debug(s"changeValueV1 - DefaultObjectAccessPermissionsStringForPropertyGetV1 - projectIri ${findResourceWithValueResult.projectIri}, propertyIri: ${findResourceWithValueResult.propertyIri}, permissionData: ${changeValueRequest.userProfile.permissionData} ")
+                _ = log.debug(s"changeValueV1 - DefaultObjectAccessPermissionsStringForPropertyGetV1 - projectIri ${findResourceWithValueResult.projectIri}, propertyIri: ${findResourceWithValueResult.propertyIri}, permissions: ${changeValueRequest.userProfile.permissions} ")
                 defaultObjectAccessPermissions <- {
                     responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
                         projectIri = findResourceWithValueResult.projectIri,
                         resourceClassIri = resourceClassIri,
                         propertyIri = findResourceWithValueResult.propertyIri,
-                        targetUser = changeValueRequest.userProfile,
+                        targetUser = changeValueRequest.userProfile.asUserProfileV1,
                         requestingUser = KnoraSystemInstances.Users.SystemUser)
                 }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                 _ = log.debug(s"changeValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
@@ -883,7 +890,7 @@ class ValuesResponderV1 extends Responder {
                 maybeProjectInfo <- {
                     responderManager ? ProjectInfoByIRIGetV1(
                         iri = resourceFullResponse.resinfo.get.project_id,
-                        userProfileV1 = Some(changeValueRequest.userProfile)
+                        userProfileV1 = Some(changeValueRequest.userProfile.asUserProfileV1)
                     )
                 }.mapTo[Option[ProjectInfoV1]]
 
@@ -942,9 +949,12 @@ class ValuesResponderV1 extends Responder {
 
         for {
             // Don't allow anonymous users to update values.
-            userIri <- changeValueRequest.userProfile.userData.user_id match {
-                case Some(iri) => Future(iri)
-                case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to update values"))
+            userIri <- Future {
+                if (changeValueRequest.userProfile.isAnonymousUser) {
+                    throw ForbiddenException("Anonymous users aren't allowed to update values")
+                } else {
+                    changeValueRequest.userProfile.id
+                }
             }
 
             // Find the resource containing the value.
@@ -1035,9 +1045,12 @@ class ValuesResponderV1 extends Responder {
 
         for {
             // Don't allow anonymous users to update values.
-            userIri <- changeCommentRequest.userProfile.userData.user_id match {
-                case Some(iri) => Future(iri)
-                case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to update values"))
+            userIri <- Future {
+                if (changeCommentRequest.userProfile.isAnonymousUser) {
+                    throw ForbiddenException("Anonymous users aren't allowed to update values")
+                } else {
+                    changeCommentRequest.userProfile.id
+                }
             }
 
             // Find the resource containing the value.
@@ -1200,9 +1213,12 @@ class ValuesResponderV1 extends Responder {
 
         for {
             // Don't allow anonymous users to update values.
-            userIri <- deleteValueRequest.userProfile.userData.user_id match {
-                case Some(iri) => Future(iri)
-                case None => Future.failed(ForbiddenException("Anonymous users aren't allowed to mark values as deleted"))
+            userIri <- Future {
+                if (deleteValueRequest.userProfile.isAnonymousUser) {
+                    throw ForbiddenException("Anonymous users aren't allowed to mark values as deleted")
+                } else {
+                    deleteValueRequest.userProfile.id
+                }
             }
 
             // Find the resource containing the value.
@@ -1224,6 +1240,8 @@ class ValuesResponderV1 extends Responder {
       * @return a [[ValueVersionHistoryGetResponseV1]].
       */
     private def getValueVersionHistoryResponseV1(versionHistoryRequest: ValueVersionHistoryGetRequestV1): Future[ValueVersionHistoryGetResponseV1] = {
+        val userProfileV1 = versionHistoryRequest.userProfile.asUserProfileV1
+
         /**
           * Recursively converts a [[Map]] of value version SPARQL query result rows into a [[Vector]] representing the value's version history,
           * ordered from most recent to oldest.
@@ -1288,11 +1306,17 @@ class ValuesResponderV1 extends Responder {
                             subjectCreator = valueCreator,
                             subjectProject = project,
                             subjectPermissionLiteral = valuePermissions,
-                            userProfile = versionHistoryRequest.userProfile
+                            userProfile = userProfileV1
                         )
                     } else {
                         // It's not a LinkValue.
-                        PermissionUtilADM.getUserPermissionV1(subjectIri = valueIri, subjectCreator = valueCreator, subjectProject = project, subjectPermissionLiteral = valuePermissions, userProfile = versionHistoryRequest.userProfile)
+                        PermissionUtilADM.getUserPermissionV1(
+                            subjectIri = valueIri,
+                            subjectCreator = valueCreator,
+                            subjectProject = project,
+                            subjectPermissionLiteral = valuePermissions,
+                            userProfile = userProfileV1
+                        )
                     }
 
                     valuePermissionCode.nonEmpty
@@ -1328,7 +1352,7 @@ class ValuesResponderV1 extends Responder {
       * @return a [[ValueGetResponseV1]] containing a [[LinkValueV1]].
       */
     @throws(classOf[NotFoundException])
-    private def getLinkValue(subjectIri: IRI, predicateIri: IRI, objectIri: IRI, userProfile: UserProfileV1): Future[ValueGetResponseV1] = {
+    private def getLinkValue(subjectIri: IRI, predicateIri: IRI, objectIri: IRI, userProfile: UserADM): Future[ValueGetResponseV1] = {
         for {
             maybeValueQueryResult <- findLinkValueByLinkTriple(
                 subjectIri = subjectIri,
@@ -1340,7 +1364,7 @@ class ValuesResponderV1 extends Responder {
             linkValueResponse <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileTypeV1.RESTRICTED)).mapTo[Option[UserProfileV1]]
+                        maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileTypeV1.RESTRICTED)).mapTo[Option[UserADM]]
                         valueCreatorProfile = maybeValueCreatorProfile match {
                             case Some(up) => up
                             case None => throw NotFoundException(s"User ${valueQueryResult.creatorIri} not found")
@@ -1349,8 +1373,8 @@ class ValuesResponderV1 extends Responder {
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
                         value = valueQueryResult.value,
-                        valuecreator = valueCreatorProfile.userData.email.get,
-                        valuecreatorname = valueCreatorProfile.userData.fullname.get,
+                        valuecreator = valueCreatorProfile.email,
+                        valuecreatorname = valueCreatorProfile.fullname,
                         valuecreationdate = valueQueryResult.creationDate,
                         comment = valueQueryResult.comment
                     )
@@ -1440,7 +1464,7 @@ class ValuesResponderV1 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[ValueQueryResult]], or `None` if the value is not found.
       */
-    private def findValue(valueIri: IRI, userProfile: UserProfileV1): Future[Option[ValueQueryResult]] = {
+    private def findValue(valueIri: IRI, userProfile: UserADM): Future[Option[ValueQueryResult]] = {
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getValue(
                 triplestore = settings.triplestoreType,
@@ -1473,7 +1497,9 @@ class ValuesResponderV1 extends Responder {
       * @param userProfile  the profile of the user making the request.
       * @return () if the user has the required permission, or an exception otherwise.
       */
-    private def checkLinkValueSubjectAndObjectPermissions(linkValueIri: IRI, userProfile: UserProfileV1): Future[Unit] = {
+    private def checkLinkValueSubjectAndObjectPermissions(linkValueIri: IRI, userProfile: UserADM): Future[Unit] = {
+        val userProfileV1 = userProfile.asUserProfileV1
+
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getLinkSourceAndTargetPermissions(
                 triplestore = settings.triplestoreType,
@@ -1488,14 +1514,13 @@ class ValuesResponderV1 extends Responder {
             }
 
             rowMap = rows.head.rowMap
-            userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
 
             maybeSourcePermissionCode = PermissionUtilADM.getUserPermissionV1(
                 subjectIri = rowMap("source"),
                 subjectCreator = rowMap("sourceCreator"),
                 subjectProject = rowMap("sourceProject"),
                 subjectPermissionLiteral = rowMap("sourcePermissions"),
-                userProfile = userProfile
+                userProfile = userProfileV1
             )
 
             maybeTargetPermissionCode = PermissionUtilADM.getUserPermissionV1(
@@ -1503,11 +1528,11 @@ class ValuesResponderV1 extends Responder {
                 subjectCreator = rowMap("targetCreator"),
                 subjectProject = rowMap("targetProject"),
                 subjectPermissionLiteral = rowMap("targetPermissions"),
-                userProfile = userProfile
+                userProfile = userProfileV1
             )
 
             _ = if (maybeSourcePermissionCode.isEmpty || maybeTargetPermissionCode.isEmpty) {
-                throw ForbiddenException(s"User $userIri does not have permission to view link value $linkValueIri")
+                throw ForbiddenException(s"User ${userProfile.id} does not have permission to view link value $linkValueIri")
             }
         } yield ()
     }
@@ -1523,7 +1548,7 @@ class ValuesResponderV1 extends Responder {
       * @param userProfile  the profile of the user making the request.
       * @return an optional [[ValueGetResponseV1]] containing a [[LinkValueV1]].
       */
-    private def findLinkValueByIri(subjectIri: IRI, predicateIri: IRI, objectIri: Option[IRI], linkValueIri: IRI, userProfile: UserProfileV1): Future[Option[LinkValueQueryResult]] = {
+    private def findLinkValueByIri(subjectIri: IRI, predicateIri: IRI, objectIri: Option[IRI], linkValueIri: IRI, userProfile: UserADM): Future[Option[LinkValueQueryResult]] = {
         for {
             sparqlQuery <- Future {
                 queries.sparql.v1.txt.findLinkValueByIri(
@@ -1557,7 +1582,7 @@ class ValuesResponderV1 extends Responder {
       * @param userProfile  the profile of the user making the request.
       * @return an optional [[ValueGetResponseV1]] containing a [[LinkValueV1]].
       */
-    private def findLinkValueByLinkTriple(subjectIri: IRI, predicateIri: IRI, objectIri: IRI, userProfile: UserProfileV1): Future[Option[LinkValueQueryResult]] = {
+    private def findLinkValueByLinkTriple(subjectIri: IRI, predicateIri: IRI, objectIri: IRI, userProfile: UserADM): Future[Option[LinkValueQueryResult]] = {
         for {
             sparqlQuery <- Future {
                 queries.sparql.v1.txt.findLinkValueByObject(
@@ -1591,7 +1616,9 @@ class ValuesResponderV1 extends Responder {
       * @return a [[ValueQueryResult]].
       */
     @throws(classOf[ForbiddenException])
-    private def sparqlQueryResults2ValueQueryResult(valueIri: IRI, rows: Seq[VariableResultsRow], userProfile: UserProfileV1): Future[Option[BasicValueQueryResult]] = {
+    private def sparqlQueryResults2ValueQueryResult(valueIri: IRI, rows: Seq[VariableResultsRow], userProfile: UserADM): Future[Option[BasicValueQueryResult]] = {
+        val userProfileV1 = userProfile.asUserProfileV1
+
         if (rows.nonEmpty) {
             // Convert the query results to a ApiValueV1.
             val valueProps = valueUtilV1.createValueProps(valueIri, rows)
@@ -1632,19 +1659,18 @@ class ValuesResponderV1 extends Responder {
                             valueIri = valueIri,
                             valueProps = valueProps,
                             subjectProject = None, // no need to specify this here, because it's in valueProps
-                            userProfile = userProfile
+                            userProfile = userProfileV1
                         )
 
                     case _ => PermissionUtilADM.getUserPermissionV1FromAssertions(
                         subjectIri = valueIri,
                         assertions = assertions,
-                        userProfile = userProfile
+                        userProfile = userProfileV1
                     )
                 }
 
                 permissionCode = maybePermissionCode.getOrElse {
-                    val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
-                    throw ForbiddenException(s"User $userIri does not have permission to see value $valueIri")
+                    throw ForbiddenException(s"User ${userProfile.id} does not have permission to see value $valueIri")
                 }
 
             } yield Some(
@@ -1670,7 +1696,9 @@ class ValuesResponderV1 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[LinkValueQueryResult]].
       */
-    private def sparqlQueryResults2LinkValueQueryResult(rows: Seq[VariableResultsRow], userProfile: UserProfileV1): Future[Option[LinkValueQueryResult]] = {
+    private def sparqlQueryResults2LinkValueQueryResult(rows: Seq[VariableResultsRow], userProfile: UserADM): Future[Option[LinkValueQueryResult]] = {
+        val userProfileV1 = userProfile.asUserProfileV1
+
         if (rows.nonEmpty) {
             val firstRowMap = rows.head.rowMap
             val linkValueIri = firstRowMap("linkValue")
@@ -1706,10 +1734,9 @@ class ValuesResponderV1 extends Responder {
                     valueIri = linkValueIri,
                     valueProps = valueProps,
                     subjectProject = None, // no need to specify this here, because it's in valueProps
-                    userProfile = userProfile
+                    userProfile = userProfileV1
                 ).getOrElse {
-                    val userIri = userProfile.userData.user_id.getOrElse(OntologyConstants.KnoraBase.UnknownUser)
-                    throw ForbiddenException(s"User $userIri does not have permission to see value $linkValueIri")
+                    throw ForbiddenException(s"User ${userProfile.id} does not have permission to see value $linkValueIri")
                 }
 
                 directLinkExists = firstRowMap.get("directLinkExists").exists(_.toBoolean)
@@ -1747,7 +1774,7 @@ class ValuesResponderV1 extends Responder {
     private def verifyValueCreation(resourceIri: IRI,
                                     propertyIri: IRI,
                                     unverifiedValue: UnverifiedValueV1,
-                                    userProfile: UserProfileV1): Future[CreateValueResponseV1] = {
+                                    userProfile: UserADM): Future[CreateValueResponseV1] = {
         unverifiedValue.value match {
             case linkUpdateV1: LinkUpdateV1 =>
                 for {
@@ -1800,7 +1827,7 @@ class ValuesResponderV1 extends Responder {
       */
     @throws(classOf[UpdateNotPerformedException])
     @throws(classOf[ForbiddenException])
-    private def verifyOrdinaryValueUpdate(resourceIri: IRI, propertyIri: IRI, searchValueIri: IRI, userProfile: UserProfileV1): Future[ValueQueryResult] = {
+    private def verifyOrdinaryValueUpdate(resourceIri: IRI, propertyIri: IRI, searchValueIri: IRI, userProfile: UserADM): Future[ValueQueryResult] = {
         for {
             // Do a SPARQL query to look for the value in the resource's version history.
             sparqlQuery <- Future {
@@ -1837,7 +1864,7 @@ class ValuesResponderV1 extends Responder {
       */
     @throws(classOf[UpdateNotPerformedException])
     @throws(classOf[ForbiddenException])
-    private def verifyLinkUpdate(linkSourceIri: IRI, linkPropertyIri: IRI, linkTargetIri: IRI, linkValueIri: IRI, userProfile: UserProfileV1): Future[LinkValueQueryResult] = {
+    private def verifyLinkUpdate(linkSourceIri: IRI, linkPropertyIri: IRI, linkTargetIri: IRI, linkValueIri: IRI, userProfile: UserADM): Future[LinkValueQueryResult] = {
         for {
             maybeLinkValueQueryResult <- findLinkValueByIri(
                 subjectIri = linkSourceIri,
@@ -1935,7 +1962,7 @@ class ValuesResponderV1 extends Responder {
                                          valueCreator: IRI,
                                          valuePermissions: String,
                                          updateResourceLastModificationDate: Boolean,
-                                         userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
+                                         userProfile: UserADM): Future[UnverifiedValueV1] = {
         value match {
             case linkUpdateV1: LinkUpdateV1 =>
                 createLinkValueV1AfterChecks(
@@ -1986,7 +2013,7 @@ class ValuesResponderV1 extends Responder {
                                              valueCreator: IRI,
                                              valuePermissions: String,
                                              updateResourceLastModificationDate: Boolean,
-                                             userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
+                                             userProfile: UserADM): Future[UnverifiedValueV1] = {
         for {
             sparqlTemplateLinkUpdate <- incrementLinkValue(
                 sourceResourceIri = resourceIri,
@@ -2044,7 +2071,7 @@ class ValuesResponderV1 extends Responder {
                                                  valueCreator: IRI,
                                                  valuePermissions: String,
                                                  updateResourceLastModificationDate: Boolean,
-                                                 userProfile: UserProfileV1): Future[UnverifiedValueV1] = {
+                                                 userProfile: UserADM): Future[UnverifiedValueV1] = {
         // Generate an IRI for the new value.
         val newValueIri = knoraIdUtil.makeRandomValueIri(resourceIri)
         val currentTime: String = Instant.now.toString
@@ -2130,7 +2157,7 @@ class ValuesResponderV1 extends Responder {
                                              comment: Option[String],
                                              valueCreator: IRI,
                                              valuePermissions: String,
-                                             userProfile: UserProfileV1): Future[ChangeValueResponseV1] = {
+                                             userProfile: UserADM): Future[ChangeValueResponseV1] = {
         for {
             // Delete the existing link and decrement its LinkValue's reference count.
             sparqlTemplateLinkUpdateForCurrentLink <- decrementLinkValue(
@@ -2236,7 +2263,7 @@ class ValuesResponderV1 extends Responder {
                                                  comment: Option[String],
                                                  valueCreator: IRI,
                                                  valuePermissions: String,
-                                                 userProfile: UserProfileV1): Future[ChangeValueResponseV1] = {
+                                                 userProfile: UserADM): Future[ChangeValueResponseV1] = {
         for {
             // If we're adding a text value, update direct links and LinkValues for any resource references in Standoff.
             standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- (currentValueV1, updateValueV1) match {
@@ -2381,7 +2408,7 @@ class ValuesResponderV1 extends Responder {
                                    targetResourceIri: IRI,
                                    valueCreator: IRI,
                                    valuePermissions: String,
-                                   userProfile: UserProfileV1): Future[SparqlTemplateLinkUpdate] = {
+                                   userProfile: UserADM): Future[SparqlTemplateLinkUpdate] = {
         for {
             // Check whether a LinkValue already exists for this link.
             maybeLinkValueQueryResult <- findLinkValueByLinkTriple(
@@ -2466,7 +2493,7 @@ class ValuesResponderV1 extends Responder {
                                    targetResourceIri: IRI,
                                    valueCreator: IRI,
                                    valuePermissions: String,
-                                   userProfile: UserProfileV1): Future[SparqlTemplateLinkUpdate] = {
+                                   userProfile: UserADM): Future[SparqlTemplateLinkUpdate] = {
         for {
             // Query the LinkValue to ensure that it exists and to get its contents.
             maybeLinkValueQueryResult <- findLinkValueByLinkTriple(
@@ -2550,7 +2577,7 @@ class ValuesResponderV1 extends Responder {
       * @return a `Future[Unit]` on success, otherwise a `Future` containing an exception ([[NotFoundException]] if the target resource is not found,
       *         or [[BadRequestException]] if the target IRI isn't a `knora-base:Resource`).
       */
-    private def checkStandoffResourceReferenceTargets(targetIris: Set[IRI], userProfile: UserProfileV1): Future[Unit] = {
+    private def checkStandoffResourceReferenceTargets(targetIris: Set[IRI], userProfile: UserADM): Future[Unit] = {
         if (targetIris.isEmpty) {
             Future(())
         } else {
@@ -2583,7 +2610,7 @@ class ValuesResponderV1 extends Responder {
       * @param userProfile                   the profile of the user making the request.
       * @return an empty [[Future]] on success, or a failed [[Future]] if the value has the wrong type.
       */
-    private def checkPropertyObjectClassConstraintForValue(propertyIri: IRI, propertyObjectClassConstraint: IRI, updateValueV1: UpdateValueV1, userProfile: UserProfileV1): Future[Unit] = {
+    private def checkPropertyObjectClassConstraintForValue(propertyIri: IRI, propertyObjectClassConstraint: IRI, updateValueV1: UpdateValueV1, userProfile: UserADM): Future[Unit] = {
         for {
             result <- updateValueV1 match {
                 case linkUpdate: LinkUpdateV1 =>

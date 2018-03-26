@@ -23,13 +23,10 @@
   */
 package org.knora.webapi.responders.v1
 
-import java.util.UUID
-
 import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.SharedTestDataV1._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse, NamedGraphV1}
@@ -37,7 +34,6 @@ import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
 
@@ -72,7 +68,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
+        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 

@@ -29,7 +29,7 @@ import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, Pr
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
-import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
+import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.{E2ESpec, SharedTestDataV1}
 import spray.json._
 

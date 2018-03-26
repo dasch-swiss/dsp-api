@@ -22,8 +22,8 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
@@ -34,7 +34,7 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.search.ApacheLuceneSupport.{CombineSearchTerms, MatchStringWhileTyping}
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.v2._
-import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, SmartIri, StringFormatter, _}
+import org.knora.webapi.util._
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -1137,7 +1137,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile the user making the request.
       * @return the forbidden resource.
       */
-    private def getForbiddenResource(userProfile: UserProfileV1) = {
+    private def getForbiddenResource(userProfile: UserADM) = {
         import SearchResponderV2Constants.ExtendedSearchConstants.forbiddenResourceIri
 
         for {
@@ -1159,7 +1159,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the amount of resources that have been found.
       */
-    private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserADM): Future[ReadResourcesSequenceV2] = {
 
         val searchTerms: CombineSearchTerms = CombineSearchTerms(searchValue)
 
@@ -1202,7 +1202,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserADM): Future[ReadResourcesSequenceV2] = {
 
         import SearchResponderV2Constants.FullTextSearchConstants._
 
@@ -1451,7 +1451,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def extendedSearchCountV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, userProfile: UserProfileV1) = {
+    private def extendedSearchCountV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, userProfile: UserADM) = {
 
         if (apiSchema != ApiV2Simple) {
             throw SparqlSearchException("Only api v2 simple is supported in v2 extended search count query")
@@ -1596,7 +1596,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def extendedSearchV2(inputQuery: ConstructQuery, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def extendedSearchV2(inputQuery: ConstructQuery, userProfile: UserADM): Future[ReadResourcesSequenceV2] = {
 
         /**
           * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -2326,7 +2326,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserProfileV1) = {
+    private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserADM) = {
 
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
@@ -2369,7 +2369,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile          the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def searchResourcesByLabelV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def searchResourcesByLabelV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserADM): Future[ReadResourcesSequenceV2] = {
 
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 

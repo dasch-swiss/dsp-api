@@ -25,15 +25,15 @@ import java.util.UUID
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, StringLiteralV2}
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}
-import org.knora.webapi.messages.store.triplestoremessages.{SmartIriLiteralV2, StringLiteralV2}
 
 import scala.concurrent.duration._
 
@@ -44,11 +44,11 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    private val imagesUserProfile = SharedTestDataV1.imagesUser01
-    private val imagesProjectIri = SharedTestDataV1.IMAGES_PROJECT_IRI.toSmartIri
+    private val imagesUserProfile = SharedTestDataADM.imagesUser01
+    private val imagesProjectIri = SharedTestDataADM.IMAGES_PROJECT_IRI.toSmartIri
 
-    private val anythingUserProfile = SharedTestDataV1.anythingAdminUser
-    private val anythingProjectIri = SharedTestDataV1.ANYTHING_PROJECT_IRI.toSmartIri
+    private val anythingUserProfile = SharedTestDataADM.anythingAdminUser
+    private val anythingProjectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI.toSmartIri
 
     private val actorUnderTest = TestActorRef[OntologyResponderV2]
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
@@ -128,6 +128,39 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure =>
                     msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "delete the 'foo' ontology" in {
+            actorUnderTest ! DeleteOntologyRequestV2(
+                ontologyIri = fooIri.get.toSmartIri,
+                lastModificationDate = fooLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = imagesUserProfile
+            )
+
+            expectMsgType[SuccessResponseV2](timeout)
+        }
+
+        "not delete the 'anything' ontology, because it is used in data" in {
+            actorUnderTest ! OntologyMetadataGetRequestV2(
+                projectIris = Set(anythingProjectIri),
+                userProfile = anythingUserProfile
+            )
+
+            val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
+            assert(metadataResponse.ontologies.size == 1)
+            anythingLastModDate = metadataResponse.ontologies.head.lastModificationDate.get
+
+            actorUnderTest ! DeleteOntologyRequestV2(
+                ontologyIri = AnythingOntologyIri,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                userProfile = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
         }
 

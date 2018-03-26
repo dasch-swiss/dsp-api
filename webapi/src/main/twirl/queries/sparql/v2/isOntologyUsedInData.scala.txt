@@ -1,0 +1,78 @@
+@*
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.util.SmartIri
+
+@*
+ * Checks whether any entity in an ontology is used in data. Returns either one row if at least one entity is
+ * used, or no rows if none are used.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param classIris the IRIs of all the classes in the ontology.
+ * @param propertyIris the IRIs of all the properties in the ontology.
+ *@
+@(triplestore: String,
+  classIris: Set[SmartIri],
+  propertyIris: Set[SmartIri])
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?s
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
+WHERE {
+    @for((propertyIri, index) <- propertyIris.toVector.zipWithIndex) {
+
+        @if(index > 0) {
+
+            UNION
+
+        }
+
+        {
+
+            ?s <@propertyIri> ?o .
+
+        }
+
+    }
+
+    @for((classIri, index) <- classIris.toVector.zipWithIndex) {
+
+        @if(propertyIris.nonEmpty || index > 0) {
+
+            UNION
+
+        }
+
+        {
+
+            ?s rdf:type <@classIri> .
+
+        }
+
+    }
+}
+LIMIT 1

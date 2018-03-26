@@ -21,7 +21,7 @@ package org.knora.webapi.messages.v1.responder.searchmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
@@ -43,7 +43,7 @@ sealed trait SearchResponderRequestV1 extends KnoraRequestV1 {
 
     def showNRows: Int
 
-    def userProfile: UserProfileV1
+    def userProfile: UserADM
 }
 
 /**
@@ -56,7 +56,7 @@ case class FulltextSearchGetRequestV1(searchValue: String,
                                       filterByProject: Option[IRI] = None,
                                       startAt: Int,
                                       showNRows: Int,
-                                      userProfile: UserProfileV1) extends SearchResponderRequestV1
+                                      userProfile: UserADM) extends SearchResponderRequestV1
 
 /**
   * Requests an extended search. A successful response will be a [[SearchGetResponseV1]].
@@ -72,7 +72,7 @@ case class ExtendedSearchGetRequestV1(filterByRestype: Option[IRI] = None,
                                       searchValue: Seq[String] = Nil, // parallel structure
                                       startAt: Int,
                                       showNRows: Int,
-                                      userProfile: UserProfileV1) extends SearchResponderRequestV1
+                                      userProfile: UserADM) extends SearchResponderRequestV1
 
 
 /**

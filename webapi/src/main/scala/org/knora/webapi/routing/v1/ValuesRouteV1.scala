@@ -33,8 +33,8 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.FileIO
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
@@ -57,7 +57,7 @@ object ValuesRouteV1 extends Authenticator {
         val responderManager = system.actorSelection("/user/responderManager")
         val stringFormatter = StringFormatter.getGeneralInstance
 
-        def makeVersionHistoryRequestMessage(iris: Seq[IRI], userProfile: UserProfileV1): ValueVersionHistoryGetRequestV1 = {
+        def makeVersionHistoryRequestMessage(iris: Seq[IRI], userProfile: UserADM): ValueVersionHistoryGetRequestV1 = {
             if (iris.length != 3) throw BadRequestException("Version history request requires resource IRI, property IRI, and current value IRI")
 
             val Seq(resourceIriStr, propertyIriStr, currentValueIriStr) = iris
@@ -74,7 +74,7 @@ object ValuesRouteV1 extends Authenticator {
             )
         }
 
-        def makeLinkValueGetRequestMessage(iris: Seq[IRI], userProfile: UserProfileV1): LinkValueGetRequestV1 = {
+        def makeLinkValueGetRequestMessage(iris: Seq[IRI], userProfile: UserADM): LinkValueGetRequestV1 = {
             if (iris.length != 3) throw BadRequestException("Link value request requires subject IRI, predicate IRI, and object IRI")
 
             val Seq(subjectIriStr, predicateIriStr, objectIriStr) = iris
@@ -91,7 +91,7 @@ object ValuesRouteV1 extends Authenticator {
             )
         }
 
-        def makeCreateValueRequestMessage(apiRequest: CreateValueApiRequestV1, userProfile: UserProfileV1): Future[CreateValueRequestV1] = {
+        def makeCreateValueRequestMessage(apiRequest: CreateValueApiRequestV1, userProfile: UserADM): Future[CreateValueRequestV1] = {
             val resourceIri = stringFormatter.validateAndEscapeIri(apiRequest.res_id, throw BadRequestException(s"Invalid resource IRI ${apiRequest.res_id}"))
             val propertyIri = stringFormatter.validateAndEscapeIri(apiRequest.prop, throw BadRequestException(s"Invalid property IRI ${apiRequest.prop}"))
 
@@ -193,7 +193,7 @@ object ValuesRouteV1 extends Authenticator {
                 )
         }
 
-        def makeAddValueVersionRequestMessage(valueIriStr: IRI, apiRequest: ChangeValueApiRequestV1, userProfile: UserProfileV1): Future[ChangeValueRequestV1] = {
+        def makeAddValueVersionRequestMessage(valueIriStr: IRI, apiRequest: ChangeValueApiRequestV1, userProfile: UserADM): Future[ChangeValueRequestV1] = {
             val valueIri = stringFormatter.validateAndEscapeIri(valueIriStr, throw BadRequestException(s"Invalid value IRI: $valueIriStr"))
 
             for {
@@ -292,7 +292,7 @@ object ValuesRouteV1 extends Authenticator {
             )
         }
 
-        def makeChangeCommentRequestMessage(valueIriStr: IRI, comment: Option[String], userProfile: UserProfileV1): ChangeCommentRequestV1 = {
+        def makeChangeCommentRequestMessage(valueIriStr: IRI, comment: Option[String], userProfile: UserADM): ChangeCommentRequestV1 = {
             ChangeCommentRequestV1(
                 valueIri = stringFormatter.validateAndEscapeIri(valueIriStr, throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
                 comment = comment.map(str => stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid comment: '$str'"))),
@@ -301,7 +301,7 @@ object ValuesRouteV1 extends Authenticator {
             )
         }
 
-        def makeDeleteValueRequest(valueIriStr: IRI, deleteComment: Option[String], userProfile: UserProfileV1): DeleteValueRequestV1 = {
+        def makeDeleteValueRequest(valueIriStr: IRI, deleteComment: Option[String], userProfile: UserADM): DeleteValueRequestV1 = {
             DeleteValueRequestV1(
                 valueIri = stringFormatter.validateAndEscapeIri(valueIriStr, throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
                 deleteComment = deleteComment.map(comment => stringFormatter.toSparqlEncodedString(comment, throw BadRequestException(s"Invalid comment: '$comment'"))),
@@ -310,14 +310,14 @@ object ValuesRouteV1 extends Authenticator {
             )
         }
 
-        def makeGetValueRequest(valueIriStr: IRI, userProfile: UserProfileV1): ValueGetRequestV1 = {
+        def makeGetValueRequest(valueIriStr: IRI, userProfile: UserADM): ValueGetRequestV1 = {
             ValueGetRequestV1(
                 stringFormatter.validateAndEscapeIri(valueIriStr, throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
                 userProfile
             )
         }
 
-        def makeChangeFileValueRequest(resIriStr: IRI, apiRequest: Option[ChangeFileValueApiRequestV1], multipartConversionRequest: Option[SipiResponderConversionPathRequestV1], userProfile: UserProfileV1) = {
+        def makeChangeFileValueRequest(resIriStr: IRI, apiRequest: Option[ChangeFileValueApiRequestV1], multipartConversionRequest: Option[SipiResponderConversionPathRequestV1], userProfile: UserADM) = {
             if (apiRequest.nonEmpty && multipartConversionRequest.nonEmpty) throw BadRequestException("File information is present twice, only one is allowed.")
 
             val resourceIri = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
@@ -328,7 +328,7 @@ object ValuesRouteV1 extends Authenticator {
                     originalFilename = stringFormatter.toSparqlEncodedString(apiRequest.get.file.originalFilename, throw BadRequestException(s"The original filename is invalid: '${apiRequest.get.file.originalFilename}'")),
                     originalMimeType = stringFormatter.toSparqlEncodedString(apiRequest.get.file.originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '${apiRequest.get.file.originalMimeType}'")),
                     filename = stringFormatter.toSparqlEncodedString(apiRequest.get.file.filename, throw BadRequestException(s"Invalid filename: '${apiRequest.get.file.filename}'")),
-                    userProfile = userProfile
+                    userProfile = userProfile.asUserProfileV1
                 )
                 ChangeFileValueRequestV1(
                     resourceIri = resourceIri,
@@ -354,7 +354,7 @@ object ValuesRouteV1 extends Authenticator {
         path("v1" / "values" / "history" / Segments) { iris =>
             get {
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
                     val requestMessage = makeVersionHistoryRequestMessage(iris = iris, userProfile = userProfile)
 
 
@@ -371,7 +371,7 @@ object ValuesRouteV1 extends Authenticator {
             post {
                 entity(as[CreateValueApiRequestV1]) { apiRequest =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
                         val requestMessageFuture = makeCreateValueRequestMessage(apiRequest = apiRequest, userProfile = userProfile)
 
                         RouteUtilV1.runJsonRouteWithFuture(
@@ -386,7 +386,7 @@ object ValuesRouteV1 extends Authenticator {
         } ~ path("v1" / "values" / Segment) { valueIriStr =>
             get {
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
                     val requestMessage = makeGetValueRequest(valueIriStr = valueIriStr, userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
@@ -400,7 +400,7 @@ object ValuesRouteV1 extends Authenticator {
             } ~ put {
                 entity(as[ChangeValueApiRequestV1]) { apiRequest =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
 
                         // In API v1, you cannot change a value and its comment in a single request. So we know that here,
                         // we are getting a request to change either the value or the comment, but not both.
@@ -419,7 +419,7 @@ object ValuesRouteV1 extends Authenticator {
                 }
             } ~ delete {
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
                     val params = requestContext.request.uri.query().toMap
                     val deleteComment = params.get("deleteComment")
                     val requestMessage = makeDeleteValueRequest(valueIriStr = valueIriStr, deleteComment = deleteComment, userProfile = userProfile)
@@ -436,7 +436,7 @@ object ValuesRouteV1 extends Authenticator {
         } ~ path("v1" / "valuecomments" / Segment) { valueIriStr =>
             delete {
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
                     val requestMessage = makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = None, userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
@@ -452,7 +452,7 @@ object ValuesRouteV1 extends Authenticator {
             // Link value request requires 3 URL path segments: subject IRI, predicate IRI, and object IRI
             get {
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
                     val requestMessage = makeLinkValueGetRequestMessage(iris = iris, userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
@@ -468,7 +468,7 @@ object ValuesRouteV1 extends Authenticator {
             put {
                 entity(as[ChangeFileValueApiRequestV1]) { apiRequest =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
                         val requestMessage = makeChangeFileValueRequest(resIriStr = resIriStr, apiRequest = Some(apiRequest), multipartConversionRequest = None, userProfile = userProfile)
 
                         RouteUtilV1.runJsonRoute(
@@ -485,7 +485,7 @@ object ValuesRouteV1 extends Authenticator {
 
                         loggingAdapter.debug("/v1/filevalue - PUT - Multipart.FormData - Route")
 
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
 
                         val FILE_PART = "file"
 
@@ -529,7 +529,7 @@ object ValuesRouteV1 extends Authenticator {
                                 originalFilename = stringFormatter.toSparqlEncodedString(originalFilename, throw BadRequestException(s"The original filename is invalid: '$originalFilename'")),
                                 originalMimeType = stringFormatter.toSparqlEncodedString(originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '$originalMimeType'")),
                                 source = sourcePath,
-                                userProfile = userProfile
+                                userProfile = userProfile.asUserProfileV1
                             )
 
                         } yield makeChangeFileValueRequest(resIriStr = resIriStr, apiRequest = None, multipartConversionRequest = Some(sipiConvertPathRequest), userProfile = userProfile)

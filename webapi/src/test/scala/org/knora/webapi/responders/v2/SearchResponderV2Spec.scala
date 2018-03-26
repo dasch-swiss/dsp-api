@@ -30,12 +30,12 @@ import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManag
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{CoreSpec, LiveActorMaker, SharedTestDataV1}
+import org.knora.webapi.{CoreSpec, LiveActorMaker, SharedTestDataADM}
 
 import scala.concurrent.duration._
 
 object SearchResponderV2Spec {
-    private val userProfile = SharedTestDataV1.incunabulaProjectAdminUser
+    private val userProfile = SharedTestDataADM.incunabulaProjectAdminUser
 
 }
 
@@ -74,7 +74,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "perform a fulltext search for 'Narr'" in {
 
-            actorUnderTest ! FulltextSearchGetRequestV2(searchValue = "Narr", offset = 0, limitToProject = None, limitToResourceClass = None, SharedTestDataV1.anonymousUser)
+            actorUnderTest ! FulltextSearchGetRequestV2(searchValue = "Narr", offset = 0, limitToProject = None, limitToResourceClass = None, SharedTestDataADM.anonymousUser)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -88,7 +88,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "perform a fulltext search for 'Dinge'" in {
 
-            actorUnderTest ! FulltextSearchGetRequestV2(searchValue = "Dinge", offset = 0, limitToProject = None, limitToResourceClass = None, SharedTestDataV1.anythingUser1)
+            actorUnderTest ! FulltextSearchGetRequestV2(searchValue = "Dinge", offset = 0, limitToProject = None, limitToResourceClass = None, SharedTestDataADM.anythingUser1)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -101,7 +101,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         "perform an extended search for books that have the title 'Zeitglöcklein des Lebens'" in {
 
 
-            actorUnderTest ! ExtendedSearchGetRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein, SharedTestDataV1.anonymousUser)
+            actorUnderTest ! ExtendedSearchGetRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein, SharedTestDataADM.anonymousUser)
 
             // extended search sort by resource Iri by default if no order criterion is indicated
             expectMsgPF(timeout) {
@@ -113,7 +113,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "perform an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
 
-            actorUnderTest ! ExtendedSearchGetRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein, SharedTestDataV1.anonymousUser)
+            actorUnderTest ! ExtendedSearchGetRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein, SharedTestDataADM.anonymousUser)
 
             // extended search sort by resource Iri by default if no order criterion is indicated
             expectMsgPF(timeout) {
@@ -131,7 +131,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
                 offset = 0,
                 limitToProject = None,
                 limitToResourceClass = Some("http://www.knora.org/ontology/incunabula#book".toSmartIri), // internal Iri!
-                userProfile = SharedTestDataV1.anonymousUser
+                userProfile = SharedTestDataADM.anonymousUser
             )
 
             expectMsgPF(timeout) {

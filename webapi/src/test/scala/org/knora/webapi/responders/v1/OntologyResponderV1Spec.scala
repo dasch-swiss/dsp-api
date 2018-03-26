@@ -23,8 +23,8 @@ package org.knora.webapi.responders.v1
 import akka.actor.Props
 import akka.testkit._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
 import org.knora.webapi.util.MessageUtil
@@ -37,13 +37,10 @@ import scala.concurrent.duration._
 object OntologyResponderV1Spec {
 
     // A test user that prefers responses in German.
-    private val userProfileWithGerman = SharedTestDataV1.incunabulaProjectAdminUser
-
-    // A test user that prefers responses in French.
-    private val userProfileWithFrench = userProfileWithGerman.copy(userData = userProfileWithGerman.userData.copy(lang = "fr"))
+    private val userProfileWithGerman = SharedTestDataADM.incunabulaProjectAdminUser
 
     // A test user that prefers responses in English.
-    private val userProfileWithEnglish = userProfileWithGerman.copy(userData = userProfileWithGerman.userData.copy(lang = "en"))
+    private val userProfileWithEnglish = userProfileWithGerman.copy(lang = "en")
 
 }
 

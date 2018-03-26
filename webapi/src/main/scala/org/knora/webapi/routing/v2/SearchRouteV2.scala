@@ -125,7 +125,7 @@ object SearchRouteV2 extends Authenticator {
             get {
                 requestContext =>
 
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
 
                     val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
@@ -152,7 +152,7 @@ object SearchRouteV2 extends Authenticator {
         } ~ path("v2" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
             get {
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
 
                     val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
@@ -183,7 +183,7 @@ object SearchRouteV2 extends Authenticator {
             get {
 
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
 
                     val constructQuery = SearchParserV2.parseSearchQuery(sparql)
 
@@ -202,7 +202,7 @@ object SearchRouteV2 extends Authenticator {
             get {
 
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
 
                     val constructQuery = SearchParserV2.parseSearchQuery(sparql)
 
@@ -223,7 +223,7 @@ object SearchRouteV2 extends Authenticator {
         } ~ path("v2" / "searchbylabel" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
             get {
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
 
                     val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
@@ -257,7 +257,7 @@ object SearchRouteV2 extends Authenticator {
             get {
                 requestContext => {
 
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
 
                     val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 

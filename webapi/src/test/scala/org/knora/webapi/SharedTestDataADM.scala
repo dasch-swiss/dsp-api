@@ -388,6 +388,31 @@ object SharedTestDataADM {
 
     val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/anything"
 
+    def anythingAdminUser = UserADM(
+        id = "http://rdfh.ch/users/AnythingAdminUser",
+        email = "anything.admin@example.org",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
+        token = None,
+        givenName = "Anything",
+        familyName = "Admin",
+        status = true,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq(anythingProject),
+        sessionId = None,
+        permissions = PermissionsDataADM(
+            groupsPerProject = Map(
+                ANYTHING_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
+            ),
+            administrativePermissionsPerProject = Map(
+                ANYTHING_PROJECT_IRI -> Set(
+                    PermissionADM.ProjectAdminAllPermission,
+                    PermissionADM.ProjectResourceCreateAllPermission
+                )
+            )
+        )
+    )
+
     def anythingUser1: UserADM = UserADM(
         id = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         email = "anything.user01@example.org",

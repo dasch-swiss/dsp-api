@@ -24,10 +24,10 @@ import java.io._
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.util.UUID
+
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator}
-
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.Multipart.BodyPart
@@ -42,11 +42,11 @@ import akka.stream.scaladsl.FileIO
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.IriConversions._
@@ -86,7 +86,7 @@ object ResourcesRouteV1 extends Authenticator {
         def makeResourceRequestMessage(resIri: String,
                                        resinfo: Boolean,
                                        requestType: String,
-                                       userProfile: UserProfileV1): ResourcesResponderRequestV1 = {
+                                       userProfile: UserADM): ResourcesResponderRequestV1 = {
             val validResIri = stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: $resIri"))
 
             requestType match {
@@ -101,14 +101,14 @@ object ResourcesRouteV1 extends Authenticator {
         def makeResourceSearchRequestMessage(searchString: String,
                                              resourceTypeIri: Option[IRI],
                                              numberOfProps: Int, limitOfResults: Int,
-                                             userProfile: UserProfileV1): ResourceSearchGetRequestV1 = {
+                                             userProfile: UserADM): ResourceSearchGetRequestV1 = {
             ResourceSearchGetRequestV1(searchString = searchString, resourceTypeIri = resourceTypeIri, numberOfProps = numberOfProps, limitOfResults = limitOfResults, userProfile = userProfile)
         }
 
 
         def valuesToCreate(properties: Map[IRI, Seq[CreateResourceValueV1]],
                            acceptStandoffLinksToClientIDs: Boolean,
-                           userProfile: UserProfileV1): Map[IRI, Future[Seq[CreateValueV1WithComment]]] = {
+                           userProfile: UserADM): Map[IRI, Future[Seq[CreateValueV1WithComment]]] = {
             properties.map {
                 case (propIri: IRI, values: Seq[CreateResourceValueV1]) =>
                     (stringFormatter.validateAndEscapeIri(propIri, throw BadRequestException(s"Invalid property IRI $propIri")), values.map {
@@ -224,7 +224,7 @@ object ResourcesRouteV1 extends Authenticator {
         }
 
 
-        def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, multipartConversionRequest: Option[SipiResponderConversionPathRequestV1] = None, userProfile: UserProfileV1): Future[ResourceCreateRequestV1] = {
+        def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, multipartConversionRequest: Option[SipiResponderConversionPathRequestV1] = None, userProfile: UserADM): Future[ResourceCreateRequestV1] = {
             val projectIri = stringFormatter.validateAndEscapeIri(apiRequest.project_id, throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
             val resourceTypeIri = stringFormatter.validateAndEscapeIri(apiRequest.restype_id, throw BadRequestException(s"Invalid resource IRI: ${apiRequest.restype_id}"))
             val label = stringFormatter.toSparqlEncodedString(apiRequest.label, throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
@@ -237,7 +237,7 @@ object ResourcesRouteV1 extends Authenticator {
                     originalFilename = stringFormatter.toSparqlEncodedString(createFile.originalFilename, throw BadRequestException(s"The original filename is invalid: '${createFile.originalFilename}'")),
                     originalMimeType = stringFormatter.toSparqlEncodedString(createFile.originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '${createFile.originalMimeType}'")),
                     filename = stringFormatter.toSparqlEncodedString(createFile.filename, throw BadRequestException(s"Invalid filename: '${createFile.filename}'")),
-                    userProfile = userProfile
+                    userProfile = userProfile.asUserProfileV1
                 ))
                 case None => None
             }
@@ -275,7 +275,7 @@ object ResourcesRouteV1 extends Authenticator {
             )
         }
 
-        def createOneResourceRequestFromXmlImport(resourceRequest: CreateResourceFromXmlImportRequestV1, userProfile: UserProfileV1): Future[OneOfMultipleResourceCreateRequestV1] = {
+        def createOneResourceRequestFromXmlImport(resourceRequest: CreateResourceFromXmlImportRequestV1, userProfile: UserADM): Future[OneOfMultipleResourceCreateRequestV1] = {
             val values: Map[IRI, Future[Seq[CreateValueV1WithComment]]] = valuesToCreate(
                 properties = resourceRequest.properties,
                 acceptStandoffLinksToClientIDs = true,
@@ -302,13 +302,13 @@ object ResourcesRouteV1 extends Authenticator {
                             originalFilename = stringFormatter.toSparqlEncodedString(fileToRead.file.getName, throw BadRequestException(s"The filename is invalid: '${fileToRead.file.getName}'")),
                             originalMimeType = stringFormatter.toSparqlEncodedString(fileToRead.mimeType, throw BadRequestException(s"The MIME type is invalid: '${fileToRead.mimeType}'")),
                             source = fileToRead.file,
-                            userProfile = userProfile
+                            userProfile = userProfile.asUserProfileV1
                         )
                 }
             )
         }
 
-        def makeMultiResourcesRequestMessage(resourceRequest: Seq[CreateResourceFromXmlImportRequestV1], projectId: IRI, apiRequestID: UUID, userProfile: UserProfileV1): Future[MultipleResourceCreateRequestV1] = {
+        def makeMultiResourcesRequestMessage(resourceRequest: Seq[CreateResourceFromXmlImportRequestV1], projectId: IRI, apiRequestID: UUID, userProfile: UserADM): Future[MultipleResourceCreateRequestV1] = {
             // Make sure there are no duplicate client resource IDs.
 
             val duplicateClientIDs: immutable.Iterable[String] = resourceRequest.map(_.client_id).groupBy(identity).collect { case (clientID, occurrences) if occurrences.size > 1 => clientID }
@@ -325,11 +325,11 @@ object ResourcesRouteV1 extends Authenticator {
             } yield MultipleResourceCreateRequestV1(resToCreateCollection, projectId, userProfile, apiRequestID)
         }
 
-        def makeGetPropertiesRequestMessage(resIri: IRI, userProfile: UserProfileV1) = {
+        def makeGetPropertiesRequestMessage(resIri: IRI, userProfile: UserADM) = {
             PropertiesGetRequestV1(resIri, userProfile)
         }
 
-        def makeResourceDeleteMessage(resIri: IRI, deleteComment: Option[String], userProfile: UserProfileV1) = {
+        def makeResourceDeleteMessage(resIri: IRI, deleteComment: Option[String], userProfile: UserADM) = {
             ResourceDeleteRequestV1(
                 resourceIri = stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: $resIri")),
                 deleteComment = deleteComment.map(comment => stringFormatter.toSparqlEncodedString(comment, throw BadRequestException(s"Invalid comment: '$comment'"))),
@@ -347,7 +347,7 @@ object ResourcesRouteV1 extends Authenticator {
           * @param userProfile     the profile of the user making the request.
           * @return a map of internal ontology IRIs to [[NamedGraphEntityInfoV1]] objects.
           */
-        def getNamedGraphInfos(mainOntologyIri: IRI, userProfile: UserProfileV1): Future[Map[IRI, NamedGraphEntityInfoV1]] = {
+        def getNamedGraphInfos(mainOntologyIri: IRI, userProfile: UserADM): Future[Map[IRI, NamedGraphEntityInfoV1]] = {
             /**
               * Does the actual recursion for `getNamedGraphInfos`, loading only information about project-specific
               * ontologies (i.e. ontologies other than `knora-base`).
@@ -362,7 +362,7 @@ object ResourcesRouteV1 extends Authenticator {
               * @param userProfile         the profile of the user making the request.
               * @return a map of internal ontology IRIs to [[NamedGraphEntityInfoV1]] objects.
               */
-            def getNamedGraphInfosRec(initialOntologyIri: IRI, intermediateResults: Map[IRI, NamedGraphEntityInfoV1], userProfile: UserProfileV1): Future[Map[IRI, NamedGraphEntityInfoV1]] = {
+            def getNamedGraphInfosRec(initialOntologyIri: IRI, intermediateResults: Map[IRI, NamedGraphEntityInfoV1], userProfile: UserADM): Future[Map[IRI, NamedGraphEntityInfoV1]] = {
                 assert(intermediateResults.contains(OntologyConstants.KnoraBase.KnoraBaseOntologyIri))
 
                 for {
@@ -441,7 +441,7 @@ object ResourcesRouteV1 extends Authenticator {
           * @param userProfile         the profile of the user making the request.
           * @return an [[XmlImportSchemaBundleV1]] for validating the import.
           */
-        def generateSchemasFromOntologies(internalOntologyIri: IRI, userProfile: UserProfileV1): Future[XmlImportSchemaBundleV1] = {
+        def generateSchemasFromOntologies(internalOntologyIri: IRI, userProfile: UserADM): Future[XmlImportSchemaBundleV1] = {
             /**
               * Called by the schema generation template to get the prefix label for an internal ontology
               * entity IRI. The schema generation template gets these IRIs from resource cardinalities
@@ -578,7 +578,7 @@ object ResourcesRouteV1 extends Authenticator {
           * @param userProfile         the profile of the user making the request.
           * @return a byte array representing a Zip file containing XML schemas.
           */
-        def generateSchemaZipFile(internalOntologyIri: IRI, userProfile: UserProfileV1): Future[Array[Byte]] = {
+        def generateSchemaZipFile(internalOntologyIri: IRI, userProfile: UserADM): Future[Array[Byte]] = {
             for {
                 // Generate a bundle of XML schemas.
                 schemaBundle: XmlImportSchemaBundleV1 <- generateSchemasFromOntologies(
@@ -605,7 +605,7 @@ object ResourcesRouteV1 extends Authenticator {
           * @param userProfile      the profile of the user making the request.
           * @return a `Future` containing `()` if successful, otherwise a failed future.
           */
-        def validateImportXml(xml: String, defaultNamespace: IRI, userProfile: UserProfileV1): Future[Unit] = {
+        def validateImportXml(xml: String, defaultNamespace: IRI, userProfile: UserADM): Future[Unit] = {
             // Convert the default namespace of the submitted XML to an internal ontology IRI. This should be the
             // IRI of the main ontology used in the import.
             val mainOntologyIri: SmartIri = stringFormatter.xmlImportNamespaceToInternalOntologyIriV1(
@@ -862,7 +862,7 @@ object ResourcesRouteV1 extends Authenticator {
             get {
                 // search for resources matching the given search string (searchstr) and return their Iris.
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
                     val params = requestContext.request.uri.query().toMap
                     val searchstr = params.getOrElse("searchstr", throw BadRequestException(s"required param searchstr is missing"))
 
@@ -908,7 +908,7 @@ object ResourcesRouteV1 extends Authenticator {
                 // For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.
                 entity(as[CreateResourceApiRequestV1]) { apiRequest =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
                         val requestMessageFuture = makeCreateResourceRequestMessage(apiRequest = apiRequest, userProfile = userProfile)
 
                         RouteUtilV1.runJsonRouteWithFuture(
@@ -928,7 +928,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                         log.debug("/v1/resources - POST - Multipart.FormData - Route")
 
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
 
                         type Name = String
 
@@ -989,7 +989,7 @@ object ResourcesRouteV1 extends Authenticator {
                                 originalFilename = stringFormatter.toSparqlEncodedString(originalFilename, throw BadRequestException(s"Original filename is invalid: '$originalFilename'")),
                                 originalMimeType = stringFormatter.toSparqlEncodedString(originalMimeType, throw BadRequestException(s"Original MIME type is invalid: '$originalMimeType'")),
                                 source = sourcePath,
-                                userProfile = userProfile
+                                userProfile = userProfile.asUserProfileV1
                             )
 
                             requestMessageFuture: Future[ResourceCreateRequestV1] = makeCreateResourceRequestMessage(
@@ -1014,7 +1014,7 @@ object ResourcesRouteV1 extends Authenticator {
             get {
                 parameters("reqtype".?, "resinfo".as[Boolean].?) { (reqtypeParam, resinfoParam) =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
                         val requestType = reqtypeParam.getOrElse("")
                         val resinfo = resinfoParam.getOrElse(false)
                         val requestMessage = makeResourceRequestMessage(resIri = resIri, resinfo = resinfo, requestType = requestType, userProfile = userProfile)
@@ -1030,7 +1030,7 @@ object ResourcesRouteV1 extends Authenticator {
             } ~ delete {
                 parameters("deleteComment".?) { deleteCommentParam =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
                         val requestMessage = makeResourceDeleteMessage(resIri = resIri, deleteComment = deleteCommentParam, userProfile = userProfile)
 
                         RouteUtilV1.runJsonRoute(
@@ -1045,7 +1045,7 @@ object ResourcesRouteV1 extends Authenticator {
         } ~ path("v1" / "resources.html" / Segment) { iri =>
             get {
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
                     val params = requestContext.request.uri.query().toMap
                     val requestType = params.getOrElse("reqtype", "")
                     val resIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param resource IRI: $iri"))
@@ -1067,7 +1067,7 @@ object ResourcesRouteV1 extends Authenticator {
         } ~ path("v1" / "properties" / Segment) { iri =>
             get {
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
                     val resIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param resource IRI: $iri"))
                     val requestMessage = makeGetPropertiesRequestMessage(resIri, userProfile)
 
@@ -1084,7 +1084,7 @@ object ResourcesRouteV1 extends Authenticator {
             put {
                 entity(as[ChangeResourceLabelApiRequestV1]) { apiRequest =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
 
                         val resIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param resource IRI: $iri"))
 
@@ -1110,7 +1110,7 @@ object ResourcesRouteV1 extends Authenticator {
             get {
                 parameters("depth".as[Int].?) { depth =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
                         val resourceIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param resource IRI: $iri"))
                         val requestMessage = GraphDataGetRequestV1(resourceIri, depth.getOrElse(4), userProfile)
 
@@ -1147,14 +1147,14 @@ object ResourcesRouteV1 extends Authenticator {
             post {
                 entity(as[String]) { xml =>
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
 
                         if (userProfile.isAnonymousUser) {
                             throw BadRequestException("You are not logged in, and only a system administrator or project administrator can perform a bulk import")
                         }
 
-                        if (!(userProfile.permissionData.isSystemAdmin || userProfile.permissionData.isProjectAdmin(projectId))) {
-                            throw BadRequestException(s"You are logged in as ${userProfile.userData.email.get}, but only a system administrator or project administrator can perform a bulk import")
+                        if (!(userProfile.permissions.isSystemAdmin || userProfile.permissions.isProjectAdmin(projectId))) {
+                            throw BadRequestException(s"You are logged in as ${userProfile.email}, but only a system administrator or project administrator can perform a bulk import")
                         }
 
                         // Parse the submitted XML.
@@ -1209,7 +1209,7 @@ object ResourcesRouteV1 extends Authenticator {
                 // Respond with a Content-Disposition header specifying the filename of the generated Zip file.
                 respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> (internalOntologyPrefixLabel + "-xml-schemas.zip")))) {
                     requestContext =>
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
 
                         val httpResponseFuture: Future[HttpResponse] = for {
                             schemaZipFileBytes: Array[Byte] <- generateSchemaZipFile(

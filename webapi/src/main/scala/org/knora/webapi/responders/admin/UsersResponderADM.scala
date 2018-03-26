@@ -199,7 +199,7 @@ class UsersResponderADM extends Responder {
     }
 
     /**
-      * Gets information about a Knora user, and returns it as a [[UserProfileResponseV1]].
+      * Gets information about a Knora user, and returns it as a [[UserResponseADM]].
       *
       * @param maybeUserIri     the IRI of the user.
       * @param maybeUserEmail the email of the user.

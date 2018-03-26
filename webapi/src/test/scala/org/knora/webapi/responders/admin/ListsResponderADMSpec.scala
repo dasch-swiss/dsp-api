@@ -28,16 +28,14 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.SharedTestDataV1._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, StringLiteralV2}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.responders._
+import org.knora.webapi.responders.admin.ListsResponderADM._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
-
-import org.knora.webapi.responders.admin.ListsResponderADM._
 /**
   * Static data for testing [[ListsResponderADM]].
   */
@@ -90,7 +88,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser.asUserProfileV1)
+        responderManager ! LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 

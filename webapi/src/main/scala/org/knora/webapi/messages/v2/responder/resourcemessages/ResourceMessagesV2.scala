@@ -20,7 +20,7 @@
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder._
 
 /**
@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v2.responder._
   */
 sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
 
-    def userProfile: UserProfileV1
+    def userProfile: UserADM
 }
 
 /**
@@ -37,7 +37,7 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
   * @param resourceIris the IRIs of the resources to be queried.
   * @param userProfile  the profile of the user making the request.
   */
-case class ResourcesGetRequestV2(resourceIris: Seq[IRI], userProfile: UserProfileV1) extends ResourcesResponderRequestV2
+case class ResourcesGetRequestV2(resourceIris: Seq[IRI], userProfile: UserADM) extends ResourcesResponderRequestV2
 
 /**
   * Requests a preview of a resource.
@@ -45,4 +45,4 @@ case class ResourcesGetRequestV2(resourceIris: Seq[IRI], userProfile: UserProfil
   * @param resourceIris the Iris of the resources to obtain a preview for.
   * @param userProfile  the profile of the user making the request.
   */
-case class ResourcePreviewRequestV2(resourceIris: Seq[IRI], userProfile: UserProfileV1) extends ResourcesResponderRequestV2
+case class ResourcePreviewRequestV2(resourceIris: Seq[IRI], userProfile: UserADM) extends ResourcesResponderRequestV2

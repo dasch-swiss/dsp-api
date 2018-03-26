@@ -20,8 +20,8 @@
 package org.knora.webapi.responders.v2
 
 import akka.pattern._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcePreviewRequestV2, ResourcesGetRequestV2}
 import org.knora.webapi.responders.ResponderWithStandoffV2
@@ -47,7 +47,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile  the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
-    private def getResources(resourceIris: Seq[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def getResources(resourceIris: Seq[IRI], userProfile: UserADM): Future[ReadResourcesSequenceV2] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -95,7 +95,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       * @param userProfile  the profile of the client making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
-    private def getResourcePreview(resourceIris: Seq[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def getResourcePreview(resourceIris: Seq[IRI], userProfile: UserADM): Future[ReadResourcesSequenceV2] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct

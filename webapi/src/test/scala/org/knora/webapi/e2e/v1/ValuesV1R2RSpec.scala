@@ -27,14 +27,14 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.store._
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{IRI, LiveActorMaker, R2RSpec, SharedTestDataV1}
-import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import spray.json._
 
 import scala.concurrent.Await
@@ -56,7 +56,7 @@ class ValuesV1R2RSpec extends R2RSpec {
 
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
-    private val incunabulaUser = SharedTestDataV1.incunabulaProjectAdminUser
+    private val incunabulaUser = SharedTestDataADM.incunabulaProjectAdminUser
 
     implicit val timeout: Timeout = settings.defaultRestoreTimeout
 

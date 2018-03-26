@@ -118,7 +118,7 @@ trait KnoraService {
     /**
       * A user representing the Knora API server, used for initialisation on startup.
       */
-    private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
+    private val systemUser = KnoraSystemInstances.Users.SystemUser
 
     /**
       * All routes composed together and CORS activated.
