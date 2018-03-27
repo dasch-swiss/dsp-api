@@ -22,9 +22,9 @@ package org.knora.webapi.responders.v1
 import akka.actor.Status
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsGetRequestADM, ProjectsGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsNamedGraphGetV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversions
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
@@ -277,10 +277,31 @@ class OntologyResponderV1 extends Responder {
     private def getNamedGraphs(userProfile: UserADM): Future[NamedGraphsResponseV1] = {
 
         for {
-            projectsNamedGraph <- (responderManager ? ProjectsNamedGraphGetV1(userProfile.asUserProfileV1)).mapTo[Seq[NamedGraphV1]]
+            projectsResponse <- (responderManager ? ProjectsGetRequestADM(userProfile)).mapTo[ProjectsGetResponseADM]
+            readOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetRequestV2(requestingUser = userProfile)).mapTo[ReadOntologyMetadataV2]
+
+            projectsMap: Map[IRI, ProjectADM] = projectsResponse.projects.map {
+                project => project.id -> project
+            }.toMap
+
+            namedGraphs: Seq[NamedGraphV1] = readOntologyMetadataV2.ontologies.toVector.map {
+                ontologyMetadata =>
+                    val internalMetadata = ontologyMetadata.toOntologySchema(InternalSchema)
+                    val project = projectsMap(internalMetadata.projectIri.get.toString)
+
+                    NamedGraphV1(
+                        id = internalMetadata.ontologyIri.toString,
+                        shortname = project.shortname,
+                        longname = project.longname.getOrElse(throw InconsistentTriplestoreDataException(s"Project ${project.id} has no longname")),
+                        description = project.description.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"Project ${project.id} has no description")).toString,
+                        project_id = project.id,
+                        uri = internalMetadata.ontologyIri.toString,
+                        active = project.status
+                    )
+            }
 
             response = NamedGraphsResponseV1(
-                vocabularies = projectsNamedGraph
+                vocabularies = namedGraphs
             )
         } yield response
     }
@@ -362,8 +383,9 @@ class OntologyResponderV1 extends Responder {
 
             case None => // map over all named graphs and collect the resource types
                 for {
-                    projectNamedGraphIris: Seq[IRI] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile.asUserProfileV1)).mapTo[Seq[NamedGraphV1]] map (_.map(_.uri))
-                    resourceTypesPerProject: Seq[Future[Seq[ResourceTypeV1]]] = projectNamedGraphIris map (iri => getResourceTypes(iri))
+                    projectNamedGraphsResponse: NamedGraphsResponseV1 <- getNamedGraphs(userProfile)
+                    projectNamedGraphIris: Seq[IRI] = projectNamedGraphsResponse.vocabularies.map(_.uri)
+                    resourceTypesPerProject: Seq[Future[Seq[ResourceTypeV1]]] = projectNamedGraphIris.map(iri => getResourceTypes(iri))
                     resourceTypes: Seq[Seq[ResourceTypeV1]] <- Future.sequence(resourceTypesPerProject)
                 } yield ResourceTypesForNamedGraphResponseV1(resourcetypes = resourceTypes.flatten)
         }
@@ -434,8 +456,9 @@ class OntologyResponderV1 extends Responder {
             case None => // get the property types for all named graphs (collect them by mapping over all named graphs)
 
                 for {
-                    projectNamedGraphIris: Seq[IRI] <- (responderManager ? ProjectsNamedGraphGetV1(userProfile.asUserProfileV1)).mapTo[Seq[NamedGraphV1]] map (_.map(_.uri))
-                    propertyTypesPerProject: Seq[Future[Seq[PropertyDefinitionInNamedGraphV1]]] = projectNamedGraphIris map (iri => getPropertiesForNamedGraph(iri, userProfile))
+                    projectNamedGraphsResponse: NamedGraphsResponseV1 <- getNamedGraphs(userProfile)
+                    projectNamedGraphIris: Seq[IRI] = projectNamedGraphsResponse.vocabularies.map(_.uri)
+                    propertyTypesPerProject: Seq[Future[Seq[PropertyDefinitionInNamedGraphV1]]] = projectNamedGraphIris.map(iri => getPropertiesForNamedGraph(iri, userProfile))
                     propertyTypes: Seq[Seq[PropertyDefinitionInNamedGraphV1]] <- Future.sequence(propertyTypesPerProject)
                 } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes.flatten)
         }

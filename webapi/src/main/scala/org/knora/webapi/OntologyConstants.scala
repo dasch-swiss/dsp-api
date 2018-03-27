@@ -321,7 +321,6 @@ object OntologyConstants {
         val ProjectKeyword: IRI = KnoraBasePrefixExpansion + "projectKeyword"
         val ProjectLogo: IRI = KnoraBasePrefixExpansion + "projectLogo"
         val BelongsToInstitution: IRI = KnoraBasePrefixExpansion + "belongsToInstitution"
-        val ProjectOntology: IRI = KnoraBasePrefixExpansion + "projectOntology"
         val HasSelfJoinEnabled: IRI = KnoraBasePrefixExpansion + "hasSelfJoinEnabled"
 
         /* Group */

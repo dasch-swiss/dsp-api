@@ -26,11 +26,13 @@
  * @param triplestore the name of the triplestore being used.
  * @param ontologyNamedGraphIri the IRI of the named graph where the ontology should be stored.
  * @param ontologyIri the IRI of the ontology to be created.
+ * @param projectIri the IRI of the project that the ontology belongs to.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
  *@
 @(triplestore: String,
   ontologyNamedGraphIri: SmartIri,
   ontologyIri: SmartIri,
+  projectIri: SmartIri,
   ontologyLabel: String,
   currentTime: Instant)
 
@@ -43,6 +45,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 INSERT {
     GRAPH ?ontologyNamedGraph {
         ?ontology rdf:type owl:Ontology ;
+            knora-base:attachedToProject ?project ;
             rdfs:label """@ontologyLabel"""^^xsd:string ;
             knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
     }
@@ -54,6 +57,7 @@ INSERT {
 WHERE {
     BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
     BIND(IRI("@ontologyIri") AS ?ontology)
+    BIND(IRI("@projectIri") AS ?project)
 
     FILTER NOT EXISTS {
         ?ontology rdf:type ?existingOntologyType .

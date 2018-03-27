@@ -13,7 +13,8 @@
 
 @prefix : <http://www.knora.org/ontology/something#> .
 <http://www.knora.org/ontology/something> rdf:type owl:Ontology ;
-    rdfs:label "The something ontology" .
+    rdfs:label "The something ontology" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/anything> .
 
 :Something rdf:type owl:Class ;
 

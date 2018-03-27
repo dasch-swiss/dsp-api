@@ -1322,7 +1322,7 @@ class ResourcesResponderV1 extends Responder {
                             responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetADM(
                                 projectIri = projectIri,
                                 resourceClassIri = resourceClassIri,
-                                targetUser = userProfileV1,
+                                targetUser = userProfile,
                                 requestingUser = KnoraSystemInstances.Users.SystemUser
                             )
                         }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
@@ -1342,7 +1342,7 @@ class ResourcesResponderV1 extends Responder {
                                         projectIri = projectIri,
                                         resourceClassIri = resourceClassIri,
                                         propertyIri = propertyIri,
-                                        targetUser = userProfileV1,
+                                        targetUser = userProfile,
                                         requestingUser = KnoraSystemInstances.Users.SystemUser)
                                 }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                             } yield (propertyIri, defaultObjectAccessPermissions.permissionLiteral)
@@ -1782,7 +1782,7 @@ class ResourcesResponderV1 extends Responder {
                 responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetADM(
                     projectIri = projectIri,
                     resourceClassIri = resourceClassIri,
-                    targetUser = userProfileV1,
+                    targetUser = userProfile,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
             }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
@@ -1797,7 +1797,7 @@ class ResourcesResponderV1 extends Responder {
                                 projectIri = projectIri,
                                 resourceClassIri = resourceClassIri,
                                 propertyIri = propertyIri,
-                                targetUser = userProfileV1,
+                                targetUser = userProfile,
                                 requestingUser = KnoraSystemInstances.Users.SystemUser)
                         }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                     } yield (propertyIri, defaultObjectAccessPermissions.permissionLiteral)

@@ -24,13 +24,12 @@ import java.time.Instant
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectOntologyAddADM, ProjectOntologyRemoveADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
 import org.knora.webapi.messages.v2.responder.ontologymessages._
@@ -81,18 +80,18 @@ class OntologyResponderV2 extends Responder {
                                          propertiesUsedInStandoffCardinalities: Set[SmartIri])
 
     def receive = {
-        case LoadOntologiesRequestV2(userProfile) => future2Message(sender(), loadOntologies(userProfile), log)
-        case EntityInfoGetRequestV2(classIris, propertyIris, userProfile) => future2Message(sender(), getEntityInfoResponseV2(classIris, propertyIris, userProfile), log)
-        case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, userProfile) => future2Message(sender(), getStandoffEntityInfoResponseV2(standoffClassIris, standoffPropertyIris, userProfile), log)
-        case StandoffClassesWithDataTypeGetRequestV2(userProfile) => future2Message(sender(), getStandoffStandoffClassesWithDataTypeV2(userProfile), log)
-        case StandoffAllPropertyEntitiesGetRequestV2(userProfile) => future2Message(sender(), getAllStandoffPropertyEntitiesV2(userProfile), log)
-        case CheckSubClassRequestV2(subClassIri, superClassIri, userProfile) => future2Message(sender(), checkSubClassV2(subClassIri, superClassIri, userProfile), log)
-        case SubClassesGetRequestV2(resourceClassIri, userProfile) => future2Message(sender(), getSubClassesV2(resourceClassIri, userProfile), log)
-        case OntologyKnoraEntityIrisGetRequestV2(namedGraphIri, userProfile) => future2Message(sender(), getKnoraEntityIrisInNamedGraphV2(namedGraphIri, userProfile), log)
-        case OntologyEntitiesGetRequestV2(namedGraphIris, responseSchema, allLanguages, userProfile) => future2Message(sender(), getOntologyEntitiesV2(namedGraphIris, responseSchema, allLanguages, userProfile), log)
-        case ClassesGetRequestV2(resourceClassIris, allLanguages, userProfile) => future2Message(sender(), getClassDefinitionsV2(resourceClassIris, allLanguages, userProfile), log)
-        case PropertiesGetRequestV2(propertyIris, allLanguages, userProfile) => future2Message(sender(), getPropertyDefinitionsV2(propertyIris, allLanguages, userProfile), log)
-        case OntologyMetadataGetRequestV2(projectIris, userProfile) => future2Message(sender(), getOntologyMetadataForProjectsV2(projectIris, userProfile), log)
+        case LoadOntologiesRequestV2(requestingUser) => future2Message(sender(), loadOntologies(requestingUser), log)
+        case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) => future2Message(sender(), getEntityInfoResponseV2(classIris, propertyIris, requestingUser), log)
+        case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, requestingUser) => future2Message(sender(), getStandoffEntityInfoResponseV2(standoffClassIris, standoffPropertyIris, requestingUser), log)
+        case StandoffClassesWithDataTypeGetRequestV2(requestingUser) => future2Message(sender(), getStandoffStandoffClassesWithDataTypeV2(requestingUser), log)
+        case StandoffAllPropertyEntitiesGetRequestV2(requestingUser) => future2Message(sender(), getAllStandoffPropertyEntitiesV2(requestingUser), log)
+        case CheckSubClassRequestV2(subClassIri, superClassIri, requestingUser) => future2Message(sender(), checkSubClassV2(subClassIri, superClassIri, requestingUser), log)
+        case SubClassesGetRequestV2(resourceClassIri, requestingUser) => future2Message(sender(), getSubClassesV2(resourceClassIri, requestingUser), log)
+        case OntologyKnoraEntityIrisGetRequestV2(namedGraphIri, requestingUser) => future2Message(sender(), getKnoraEntityIrisInNamedGraphV2(namedGraphIri, requestingUser), log)
+        case OntologyEntitiesGetRequestV2(namedGraphIris, responseSchema, allLanguages, requestingUser) => future2Message(sender(), getOntologyEntitiesV2(namedGraphIris, responseSchema, allLanguages, requestingUser), log)
+        case ClassesGetRequestV2(resourceClassIris, allLanguages, requestingUser) => future2Message(sender(), getClassDefinitionsV2(resourceClassIris, allLanguages, requestingUser), log)
+        case PropertiesGetRequestV2(propertyIris, allLanguages, requestingUser) => future2Message(sender(), getPropertyDefinitionsV2(propertyIris, allLanguages, requestingUser), log)
+        case OntologyMetadataGetRequestV2(projectIris, requestingUser) => future2Message(sender(), getOntologyMetadataForProjectsV2(projectIris, requestingUser), log)
         case createOntologyRequest: CreateOntologyRequestV2 => future2Message(sender(), createOntology(createOntologyRequest), log)
         case changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2 => future2Message(sender(), changeOntologyMetadata(changeOntologyMetadataRequest), log)
         case createClassRequest: CreateClassRequestV2 => future2Message(sender(), createClass(createClassRequest), log)
@@ -118,13 +117,17 @@ class OntologyResponderV2 extends Responder {
     /**
       * Loads and caches all ontology information.
       *
-      * @param userProfile the profile of the user making the request.
+      * @param requestingUser the user making the request.
       * @return a [[LoadOntologiesResponse]].
       */
-    private def loadOntologies(userProfile: UserADM): Future[SuccessResponseV2] = {
-        // TODO: determine whether the user is authorised to reload the ontologies (depends on pull request #168).
-
+    private def loadOntologies(requestingUser: UserADM): Future[SuccessResponseV2] = {
         for {
+            _ <- Future {
+                if (!(requestingUser.id == KnoraSystemInstances.Users.SystemUser.id || requestingUser.permissions.isSystemAdmin)) {
+                    throw ForbiddenException(s"Only a system administrator can reload ontologies")
+                }
+            }
+
             // Get all ontology metadata.
             allOntologyMetdataSparql <- FastFuture.successful(queries.sparql.v2.txt.getAllOntologyMetadata(triplestore = settings.triplestoreType).toString())
             allOntologyMetadataResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(allOntologyMetdataSparql)).mapTo[SparqlSelectResponse]
@@ -404,11 +407,13 @@ class OntologyResponderV2 extends Responder {
                     row => row.rowMap("ontologyPred") -> row.rowMap("ontologyObj")
                 }.toMap
 
+                val projectIri = ontologyMetadataMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri has no knora-base:attachedToProject")).toSmartIri
                 val ontologyLabel = ontologyMetadataMap.getOrElse(OntologyConstants.Rdfs.Label, ontologySmartIri.getOntologyName)
                 val lastModificationDate = ontologyMetadataMap.get(OntologyConstants.KnoraBase.LastModificationDate).map(instant => stringFormatter.toInstant(instant, throw InconsistentTriplestoreDataException(s"Invalid UTC instant: $instant")))
 
                 ontologySmartIri -> OntologyMetadataV2(
                     ontologyIri = ontologySmartIri,
+                    projectIri = Some(projectIri),
                     label = Some(ontologyLabel),
                     lastModificationDate = lastModificationDate
                 )
@@ -723,10 +728,10 @@ class OntologyResponderV2 extends Responder {
       *
       * @param classIris    the IRIs of the resource entities to be queried.
       * @param propertyIris the IRIs of the property entities to be queried.
-      * @param userProfile  the profile of the user making the request.
+      * @param requestingUser  the user making the request.
       * @return an [[EntityInfoGetResponseV1]].
       */
-    private def getEntityInfoResponseV2(classIris: Set[SmartIri] = Set.empty[SmartIri], propertyIris: Set[SmartIri] = Set.empty[SmartIri], userProfile: UserADM): Future[EntityInfoGetResponseV2] = {
+    private def getEntityInfoResponseV2(classIris: Set[SmartIri] = Set.empty[SmartIri], propertyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM): Future[EntityInfoGetResponseV2] = {
         for {
             cacheData <- getCacheData
 
@@ -805,10 +810,10 @@ class OntologyResponderV2 extends Responder {
       *
       * @param standoffClassIris    the IRIs of the resource entities to be queried.
       * @param standoffPropertyIris the IRIs of the property entities to be queried.
-      * @param userProfile          the profile of the user making the request.
+      * @param requestingUser          the user making the request.
       * @return an [[EntityInfoGetResponseV1]].
       */
-    private def getStandoffEntityInfoResponseV2(standoffClassIris: Set[SmartIri] = Set.empty[SmartIri], standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri], userProfile: UserADM): Future[StandoffEntityInfoGetResponseV2] = {
+    private def getStandoffEntityInfoResponseV2(standoffClassIris: Set[SmartIri] = Set.empty[SmartIri], standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM): Future[StandoffEntityInfoGetResponseV2] = {
         for {
             cacheData <- getCacheData
 
@@ -853,10 +858,10 @@ class OntologyResponderV2 extends Responder {
     /**
       * Gets information about all standoff classes that are a subclass of a data type standoff class.
       *
-      * @param userProfile the profile of the user making the request.
+      * @param requestingUser the user making the request.
       * @return a [[StandoffClassesWithDataTypeGetResponseV1]]
       */
-    private def getStandoffStandoffClassesWithDataTypeV2(userProfile: UserADM): Future[StandoffClassesWithDataTypeGetResponseV2] = {
+    private def getStandoffStandoffClassesWithDataTypeV2(requestingUser: UserADM): Future[StandoffClassesWithDataTypeGetResponseV2] = {
         for {
             cacheData <- getCacheData
         } yield StandoffClassesWithDataTypeGetResponseV2(
@@ -872,10 +877,10 @@ class OntologyResponderV2 extends Responder {
     /**
       * Gets all standoff property entities.
       *
-      * @param userProfile the profile of the user making the request.
+      * @param requestingUser the user making the request.
       * @return a [[StandoffAllPropertiesGetResponseV1]].
       */
-    private def getAllStandoffPropertyEntitiesV2(userProfile: UserADM): Future[StandoffAllPropertyEntitiesGetResponseV2] = {
+    private def getAllStandoffPropertyEntitiesV2(requestingUser: UserADM): Future[StandoffAllPropertyEntitiesGetResponseV2] = {
         for {
             cacheData <- getCacheData
         } yield StandoffAllPropertyEntitiesGetResponseV2(
@@ -892,7 +897,7 @@ class OntologyResponderV2 extends Responder {
       * @param superClassIri the IRI of the resource or value class to check for (whether it is a a super class of `subClassIri` or not).
       * @return a [[CheckSubClassResponseV1]].
       */
-    private def checkSubClassV2(subClassIri: SmartIri, superClassIri: SmartIri, userProfile: UserADM): Future[CheckSubClassResponseV2] = {
+    private def checkSubClassV2(subClassIri: SmartIri, superClassIri: SmartIri, requestingUser: UserADM): Future[CheckSubClassResponseV2] = {
         for {
             cacheData <- getCacheData
             response = CheckSubClassResponseV2(
@@ -911,7 +916,7 @@ class OntologyResponderV2 extends Responder {
       * @param classIri the IRI of the class whose subclasses should be returned.
       * @return a [[SubClassesGetResponseV1]].
       */
-    private def getSubClassesV2(classIri: SmartIri, userProfile: UserADM): Future[SubClassesGetResponseV2] = {
+    private def getSubClassesV2(classIri: SmartIri, requestingUser: UserADM): Future[SubClassesGetResponseV2] = {
         for {
             cacheData <- getCacheData
 
@@ -925,7 +930,7 @@ class OntologyResponderV2 extends Responder {
                         id = subClassIri,
                         label = classInfo.entityInfoContent.getPredicateStringLiteralObject(
                             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                            preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                            preferredLangs = Some(requestingUser.lang, settings.fallbackLanguage)
                         ).getOrElse(throw InconsistentTriplestoreDataException(s"Resource class $subClassIri has no rdfs:label"))
                     )
             }
@@ -938,10 +943,10 @@ class OntologyResponderV2 extends Responder {
       * Gets the [[OntologyKnoraEntitiesIriInfoV2]] for an ontology.
       *
       * @param ontologyIri the IRI of the ontology to query
-      * @param userProfile the profile of the user making the request.
+      * @param requestingUser the user making the request.
       * @return an [[OntologyKnoraEntitiesIriInfoV2]].
       */
-    private def getKnoraEntityIrisInNamedGraphV2(ontologyIri: SmartIri, userProfile: UserADM): Future[OntologyKnoraEntitiesIriInfoV2] = {
+    private def getKnoraEntityIrisInNamedGraphV2(ontologyIri: SmartIri, requestingUser: UserADM): Future[OntologyKnoraEntitiesIriInfoV2] = {
         for {
             cacheData <- getCacheData
             ontology = cacheData.ontologies(ontologyIri)
@@ -964,29 +969,32 @@ class OntologyResponderV2 extends Responder {
       * Gets the metadata describing the ontologies that belong to selected projects, or to all projects.
       *
       * @param projectIris the IRIs of the projects selected, or an empty set if all projects are selected.
-      * @param userProfile the profile of the user making the request.
+      * @param requestingUser the user making the request.
       * @return a [[ReadOntologyMetadataV2]].
       */
-    private def getOntologyMetadataForProjectsV2(projectIris: Set[SmartIri], userProfile: UserADM): Future[ReadOntologyMetadataV2] = {
+    private def getOntologyMetadataForProjectsV2(projectIris: Set[SmartIri], requestingUser: UserADM): Future[ReadOntologyMetadataV2] = {
         for {
             cacheData <- getCacheData
             returnAllOntologies: Boolean = projectIris.isEmpty
 
-            ontologyMetadata: Set[OntologyMetadataV2] <- if (returnAllOntologies) {
-                FastFuture.successful(cacheData.ontologies.values.map(_.ontologyMetadata).toSet)
+            projectFutures: Vector[Future[ProjectGetResponseADM]] = projectIris.toVector.map {
+                projectIri =>
+                    (responderManager ? ProjectGetRequestADM(
+                        maybeIri = Some(projectIri.toString),
+                        requestingUser = requestingUser
+                    )).mapTo[ProjectGetResponseADM]
+            }
+
+            _: Seq[ProjectGetResponseADM] <- Future.sequence(projectFutures)
+
+            ontologyMetadata: Set[OntologyMetadataV2] = if (returnAllOntologies) {
+                cacheData.ontologies.values.map(_.ontologyMetadata).toSet
             } else {
-                val userProfileV1 = userProfile.asUserProfileV1 // TODO: implement a way to do this with ADM
-
-                for {
-                    namedGraphInfos: Seq[NamedGraphV1] <- (responderManager ? ProjectsNamedGraphGetV1(userProfileV1)).mapTo[Seq[NamedGraphV1]]
-                    projectIriStrs = projectIris.map(_.toString)
-
-                    projectOntologyMetadata = namedGraphInfos.filter(namedGraphInfo => projectIriStrs.contains(namedGraphInfo.project_id)).map {
-                        namedGraphInfo =>
-                            val ontologyIri = namedGraphInfo.id.toSmartIri
-                            cacheData.ontologies.get(ontologyIri).map(_.ontologyMetadata).getOrElse(throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri has no metadata"))
-                    }.toSet
-                } yield projectOntologyMetadata
+                cacheData.ontologies.values.filter {
+                    ontology => projectIris.contains(ontology.ontologyMetadata.projectIri.get)
+                }.map {
+                    ontology => ontology.ontologyMetadata
+                }.toSet
             }
         } yield ReadOntologyMetadataV2(
             ontologies = ontologyMetadata
@@ -997,17 +1005,17 @@ class OntologyResponderV2 extends Responder {
       * Requests the entities defined in the given ontologies.
       *
       * @param ontologyIris the IRIs (internal or external) of the ontologies to be queried.
-      * @param userProfile  the profile of the user making the request.
+      * @param requestingUser  the user making the request.
       * @return a [[ReadOntologiesV2]].
       */
-    private def getOntologyEntitiesV2(ontologyIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, userProfile: UserADM): Future[ReadOntologiesV2] = {
+    private def getOntologyEntitiesV2(ontologyIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, requestingUser: UserADM): Future[ReadOntologiesV2] = {
         for {
             cacheData <- getCacheData
 
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
                 // Just the user's preferred language.
-                Some(userProfile.lang)
+                Some(requestingUser.lang)
             } else {
                 // All available languages.
                 None
@@ -1029,20 +1037,20 @@ class OntologyResponderV2 extends Responder {
       * Requests information about OWL classes.
       *
       * @param classIris   the IRIs (internal or external) of the classes to query for.
-      * @param userProfile the profile of the user making the request.
+      * @param requestingUser the user making the request.
       * @return a [[ReadOntologiesV2]].
       */
-    private def getClassDefinitionsV2(classIris: Set[SmartIri], allLanguages: Boolean, userProfile: UserADM): Future[ReadOntologiesV2] = {
+    private def getClassDefinitionsV2(classIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM): Future[ReadOntologiesV2] = {
         for {
             cacheData <- getCacheData
 
             // request information about the given resource class Iris
-            classInfoResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(classIris = classIris, userProfile = userProfile)
+            classInfoResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(classIris = classIris, requestingUser = requestingUser)
 
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
                 // Just the user's preferred language.
-                Some(userProfile.lang)
+                Some(requestingUser.lang)
             } else {
                 // All available languages.
                 None
@@ -1066,20 +1074,20 @@ class OntologyResponderV2 extends Responder {
       * Requests information about property entities.
       *
       * @param propertyIris the IRIs (internal or external) of the properties to query for.
-      * @param userProfile  the profile of the user making the request.
+      * @param requestingUser  the user making the request.
       * @return a [[ReadOntologiesV2]].
       */
-    private def getPropertyDefinitionsV2(propertyIris: Set[SmartIri], allLanguages: Boolean, userProfile: UserADM) = {
+    private def getPropertyDefinitionsV2(propertyIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM) = {
 
         for {
             cacheData <- getCacheData
 
-            propertiesResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, userProfile = userProfile)
+            propertiesResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, requestingUser = requestingUser)
 
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
                 // Just the user's preferred language.
-                Some(userProfile.lang)
+                Some(requestingUser.lang)
             } else {
                 // All available languages.
                 None
@@ -1134,8 +1142,15 @@ class OntologyResponderV2 extends Responder {
                                 }
                         }
 
+                        val projectIris = statementMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has no knora-base:attachedToProject"))
                         val labels: Seq[String] = statementMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[String])
                         val lastModDates: Seq[String] = statementMap.getOrElse(OntologyConstants.KnoraBase.LastModificationDate, Seq.empty[String])
+
+                        val projectIri = if (projectIris.size > 1) {
+                            throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has more than one knora-base:attachedToProject")
+                        } else {
+                            projectIris.head.toSmartIri
+                        }
 
                         val label: String = if (labels.size > 1) {
                             throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has more than one rdfs:label")
@@ -1156,6 +1171,7 @@ class OntologyResponderV2 extends Responder {
 
                         Some(OntologyMetadataV2(
                             ontologyIri = internalOntologyIri,
+                            projectIri = Some(projectIri),
                             label = Some(label),
                             lastModificationDate = lastModificationDate
                         ))
@@ -1192,6 +1208,7 @@ class OntologyResponderV2 extends Responder {
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
+                    projectIri = createOntologyRequest.projectIri,
                     ontologyLabel = createOntologyRequest.label,
                     currentTime = currentTime
                 ).toString
@@ -1202,6 +1219,7 @@ class OntologyResponderV2 extends Responder {
 
                 unescapedNewMetadata = OntologyMetadataV2(
                     ontologyIri = internalOntologyIri,
+                    projectIri = Some(createOntologyRequest.projectIri),
                     label = Some(createOntologyRequest.label),
                     lastModificationDate = Some(currentTime)
                 ).unescape
@@ -1223,20 +1241,17 @@ class OntologyResponderV2 extends Responder {
                     ontologies = cacheData.ontologies + (internalOntologyIri -> ReadOntologyV2(ontologyMetadata = unescapedNewMetadata))
                 ))
 
-                // tell the projects responder that the ontology was created, so it can add it to the project's admin data.
-                _ <- (responderManager ? ProjectOntologyAddADM(createOntologyRequest.projectIri.toString, internalOntologyIri.toString, requestingUser = KnoraSystemInstances.Users.SystemUser, createOntologyRequest.apiRequestID)).mapTo[ProjectADM]
-
             } yield ReadOntologyMetadataV2(ontologies = Set(unescapedNewMetadata))
         }
 
         for {
-            userProfile <- FastFuture.successful(createOntologyRequest.userProfile)
+            requestingUser <- FastFuture.successful(createOntologyRequest.requestingUser)
             projectIri = createOntologyRequest.projectIri
 
             // check if the requesting user is allowed to create an ontology
-            _ = if (!(userProfile.permissions.isProjectAdmin(projectIri.toString) || userProfile.permissions.isSystemAdmin)) {
-                // println(s"userProfile: $userProfile")
-                // println(s"userProfile.permissionData.isProjectAdmin(<${projectIri.toString}>): ${userProfile.permissionData.isProjectAdmin(projectIri.toString)}")
+            _ = if (!(requestingUser.permissions.isProjectAdmin(projectIri.toString) || requestingUser.permissions.isSystemAdmin)) {
+                // println(s"requestingUser: $requestingUser")
+                // println(s"requestingUser.permissionData.isProjectAdmin(<${projectIri.toString}>): ${requestingUser.permissionData.isProjectAdmin(projectIri.toString)}")
                 throw ForbiddenException(s"A new ontology in the project ${createOntologyRequest.projectIri} can only be created by an admin of that project, or by a system admin.")
             }
 
@@ -1273,6 +1288,12 @@ class OntologyResponderV2 extends Responder {
             for {
                 cacheData <- getCacheData
 
+                // Check that the user has permission to update the ontology.
+                projectIri <- checkPermissionsForOntologyUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    requestingUser = changeOntologyMetadataRequest.requestingUser
+                )
+
                 // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
                 _ <- checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = changeOntologyMetadataRequest.lastModificationDate)
 
@@ -1295,6 +1316,7 @@ class OntologyResponderV2 extends Responder {
 
                 unescapedNewMetadata = OntologyMetadataV2(
                     ontologyIri = internalOntologyIri,
+                    projectIri = Some(projectIri),
                     label = Some(changeOntologyMetadataRequest.label),
                     lastModificationDate = Some(currentTime)
                 ).unescape
@@ -1320,13 +1342,8 @@ class OntologyResponderV2 extends Responder {
         }
 
         for {
-            userProfile <- FastFuture.successful(changeOntologyMetadataRequest.userProfile)
-
-            externalOntologyIri = changeOntologyMetadataRequest.ontologyIri
-            _ <- checkExternalOntologyIriForUpdate(externalOntologyIri)
-
-            internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
-            _ <- checkPermissionsForOntologyUpdate(internalOntologyIri = internalOntologyIri, userProfile = userProfile)
+            _ <- checkExternalOntologyIriForUpdate(changeOntologyMetadataRequest.ontologyIri)
+            internalOntologyIri = changeOntologyMetadataRequest.ontologyIri.toOntologySchema(InternalSchema)
 
             // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
             taskResult <- IriLocker.runWithIriLock(
@@ -1480,13 +1497,13 @@ class OntologyResponderV2 extends Responder {
                 response <- getClassDefinitionsV2(
                     classIris = Set(internalClassIri),
                     allLanguages = true,
-                    userProfile = createClassRequest.userProfile
+                    requestingUser = createClassRequest.requestingUser
                 )
             } yield response
         }
 
         for {
-            userProfile <- FastFuture.successful(createClassRequest.userProfile)
+            requestingUser <- FastFuture.successful(createClassRequest.requestingUser)
 
             externalClassIri = createClassRequest.classInfoContent.classIri
             externalOntologyIri = externalClassIri.getOntologyFromEntity
@@ -1494,7 +1511,7 @@ class OntologyResponderV2 extends Responder {
             _ <- checkOntologyAndEntityIrisForUpdate(
                 externalOntologyIri = externalOntologyIri,
                 externalEntityIri = externalClassIri,
-                userProfile = userProfile
+                requestingUser = requestingUser
             )
 
             internalClassIri = externalClassIri.toOntologySchema(InternalSchema)
@@ -1656,13 +1673,13 @@ class OntologyResponderV2 extends Responder {
                 response <- getClassDefinitionsV2(
                     classIris = Set(internalClassIri),
                     allLanguages = true,
-                    userProfile = addCardinalitiesRequest.userProfile
+                    requestingUser = addCardinalitiesRequest.requestingUser
                 )
             } yield response
         }
 
         for {
-            userProfile <- FastFuture.successful(addCardinalitiesRequest.userProfile)
+            requestingUser <- FastFuture.successful(addCardinalitiesRequest.requestingUser)
 
             externalClassIri = addCardinalitiesRequest.classInfoContent.classIri
             externalOntologyIri = externalClassIri.getOntologyFromEntity
@@ -1670,7 +1687,7 @@ class OntologyResponderV2 extends Responder {
             _ <- checkOntologyAndEntityIrisForUpdate(
                 externalOntologyIri = externalOntologyIri,
                 externalEntityIri = externalClassIri,
-                userProfile = userProfile
+                requestingUser = requestingUser
             )
 
             internalClassIri = externalClassIri.toOntologySchema(InternalSchema)
@@ -1819,13 +1836,13 @@ class OntologyResponderV2 extends Responder {
                 response <- getClassDefinitionsV2(
                     classIris = Set(internalClassIri),
                     allLanguages = true,
-                    userProfile = changeCardinalitiesRequest.userProfile
+                    requestingUser = changeCardinalitiesRequest.requestingUser
                 )
             } yield response
         }
 
         for {
-            userProfile <- FastFuture.successful(changeCardinalitiesRequest.userProfile)
+            requestingUser <- FastFuture.successful(changeCardinalitiesRequest.requestingUser)
 
             externalClassIri = changeCardinalitiesRequest.classInfoContent.classIri
             externalOntologyIri = externalClassIri.getOntologyFromEntity
@@ -1833,7 +1850,7 @@ class OntologyResponderV2 extends Responder {
             _ <- checkOntologyAndEntityIrisForUpdate(
                 externalOntologyIri = externalOntologyIri,
                 externalEntityIri = externalClassIri,
-                userProfile = userProfile
+                requestingUser = requestingUser
             )
 
             internalClassIri = externalClassIri.toOntologySchema(InternalSchema)
@@ -1929,7 +1946,7 @@ class OntologyResponderV2 extends Responder {
         }
 
         for {
-            userProfile <- FastFuture.successful(deleteClassRequest.userProfile)
+            requestingUser <- FastFuture.successful(deleteClassRequest.requestingUser)
 
             externalClassIri = deleteClassRequest.classIri
             externalOntologyIri = externalClassIri.getOntologyFromEntity
@@ -1937,7 +1954,7 @@ class OntologyResponderV2 extends Responder {
             _ <- checkOntologyAndEntityIrisForUpdate(
                 externalOntologyIri = externalOntologyIri,
                 externalEntityIri = externalClassIri,
-                userProfile = userProfile
+                requestingUser = requestingUser
             )
 
             internalClassIri = externalClassIri.toOntologySchema(InternalSchema)
@@ -2031,7 +2048,7 @@ class OntologyResponderV2 extends Responder {
         }
 
         for {
-            userProfile <- FastFuture.successful(deletePropertyRequest.userProfile)
+            requestingUser <- FastFuture.successful(deletePropertyRequest.requestingUser)
 
             externalPropertyIri = deletePropertyRequest.propertyIri
             externalOntologyIri = externalPropertyIri.getOntologyFromEntity
@@ -2039,7 +2056,7 @@ class OntologyResponderV2 extends Responder {
             _ <- checkOntologyAndEntityIrisForUpdate(
                 externalOntologyIri = externalOntologyIri,
                 externalEntityIri = externalPropertyIri,
-                userProfile = userProfile
+                requestingUser = requestingUser
             )
 
             internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema)
@@ -2058,9 +2075,15 @@ class OntologyResponderV2 extends Responder {
     }
 
     def deleteOntology(deleteOntologyRequest: DeleteOntologyRequestV2): Future[SuccessResponseV2] = {
-        def makeTaskFuture(internalOntologyIri: SmartIri, projectIri: IRI): Future[SuccessResponseV2] = {
+        def makeTaskFuture(internalOntologyIri: SmartIri): Future[SuccessResponseV2] = {
             for {
                 cacheData <- getCacheData
+
+                // Check that the user has permission to update the ontology.
+                _ <- checkPermissionsForOntologyUpdate(
+                    internalOntologyIri = internalOntologyIri,
+                    requestingUser = deleteOntologyRequest.requestingUser
+                )
 
                 // Check that the ontology exists and has not been updated by another user since the client last read it.
                 _ <- checkOntologyLastModificationDateBeforeUpdate(
@@ -2101,39 +2124,19 @@ class OntologyResponderV2 extends Responder {
                     throw UpdateNotPerformedException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} was not deleted. Please report this as a possible bug.")
                 }
 
-                removeOntologyFromProjectMsg = ProjectOntologyRemoveADM(
-                    projectIri = projectIri,
-                    ontologyIri = internalOntologyIri.toString,
-                    requestingUser = deleteOntologyRequest.userProfile,
-                    apiRequestID = deleteOntologyRequest.apiRequestID
-                )
-
-                _ <- (responderManager ? removeOntologyFromProjectMsg).mapTo[ProjectADM]
-
             } yield SuccessResponseV2(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} has been deleted")
         }
 
         for {
-            userProfile <- FastFuture.successful(deleteOntologyRequest.userProfile)
-
-            externalOntologyIri = deleteOntologyRequest.ontologyIri
-
-            _ <- checkExternalOntologyIriForUpdate(externalOntologyIri)
-
-            projectIri <- checkPermissionsForOntologyUpdate(
-                internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema),
-                userProfile = userProfile
-            )
-
-            internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+            _ <- checkExternalOntologyIriForUpdate(deleteOntologyRequest.ontologyIri)
+            internalOntologyIri = deleteOntologyRequest.ontologyIri.toOntologySchema(InternalSchema)
 
             // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID = deleteOntologyRequest.apiRequestID,
                 iri = internalOntologyIri.toString,
                 task = () => makeTaskFuture(
-                    internalOntologyIri = internalOntologyIri,
-                    projectIri = projectIri
+                    internalOntologyIri = internalOntologyIri
                 )
             )
         } yield taskResult
@@ -2467,13 +2470,13 @@ class OntologyResponderV2 extends Responder {
                 response <- getPropertyDefinitionsV2(
                     propertyIris = Set(internalPropertyIri),
                     allLanguages = true,
-                    userProfile = createPropertyRequest.userProfile
+                    requestingUser = createPropertyRequest.requestingUser
                 )
             } yield response
         }
 
         for {
-            userProfile <- FastFuture.successful(createPropertyRequest.userProfile)
+            requestingUser <- FastFuture.successful(createPropertyRequest.requestingUser)
 
             externalPropertyIri = createPropertyRequest.propertyInfoContent.propertyIri
             externalOntologyIri = externalPropertyIri.getOntologyFromEntity
@@ -2481,7 +2484,7 @@ class OntologyResponderV2 extends Responder {
             _ <- checkOntologyAndEntityIrisForUpdate(
                 externalOntologyIri = externalOntologyIri,
                 externalEntityIri = externalPropertyIri,
-                userProfile = userProfile
+                requestingUser = requestingUser
             )
 
             internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema)
@@ -2629,12 +2632,12 @@ class OntologyResponderV2 extends Responder {
 
                 // Read the data back from the cache.
 
-                response <- getPropertyDefinitionsV2(propertyIris = Set(internalPropertyIri), allLanguages = true, userProfile = changePropertyLabelsOrCommentsRequest.userProfile)
+                response <- getPropertyDefinitionsV2(propertyIris = Set(internalPropertyIri), allLanguages = true, requestingUser = changePropertyLabelsOrCommentsRequest.requestingUser)
             } yield response
         }
 
         for {
-            userProfile <- FastFuture.successful(changePropertyLabelsOrCommentsRequest.userProfile)
+            requestingUser <- FastFuture.successful(changePropertyLabelsOrCommentsRequest.requestingUser)
 
             externalPropertyIri = changePropertyLabelsOrCommentsRequest.propertyIri
             externalOntologyIri = externalPropertyIri.getOntologyFromEntity
@@ -2642,7 +2645,7 @@ class OntologyResponderV2 extends Responder {
             _ <- checkOntologyAndEntityIrisForUpdate(
                 externalOntologyIri = externalOntologyIri,
                 externalEntityIri = externalPropertyIri,
-                userProfile = userProfile
+                requestingUser = requestingUser
             )
 
             internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema)
@@ -2750,13 +2753,13 @@ class OntologyResponderV2 extends Responder {
                 response <- getClassDefinitionsV2(
                     classIris = Set(internalClassIri),
                     allLanguages = true,
-                    userProfile = changeClassLabelsOrCommentsRequest.userProfile
+                    requestingUser = changeClassLabelsOrCommentsRequest.requestingUser
                 )
             } yield response
         }
 
         for {
-            userProfile <- FastFuture.successful(changeClassLabelsOrCommentsRequest.userProfile)
+            requestingUser <- FastFuture.successful(changeClassLabelsOrCommentsRequest.requestingUser)
 
             externalClassIri = changeClassLabelsOrCommentsRequest.classIri
             externalOntologyIri = externalClassIri.getOntologyFromEntity
@@ -2764,7 +2767,7 @@ class OntologyResponderV2 extends Responder {
             _ <- checkOntologyAndEntityIrisForUpdate(
                 externalOntologyIri = externalOntologyIri,
                 externalEntityIri = externalClassIri,
-                userProfile = userProfile
+                requestingUser = requestingUser
             )
 
             internalClassIri = externalClassIri.toOntologySchema(InternalSchema)
@@ -2788,17 +2791,17 @@ class OntologyResponderV2 extends Responder {
       *
       * @param externalOntologyIri the external IRI of the ontology.
       * @param externalEntityIri   the external IRI of the entity.
-      * @param userProfile         the profile of the user making the request.
+      * @param requestingUser         the user making the request.
       */
     private def checkOntologyAndEntityIrisForUpdate(externalOntologyIri: SmartIri,
                                                     externalEntityIri: SmartIri,
-                                                    userProfile: UserADM): Future[Unit] = {
+                                                    requestingUser: UserADM): Future[Unit] = {
         for {
             _ <- checkExternalOntologyIriForUpdate(externalOntologyIri)
             _ <- checkExternalEntityIriForUpdate(externalEntityIri = externalEntityIri)
             _ <- checkPermissionsForOntologyUpdate(
                 internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema),
-                userProfile = userProfile
+                requestingUser = requestingUser
             )
         } yield ()
     }
@@ -3172,24 +3175,20 @@ class OntologyResponderV2 extends Responder {
       * Checks whether the user has permission to update an ontology.
       *
       * @param internalOntologyIri the internal IRI of the ontology.
-      * @param userProfile         the profile of the user making the request.
+      * @param requestingUser         the user making the request.
       * @return the project IRI.
       */
-    private def checkPermissionsForOntologyUpdate(internalOntologyIri: SmartIri, userProfile: UserADM): Future[IRI] = {
-        val userProfileV1 = userProfile.asUserProfileV1 // TODO: refactor this not to use V1
-
+    private def checkPermissionsForOntologyUpdate(internalOntologyIri: SmartIri, requestingUser: UserADM): Future[SmartIri] = {
         for {
-            // Get the project that the ontology belongs to.
-            projectInfo: ProjectInfoResponseV1 <- (responderManager ? ProjectInfoByOntologyGetRequestV1(
-                internalOntologyIri.toString,
-                Some(userProfileV1)
-            )).mapTo[ProjectInfoResponseV1]
+            cacheData <- getCacheData
+            projectIri = cacheData.ontologies(internalOntologyIri).ontologyMetadata.projectIri.get
 
-            _ = if (!userProfile.permissions.isProjectAdmin(projectInfo.project_info.id.toString) && !userProfile.permissions.isSystemAdmin) {
+            _ = if (!requestingUser.permissions.isProjectAdmin(projectIri.toString) && !requestingUser.permissions.isSystemAdmin) {
                 // not a project or system admin
                 throw ForbiddenException("Ontologies can be modified only by a project or system admin.")
             }
-        } yield projectInfo.project_info.id
+
+        } yield projectIri
     }
 
 

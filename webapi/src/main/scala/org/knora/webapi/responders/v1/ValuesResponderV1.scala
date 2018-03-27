@@ -32,7 +32,7 @@ import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIG
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1}
+import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.responders.{IriLocker, Responder}
@@ -90,7 +90,7 @@ class ValuesResponderV1 extends Responder {
             response <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileTypeV1.RESTRICTED)).mapTo[Option[UserADM]]
+                        maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileTypeV1.RESTRICTED)).mapTo[Option[UserProfileV1]]
                         valueCreatorProfile = maybeValueCreatorProfile match {
                             case Some(up) => up
                             case None => throw NotFoundException(s"User ${valueQueryResult.creatorIri} not found")
@@ -99,8 +99,8 @@ class ValuesResponderV1 extends Responder {
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
                         value = valueQueryResult.value,
-                        valuecreator = valueCreatorProfile.email,
-                        valuecreatorname = valueCreatorProfile.fullname,
+                        valuecreator = valueCreatorProfile.userData.email.get,
+                        valuecreatorname = valueCreatorProfile.userData.fullname.get,
                         valuecreationdate = valueQueryResult.creationDate,
                         comment = valueQueryResult.comment
                     )
@@ -197,7 +197,7 @@ class ValuesResponderV1 extends Responder {
                     projectIri = projectIri,
                     resourceClassIri = resourceClassIri,
                     propertyIri = createValueRequest.propertyIri,
-                    targetUser = createValueRequest.userProfile.asUserProfileV1,
+                    targetUser = createValueRequest.userProfile,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
             }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
@@ -881,7 +881,7 @@ class ValuesResponderV1 extends Responder {
                         projectIri = findResourceWithValueResult.projectIri,
                         resourceClassIri = resourceClassIri,
                         propertyIri = findResourceWithValueResult.propertyIri,
-                        targetUser = changeValueRequest.userProfile.asUserProfileV1,
+                        targetUser = changeValueRequest.userProfile,
                         requestingUser = KnoraSystemInstances.Users.SystemUser)
                 }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                 _ = log.debug(s"changeValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
@@ -1364,7 +1364,7 @@ class ValuesResponderV1 extends Responder {
             linkValueResponse <- maybeValueQueryResult match {
                 case Some(valueQueryResult) =>
                     for {
-                        maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileTypeV1.RESTRICTED)).mapTo[Option[UserADM]]
+                        maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(valueQueryResult.creatorIri, UserProfileTypeV1.RESTRICTED)).mapTo[Option[UserProfileV1]]
                         valueCreatorProfile = maybeValueCreatorProfile match {
                             case Some(up) => up
                             case None => throw NotFoundException(s"User ${valueQueryResult.creatorIri} not found")
@@ -1373,8 +1373,8 @@ class ValuesResponderV1 extends Responder {
                         valuetype = valueQueryResult.value.valueTypeIri,
                         rights = valueQueryResult.permissionCode,
                         value = valueQueryResult.value,
-                        valuecreator = valueCreatorProfile.email,
-                        valuecreatorname = valueCreatorProfile.fullname,
+                        valuecreator = valueCreatorProfile.userData.email.get,
+                        valuecreatorname = valueCreatorProfile.userData.fullname.get,
                         valuecreationdate = valueQueryResult.creationDate,
                         comment = valueQueryResult.comment
                     )

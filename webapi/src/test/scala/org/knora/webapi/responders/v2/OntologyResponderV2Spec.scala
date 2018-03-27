@@ -26,7 +26,6 @@ import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
@@ -44,10 +43,10 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    private val imagesUserProfile = SharedTestDataADM.imagesUser01
+    private val imagesUser = SharedTestDataADM.imagesUser01
     private val imagesProjectIri = SharedTestDataADM.IMAGES_PROJECT_IRI.toSmartIri
 
-    private val anythingUserProfile = SharedTestDataADM.anythingAdminUser
+    private val anythingUser = SharedTestDataADM.anythingAdminUser
     private val anythingProjectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI.toSmartIri
 
     private val actorUnderTest = TestActorRef[OntologyResponderV2]
@@ -73,8 +72,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(anythingUserProfile)
-        expectMsg(10.seconds, LoadOntologiesResponse())
+        responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
+        expectMsgType[SuccessResponseV2](10.seconds)
     }
 
     "The ontology responder v2" should {
@@ -84,7 +83,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectIri = imagesProjectIri,
                 label = "The foo ontology",
                 apiRequestID = UUID.randomUUID,
-                userProfile = imagesUserProfile
+                requestingUser = imagesUser
             )
 
             val response = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -103,7 +102,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 label = newLabel,
                 lastModificationDate = fooLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = imagesUserProfile
+                requestingUser = imagesUser
             )
 
             val response = expectMsgType[ReadOntologyMetadataV2](timeout)
@@ -122,7 +121,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectIri = imagesProjectIri,
                 label = "The foo ontology",
                 apiRequestID = UUID.randomUUID,
-                userProfile = imagesUserProfile
+                requestingUser = imagesUser
             )
 
             expectMsgPF(timeout) {
@@ -136,7 +135,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologyIri = fooIri.get.toSmartIri,
                 lastModificationDate = fooLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = imagesUserProfile
+                requestingUser = imagesUser
             )
 
             expectMsgType[SuccessResponseV2](timeout)
@@ -145,18 +144,18 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not delete the 'anything' ontology, because it is used in data" in {
             actorUnderTest ! OntologyMetadataGetRequestV2(
                 projectIris = Set(anythingProjectIri),
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
-            assert(metadataResponse.ontologies.size == 1)
-            anythingLastModDate = metadataResponse.ontologies.head.lastModificationDate.get
+            assert(metadataResponse.ontologies.size == 2)
+            anythingLastModDate = metadataResponse.toOntologySchema(ApiV2WithValueObjects).ontologies.find(_.ontologyIri == AnythingOntologyIri).get.lastModificationDate.get
 
             actorUnderTest ! DeleteOntologyRequestV2(
                 ontologyIri = AnythingOntologyIri,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -172,7 +171,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectIri = imagesProjectIri,
                 label = "The 0000 ontology",
                 apiRequestID = UUID.randomUUID,
-                userProfile = imagesUserProfile
+                requestingUser = imagesUser
             )
 
             expectMsgPF(timeout) {
@@ -189,7 +188,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectIri = imagesProjectIri,
                 label = "The -foo ontology",
                 apiRequestID = UUID.randomUUID,
-                userProfile = imagesUserProfile
+                requestingUser = imagesUser
             )
 
             expectMsgPF(timeout) {
@@ -204,7 +203,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectIri = imagesProjectIri,
                 label = "The v3 ontology",
                 apiRequestID = UUID.randomUUID,
-                userProfile = imagesUserProfile
+                requestingUser = imagesUser
             )
 
             expectMsgPF(timeout) {
@@ -219,7 +218,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectIri = imagesProjectIri,
                 label = "The ontology ontology",
                 apiRequestID = UUID.randomUUID,
-                userProfile = imagesUserProfile
+                requestingUser = imagesUser
             )
 
             expectMsgPF(timeout) {
@@ -234,7 +233,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectIri = imagesProjectIri,
                 label = "The wrong knora ontology",
                 apiRequestID = UUID.randomUUID,
-                userProfile = imagesUserProfile
+                requestingUser = imagesUser
             )
 
             expectMsgPF(timeout) {
@@ -249,7 +248,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectIri = imagesProjectIri,
                 label = "The simple ontology",
                 apiRequestID = UUID.randomUUID,
-                userProfile = imagesUserProfile
+                requestingUser = imagesUser
             )
 
             expectMsgPF(timeout) {
@@ -262,12 +261,12 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! OntologyMetadataGetRequestV2(
                 projectIris = Set(anythingProjectIri),
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
-            assert(metadataResponse.ontologies.size == 1)
-            anythingLastModDate = metadataResponse.ontologies.head.lastModificationDate.get
+            assert(metadataResponse.ontologies.size == 2)
+            anythingLastModDate = metadataResponse.toOntologySchema(ApiV2WithValueObjects).ontologies.find(_.ontologyIri == AnythingOntologyIri).get.lastModificationDate.get
 
             val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
 
@@ -309,7 +308,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -327,13 +326,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             // Reload the ontology cache and see if we get the same result.
 
-            responderManager ! LoadOntologiesRequest(anythingUserProfile)
-            expectMsg(10.seconds, LoadOntologiesResponse())
+            responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
+            expectMsgType[SuccessResponseV2](10.seconds)
 
             responderManager ! PropertiesGetRequestV2(
                 propertyIris = Set(propertyIri),
                 allLanguages = true,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -350,12 +349,12 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! OntologyMetadataGetRequestV2(
                 projectIris = Set(anythingProjectIri),
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
-            assert(metadataResponse.ontologies.size == 1)
-            anythingLastModDate = metadataResponse.ontologies.head.lastModificationDate.get
+            assert(metadataResponse.ontologies.size == 2)
+            anythingLastModDate = metadataResponse.toOntologySchema(ApiV2WithValueObjects).ontologies.find(_.ontologyIri == AnythingOntologyIri).get.lastModificationDate.get
 
             val propertyIri = AnythingOntologyIri.makeEntityIri("hasInterestingThing")
 
@@ -395,7 +394,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -420,7 +419,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! PropertiesGetRequestV2(
                 propertyIris = Set(linkValuePropIri),
                 allLanguages = true,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -436,13 +435,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             // Reload the ontology cache and see if we get the same result.
 
-            responderManager ! LoadOntologiesRequest(anythingUserProfile)
-            expectMsg(10.seconds, LoadOntologiesResponse())
+            responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
+            expectMsgType[SuccessResponseV2](10.seconds)
 
             responderManager ! PropertiesGetRequestV2(
                 propertyIris = Set(propertyIri),
                 allLanguages = true,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -459,7 +458,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! PropertiesGetRequestV2(
                 propertyIris = Set(linkValuePropIri),
                 allLanguages = true,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -511,7 +510,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -561,7 +560,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -611,7 +610,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -661,7 +660,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -711,7 +710,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -764,7 +763,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -814,7 +813,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -864,7 +863,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -914,7 +913,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -964,7 +963,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1014,7 +1013,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1064,7 +1063,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1114,7 +1113,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1164,7 +1163,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1214,7 +1213,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1264,7 +1263,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1314,7 +1313,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1365,7 +1364,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1424,7 +1423,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1482,7 +1481,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1507,7 +1506,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 newObjects = newObjects,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1545,7 +1544,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 newObjects = newObjects,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1594,7 +1593,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             val expectedProperties: Set[SmartIri] = Set(
@@ -1673,7 +1672,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             val expectedProperties = Set(
@@ -1712,7 +1711,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 newObjects = newObjects,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1749,7 +1748,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 newObjects = newObjects,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1798,7 +1797,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1839,7 +1838,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1880,7 +1879,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1921,7 +1920,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -1963,7 +1962,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -2005,7 +2004,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -2047,7 +2046,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -2099,7 +2098,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -2154,7 +2153,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -2210,7 +2209,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -2251,7 +2250,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -2288,7 +2287,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -2328,7 +2327,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -2345,7 +2344,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classIri = classIri,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -2379,7 +2378,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             val expectedProperties = Set(
@@ -2425,7 +2424,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -2476,7 +2475,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -2514,7 +2513,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             val expectedDirectCardinalities = Map(
@@ -2566,7 +2565,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             val expectedProperties = Set(
@@ -2598,7 +2597,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classIri = classIri,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -2615,7 +2614,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIri = hasNothingness,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -2635,7 +2634,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIri = hasNothingness,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -2663,7 +2662,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             val expectedProperties = Set(
@@ -2694,7 +2693,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIri = hasEmptiness,
                 lastModificationDate = anythingLastModDate.minusSeconds(60),
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -2711,7 +2710,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIri = hasEmptiness,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -2731,7 +2730,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 classIri = classIri,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
-                userProfile = anythingUserProfile
+                requestingUser = anythingUser
             )
 
             expectMsgPF(timeout) {

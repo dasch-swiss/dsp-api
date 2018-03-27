@@ -93,12 +93,12 @@ object SearchResponderV2Constants {
 class SearchResponderV2 extends ResponderWithStandoffV2 {
 
     def receive = {
-        case FullTextSearchCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, userProfile), log)
-        case FulltextSearchGetRequestV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile), log)
-        case ExtendedSearchCountGetRequestV2(query, userProfile) => future2Message(sender(), extendedSearchCountV2(inputQuery = query, userProfile = userProfile), log)
-        case ExtendedSearchGetRequestV2(query, userProfile) => future2Message(sender(), extendedSearchV2(inputQuery = query, userProfile = userProfile), log)
-        case SearchResourceByLabelCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass, userProfile), log)
-        case SearchResourceByLabelGetRequestV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile), log)
+        case FullTextSearchCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, requestingUser) => future2Message(sender(), fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, requestingUser), log)
+        case FulltextSearchGetRequestV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser) => future2Message(sender(), fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser), log)
+        case ExtendedSearchCountGetRequestV2(query, requestingUser) => future2Message(sender(), extendedSearchCountV2(inputQuery = query, requestingUser = requestingUser), log)
+        case ExtendedSearchGetRequestV2(query, requestingUser) => future2Message(sender(), extendedSearchV2(inputQuery = query, requestingUser = requestingUser), log)
+        case SearchResourceByLabelCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, requestingUser) => future2Message(sender(), searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass, requestingUser), log)
+        case SearchResourceByLabelGetRequestV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser) => future2Message(sender(), searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -1134,15 +1134,15 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     /**
       * Gets the forbidden resource.
       *
-      * @param userProfile the user making the request.
+      * @param requestingUser the user making the request.
       * @return the forbidden resource.
       */
-    private def getForbiddenResource(userProfile: UserADM) = {
+    private def getForbiddenResource(requestingUser: UserADM) = {
         import SearchResponderV2Constants.ExtendedSearchConstants.forbiddenResourceIri
 
         for {
 
-            forbiddenResSeq: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Seq(forbiddenResourceIri), userProfile = userProfile)).mapTo[ReadResourcesSequenceV2]
+            forbiddenResSeq: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Seq(forbiddenResourceIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
             forbiddenRes = forbiddenResSeq.resources.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"$forbiddenResourceIri was not returned"))
         } yield Some(forbiddenRes)
     }
@@ -1156,10 +1156,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param searchValue          the values to search for.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param userProfile          the profile of the client making the request.
+      * @param requestingUser          the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the amount of resources that have been found.
       */
-    private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         val searchTerms: CombineSearchTerms = CombineSearchTerms(searchValue)
 
@@ -1199,10 +1199,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param offset               the offset to be used for paging.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param userProfile          the profile of the client making the request.
+      * @param requestingUser          the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         import SearchResponderV2Constants.FullTextSearchConstants._
 
@@ -1370,7 +1370,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificQuery.toSparql)).mapTo[SparqlConstructResponse]
 
                     // separate resources and value objects
-                    queryResultsSep = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
+                    queryResultsSep = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, requestingUser = requestingUser)
 
                     // for each main resource check if all dependent resources and value objects are still present after permission checking
                     // this ensures that the user has sufficient permissions on the whole query path
@@ -1418,14 +1418,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             forbiddenResourceOption: Option[ReadResourceV2] <- if (resourceIris.size > queryResultsSeparatedWithFullQueryPath.size) {
                 // some of the main resources have been suppressed, represent them using the forbidden resource
 
-                getForbiddenResource(userProfile)
+                getForbiddenResource(requestingUser)
             } else {
                 // all resources visible, no need for the forbidden resource
                 Future(None)
             }
 
             // get the mappings
-            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullQueryPath, userProfile)
+            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullQueryPath, requestingUser)
 
             // _ = println(mappingsAsMap)
 
@@ -1448,10 +1448,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * Performs a count query for an extended search Sparql query provided by the user.
       *
       * @param inputQuery  Sparql construct query provided by the client.
-      * @param userProfile the profile of the client making the request.
+      * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def extendedSearchCountV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, userProfile: UserADM) = {
+    private def extendedSearchCountV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, requestingUser: UserADM) = {
 
         if (apiSchema != ApiV2Simple) {
             throw SparqlSearchException("Only api v2 simple is supported in v2 extended search count query")
@@ -1593,10 +1593,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * Performs an extended search using a Sparql query provided by the user.
       *
       * @param inputQuery  Sparql construct query provided by the client.
-      * @param userProfile the profile of the client making the request.
+      * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def extendedSearchV2(inputQuery: ConstructQuery, userProfile: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def extendedSearchV2(inputQuery: ConstructQuery, requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         /**
           * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -2159,7 +2159,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
 
                     // separate main resources and value objects (dependent resources are nested)
-                    queryResultsSep: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
+                    queryResultsSep: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, requestingUser = requestingUser)
 
                     // for each main resource check if all dependent resources and value objects are still present after permission checking
                     // this ensures that the user has sufficient permissions on the whole query path
@@ -2296,14 +2296,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             forbiddenResourceOption: Option[ReadResourceV2] <- if (mainResourceIris.size > queryResultsSeparatedWithFullQueryPath.size) {
                 // some of the main resources have been suppressed, represent them using the forbidden resource
 
-                getForbiddenResource(userProfile)
+                getForbiddenResource(requestingUser)
             } else {
                 // all resources visible, no need for the forbidden resource
                 Future(None)
             }
 
             // get the mappings
-            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullQueryPath, userProfile)
+            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullQueryPath, requestingUser)
 
 
         } yield ReadResourcesSequenceV2(
@@ -2323,10 +2323,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param searchValue          the values to search for.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param userProfile          the profile of the client making the request.
+      * @param requestingUser          the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserADM) = {
+    private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM) = {
 
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
@@ -2366,10 +2366,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param offset               the offset to be used for paging.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param userProfile          the profile of the client making the request.
+      * @param requestingUser          the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def searchResourcesByLabelV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def searchResourcesByLabelV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
@@ -2409,12 +2409,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // _ = println(mainResourceIris.size)
 
             // separate resources and value objects
-            queryResultsSeparated = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResourceByLabelResponse, userProfile = userProfile)
+            queryResultsSeparated = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResourceByLabelResponse, requestingUser = requestingUser)
 
             // check if there are resources the user does not have sufficient permissions to see
             forbiddenResourceOption: Option[ReadResourceV2] <- if (mainResourceIris.size > queryResultsSeparated.size) {
                 // some of the main resources have been suppressed, represent them using the forbidden resource
-                getForbiddenResource(userProfile)
+                getForbiddenResource(requestingUser)
             } else {
                 // all resources visible, no need for the forbidden resource
                 Future(None)

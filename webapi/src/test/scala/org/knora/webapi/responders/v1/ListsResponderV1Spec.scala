@@ -3290,7 +3290,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(userProfile)
+        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 

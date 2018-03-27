@@ -25,7 +25,6 @@ import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoShortADM
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserInformationTypeADM}
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -63,8 +62,6 @@ class ProjectsResponderADM extends Responder {
         case ProjectKeywordsGetRequestADM(projectIri, requestingUser) => future2Message(sender(), projectKeywordsGetRequestADM(projectIri, requestingUser), log)
         case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) => future2Message(sender(), projectCreateRequestADM(createRequest, requestingUser, apiRequestID), log)
         case ProjectChangeRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID) => future2Message(sender(), changeBasicInformationRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID), log)
-        case ProjectOntologyAddADM(projectIri, ontologyIri, requestingUser, apiRequestID) => future2Message(sender(), projectOntologyAddADM(projectIri, ontologyIri, requestingUser, apiRequestID), log)
-        case ProjectOntologyRemoveADM(projectIri, ontologyIri, requestingUser, apiRequestID) => future2Message(sender(), projectOntologyRemoveADM(projectIri, ontologyIri, requestingUser, apiRequestID), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -94,15 +91,6 @@ class ProjectsResponderADM extends Responder {
             projects: Seq[ProjectADM] = statements.map {
                 case (projectIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
-                    val ontologyIris = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, Seq.empty[IRI]).map(_.asInstanceOf[IriLiteralV2].value)
-
-                    val ontologyInfos: Seq[OntologyInfoShortADM] = ontologyIris.map { ontologyIri =>
-                        OntologyInfoShortADM(
-                            ontologyIri = ontologyIri,
-                            ontologyName = SmartIri(ontologyIri).getOntologyName
-                        )
-                    }
-
                     ProjectADM(
                         id = projectIri.toString,
                         shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head.asInstanceOf[StringLiteralV2].value,
@@ -111,7 +99,6 @@ class ProjectsResponderADM extends Responder {
                         description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
                         keywords = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectKeyword, Seq.empty[String]).map(_.asInstanceOf[StringLiteralV2].value).sorted,
                         logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head.asInstanceOf[StringLiteralV2].value),
-                        ontologies = ontologyInfos,
                         status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.asInstanceOf[BooleanLiteralV2].value,
                         selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).head.asInstanceOf[BooleanLiteralV2].value
                     )
@@ -499,101 +486,6 @@ class ProjectsResponderADM extends Responder {
     }
 
     /**
-      * Add a ontology to the project.
-      *
-      * @param projectIri the IRI of the project.
-      * @param ontologyIri the IRI of the ontology that is added to the project.
-      * @param apiRequestID the unique api request ID.
-      * @return a [[ProjectInfoV1]]
-      * @throws NotFoundException in the case that the project's IRI is not found.
-      */
-    private def projectOntologyAddADM(projectIri: IRI, ontologyIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[ProjectADM] = {
-
-        // log.debug("projectOntologyAddV1 - projectIri: {}, ontologyIri: {}", projectIri, ontologyIri)
-
-        /**
-          * The actual ontology add task run with an IRI lock.
-          */
-        def ontologyAddTask(projectIri: IRI, ontologyIri: IRI): Future[ProjectADM] = for {
-
-            _ <- Future(
-                // check if necessary information is present
-                if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-            )
-
-            maybeProject <- projectGetADM(maybeIri = Some(projectIri), maybeShortname = None, maybeShortcode = None, requestingUser = KnoraSystemInstances.Users.SystemUser)
-
-            // _ = log.debug("projectOntologyAddV1 - ontologyAddTask - maybeProjectInfo: {}", maybeProjectInfo)
-
-            ontologies: Seq[IRI] = maybeProject match {
-                case Some(project) => project.ontologies.map(_.ontologyIri.toString) :+ ontologyIri
-                case None => throw NotFoundException(s"Project '$projectIri' not found. Aborting update request.")
-            }
-
-            projectUpdatePayload = ProjectUpdatePayloadADM(ontologies = Some(ontologies))
-
-            result <- updateProjectADM(projectIri, projectUpdatePayload, requestingUser = KnoraSystemInstances.Users.SystemUser)
-        } yield result.project
-
-        for {
-            // run the change status task with an IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                projectIri,
-                () => ontologyAddTask(projectIri, ontologyIri)
-            )
-        } yield taskResult
-    }
-
-    /**
-      * Remove a ontology from the project.
-      *
-      * @param projectIri the IRI of the project.
-      * @param ontologyIri the IRI of the ontology that is added to the project.
-      * @param apiRequestID the unique api request ID.
-      * @return a [[ProjectInfoV1]]
-      * @throws NotFoundException in the case that the project's IRI is not found.
-      */
-    private def projectOntologyRemoveADM(projectIri: IRI, ontologyIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[ProjectADM] = {
-
-        // log.debug("projectOntologyRemoveV1 - projectIri: {}, ontologyIri: {}", projectIri, ontologyIri)
-
-        /**
-          * The actual ontology remove task run with an IRI lock.
-          */
-        def ontologyRemoveTask(projectIri: IRI, ontologyIri: IRI): Future[ProjectADM] = for {
-
-            _ <- Future(
-                // check if necessary information is present
-                if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-            )
-
-            maybeProjectADM <- projectGetADM(maybeIri = Some(projectIri), maybeShortname = None, maybeShortcode = None, requestingUser = KnoraSystemInstances.Users.SystemUser)
-
-            // _ = log.debug("projectOntologyRemoveV1 - ontologyRemoveTask - maybeProjectInfo: {}", maybeProjectInfo)
-
-            ontologies: Seq[IRI] = maybeProjectADM match {
-                case Some(pi) => pi.ontologies.map(_.ontologyIri.toString).filterNot(_.equals(ontologyIri))
-                case None => throw NotFoundException(s"Project '$projectIri' not found. Aborting update request.")
-            }
-
-            projectUpdatePayload = ProjectUpdatePayloadADM(ontologies = Some(ontologies))
-
-            result <- updateProjectADM(projectIri, projectUpdatePayload, requestingUser = KnoraSystemInstances.Users.SystemUser)
-        } yield result.project
-
-        for {
-            // run the change status task with an IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                projectIri,
-                () => ontologyRemoveTask(projectIri, ontologyIri)
-            )
-        } yield taskResult
-
-    }
-
-    /**
       * Main project update method.
       *
       * @param projectIri the IRI of the project.
@@ -613,7 +505,6 @@ class ProjectsResponderADM extends Responder {
             projectUpdatePayload.description,
             projectUpdatePayload.keywords,
             projectUpdatePayload.logo,
-            projectUpdatePayload.ontologies,
             projectUpdatePayload.status,
             projectUpdatePayload.selfjoin).flatten.size
 
@@ -636,7 +527,6 @@ class ProjectsResponderADM extends Responder {
                 maybeDescriptions = projectUpdatePayload.description,
                 maybeKeywords = projectUpdatePayload.keywords,
                 maybeLogo = projectUpdatePayload.logo,
-                maybeOntologies = projectUpdatePayload.ontologies,
                 maybeStatus = projectUpdatePayload.status,
                 maybeSelfjoin = projectUpdatePayload.selfjoin
             ).toString)
@@ -669,10 +559,6 @@ class ProjectsResponderADM extends Responder {
 
             _ = if (projectUpdatePayload.logo.isDefined) {
                 if (updatedProject.logo != projectUpdatePayload.logo) throw UpdateNotPerformedException("Project's 'logo' was not updated. Please report this as a possible bug.")
-            }
-
-            _ = if (projectUpdatePayload.ontologies.isDefined) {
-                if (updatedProject.ontologies.map(_.ontologyIri.toString) != projectUpdatePayload.ontologies.get) throw UpdateNotPerformedException("Project's 'ontologies' where not updated. Please report this as a possible bug.")
             }
 
             _ = if (projectUpdatePayload.status.isDefined) {
@@ -708,15 +594,6 @@ class ProjectsResponderADM extends Responder {
         val projectIri: IRI = statements._1.toString
         val propsMap: Map[IRI, Seq[LiteralV2]] = statements._2
 
-        val ontologyIris = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectOntology, Seq.empty[IRI]).map(_.asInstanceOf[IriLiteralV2].value)
-
-        val ontologyInfos: Seq[OntologyInfoShortADM] = ontologyIris.map { ontologyIri =>
-            OntologyInfoShortADM(
-                ontologyIri = ontologyIri,
-                ontologyName = SmartIri(ontologyIri).getOntologyName
-            )
-        }
-
         ProjectADM(
             id = projectIri,
             shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head.asInstanceOf[StringLiteralV2].value,
@@ -725,7 +602,6 @@ class ProjectsResponderADM extends Responder {
             description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
             keywords = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectKeyword, Seq.empty[String]).map(_.asInstanceOf[StringLiteralV2].value).sorted,
             logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head.asInstanceOf[StringLiteralV2].value),
-            ontologies = ontologyInfos,
             status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.asInstanceOf[BooleanLiteralV2].value,
             selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).head.asInstanceOf[BooleanLiteralV2].value
         )

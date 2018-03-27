@@ -189,7 +189,6 @@ object SharedTestDataV1 {
         keywords = Some("collection, images"),
         logo = None,
         institution = Some("http://rdfh.ch/institutions/dhlab-basel"),
-        ontologies = Seq(IMAGES_ONTOLOGY_IRI),
         status = true,
         selfjoin = false
     )
@@ -293,7 +292,6 @@ object SharedTestDataV1 {
         keywords = Some("Basel, Basler Frühdrucke, Bilderfolgen, Contectualisation of images, Inkunabel, Kunsthistorisches Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Narrenschiff, Sebastian Brant, Wiegendrucke, early print, incunabula, ship of fools"),
         logo = Some("incunabula_logo.png"),
         institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/incunabula"),
         status = true,
         selfjoin = false
     )
@@ -392,7 +390,6 @@ object SharedTestDataV1 {
         keywords = None,
         logo = None,
         institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/anything"),
         status = true,
         selfjoin = false
     )
@@ -413,7 +410,6 @@ object SharedTestDataV1 {
         keywords = None,
         logo = None,
         institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/0801/beol"),
         status = true,
         selfjoin = false
     )
@@ -434,7 +430,6 @@ object SharedTestDataV1 {
         keywords = None,
         logo = None,
         institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/biblio"),
         status = true,
         selfjoin = false
     )
@@ -472,7 +467,6 @@ object SharedTestDataV1 {
         keywords = None,
         logo = None,
         institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/00FE/dokubib"),
         status = false,
         selfjoin = false
     )
@@ -492,7 +486,6 @@ object SharedTestDataV1 {
         keywords = None,
         logo = None,
         institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/08AE/webern"),
         status = false,
         selfjoin = false
     )

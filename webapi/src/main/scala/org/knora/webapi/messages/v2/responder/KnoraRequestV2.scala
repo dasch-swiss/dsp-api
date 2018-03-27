@@ -40,10 +40,10 @@ trait KnoraJsonLDRequestReaderV2[C] {
       *
       * @param jsonLDDocument the JSON-LD input.
       * @param apiRequestID   the UUID of the API request.
-      * @param userProfile    the profile of the user making the request.
+      * @param requestingUser    the user making the request.
       * @return a case class instance representing the input.
       */
     def fromJsonLD(jsonLDDocument: JsonLDDocument,
                    apiRequestID: UUID,
-                   userProfile: UserADM): C
+                   requestingUser: UserADM): C
 }

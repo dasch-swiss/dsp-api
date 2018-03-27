@@ -29,12 +29,12 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2.compareJSONLD
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
-import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.{LiveActorMaker, R2RSpec, SharedTestDataADM}
+import org.knora.webapi.{KnoraSystemInstances, LiveActorMaker, R2RSpec, SharedTestDataADM}
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}
@@ -76,7 +76,7 @@ class ResourcesRouteV2R2Spec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataADM.rootUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser), 30.seconds)
     }
 
     "The resources v2 endpoint" should {

@@ -80,7 +80,7 @@ class ValuesV1R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(incunabulaUser), 30.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataADM.rootUser), 30.seconds)
     }
 
     "The Values Endpoint" should {

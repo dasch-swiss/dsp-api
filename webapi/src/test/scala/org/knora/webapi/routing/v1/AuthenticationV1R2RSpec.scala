@@ -80,7 +80,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataADM.rootUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataADM.rootUser), 30.seconds)
     }
     "The Authentication Route ('v1/authenticate') when accessed with credentials supplied via URL parameters " should {
 

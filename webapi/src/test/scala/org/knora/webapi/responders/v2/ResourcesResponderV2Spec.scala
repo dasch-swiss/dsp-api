@@ -22,13 +22,13 @@ package org.knora.webapi.responders.v2
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.messages.v2.responder.ReadResourcesSequenceV2
+import org.knora.webapi.messages.v2.responder.{ReadResourcesSequenceV2, SuccessResponseV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.responders.v2.ResponseCheckerResponderV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.{CoreSpec, LiveActorMaker, SharedTestDataADM}
+import org.knora.webapi.{CoreSpec, KnoraSystemInstances, LiveActorMaker, SharedTestDataADM}
 
 import scala.concurrent.duration._
 
@@ -62,8 +62,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(userProfile)
-        expectMsg(10.seconds, LoadOntologiesResponse())
+        responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
+        expectMsgType[SuccessResponseV2](10.seconds)
     }
 
     "The resources responder v2" should {

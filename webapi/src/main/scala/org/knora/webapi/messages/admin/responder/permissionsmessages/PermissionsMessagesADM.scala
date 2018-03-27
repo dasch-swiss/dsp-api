@@ -191,7 +191,7 @@ case class DefaultObjectAccessPermissionForIriGetRequestADM(defaultObjectAccessP
   * @param projectIri       the project for which the default object permissions need to be retrieved.
   * @param resourceClassIri the resource class which can also cary default object access permissions.
   */
-case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri: IRI, resourceClassIri: IRI, targetUser: UserProfileV1, requestingUser: UserADM) extends PermissionsResponderRequestADM
+case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri: IRI, resourceClassIri: IRI, targetUser: UserADM, requestingUser: UserADM) extends PermissionsResponderRequestADM
 
 /**
   * A message that requests default object access permissions for a resource class / property combination inside a specific project. A successful response will be a
@@ -201,7 +201,7 @@ case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri
   * @param resourceClassIri the resource class which can also cary default object access permissions.
   * @param propertyIri      the property type which can also cary default object access permissions.
   */
-case class DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri: IRI, resourceClassIri: IRI, propertyIri: IRI, targetUser: UserProfileV1, requestingUser: UserADM) extends PermissionsResponderRequestADM
+case class DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri: IRI, resourceClassIri: IRI, propertyIri: IRI, targetUser: UserADM, requestingUser: UserADM) extends PermissionsResponderRequestADM
 
 /**
   * Create a single [[DefaultObjectAccessPermissionADM]].

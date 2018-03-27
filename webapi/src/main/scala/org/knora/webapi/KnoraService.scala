@@ -143,7 +143,6 @@ trait KnoraService {
             AuthenticationRouteV2.knoraApiPath(system, settings, log) ~
             GroupsRouteADM.knoraApiPath(system, settings, log) ~
             ListsRouteADM.knoraApiPath(system, settings, log) ~
-            OntologiesRouteADM.knoraApiPath(system, settings, log) ~
             PermissionsRouteADM.knoraApiPath(system, settings, log) ~
             ProjectsRouteADM.knoraApiPath(system, settings, log) ~
             StoreRouteADM.knoraApiPath(system, settings, log) ~

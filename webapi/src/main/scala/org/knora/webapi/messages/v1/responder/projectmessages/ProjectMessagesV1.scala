@@ -56,13 +56,6 @@ case class ProjectsGetRequestV1(userProfile: Option[UserProfileV1]) extends Proj
 case class ProjectsGetV1(userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
-  * Get all the existing named graphs from all projects as a vector of [[org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1]].
-  *
-  * @param userProfile the profile of the user making the request.
-  */
-case class ProjectsNamedGraphGetV1(userProfile: UserProfileV1) extends ProjectsResponderRequestV1
-
-/**
   * Get info about a single project identified through its IRI. A successful response will be a [[ProjectInfoResponseV1]].
   *
   * @param iri           the IRI of the project.
@@ -85,14 +78,6 @@ case class ProjectInfoByIRIGetV1(iri: IRI, userProfileV1: Option[UserProfileV1])
   * @param userProfileV1 the profile of the user making the request.
   */
 case class ProjectInfoByShortnameGetRequestV1(shortname: String, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
-
-/**
-  * Gets info about a single project identified by an ontology that belongs to the project. A successful response will be a [[ProjectInfoResponseV1]].
-  *
-  * @param ontologyIri the ontology IRI.
-  * @param userProfileV1 the profile of the user making the request.
-  */
-case class ProjectInfoByOntologyGetRequestV1(ontologyIri: IRI, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
   * Returns all users belonging to a project.
@@ -182,7 +167,6 @@ case class ProjectAdminMembersGetResponseV1(members: Seq[UserDataV1],
   * @param keywords           The project's keywords.
   * @param logo               The project's logo.
   * @param institution        The project's institution.
-  * @param ontologies         The project's ontologies.
   * @param status             The project's status.
   * @param selfjoin           The project's self-join status.
   */
@@ -194,7 +178,6 @@ case class ProjectInfoV1(id: IRI,
                          keywords: Option[String],
                          logo: Option[String],
                          institution: Option[IRI],
-                         ontologies: Seq[IRI],
                          status: Boolean,
                          selfjoin: Boolean)
 
@@ -214,7 +197,7 @@ trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
     // https://github.com/spray/spray-json#jsonformats-for-recursive-types
     implicit val projectAdminMembersGetRequestV1Format: RootJsonFormat[ProjectAdminMembersGetResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectAdminMembersGetResponseV1, "members", "userdata")))
     implicit val projectMembersGetRequestV1Format: RootJsonFormat[ProjectMembersGetResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectMembersGetResponseV1, "members", "userdata")))
-    implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat11(ProjectInfoV1)
+    implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat10(ProjectInfoV1)
     implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectsResponseV1, "projects")))
     implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectInfoResponseV1, "project_info")))
 }

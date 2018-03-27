@@ -88,7 +88,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser)
+        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 

@@ -78,8 +78,8 @@ object ConstructResponseUtilV2 {
       * @param constructQueryResults the results of a SPARQL construct query representing resources and their values.
       * @return a Map[resource IRI -> [[ResourceWithValueRdfData]]].
       */
-    def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlConstructResponse, userProfile: UserADM): Map[IRI, ResourceWithValueRdfData] = {
-        val userProfileV1 = userProfile.asUserProfileV1 // TODO: refactor not to use V1
+    def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlConstructResponse, requestingUser: UserADM): Map[IRI, ResourceWithValueRdfData] = {
+        val userProfileV1 = requestingUser.asUserProfileV1 // TODO: refactor not to use V1
 
         // split statements about resources and other statements (value objects and standoff)
         // resources are identified by the triple "resourceIri a knora-base:Resource" which is an inferred information returned by the SPARQL Construct query.
