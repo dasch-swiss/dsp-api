@@ -27,8 +27,6 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
@@ -118,7 +116,7 @@ class OntologyResponderV2 extends Responder {
       * Loads and caches all ontology information.
       *
       * @param requestingUser the user making the request.
-      * @return a [[LoadOntologiesResponse]].
+      * @return a [[SuccessResponseV2]].
       */
     private def loadOntologies(requestingUser: UserADM): Future[SuccessResponseV2] = {
         for {
@@ -724,12 +722,12 @@ class OntologyResponderV2 extends Responder {
     }
 
     /**
-      * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV1]] describing both resource and property entities.
+      * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV2]] describing both resource and property entities.
       *
       * @param classIris    the IRIs of the resource entities to be queried.
       * @param propertyIris the IRIs of the property entities to be queried.
       * @param requestingUser  the user making the request.
-      * @return an [[EntityInfoGetResponseV1]].
+      * @return an [[EntityInfoGetResponseV2]].
       */
     private def getEntityInfoResponseV2(classIris: Set[SmartIri] = Set.empty[SmartIri], propertyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM): Future[EntityInfoGetResponseV2] = {
         for {
@@ -806,12 +804,12 @@ class OntologyResponderV2 extends Responder {
     }
 
     /**
-      * Given a list of standoff class IRIs and a list of property IRIs (ontology entities), returns an [[StandoffEntityInfoGetResponseV1]] describing both resource and property entities.
+      * Given a list of standoff class IRIs and a list of property IRIs (ontology entities), returns an [[StandoffEntityInfoGetResponseV2]] describing both resource and property entities.
       *
       * @param standoffClassIris    the IRIs of the resource entities to be queried.
       * @param standoffPropertyIris the IRIs of the property entities to be queried.
       * @param requestingUser          the user making the request.
-      * @return an [[EntityInfoGetResponseV1]].
+      * @return a [[StandoffEntityInfoGetResponseV2]].
       */
     private def getStandoffEntityInfoResponseV2(standoffClassIris: Set[SmartIri] = Set.empty[SmartIri], standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM): Future[StandoffEntityInfoGetResponseV2] = {
         for {
@@ -859,7 +857,7 @@ class OntologyResponderV2 extends Responder {
       * Gets information about all standoff classes that are a subclass of a data type standoff class.
       *
       * @param requestingUser the user making the request.
-      * @return a [[StandoffClassesWithDataTypeGetResponseV1]]
+      * @return a [[StandoffClassesWithDataTypeGetResponseV2]]
       */
     private def getStandoffStandoffClassesWithDataTypeV2(requestingUser: UserADM): Future[StandoffClassesWithDataTypeGetResponseV2] = {
         for {
@@ -878,7 +876,7 @@ class OntologyResponderV2 extends Responder {
       * Gets all standoff property entities.
       *
       * @param requestingUser the user making the request.
-      * @return a [[StandoffAllPropertiesGetResponseV1]].
+      * @return a [[StandoffAllPropertyEntitiesGetResponseV2]].
       */
     private def getAllStandoffPropertyEntitiesV2(requestingUser: UserADM): Future[StandoffAllPropertyEntitiesGetResponseV2] = {
         for {
@@ -895,7 +893,7 @@ class OntologyResponderV2 extends Responder {
       *
       * @param subClassIri   the IRI of the resource or value class whose subclassOf relations have to be checked.
       * @param superClassIri the IRI of the resource or value class to check for (whether it is a a super class of `subClassIri` or not).
-      * @return a [[CheckSubClassResponseV1]].
+      * @return a [[CheckSubClassResponseV2]].
       */
     private def checkSubClassV2(subClassIri: SmartIri, superClassIri: SmartIri, requestingUser: UserADM): Future[CheckSubClassResponseV2] = {
         for {
@@ -914,7 +912,7 @@ class OntologyResponderV2 extends Responder {
       * Gets the IRIs of the subclasses of a class.
       *
       * @param classIri the IRI of the class whose subclasses should be returned.
-      * @return a [[SubClassesGetResponseV1]].
+      * @return a [[SubClassesGetResponseV2]].
       */
     private def getSubClassesV2(classIri: SmartIri, requestingUser: UserADM): Future[SubClassesGetResponseV2] = {
         for {
@@ -1256,17 +1254,13 @@ class OntologyResponderV2 extends Responder {
             }
 
             // Get project info for the shortcode.
-            maybeProjectInfo: Option[ProjectInfoV1] <- (responderManager ? ProjectInfoByIRIGetV1(projectIri.toString, None)).mapTo[Option[ProjectInfoV1]]
-            projectCode: Option[String] = maybeProjectInfo match {
-                case Some(pi: ProjectInfoV1) => pi.shortcode
-                case None => throw NotFoundException(s"Project $projectIri not found. Cannot add an ontology to a nonexistent project.")
-            }
+            projectInfo: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(projectIri.toString), requestingUser = requestingUser)).mapTo[ProjectGetResponseADM]
 
             // Check that the ontology name is valid.
             validOntologyName = stringFormatter.validateProjectSpecificOntologyName(createOntologyRequest.ontologyName, throw BadRequestException(s"Invalid project-specific ontology name: ${createOntologyRequest.ontologyName}"))
 
             // Make the internal ontology IRI.
-            internalOntologyIri = stringFormatter.makeProjectSpecificInternalOntologyIri(validOntologyName, projectCode)
+            internalOntologyIri = stringFormatter.makeProjectSpecificInternalOntologyIri(validOntologyName, projectInfo.project.shortcode)
 
             // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
             taskResult <- IriLocker.runWithIriLock(

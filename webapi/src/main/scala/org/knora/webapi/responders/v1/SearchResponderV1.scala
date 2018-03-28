@@ -187,10 +187,10 @@ class SearchResponderV1 extends Responder {
                     val resourcePermissions = firstRowMap("resourcePermissions")
 
                     val resourcePermissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1(
-                        subjectIri = resourceIri,
-                        subjectCreator = resourceCreator,
-                        subjectProject = resourceProject,
-                        subjectPermissionLiteral = resourcePermissions,
+                        entityIri = resourceIri,
+                        entityCreator = resourceCreator,
+                        entityProject = resourceProject,
+                        entityPermissionLiteral = resourcePermissions,
                         userProfile = userProfileV1
                     )
 
@@ -215,9 +215,10 @@ class SearchResponderV1 extends Responder {
                                 val valueCreator = row.rowMap("valueCreator")
                                 val valuePermissionsLiteral = row.rowMap("valuePermissions")
                                 val valuePermissionCode = PermissionUtilADM.getUserPermissionV1(
-                                    subjectIri = valueIri, subjectCreator = valueCreator,
-                                    subjectProject = resourceProject,
-                                    subjectPermissionLiteral = valuePermissionsLiteral,
+                                    entityIri = valueIri,
+                                    entityCreator = valueCreator,
+                                    entityProject = resourceProject,
+                                    entityPermissionLiteral = valuePermissionsLiteral,
                                     userProfile = userProfileV1
                                 )
 
@@ -514,10 +515,10 @@ class SearchResponderV1 extends Responder {
                     val resourcePermissions = firstRowMap("resourcePermissions")
 
                     val resourcePermissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1(
-                        subjectIri = resourceIri,
-                        subjectCreator = resourceCreator,
-                        subjectProject = resourceProject,
-                        subjectPermissionLiteral = resourcePermissions,
+                        entityIri = resourceIri,
+                        entityCreator = resourceCreator,
+                        entityProject = resourceProject,
+                        entityPermissionLiteral = resourcePermissions,
                         userProfile = userProfileV1
                     )
 
@@ -547,10 +548,10 @@ class SearchResponderV1 extends Responder {
                                             val valuePermissionCode = if (searchCriterion.valueType == OntologyConstants.KnoraBase.Resource) {
                                                 // Yes.
                                                 val linkValuePermissionCode = PermissionUtilADM.getUserPermissionV1(
-                                                    subjectIri = valueIri,
-                                                    subjectCreator = valueCreator,
-                                                    subjectProject = resourceProject,
-                                                    subjectPermissionLiteral = valuePermissionLiteral,
+                                                    entityIri = valueIri,
+                                                    entityCreator = valueCreator,
+                                                    entityProject = resourceProject,
+                                                    entityPermissionLiteral = valuePermissionLiteral,
                                                     userProfile = userProfileV1
                                                 )
 
@@ -561,10 +562,10 @@ class SearchResponderV1 extends Responder {
                                                 val targetResourcePermissionLiteral = row.rowMap(s"targetResourcePermissions$index")
 
                                                 val targetResourcePermissionCode = PermissionUtilADM.getUserPermissionV1(
-                                                    subjectIri = targetResourceIri,
-                                                    subjectCreator = targetResourceCreator,
-                                                    subjectProject = targetResourceProject,
-                                                    subjectPermissionLiteral = targetResourcePermissionLiteral,
+                                                    entityIri = targetResourceIri,
+                                                    entityCreator = targetResourceCreator,
+                                                    entityProject = targetResourceProject,
+                                                    entityPermissionLiteral = targetResourcePermissionLiteral,
                                                     userProfile = userProfileV1
                                                 )
 
@@ -573,10 +574,10 @@ class SearchResponderV1 extends Responder {
                                             } else {
                                                 // The matching object is an ordinary value, not a LinkValue.
                                                 PermissionUtilADM.getUserPermissionV1(
-                                                    subjectIri = valueIri,
-                                                    subjectCreator = valueCreator,
-                                                    subjectProject = resourceProject,
-                                                    subjectPermissionLiteral = valuePermissionLiteral,
+                                                    entityIri = valueIri,
+                                                    entityCreator = valueCreator,
+                                                    entityProject = resourceProject,
+                                                    entityPermissionLiteral = valuePermissionLiteral,
                                                     userProfile = userProfileV1
                                                 )
                                             }

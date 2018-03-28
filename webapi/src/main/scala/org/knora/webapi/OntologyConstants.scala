@@ -358,7 +358,7 @@ object OntologyConstants {
         val ChangeRightsPermission: String = "CR"
         val MaxPermission: String = ChangeRightsPermission
 
-        val ObjectAccessPermissionAbbreviations: Seq[String] = Seq(
+        val EntityPermissionAbbreviations: Seq[String] = Seq(
             RestrictedViewPermission,
             ViewPermission,
             ModifyPermission,
@@ -372,7 +372,6 @@ object OntologyConstants {
         val ProjectAdminGroupAllPermission: String = "ProjectAdminGroupAllPermission"
         val ProjectAdminGroupRestrictedPermission: String = "ProjectAdminGroupRestrictedPermission"
         val ProjectAdminRightsAllPermission: String = "ProjectAdminRightsAllPermission"
-        val ProjectAdminOntologyAllPermission: String = "ProjectAdminOntologyAllPermission"
 
         val AdministrativePermissionAbbreviations: Seq[String] = Seq(
             ProjectResourceCreateAllPermission,
@@ -380,8 +379,7 @@ object OntologyConstants {
             ProjectAdminAllPermission,
             ProjectAdminGroupAllPermission,
             ProjectAdminGroupRestrictedPermission,
-            ProjectAdminRightsAllPermission,
-            ProjectAdminOntologyAllPermission
+            ProjectAdminRightsAllPermission
         )
 
         val HasDefaultRestrictedViewPermission: IRI = KnoraBasePrefixExpansion + "hasDefaultRestrictedViewPermission"

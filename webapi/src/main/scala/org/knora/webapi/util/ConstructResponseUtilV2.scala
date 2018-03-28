@@ -79,8 +79,6 @@ object ConstructResponseUtilV2 {
       * @return a Map[resource IRI -> [[ResourceWithValueRdfData]]].
       */
     def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlConstructResponse, requestingUser: UserADM): Map[IRI, ResourceWithValueRdfData] = {
-        val userProfileV1 = requestingUser.asUserProfileV1 // TODO: refactor not to use V1
-
         // split statements about resources and other statements (value objects and standoff)
         // resources are identified by the triple "resourceIri a knora-base:Resource" which is an inferred information returned by the SPARQL Construct query.
         val (resourceStatements: Map[IRI, Seq[(IRI, String)]], nonResourceStatements: Map[IRI, Seq[(IRI, String)]]) = constructQueryResults.statements.partition {
@@ -96,7 +94,7 @@ object ConstructResponseUtilV2 {
             case (resIri: IRI, assertions: Seq[(IRI, String)]) =>
                 // filter out those resources that the user has not sufficient permissions to see
                 // please note that this also applies to referred resources
-                PermissionUtilADM.getUserPermissionV1FromAssertions(resIri, assertions, userProfileV1).isEmpty
+                PermissionUtilADM.getUserPermissionFromAssertionsADM(resIri, assertions, requestingUser).isEmpty
         }
 
         val flatResourcesWithValues: Map[IRI, ResourceWithValueRdfData] = resourceStatementsVisible.map {
@@ -163,7 +161,7 @@ object ConstructResponseUtilV2 {
                                 val resourceProject: String = predicateMap(OntologyConstants.KnoraBase.AttachedToProject)
 
                                 // prepend the resource's project to the value's assertions
-                                PermissionUtilADM.getUserPermissionV1FromAssertions(valObjIri, (OntologyConstants.KnoraBase.AttachedToProject, resourceProject) +: valueObjAssertions, userProfileV1).nonEmpty
+                                PermissionUtilADM.getUserPermissionFromAssertionsADM(valObjIri, (OntologyConstants.KnoraBase.AttachedToProject, resourceProject) +: valueObjAssertions, requestingUser).nonEmpty
                         }.flatMap {
                             valObjIri: IRI =>
 

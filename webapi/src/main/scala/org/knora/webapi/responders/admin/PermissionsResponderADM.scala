@@ -1095,7 +1095,7 @@ class PermissionsResponderADM extends Responder {
             /* Create permissions string */
             result = permissionsListBuffer.length match {
                 case 1 => {
-                    PermissionUtilADM.formatPermissions(permissionsListBuffer.head._2, PermissionType.OAP)
+                    PermissionUtilADM.formatPermissionADMs(permissionsListBuffer.head._2, PermissionType.OAP)
                 }
                 case _ => throw AssertionException("The permissions list buffer holding default object permissions should never be larger then 1.")
             }

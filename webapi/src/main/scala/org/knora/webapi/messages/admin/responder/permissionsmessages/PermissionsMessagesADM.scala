@@ -573,11 +573,12 @@ case class NewDefaultObjectAccessPermissionADM(iri: IRI,
   */
 case class PermissionADM(name: String,
                          additionalInformation: Option[IRI],
-                         v1Code: Option[Int]
+                         permissionCode: Option[Int]
                        ) extends Jsonable with PermissionsADMJsonProtocol {
 
     def toJsValue = permissionADMFormat.write(this)
 }
+
 
 /**
   * The permission companion object, used to create specific permissions.
@@ -592,7 +593,7 @@ object PermissionADM {
         PermissionADM(
             name = OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission,
             additionalInformation = None,
-            v1Code = None
+            permissionCode = None
         )
     }
 
@@ -600,7 +601,7 @@ object PermissionADM {
         PermissionADM(
             name = OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission,
             additionalInformation = Some(restriction),
-            v1Code = None
+            permissionCode = None
         )
     }
 
@@ -608,7 +609,7 @@ object PermissionADM {
         PermissionADM(
             name = OntologyConstants.KnoraBase.ProjectAdminAllPermission,
             additionalInformation = None,
-            v1Code = None
+            permissionCode = None
         )
     }
 
@@ -616,7 +617,7 @@ object PermissionADM {
         PermissionADM(
             name = OntologyConstants.KnoraBase.ProjectAdminGroupAllPermission,
             additionalInformation = None,
-            v1Code = None
+            permissionCode = None
         )
     }
 
@@ -624,7 +625,7 @@ object PermissionADM {
         PermissionADM(
             name = OntologyConstants.KnoraBase.ProjectAdminGroupRestrictedPermission,
             additionalInformation = Some(restriction),
-            v1Code = None
+            permissionCode = None
         )
     }
 
@@ -632,17 +633,10 @@ object PermissionADM {
         PermissionADM(
             name = OntologyConstants.KnoraBase.ProjectAdminRightsAllPermission,
             additionalInformation = None,
-            v1Code = None
+            permissionCode = None
         )
     }
 
-    val ProjectAdminOntologyAllPermission: PermissionADM = {
-        PermissionADM(
-            name = OntologyConstants.KnoraBase.ProjectAdminOntologyAllPermission,
-            additionalInformation = None,
-            v1Code = None
-        )
-    }
 
     ///////////////////////////////////////////////////////////////////////////
     // Object Access Permissions
@@ -652,7 +646,7 @@ object PermissionADM {
         PermissionADM(
             name = OntologyConstants.KnoraBase.ChangeRightsPermission,
             additionalInformation = Some(restriction),
-            v1Code = Some(8)
+            permissionCode = Some(8)
         )
     }
 
@@ -660,7 +654,7 @@ object PermissionADM {
         PermissionADM(
             name = OntologyConstants.KnoraBase.DeletePermission,
             additionalInformation = Some(restriction),
-            v1Code = Some(7)
+            permissionCode = Some(7)
         )
     }
 
@@ -668,7 +662,7 @@ object PermissionADM {
         PermissionADM(
             name = OntologyConstants.KnoraBase.ModifyPermission,
             additionalInformation = Some(restriction),
-            v1Code = Some(6)
+            permissionCode = Some(6)
         )
     }
 
@@ -676,7 +670,7 @@ object PermissionADM {
         PermissionADM(
             name = OntologyConstants.KnoraBase.ViewPermission,
             additionalInformation = Some(restriction),
-            v1Code = Some(2)
+            permissionCode = Some(2)
         )
     }
 
@@ -684,7 +678,7 @@ object PermissionADM {
         PermissionADM(
             name = OntologyConstants.KnoraBase.RestrictedViewPermission,
             additionalInformation = Some(restriction),
-            v1Code = Some(1)
+            permissionCode = Some(1)
         )
     }
 }
@@ -765,7 +759,7 @@ trait PermissionsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtoc
         }
     }
 
-    implicit val permissionADMFormat: JsonFormat[PermissionADM] = jsonFormat(PermissionADM.apply, "name", "additionalInformation", "v1Code")
+    implicit val permissionADMFormat: JsonFormat[PermissionADM] = jsonFormat(PermissionADM.apply, "name", "additionalInformation", "permissionCode")
     // apply needed because we have an companion object of a case class
     implicit val administrativePermissionADMFormat: JsonFormat[AdministrativePermissionADM] = jsonFormat(AdministrativePermissionADM, "iri", "forProject", "forGroup", "hasPermissions")
     implicit val objectAccessPermissionADMFormat: JsonFormat[ObjectAccessPermissionADM] = jsonFormat(ObjectAccessPermissionADM, "forResource", "forValue", "hasPermissions")
