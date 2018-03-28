@@ -668,6 +668,15 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 shortname = SharedTestDataV1.anythingProjectInfo.shortname,
                 id = SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI
             ),
+            NamedGraphV1( // something
+                shortname = "anything",
+                description = "Anything Project",
+                uri = "http://www.knora.org/ontology/something",
+                id = "http://www.knora.org/ontology/something",
+                project_id = "http://rdfh.ch/projects/anything",
+                longname = "Anything Project",
+                active = true
+            ),
             NamedGraphV1( // Dokubib
                 active = false,
                 uri = SharedOntologyTestDataADM.DOKUBIB_ONTOLOGY_IRI,

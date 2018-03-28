@@ -284,18 +284,22 @@ class OntologyResponderV1 extends Responder {
                 project => project.id -> project
             }.toMap
 
-            namedGraphs: Seq[NamedGraphV1] = readOntologyMetadataV2.ontologies.toVector.map {
+            namedGraphs: Seq[NamedGraphV1] = readOntologyMetadataV2.ontologies.toVector.map(_.toOntologySchema(InternalSchema)).filter {
                 ontologyMetadata =>
-                    val internalMetadata = ontologyMetadata.toOntologySchema(InternalSchema)
-                    val project = projectsMap(internalMetadata.projectIri.get.toString)
+                    // In V1, the only built-in ontology we show is knora-base.
+                    val ontologyLabel = ontologyMetadata.ontologyIri.getOntologyName
+                    ontologyLabel == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel || !OntologyConstants.BuiltInOntologyLabels.contains(ontologyLabel)
+            }.map {
+                ontologyMetadata =>
+                    val project = projectsMap(ontologyMetadata.projectIri.get.toString)
 
                     NamedGraphV1(
-                        id = internalMetadata.ontologyIri.toString,
+                        id = ontologyMetadata.ontologyIri.toString,
                         shortname = project.shortname,
                         longname = project.longname.getOrElse(throw InconsistentTriplestoreDataException(s"Project ${project.id} has no longname")),
                         description = project.description.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"Project ${project.id} has no description")).toString,
                         project_id = project.id,
-                        uri = internalMetadata.ontologyIri.toString,
+                        uri = ontologyMetadata.ontologyIri.toString,
                         active = project.status
                     )
             }
