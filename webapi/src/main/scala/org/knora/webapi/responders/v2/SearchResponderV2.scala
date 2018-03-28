@@ -49,7 +49,7 @@ object SearchResponderV2Constants {
     /**
       * Constants for fulltext query.
       *
-      * These constants are used to create SPARQL queries to be executed by the triplstore and to process the results that are returned.
+      * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
       */
     object FullTextSearchConstants {
 
@@ -90,7 +90,7 @@ object SearchResponderV2Constants {
     /**
       * Constants for extended search.
       *
-      * These constants are used to create SPARQL queries to be executed by the triplstore and to process the results that are returned.
+      * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
       */
     object ExtendedSearchConstants {
 
@@ -1973,6 +1973,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 // WHERE patterns for statements about the main and dependent resources' values
                 val wherePatternsForMainAndDependentResourcesValues = Seq(
+                    mainAndDependentResourcesValueObjectsValuePattern,
                     StatementPattern.makeInferred(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri), obj = mainAndDependentResourceValueObject),
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceVar, pred = mainAndDependentResourceValueProp, obj = mainAndDependentResourceValueObject),
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)),
@@ -1988,6 +1989,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 // WHERE patterns for standoff belonging to value objects (if any)
                 val wherePatternsForStandoff = Seq(
+                    mainAndDependentResourcesValueObjectsValuePattern,
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
                     StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
                 )
@@ -2000,6 +2002,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 // WHERE patterns for list node pointed to by value objects (if any)
                 val wherePatternsForListNode = Seq(
+                    mainAndDependentResourcesValueObjectsValuePattern,
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.ListValue.toSmartIri)),
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri), obj = listNode),
                     StatementPattern.makeExplicit(subj = listNode, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), obj = listNodeLabel)
@@ -2017,7 +2020,6 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     ),
                     whereClause = WhereClause(
                         Seq(
-                            mainAndDependentResourcesValueObjectsValuePattern, // put VALUES pattern for main and dependent resource value objects in the WHERE clause's scope so it can be referred to in the UNION blocks
                             UnionPattern(
                                 Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff, wherePatternsForListNode)
                             )
