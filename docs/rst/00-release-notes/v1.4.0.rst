@@ -25,10 +25,18 @@ See the `release`_ and closed tickets on the `v1.4.0 milestone`_ on Github.
 Required changes to existing data:
 ----------------------------------
 
+Every ontology must now have the property ``knora-base:attachedToProject``, which points to the IRI of the
+project that is responsible for the ontology. This must be added to each project-specific ontology in existing
+repositories. All built-in ontologies have been updated to have this property, and must therefore be reloaded
+into existing repositories.
+
+The property ``knora-base:projectOntology`` has been removed, and must be removed from project
+definitions in existing repositories.
 
 New features:
 -------------
 
+- A project-specific ontology can now be deleted via API v2.
 
 .. _release: https://github.com/dhlab-basel/Knora/releases/tag/v1.4.0
 .. _v1.4.0 milestone: https://github.com/dhlab-basel/Knora/milestone/8
