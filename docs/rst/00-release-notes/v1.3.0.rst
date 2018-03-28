@@ -16,7 +16,7 @@
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ***************************************
-v1.3.0 Release Notes (not released yet)
+v1.3.0 Release Notes
 ***************************************
 
 See the `release`_ and closed tickets on the `v1.3.0 milestone`_ on Github.
