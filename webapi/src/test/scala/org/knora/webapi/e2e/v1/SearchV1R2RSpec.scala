@@ -249,6 +249,51 @@ class SearchV1R2RSpec extends R2RSpec {
 
         }
 
+        val props_two_lists_one = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fanything%23hasListItem&compop=EQ&searchval=http%3A%2F%2Fdata.knora.org%2Fanything%2FtreeList01"
+
+        "perform an extended search for an anything:Thing that has two list values on one of the lists (EQ)" in {
+
+            val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Frdfh.ch%2Fprojects%2Fanything"
+
+            Get("/v1/search/?searchtype=extended" + props_two_lists_one + filter) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfHits(responseAs[String], 1)
+
+            }
+
+        }
+
+        val props_two_lists_two = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fanything%23hasOtherListItem&compop=EQ&searchval=http%3A%2F%2Fdata.knora.org%2Fanything%2FotherTreeList02"
+
+        "perform an extended search for an anything:Thing that has two list values on the other lists (EQ)" in {
+
+            val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Frdfh.ch%2Fprojects%2Fanything"
+
+            Get("/v1/search/?searchtype=extended" + props_two_lists_two + filter) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfHits(responseAs[String], 1)
+
+            }
+
+        }
+
+        "perform an extended search for an anything:Thing that has two list values on both lists (EQ)" in {
+
+            val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Frdfh.ch%2Fprojects%2Fanything"
+
+            Get("/v1/search/?searchtype=extended" + props_two_lists_one + props_two_lists_two + filter) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfHits(responseAs[String], 1)
+
+            }
+
+        }
 
     }
 
