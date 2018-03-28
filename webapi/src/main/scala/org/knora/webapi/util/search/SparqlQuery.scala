@@ -20,8 +20,8 @@
 package org.knora.webapi.util.search
 
 import org.knora.webapi._
-import org.knora.webapi.util.{StringFormatter, SmartIri}
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
   * Represents something that can generate SPARQL source code.

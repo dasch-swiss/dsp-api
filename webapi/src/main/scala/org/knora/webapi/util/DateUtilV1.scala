@@ -22,8 +22,8 @@ package org.knora.webapi.util
 import java.util.{Calendar, Date, GregorianCalendar}
 
 import jodd.datetime.JDateTime
-import org.knora.webapi.{AssertionException, BadRequestException}
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
+import org.knora.webapi.{AssertionException, BadRequestException}
 
 /**
   * Utility functions for converting dates.

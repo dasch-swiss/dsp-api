@@ -22,13 +22,13 @@ package org.knora.webapi.routing.v1
 import java.awt.image.BufferedImage
 import java.awt.{Color, Font, Graphics}
 import java.io.{ByteArrayOutputStream, File}
-import javax.imageio.ImageIO
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaTypes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import javax.imageio.ImageIO
 import org.knora.webapi.SettingsImpl
 import org.knora.webapi.routing.Authenticator
 

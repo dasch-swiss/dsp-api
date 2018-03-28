@@ -22,21 +22,21 @@ package org.knora.webapi.responders.v1
 import java.io.{File, IOException, StringReader}
 import java.util.UUID
 
+import akka.actor.Status
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model._
+import akka.pattern._
+import akka.stream.ActorMaterializer
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
-import akka.actor.Status
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{StatusCodes, _}
-import akka.pattern._
-import akka.stream.ActorMaterializer
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.responders.{IriLocker, Responder}
@@ -44,8 +44,8 @@ import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, Map
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.XMLTagItem
 import org.knora.webapi.util.standoff._
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, MessageUtil, StringFormatter}
-import org.knora.webapi.{BadRequestException, _}
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, StringFormatter}
+import org.knora.webapi._
 import org.xml.sax.SAXException
 
 import scala.concurrent.Future

@@ -38,7 +38,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagIriAttributeV1, StandoffTagV1}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.util._
 
 import scala.annotation.tailrec

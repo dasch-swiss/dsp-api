@@ -31,7 +31,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{KnoraIdUtil, SmartIri, StringFormatter}
+import org.knora.webapi.util.{KnoraIdUtil, StringFormatter}
 
 import scala.concurrent.Future
 
