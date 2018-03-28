@@ -8,11 +8,12 @@
  1. Update links in the new page to point to correct release tag and milestone.
  1. On Github - Move any open issues from current release milestone to the next release milestone.
  1. On Github - Close current milestone.
+ 1. On Github - Create new milestone
  1. Run `GenerateContributorsFile`, passing it a GitHub API token (`runMain org.knora.webapi.util.GenerateContributorsFile [ -t TOKEN ]`), to generate `Contributors.md`, then commit that file.
  1. Push and merge PR to `develop`.
  1. Travis CI will start a [CI build](https://travis-ci.org/dhlab-basel/Knora/builds) for the new tag and publish
     artifacts to Docker Hub.
- 1. On Github - Tag the commit with the version string, e.g., `v1.2.0` and create a release.
+ 1. On Github - Tag the commit with the version string, e.g., `vX.X.X` and create a release.
  1. On Github - Copy the release notes from the docs to the release.
  1. Publish documentation.
 
