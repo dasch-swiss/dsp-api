@@ -15,9 +15,9 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-***************************************
+********************
 v1.3.0 Release Notes
-***************************************
+********************
 
 See the `release`_ and closed tickets on the `v1.3.0 milestone`_ on Github.
 
@@ -34,13 +34,12 @@ in ``salsah-gui.ttl``.
 New features:
 -------------
 
-1. More support for salsah-gui elements and attributes in ontologies
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- More support for salsah-gui elements and attributes in ontologies
+  - Serve the ``salsah-gui`` ontology in API v2 in the default schema.
+  - Show ``salsah-gui:guiElement`` and ``salsah-gui:guiAttribute`` when serving ontologies in API v2 in the default schema.
+  - Allow ``salsah-gui:guiElement`` and ``salsah-gui:guiAttribute`` to be included in new property definitions created via API v2.
+  - Change ``salsah-gui`` so that GraphDB's consistency checker can check the use of ``guiElement`` and ``guiAttribute``.
 
-- Serve the ``salsah-gui`` ontology in API v2 in the default schema.
-- Show ``salsah-gui:guiElement`` and ``salsah-gui:guiAttribute`` when serving ontologies in API v2 in the default schema.
-- Allow ``salsah-gui:guiElement`` and ``salsah-gui:guiAttribute`` to be included in new property definitions created via API v2.
-- Change ``salsah-gui`` so that GraphDB's consistency checker can check the use of ``guiElement`` and ``guiAttribute``.
 - Changes to ``application.conf``. The ``sipi`` and ``web-api`` sections have received a big update, adding separate settings
   for internal and external host settings:
 
