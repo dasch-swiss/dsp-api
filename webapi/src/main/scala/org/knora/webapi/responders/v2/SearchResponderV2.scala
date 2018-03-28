@@ -44,48 +44,94 @@ import scala.concurrent.Future
   */
 object SearchResponderV2Constants {
 
+    val forbiddenResourceIri: IRI = s"http://${KnoraIdUtil.IriDomain}/permissions/forbiddenResource"
+
     /**
       * Constants for fulltext query.
+      *
+      * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
       */
     object FullTextSearchConstants {
+
+        // SPARQL variable representing the concatenated IRIs of value objects matching the search criteria
+        val valueObjectConcatVar: QueryVariable = QueryVariable("valueObjectConcat")
+
+        // SPARQL variable representing the resources matching the search criteria
         val resourceVar: QueryVariable = QueryVariable("resource")
+
+        // SPARQL variable representing the predicates of a resource
         val resourcePropVar: QueryVariable = QueryVariable("resourceProp")
+
+        // SPARQL variable representing the objects of a resource
         val resourceObjectVar: QueryVariable = QueryVariable("resourceObj")
-        val resourceValueObject: QueryVariable = QueryVariable("resourceValueObject")
+
+        // SPARQL variable representing the property pointing to a value object from a resource
         val resourceValueProp: QueryVariable = QueryVariable("resourceValueProp")
+
+        // SPARQL variable representing the value objects of a resource
+        val resourceValueObject: QueryVariable = QueryVariable("resourceValueObject")
+
+        // SPARQL variable representing the predicates of a value object
         val resourceValueObjectProp: QueryVariable = QueryVariable("resourceValueObjectProp")
+
+        // SPARQL variable representing the objects of a value object
         val resourceValueObjectObj: QueryVariable = QueryVariable("resourceValueObjectObj")
 
+        // SPARQL variable representing the standoff nodes of a (text) value object
         val standoffNodeVar: QueryVariable = QueryVariable("standoffNode")
-        val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
-        val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
 
-        val valueObjectConcatVar: QueryVariable = QueryVariable("valueObjectConcat")
+        // SPARQL variable representing the predicates of a standoff node of a (text) value object
+        val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
+
+        // SPARQL variable representing the objects of a standoff node of a (text) value object
+        val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
     }
 
     /**
       * Constants for extended search.
+      *
+      * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
       */
     object ExtendedSearchConstants {
 
-        // variables representing the main resource and its properties
+        // SPARQL variable representing the main resource and its properties
         val mainResourceVar: QueryVariable = QueryVariable("mainResourceVar")
 
-        // variables representing main and dependent resources. direct assertions about them as well as their values
+        // SPARQL variable representing main and dependent resources
         val mainAndDependentResourceVar: QueryVariable = QueryVariable("mainAndDependentResource")
+
+        // SPARQL variable representing the predicates of the main and dependent resources
         val mainAndDependentResourcePropVar: QueryVariable = QueryVariable("mainAndDependentResourceProp")
+
+        // SPARQL variable representing the objects of the main and dependent resources
         val mainAndDependentResourceObjectVar: QueryVariable = QueryVariable("mainAndDependentResourceObj")
+
+        // SPARQL variable representing the value objects of the main and dependent resources
         val mainAndDependentResourceValueObject: QueryVariable = QueryVariable("mainAndDependentResourceValueObject")
+
+        // SPARQL variable representing the properties pointing to value objects from the main and dependent resources
         val mainAndDependentResourceValueProp: QueryVariable = QueryVariable("mainAndDependentResourceValueProp")
+
+        // SPARQL variable representing the predicates of value objects of the main and dependent resources
         val mainAndDependentResourceValueObjectProp: QueryVariable = QueryVariable("mainAndDependentResourceValueObjectProp")
+
+        // SPARQL variable representing the objects of value objects of the main and dependent resources
         val mainAndDependentResourceValueObjectObj: QueryVariable = QueryVariable("mainAndDependentResourceValueObjectObj")
 
+        // SPARQL variable representing the standoff nodes of a (text) value object
         val standoffNodeVar: QueryVariable = QueryVariable("standoffNode")
+
+        // SPARQL variable representing the predicates of a standoff node of a (text) value object
         val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
+
+        // SPARQL variable representing the objects of a standoff node of a (text) value object
         val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
 
-        val forbiddenResourceIri: IRI = s"http://${KnoraIdUtil.IriDomain}/permissions/forbiddenResource"
+        // SPARQL variable representing a list node pointed to by a (list) value object
+        val listNode: QueryVariable = QueryVariable("listNode")
 
+        // SPARQL variable representing the label of a list node pointed to by a (list) value object
+        val listNodeLabel: QueryVariable = QueryVariable("listNodeLabel")
     }
 
 }
@@ -1138,10 +1184,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @return the forbidden resource.
       */
     private def getForbiddenResource(requestingUser: UserADM) = {
-        import SearchResponderV2Constants.ExtendedSearchConstants.forbiddenResourceIri
+        import SearchResponderV2Constants.forbiddenResourceIri
 
         for {
-
             forbiddenResSeq: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Seq(forbiddenResourceIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
             forbiddenRes = forbiddenResSeq.resources.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"$forbiddenResourceIri was not returned"))
         } yield Some(forbiddenRes)
@@ -1923,9 +1968,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             if (valueObjectIris.nonEmpty) {
                 // value objects are to be queried
 
+                val mainAndDependentResourcesValueObjectsValuePattern = ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri)))
+
                 // WHERE patterns for statements about the main and dependent resources' values
                 val wherePatternsForMainAndDependentResourcesValues = Seq(
-                    ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri))),
+                    mainAndDependentResourcesValueObjectsValuePattern,
                     StatementPattern.makeInferred(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri), obj = mainAndDependentResourceValueObject),
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceVar, pred = mainAndDependentResourceValueProp, obj = mainAndDependentResourceValueObject),
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)),
@@ -1941,7 +1988,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 // WHERE patterns for standoff belonging to value objects (if any)
                 val wherePatternsForStandoff = Seq(
-                    ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri))),
+                    mainAndDependentResourcesValueObjectsValuePattern,
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
                     StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
                 )
@@ -1952,14 +1999,28 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
                 )
 
+                // WHERE patterns for list node pointed to by value objects (if any)
+                val wherePatternsForListNode = Seq(
+                    mainAndDependentResourcesValueObjectsValuePattern,
+                    StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.ListValue.toSmartIri)),
+                    StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri), obj = listNode),
+                    StatementPattern.makeExplicit(subj = listNode, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), obj = listNodeLabel)
+                )
+
+                // return list node assertions
+                val constructPatternsForListNode = Seq(
+                    StatementPattern(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri), obj = listNode),
+                    StatementPattern(subj = listNode, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), obj = listNodeLabel)
+                )
+
                 ConstructQuery(
                     constructClause = ConstructClause(
-                        statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues ++ constructPatternsForStandoff
+                        statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues ++ constructPatternsForStandoff ++ constructPatternsForListNode
                     ),
                     whereClause = WhereClause(
                         Seq(
                             UnionPattern(
-                                Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff)
+                                Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff, wherePatternsForListNode)
                             )
                         )
                     )
@@ -2128,7 +2189,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 // create the main query
                 // it is a Union of two sets: the main resources and the dependent resources
-                val mainQuery = createMainQuery(
+                val mainQuery: ConstructQuery = createMainQuery(
                     mainResourceIris = mainResourceIris.map(iri => IriRef(iri.toSmartIri)).toSet,
                     dependentResourceIris = allDependentResourceIris.map(iri => IriRef(iri.toSmartIri)),
                     valueObjectIris = allValueObjectIris
