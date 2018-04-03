@@ -263,11 +263,11 @@ WHERE {
 
                         *@
 
-                        ?valueObject@index knora-base:valueHasListNode ?listNode .
-                        <@searchCriterion.searchValue> knora-base:hasSubListNode* ?listNode .
+                        ?valueObject@index knora-base:valueHasListNode ?listNode@index  .
+                        <@searchCriterion.searchValue> knora-base:hasSubListNode* ?listNode@index  .
 
-                        ?listNode rdfs:label ?listNodeLabel .
-                        BIND(?listNodeLabel AS ?literal@index)
+                        ?listNode@index  rdfs:label ?listNodeLabel@index  .
+                        BIND(?listNodeLabel@index  AS ?literal@index)
 
                     }
 
