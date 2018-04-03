@@ -1581,7 +1581,9 @@ object Cardinality extends Enumeration {
       * @param cardinality the Knora cardinality.
       * @param guiOrder    the SALSAH GUI order.
       */
-    case class KnoraCardinalityInfo(cardinality: Value, guiOrder: Option[Int] = None)
+    case class KnoraCardinalityInfo(cardinality: Value, guiOrder: Option[Int] = None) {
+        override def toString: String = cardinality.toString
+    }
 
     type Cardinality = Value
 

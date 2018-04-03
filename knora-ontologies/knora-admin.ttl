@@ -469,8 +469,6 @@
 
         rdfs:comment "The email address and login name of a user of Knora"@en ;
 
-        :subjectClassConstraint :User ;
-
         :objectDatatypeConstraint xsd:string .
 
 
