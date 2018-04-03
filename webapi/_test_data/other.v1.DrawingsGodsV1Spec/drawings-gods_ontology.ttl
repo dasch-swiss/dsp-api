@@ -83,7 +83,7 @@ drawings-gods:QuestionnaireBaseOriginal a owl:Class ;
 	rdfs:label "Page de questionnaire standardisé en langue originale"@fr , "Standardized questionnaire page in original language"@en .
 
 drawings-gods:QuestionnaireIndividual a owl:Class ;
-	rdfs:subClassOf knora-base:Resource , _:node1c6amen3ex125 , _:node1c6amen3ex126 , _:node1c6amen3ex127 , _:node1c6amen3ex128 , _:node1c6amen3ex129 , _:node1c6amen3ex130 , _:node1c6amen3ex131 , _:node1c6amen3ex132 , _:node1c6amen3ex133 , _:node1c6amen3ex134 , _:node1c6amen3ex135 , _:node1c6amen3ex136 , _:node1c6amen3ex137 , _:node1c6amen3ex138 , _:node1c6amen3ex139 , _:node1c6amen3ex140 , _:node1c6amen3ex141 , _:node1c6amen3ex142 , _:node1c6amen3ex143 , _:node1c6amen3ex144 , _:node1c6amen3ex145 , _:node1c6amen3ex146 , _:node1c6amen3ex147 , _:node1c6amen3ex148 , _:node1c6amen3ex149 , _:node1c6amen3ex150 , _:node1c6amen3ex151 , _:node1c6amen3ex152 , _:node1c6amen3ex153 , _:node1c6amen3ex154 , _:node1c6amen3ex155 , _:node1c6amen3ex156 , _:node1c6amen3ex157 , _:node1c6amen3ex158 , _:node1c6amen3ex159 , _:node1c6amen3ex160 , _:node1c6amen3ex161 , _:node1c6amen3ex162 , _:node1c6amen3ex163 , _:node1c6amen3ex164 , _:node1c6amen3ex165 , _:node1c6amen3ex166 , _:node1c6amen3ex167 , _:node1c6amen3ex168 , _:node1c6amen3ex169 , _:node1c6amen3ex170 , _:node1c6amen3ex171 , _:node1c6amen3ex172 , _:node1c6amen3ex173 , _:node1c6amen3ex174 , _:node1c6amen3ex175 , _:node1c6amen3ex176 , _:node1c6amen3ex177 , _:node1c6amen3ex178 , _:node1c6amen3ex179 , _:node1c6amen3ex180 , _:node1c6amen3ex181 , _:node1c6amen3ex182 , _:node1c6amen3ex183 , _:node1c6amen3ex184 , _:node1c6amen3ex185 , _:node1c6amen3ex186 , _:node1c6amen3ex187 , _:node1c6amen3ex188 , _:node1c6amen3ex189 , _:node1c6amen3ex190 , _:node1c6amen3ex191 , _:node1c6amen3ex192 , _:node1c6amen3ex193 , _:node1c6amen3ex194 , _:node1c6amen3ex195 , _:node1c6amen3ex196 , _:node1c6amen3ex197 , _:node1c6amen3ex198 , _:node1c6amen3ex199 , _:node1c6amen3ex200 , _:node1c6amen3ex201 , _:node1c6amen3ex202 , _:node1c6amen3ex203 , _:node1c6amen3ex204 , _:node1c6amen3ex205 , _:node1c6amen3ex206 , _:node1c6amen3ex207 , _:node1c6amen3ex208 , _:node1c6amen3ex209 , _:node1c6amen3ex210 , _:node1c6amen3ex211 , _:node1c6amen3ex212 , _:node1c6amen3ex213 , _:node1c6amen3ex214 , _:node1c6amen3ex215 , _:node1c6amen3ex216 , _:node1c6amen3ex217 , _:node1c6amen3ex218 , _:node1c6amen3ex219 , _:node1c6amen3ex220 , _:node1c6amen3ex221 , _:node1c6amen3ex222 , _:node1c6amen3ex223 , _:node1c6amen3ex224 , _:node1c6amen3ex225 , _:node1c6amen3ex226 , _:node1c6amen3ex227 , _:node1c6amen3ex228 , _:node1c6amen3ex229 , _:node1c6amen3ex230 , _:node1c6amen3ex231 , _:node1c6amen3ex232 , _:node1c6amen3ex233 , _:node1c6amen3ex234 , _:node1c6amen3ex235 , _:node1c6amen3ex236 , _:node1c6amen3ex237 , _:node1c6amen3ex238 , _:node1c6amen3ex239 , _:node1c6amen3ex240 , _:node1c6amen3ex241 , _:node1c6amen3ex242 , _:node1c6amen3ex243 , _:node1c6amen3ex244 , _:node1c6amen3ex245 , _:node1c6amen3ex246 , _:node1c6amen3ex247 , _:node1c6amen3ex248 ;
+	rdfs:subClassOf knora-base:Resource , _:node1c6amen3ex125 , _:node1c6amen3ex126 , _:node1c6amen3ex127 , _:node1c6amen3ex128 , _:node1c6amen3ex129 , _:node1c6amen3ex130 , _:node1c6amen3ex131 , _:node1c6amen3ex132 , _:node1c6amen3ex133 , _:node1c6amen3ex134 , _:node1c6amen3ex135 , _:node1c6amen3ex136 , _:node1c6amen3ex137 , _:node1c6amen3ex138 , _:node1c6amen3ex139 , _:node1c6amen3ex140 , _:node1c6amen3ex141 , _:node1c6amen3ex142 , _:node1c6amen3ex143 , _:node1c6amen3ex144 , _:node1c6amen3ex145 , _:node1c6amen3ex146 , _:node1c6amen3ex147 , _:node1c6amen3ex148 , _:node1c6amen3ex149 , _:node1c6amen3ex150 , _:node1c6amen3ex151 , _:node1c6amen3ex152 , _:node1c6amen3ex153 , _:node1c6amen3ex154 , _:node1c6amen3ex155 , _:node1c6amen3ex156 , _:node1c6amen3ex157 , _:node1c6amen3ex158 , _:node1c6amen3ex159 , _:node1c6amen3ex160 , _:node1c6amen3ex161 , _:node1c6amen3ex162 , _:node1c6amen3ex163 , _:node1c6amen3ex165 , _:node1c6amen3ex166 , _:node1c6amen3ex167 , _:node1c6amen3ex168 , _:node1c6amen3ex169 , _:node1c6amen3ex170 , _:node1c6amen3ex171 , _:node1c6amen3ex172 , _:node1c6amen3ex173 , _:node1c6amen3ex174 , _:node1c6amen3ex175 , _:node1c6amen3ex176 , _:node1c6amen3ex177 , _:node1c6amen3ex178 , _:node1c6amen3ex179 , _:node1c6amen3ex180 , _:node1c6amen3ex181 , _:node1c6amen3ex182 , _:node1c6amen3ex183 , _:node1c6amen3ex184 , _:node1c6amen3ex185 , _:node1c6amen3ex186 , _:node1c6amen3ex187 , _:node1c6amen3ex188 , _:node1c6amen3ex189 , _:node1c6amen3ex190 , _:node1c6amen3ex191 , _:node1c6amen3ex192 , _:node1c6amen3ex193 , _:node1c6amen3ex194 , _:node1c6amen3ex195 , _:node1c6amen3ex196 , _:node1c6amen3ex197 , _:node1c6amen3ex198 , _:node1c6amen3ex199 , _:node1c6amen3ex200 , _:node1c6amen3ex201 , _:node1c6amen3ex202 , _:node1c6amen3ex203 , _:node1c6amen3ex204 , _:node1c6amen3ex205 , _:node1c6amen3ex206 , _:node1c6amen3ex207 , _:node1c6amen3ex208 , _:node1c6amen3ex209 , _:node1c6amen3ex210 , _:node1c6amen3ex211 , _:node1c6amen3ex212 , _:node1c6amen3ex213 , _:node1c6amen3ex214 , _:node1c6amen3ex215 , _:node1c6amen3ex216 , _:node1c6amen3ex217 , _:node1c6amen3ex218 , _:node1c6amen3ex219 , _:node1c6amen3ex220 , _:node1c6amen3ex221 , _:node1c6amen3ex222 , _:node1c6amen3ex223 , _:node1c6amen3ex224 , _:node1c6amen3ex225 , _:node1c6amen3ex226 , _:node1c6amen3ex227 , _:node1c6amen3ex228 , _:node1c6amen3ex229 , _:node1c6amen3ex230 , _:node1c6amen3ex231 , _:node1c6amen3ex232 , _:node1c6amen3ex233 , _:node1c6amen3ex234 , _:node1c6amen3ex235 , _:node1c6amen3ex236 , _:node1c6amen3ex237 , _:node1c6amen3ex238 , _:node1c6amen3ex239 , _:node1c6amen3ex240 , _:node1c6amen3ex241 , _:node1c6amen3ex242 , _:node1c6amen3ex243 , _:node1c6amen3ex244 , _:node1c6amen3ex245 , _:node1c6amen3ex247 , _:node1c6amen3ex248 ;
 	rdfs:label "Questionnaire individuel"@fr , "Individual questionnaire"@en .
 
 drawings-gods:QuestionnairePage a owl:Class ;
@@ -1457,7 +1457,7 @@ drawings-gods:hasPersonGender a owl:ObjectProperty ;
 drawings-gods:hasPersonLinkedFileComment a owl:ObjectProperty ;
 	rdfs:subPropertyOf drawings-gods:hasInternalComment ;
 	knora-base:objectClassConstraint knora-base:TextValue ;
-	knora-base:subjectClassConstraint drawings-gods:Person ;
+	knora-base:subjectClassConstraint drawings-gods:PersonLinkedFile ;
 	rdfs:label "Commentaire interne (fichiers attachés)"@fr , "Internal comment (linked files)"@en ;
 	rdfs:comment "Commentaire interne (fichiers attachés)"@fr , "Internal comment (linked files)"@en ;
 	salsah-gui:guiElement salsah-gui:Textarea ;
@@ -2917,10 +2917,6 @@ _:node1c6amen3ex163 a owl:Restriction ;
 	owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
 	salsah-gui:guiOrder "77"^^xsd:int .
 
-_:node1c6amen3ex164 a owl:Restriction ;
-	owl:onProperty drawings-gods:ifIToldYouGodCouldYouDrawDoNotKnow ;
-	owl:maxCardinality "1"^^xsd:nonNegativeInteger .
-
 _:node1c6amen3ex165 a owl:Restriction ;
 	owl:onProperty drawings-gods:ifIToldYouGodCouldYouDrawSomethingElse ;
 	owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
@@ -3369,10 +3365,6 @@ _:node1c6amen3ex245 a owl:Restriction ;
 	owl:onProperty drawings-gods:otherMotherTongue ;
 	owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
 	salsah-gui:guiOrder "117"^^xsd:int .
-
-_:node1c6amen3ex246 a owl:Restriction ;
-	owl:onProperty drawings-gods:otherLanguages3 ;
-	owl:maxCardinality "1"^^xsd:nonNegativeInteger .
 
 _:node1c6amen3ex247 a owl:Restriction ;
 	owl:onProperty drawings-gods:otherLanguageSpokenMostOften ;
