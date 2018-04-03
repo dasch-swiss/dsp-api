@@ -41,7 +41,7 @@ import scala.util.control.Exception._
 import scala.util.matching.Regex
 
 /**
-  * Provides the singleton instance of [[StringFormatter]], as well as string formatting constants.
+  * Provides instances of [[StringFormatter]], as well as string formatting constants.
   */
 object StringFormatter {
 
@@ -606,8 +606,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
     // A regex for the URL path of an API v2 ontology (built-in or project-specific).
     private val ApiV2OntologyUrlPathRegex: Regex = (
-        "^" + "/ontology/((" +
-            ProjectIDPattern + ")/)?(" + NCNamePattern + ")(" +
+        "^" + "/ontology/(" +
+            ProjectIDPattern + ")/(" + NCNamePattern + ")(" +
             OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")$"
         ).r
 
@@ -619,8 +619,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
     // A regex for a project-specific XML import namespace.
     private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
-        "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart + "((" +
-            ProjectIDPattern + ")/)?(" + NCNamePattern + ")" +
+        "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart + "(" +
+            ProjectIDPattern + ")/(" + NCNamePattern + ")" +
             OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
         ).r
 
@@ -628,7 +628,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     // may start with a project ID (prefixed with 'p') and a hyphen. This regex parses that pattern.
     private val PropertyFromOtherOntologyInXmlImportRegex: Regex = (
 
-        "^(p(" + ProjectIDPattern + ")-)?(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
+        "^(p(" + ProjectIDPattern + ")-)(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
         ).r
 
     // In XML import data, a standoff link tag that refers to a resource described in the import must have the
@@ -805,6 +805,11 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
                         if ((hasProjectSpecificHostname && hasBuiltInOntologyName) ||
                             (hostname == BuiltInKnoraApiHostname && !hasBuiltInOntologyName)) {
+                            errorFun
+                        }
+
+                        // A project code is required in project-specific definition IRIs.
+                        if (hasProjectSpecificHostname && projectCode.isEmpty) {
                             errorFun
                         }
 
@@ -1665,13 +1670,10 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @return the same ontology name.
       */
     def validateProjectSpecificOntologyName(ontologyName: String, errorFun: => Nothing): String = {
-        // TODO: Uncomment this when unil.ch have renamed their ontologies to use NCNames (#667).
-        /*
         ontologyName match {
             case NCNameRegex(_*) => ()
             case _ => errorFun
         }
-        */
 
         val lowerCaseOntologyName = ontologyName.toLowerCase
 
