@@ -1238,8 +1238,8 @@ class OntologyResponderV2 extends Responder {
 
             // Get project info for the shortcode.
             maybeProjectInfo: Option[ProjectInfoV1] <- (responderManager ? ProjectInfoByIRIGetV1(projectIri.toString, None)).mapTo[Option[ProjectInfoV1]]
-            projectCode: Option[String] = maybeProjectInfo match {
-                case Some(pi: ProjectInfoV1) => pi.shortcode
+            projectCode: String = maybeProjectInfo match {
+                case Some(pi: ProjectInfoV1) => pi.shortcode.getOrElse(throw AssertionException(s"No project code in project $projectIri"))
                 case None => throw NotFoundException(s"Project $projectIri not found. Cannot add an ontology to a nonexistent project.")
             }
 
