@@ -15,15 +15,20 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-#############
-Release Notes
-#############
+***************************************
+v1.4.0 Release Notes (not released yet)
+***************************************
+
+See the `release`_ and closed tickets on the `v1.4.0 milestone`_ on Github.
 
 
-.. toctree::
-   :maxdepth: 2
+Required changes to existing data:
+----------------------------------
 
-   v1.1.0
-   v1.2.0
-   v1.3.0
-   v1.4.0
+
+New features:
+-------------
+
+
+.. _release: https://github.com/dhlab-basel/Knora/releases/tag/v1.4.0
+.. _v1.4.0 milestone: https://github.com/dhlab-basel/Knora/milestone/8
