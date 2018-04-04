@@ -19,22 +19,18 @@
 
 package org.knora.webapi
 
-import java.io.InputStream
-import java.security.{KeyStore, SecureRandom}
-import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
-
 import akka.actor.{ActorSystem, _}
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.{ConnectionContext, Http}
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import kamon.Kamon
-import kamon.jaeger.Jaeger
 import kamon.prometheus.PrometheusReporter
 import kamon.zipkin.ZipkinReporter
+import kamon.jaeger.JaegerReporter
 import org.knora.webapi.app.{ApplicationStateActor, _}
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.app.appmessages._
@@ -227,8 +223,8 @@ trait KnoraService {
         }
 
         val jaegerReporter = Await.result(applicationStateActor ? GetJaegerReporterState(), 1.second).asInstanceOf[Boolean]
-        if (zipkinReporter) {
-            Kamon.addReporter(new Jaeger()) // tracing
+        if (jaegerReporter) {
+            Kamon.addReporter(new JaegerReporter()) // tracing
         }
 
         Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
