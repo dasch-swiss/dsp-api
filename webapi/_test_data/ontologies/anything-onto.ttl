@@ -311,7 +311,7 @@
 
     knora-base:subjectClassConstraint :Thing ;
 
-    knora-base:objectClassConstraint :LinkValue ;
+    knora-base:objectClassConstraint knora-base:LinkValue ;
 
     salsah-gui:guiElement salsah-gui:Searchbox .
 

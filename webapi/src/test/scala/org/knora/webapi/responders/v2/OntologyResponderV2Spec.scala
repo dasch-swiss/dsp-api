@@ -634,7 +634,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure =>
                     if (printErrorMessages) println(msg.cause.getMessage)
-                    msg.cause.isInstanceOf[NotFoundException] should ===(true)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
         }
 
@@ -1853,7 +1853,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure =>
                     if (printErrorMessages) println(msg.cause.getMessage)
-                    msg.cause.isInstanceOf[NotFoundException] should ===(true)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
         }
 

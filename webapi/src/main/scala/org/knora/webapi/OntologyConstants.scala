@@ -77,6 +77,14 @@ object OntologyConstants {
         )
 
         val NamedIndividual: IRI = OwlPrefixExpansion + "NamedIndividual"
+
+        /**
+          * Classes defined by OWL that can be used as knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
+          */
+        val ClassesThatCanBeKnoraClassConstraints: Set[IRI] = Set(
+            Class,
+            Restriction
+        )
     }
 
     object Xsd {

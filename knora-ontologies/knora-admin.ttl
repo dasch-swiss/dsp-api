@@ -218,8 +218,6 @@
 
              rdfs:comment "A description of a user group"@en ;
 
-             rdfs:subPropertyOf :description ;
-
              :subjectClassConstraint :UserGroup ;
 
              :objectDatatypeConstraint xsd:string .
@@ -263,8 +261,6 @@
             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
             rdfs:comment "A description of a user group"@en ;
-
-            rdfs:subPropertyOf :description ;
 
             :subjectClassConstraint :Institution ;
 
@@ -324,7 +320,7 @@
 
           rdfs:comment "An encrypted credential for access"@en ;
 
-          :subjectClassConstraint foaf:Person ;
+          :subjectClassConstraint :User ;
 
           :objectDatatypeConstraint xsd:string .
 
@@ -361,8 +357,6 @@
             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
             rdfs:comment "A description of a Knora project"@en ;
-
-            rdfs:subPropertyOf :description ;
 
             :subjectClassConstraint :knoraProject ;
 
