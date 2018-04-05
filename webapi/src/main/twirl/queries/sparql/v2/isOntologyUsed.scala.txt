@@ -62,7 +62,7 @@ WHERE {
             a subproperty of propertyIri, because there are only two ways this can happen:
 
             1. The subproperty is defined in the same ontology, so it will be included in propertyIris.
-            2. The subproperty is defined in another ontology, so next branch of the UNION
+            2. The subproperty is defined in another ontology, so the next branch of the UNION
                will find it, whether or not any data uses the subproperty.
 
             *@
@@ -101,7 +101,7 @@ WHERE {
             a subclass of classIri, because there are only two ways this can happen:
 
             1. The subclass is defined in the same ontology, so it will be included in classIris.
-            2. The subclass is defined in another ontology, so next branch of the UNION
+            2. The subclass is defined in another ontology, so the next branch of the UNION
                will find it, whether or not any data uses the subclass.
 
             *@
