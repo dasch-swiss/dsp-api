@@ -142,7 +142,7 @@ lazy val webapi = (project in file(".")).
 lazy val webApiCommonSettings = Seq(
     organization := "org.knora",
     name := "webapi",
-    version := "1.2.0",
+    version := "1.3.0",
     scalaVersion := "2.12.4"
 )
 

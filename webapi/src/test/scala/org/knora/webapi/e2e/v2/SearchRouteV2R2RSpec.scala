@@ -1089,7 +1089,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 <http://data.knora.org/50e7460a7203> knora-api:seqnum ?seqnum .
 
-                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFileValue ?file .
+                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFile ?file .
 
             } WHERE {
 
@@ -1111,10 +1111,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 ?seqnum a xsd:integer .
 
-                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFileValue ?file .
-                knora-api:hasStillImageFileValue knora-api:objectType knora-api:StillImageFile .
+                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFile ?file .
+                knora-api:hasStillImageFile knora-api:objectType knora-api:File .
 
-                ?file a knora-api:StillImageFile .
+                ?file a knora-api:File .
 
             } OFFSET 0
             """.stripMargin
@@ -1166,10 +1166,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 ?seqnum a xsd:integer .
 
-                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFileValue ?file .
-                knora-api:hasStillImageFileValue knora-api:objectType knora-api:StillImageFile .
+                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFile ?file .
+                knora-api:hasStillImageFile knora-api:objectType knora-api:File .
 
-                ?file a knora-api:StillImageFile .
+                ?file a knora-api:File .
 
             } OFFSET 0
             """.stripMargin
@@ -1738,6 +1738,45 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 checkCountQuery(responseAs[String], 2)
+
+            }
+
+        }
+
+        "search for a anything:Thing with a list value" in {
+
+            val sparqlSimplified =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?thing knora-api:isMainResource true .
+                  |
+                  |        ?thing anything:hasListItem ?listItem .
+                  |
+                  |    } WHERE {
+                  |        ?thing a knora-api:Resource .
+                  |
+                  |        ?thing anything:hasListItem ?listItem .
+                  |
+                  |        anything:hasListItem knora-api:objectType xsd:string .
+                  |
+                  |        ?listItem a xsd:string .
+                  |
+                  |    } OFFSET 0
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithListValue.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkCountQuery(responseAs[String], 1)
 
             }
 

@@ -618,6 +618,24 @@
                            salsah-gui:guiElement salsah-gui:Searchbox .
 
 
+
+### ###########################################
+### incunabula:miscHasBookValue
+
+:miscHasBookValue rdf:type owl:ObjectProperty ;
+
+                           rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                           rdfs:label "Verbindung mit einem Buch"@de ;
+
+                           knora-base:subjectClassConstraint :misc ;
+
+                           knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                           salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+
 ##########################################################
 #
 # RESOURCES
@@ -858,9 +876,15 @@
                         owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
                         salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
                      ],
-                      [
+                     [
                         rdf:type owl:Restriction ;
-                        owl:onProperty :micsHasBook ;
+                        owl:onProperty :miscHasBook ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                     ],
+                     [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :miscHasBookValue ;
                         owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
                         salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
                      ] ;

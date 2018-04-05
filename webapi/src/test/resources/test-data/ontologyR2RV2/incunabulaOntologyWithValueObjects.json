@@ -14,12 +14,22 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#attachedToProject"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#attachedToUser"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLink"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -79,12 +89,22 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#attachedToProject"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#attachedToUser"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLink"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -183,12 +203,22 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#attachedToProject"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#attachedToUser"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLink"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -224,6 +254,16 @@
           "salsah-gui:guiOrder" : 1,
           "owl:maxCardinality" : 1,
           "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#miscHasGeometry"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 2,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#miscHasBook"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 2,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#miscHasBookValue"
         } ]
       },
       "incunabula:page" : {
@@ -238,12 +278,22 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#attachedToProject"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#attachedToUser"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLinks"
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLink"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -472,6 +522,18 @@
         "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
         "rdfs:label" : "Verbindung mit einem Buch",
         "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkTo"
+      },
+      "incunabula:miscHasBookValue" : {
+        "@id" : "incunabula:miscHasBookValue",
+        "@type" : "owl:ObjectProperty",
+        "knora-api:isEditable" : true,
+        "knora-api:isLinkValueProperty" : true,
+        "knora-api:isResourceProperty" : true,
+        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/incunabula/v2#misc",
+        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#Searchbox",
+        "rdfs:label" : "Verbindung mit einem Buch",
+        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasLinkToValue"
       },
       "incunabula:miscHasColor" : {
         "@id" : "incunabula:miscHasColor",

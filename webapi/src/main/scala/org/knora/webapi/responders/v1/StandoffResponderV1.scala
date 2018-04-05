@@ -611,28 +611,28 @@ class StandoffResponderV1 extends Responder {
                     // check for attributes
                     val attributes: Seq[MappingXMLAttribute] = assertions.filter {
                         case (propIri, obj) =>
-                            propIri == OntologyConstants.KnoraBase.mappingHasXMLAttribute
+                            propIri == OntologyConstants.KnoraBase.MappingHasXMLAttribute
                     }.map {
                         case (attrProp: IRI, attributeElementIri: String) =>
 
                             val attributeStatementsAsMap: Map[IRI, String] = otherStatements(attributeElementIri).toMap
 
                             MappingXMLAttribute(
-                                attributeName = attributeStatementsAsMap(OntologyConstants.KnoraBase.mappingHasXMLAttributename),
-                                namespace = attributeStatementsAsMap(OntologyConstants.KnoraBase.mappingHasXMLNamespace),
-                                standoffProperty = attributeStatementsAsMap(OntologyConstants.KnoraBase.mappingHasStandoffProperty),
+                                attributeName = attributeStatementsAsMap(OntologyConstants.KnoraBase.MappingHasXMLAttributename),
+                                namespace = attributeStatementsAsMap(OntologyConstants.KnoraBase.MappingHasXMLNamespace),
+                                standoffProperty = attributeStatementsAsMap(OntologyConstants.KnoraBase.MappingHasStandoffProperty),
                                 mappingXMLAttributeElementIri = attributeElementIri
                             )
                     }
 
                     // check for standoff data type class
-                    val dataTypeOption: Option[IRI] = assertionsAsMap.get(OntologyConstants.KnoraBase.mappingHasStandoffDataTypeClass)
+                    val dataTypeOption: Option[IRI] = assertionsAsMap.get(OntologyConstants.KnoraBase.MappingHasStandoffDataTypeClass)
 
                     MappingElement(
-                        tagName = assertionsAsMap(OntologyConstants.KnoraBase.mappingHasXMLTagname),
-                        namespace = assertionsAsMap(OntologyConstants.KnoraBase.mappingHasXMLNamespace),
-                        className = assertionsAsMap(OntologyConstants.KnoraBase.mappingHasXMLClass),
-                        standoffClass = assertionsAsMap(OntologyConstants.KnoraBase.mappingHasStandoffClass),
+                        tagName = assertionsAsMap(OntologyConstants.KnoraBase.MappingHasXMLTagname),
+                        namespace = assertionsAsMap(OntologyConstants.KnoraBase.MappingHasXMLNamespace),
+                        className = assertionsAsMap(OntologyConstants.KnoraBase.MappingHasXMLClass),
+                        standoffClass = assertionsAsMap(OntologyConstants.KnoraBase.MappingHasStandoffClass),
                         mappingElementIri = subjectIri,
                         standoffDataTypeClass = dataTypeOption match {
                             case Some(dataTypeElementIri: IRI) =>
@@ -640,14 +640,14 @@ class StandoffResponderV1 extends Responder {
                                 val dataTypeAssertionsAsMap: Map[IRI, String] = otherStatements(dataTypeElementIri).toMap
 
                                 Some(MappingStandoffDatatypeClass(
-                                    datatype = dataTypeAssertionsAsMap(OntologyConstants.KnoraBase.mappingHasStandoffClass),
-                                    attributeName = dataTypeAssertionsAsMap(OntologyConstants.KnoraBase.mappingHasXMLAttributename),
+                                    datatype = dataTypeAssertionsAsMap(OntologyConstants.KnoraBase.MappingHasStandoffClass),
+                                    attributeName = dataTypeAssertionsAsMap(OntologyConstants.KnoraBase.MappingHasXMLAttributename),
                                     mappingStandoffDataTypeClassElementIri = dataTypeElementIri
                                 ))
                             case None => None
                         },
                         attributes = attributes,
-                        separatorRequired = assertionsAsMap(OntologyConstants.KnoraBase.mappingElementRequiresSeparator).toBoolean
+                        separatorRequired = assertionsAsMap(OntologyConstants.KnoraBase.MappingElementRequiresSeparator).toBoolean
                     )
 
             }.toSeq
@@ -655,7 +655,7 @@ class StandoffResponderV1 extends Responder {
             // check if there is a default XSL transformation
             defaultXSLTransformationOption: Option[IRI] = otherStatements(mappingIri).find {
                 case (pred: IRI, obj: String) =>
-                    pred == OntologyConstants.KnoraBase.mappingHasDefaultXSLTransformation
+                    pred == OntologyConstants.KnoraBase.MappingHasDefaultXSLTransformation
             }.map {
                 case (hasDefaultTransformation: IRI, xslTransformationIri: IRI) =>
                     xslTransformationIri
