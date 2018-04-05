@@ -268,8 +268,8 @@ lazy val library =
         val xmlunitCore            = "org.xmlunit"                   % "xmlunit-core"             % "2.1.1"
 
         // other
-        val rdf4jRioTurtle         = "org.eclipse.rdf4j"             % "rdf4j-rio-turtle"         % "2.2.4"
-        val rdf4jQueryParserSparql = "org.eclipse.rdf4j"             % "rdf4j-queryparser-sparql" % "2.2.4"
+        val rdf4jRioTurtle         = "org.eclipse.rdf4j"             % "rdf4j-rio-turtle"         % "2.3.0"
+        val rdf4jQueryParserSparql = "org.eclipse.rdf4j"             % "rdf4j-queryparser-sparql" % "2.3.0"
         val scallop                = "org.rogach"                   %% "scallop"                  % "2.0.5"
         val gwtServlet             = "com.google.gwt"                % "gwt-servlet"              % "2.8.0"
         val sayonHE                = "net.sf.saxon"                  % "Saxon-HE"                 % "9.7.0-14"

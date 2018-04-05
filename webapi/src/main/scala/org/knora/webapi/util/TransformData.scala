@@ -328,13 +328,13 @@ object TransformData extends App {
     private class RegionLabelHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
         override def endRDF(): Unit = {
             statements.foreach {
-                case (subjectIri: IRI, subjectStatements: Vector[Statement]) =>
+                case (_, subjectStatements: Vector[Statement]) =>
                     val subjectType = subjectStatements.find(_.getPredicate.stringValue == OntologyConstants.Rdf.Type).get.getObject.stringValue
                     val label = subjectStatements.find(_.getPredicate.stringValue == OntologyConstants.Rdfs.Label).map(_.getObject.stringValue)
 
                     val newLabel = if (subjectType == OntologyConstants.KnoraBase.Region && (label.isEmpty || label.contains("test"))) {
                         val commentIri = subjectStatements.find(_.getPredicate.stringValue == OntologyConstants.KnoraBase.HasComment).get.getObject.stringValue
-                        Some(statements(commentIri).find(_.getPredicate.stringValue == OntologyConstants.KnoraBase.ValueHasString).get.getObject.stringValue)
+                        Some(statements(valueFactory.createIRI(commentIri)).find(_.getPredicate.stringValue == OntologyConstants.KnoraBase.ValueHasString).get.getObject.stringValue)
                     } else {
                         label
                     }
@@ -368,7 +368,7 @@ object TransformData extends App {
     private class IsDeletedHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
         override def endRDF(): Unit = {
             statements.foreach {
-                case (subjectIri: IRI, subjectStatements: Vector[Statement]) =>
+                case (_, subjectStatements: Vector[Statement]) =>
                     // Check whether the subject already has a knora-base:isDeleted predicate.
                     val hasIsDeleted = subjectStatements.exists(_.getPredicate.stringValue == OntologyConstants.KnoraBase.IsDeleted)
                     val isStandoff = subjectStatements.exists(_.getPredicate.stringValue == OntologyConstants.KnoraBase.StandoffTagHasStart)
@@ -410,7 +410,7 @@ object TransformData extends App {
     private class PermissionsHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
         override def endRDF(): Unit = {
             statements.foreach {
-                case (subjectIri: IRI, subjectStatements: Vector[Statement]) =>
+                case (subject: Resource, subjectStatements: Vector[Statement]) =>
                     // Write the statements about each resource.
                     val subjectPermissions = subjectStatements.foldLeft(Map.empty[String, Set[IRI]]) {
                         case (acc, st) =>
@@ -434,7 +434,7 @@ object TransformData extends App {
                         val permissionLiteral = PermissionUtilADM.formatPermissions(subjectPermissions)
 
                         val permissionStatement = valueFactory.createStatement(
-                            valueFactory.createIRI(subjectIri),
+                            subject,
                             valueFactory.createIRI(OntologyConstants.KnoraBase.HasPermissions),
                             valueFactory.createLiteral(permissionLiteral)
                         )
@@ -454,7 +454,7 @@ object TransformData extends App {
       */
     private class ValueHasStringHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
 
-        private def maybeWriteValueHasString(subjectIri: IRI, subjectStatements: Vector[Statement]): Unit = {
+        private def maybeWriteValueHasString(subject: Resource, subjectStatements: Vector[Statement]): Unit = {
             val resourceClass = getObject(subjectStatements, OntologyConstants.Rdf.Type).get
 
             // Is this Knora value object?
@@ -511,7 +511,7 @@ object TransformData extends App {
                     }
 
                     val valueHasStringStatement = valueFactory.createStatement(
-                        valueFactory.createIRI(subjectIri),
+                        subject,
                         valueFactory.createIRI(OntologyConstants.KnoraBase.ValueHasString),
                         valueFactory.createLiteral(stringLiteral)
                     )
@@ -523,9 +523,9 @@ object TransformData extends App {
 
         override def endRDF(): Unit = {
             statements.foreach {
-                case (subjectIri: IRI, subjectStatements: Vector[Statement]) =>
+                case (subject: Resource, subjectStatements: Vector[Statement]) =>
                     subjectStatements.foreach(st => turtleWriter.handleStatement(st))
-                    maybeWriteValueHasString(subjectIri, subjectStatements)
+                    maybeWriteValueHasString(subject, subjectStatements)
             }
 
             turtleWriter.endRDF()
@@ -1078,8 +1078,8 @@ object TransformData extends App {
     private class ValueProjectHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
         override def endRDF(): Unit = {
             statements.foreach {
-                case (subjectIri: IRI, subjectStatements: Vector[Statement]) =>
-                    val rdfType = getObject(subjectStatements = subjectStatements, predicateIri = OntologyConstants.Rdf.Type).getOrElse(s"Subject $subjectIri has no rdf:type")
+                case (subject: Resource, subjectStatements: Vector[Statement]) =>
+                    val rdfType = getObject(subjectStatements = subjectStatements, predicateIri = OntologyConstants.Rdf.Type).getOrElse(s"Subject $subject has no rdf:type")
 
                     val statementsToWrite = if (OntologyConstants.KnoraBase.ValueClasses.contains(rdfType)) {
                         subjectStatements.filter(_.getPredicate.stringValue != OntologyConstants.KnoraBase.AttachedToProject)
@@ -1105,7 +1105,7 @@ object TransformData extends App {
         override def endRDF(): Unit = {
 
             statements.foreach {
-                case (subjectIri: IRI, subjectStatements: Vector[Statement]) =>
+                case (_, subjectStatements: Vector[Statement]) =>
 
                     subjectStatements.foreach {
                         statement =>
@@ -1158,9 +1158,9 @@ object TransformData extends App {
             val standoffNodeIris: Set[IRI] = statements.values.flatten.filter(_.getPredicate.stringValue == OntologyConstants.KnoraBase.ValueHasStandoff).map(_.getObject.stringValue).toSet
 
             statements.foreach {
-                case (subjectIri: IRI, subjectStatements: Vector[Statement]) =>
+                case (subject: Resource, subjectStatements: Vector[Statement]) =>
 
-                    if (standoffNodeIris.contains(subjectIri)) {
+                    if (standoffNodeIris.contains(subject.stringValue)) {
                         subjectStatements.foreach {
                             statement => turtleWriter.handleStatement(statement)
                         }
@@ -1184,7 +1184,7 @@ object TransformData extends App {
 
                         /* create statement with new literal */
                         val newHasPermissionsStatement = valueFactory.createStatement(
-                            valueFactory.createIRI(subjectIri),
+                            subject,
                             valueFactory.createIRI(OntologyConstants.KnoraBase.HasPermissions),
                             valueFactory.createLiteral(changedPermissionsLiteral)
                         )
