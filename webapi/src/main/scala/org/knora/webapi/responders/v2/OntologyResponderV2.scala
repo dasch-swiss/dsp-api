@@ -550,11 +550,19 @@ class OntologyResponderV2 extends Responder {
                     }
 
                     if (isKnoraResourceClass) {
-                        // If it's a resource class, all its cardinalities must be on Knora resource properties.
+                        // If it's a resource class, all its cardinalities must be on Knora resource properties, not including knora-base:resourceProperty or knora-base:hasValue.
+
                         val cardinalitiesOnInvalidProps = directCardinalityPropertyIris.filterNot(allKnoraResourceProps)
 
                         if (cardinalitiesOnInvalidProps.nonEmpty) {
                             throw InconsistentTriplestoreDataException(s"Resource class $classIri has one or more cardinalities on properties that are not Knora resource properties: ${cardinalitiesOnInvalidProps.mkString(", ")}")
+                        }
+
+                        Set(OntologyConstants.KnoraBase.ResourceProperty, OntologyConstants.KnoraBase.HasValue).foreach {
+                            invalidProp =>
+                                if (directCardinalityPropertyIris.contains(invalidProp.toSmartIri)) {
+                                    throw InconsistentTriplestoreDataException(s"Class $classIri has a cardinality on property $invalidProp, which is not allowed")
+                                }
                         }
 
                         // All its base classes with Knora IRIs must also be resource classes.
@@ -565,6 +573,7 @@ class OntologyResponderV2 extends Responder {
                         }
                     } else {
                         // If it's a standoff class, none of its cardinalities must be on Knora resource properties.
+
                         val cardinalitiesOnInvalidProps = directCardinalityPropertyIris.filter(allKnoraResourceProps)
 
                         if (cardinalitiesOnInvalidProps.nonEmpty) {
@@ -1665,8 +1674,8 @@ class OntologyResponderV2 extends Responder {
 
         internalClassDef.directCardinalities.keySet.foreach {
             propertyIri =>
-                if (!isKnoraResourceProperty(propertyIri, cacheData)) {
-                    throw NotFoundException(s"Property ${propertyIri.toOntologySchema(ApiV2WithValueObjects)} not found")
+                if (!isKnoraResourceProperty(propertyIri, cacheData) || propertyIri.toString == OntologyConstants.KnoraBase.ResourceProperty || propertyIri.toString == OntologyConstants.KnoraBase.HasValue) {
+                    throw NotFoundException(s"Invalid property for cardinality: ${propertyIri.toOntologySchema(ApiV2WithValueObjects)}")
                 }
         }
 
@@ -2342,7 +2351,7 @@ class OntologyResponderV2 extends Responder {
                 // Check that the base properties that have Knora IRIs are defined as Knora resource properties.
 
                 knoraSuperProperties = internalPropertyDef.subPropertyOf.filter(_.isKnoraInternalEntityIri)
-                invalidSuperProperties = knoraSuperProperties.filterNot(baseProperty => isKnoraResourceProperty(baseProperty, cacheData))
+                invalidSuperProperties = knoraSuperProperties.filterNot(baseProperty => isKnoraResourceProperty(baseProperty, cacheData) && baseProperty.toString != OntologyConstants.KnoraBase.ResourceProperty)
 
                 _ = if (invalidSuperProperties.nonEmpty) {
                     throw BadRequestException(s"One or more specified base properties are invalid: ${invalidSuperProperties.mkString(", ")}")
