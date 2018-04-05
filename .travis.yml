@@ -28,7 +28,7 @@ env:
     - SIPI_REPO=dhlabbasel/sipi
     - DOCKERHOST=$(ip route get 8.8.8.8 | awk '{print $NF; exit}')
     - CHROME_BIN=google-chrome-stable
-    - GDB_HEAP_SIZE="3G"
+    - GDB_HEAP_SIZE="2G"
     - TAG=${TRAVIS_BRANCH//\//-}
     - GRAPHDB_VERSION="8.5.0-se"
 
