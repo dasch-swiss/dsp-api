@@ -2089,8 +2089,9 @@ class OntologyResponderV2 extends Responder {
 
                 ontology = cacheData.ontologies(internalOntologyIri)
 
-                isOntologyUsedSparql = queries.sparql.v2.txt.isOntologyUsedInData(
+                isOntologyUsedSparql = queries.sparql.v2.txt.isOntologyUsed(
                     triplestore = settings.triplestoreType,
+                    ontologyNamedGraphIri = internalOntologyIri,
                     classIris = ontology.classes.keySet,
                     propertyIris = ontology.properties.keySet
                 ).toString()
@@ -2098,7 +2099,11 @@ class OntologyResponderV2 extends Responder {
                 isOntologyUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isOntologyUsedSparql)).mapTo[SparqlSelectResponse]
 
                 _ = if (isOntologyUsedResponse.results.bindings.nonEmpty) {
-                    throw BadRequestException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} cannot be deleted, because it is used in data")
+                    val subjects: Seq[String] = isOntologyUsedResponse.results.bindings.map {
+                        row => row.rowMap("s")
+                    }.map(s => "<" + s + ">").toVector.sorted
+
+                    throw BadRequestException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} cannot be deleted, because of subjects that refer to it: ${subjects.mkString(", ")}")
                 }
 
                 // Delete everything in the ontology's named graph.

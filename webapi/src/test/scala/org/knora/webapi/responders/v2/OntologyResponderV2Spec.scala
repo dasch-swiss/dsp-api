@@ -141,7 +141,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             expectMsgType[SuccessResponseV2](timeout)
         }
 
-        "not delete the 'anything' ontology, because it is used in data" in {
+        "not delete the 'anything' ontology, because it is used in data and in the 'something' ontology" in {
             actorUnderTest ! OntologyMetadataGetRequestV2(
                 projectIris = Set(anythingProjectIri),
                 requestingUser = anythingUser
@@ -159,7 +159,20 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    val cause: Throwable = msg.cause
+                    val errorMsg: String = cause.getMessage
+                    if (printErrorMessages) println(errorMsg)
+                    cause.isInstanceOf[BadRequestException] should ===(true)
+
+                    val expectedSubjects = Set(
+                        "<http://data.knora.org/a-thing>", // rdf:type anything:Thing
+                        "<http://data.knora.org/a-blue-thing>", // rdf:type anything:BlueThing, a subclass of anything:Thing
+                        "<http://www.knora.org/ontology/something#Something>", // a subclass of anything:Thing in another ontology
+                        "<http://www.knora.org/ontology/something#hasOtherSomething>" // a subproperty of anything:hasOtherThing in another ontology
+                    )
+
+                    expectedSubjects.forall(s => errorMsg.contains(s)) should ===(true)
             }
         }
 
@@ -1495,9 +1508,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
 
             val newObjects = Seq(
-                StringLiteralV2("has name" , Some("en")),
-                StringLiteralV2("a nom" , Some("fr")),
-                StringLiteralV2("hat Namen" , Some("de"))
+                StringLiteralV2("has name", Some("en")),
+                StringLiteralV2("a nom", Some("fr")),
+                StringLiteralV2("hat Namen", Some("de"))
             )
 
             actorUnderTest ! ChangePropertyLabelsOrCommentsRequestV2(
@@ -1528,9 +1541,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
 
             val newObjects = Seq(
-                StringLiteralV2("The name of a Thing" , Some("en")),
-                StringLiteralV2("Le nom d\\'une chose" , Some("fr")), // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
-                StringLiteralV2("Der Name eines Dinges" , Some("de"))
+                StringLiteralV2("The name of a Thing", Some("en")),
+                StringLiteralV2("Le nom d\\'une chose", Some("fr")), // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
+                StringLiteralV2("Der Name eines Dinges", Some("de"))
             )
 
             // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.

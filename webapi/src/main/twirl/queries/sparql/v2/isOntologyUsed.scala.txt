@@ -20,14 +20,16 @@
 @import org.knora.webapi.util.SmartIri
 
 @*
- * Checks whether any entity in an ontology is used in data. Returns either one row if at least one entity is
- * used, or no rows if none are used.
+ * Checks whether any entity in an ontology is used in data or in other ontologies. Returns at most 50 subjects that
+ * refer to entities in the ontology.
  *
  * @param triplestore the name of the triplestore being used.
+ * @param ontologyNamedGraphIri the IRI of the ontology's named graph.
  * @param classIris the IRIs of all the classes in the ontology.
  * @param propertyIris the IRIs of all the properties in the ontology.
  *@
 @(triplestore: String,
+  ontologyNamedGraphIri: SmartIri,
   classIris: Set[SmartIri],
   propertyIris: Set[SmartIri])
 
@@ -37,12 +39,13 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?s
+SELECT DISTINCT ?s
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
+
     @for((propertyIri, index) <- propertyIris.toVector.zipWithIndex) {
 
         @if(index > 0) {
@@ -53,7 +56,31 @@ WHERE {
 
         {
 
+            @*
+
+            Check that there is no data that uses propertyIri. We don't need to check for data that uses
+            a subproperty of propertyIri, because there are only two ways this can happen:
+
+            1. The subproperty is defined in the same ontology, so it will be included in propertyIris.
+            2. The subproperty is defined in another ontology, so next branch of the UNION
+               will find it, whether or not any data uses the subproperty.
+
+            *@
+
             ?s <@propertyIri> ?o .
+
+        } UNION {
+
+            @* Check that there are no references to the property in other ontology graphs. *@
+
+            GRAPH ?g {
+
+                ?ontology rdf:type owl:Ontology .
+                ?s ?pred <@propertyIri> .
+
+            }
+
+            FILTER (?g != <@ontologyNamedGraphIri>)
 
         }
 
@@ -68,11 +95,34 @@ WHERE {
         }
 
         {
+            @*
+
+            Check that there is no data that uses classIri. We don't need to check for data that uses
+            a subclass of classIri, because there are only two ways this can happen:
+
+            1. The subclass is defined in the same ontology, so it will be included in classIris.
+            2. The subclass is defined in another ontology, so next branch of the UNION
+               will find it, whether or not any data uses the subclass.
+
+            *@
 
             ?s rdf:type <@classIri> .
+
+        } UNION {
+
+            @* Check that there are no references to the class in other ontology graphs. *@
+
+            GRAPH ?g {
+
+                ?ontology rdf:type owl:Ontology .
+                ?s ?pred <@classIri> .
+
+            }
+
+            FILTER (?g != <@ontologyNamedGraphIri>)
 
         }
 
     }
 }
-LIMIT 1
+LIMIT 50
