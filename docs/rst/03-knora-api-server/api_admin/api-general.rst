@@ -64,7 +64,8 @@ HTTP header or as parts of the URL (see :ref:`authentication`).
 OpenAPI / Swagger
 -----------------
 
-The Admin API uses OpenAPI_ for documentation purposes.
+The Admin API uses OpenAPI_ for documentation purposes. To try it out, run `webapi` and open
+`http://host/api-docs/swagger.json` in http://petstore.swagger.io .
 
 .. _OpenAPI: http://www.restapitutorial.com/lessons/httpmethods.html
 
