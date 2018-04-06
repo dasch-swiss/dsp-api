@@ -58,7 +58,7 @@ import scala.xml.{Node, NodeSeq, XML}
   */
 class StandoffResponderV1 extends Responder {
 
-    implicit val materializer = ActorMaterializer()
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     // Converts SPARQL query results to ApiValueV1 objects.
     val valueUtilV1 = new ValueUtilV1(settings)

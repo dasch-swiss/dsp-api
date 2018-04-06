@@ -53,7 +53,7 @@ case class CreateMappingRequestV1(xml: String, label: String, projectIri: IRI, m
   * @param mappingIri the IRI of the resource (knora-base:XMLToStandoffMapping) representing the mapping that has been created.
   */
 case class CreateMappingResponseV1(mappingIri: IRI) extends KnoraResponseV1 {
-    def toJsValue = RepresentationV1JsonProtocol.createMappingResponseV1Format.write(this)
+    def toJsValue: JsValue = RepresentationV1JsonProtocol.createMappingResponseV1Format.write(this)
 }
 
 /**
@@ -141,9 +141,7 @@ case class XMLStandoffDataTypeClass(standoffDataTypeClass: StandoffDataTypeClass
   * @param mappingName the name of the mapping (will be appended to the mapping IRI).
   */
 case class CreateMappingApiRequestV1(project_id: IRI, label: String, mappingName: String) {
-
-    def toJsValue = RepresentationV1JsonProtocol.createMappingApiRequestV1Format.write(this)
-
+    def toJsValue: JsValue = RepresentationV1JsonProtocol.createMappingApiRequestV1Format.write(this)
 }
 
 /**

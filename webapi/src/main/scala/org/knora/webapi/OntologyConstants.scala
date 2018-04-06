@@ -751,6 +751,9 @@ object OntologyConstants {
 
         val ResourceIcon: IRI = KnoraApiV2PrefixExpansion + "resourceIcon"
 
+        // TODO: Add this to the ontology in the complex schema
+        val MappingHasName: IRI = KnoraApiV2PrefixExpansion + "mappingHasName"
+
     }
 
     object SalsahGuiApiV2WithValueObjects {
