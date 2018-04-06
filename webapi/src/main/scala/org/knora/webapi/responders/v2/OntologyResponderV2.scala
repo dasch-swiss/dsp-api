@@ -3180,7 +3180,11 @@ class OntologyResponderV2 extends Responder {
     private def checkPermissionsForOntologyUpdate(internalOntologyIri: SmartIri, requestingUser: UserADM): Future[SmartIri] = {
         for {
             cacheData <- getCacheData
-            projectIri = cacheData.ontologies(internalOntologyIri).ontologyMetadata.projectIri.get
+
+            projectIri = cacheData.ontologies.getOrElse(
+                internalOntologyIri,
+                throw NotFoundException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} not found")
+            ).ontologyMetadata.projectIri.get
 
             _ = if (!requestingUser.permissions.isProjectAdmin(projectIri.toString) && !requestingUser.permissions.isSystemAdmin) {
                 // not a project or system admin
