@@ -70,7 +70,7 @@ class NieIneV1Spec extends CoreSpec( NieIneV1Spec.config ) with TriplestoreJsonP
     RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/information-carrier-ontology-knora.ttl", name = "http://www.knora.org/ontology/information-carrier"),
     RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/language-ontology-knora.ttl", name = "http://www.knora.org/ontology/language"),
     RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/physical-resource-ontology-knora.ttl", name = "http://www.knora.org/ontology/physical-resource"),
-    RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/organisation-ontology-knora.ttl", name = "http://www.knora.org/ontology/organisation"),
+    //RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/organisation-ontology-knora.ttl", name = "http://www.knora.org/ontology/organisation"),
     RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/literature-ontology-knora.ttl", name = "http://www.knora.org/ontology/literature"),
     RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/teaching-ontology-knora.ttl", name = "http://www.knora.org/ontology/teaching"),
     RdfDataObject(path = "_test_data/other.v1.NieIneV1Spec/ontologies/political-geography-ontology-knora.ttl", name = "http://www.knora.org/ontology/political-geography")
