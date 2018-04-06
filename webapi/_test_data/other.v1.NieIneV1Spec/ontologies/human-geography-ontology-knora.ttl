@@ -1,0 +1,127 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix narespa: <http://sweet.jpl.nasa.gov/2.3/reprSpace.owl#>.
+@prefix naproti: <http://sweet.jpl.nasa.gov/2.3/propTime.owl#Time>.
+@prefix naprospadi: <http://sweet.jpl.nasa.gov/2.3/propSpaceDistance.owl#>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix physical: <http://www.knora.org/ontology/physical-resource#>.
+@prefix concept: <http://www.knora.org/ontology/concept#>.
+@prefix org: <http://www.knora.org/ontology/organisation#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+@prefix humgeo: <http://www.knora.org/ontology/human-geography#>.
+
+<http://www.knora.org/ontology/human-geography>
+	a owl:Ontology;
+	dct:title """Human Geography"""@en;
+	dct:description """Formal description of human geography, general subclasses, related classes, and properties."""@en;
+	dct:creator "Hans Cools, software developer, NIE-INE, Basel University, Switzerland"@en;
+	dct:publisher "Basel University, Switzerland"@en.
+
+#
+# CLASSES
+#
+
+# humgeo:HumanGeography
+# humgeo:PoliticalGeography
+
+# http://sweet.jpl.nasa.gov/2.3/realm.owl#PlanetarySurface
+
+humgeo:Nation
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/human-geography#>;
+	rdfs:label "nation"@en, "Nation"@de;
+	rdfs:comment """Stable political organization with a commonality e.g. ethnicity, language, culture, ."""@en;
+	rdfs:subClassOf org:PoliticalOrganization.
+
+humgeo:Country
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/human-geography#>;
+	rdfs:label "country"@en, "Land"@de;
+	rdfs:comment """Place of a nation."""@en;
+	rdfs:subClassOf physical:Place.
+
+humgeo:State
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/human-geography#>;
+	rdfs:label "state"@en, "Staat"@de;
+	rdfs:comment """Political organization of a nation with an own government."""@en;
+	rdfs:subClassOf org:PoliticalOrganization.
+
+humgeo:Empire
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/human-geography#>;
+	rdfs:label "empire"@en, "Imperium"@de;
+	rdfs:comment """Group of nations with an overarching government."""@en;
+	rdfs:subClassOf org:PoliticalOrganization.
+
+# humgeo:NationState: nation-state
+
+# humgeo:SovereignState
+
+# humgeo:FederatedState
+
+# humgeo:Government: exercises authority over a particular territory
+
+humgeo:Town
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/human-geography#>;
+	rdfs:label "town"@en, "Ortschaft"@de;
+	rdfs:comment """Smallest place with political boundaries and an own government."""@en;
+	rdfs:subClassOf physical:Place.
+
+humgeo:Village
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/human-geography#>;
+	rdfs:label "village"@en, "Dorf"@de;
+	rdfs:comment """Small place with political boundaries but without an own government."""@en;
+	rdfs:subClassOf physical:Place.
+
+humgeo:City
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/human-geography#>;
+	rdfs:label "city"@en, "Stadt"@de;
+	rdfs:comment """Large town."""@en;
+	rdfs:subClassOf physical:Place.
+
+humgeo:District
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/human-geography#>;
+	rdfs:label "district"@en, "Stadtviertel"@de;
+	rdfs:comment """Part of a city with own administration."""@en;
+	rdfs:subClassOf physical:Place.
+
+humgeo:Street
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/human-geography#>;
+	rdfs:label "street"@en, "Strasse"@de;
+	rdfs:comment """."""@en;
+	rdfs:subClassOf physical:Place.
+
+humgeo:Building
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/human-geography#>;
+	rdfs:label "building"@en, "Gebäude"@de;
+	rdfs:comment """."""@en;
+	rdfs:subClassOf physical:Place.
+
+humgeo:PostalAddress #* more general?
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/human-geography#>;
+	rdfs:label "postal address"@en, "Postanschrift"@de;
+	rdfs:comment """."""@en;
+	rdfs:subClassOf concept:SymbolicConcept, cidoc:E45_Address.
+
+humgeo:Residence #* ! Wohnsitz = address
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/human-geography#>;
+	rdfs:label "residence"@en, "Wohnsitz"@de;
+	rdfs:comment """Person's home."""@en;
+	rdfs:subClassOf physical:Place.
+
+#
+# PROPERTIES
+#

@@ -1,0 +1,1206 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix incunabula: <http://www.knora.org/ontology/incunabula#> .
+
+
+##########################################################
+#
+# Knora System Permissions
+#
+##########################################################
+
+
+### Default Object Access Permissions on knora-base:LinkObj resource class
+<http://rdfh.ch/permissions/001-d1>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject knora-base:SystemProject ;
+
+                      knora-base:forResourceClass knora-base:LinkObj ;
+
+                      knora-base:hasPermissions "M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+
+
+### Default Object Access Permissions on knora-base:Region resource class
+<http://rdfh.ch/permissions/001-d2>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject knora-base:SystemProject ;
+
+                      knora-base:forResourceClass knora-base:Region ;
+
+                      knora-base:hasPermissions "M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+
+
+### Default Object Access Permissions on knora-base:hasStillImageFileValue property
+<http://rdfh.ch/permissions/001-d3>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject knora-base:SystemProject ;
+
+                      knora-base:forProperty knora-base:hasStillImageFileValue ;
+
+                      knora-base:hasPermissions "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
+
+
+
+##########################################################
+#
+# Images Demo Project Permissions
+#
+##########################################################
+
+### Administrative Permissions on ProjectMember
+<http://rdfh.ch/permissions/00FF/a1>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/00FF> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
+
+
+### Administrative Permissions on ProjectAdmin
+<http://rdfh.ch/permissions/00FF/a2>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/00FF> ;
+
+                      knora-base:forGroup knora-base:ProjectAdmin ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .
+
+
+### Administrative Permissions on 'images-reviewer'
+<http://rdfh.ch/permissions/00FF/a3>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/00FF> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/images#bild,http://www.knora.org/ontology/images#bildformat"^^xsd:string .
+
+
+### Default Object Access Permissions on ProjectMember Group
+<http://rdfh.ch/permissions/00FF/d1>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/00FF> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"^^xsd:string .
+
+
+### Default Object Access Permissions on ProjectMember Group
+<http://rdfh.ch/permissions/00FF/d2>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/00FF> ;
+
+                      knora-base:forGroup knora-base:KnownUser ;
+
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"^^xsd:string .
+
+
+
+##########################################################
+#
+# Incunabula Project Permissions
+#
+##########################################################
+
+### Administrative Permissions on ProjectMember
+<http://rdfh.ch/permissions/003-a1>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/77275339> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
+
+
+### Administrative Permissions on ProjectAdmin
+<http://rdfh.ch/permissions/003-a2>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/77275339> ;
+
+                      knora-base:forGroup knora-base:ProjectAdmin ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .
+
+
+### Default Object Access Permissions on ProjectMember Group
+<http://rdfh.ch/permissions/003-d1>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/77275339> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
+
+
+### Default Object Access Permissions on incunabula:book resource class
+<http://rdfh.ch/permissions/003-d2>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/77275339> ;
+
+                      knora-base:forResourceClass incunabula:book ;
+
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
+
+
+### Default Object Access Permissions on incunabula:page resource class
+<http://rdfh.ch/permissions/003-d3>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/77275339> ;
+
+                      knora-base:forResourceClass incunabula:page ;
+
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
+
+
+##########################################################
+#
+# Anything Project Permissions
+#
+##########################################################
+
+### Administrative Permissions on ProjectMember
+<http://rdfh.ch/permissions/005-a1>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/anything> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
+
+
+### Administrative Permissions on ProjectAdmin
+<http://rdfh.ch/permissions/005-a2>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/anything> ;
+
+                      knora-base:forGroup knora-base:ProjectAdmin ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .
+
+
+### Default Object Access Permissions on ProjectMember Group
+<http://rdfh.ch/permissions/005-d1>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/anything> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
+
+
+
+
+
+##########################################################
+#
+# BEOL Project Permissions
+#
+##########################################################
+
+### Administrative Permissions on ProjectMember
+<http://rdfh.ch/permissions/006-a1>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
+
+
+### Administrative Permissions on ProjectAdmin
+<http://rdfh.ch/permissions/006-a2>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+
+                      knora-base:forGroup knora-base:ProjectAdmin ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .
+
+
+### Default Object Access Permissions on ProjectMember Group
+<http://rdfh.ch/permissions/006-d1>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
+
+
+##########################################################
+#
+# Biblio Project Permissions
+#
+##########################################################
+
+
+### Administrative Permissions on ProjectMember
+<http://rdfh.ch/permissions/007-a1>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
+
+
+### Administrative Permissions on ProjectAdmin
+<http://rdfh.ch/permissions/007-a2>
+
+                      rdf:type knora-base:AdministrativePermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> ;
+
+                      knora-base:forGroup knora-base:ProjectAdmin ;
+
+                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .
+
+
+### Default Object Access Permissions on ProjectMember Group
+<http://rdfh.ch/permissions/007-d1>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> ;
+
+                      knora-base:forGroup knora-base:ProjectMember ;
+
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+
+##########################################################
+#
+# Sweet and tasty but forbidden resource
+#
+# but of the tree of the knowledge of good and evil, thou shalt not eat of it
+#
+##########################################################
+
+<http://rdfh.ch/permissions/forbiddenResource> a knora-base:ForbiddenResource ;
+
+                      rdfs:label """This resource is a proxy for a resource you are not allowed to see (may depend on the context: query path)""" ;
+
+                      knora-base:isDeleted false ;
+
+                      knora-base:attachedToUser <http://rdfh.ch/users/root> ;
+
+                      knora-base:attachedToProject knora-base:SystemProject ;
+
+                      knora-base:creationDate "2017-10-06T11:05:37Z"^^xsd:dateTimeStamp ;
+
+					  knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|V knora-base:UnknownUser" .
+
+
+#
+# Human
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/008-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/human>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/008-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/human>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/008-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/human>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Concept
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/009-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/concept>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/009-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/concept>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/009-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/concept>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+#
+# Text
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/010-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/text>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/010-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/text>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/010-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/text>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Image
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/011-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/image>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/011-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/image>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/011-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/image>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Digital Repertory of Commentaries on Peter Lombard’s Sentences
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/012-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/drcs>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/012-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/drcs>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/012-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/drcs>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Scholasticism
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/013-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/scholasticism>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/013-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/scholasticism>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/013-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/scholasticism>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Kuno Raeber Lyric
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/014-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/kuno-raeber>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/014-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/kuno-raeber>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/014-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/kuno-raeber>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Event
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/015-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/event>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/015-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/event>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/015-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/event>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Kuno Raeber Gui
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/016-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/kuno-raeber-gui>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/016-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/kuno-raeber-gui>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/016-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/kuno-raeber-gui>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Publishing
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/017-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/publishing>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/017-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/publishing>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/017-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/publishing>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Agent
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/018-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/agent>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/018-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/agent>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/018-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/agent>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Information Carrier
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/019-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/information-carrier>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/019-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/information-carrier>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/019-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/information-carrier>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Catholic Organisation
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/020-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/catholic-organisation>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/020-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/catholic-organisation>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/020-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/catholic-organisation>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Philosophy
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/021-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/philosophy>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/021-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/philosophy>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/021-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/philosophy>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Language
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/022-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/language>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/022-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/language>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/022-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/language>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Philosophies
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/023-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/philosophies>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/023-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/philosophies>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/023-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/philosophies>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Catholic Orders
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/024-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/catholic-orders>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/024-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/catholic-orders>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/024-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/catholic-orders>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Physical Resource
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/025-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/physical-resource>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/025-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/physical-resource>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/025-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/physical-resource>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Literature
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/026-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/literature>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/026-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/literature>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/026-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/literature>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Organisation
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/027-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/organisation>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/027-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/organisation>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/027-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/organisation>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Teaching
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/028-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/teaching>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/028-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/teaching>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/028-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/teaching>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Physical Geography
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/029-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/physical-geography>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/029-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/physical-geography>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/029-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/physical-geography>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Text Editing
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/030-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/text-editing>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/030-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/text-editing>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/030-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/text-editing>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Atharvaveda
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/031-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/atharvaveda>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/031-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/atharvaveda>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/031-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/atharvaveda>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Indology
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/032-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/indology>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/032-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/indology>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/032-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/indology>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Device
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/033-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/device>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/033-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/device>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/033-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/device>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Text Structure
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/034-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/text-structure>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/034-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/text-structure>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/034-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/text-structure>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.
+
+
+#
+# Human Geography
+#
+
+## Administrative permissions on project member
+
+<http://rdfh.ch/permissions/035-a1>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/human-geography>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string.
+
+
+## Administrative permissions on project admin
+
+<http://rdfh.ch/permissions/035-a2>
+	rdf:type knora-base:AdministrativePermission;
+	knora-base:forProject <http://rdfh.ch/projects/human-geography>;
+	knora-base:forGroup knora-base:ProjectAdmin;
+	knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string.
+
+
+## Default object access permissions on project member group
+
+<http://rdfh.ch/permissions/035-d1>
+	rdf:type knora-base:DefaultObjectAccessPermission;
+	knora-base:forProject <http://rdfh.ch/projects/human-geography>;
+	knora-base:forGroup knora-base:ProjectMember;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string.

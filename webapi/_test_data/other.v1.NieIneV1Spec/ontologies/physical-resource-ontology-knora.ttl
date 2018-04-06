@@ -1,0 +1,211 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix narespa: <http://sweet.jpl.nasa.gov/2.3/reprSpace.owl#>.
+@prefix naproti: <http://sweet.jpl.nasa.gov/2.3/propTime.owl#Time>.
+@prefix naprospadi: <http://sweet.jpl.nasa.gov/2.3/propSpaceDistance.owl#>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix phygeo: <http://www.knora.org/ontology/physical-geography#>.
+@prefix text: <http://www.knora.org/ontology/text#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#>.
+@prefix physical: <http://www.knora.org/ontology/physical-resource#>.
+
+<http://www.knora.org/ontology/physical-resource>
+	a owl:Ontology;
+	dct:title """Physical Resource"""@en;
+	dct:description """Formal description of physical resource in broadest sense, general subclasses, related classes, and properties."""@en;
+	dct:creator "Hans Cools, software developer, NIE-INE, Basel University, Switzerland"@en;
+	dct:publisher "Basel University, Switzerland"@en.
+
+#
+# CLASSES
+#
+
+physical:Resource
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "physical resource"@en, "physische Entität"@de;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf knora-base:Resource. #* cidoc:
+
+physical:Space
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "space"@en, "Raum"@de;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf physical:Resource, geo:SpatialThing, narespa:Space, [
+		a owl:Restriction; owl:onProperty physical:isPartOf; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty physical:isPartOfValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty phygeo:hasLatitude; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty phygeo:hasLongitude; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+physical:Time
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "time"@en, "Zeit"@de;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf physical:Resource, naproti:Time.
+
+physical:Place
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "place"@en, "Platz"@de;
+	rdfs:comment """Specific space."""@en;
+	rdfs:subClassOf physical:Space, cidoc:E53_Place, [
+		a owl:Restriction; owl:onProperty physical:placeHasName; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+# cidoc:E44_Place_Appellation
+
+physical:Point
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "point"@en, "Punkt"@de;
+	rdfs:comment """Space without dimension."""@en;
+	rdfs:subClassOf physical:Space, geo:Point.
+
+physical:Size
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "size"@en, "Grösse"@de;
+	rdfs:comment """Spatial extent having 1 to 3 dimensions."""@en;
+	rdfs:subClassOf naprospadi:Size, knora-base:Resource.
+
+physical:Length
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "length"@en, "Länge"@de;
+	rdfs:comment """Spatial extent representing 1 dimension."""@en;
+	rdfs:subClassOf naprospadi:Length, knora-base:Resource.
+
+physical:Distance
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "distance"@en, "Abstand"@de;
+	rdfs:comment """Length of the space between two points."""@en;
+	rdfs:subClassOf physical:Length, naprospadi:Distance.
+
+physical:Matter
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "matter"@en, "Materie"@de;
+	rdfs:comment """Physical resource having mass and volume."""@en;
+	skos:note """As in classical physics observed in everyday life."""@en;
+	rdfs:subClassOf physical:Space, dct:PhysicalResource, [
+		a owl:Restriction; owl:onProperty physical:hasSize; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty physical:hasSizeValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty physical:hasLength; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty physical:hasLengthValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+physical:Compound
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "compound"@en, "Mischung"@de;
+	rdfs:comment """Physical resource composed of more than 1 type of substance."""@en;
+	skos:note """This can be anything, e.g. chemical compound containing more than 1 elementary substance."""@en;
+	rdfs:subClassOf physical:Matter.
+
+#physical:Specimen
+#	a owl:Class;
+#	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+#	rdfs:label "specimen"@en, "Materie"@de;
+#	rdfs:comment """Sample containing a substance for examination."""@en;
+#	rdfs:subClassOf physical:Matter.
+
+physical:Product
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "product"@en, "Produkt"@de;
+	rdfs:comment """Matter as result of producing in broadest sense."""@en;
+	rdfs:subClassOf physical:Matter.
+
+#
+# PROPERTIES
+#
+
+physical:isPartOf
+	a owl:ObjectProperty, owl:TransitiveProperty;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "is part of"@en, "ist Teil von"@de;
+	rdfs:comment "Relating a space to another one it is part of."@en;
+	rdfs:subPropertyOf knora-base:hasLinkTo; # cidoc:P46i_forms_part_of
+	knora-base:subjectClassConstraint physical:Space;
+	knora-base:objectClassConstraint physical:Space.
+
+physical:isPartOfValue
+	a owl:ObjectProperty;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "is part of - statement"@en, "ist Teil von - Festlegung"@de;
+	rdfs:comment "Relating a space to a reification statement of the relation between that space and another one it is part of."@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint physical:Space;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+physical:hasSize
+	a owl:ObjectProperty;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "has size"@en, "hat Grösse"@de;
+	rdfs:comment "Relating a space to its size."@en;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint physical:Space;
+	knora-base:objectClassConstraint physical:Size.
+
+physical:hasSizeValue
+	a owl:ObjectProperty;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "has size - statement"@en, "hat Grösse - Festlegung"@de;
+	rdfs:comment "Relating a space to a reification statement of the relation between that space and its size."@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint physical:Space;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+physical:hasLength
+	a owl:ObjectProperty;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "has length"@en, "hat Länge"@de;
+	rdfs:comment "Relating a space to its length."@en;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint physical:Space;
+	knora-base:objectClassConstraint physical:Length.
+
+physical:hasLengthValue
+	a owl:ObjectProperty;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/physical-resource#>;
+	rdfs:label "has length - statement"@en, "hat Länge - Festlegung"@de;
+	rdfs:comment "Relating a space to a reification statement of the relation between that space and its length."@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint physical:Space;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+physical:hasLocation
+	a owl:ObjectProperty;
+	rdfs:label "has location"@en, "hat Ort"@de;
+	rdfs:comment """Relating something to its location."""@en;
+	rdfs:domain rdfs:Resource;
+	rdfs:range physical:Space;
+	rdfs:subPropertyOf geo:location, knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint knora-base:Resource; #*
+	knora-base:objectClassConstraint physical:Space.
+
+physical:hasLocationValue
+	a owl:ObjectProperty;
+	rdfs:label "has location - statement"@en, "hat Ort - Festlegung"@de;
+	rdfs:comment """Relating something to a reification statement of the relation between that something and its location."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint knora-base:Resource; #*
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+physical:placeHasName
+	a owl:ObjectProperty;
+	rdfs:label "place has name"@en, "Platz hat Name"@de;
+	rdfs:comment """Relating a place to its name."""@en;
+	rdfs:domain physical:Place;
+	rdfs:range rdfs:Literal;
+	rdfs:subPropertyOf text:hasName;
+	knora-base:subjectClassConstraint physical:Place;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Date.

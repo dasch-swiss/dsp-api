@@ -1,0 +1,113 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix event: <http://www.knora.org/ontology/event#>.
+@prefix human: <http://www.knora.org/ontology/human#>.
+@prefix cathorg: <http://www.knora.org/ontology/catholic-organisation#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+@prefix cathord: <http://www.knora.org/ontology/catholic-orders#>.
+
+<http://www.knora.org/ontology/catholic-orders>
+	a owl:Ontology;
+	dct:title "An ontology about catholic orders"@en;
+	dct:description """Formal description of catholic orders, general subclasses, related classes, properties, and instances."""@en;
+	dct:creator "Hans Cools, software developer, NIE-INE, Basel University, Switzerland"@en;
+	dct:contributor "Prof. Dr. Ueli Zahnd, Faculty of Theology, University of Basel, Switzerland"@en, "Gabriel Müller, Faculty of Theology, University of Basel, Switzerland"@en.
+
+#
+# INSTANCES
+#
+
+cathord:AugustinianFriars
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/catholic-orders#>;
+	rdfs:label "Ordo Fratrum Sancti Augustini"@la, "Order of Augustinian Friars"@en;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf cathorg:Order.
+
+cathord:Benedictines
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/catholic-orders#>;
+	rdfs:label "Ordo Sancti Benedicti"@la, "Order of Benedictines"@en;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf cathorg:Order.
+
+cathord:Carmelites
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/catholic-orders#>;
+	rdfs:label "Ordo Fratrum Beatissimae Mariae Virginis de Monte Carmelo"@la, "Order of Carmelites"@en;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf cathorg:Order.
+
+cathord:Carthusians
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/catholic-orders#>;
+	rdfs:label "Ordo Cartusiensis"@la, "Order of Carthusians"@en;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf cathorg:Order.
+
+cathord:Cistercians
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/catholic-orders#>;
+	rdfs:label "Ordo Cisterciensis"@la, "Order of Cistercians"@en;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf cathorg:Order.
+
+cathord:Franciscans
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/catholic-orders#>;
+	rdfs:label "Ordo Fratrum Minorum"@la, "Order of Franciscans"@en;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf cathorg:Order.
+
+cathord:ConventualFranciscans
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/catholic-orders#>;
+	rdfs:label "Ordo Fratrum Minorum Conventualium"@la, "Order of Conventual Franciscans"@en;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf cathorg:Franciscans.
+
+cathord:ObservantFranciscans
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/catholic-orders#>;
+	rdfs:label "Ordo Fratrum Minorum Observantiae"@la, "Order of ObservantFrant Franciscans"@en;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf cathorg:Franciscans.
+
+cathord:Dominicans
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/catholic-orders#>;
+	rdfs:label "Ordo Fratrum Praedicatorum"@la, "Order of Dominicans"@en;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf cathorg:Order.
+
+cathord:Jesuits
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/catholic-orders#>;
+	rdfs:label "Societas Iesu"@la, "Order of Jesuits"@en;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf cathorg:Order.
+
+#
+# PROPERTIES
+#
+
+cathord:isMemberOf
+	a owl:ObjectProperty;
+	rdfs:label "is member of catholic order"@en, "ist Mitglied einem katholischen Orden"@de;
+	rdfs:comment """Relating a person to a catholic order the person is a member of."""@en;
+	rdfs:domain human:Person; #* ? more specific
+	rdfs:range cathorg:Order;
+	rdfs:subPropertyOf human:isMemberOfOrganisation;
+	knora-base:subjectClassConstraint human:Person;
+	knora-base:objectClassConstraint cathorg:Order.
+
+cathord:isMemberOfValue
+	a owl:ObjectProperty;
+	rdfs:label "is member of catholic order - statement"@en, "ist Mitglied einem katholischen Orden - Festlegung"@de;
+	rdfs:comment """Relating a person to a reification statement of the relation between the person and a catholic order the person is a member of."""@en;
+	rdfs:subPropertyOf human:isMemberOfOrganisationValue;
+	knora-base:subjectClassConstraint human:Person;
+	knora-base:objectClassConstraint knora-base:LinkValue.

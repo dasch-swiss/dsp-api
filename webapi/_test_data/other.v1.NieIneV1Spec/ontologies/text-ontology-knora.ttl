@@ -1,0 +1,438 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix frbroo: <http://iflastandards.info/ns/fr/frbr/frbroo/>.
+@prefix event: <http://www.knora.org/ontology/event#>.
+@prefix human: <http://www.knora.org/ontology/human#>.
+@prefix language: <http://www.knora.org/ontology/language#>.
+@prefix concept: <http://www.knora.org/ontology/concept#>.
+@prefix text-structure: <http://www.knora.org/ontology/text-structure#>.
+@prefix textedit: <http://www.knora.org/ontology/text-editing#>.
+@prefix infocar: <http://www.knora.org/ontology/information-carrier#>.
+@prefix publish: <http://www.knora.org/ontology/publishing#>.
+@prefix litera: <http://www.knora.org/ontology/literature#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#>.
+@prefix text: <http://www.knora.org/ontology/text#>.
+
+<http://www.knora.org/ontology/text>
+	a owl:Ontology;
+	dct:title "An ontology about text"@en;
+	dct:description """Formal description of text in broadest sense, general subclasses, related classes, and properties."""@en;
+	skos:note """Text editing is described in a seperate ontology"""@en;
+	dct:creator "Hans Cools, software developer, NIE-INE, Basel University, Switzerland"@en;
+	dct:contributor "Roberta Padlina, tool coordinator, NIE-INE, Basel University, Switzerland"@en;
+	dct:publisher "Basel University, Switzerland"@en.
+#	skos:note """Representation of an otherwise literal data element as object ('objectivation') enabling relating it to metadata"""@en.
+
+#
+# CLASSES
+#
+
+text:Expression
+	a owl:Class;
+	rdfs:label "text expression"@en, "Text-Expression"@de;
+	rdfs:comment """Expression as text in a human natural language."""@en;
+	rdfs:subClassOf concept:Expression, language:HumanNaturalLanguageExpression, [
+		a owl:Restriction; owl:onProperty text:hasAuthor; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text:hasAuthorValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text:hasRevisor; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text:hasRevisorValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text:hasGlossator; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text:hasGlossatorValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text:hasAbbreviator; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text:hasAbbreviatorValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text:hasCopyist; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text:hasCopyistValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text:hasIncipit; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text:hasExplicit; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text:hasVersionIndicator; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text:hasReferenceText; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text:hasReferenceTextValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text-structure:hasStructure; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text-structure:hasStructureValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty text-structure:hasLineNumber; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:hasEditor; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:hasEditorValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:hasRedactor; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:hasRedactorValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:hasEdition; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:hasEditionValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:hasSameEditionAs; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:hasSameEditionAsValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:hasDiplomaticTranscription; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:hasDiplomaticTranscriptionValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:hasCriticalEdition; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:hasCriticalEditionValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+text:Author
+	a owl:Class;
+	rdfs:label "author"@en, "Autor"@de;
+	rdfs:comment """Role of a person being responsible for a text."""@en;
+	skos:note """Often an author is also the creator of a text."""@en;
+	rdfs:subClassOf human:Role.
+
+text:Revisor #* SCO editor? -> revise without change
+	a owl:Class;
+	rdfs:label "revisor"@en, "Revisor"@de;
+	rdfs:comment """Role of a person checking on certain aspects of a text."""@en;
+	rdfs:subClassOf human:Role.
+
+#* curator: keeper of a cultural heritage institution?
+
+text:Glossator #* -> scholastic? Unlikely to be used in modern times?
+	a owl:Class;
+	rdfs:label "glossator"@la, "glossator"@en, "Glossator"@de;
+	rdfs:comment """Role of a person adding texts or glosses to a text."""@en;
+# 	substantial OR marginal texts e.g. in the margin or between lines
+	rdfs:subClassOf human:Creator.
+
+text:Abbreviator #* -> scholastic?
+	a owl:Class;
+	rdfs:label "abbreviator"@la, "abbreviator"@en, "Abkürzer"@de;
+	rdfs:comment """Role of a person being responsible for a shortened version of a text."""@en; #*
+	rdfs:subClassOf human:Creator.
+
+text:Copyist
+	a owl:Class;
+	rdfs:label "scribes"@la, "copyist"@en, "Kopist"@de; # "scribe"@en, "Schreiber"@de;
+	rdfs:comment """Role of a person copying text by handwriting."""@en;
+	rdfs:subClassOf human:Creator.
+
+text:Translator #* -> scholastic? ~ handwriting
+	a owl:Class;
+	rdfs:label "translator"@en, "Übersetzer"@de;
+	rdfs:comment """Role of a person translating text by writing."""@en;
+	rdfs:subClassOf language:Translator, human:Creator.
+
+text:WrittenText
+	a owl:Class;
+	rdfs:label "written text"@en, "geschriebener Text"@de;
+	rdfs:comment """Text written by any method, e.g. manually, with an analogue or digital typewriter, or on a computer, abstracted from its carrier."""@en;
+	rdfs:subClassOf language:HumanNaturalLanguageExpression, [
+		a owl:Restriction; owl:onProperty infocar:isWrittenWith; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:isWrittenWithValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+text:HandwrittenText
+	a owl:Class;
+	rdfs:label "handwritten text"@en, "handgeschriebener Text"@de;
+	rdfs:comment """Text written by hand."""@en;
+	rdfs:subClassOf text:WrittenText, [
+		a owl:Restriction; owl:onProperty infocar:isInManuscript; owl:cardinality "1"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:isInManuscriptValue; owl:cardinality "1"^^xsd:nonNegativeInteger].
+
+text:TypewrittenText
+	a owl:Class;
+	rdfs:label "typewritten text"@en, "maschinengeschriebener Text"@de;
+	rdfs:comment """Text written with a typewriter."""@en;
+	rdfs:subClassOf text:WrittenText, [
+		a owl:Restriction; owl:onProperty infocar:isInTypescript; owl:cardinality "1"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:isInTypescriptValue; owl:cardinality "1"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:isWrittenWith; owl:allValuesFrom text:Typewriter].
+
+# text:Print: printed text abstracted from its carrier
+
+text:DiaryEntry
+	a owl:Class;
+	rdfs:label "diary entry"@en, "Tagebucheintrag"@de;
+	rdfs:comment """Periodical, usually daily description of a personal experience or observation written in a diary."""@en;
+	rdfs:subClassOf text:Expression, [
+		a owl:Restriction; owl:onProperty infocar:isInDiary; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:isInDiaryValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:hasDiaryEnteringDate; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+text:LetterExpression
+	a owl:Class;
+	rdfs:label "letter expression"@en, "Brief-Expression"@de;
+	rdfs:comment """Text expression with a letter structure."""@en;
+	rdfs:subClassOf text:Expression, [
+		a owl:Restriction; owl:onProperty text-structure:hasStructure; owl:allValuesFrom text:LetterStructure], [
+#		a owl:Restriction; owl:onProperty text-structure:hasStructure; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+#		a owl:Restriction; owl:onProperty text-structure:hasStructureValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:isInLetter; owl:cardinality "1"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:isInLetterValue; owl:cardinality "1"^^xsd:nonNegativeInteger].
+
+text:Commentary
+	a owl:Class;
+	rdfs:label "commentary"@en, "Kommentar"@de;
+	rdfs:comment """Text expression in the form of a series of comments as analysis, interpretation or explanation of something, especially another textual expression."""@en;
+	rdfs:subClassOf text:Expression.
+
+text:Draft
+	a owl:Class;
+	rdfs:label "draft"@en, "Entwurf"@de;
+	rdfs:comment """Developmental text expression."""@en;
+	rdfs:subClassOf human:CreationVersion.
+
+text:Transcription
+	a owl:Class;
+	rdfs:label "transcription"@en, "Transkription"@de;
+	rdfs:comment """Exact written copy of a text."""@en;
+	rdfs:subClassOf language:HumanNaturalLanguageExpression.
+
+text:Witness #* immaterial?; edition/derivative, version?; handwritten?
+	a owl:Class;
+	rdfs:label "witness"@en, "Textzeuge"@de;
+	rdfs:comment """Copy of an original text."""@en; #* enabling its reconstruction
+	rdfs:subClassOf text:Expression. # Transcription?
+
+text:Development
+	a owl:Class;
+	rdfs:label "text development"@en, "Text-Entwicklung"@de;
+	rdfs:comment """Action wherein a person(s) creates text resulting in different manifestation, e.g. from notebook to manuscript to typescript to published print."""@en;
+	rdfs:subClassOf human:Creating, [
+		a owl:Restriction; owl:onProperty event:hasStage; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty event:hasStageValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+#* extrinsic feature: carrier, typescript, system of signs, diacritical eg. &
+#* intrinsic: formal content
+
+#
+# PROPERTIES
+#
+
+text:hasText
+	a owl:ObjectProperty;
+	rdfs:label "has text"@en, "hat Text"@de;
+	rdfs:comment """Relating a resource to a text (as object) as a writable coherent set of signs representing semantics in a language."""@en;
+	rdfs:subPropertyOf knora-base:hasValue;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+text:hasName
+	a owl:ObjectProperty;
+	rdfs:label "has name"@en, "hat Name"@de;
+	rdfs:comment """Relating a resource to a name (as object) as a textual identifier of the resource."""@en;
+	rdfs:domain rdfs:Resource;
+	rdfs:range rdfs:Literal;
+	rdfs:subPropertyOf text:hasText; # rdfs:label, foaf:name
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+text:hasPreferredName
+	a owl:ObjectProperty;
+	rdfs:label "has preferred name"@en, "hat bevorzugter Name"@de;
+	rdfs:comment """Relating a resource to a preferred name (as object)."""@en;
+	rdfs:subPropertyOf text:hasName;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+text:hasAlias
+	a owl:ObjectProperty;
+	rdfs:label "has alias"@en, "hat Alias"@de;
+	rdfs:comment """Relating a resource to an alias (as object) as an alternative name of the resource."""@en;
+	rdfs:subPropertyOf text:hasName;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+text:hasIdentifier
+	a owl:ObjectProperty;
+	rdfs:label "has identifier"@en, "hat Kennzeichen"@de;
+	rdfs:comment """Relating a resource to an identifier (as object) as a unique textual reference to the resource within a given context, and conforming to a formal identification system."""@en;
+	rdfs:subPropertyOf text:hasText; # cidoc:E42_Identifier, cf. dcterms:identifier
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+text:hasTitle
+	a owl:ObjectProperty;
+	rdfs:label "has title"@en, "hat Titel"@de;
+	rdfs:comment """Relating a resource to a title (as object) as a textual identifier of the resource."""@en;
+	rdfs:subPropertyOf text:hasText;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+text:hasComment
+	a owl:ObjectProperty;
+	rdfs:label "has comment"@en, "hat Kommentar"@de;
+	rdfs:comment """Relating a resource to a comment (as object) as a textual statement about the resource."""@en;
+	rdfs:subPropertyOf text:hasText;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+text:hasDescription
+	a owl:ObjectProperty;
+	rdfs:label "has description"@en, "hat Beschreibung"@de;
+	rdfs:comment """Relating a resource to a description (as object) as a textual statement about features of the resource."""@en;
+	rdfs:subPropertyOf text:hasText;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+text:hasDefinition
+	a owl:ObjectProperty;
+	rdfs:label "has definition"@en, "hat Definition"@de;
+	rdfs:comment """Relating a resource to a definition (as object) as a textual statement about the essential features of the resource."""@en;
+	rdfs:subPropertyOf text:hasDescription;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+text:hasDetailDescription
+	a owl:ObjectProperty;
+	rdfs:label "has detail description"@en, "hat Detail-Beschreibung"@de;
+	rdfs:comment """Relating a resource to a description (as object) of its detail(s). E.g. in the case of a text a detail can be a passage variant or an emendation"""@en;
+	rdfs:subPropertyOf text:hasDescription;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+text:hasSpecialDescription
+	a owl:ObjectProperty;
+	rdfs:label "has special description"@en, "hat Besonderes-Beschreibung"@de;
+	rdfs:comment """Relating a resource to a description (as object) of (a) certain feature(s)."""@en;
+	rdfs:subPropertyOf text:hasDescription;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+text:hasIncipit
+	a owl:ObjectProperty;
+	rdfs:label "has incipit"@en, "hat Incipit"@de;
+	rdfs:comment """Relating an untitled text expression to a beginning part thereof (as object) to identify the text."""@en;
+	rdfs:subPropertyOf text:hasText;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+text:hasExplicit
+	a owl:ObjectProperty;
+	rdfs:label "has explicit"@en, "hat Explicit"@de;
+	rdfs:comment """Relating an untitled text expression to an end part thereof (as object) to identify the text."""@en;
+	rdfs:subPropertyOf text:hasText;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+text:hasVersionIndicator
+	a owl:ObjectProperty;
+	rdfs:label "has version indicator"@en, "hat Version-Indikator"@de;
+	rdfs:comment """Relating a text expression to a textual element (as object) that indicates its version."""@en;
+	rdfs:subPropertyOf language:hasContent;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+text:hasAuthor #*
+	a owl:ObjectProperty;
+	rdfs:label "has author"@en, "hat Autor"@de;
+	rdfs:comment """Relating a text to a person who authored it."""@en; # OR an Organisation that authored it -> foaf:Agent
+	skos:note """A text can have more than one author."""@en;
+	rdfs:domain text:Expression;
+	rdfs:range [rdfs:subClassOf human:Person, [a owl:Restriction; owl:onProperty human:hasRole; owl:someValuesFrom text:Author]];
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint human:Person.
+
+text:hasAuthorValue
+	a owl:ObjectProperty;
+	rdfs:label "has author - statement"@en, "hat Autor - Festlegung"@de;
+	rdfs:comment """Relating a text to a reification statement of the relation between the text and a person who authored it."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+#text:isAuthorOf
+#	a owl:ObjectProperty;
+#	rdfs:label "author of"@en;
+#	rdfs:comment """Relating a person with author role to a text the person authored."""@en;
+#	knora-base:subjectClassConstraint human:Person; # [rdfs:subClassOf human:Person, [a owl:Restriction; owl:onProperty human:hasRole; owl:someValuesFrom text:Author]];
+#	knora-base:objectClassConstraint text:Expression.
+
+text:hasRevisor
+	a owl:ObjectProperty;
+	rdfs:label "has revisor"@en, "hat Revisor"@de;
+	rdfs:comment """Relating a text to a person who revised it."""@en;
+	rdfs:domain text:Expression;
+	rdfs:range [rdfs:subClassOf human:Person, [a owl:Restriction; owl:onProperty human:hasRole; owl:someValuesFrom text:Revisor]];
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint human:Person.
+
+text:hasRevisorValue
+	a owl:ObjectProperty;
+	rdfs:label "has revisor - statement"@en, "hat Revisor - Festlegung"@de;
+	rdfs:comment """Relating a text to a reification statement of the relation between the text and a person who revised it."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+text:hasGlossator
+	a owl:ObjectProperty;
+	rdfs:label "has glossator"@en, "hat Glossator"@de;
+	rdfs:comment """Relating a text to a person who glossed it."""@en;
+	rdfs:domain text:Expression;
+	rdfs:range [rdfs:subClassOf human:Person, [a owl:Restriction; owl:onProperty human:hasRole; owl:someValuesFrom text:Glossator]];
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint human:Person.
+
+text:hasGlossatorValue
+	a owl:ObjectProperty;
+	rdfs:label "has glossator - statement"@en, "hat Glossator - Festlegung"@de;
+	rdfs:comment """Relating a text to a reification statement of the relation between the text and a person who glossed it."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+text:hasAbbreviator
+	a owl:ObjectProperty;
+	rdfs:label "has abbreviator"@en, "hat Abkurzer"@de;
+	rdfs:comment """Relating a text to a person who abbreviated it."""@en;
+	rdfs:domain text:Expression;
+	rdfs:range [rdfs:subClassOf human:Person, [a owl:Restriction; owl:onProperty human:hasRole; owl:someValuesFrom text:Abbreviator]];
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint human:Person.
+
+text:hasAbbreviatorValue
+	a owl:ObjectProperty;
+	rdfs:label "has abbreviator - statement"@en, "hat Abkurzer - Festlegung"@de;
+	rdfs:comment """Relating a text to a reification statement of the relation between the text and a person who abbreviated it."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+text:hasCopyist
+	a owl:ObjectProperty;
+	rdfs:label "has copyist"@en, "hat Kopist"@de;
+	rdfs:comment """Relating a text to a person who copied it by handwriting."""@en;
+	rdfs:domain text:Expression;
+	rdfs:range [rdfs:subClassOf human:Person, [a owl:Restriction; owl:onProperty human:hasRole; owl:someValuesFrom text:Copyist]];
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint human:Person.
+
+text:hasCopyistValue
+	a owl:ObjectProperty;
+	rdfs:label "has copyist - statement"@en, "hat Kopist - Festlegung"@de;
+	rdfs:comment """Relating a text to a reification statement of the relation between the text and a person who copied it by handwriting."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+text:hasReferenceText
+	a owl:ObjectProperty;
+	rdfs:label "has reference text"@en, "hat Bezugstext"@de;
+	rdfs:comment "Relating a text to another one as its reference."@en;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint text:Expression.
+
+text:hasReferenceTextValue
+	a owl:ObjectProperty;
+	rdfs:label "has reference text - statement"@en, "hat Bezugstext - Festlegung"@de;
+	rdfs:comment "Relating a text to a reification statement of the relation between the text and another one as its reference."@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint knora-base:LinkValue.

@@ -1,0 +1,633 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@base <http://www.knora.org/ontology/anything> .
+
+# A trivial ontology, used only for testing Knora.
+
+@prefix : <http://www.knora.org/ontology/anything#> .
+<http://www.knora.org/ontology/anything> rdf:type owl:Ontology .
+
+
+:hasListItem rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Listenelement"@de ,
+                  "Elément de liste"@fr ,
+                  "Elemento di lista"@it ,
+                  "List element"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:ListValue ;
+
+       salsah-gui:guiOrder "0"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:List ;
+
+       salsah-gui:guiAttribute "hlist=<http://data.knora.org/anything/treeList>" .
+
+
+:hasOtherListItem rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Andere listenelement"@de ,
+                  "Autre elément de liste"@fr ,
+                  "Altra elemento di lista"@it ,
+                  "Other list element"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:ListValue ;
+
+       salsah-gui:guiOrder "0"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:List ;
+
+       salsah-gui:guiAttribute "hlist=<http://data.knora.org/anything/otherTreeList>" .
+
+
+
+:hasOtherThing rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+               rdfs:label "Ein anderes Ding"@de ,
+                          "Une autre chose"@fr ,
+                          "Un'altra cosa"@it ,
+                          "Another thing"@en ;
+
+               knora-base:subjectClassConstraint :Thing ;
+
+               knora-base:objectClassConstraint :Thing ;
+
+               salsah-gui:guiOrder "1"^^xsd:integer ;
+
+               salsah-gui:guiElement salsah-gui:Searchbox ;
+	       
+	           salsah-gui:guiAttribute "size=45".
+
+
+
+
+:hasOtherThingValue rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+               rdfs:label "Ein anderes Ding"@de ,
+                          "Une autre chose"@fr ,
+                          "Un'altra cosa"@it ,
+                          "Another thing"@en ;
+
+               knora-base:subjectClassConstraint :Thing ;
+
+               knora-base:objectClassConstraint knora-base:LinkValue ;
+
+               salsah-gui:guiOrder "1"^^xsd:integer ;
+
+               salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+:hasText rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Text"@de ,
+                  "Texte"@fr ,
+                  "Testo"@it ,
+                  "Text"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:TextValue ;
+
+       salsah-gui:guiOrder "2"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" .
+
+
+:hasRichtext rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Text"@de ,
+                  "Texte"@fr ,
+                  "Testo"@it ,
+                  "Text"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:TextValue ;
+
+       salsah-gui:guiOrder "2"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:Richtext ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" .
+
+
+:hasDate rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Datum"@de ,
+                  "Date"@fr ,
+                  "Data"@it ,
+                  "Date"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:DateValue ;
+
+       salsah-gui:guiOrder "3"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:Date ;
+
+       salsah-gui:guiAttribute "size=16" ,
+                               "maxlength=32" .
+
+
+
+:hasInteger rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Ganzzahl"@de ,
+                  "Nombre entier"@fr ,
+                  "Intero"@it ,
+                  "Integer"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:IntValue ;
+
+       salsah-gui:guiOrder "4"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:Spinbox ;
+
+       salsah-gui:guiAttribute "min=0" ,
+                                "max=-1" .
+
+
+
+:hasDecimal rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Dezimalzahl"@de ,
+                  "Nombre décimal"@fr ,
+                  "Numero decimale"@it ,
+                  "Decimal number"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:DecimalValue ;
+
+       salsah-gui:guiOrder "5"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" .
+
+
+
+:hasBoolean rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Boolescher Wert"@de ,
+                  "Valeur booléenne"@fr ,
+                  "Valore booleano"@it ,
+                  "Boolean value"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:BooleanValue ;
+
+       salsah-gui:guiOrder "6"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:Checkbox .
+
+
+
+:hasUri rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "URI"@de ,
+                  "URI"@fr ,
+                  "URI"@it ,
+                  "URI"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:UriValue ;
+
+       salsah-gui:guiOrder "7"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" .
+
+
+:hasInterval rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Sequenz"@de ,
+                  "Séquence"@fr ,
+                  "Sequenza"@it ,
+                  "Time interval"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:IntervalValue ;
+
+       salsah-gui:guiOrder "9"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:Interval .
+
+
+
+:hasColor rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Farbe"@de ,
+                  "Couleur"@fr ,
+                  "Colore"@it ,
+                  "Color"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:ColorValue ;
+
+       salsah-gui:guiOrder "10"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:Colorpicker .
+
+
+
+:hasGeometry rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Geometrie"@de ,
+                  "Géométrie"@fr ,
+                  "Geometria"@it ,
+                  "Geometry"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:GeomValue ;
+
+       salsah-gui:guiOrder "11"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:Geometry .
+
+
+
+:hasGeoname rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Geometrie"@de ,
+                  "Géométrie"@fr ,
+                  "Geometria"@it ,
+                  "Geometry"@en ;
+
+       knora-base:subjectClassConstraint :Thing ;
+
+       knora-base:objectClassConstraint knora-base:GeonameValue ;
+
+       salsah-gui:guiOrder "12"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:Geonames .
+
+
+
+:hasThingPicture rdf:type owl:ObjectProperty ;
+
+    rdfs:subPropertyOf knora-base:hasRepresentation ;
+
+    rdfs:label "Dingbild"@de ,
+               "Image d'une chose"@fr ,
+               "Immagine di una cosa"@it ,
+               "Picture of a thing"@en ;
+
+    knora-base:subjectClassConstraint :Thing ;
+
+    knora-base:objectClassConstraint :ThingPicture ;
+
+    salsah-gui:guiOrder "13"^^xsd:integer ;
+
+    salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+
+:hasThingPictureValue rdf:type owl:ObjectProperty ;
+
+    rdfs:subPropertyOf knora-base:hasRepresentationValue ;
+
+    rdfs:label "Dingbild"@de ,
+               "Image d'une chose"@fr ,
+               "Immagine di una cosa"@it ,
+               "Picture of a thing"@en ;
+
+    knora-base:subjectClassConstraint :Thing ;
+
+    knora-base:objectClassConstraint :LinkValue ;
+
+    salsah-gui:guiOrder "14"^^xsd:integer ;
+
+    salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+
+:isPartOfOtherThing rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf knora-base:isPartOf ;
+
+               rdfs:label "ist ein Teil von"@de ,
+                          "fait partie de"@fr ,
+                          "fa parte da"@it ,
+                          "is part of"@en ;
+
+               knora-base:subjectClassConstraint :Thing ;
+
+               knora-base:objectClassConstraint :Thing ;
+
+               salsah-gui:guiOrder "15"^^xsd:integer ;
+
+               salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+
+:isPartOfOtherThingValue rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf knora-base:isPartOfValue ;
+
+               rdfs:label "ist ein Teil von"@de ,
+                          "fait partie de"@fr ,
+                          "fa parte da"@it ,
+                          "is part of"@en ;
+
+               knora-base:subjectClassConstraint :Thing ;
+
+               knora-base:objectClassConstraint knora-base:LinkValue ;
+
+               salsah-gui:guiOrder "15"^^xsd:integer ;
+
+               salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+
+
+
+:hasBlueThing rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf :hasOtherThing ;
+
+               rdfs:label "Ein blaues Ding"@de ,
+                          "Une chose bleue"@fr ,
+                          "Una cosa azzurra"@it ,
+                          "A blue thing"@en ;
+
+               knora-base:subjectClassConstraint :Thing ;
+
+               knora-base:objectClassConstraint :BlueThing ;
+
+               salsah-gui:guiElement salsah-gui:Searchbox ;
+
+               salsah-gui:guiOrder "16"^^xsd:integer .
+
+
+:hasBlueThingValue rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf :hasOtherThingValue ;
+
+               knora-base:subjectClassConstraint :Thing ;
+
+               knora-base:objectClassConstraint knora-base:LinkValue ;
+
+               salsah-gui:guiOrder "16"^^xsd:integer .
+
+#################################################################
+#
+#    Standoff Properties
+#
+#################################################################
+
+
+###  http://www.knora.org/ontology/anything#standoffEventTagHasDescription
+
+:standoffEventTagHasDescription rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                  knora-base:subjectClassConstraint :StandoffEventTag ;
+
+                  knora-base:objectDatatypeConstraint xsd:string .
+
+:Thing rdf:type owl:Class ;
+
+      rdfs:subClassOf knora-base:Resource ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasListItem ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasOtherListItem ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasOtherThing ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasOtherThingValue ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :isPartOfOtherThing ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :isPartOfOtherThingValue ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasThingPicture ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasThingPictureValue ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasText ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasRichtext ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasDate ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasInteger ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasBoolean ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasUri ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasDecimal ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasInterval ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasColor ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasBlueThing ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasBlueThingValue ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ;
+                      #[
+                      #   rdf:type owl:Restriction ;
+                      #   owl:onProperty :hasGeometry ;
+                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      #] ,
+                      #[
+                      #   rdf:type owl:Restriction ;
+                      #   owl:onProperty :hasGeoname ;
+                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      #] ;
+
+      knora-base:resourceIcon "thing.png" ;
+
+      rdfs:label "Ding"@de ,
+                 "Chose"@fr ,
+                 "Cosa"@it ,
+                 "Thing"@en ;
+
+      rdfs:comment """'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking"""@de .
+
+
+
+
+:BlueThing rdf:type owl:Class ;
+
+      rdfs:subClassOf :Thing ;
+
+      rdfs:comment """Diese Resource-Klasse beschreibt ein blaues Ding"""@de ;
+
+      rdfs:label "Blaues Ding"@de ,
+                 "Chose bleue"@fr ,
+                 "Cosa azzurra"@it ,
+                 "Blue thing"@en .
+
+
+:hasPictureTitle rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Titel"@de ,
+                  "Titre"@fr ,
+                  "Titolo"@it ,
+                  "Title"@en ;
+
+       knora-base:subjectClassConstraint :ThingPicture ;
+
+       knora-base:objectClassConstraint knora-base:TextValue ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" .
+
+
+
+:ThingPicture rdf:type owl:Class ;
+
+    rdfs:subClassOf knora-base:StillImageRepresentation ,
+                    [
+                       rdf:type owl:Restriction ;
+                       owl:onProperty :hasPictureTitle ;
+                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ] ;
+
+    knora-base:resourceIcon "thing.png" ;
+
+    rdfs:label "Dingbild"@de ,
+               "Image d'une chose"@fr ,
+               "Immagine di una cosa"@it ,
+               "Picture of a thing"@en ;
+
+    rdfs:comment """Diese Resource-Klasse beschreibt ein Bild eines Dinges"""@de .
+
+
+#################################################################
+#
+#    Standoff Classes
+#
+#################################################################
+
+:StandoffEventTag rdf:type owl:Class ;
+
+    rdfs:subClassOf knora-base:StandoffDateTag,
+                   [
+                      rdf:type owl:Restriction ;
+                      owl:onProperty :standoffEventTagHasDescription ;
+                      owl:cardinality "1"^^xsd:nonNegativeInteger
+                   ] ;
+
+    rdfs:label "Represents an event in a TextValue"@en ;
+
+    rdfs:comment """Represents an event in a TextValue"""@en .

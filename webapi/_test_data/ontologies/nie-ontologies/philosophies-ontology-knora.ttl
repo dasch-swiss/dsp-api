@@ -1,0 +1,56 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix philo: <http://www.knora.org/ontology/philosophy#>.
+@prefix philos: <http://www.knora.org/ontology/philosophies#>.
+
+<http://www.knora.org/ontology/philosophies>
+	a owl:Ontology;
+	dct:title "An ontology about philosophies"@en;
+	dct:description """Formal description of philosophies, general subclasses, related classes, properties, and instances."""@en;
+	dct:creator "Hans Cools, software developer, NIE-INE, Basel University, Switzerland"@en;
+	dct:contributor "Prof. Dr. Ueli Zahnd, Faculty of Theology, University of Basel, Switzerland"@en, "Gabriel Müller, Faculty of Theology, University of Basel, Switzerland"@en.
+
+#
+# INSTANCES
+#
+
+philos:Albertism
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/philosophies#>;
+	rdfs:label "Albertism"@en;
+	rdfs:comment """Theological ideas of Albertus Magnus, 13th-century German Scholastic philosopher."""@en; #*
+	rdfs:subClassOf philo:Philosophy.
+
+philos:Humanism
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/philosophies#>;
+	rdfs:label "Humanism"@en;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf philo:Philosophy.
+
+philos:Nominalism #* existing?
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/philosophies#>;
+	rdfs:label "Nominalism"@en;
+	rdfs:comment """Phylosophy stating that only individual things exist, denying the existence of universals and abstract objects."""@en;
+	rdfs:subClassOf philo:Metaphysics.
+
+philos:Scotism
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/philosophies#>;
+	rdfs:label "Scotism"@en;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf philo:Philosophy.
+
+philos:Thomism
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/philosophies#>;
+	rdfs:label "Thomism"@en;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf philo:Philosophy.
+
+#* Averroes?
+#* Augustinus? - Augustinianism - Augustine of Hippo

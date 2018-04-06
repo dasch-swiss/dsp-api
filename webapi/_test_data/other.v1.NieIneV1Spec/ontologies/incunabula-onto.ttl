@@ -1,0 +1,871 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix dc: <http://www.knora.org/ontology/dc#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@base <http://www.knora.org/ontology/incunabula> .
+
+@prefix : <http://www.knora.org/ontology/incunabula#> .
+
+<http://www.knora.org/ontology/incunabula> rdf:type owl:Ontology .
+
+##########################################################
+#
+# PROPERTIES
+#
+##########################################################
+
+
+### ###########################################
+### incunabula:title
+
+:title rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf dc:title ;
+
+       rdfs:label "Titel"@de ,
+                  "Titre"@fr ,
+                  "Titolo"@it ,
+                  "Title"@en ;
+
+       rdfs:comment """Titel"""@de ;
+
+       knora-base:subjectClassConstraint :book ;
+
+       knora-base:objectClassConstraint knora-base:TextValue ;
+
+       salsah-gui:guiOrder "1"^^xsd:integer ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" .
+
+
+### ###########################################
+### incunabula:hasAuthor
+
+:hasAuthor rdf:type owl:ObjectProperty ;
+
+           rdfs:subPropertyOf dc:creator ;
+
+           rdfs:label "Creator"@de ;
+
+           rdfs:comment """Erzeuger/Autor"""@de ;
+
+           knora-base:subjectClassConstraint :book ;
+
+           knora-base:objectClassConstraint knora-base:TextValue ;
+
+           salsah-gui:guiOrder "2"^^xsd:integer ;
+
+           salsah-gui:guiElement salsah-gui:SimpleText ;
+
+           salsah-gui:guiAttribute "size=60" ,
+                                   "maxlength=255" .
+
+
+### ###########################################
+### incunabula:publisher
+
+:publisher rdf:type owl:ObjectProperty ;
+
+           rdfs:subPropertyOf dc:publisher ;
+
+           rdfs:label "Verleger"@de ,
+                      "Editions"@fr ,
+                      "Casa editrice"@it ,
+                      "Publisher"@en ;
+
+           rdfs:comment """Ein Verlag ist ein Medienunternehmen, das Werke der Literatur, Kunst, Musik oder Wissenschaft vervielfältigt und verbreitet. Der Verkauf kann über den Handel (Kunst-, Buchhandel etc.) oder durch den Verlag selbst erfolgen. Das Wort „verlegen“ bedeutet im Mittelhochdeutschen „Geld ausgeben“ oder „etwas auf seine Rechnung nehmen“. (Wikipedia http://de.wikipedia.org/wiki/Verlag)"""@de ,
+                        """Une maison d’édition est une entreprise ou une association dont l’activité principale est la production et la diffusion de livres. L’activité est donc liée à l’édition de documents. Trois formes d'entreprise dominent la profession : SA, SARL et entreprise personnelle. (Wikipedia http://fr.wikipedia.org/wiki/Maison_d%27édition)"""@fr ,
+                        """Publishing is the process of production and dissemination of literature or information – the activity of making information available for public view. In some cases authors may be their own publishers, meaning: originators and developers of content also provide media to deliver and display the content. (Wikipedia http://en.wikipedia.org/wiki/Publisher)"""@en ;
+
+           knora-base:subjectClassConstraint :book ;
+
+           knora-base:objectClassConstraint knora-base:TextValue ;
+
+           salsah-gui:guiOrder "3"^^xsd:integer ;
+
+           salsah-gui:guiElement salsah-gui:SimpleText ;
+
+           salsah-gui:guiAttribute "size=60" ,
+                                   "maxlength=255" .
+
+
+### ###########################################
+### incunabula:publoc
+
+:publoc rdf:type owl:ObjectProperty ;
+
+        rdfs:subPropertyOf knora-base:hasValue ;
+
+        rdfs:label "Ort der Herausgabe"@de ,
+                   "Publication location"@en ;
+
+        rdfs:comment """Ort der Herausgabe"""@de ;
+
+        knora-base:subjectClassConstraint :book ;
+
+        knora-base:objectClassConstraint knora-base:TextValue ;
+
+        salsah-gui:guiOrder "4"^^xsd:integer ;
+
+        salsah-gui:guiElement salsah-gui:SimpleText ;
+
+        salsah-gui:guiAttribute "size=60" ,
+                                "maxlength=100" .
+
+
+### ###########################################
+### incunabula:pubdate
+
+:pubdate rdf:type owl:ObjectProperty ;
+
+         rdfs:subPropertyOf dc:date ;
+
+         rdfs:label "Datum der Herausgabe"@de ;
+
+         knora-base:subjectClassConstraint :book ;
+
+         knora-base:objectClassConstraint knora-base:DateValue ;
+
+         salsah-gui:guiOrder "5"^^xsd:integer ;
+
+         salsah-gui:guiElement salsah-gui:Date ;
+
+         salsah-gui:guiAttribute "size=16" ,
+                                 "maxlength=32" ;
+
+         rdfs:comment """Datum der Herausgabe"""@de .
+
+
+### ###########################################
+### incunabula:location
+
+:location rdf:type owl:ObjectProperty ;
+
+          rdfs:subPropertyOf knora-base:hasValue ;
+
+          rdfs:label "Standort"@de ,
+                     "Emplacement"@fr ,
+                     "Postazione"@it ,
+                     "Location"@en ;
+
+          rdfs:comment """Der Ort wo sich das physische Original befindet"""@de ;
+
+          knora-base:subjectClassConstraint :book ;
+
+          knora-base:objectClassConstraint knora-base:TextValue ;
+
+          salsah-gui:guiOrder "6"^^xsd:integer ;
+
+          salsah-gui:guiElement salsah-gui:Textarea ;
+
+          salsah-gui:guiAttribute "cols=60" ,
+                                  "rows=4" ,
+                                  "wrap=soft" .
+
+
+### ###########################################
+### incunabula:url
+
+:url rdf:type owl:ObjectProperty ;
+
+     rdfs:subPropertyOf knora-base:hasValue ;
+
+     rdfs:label "URI"@de ,
+                "URI"@en ;
+
+     rdfs:comment """Uniform Resource Identifier"""@de ,
+                  """Uniform Resource Identifier"""@fr ,
+                  """Uniform Resource Identifier"""@it ,
+                  """Uniform Resource Identifier"""@en ;
+
+     knora-base:subjectClassConstraint :book ;
+
+     knora-base:objectClassConstraint knora-base:TextValue ;
+
+     salsah-gui:guiOrder "7"^^xsd:integer ;
+
+     salsah-gui:guiElement salsah-gui:SimpleText ;
+
+     salsah-gui:guiAttribute "size=60" ,
+                             "maxlength=200" .
+
+
+### ###########################################
+### incunabula:description
+
+:description rdf:type owl:ObjectProperty ;
+
+             rdfs:subPropertyOf dc:description ;
+
+             rdfs:label "Beschreibung (Richtext)"@de ,
+                        "Description"@en ;
+
+             rdfs:comment """Beschreibung"""@de ,
+                          """Description"""@en ;
+
+             knora-base:subjectClassConstraint knora-base:Resource ;
+
+             knora-base:objectClassConstraint knora-base:TextValue ;
+
+             salsah-gui:guiOrder "2"^^xsd:integer ;
+
+             salsah-gui:guiElement salsah-gui:Richtext .
+
+
+### ###########################################
+### incunabula:physical_desc
+
+:physical_desc rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf knora-base:hasValue ;
+
+               rdfs:label "Physische Beschreibung"@de ,
+                          "Phyiscal description"@en ;
+
+               rdfs:comment """Generelle physische Beschreibung des Objektes wie Material, Grösse etc."""@de ;
+
+               knora-base:subjectClassConstraint :book ;
+
+               knora-base:objectClassConstraint knora-base:TextValue ;
+
+               salsah-gui:guiOrder "9"^^xsd:integer ;
+
+               salsah-gui:guiElement salsah-gui:Textarea ;
+
+               salsah-gui:guiAttribute "cols=60" ,
+                                       "rows=3" ,
+                                       "wrap=soft" .
+
+
+### ###########################################
+### incunabula:note
+
+:note rdf:type owl:ObjectProperty ;
+
+      rdfs:subPropertyOf knora-base:hasValue ;
+
+      rdfs:label "Anmerkung"@de ,
+                 "Note"@en ;
+
+      rdfs:comment """Eine Anmerkung zum Objekt"""@de ,
+                   """A note concerning the object"""@en ;
+
+      knora-base:subjectClassConstraint :book ;
+
+      knora-base:objectClassConstraint knora-base:TextValue ;
+
+      salsah-gui:guiOrder "10"^^xsd:integer ;
+
+      salsah-gui:guiElement salsah-gui:Textarea ;
+
+      salsah-gui:guiAttribute "cols=60" ,
+                              "rows=3" ,
+                              "wrap=soft" .
+
+
+### ###########################################
+### incunabula:citation
+
+:citation rdf:type owl:ObjectProperty ;
+
+          rdfs:subPropertyOf knora-base:hasValue ;
+
+          rdfs:label "Verweis"@de ,
+                     "Citation/reference"@en ;
+
+          knora-base:subjectClassConstraint knora-base:Resource ;
+
+          knora-base:objectClassConstraint knora-base:TextValue ;
+
+          salsah-gui:guiOrder "5"^^xsd:integer ;
+
+          salsah-gui:guiElement salsah-gui:Textarea ;
+
+          salsah-gui:guiAttribute "cols=60" ,
+                                  "rows=3" ,
+                                  "wrap=soft" ;
+
+          rdfs:comment "Stellt einen Verweis dar."@de .
+
+
+### ###########################################
+### incunabula:book_comment
+
+:book_comment rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf knora-base:hasComment ;
+
+              rdfs:label "Kommentar"@de ,
+                         "Commentaire"@fr ,
+                         "Commento"@it ,
+                         "Comment"@en ;
+
+              rdfs:comment """Unstrukturierte Bemerkungen zu einem Objekt"""@de ;
+
+              knora-base:subjectClassConstraint :book ;
+
+              knora-base:objectClassConstraint knora-base:TextValue ;
+
+              salsah-gui:guiOrder "12"^^xsd:integer ;
+
+              salsah-gui:guiElement salsah-gui:Textarea ;
+
+              salsah-gui:guiAttribute "width=95%" ,
+                                      "rows=7" ,
+                                      "wrap=soft" .
+
+
+### ###########################################
+### incunabula:pagenum
+
+:pagenum rdf:type owl:ObjectProperty ;
+
+         rdfs:subPropertyOf knora-base:hasValue ;
+
+         rdfs:label "Seitenbezeichnung"@de ,
+                    "Désignation de page"@fr ,
+                    "Page identifier"@en ;
+
+         rdfs:comment """Eine eindeutige numerische Bezeichnung einer Buchseite"""@de ,
+                      """A distinct identification of a book page"""@en ;
+
+         knora-base:subjectClassConstraint :page ;
+
+         knora-base:objectClassConstraint knora-base:TextValue ;
+
+         salsah-gui:guiOrder "1"^^xsd:integer ;
+
+         salsah-gui:guiElement salsah-gui:SimpleText ;
+
+         salsah-gui:guiAttribute "min=4" ,
+                                 "max=8" .
+
+
+### ###########################################
+### incunabula:partOfValue
+
+:partOfValue rdf:type owl:ObjectProperty ;
+
+             rdfs:subPropertyOf knora-base:isPartOfValue ;
+
+             knora-base:objectClassConstraint knora-base:LinkValue ;
+
+             rdfs:label "ist ein Teil von"@de ,
+                        "est un part de"@fr ,
+                        "e una parte di"@it ,
+                        "is a part of"@en ;
+
+             rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ;
+
+             knora-base:subjectClassConstraint :page ;
+
+             salsah-gui:guiOrder "2"^^xsd:integer ;
+
+             salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### incunabula:partOf
+
+:partOf rdf:type owl:ObjectProperty ;
+
+        rdfs:subPropertyOf knora-base:isPartOf ;
+
+        rdfs:label "ist ein Teil von"@de ,
+                   "est un part de"@fr ,
+                   "e una parte di"@it ,
+                   "is a part of"@en ;
+
+        rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ;
+
+        knora-base:subjectClassConstraint :page ;
+
+        knora-base:objectClassConstraint :book ;
+
+        salsah-gui:guiOrder "2"^^xsd:integer ;
+
+        salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### incunabula:seqnum
+
+:seqnum rdf:type owl:ObjectProperty ;
+
+        rdfs:subPropertyOf knora-base:seqnum ;
+
+        rdfs:label "Sequenznummer"@de ,
+                   "Numéro de Séquence"@fr ,
+                   "Numero di scala"@it ,
+                   "Sequence number"@en ;
+
+        rdfs:comment """Diese Property bezeichnet die Position in einer geordneten Reihenfolge"""@de ,
+                     """Cette \"property\" dénote la position dans un séquence."""@fr ,
+                     """This property stands for the position within a set of rdered items (resoucres)"""@en ;
+
+        knora-base:subjectClassConstraint :page ;
+
+        knora-base:objectClassConstraint knora-base:IntValue ;
+
+        salsah-gui:guiOrder "3"^^xsd:integer ;
+
+        salsah-gui:guiElement salsah-gui:Spinbox ;
+
+        salsah-gui:guiAttribute "min=0" ,
+                                "max=-1" .
+
+
+### ###########################################
+### incunabula:page_comment
+
+:page_comment rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf knora-base:hasComment ;
+
+              rdfs:label "Kommentar"@de ,
+                         "Commentaire"@fr ,
+                         "Commento"@it ,
+                         "Comment"@en ;
+
+              rdfs:comment """Unstrukturierte Bemerkungen zu einem Objekt"""@de ;
+
+              knora-base:subjectClassConstraint :page ;
+
+              knora-base:objectClassConstraint knora-base:TextValue ;
+
+              salsah-gui:guiOrder "6"^^xsd:integer ;
+
+              salsah-gui:guiElement salsah-gui:Textarea ;
+
+              salsah-gui:guiAttribute "width=95%" ,
+                                      "rows=7" ,
+                                      "wrap=soft" .
+
+
+### ###########################################
+### incunabula:origname
+
+:origname rdf:type owl:ObjectProperty ;
+
+          rdfs:subPropertyOf knora-base:hasValue ;
+
+          rdfs:label "Original filename"@en ,
+                     "Ursprünglicher Dateiname"@de ,
+                     "Nom de fichier original"@fr ;
+
+          rdfs:comment """Der originale Dateiname"""@de ;
+
+          knora-base:subjectClassConstraint :page ;
+
+          knora-base:objectClassConstraint knora-base:TextValue ;
+
+          salsah-gui:guiOrder "7"^^xsd:integer ;
+
+          salsah-gui:guiElement salsah-gui:SimpleText ;
+
+          salsah-gui:guiAttribute "size=54" ,
+                                  "maxlength=128" .
+
+
+### ###########################################
+### incunabula:hasLeftSidebandValue
+
+:hasLeftSidebandValue rdf:type owl:ObjectProperty ;
+
+                      rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                      knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                      rdfs:label "Randleistentyp links"@de ;
+
+                      rdfs:comment """Verweis auf einen Randleistentyp"""@de ;
+
+                      knora-base:subjectClassConstraint :page ;
+
+                      salsah-gui:guiOrder "10"^^xsd:integer ;
+
+                      salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### incunabula:hasLeftSideband
+
+:hasLeftSideband rdf:type owl:ObjectProperty ;
+
+                 rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                 rdfs:label "Randleistentyp links"@de ;
+
+                 rdfs:comment """Verweis auf einen Randleistentyp"""@de ;
+
+                 knora-base:subjectClassConstraint :page ;
+
+                 knora-base:objectClassConstraint :Sideband ;
+
+                 salsah-gui:guiOrder "10"^^xsd:integer ;
+
+                 salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                 salsah-gui:guiAttribute "numprops=1" .
+
+
+### ###########################################
+### incunabula:hasRightSidebandValue
+
+:hasRightSidebandValue rdf:type owl:ObjectProperty ;
+
+                       rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                       knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                       rdfs:label "Randleistentyp rechts"@de ;
+
+                       rdfs:comment """Verweis auf einen Randleistentyp"""@de ;
+
+                       knora-base:subjectClassConstraint :page ;
+
+                       salsah-gui:guiOrder "11"^^xsd:integer ;
+
+                       salsah-gui:guiElement salsah-gui:Searchbox .
+
+### ###########################################
+### incunabula:hasRightSideband
+
+:hasRightSideband rdf:type owl:ObjectProperty ;
+
+                  rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                  rdfs:label "Randleistentyp rechts"@de ;
+
+                  rdfs:comment """Verweis auf einen Randleistentyp"""@de ;
+
+                  knora-base:subjectClassConstraint :page ;
+
+                  knora-base:objectClassConstraint :Sideband ;
+
+                  salsah-gui:guiOrder "11"^^xsd:integer ;
+
+                  salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                  salsah-gui:guiAttribute "numprops=1" .
+
+
+### ###########################################
+### incunabula:transcription
+
+:transcription rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf knora-base:hasValue ;
+
+               rdfs:label "Transkription"@de ;
+
+               rdfs:comment """Transkription"""@de ;
+
+               knora-base:subjectClassConstraint :page ;
+
+               knora-base:objectClassConstraint knora-base:TextValue ;
+
+               salsah-gui:guiOrder "12"^^xsd:integer ;
+
+               salsah-gui:guiElement salsah-gui:Pulldown ;
+
+               salsah-gui:guiAttribute "hlist=<http://data.knora.org/lists/4b6d86ce03>" .
+
+
+### ###########################################
+### incunabula:sbTitle
+
+:sbTitle rdf:type owl:ObjectProperty ;
+
+         rdfs:subPropertyOf dc:title ;
+
+         rdfs:label "Titel"@de ,
+                    "Titre"@fr ,
+                    "Titolo"@it ,
+                    "Title"@en ;
+
+         knora-base:subjectClassConstraint :Sideband ;
+
+         knora-base:objectClassConstraint knora-base:TextValue ;
+
+         salsah-gui:guiOrder "1"^^xsd:integer ;
+
+         salsah-gui:guiElement salsah-gui:SimpleText ;
+
+         salsah-gui:guiAttribute "size=80" ,
+                                 "maxlength=255" .
+
+
+### ###########################################
+### incunabula:sideband_comment
+
+:sideband_comment rdf:type owl:ObjectProperty ;
+
+                  rdfs:subPropertyOf knora-base:hasComment ;
+
+                  rdfs:label "Kommentar (Richtext)"@de ;
+
+                  rdfs:comment """Unstrukturierte Bemerkungen zu einem Objekt"""@de ;
+
+                  knora-base:subjectClassConstraint :Sideband ;
+
+                  knora-base:objectClassConstraint knora-base:TextValue ;
+
+                  salsah-gui:guiOrder "3"^^xsd:integer ;
+
+                  salsah-gui:guiElement salsah-gui:Richtext .
+
+
+### ###########################################
+### incunabula:miscHasColor
+
+:miscHasColor rdf:type owl:ObjectProperty ;
+
+                        rdfs:subPropertyOf knora-base:hasValue ;
+
+                        rdfs:label "Farbe"@de ;
+
+                        knora-base:subjectClassConstraint :misc ;
+
+                        knora-base:objectClassConstraint knora-base:ColorValue ;
+
+                        salsah-gui:guiOrder "1"^^xsd:integer ;
+
+                        salsah-gui:guiElement salsah-gui:Colorpicker .
+
+
+### ###########################################
+### incunabula:miscHasGeometry
+
+:miscHasGeometry rdf:type owl:ObjectProperty ;
+
+                           rdfs:subPropertyOf knora-base:hasValue ;
+
+                           rdfs:label "Geometrie"@de ;
+
+                           knora-base:subjectClassConstraint :misc ;
+
+                           knora-base:objectClassConstraint knora-base:GeomValue ;
+
+                           salsah-gui:guiOrder "2"^^xsd:integer ;
+
+                           salsah-gui:guiElement salsah-gui:Geometry .
+
+
+### ###########################################
+### incunabula:miscHasBook
+
+:miscHasBook rdf:type owl:ObjectProperty ;
+
+                           rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                           rdfs:label "Verbindung mit einem Buch"@de ;
+
+                           knora-base:subjectClassConstraint :misc ;
+
+                           knora-base:objectClassConstraint :book ;
+
+                           salsah-gui:guiOrder "3"^^xsd:integer ;
+
+                           salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+##########################################################
+#
+# RESOURCES
+#
+##########################################################
+
+
+### ###########################################
+### incunabula:book
+
+:book rdf:type owl:Class ;
+
+      rdfs:subClassOf knora-base:Resource ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :title ;
+                         owl:minCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasAuthor ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :publisher ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :publoc ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :pubdate ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :location ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :url ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :description ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :physical_desc ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :note ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :citation ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :book_comment ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ;
+
+      knora-base:resourceIcon "book.gif" ;
+
+      rdfs:label "Buch"@de ,
+                 "Livre"@fr ,
+                 "Libro"@it ,
+                 "Book"@en ;
+
+      rdfs:comment """Diese Resource-Klasse beschreibt ein Buch"""@de .
+
+
+### ###########################################
+### incunabula:page
+
+:page rdf:type owl:Class ;
+
+      rdfs:subClassOf knora-base:StillImageRepresentation ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :pagenum ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :partOfValue ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :partOf ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :seqnum ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :description ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :citation ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :page_comment ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :origname ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasLeftSidebandValue ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasLeftSideband ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasRightSidebandValue ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasRightSideband ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :transcription ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ;
+
+      knora-base:resourceIcon "page.gif" ;
+
+      rdfs:label "Seite"@de ,
+                 "Page"@fr ,
+                 "Page"@en ;
+
+      rdfs:comment """Eine Seite ist ein Teil eines Buchs"""@de ,
+                   """Une page est une partie d'un livre"""@fr ,
+                   """A page is a part of a book"""@en .
+
+
+### ###########################################
+### incunabula:Sideband
+
+:Sideband rdf:type owl:Class ;
+
+          rdfs:subClassOf knora-base:StillImageRepresentation ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :sbTitle ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger                          ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :description ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                          ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :sideband_comment ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger                          ] ;
+
+          rdfs:label "Randleiste"@de ;
+
+          rdfs:comment """Randleistentyp"""@de .
+
+
+### ###########################################
+### incunabula:misc
+
+:misc rdf:type owl:Class ;
+
+      rdfs:subClassOf knora-base:Resource,
+                      [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :miscHasColor ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :miscHasGeometry ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      ],
+                      [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :micsHasBook ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                      ] ;
+
+      rdfs:label "Sonstiges"@de ;
+
+      rdfs:comment "A fake resource class that only has optional properties"@en .

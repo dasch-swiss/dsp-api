@@ -1,0 +1,265 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix physical: <http://www.knora.org/ontology/physical-resource#>.
+@prefix text: <http://www.knora.org/ontology/text#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#>.
+@prefix event: <http://www.knora.org/ontology/event#>.
+
+<http://www.knora.org/ontology/event>
+	a owl:Ontology;
+	dct:title "An ontology about event"@en;
+	dct:description """Formal description of event, general subclasses such as action, related classes and properties."""@en;
+	skos:note """Basic model is a space-time thing, which can be described in different levels of abstraction, mostly with input and output, with a beginning and end, wherein a thing can change and/or act, in a certain way."""@en;
+	dct:creator "Hans Cools, software developer, NIE-INE, Basel University, Switzerland"@en;
+	dct:publisher "Basel University, Switzerland"@en.
+
+#
+# CLASSES
+#
+
+event:Event
+	a owl:Class;
+	rdfs:label "event"@en, "Ereignis"@de;
+	rdfs:comment """Occurrence as a space-time thing."""@en;
+	rdfs:subClassOf physical:Space, physical:Time, [
+		a owl:Restriction; owl:onProperty event:hasStartDate; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty event:hasEndDate; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty event:hasName; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+event:Existence
+	a owl:Class;
+	rdfs:label "existence"@en, "Existenz"@de;
+	rdfs:comment """Event of being."""@en;
+	rdfs:subClassOf event:Event.
+	
+event:Process
+	a owl:Class;
+	rdfs:label "process"@en, "Verfahren"@de;
+	rdfs:comment """Event implying change, with an input and an output, in one or more steps."""@en;
+	rdfs:subClassOf event:Event.
+
+event:Input
+	a owl:Class;
+	rdfs:label "input"@en, "Input"@de;
+	rdfs:comment """Precondition to a change in a process."""@en;
+	rdfs:subClassOf knora-base:Resource, [
+		a owl:Restriction; owl:onProperty event:event:isInputOf; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty event:event:isInputOfValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+event:Output
+	a owl:Class;
+	rdfs:label "output"@en, "Output"@de;
+	rdfs:comment """Consequence of a change in a process."""@en;
+	rdfs:subClassOf knora-base:Resource, [
+		a owl:Restriction; owl:onProperty event:isOutputOf; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty event:isOutputOfValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+event:Action
+	a owl:Class;
+	rdfs:label "action"@en, "Aktion"@de;
+	rdfs:comment """Process involving one or more agents causing change."""@en;
+	rdfs:subClassOf event:Process.
+
+event:Procedure
+	a owl:Class;
+	rdfs:label "procedure"@en, "Vorgehen"@de;
+	rdfs:comment """Action executed in one or more steps, in a certain manner obtaining a certain output under certain circumstances."""@en;
+	rdfs:subClassOf event:Action.
+
+event:State
+	a owl:Class;
+	rdfs:label "state"@en, "Zustand"@de;
+	rdfs:comment """Mode of being."""@en;
+	rdfs:subClassOf knora-base:Resource.
+
+event:Stage
+	a owl:Class;
+	rdfs:label "stage"@en, "Stufe"@de;
+	rdfs:comment """Extent of a process."""@en;
+	rdfs:subClassOf knora-base:Resource.
+
+event:Staging
+	a owl:Class;
+	rdfs:label "staging"@en, "Staging"@de;
+	rdfs:comment """Determining the extent of a process."""@en;
+	rdfs:subClassOf event:Action.
+
+event:Cause		# to do: relate to agent
+	a owl:Class;
+	rdfs:label "cause"@en, "Ursache"@de;
+	rdfs:comment """Source of entailment."""@en;
+	rdfs:subClassOf event:Input.
+
+event:Effect
+	a owl:Class;
+	rdfs:label "effect"@en, "Effekt"@de;
+	rdfs:comment """Output related to a cause."""@en;
+	rdfs:subClassOf event:Output.
+
+event:Intent
+	a owl:Class;
+	rdfs:label "intent"@en, "Absicht"@de;
+	rdfs:comment """Purpose of an action."""@en;
+	rdfs:subClassOf knora-base:Resource.
+
+event:Creating
+	a owl:Class;
+	rdfs:label "creating"@en, "Kreierung"@de;
+	rdfs:comment """Bringing into existence."""@en;
+	rdfs:subClassOf event:Action.
+
+event:Salon
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/event#>;
+	rdfs:label "salon"@en, "literarischer Salon"@de;
+	rdfs:comment """Sociocultural gathering under the roof of an inspiring host."""@en; #* Zusammentreffen
+	skos:note """Existed from the seventeenth century AD until 1950."""@en;
+	rdfs:subClassOf event:Action. #* to be specified
+
+#
+# PROPERTIES
+#
+
+event:hasStartDate
+	a owl:ObjectProperty;
+	rdfs:label "has start date"@en, "hat Anfangsdatum"@de;
+	rdfs:comment """Relating an event to its start date."""@en;
+	rdfs:subPropertyOf knora-base:hasValue;
+	knora-base:subjectClassConstraint event:Event;
+	knora-base:objectClassConstraint knora-base:DateValue;
+	salsah-gui:guiElement salsah-gui:Date.
+
+event:hasEndDate
+	a owl:ObjectProperty;
+	rdfs:label "has end date"@en, "hat Enddatum"@de;
+	rdfs:comment """Relating an event to its end date."""@en;
+	rdfs:subPropertyOf knora-base:hasValue;
+	knora-base:subjectClassConstraint event:Event;
+	knora-base:objectClassConstraint knora-base:DateValue;
+	salsah-gui:guiElement salsah-gui:Date.
+
+event:hasName
+	a owl:ObjectProperty;
+	rdfs:label "event has name"@en, "Ereignis hat Name"@de;
+	rdfs:comment """Relating an event to its name."""@en;
+	rdfs:domain event:Event;
+	rdfs:range rdfs:Literal;
+	rdfs:subPropertyOf text:hasName;
+	knora-base:subjectClassConstraint event:Event;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Date.
+
+event:hasEvent
+	a owl:ObjectProperty;
+	rdfs:label "has event"@en, "hat Ereignis"@de;
+	rdfs:comment """Relating someone or something - eg. an organisation, event, procedure - to an event."""@en;
+	rdfs:domain rdfs:Resource;
+	rdfs:range event:Event;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint event:Event.
+
+event:hasEventValue
+	a owl:ObjectProperty;
+	rdfs:label "has event - statement"@en, "hat Ereignis - Festlegung"@de;
+	rdfs:comment """Relating someone or something to a reification statement of the relation between that someone or something and an event."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+event:hasExistence
+	a owl:ObjectProperty;
+	rdfs:label "has existence"@en, "hat Existenz"@de;
+	rdfs:comment """Relating someone or something to her/his/its existence."""@en;
+	rdfs:subPropertyOf event:hasEvent;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint event:Existence.
+
+event:hasExistenceValue
+	a owl:ObjectProperty;
+	rdfs:label "has existence - statement"@en, "hat Existenz - Festlegung"@de;
+	rdfs:comment """Relating someone or something to a reification statement of the relation between that someone or something and her/his/its existence."""@en;
+	rdfs:subPropertyOf event:hasEventValue;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+event:hasState
+	a owl:ObjectProperty;
+	rdfs:label "has state"@en, "hat Zustand"@de;
+	rdfs:comment """Relating a resource to a state."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint event:State.
+
+event:hasStateValue
+	a owl:ObjectProperty;
+	rdfs:label "has state - statement"@en, "hat Zustand - Festlegung"@de;
+	rdfs:comment """Relating a resource to a reification statement of the relation between the resource and a state."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+event:isInputOf
+	a owl:ObjectProperty;
+	rdfs:label "is input of"@en, "ist Input von"@de;
+	rdfs:comment """Relating an input to a process."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint event:Input;
+	knora-base:objectClassConstraint event:Process.
+
+event:isInputOfValue
+	a owl:ObjectProperty;
+	rdfs:label "is input of - statement"@en, "ist Input von - Festlegung"@de;
+	rdfs:comment """Relating an input to a reification statement of the relation between the input and a process."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint event:Input;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+event:isOutputOf
+	a owl:ObjectProperty;
+	rdfs:label "is output of"@en, "ist Output von"@de;
+	rdfs:comment """Relating an output to a process."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint event:Output;
+	knora-base:objectClassConstraint event:Process.
+
+event:isOutputOfValue
+	a owl:ObjectProperty;
+	rdfs:label "is output of - statement"@en, "ist Output von - Festlegung"@de;
+	rdfs:comment """Relating an output to a reification statement of the relation between the output and a process."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint event:Output;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+event:hasStage
+	a owl:ObjectProperty;
+	rdfs:label "has stage"@en, "hat Stufe"@de;
+	rdfs:comment """Relating a process to a stage thereof."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint event:Process;
+	knora-base:objectClassConstraint event:Stage.
+
+event:hasStageValue
+	a owl:ObjectProperty;
+	rdfs:label "has stage - statement"@en, "hat Stufe - Festlegung"@de;
+	rdfs:comment """Relating a process to a reification statement of the relation between the process and a stage thereof."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint event:Process;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+event:hasGenesisDescription
+	a owl:ObjectProperty;
+	rdfs:label "has genesis description"@en, "hat Genesis-Beschreibung"@de;
+	rdfs:comment """Relating something to a description (as object) of the genesis thereof."""@en;
+	rdfs:subPropertyOf text:hasDescription;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.

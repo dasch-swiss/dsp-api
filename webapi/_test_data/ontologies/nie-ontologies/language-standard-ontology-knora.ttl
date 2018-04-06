@@ -1,0 +1,98 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix unicore: <http://purl.uniprot.org/core/>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix frbroo: <http://iflastandards.info/ns/fr/frbr/frbroo/>.
+@prefix event: <http://www.knora.org/ontology/event#>.
+@prefix agent: <http://www.knora.org/ontology/agent#>.
+@prefix human: <http://www.knora.org/ontology/human#>.
+@prefix language: <http://www.knora.org/ontology/language#>.
+@prefix concept: <http://www.knora.org/ontology/concept#>.
+@prefix text: <http://www.knora.org/ontology/text#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#>.
+@prefix langstan: <http://www.knora.org/ontology/language-standard#>.
+
+<http://www.knora.org/ontology/language-standard>
+	a owl:Ontology;
+	dct:title "An ontology about language standard"@en;
+	dct:description """Formal description of human natural language as standardized in ISO 639."""@en;
+	dct:creator "Hans Cools, MD, knowledge engineer, ontologist, software developer, NIE-INE, Basel University, Switzerland"@en;
+	dct:publisher "Basel University, Switzerland"@en.
+
+#
+# SKOS SCHEME AND DATATYPE INSTANCES
+#
+
+langstan:iso639Scheme
+	a skos:ConceptScheme;
+	rdfs:label "ISO 639"@en;
+	rdfs:comment """International standard for codes for the representation of names of languages."""@en;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/language-standard#>;
+	rdfs:seeAlso <https://www.iso.org/iso-639-language-codes.html>.
+
+langstan:iso639-1Scheme
+	a skos:ConceptScheme;
+	rdfs:label "ISO 639-1"@en;
+	rdfs:comment """ISO 639 part 1: alpha-2 (two-letter) codes."""@en;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/language-standard#>;
+	rdfs:subClassOf langstan:iso639;
+	dct:hasVersion "ISO 639-1:2002";
+	langstan:hasDataType langstan:iso639-1Datatype;
+	rdfs:seeAlso <http://www.infoterm.info/standardization/iso_639_1_2002.php>.
+
+langstan:iso639-1Datatype
+	a rdfs:Datatype;
+	rdfs:label "ISO 639-1 datatype"@en;
+	rdfs:comment """Datatype to type an ISO 639-1 alpha-2 code."""@en;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/language-standard#>.
+#	rdfs:subClassOf xsd:string. # cf. 
+
+langstan:iso639-2Scheme
+	a skos:ConceptScheme;
+	rdfs:label "ISO 639-2"@en;
+	rdfs:comment """ISO 639 part 2: alpha-3 (three-letter) codes."""@en;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/language-standard#>;
+	rdfs:subClassOf langstan:iso639;
+	dct:hasVersion "ISO 639-2:1998";
+	langstan:hasDataType langstan:iso639-2Datatype;
+	rdfs:seeAlso <http://www.loc.gov/standards/iso639-2/>.
+
+langstan:iso639-2Datatype
+	a rdfs:Datatype;
+	rdfs:label "ISO 639-2 datatype"@en;
+	rdfs:comment """Datatype to type an ISO 639-2 alpha-3 code."""@en;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/language-standard#>.
+#	rdfs:subClassOf xsd:string.
+
+langstan:iso639-3Scheme
+	a skos:ConceptScheme;
+	rdfs:label "ISO 639-3"@en;
+	rdfs:comment """ISO 639 part 3: alpha-3 (three-letter) codes for comprehensive coverage of languages."""@en;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/language-standard#>;
+	rdfs:subClassOf langstan:iso639;
+	dct:hasVersion "ISO 639-3:2007";
+	langstan:hasDataType langstan:iso639-3Datatype;
+	rdfs:seeAlso <http://www-01.sil.org/iso639-3/>.
+
+langstan:iso639-3Datatype
+	a rdfs:Datatype;
+	rdfs:label "ISO 639-3 datatype"@en;
+	rdfs:comment """Datatype to type an ISO 639-3 alpha-3 code."""@en;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/language-standard#>.
+#	rdfs:subClassOf xsd:string.
+
+#
+# INSTANCES
+#
+
+langstan:English
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/language-standard#>;
+	language:hasCode [skos:inScheme langstan:iso639-1Scheme; knora-base:valueHasString "en"^^langstan:iso639-1Datatype]; # a skos:Concept # skos:notation
+	language:hasCode [skos:inScheme langstan:iso639-2Scheme; knora-base:valueHasString "eng"^^langstan:iso639-2Datatype];
+	text:name """English"""@en.
