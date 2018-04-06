@@ -167,6 +167,7 @@ case class ProjectAdminMembersGetResponseV1(members: Seq[UserDataV1],
   * @param keywords           The project's keywords.
   * @param logo               The project's logo.
   * @param institution        The project's institution.
+  * @param ontologies         The project's ontologies.
   * @param status             The project's status.
   * @param selfjoin           The project's self-join status.
   */
@@ -178,6 +179,7 @@ case class ProjectInfoV1(id: IRI,
                          keywords: Option[String],
                          logo: Option[String],
                          institution: Option[IRI],
+                         ontologies: Seq[IRI],
                          status: Boolean,
                          selfjoin: Boolean)
 
@@ -197,7 +199,7 @@ trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
     // https://github.com/spray/spray-json#jsonformats-for-recursive-types
     implicit val projectAdminMembersGetRequestV1Format: RootJsonFormat[ProjectAdminMembersGetResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectAdminMembersGetResponseV1, "members", "userdata")))
     implicit val projectMembersGetRequestV1Format: RootJsonFormat[ProjectMembersGetResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectMembersGetResponseV1, "members", "userdata")))
-    implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat10(ProjectInfoV1)
+    implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat11(ProjectInfoV1)
     implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectsResponseV1, "projects")))
     implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(lazyFormat(jsonFormat(ProjectInfoResponseV1, "project_info")))
 }

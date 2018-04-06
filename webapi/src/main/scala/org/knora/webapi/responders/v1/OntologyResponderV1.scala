@@ -57,7 +57,7 @@ class OntologyResponderV1 extends Responder {
         case ResourceTypeGetRequestV1(resourceTypeIri, userProfile) => future2Message(sender(), getResourceTypeResponseV1(resourceTypeIri, userProfile), log)
         case checkSubClassRequest: CheckSubClassRequestV1 => future2Message(sender(), checkSubClass(checkSubClassRequest), log)
         case subClassesGetRequest: SubClassesGetRequestV1 => future2Message(sender(), getSubClasses(subClassesGetRequest), log)
-        case NamedGraphsGetRequestV1(userProfile) => future2Message(sender(), getNamedGraphs(userProfile), log)
+        case NamedGraphsGetRequestV1(projectIris, userProfile) => future2Message(sender(), getNamedGraphs(projectIris, userProfile), log)
         case ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getResourceTypesForNamedGraph(namedGraphIri, userProfile), log)
         case PropertyTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getPropertyTypesForNamedGraph(namedGraphIri, userProfile), log)
         case PropertyTypesForResourceTypeGetRequestV1(restypeId, userProfile) => future2Message(sender(), getPropertyTypesForResourceType(restypeId, userProfile), log)
@@ -78,7 +78,7 @@ class OntologyResponderV1 extends Responder {
 
         for {
             // forward the request to the v2 ontologies responder
-            successResponse: SuccessResponseV2 <- (responderManager ? LoadOntologiesRequestV2(userProfile)).mapTo[SuccessResponseV2]
+            _: SuccessResponseV2 <- (responderManager ? LoadOntologiesRequestV2(userProfile)).mapTo[SuccessResponseV2]
 
         } yield LoadOntologiesResponse()
     }
@@ -274,11 +274,11 @@ class OntologyResponderV1 extends Responder {
       * @param userProfile the profile of the user making the request.
       * @return a [[NamedGraphsResponseV1]].
       */
-    private def getNamedGraphs(userProfile: UserADM): Future[NamedGraphsResponseV1] = {
+    private def getNamedGraphs(projectIris: Set[IRI] = Set.empty[IRI], userProfile: UserADM): Future[NamedGraphsResponseV1] = {
 
         for {
             projectsResponse <- (responderManager ? ProjectsGetRequestADM(userProfile)).mapTo[ProjectsGetResponseADM]
-            readOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetRequestV2(requestingUser = userProfile)).mapTo[ReadOntologyMetadataV2]
+            readOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetRequestV2(projectIris = projectIris.map(_.toSmartIri), requestingUser = userProfile)).mapTo[ReadOntologyMetadataV2]
 
             projectsMap: Map[IRI, ProjectADM] = projectsResponse.projects.map {
                 project => project.id -> project
@@ -387,7 +387,7 @@ class OntologyResponderV1 extends Responder {
 
             case None => // map over all named graphs and collect the resource types
                 for {
-                    projectNamedGraphsResponse: NamedGraphsResponseV1 <- getNamedGraphs(userProfile)
+                    projectNamedGraphsResponse: NamedGraphsResponseV1 <- getNamedGraphs(userProfile = userProfile)
                     projectNamedGraphIris: Seq[IRI] = projectNamedGraphsResponse.vocabularies.map(_.uri)
                     resourceTypesPerProject: Seq[Future[Seq[ResourceTypeV1]]] = projectNamedGraphIris.map(iri => getResourceTypes(iri))
                     resourceTypes: Seq[Seq[ResourceTypeV1]] <- Future.sequence(resourceTypesPerProject)
@@ -460,7 +460,7 @@ class OntologyResponderV1 extends Responder {
             case None => // get the property types for all named graphs (collect them by mapping over all named graphs)
 
                 for {
-                    projectNamedGraphsResponse: NamedGraphsResponseV1 <- getNamedGraphs(userProfile)
+                    projectNamedGraphsResponse: NamedGraphsResponseV1 <- getNamedGraphs(userProfile = userProfile)
                     projectNamedGraphIris: Seq[IRI] = projectNamedGraphsResponse.vocabularies.map(_.uri)
                     propertyTypesPerProject: Seq[Future[Seq[PropertyDefinitionInNamedGraphV1]]] = projectNamedGraphIris.map(iri => getPropertiesForNamedGraph(iri, userProfile))
                     propertyTypes: Seq[Seq[PropertyDefinitionInNamedGraphV1]] <- Future.sequence(propertyTypesPerProject)

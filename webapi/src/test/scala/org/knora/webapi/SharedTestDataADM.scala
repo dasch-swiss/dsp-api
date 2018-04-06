@@ -156,14 +156,15 @@ object SharedTestDataADM {
         description = Seq(StringLiteralV2(value = "Knora System Project", language = Some("en"))),
         keywords = Seq.empty[String],
         logo = None,
+        ontologies = Seq(OntologyConstants.KnoraBase.KnoraBaseOntologyIri, OntologyConstants.SalsahGui.SalsahGuiOntologyIri, OntologyConstants.Standoff.StandoffOntologyIri),
         status = true,
         selfjoin = false
     )
 
 
-    /*************************************/
+    /** ***********************************/
     /** Images Demo Project Admin Data  **/
-    /*************************************/
+    /** ***********************************/
 
     val IMAGES_PROJECT_IRI = "http://rdfh.ch/projects/00FF"
 
@@ -253,6 +254,7 @@ object SharedTestDataADM {
         description = Seq(StringLiteralV2(value = "A demo project of a collection of images", language = Some("en"))),
         keywords = Seq("images", "collection").sorted,
         logo = None,
+        ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI),
         status = true,
         selfjoin = false
     )
@@ -288,9 +290,9 @@ object SharedTestDataADM {
     )
 
 
-    /*************************************/
+    /** ***********************************/
     /** Incunabula Project Admin Data   **/
-    /*************************************/
+    /** ***********************************/
 
     val INCUNABULA_PROJECT_IRI = "http://rdfh.ch/projects/77275339"
 
@@ -348,7 +350,7 @@ object SharedTestDataADM {
     /* represents 'root-alt' (Incunabula Creator and ProjectMember) as found in admin-data.ttl  */
     def incunabulaMemberUser = UserADM(
         id = "http://rdfh.ch/users/incunabulaMemberUser",
-        email = "user.test2t@test.ch",
+        email = "test.user2@test.ch",
         password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
         token = None,
         givenName = "User",
@@ -379,13 +381,14 @@ object SharedTestDataADM {
         description = Seq(StringLiteralV2(value = "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>", language = None)),
         keywords = Seq("Basler Frühdrucke", "Inkunabel", "Narrenschiff", "Wiegendrucke", "Sebastian Brant", "Bilderfolgen", "early print", "incunabula", "ship of fools", "Kunsthistorisches Seminar Universität Basel", "Late Middle Ages", "Letterpress Printing", "Basel", "Contectualisation of images").sorted,
         logo = Some("incunabula_logo.png"),
+        ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI),
         status = true,
         selfjoin = false
     )
 
-    /************************************/
+    /** **********************************/
     /** Anything Admin Data            **/
-    /************************************/
+    /** **********************************/
 
     val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/anything"
 
@@ -471,14 +474,15 @@ object SharedTestDataADM {
         description = Seq(StringLiteralV2(value = "Anything Project", language = None)),
         keywords = Seq.empty[String],
         logo = None,
+        ontologies = Seq("http://www.knora.org/ontology/anything", "http://www.knora.org/ontology/something"),
         status = true,
         selfjoin = false
     )
 
 
-    /************************************/
+    /** **********************************/
     /** BEOL                           **/
-    /************************************/
+    /** **********************************/
 
     val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
 
@@ -490,14 +494,15 @@ object SharedTestDataADM {
         description = Seq(StringLiteralV2(value = "Bernoulli-Euler Online", language = None)),
         keywords = Seq.empty[String],
         logo = None,
+        ontologies = Seq("http://www.knora.org/ontology/0801/beol"),
         status = true,
         selfjoin = false
     )
 
 
-    /************************************/
+    /** **********************************/
     /** BIBLIO                         **/
-    /************************************/
+    /** **********************************/
 
     val BIBLIO_PROJECT_IRI = "http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ"
 
@@ -509,6 +514,7 @@ object SharedTestDataADM {
         description = Seq(StringLiteralV2(value = "Bibliography", language = None)),
         keywords = Seq.empty[String],
         logo = None,
+        ontologies = Seq("http://www.knora.org/ontology/biblio"),
         status = true,
         selfjoin = false
     )
@@ -529,9 +535,9 @@ object SharedTestDataADM {
         permissions = PermissionsDataADM()
     )
 
-    /************************************/
+    /** **********************************/
     /** DOKUBIB                        **/
-    /************************************/
+    /** **********************************/
 
     val DOKUBIB_PROJECT_IRI = "http://rdfh.ch/projects/00FE"
 
@@ -543,6 +549,7 @@ object SharedTestDataADM {
         description = Seq(StringLiteralV2(value = "Dokubib", language = None)),
         keywords = Seq.empty[String],
         logo = None,
+        ontologies = Seq("http://www.knora.org/ontology/00FE/dokubib"),
         status = false,
         selfjoin = false
     )

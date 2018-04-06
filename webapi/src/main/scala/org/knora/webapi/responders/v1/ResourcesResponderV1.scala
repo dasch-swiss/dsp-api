@@ -1755,8 +1755,6 @@ class ResourcesResponderV1 extends Responder {
                                namedGraph: IRI,
                                userProfile: UserADM,
                                apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
-        val userProfileV1 = userProfile.asUserProfileV1
-
         for {
             // Get ontology information about the resource class and its properties.
 
@@ -1956,24 +1954,19 @@ class ResourcesResponderV1 extends Responder {
                     throw ForbiddenException(s"User $userIri does not have permission to mark resource ${resourceDeleteRequest.resourceIri} as deleted")
                 }
 
-                maybeProjectInfo <- {
-                    responderManager ? ProjectInfoByIRIGetV1(
+                projectInfoResponse <- {
+                    responderManager ? ProjectInfoByIRIGetRequestV1(
                         resourceInfo.project_id,
                         None
                     )
-                }.mapTo[Option[ProjectInfoV1]]
-
-                projectInfo = maybeProjectInfo match {
-                    case Some(pi) => pi
-                    case None => throw NotFoundException(s"Project '${resourceInfo.project_id}' not found.")
-                }
+                }.mapTo[ProjectInfoResponseV1]
 
                 // Make a timestamp to indicate when the resource was marked as deleted.
                 currentTime: String = Instant.now.toString
 
                 // Create update sparql string
                 sparqlUpdate = queries.sparql.v1.txt.deleteResource(
-                    dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo),
+                    dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfoResponse.project_info),
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceDeleteRequest.resourceIri,
                     maybeDeleteComment = resourceDeleteRequest.deleteComment,
@@ -2067,20 +2060,15 @@ class ResourcesResponderV1 extends Responder {
                     throw ForbiddenException(s"User $userIri does not have permission to change the label of resource $resourceIri")
                 }
 
-                maybeProjectInfo <- {
-                    responderManager ? ProjectInfoByIRIGetV1(
+                projectInfoResponse <- {
+                    responderManager ? ProjectInfoByIRIGetRequestV1(
                         resourceInfo.project_id,
                         None
                     )
-                }.mapTo[Option[ProjectInfoV1]]
-
-                projectInfo = maybeProjectInfo match {
-                    case Some(pi) => pi
-                    case None => throw NotFoundException(s"Project '${resourceInfo.project_id}' not found.")
-                }
+                }.mapTo[ProjectInfoResponseV1]
 
                 // get the named graph the resource is contained in by the resource's project
-                namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo)
+                namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfoResponse.project_info)
 
                 // Make a timestamp to indicate when the resource was updated.
                 currentTime: String = Instant.now.toString

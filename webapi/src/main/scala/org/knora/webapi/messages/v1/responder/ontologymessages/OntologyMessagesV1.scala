@@ -163,19 +163,19 @@ case class CheckSubClassRequestV1(subClassIri: IRI, superClassIri: IRI, userProf
 case class CheckSubClassResponseV1(isSubClass: Boolean)
 
 /**
-  * Requests all existing named graphs.
-  * This corresponds to the concept of vocabularies in the SALSAH prototype.
+  * Requests information about named graphs containing ontologies. This corresponds to the concept of vocabularies in
+  * the SALSAH prototype.
   *
+  * @param projectIris    the IRIs of the projects for which named graphs should be returned. If this set is empty, information
+  *                       about all ontology named graphs is returned.
   * @param userProfile the profile of the user making the request.
-  *
   */
-case class NamedGraphsGetRequestV1(userProfile: UserADM) extends OntologyResponderRequestV1
+case class NamedGraphsGetRequestV1(projectIris: Set[IRI] = Set.empty[IRI], userProfile: UserADM) extends OntologyResponderRequestV1
 
 /**
   * Represents the Knora API V1 response to a [[NamedGraphsGetRequestV1]].
-  * It contains all the existing named graphs.
   *
-  * @param vocabularies all the existing named graphs.
+  * @param vocabularies information about named graphs containing ontologies.
   */
 case class NamedGraphsResponseV1(vocabularies: Seq[NamedGraphV1]) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.namedGraphsResponseV1Format.write(this)

@@ -54,8 +54,8 @@ class SearchAndEditSpec extends SalsahSpec {
             ]
         """
 
-    private val incunabulaUserEmail = "root@example.com"
-    private val incunabulaUserFullName = "System Administrator"
+    private val userEmail = "root@example.com"
+    private val userFullName = "System Administrator"
     private val testPassword = "test"
 
     // In order to run these tests, start `webapi` using the option `allowReloadOverHTTP`
@@ -93,7 +93,7 @@ class SearchAndEditSpec extends SalsahSpec {
         "log in as an Incunabula project user" in {
 
             page.open()
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
             page.doLogout()
 
         }
@@ -102,7 +102,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.open()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
 
             doZeitgloeckleinSearch()
 
@@ -111,7 +111,7 @@ class SearchAndEditSpec extends SalsahSpec {
             // open the second row representing a page
             rows(1).click()
 
-            val window = page.getWindow(1)
+            val window = page.getWindowByClass(Seq("win", "imageBase"))
 
 
             // drag and drop the window
@@ -125,7 +125,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.open()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
 
             doZeitgloeckleinSearch()
 
@@ -134,7 +134,7 @@ class SearchAndEditSpec extends SalsahSpec {
             // open the first search result representing a book
             rows.head.click()
 
-            val window = page.getWindow(1)
+            val window = page.getWindowByClass(Seq("win", "imageBase"))
 
 
             page.dragWindow(window, 90, 10)
@@ -155,7 +155,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.open()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
 
             page.clickExtendedSearchButton()
 
@@ -184,7 +184,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.open()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
 
             page.clickExtendedSearchButton()
 
@@ -198,7 +198,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             rows(1).click()
 
-            val window = page.getWindow(1)
+            val window = page.getWindowByClass(Seq("win", "imageBase"))
 
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)
@@ -211,7 +211,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.open()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
 
             page.clickExtendedSearchButton()
 
@@ -247,7 +247,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.open()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
 
             page.clickExtendedSearchButton()
 
@@ -289,7 +289,7 @@ class SearchAndEditSpec extends SalsahSpec {
         "do an extended search for a book with the exact publication date Julian 1497-08-01" in {
             page.open()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
 
             page.clickExtendedSearchButton()
 
@@ -334,7 +334,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.open()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
 
             page.clickExtendedSearchButton()
 
@@ -404,7 +404,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.open()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
 
             page.clickExtendedSearchButton()
 
@@ -419,7 +419,7 @@ class SearchAndEditSpec extends SalsahSpec {
             // open page of a book
             rows.head.click()
 
-            val window = page.getWindow(1)
+            val window = page.getWindowByClass(Seq("win", "imageBase"))
 
 
             // get metadata section
@@ -474,7 +474,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.open()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
 
             doZeitgloeckleinSearch()
 
@@ -483,7 +483,7 @@ class SearchAndEditSpec extends SalsahSpec {
             // open page of a book
             rows(1).click()
 
-            val window = page.getWindow(1)
+            val window = page.getWindowByClass(Seq("win", "imageBase"))
 
 
             // get metadata section
@@ -546,7 +546,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.open()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
 
             doZeitgloeckleinSearch()
 
@@ -555,7 +555,7 @@ class SearchAndEditSpec extends SalsahSpec {
             // open a book
             rows.head.click()
 
-            val window = page.getWindow(1)
+            val window = page.getWindowByClass(Seq("win", "imageBase"))
 
 
             // get metadata section
@@ -594,7 +594,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.open()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
 
             doZeitgloeckleinSearch()
 
@@ -603,7 +603,7 @@ class SearchAndEditSpec extends SalsahSpec {
             // open a page
             rows(1).click()
 
-            val window = page.getWindow(1)
+            val window = page.getWindowByClass(Seq("win", "imageBase"))
 
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)
@@ -633,7 +633,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.open()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
 
             doZeitgloeckleinSearch()
 
@@ -642,12 +642,16 @@ class SearchAndEditSpec extends SalsahSpec {
             // open a page
             rows(1).click()
 
-            val window = page.getWindow(1)
+            val window = page.getWindowByClass(Seq("win", "imageBase"))
 
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)
 
             Thread.sleep(500) // I don't know why, but sometimes the test fails without this.
+
+            // Drag the separator to the left a bit, otherwise the edit button for the partOf field is behind
+            // the scroll bar and can't be clicked.
+            page.dragSeparator(-10)
 
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
@@ -678,7 +682,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.open()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
 
             page.clickExtendedSearchButton()
 
@@ -690,9 +694,9 @@ class SearchAndEditSpec extends SalsahSpec {
 
             val rows = page.getExtendedSearchResultRows
 
-            rows(4).click()
+            rows(3).click()
 
-            val window = page.getWindow(1)
+            val window = page.getWindowByClass(Seq("win", "imageBase"))
 
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)
@@ -726,7 +730,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.open()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
 
             page.clickExtendedSearchButton()
 
@@ -738,10 +742,9 @@ class SearchAndEditSpec extends SalsahSpec {
 
             val rows = page.getExtendedSearchResultRows
 
-            rows(4).click()
+            rows(1).click()
 
-            val window = page.getWindow(1)
-
+            val window = page.getWindowByClass(Seq("win", "imageBase"))
 
             // get metadata section
             val metadataSection: WebElement = page.getMetadataSection(window)
@@ -775,7 +778,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             page.open()
 
-            page.doLogin(email = incunabulaUserEmail, password = testPassword, fullName = incunabulaUserFullName)
+            page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
 
             val searchField: WebElement = page.getSimpleSearchField
 
@@ -795,7 +798,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
             rows.head.click()
 
-            val window = page.getWindow(1)
+            val window = page.getWindowByClass(Seq("win", "imageBase"))
 
             val metadataSection: WebElement = page.getMetadataSection(window)
 

@@ -29,9 +29,12 @@ import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserInformationTypeADM}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.{OntologyMetadataGetRequestV2, OntologyMetadataV2, ReadOntologyMetadataV2}
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{KnoraIdUtil, StringFormatter}
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 import scala.concurrent.Future
 
@@ -85,26 +88,43 @@ class ProjectsResponderADM extends Responder {
             projectsResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
             // _ = log.debug(s"projectsGetADM - projectsResponse: $projectsResponse")
 
-            statements = projectsResponse.statements.toList
+            statements: List[(SubjectV2, Map[IRI, Seq[LiteralV2]])] = projectsResponse.statements.toList
             // _ = log.debug(s"projectsGetADM - statements: $statements")
 
-            projects: Seq[ProjectADM] = statements.map {
-                case (projectIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+            projectIris = statements.map {
+                case (projectIri: SubjectV2, _) => projectIri.toString
+            }.toSet
 
-                    ProjectADM(
-                        id = projectIri.toString,
-                        shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head.asInstanceOf[StringLiteralV2].value,
-                        shortcode = propsMap.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head.asInstanceOf[StringLiteralV2].value),
-                        longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head.asInstanceOf[StringLiteralV2].value),
-                        description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
-                        keywords = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectKeyword, Seq.empty[String]).map(_.asInstanceOf[StringLiteralV2].value).sorted,
-                        logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head.asInstanceOf[StringLiteralV2].value),
-                        status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.asInstanceOf[BooleanLiteralV2].value,
-                        selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).head.asInstanceOf[BooleanLiteralV2].value
-                    )
+            ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(projectIris, requestingUser)
+
+            projects: Seq[ProjectADM] = statements.map {
+                case (projectIriSubject: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+                    val projectOntologies = ontologiesForProjects.getOrElse(projectIriSubject.toString, Seq.empty[IRI])
+                    statements2ProjectADM(statements = (projectIriSubject, propsMap), ontologies = projectOntologies, requestingUser = requestingUser)
             }
 
         } yield projects.sorted
+    }
+
+    /**
+      * Given a set of project IRIs, gets the ontologies that belong to each project.
+      *
+      * @param projectIris    a set of project IRIs. If empty, returns the ontologies for all projects.
+      * @param requestingUser the requesting user.
+      * @return a map of project IRIs to sequences of ontology IRIs.
+      */
+    private def getOntologiesForProjects(projectIris: Set[IRI], requestingUser: UserADM): Future[Map[IRI, Seq[IRI]]] = {
+        for {
+            ontologyMetadataResponse: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetRequestV2(projectIris = projectIris.map(_.toSmartIri), requestingUser = requestingUser)).mapTo[ReadOntologyMetadataV2]
+        } yield ontologyMetadataResponse.ontologies.map {
+            ontology =>
+                val ontologyIri: IRI = ontology.ontologyIri.toString
+                val projectIri: IRI = ontology.projectIri.getOrElse(throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri has no project")).toString
+                projectIri -> ontologyIri
+        }.groupBy(_._1).map {
+            case (projectIri, projectIriAndOntologies: Set[(IRI, IRI)]) =>
+                projectIri -> projectIriAndOntologies.map(_._2).toSeq
+        }
     }
 
     /**
@@ -156,10 +176,20 @@ class ProjectsResponderADM extends Responder {
                 maybeShortname = maybeShortname,
                 maybeShortcode = maybeShortcode
             ).toString())
+
             projectResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
 
+            projectIris = projectResponse.statements.keySet.map(_.toString)
+
+            ontologies <- if (projectResponse.statements.nonEmpty) {
+                getOntologiesForProjects(projectIris, requestingUser)
+            } else {
+                FastFuture.successful(Map.empty[IRI, Seq[IRI]])
+            }
+
             projectADM = if (projectResponse.statements.nonEmpty) {
-                Some(statements2ProjectADM(statements = projectResponse.statements.head, requestingUser))
+                val projectOntologies = ontologies.getOrElse(projectIris.head, Seq.empty[IRI])
+                Some(statements2ProjectADM(statements = projectResponse.statements.head, ontologies = projectOntologies, requestingUser = requestingUser))
             } else {
                 None
             }
@@ -402,7 +432,6 @@ class ProjectsResponderADM extends Responder {
 
             createProjectResponse <- (storeManager ? SparqlUpdateRequest(createNewProjectSparqlString)).mapTo[SparqlUpdateResponse]
 
-
             // Verify that the project was created.
             sparqlQuery = queries.sparql.admin.txt.getProjects(
                 triplestore = settings.triplestoreType,
@@ -410,14 +439,23 @@ class ProjectsResponderADM extends Responder {
                 maybeShortcode = None,
                 maybeShortname = None
             ).toString
+
             projectResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
 
+            projectIris = projectResponse.statements.keySet.map(_.toString)
+
+            ontologies <- if (projectResponse.statements.nonEmpty) {
+                getOntologiesForProjects(projectIris, requestingUser)
+            } else {
+                FastFuture.successful(Map.empty[IRI, Seq[IRI]])
+            }
+
             projectADM = if (projectResponse.statements.nonEmpty) {
-                statements2ProjectADM(statements = projectResponse.statements.head, requestingUser)
+                val projectOntologies = ontologies.getOrElse(projectIris.head, Seq.empty[IRI])
+                statements2ProjectADM(statements = projectResponse.statements.head, ontologies = projectOntologies, requestingUser = requestingUser)
             } else {
                 throw UpdateNotPerformedException(s"Project $newProjectIRI was not created. Please report this as a possible bug.")
             }
-
         } yield ProjectOperationResponseADM(project = projectADM)
 
         for {
@@ -584,10 +622,11 @@ class ProjectsResponderADM extends Responder {
       * Helper method that turns SPARQL result rows into a [[ProjectInfoV1]].
       *
       * @param statements results from the SPARQL query representing information about the project.
+      * @param ontologies the ontologies in the project.
       * @param requestingUser     the user making the request.
       * @return a [[ProjectADM]] representing information about project.
       */
-    private def statements2ProjectADM(statements: (SubjectV2, Map[IRI, Seq[LiteralV2]]), requestingUser: UserADM): ProjectADM = {
+    private def statements2ProjectADM(statements: (SubjectV2, Map[IRI, Seq[LiteralV2]]), ontologies: Seq[IRI], requestingUser: UserADM): ProjectADM = {
 
         // log.debug("statements2ProjectADM - statements: {}", statements)
 
@@ -602,6 +641,7 @@ class ProjectsResponderADM extends Responder {
             description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
             keywords = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectKeyword, Seq.empty[String]).map(_.asInstanceOf[StringLiteralV2].value).sorted,
             logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head.asInstanceOf[StringLiteralV2].value),
+            ontologies = ontologies,
             status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.asInstanceOf[BooleanLiteralV2].value,
             selfjoin = propsMap.getOrElse(OntologyConstants.KnoraBase.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).head.asInstanceOf[BooleanLiteralV2].value
         )

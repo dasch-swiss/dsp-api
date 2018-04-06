@@ -975,16 +975,6 @@ class OntologyResponderV2 extends Responder {
             cacheData <- getCacheData
             returnAllOntologies: Boolean = projectIris.isEmpty
 
-            projectFutures: Vector[Future[ProjectGetResponseADM]] = projectIris.toVector.map {
-                projectIri =>
-                    (responderManager ? ProjectGetRequestADM(
-                        maybeIri = Some(projectIri.toString),
-                        requestingUser = requestingUser
-                    )).mapTo[ProjectGetResponseADM]
-            }
-
-            _: Seq[ProjectGetResponseADM] <- Future.sequence(projectFutures)
-
             ontologyMetadata: Set[OntologyMetadataV2] = if (returnAllOntologies) {
                 cacheData.ontologies.values.map(_.ontologyMetadata).toSet
             } else {

@@ -161,12 +161,13 @@ class UsersResponderADM extends Responder {
             throw BadRequestException("Need to provide the user IRI and/or email.")
         }
 
-        val user = userFromCache match {
+        val maybeUserADM: Future[Option[UserADM]] = userFromCache match {
             case Some(user) =>
                 // found a user profile in the cache
                 log.debug("userGetADM - cache hit for: {}", List(maybeUserIri, maybeUserEmail).flatten.head)
                 FastFuture.successful(Some(user.ofType(userInformationType)))
-            case None => {
+
+            case None =>
                 // didn't find a user profile in the cache
                 log.debug("userGetADM - no cache hit for: {}", List(maybeUserIri, maybeUserEmail).flatten.head)
                 for {
@@ -191,11 +192,10 @@ class UsersResponderADM extends Responder {
                     result = maybeUserADM.map(_.ofType(userInformationType))
 
                 } yield result
-            }
         }
 
         // _ = log.debug("userGetADM - user: {}", MessageUtil.toSource(user))
-        user
+        maybeUserADM
     }
 
     /**

@@ -483,7 +483,8 @@ object OntologyConstants {
 
     object Standoff {
         val StandoffOntologyLabel: String = "standoff"
-        val StandoffPrefixExpansion: IRI = KnoraInternal.InternalOntologyStart + StandoffOntologyLabel + "#"
+        val StandoffOntologyIri: IRI = KnoraInternal.InternalOntologyStart + StandoffOntologyLabel
+        val StandoffPrefixExpansion: IRI = StandoffOntologyIri + "#"
 
         val StandoffRootTag: IRI = StandoffPrefixExpansion + "StandoffRootTag"
         val StandoffParagraphTag: IRI = StandoffPrefixExpansion + "StandoffParagraphTag"

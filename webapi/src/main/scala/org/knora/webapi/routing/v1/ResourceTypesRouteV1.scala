@@ -122,7 +122,7 @@ object ResourceTypesRouteV1 extends Authenticator {
             get {
                 requestContext =>
                     val userProfile = getUserADM(requestContext)
-                    val requestMessage = NamedGraphsGetRequestV1(userProfile)
+                    val requestMessage = NamedGraphsGetRequestV1(userProfile = userProfile)
 
                     RouteUtilV1.runJsonRoute(
                         requestMessage,
