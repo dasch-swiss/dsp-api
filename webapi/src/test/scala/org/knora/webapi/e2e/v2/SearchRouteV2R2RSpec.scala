@@ -1515,7 +1515,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkCountQuery(responseAs[String], 11)
+                checkCountQuery(responseAs[String], 12)
 
             }
 
@@ -1776,7 +1776,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountQuery(responseAs[String], 1)
+                checkCountQuery(responseAs[String], 2)
 
             }
 
