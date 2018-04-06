@@ -21,8 +21,8 @@ package org.knora.webapi
 
 import java.io.InputStream
 import java.security.{KeyStore, SecureRandom}
-import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
 
+import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
 import akka.actor.{ActorSystem, _}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
@@ -42,7 +42,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{Initialized, Initial
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders._
-import org.knora.webapi.routing.RejectingRoute
+import org.knora.webapi.routing.{RejectingRoute, SwaggerDocsRoute}
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
@@ -147,8 +147,9 @@ trait KnoraService {
             PermissionsRouteADM.knoraApiPath(system, settings, log) ~
             ProjectsRouteADM.knoraApiPath(system, settings, log) ~
             StoreRouteADM.knoraApiPath(system, settings, log) ~
-            UsersRouteADM.knoraApiPath(system, settings, log),
-        settings,
+            new UsersRouteADM(system, settings, log).knoraApiPath ~
+            new SwaggerDocsRoute(system, settings, log).knoraApiPath
+        , settings,
         log
     )
 
@@ -179,13 +180,27 @@ trait KnoraService {
         // needed for startup flags and the future map/flatmap in the end
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
-        CacheUtil.createCaches(settings.caches)
+        if (settings.printConfig) {
+            println("")
+            println("================================================================")
+            println("Server Configuration:")
 
-        // which repository are we using
-        println(s"DB Server: ${settings.triplestoreHost}, DB Port: ${settings.triplestorePort}")
-        println(s"Repository: ${settings.triplestoreDatabaseName}")
-        println(s"DB User: ${settings.triplestoreUsername}")
-        println(s"DB Password: ${settings.triplestorePassword}")
+            // which repository are we using
+            println(s"DB Server: ${settings.triplestoreHost}, DB Port: ${settings.triplestorePort}")
+            println(s"Repository: ${settings.triplestoreDatabaseName}")
+            println(s"DB User: ${settings.triplestoreUsername}")
+            println(s"DB Password: ${settings.triplestorePassword}")
+
+            println(s"Swagger Json: ${settings.externalKnoraApiBaseUrl}/api-docs/swagger.json")
+            println(s"Webapi internal URL: ${settings.internalKnoraApiBaseUrl}")
+            println(s"Webapi external URL: ${settings.externalKnoraApiBaseUrl}")
+            println(s"Sipi internal URL: ${settings.internalSipiBaseUrl}")
+            println(s"Sipi external URL: ${settings.externalSipiBaseUrl}")
+            println("================================================================")
+            println("")
+        }
+
+        CacheUtil.createCaches(settings.caches)
 
         // get loadDemoData value from application state actor
         val loadDemoData = Await.result(applicationStateActor ? GetLoadDemoDataState(), 1.second).asInstanceOf[Boolean]
@@ -233,6 +248,11 @@ trait KnoraService {
 
         Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
         println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}.")
+
+
+
+
+
     }
 
     /**

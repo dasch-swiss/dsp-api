@@ -26,6 +26,8 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
+import io.swagger.annotations._
+import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
@@ -33,6 +35,12 @@ import org.knora.webapi.{BadRequestException, SettingsImpl}
 
 import scala.concurrent.ExecutionContextExecutor
 
+/**
+  * Provides a spray-routing function for API routes that deal with groups.
+  */
+
+@Api(value = "/admin/groups", produces = "application/json")
+@Path("/admin/groups")
 object GroupsRouteADM extends Authenticator with GroupsADMJsonProtocol {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {

@@ -27,6 +27,8 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
+import io.swagger.annotations.Api
+import javax.ws.rs.Path
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
@@ -35,6 +37,9 @@ import org.knora.webapi.{BadRequestException, SettingsImpl}
 
 import scala.concurrent.ExecutionContextExecutor
 
+
+@Api(value = "/admin/projects", produces = "application/json")
+@Path("/admin/projects")
 object ProjectsRouteADM extends Authenticator with ProjectsADMJsonProtocol {
 
     private val schemes = Array("http", "https")
