@@ -36,17 +36,26 @@ sealed trait StandoffResponderRequestV2 extends KnoraRequestV2
   * Represents a request to create a mapping between XML elements and attributes and standoff classes and properties.
   * A successful response will be a [[CreateMappingResponseV2]].
   *
-  * @param xml         the mapping in XML.
+  * @param metadata the metadata describing the mapping.
+  * @param xml the mapping in XML syntax.
+  * @param userProfile the profile of the user making the request.
+  * @param apiRequestID the ID of the API request.
+  */
+case class CreateMappingRequestV2(metadata: CreateMappingRequestMetadataV2, xml: CreateMappingRequestXMLV2, userProfile: UserProfileV1, apiRequestID: UUID) extends StandoffResponderRequestV2
+
+/**
+  * Represents the metadata describing the mapping that is to be created.
+  *
+  * @param label the label describing the mapping.
   * @param projectIri  the IRI of the project the mapping belongs to.
   * @param mappingName the name of the mapping to be created.
-  * @param userProfile the profile of the user making the request.
   */
-case class CreateMappingRequestV2(xml: String, label: String, projectIri: SmartIri, mappingName: String, userProfile: UserProfileV1, apiRequestID: UUID) extends StandoffResponderRequestV2
+case class CreateMappingRequestMetadataV2(label: String, projectIri: SmartIri, mappingName: String) extends StandoffResponderRequestV2
 
-object CreateMappingRequestV2 extends KnoraJsonLDRequestReaderV2[CreateMappingRequestV2] {
+object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateMappingRequestMetadataV2] {
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
-                            userProfile: UserProfileV1): CreateMappingRequestV2 = {
+                            userProfile: UserProfileV1): CreateMappingRequestMetadataV2 = {
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -56,18 +65,20 @@ object CreateMappingRequestV2 extends KnoraJsonLDRequestReaderV2[CreateMappingRe
 
         val mappingName: String = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.MappingHasName, stringFormatter.toSparqlEncodedString)
 
-        CreateMappingRequestV2(
-            xml = "", // TODO: get xml from multipart request
+        CreateMappingRequestMetadataV2(
             label = label,
             projectIri = projectIri,
-            mappingName = mappingName,
-            userProfile = userProfile,
-            apiRequestID = apiRequestID
+            mappingName = mappingName
         )
     }
 }
 
-
+/**
+  * Represents the mapping as an XML document.
+  *
+  * @param xml the mapping to be created.
+  */
+case class CreateMappingRequestXMLV2(xml: String) extends StandoffResponderRequestV2
 
 /**
   * Provides the IRI of the created mapping.
