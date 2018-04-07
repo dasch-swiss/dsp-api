@@ -27,7 +27,11 @@
 
 @prefix : <http://www.knora.org/ontology/standoff#> .
 
-<http://www.knora.org/ontology/standoff> rdf:type owl:Ontology .
+<http://www.knora.org/ontology/standoff> rdf:type owl:Ontology ;
+
+    rdfs:label "The standoff ontology" ;
+
+    knora-base:attachedToProject knora-base:SystemProject .
 
 
 #################################################################
@@ -331,7 +335,7 @@
                 rdfs:subClassOf :StandoffVisualTag ;
 
                 rdfs:comment "Represents subscript in a TextValue"@en .
-                
+
 
 ###  http://www.knora.org/ontology/standoff-html-editor#StandoffLineTag
 

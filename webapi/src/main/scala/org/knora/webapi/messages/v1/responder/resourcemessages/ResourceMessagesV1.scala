@@ -19,13 +19,12 @@
 
 package org.knora.webapi.messages.v1.responder.resourcemessages
 
-import java.io.File
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
@@ -152,7 +151,7 @@ sealed trait ResourcesResponderRequestV1 extends KnoraRequestV1
   * @param iri         the IRI of the resource to be queried.
   * @param userProfile the profile of the user making the request.
   */
-case class ResourceInfoGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends ResourcesResponderRequestV1
+case class ResourceInfoGetRequestV1(iri: IRI, userProfile: UserADM) extends ResourcesResponderRequestV1
 
 /**
   * Requests a full description of a resource, along with its properties, their values, incoming references, and other
@@ -162,7 +161,7 @@ case class ResourceInfoGetRequestV1(iri: IRI, userProfile: UserProfileV1) extend
   * @param userProfile the profile of the user making the request.
   * @param getIncoming if `true`, information about incoming references will be included in the response.
   */
-case class ResourceFullGetRequestV1(iri: IRI, userProfile: UserProfileV1, getIncoming: Boolean = true) extends ResourcesResponderRequestV1
+case class ResourceFullGetRequestV1(iri: IRI, userProfile: UserADM, getIncoming: Boolean = true) extends ResourcesResponderRequestV1
 
 /**
   * Requests a [[ResourceContextResponseV1]] describing the context of a resource (i.e. the resources that are part of it).
@@ -171,7 +170,7 @@ case class ResourceFullGetRequestV1(iri: IRI, userProfile: UserProfileV1, getInc
   * @param userProfile the profile of the user making the request.
   * @param resinfo     if `true`, the [[ResourceContextResponseV1]] will include a [[ResourceInfoV1]].
   */
-case class ResourceContextGetRequestV1(iri: IRI, userProfile: UserProfileV1, resinfo: Boolean) extends ResourcesResponderRequestV1
+case class ResourceContextGetRequestV1(iri: IRI, userProfile: UserADM, resinfo: Boolean) extends ResourcesResponderRequestV1
 
 /**
   * Requests the permissions for the current user on the given resource. A successful response will be a [[ResourceRightsResponseV1]].
@@ -179,7 +178,7 @@ case class ResourceContextGetRequestV1(iri: IRI, userProfile: UserProfileV1, res
   * @param iri         the IRI of the resource to be queried.
   * @param userProfile the profile of the user making the request.
   */
-case class ResourceRightsGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends ResourcesResponderRequestV1
+case class ResourceRightsGetRequestV1(iri: IRI, userProfile: UserADM) extends ResourcesResponderRequestV1
 
 /**
   * Requests a search for resources matching the given string.
@@ -190,7 +189,7 @@ case class ResourceRightsGetRequestV1(iri: IRI, userProfile: UserProfileV1) exte
   * @param limitOfResults  limits number of resources to be returned.
   * @param userProfile     the profile of the user making the request.
   */
-case class ResourceSearchGetRequestV1(searchString: String, resourceTypeIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserProfileV1) extends ResourcesResponderRequestV1
+case class ResourceSearchGetRequestV1(searchString: String, resourceTypeIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserADM) extends ResourcesResponderRequestV1
 
 /**
   * Requests the creation of a new resource of the given type with the given properties.
@@ -208,7 +207,7 @@ case class ResourceCreateRequestV1(resourceTypeIri: IRI,
                                    values: Map[IRI, Seq[CreateValueV1WithComment]],
                                    file: Option[SipiResponderConversionRequestV1] = None,
                                    projectIri: IRI,
-                                   userProfile: UserProfileV1,
+                                   userProfile: UserADM,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV1
 
 
@@ -237,7 +236,7 @@ case class OneOfMultipleResourceCreateRequestV1(resourceTypeIri: IRI,
   */
 case class MultipleResourceCreateRequestV1(resourcesToCreate: Seq[OneOfMultipleResourceCreateRequestV1],
                                            projectIri: IRI,
-                                           userProfile: UserProfileV1,
+                                           userProfile: UserADM,
                                            apiRequestID: UUID) extends ResourcesResponderRequestV1
 
 
@@ -269,7 +268,7 @@ case class OneOfMultipleResourcesCreateResponseV1(clientResourceID: String, reso
   * @param owlClass    the IRI of the OWL class to compare the resource's class to.
   * @param userProfile the profile of the user making the request.
   */
-case class ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserProfileV1) extends ResourcesResponderRequestV1
+case class ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserADM) extends ResourcesResponderRequestV1
 
 /**
   * Requests that a resource is marked as deleted. A successful response will be a [[ResourceDeleteResponseV1]].
@@ -281,7 +280,7 @@ case class ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProf
   */
 case class ResourceDeleteRequestV1(resourceIri: IRI,
                                    deleteComment: Option[String],
-                                   userProfile: UserProfileV1,
+                                   userProfile: UserADM,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV1
 
 /**
@@ -378,7 +377,7 @@ case class ResourceCreateResponseV1(res_id: IRI,
   *
   * @param iri the iri of the given resource.
   */
-case class PropertiesGetRequestV1(iri: IRI, userProfile: UserProfileV1) extends ResourcesResponderRequestV1
+case class PropertiesGetRequestV1(iri: IRI, userProfile: UserADM) extends ResourcesResponderRequestV1
 
 
 // TODO: refactor PropertiesGetResponseV1 (https://github.com/dhlab-basel/Knora/issues/134#issue-154443186)
@@ -401,7 +400,7 @@ case class PropertiesGetResponseV1(properties: PropsGetV1) extends KnoraResponse
   * @param apiRequestID the ID of the API request.
   *
   */
-case class ChangeResourceLabelRequestV1(resourceIri: IRI, label: String, userProfile: UserProfileV1, apiRequestID: UUID) extends ResourcesResponderRequestV1
+case class ChangeResourceLabelRequestV1(resourceIri: IRI, label: String, userProfile: UserADM, apiRequestID: UUID) extends ResourcesResponderRequestV1
 
 /**
   * Represents the answer to a [[ChangeResourceLabelRequestV1]].
@@ -421,7 +420,7 @@ case class ChangeResourceLabelResponseV1(res_id: IRI, label: String) extends Kno
   * @param depth       the maximum depth of the graph, counting from the initial resource.
   * @param userProfile the profile of the user making the request.
   */
-case class GraphDataGetRequestV1(resourceIri: IRI, depth: Int, userProfile: UserProfileV1) extends ResourcesResponderRequestV1
+case class GraphDataGetRequestV1(resourceIri: IRI, depth: Int, userProfile: UserADM) extends ResourcesResponderRequestV1
 
 /**
   * Provides a graph of resources that are reachable via links to or from a given resource, in response to a

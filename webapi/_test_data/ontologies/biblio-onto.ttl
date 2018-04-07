@@ -15,7 +15,8 @@
 @prefix : <http://www.knora.org/ontology/biblio#> .
 
 <http://www.knora.org/ontology/biblio> rdf:type owl:Ontology ;
-    rdfs:label "The Biblio ontology" .
+    rdfs:label "The Biblio ontology" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> .
 
 
 #################################################################
@@ -1894,4 +1895,3 @@
                                 "Website Article"@en ;
 
                     rdfs:comment "A resource representing a website article "@en .
-

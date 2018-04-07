@@ -22,7 +22,7 @@ package org.knora.webapi.util.standoff
 import java.util.UUID
 
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.util.{StringFormatter, KnoraIdUtil}
+import org.knora.webapi.util.{KnoraIdUtil, StringFormatter}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 

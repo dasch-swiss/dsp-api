@@ -20,8 +20,8 @@
 package org.knora.webapi.responders.v2
 
 import akka.pattern._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcePreviewRequestV2, ResourcesGetRequestV2}
 import org.knora.webapi.responders.ResponderWithStandoffV2
@@ -35,8 +35,8 @@ import scala.concurrent.Future
 class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
     def receive = {
-        case ResourcesGetRequestV2(resIris, userProfile) => future2Message(sender(), getResources(resIris, userProfile), log)
-        case ResourcePreviewRequestV2(resIris, userProfile) => future2Message(sender(), getResourcePreview(resIris, userProfile), log)
+        case ResourcesGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResources(resIris, requestingUser), log)
+        case ResourcePreviewRequestV2(resIris, requestingUser) => future2Message(sender(), getResourcePreview(resIris, requestingUser), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -44,10 +44,10 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       * Get one or several resources and return them as a sequence.
       *
       * @param resourceIris the resources to query for.
-      * @param userProfile  the profile of the client making the request.
+      * @param requestingUser  the the client making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
-    private def getResources(resourceIris: Seq[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def getResources(resourceIris: Seq[IRI], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -63,7 +63,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             resourceRequestResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(resourceRequestSparql)).mapTo[SparqlConstructResponse]
 
             // separate resources and values
-            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, userProfile = userProfile)
+            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = requestingUser)
 
             // check if all the requested resources were returned
             requestedButMissing = resourceIrisDistinct.toSet -- queryResultsSeparated.keySet
@@ -77,7 +77,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             }
 
             // get the mappings
-            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, userProfile)
+            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
 
             resourcesResponse: Vector[ReadResourceV2] = resourceIrisDistinct.map {
                 (resIri: IRI) =>
@@ -92,10 +92,10 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       * Get the preview of a resource.
       *
       * @param resourceIris the resource to query for.
-      * @param userProfile  the profile of the client making the request.
+      * @param requestingUser  the the client making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
-    private def getResourcePreview(resourceIris: Seq[IRI], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def getResourcePreview(resourceIris: Seq[IRI], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -110,7 +110,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             resourcePreviewRequestResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(resourcePreviewRequestSparql)).mapTo[SparqlConstructResponse]
 
             // separate resources and values
-            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourcePreviewRequestResponse, userProfile = userProfile)
+            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourcePreviewRequestResponse, requestingUser = requestingUser)
 
             // check if all the requested resources were returned
             requestedButMissing = resourceIrisDistinct.toSet -- queryResultsSeparated.keySet

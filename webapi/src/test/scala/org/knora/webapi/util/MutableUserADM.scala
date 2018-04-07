@@ -1,19 +1,19 @@
 package org.knora.webapi.util
 
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
 /**
   * Holds an optional, mutable IRI for use in tests.
   */
-class MutableUserProfileV1 {
-    private var maybeUserProfile: Option[UserProfileV1] = None
+class MutableUserADM {
+    private var maybeUserProfile: Option[UserADM] = None
 
     /**
       * Stores the user's profile.
-      * @param userProfileV1 the user's profile to be stored.
+      * @param userProfile the user's profile to be stored.
       */
-    def set(userProfileV1: UserProfileV1): Unit = {
-        maybeUserProfile = Some(userProfileV1)
+    def set(userProfile: UserADM): Unit = {
+        maybeUserProfile = Some(userProfile)
     }
 
     /**
@@ -27,7 +27,7 @@ class MutableUserProfileV1 {
       * Gets the stored IRI, or throws an exception if the IRI is not set.
       * @return the stored IRI.
       */
-    def get: UserProfileV1 = {
+    def get: UserADM = {
         maybeUserProfile.getOrElse(throw TestUserProfileException("This test could not be run because a previous test failed"))
     }
 }

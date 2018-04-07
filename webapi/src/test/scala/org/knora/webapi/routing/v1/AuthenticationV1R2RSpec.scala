@@ -34,7 +34,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileResponseV1
 import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
 import org.knora.webapi.store._
-import org.knora.webapi.{LiveActorMaker, R2RSpec, SharedTestDataV1}
+import org.knora.webapi.{LiveActorMaker, R2RSpec, SharedTestDataADM, SharedTestDataV1}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -80,7 +80,7 @@ class AuthenticationV1R2RSpec extends R2RSpec with SessionJsonProtocol {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataV1.rootUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataADM.rootUser), 30.seconds)
     }
     "The Authentication Route ('v1/authenticate') when accessed with credentials supplied via URL parameters " should {
 

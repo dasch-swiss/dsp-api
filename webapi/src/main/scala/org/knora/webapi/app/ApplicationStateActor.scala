@@ -1,9 +1,9 @@
 package org.knora.webapi.app
 
 import akka.actor.{Actor, ActorLogging}
-import org.knora.webapi.{Settings, SettingsImpl}
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse}
+import org.knora.webapi.{Settings, SettingsImpl}
 
 class ApplicationStateActor extends Actor with ActorLogging {
 

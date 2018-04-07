@@ -94,10 +94,10 @@ class SipiResponderV1 extends Responder {
 
             valueProps = valueUtilV1.createValueProps(filename, rows)
 
-            permissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1WithValueProps(
+            permissionCode: Option[Int] = PermissionUtilADM.getUserPermissionWithValuePropsV1(
                 valueIri = filename,
                 valueProps = valueProps,
-                subjectProject = None, // no need to specify this here, because it's in valueProps
+                entityProject = None, // no need to specify this here, because it's in valueProps
                 userProfile = userProfile
             )
         } yield SipiFileInfoGetResponseV1(

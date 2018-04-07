@@ -2,6 +2,7 @@
   "knora-api:hasOntologies" : {
     "@id" : "http://0.0.0.0:3333/ontology/00FF/images/v2",
     "@type" : "owl:Ontology",
+    "knora-api:attachedToProject" : "http://rdfh.ch/projects/00FF",
     "knora-api:hasClasses" : {
       "p00FF-images:bild" : {
         "@id" : "p00FF-images:bild",

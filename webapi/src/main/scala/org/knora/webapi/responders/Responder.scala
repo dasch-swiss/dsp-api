@@ -21,9 +21,9 @@ package org.knora.webapi.responders
 
 import akka.actor.{Actor, ActorLogging}
 import org.knora.webapi.Settings
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.store._
 import org.knora.webapi.app._
+import org.knora.webapi.store._
+import org.knora.webapi.util.StringFormatter
 
 import scala.language.postfixOps
 

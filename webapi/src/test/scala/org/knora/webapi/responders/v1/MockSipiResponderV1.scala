@@ -19,14 +19,15 @@
 
 package org.knora.webapi.responders.v1
 
-import org.knora.webapi.util.ActorUtil._
 import java.io.File
 
-import scala.concurrent.Future
 import org.knora.webapi.BadRequestException
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.StillImageFileValueV1
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.util.ActorUtil._
+
+import scala.concurrent.Future
 
 /**
   * Keep track of the temporary files that was written in the route

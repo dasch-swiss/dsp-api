@@ -26,6 +26,7 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.ckanmessages._
 import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
@@ -56,7 +57,7 @@ class CkanResponderV1 extends Responder {
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
-    private def getCkanResponseV1(project: Option[Seq[String]], limit: Option[Int], info: Boolean, userProfile: UserProfileV1): Future[CkanResponseV1] = {
+    private def getCkanResponseV1(project: Option[Seq[String]], limit: Option[Int], info: Boolean, userProfile: UserADM): Future[CkanResponseV1] = {
 
 
         log.debug("Ckan Endpoint:")
@@ -99,10 +100,10 @@ class CkanResponderV1 extends Responder {
       *
       * @param pinfo
       * @param limit
-      * @param userProfileV1
+      * @param userProfile
       * @return
       */
-    private def getDokubibCkanProject(pinfo: ProjectInfoV1, limit: Option[Int], userProfileV1: UserProfileV1): Future[CkanProjectV1] = {
+    private def getDokubibCkanProject(pinfo: ProjectInfoV1, limit: Option[Int], userProfile: UserADM): Future[CkanProjectV1] = {
 
         /*
          - datasets
@@ -125,7 +126,7 @@ class CkanResponderV1 extends Responder {
 
         val datasetsFuture: Future[Seq[CkanProjectDatasetV1]] = for {
             bilder <- getDokubibBilderIRIs(pIri, limit)
-            bilderMitPropsFuture = getResources(bilder, userProfileV1)
+            bilderMitPropsFuture = getResources(bilder, userProfile)
             bilderMitProps <- bilderMitPropsFuture
             dataset = bilderMitProps.map {
                 case (iri, info, props) =>
@@ -190,10 +191,10 @@ class CkanResponderV1 extends Responder {
       *
       * @param pinfo
       * @param limit
-      * @param userProfileV1
+      * @param userProfile
       * @return
       */
-    private def getIncunabulaCkanProject(pinfo: ProjectInfoV1, limit: Option[Int], userProfileV1: UserProfileV1): Future[CkanProjectV1] = {
+    private def getIncunabulaCkanProject(pinfo: ProjectInfoV1, limit: Option[Int], userProfile: UserADM): Future[CkanProjectV1] = {
 
         /*
          - datasets
@@ -221,14 +222,14 @@ class CkanResponderV1 extends Responder {
             case singleBook =>
                 val bookDataset = singleBook map {
                     case (bookIri: webapi.IRI, pageIris: Seq[webapi.IRI]) =>
-                        val bookResourceFuture = getResource(bookIri, userProfileV1)
+                        val bookResourceFuture = getResource(bookIri, userProfile)
                         bookResourceFuture flatMap {
                             case (bIri, bInfo, bProps) =>
                                 val bInfoMap = flattenInfo(bInfo)
                                 val bPropsMap = flattenProps(bProps)
                                 val files = pageIris map {
                                     case pageIri =>
-                                        getResource(pageIri, userProfileV1) map {
+                                        getResource(pageIri, userProfile) map {
                                             case (pIri, pInfo, pProps) =>
                                                 val pInfoMap = flattenInfo(pInfo)
                                                 val pPropsMap = flattenProps(pProps)
@@ -302,11 +303,11 @@ class CkanResponderV1 extends Responder {
       * @param userProfile
       * @return
       */
-    private def getProjectInfos(projectNames: Seq[String], userProfile: UserProfileV1): Future[Seq[(String, ProjectInfoV1)]] = {
+    private def getProjectInfos(projectNames: Seq[String], userProfile: UserADM): Future[Seq[(String, ProjectInfoV1)]] = {
         Future.sequence {
             for {
                 pName <- projectNames
-                projectInfoResponseFuture = (responderManager ? ProjectInfoByShortnameGetRequestV1(pName, Some(userProfile))).mapTo[ProjectInfoResponseV1]
+                projectInfoResponseFuture = (responderManager ? ProjectInfoByShortnameGetRequestV1(pName, Some(userProfile.asUserProfileV1))).mapTo[ProjectInfoResponseV1]
                 result = projectInfoResponseFuture.map(_.project_info) map {
                     case pInfo => (pName, pInfo)
                 }
@@ -345,15 +346,15 @@ class CkanResponderV1 extends Responder {
       * Get all information there is about these resources
       *
       * @param iris
-      * @param userProfileV1
+      * @param userProfile
       * @return
       */
-    private def getResources(iris: Seq[IRI], userProfileV1: UserProfileV1): Future[Seq[(String, Option[ResourceInfoV1], Option[PropsV1])]] = {
+    private def getResources(iris: Seq[IRI], userProfile: UserADM): Future[Seq[(String, Option[ResourceInfoV1], Option[PropsV1])]] = {
 
         Future.sequence {
             for {
                 iri <- iris
-                resource = getResource(iri, userProfileV1)
+                resource = getResource(iri, userProfile)
             } yield resource
         }
     }
@@ -362,12 +363,12 @@ class CkanResponderV1 extends Responder {
       * Get all information there is about this one resource
       *
       * @param iri
-      * @param userProfileV1
+      * @param userProfile
       * @return
       */
-    private def getResource(iri: webapi.IRI, userProfileV1: UserProfileV1): Future[(String, Option[ResourceInfoV1], Option[PropsV1])] = {
+    private def getResource(iri: webapi.IRI, userProfile: UserADM): Future[(String, Option[ResourceInfoV1], Option[PropsV1])] = {
 
-        val resourceFullResponseFuture = (responderManager ? ResourceFullGetRequestV1(iri, userProfileV1)).mapTo[ResourceFullResponseV1]
+        val resourceFullResponseFuture = (responderManager ? ResourceFullGetRequestV1(iri, userProfile)).mapTo[ResourceFullResponseV1]
 
         resourceFullResponseFuture map {
             case ResourceFullResponseV1(resInfo, _, props, _, _) => (iri, resInfo, props)

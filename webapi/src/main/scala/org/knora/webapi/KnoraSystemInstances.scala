@@ -20,11 +20,9 @@
 package org.knora.webapi
 
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
-import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoShortADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 /**
   * This object represents built-in User and Project instances.
@@ -68,28 +66,6 @@ object KnoraSystemInstances {
             sessionId = None,
             permissions = PermissionsDataADM()
         )
-    }
-
-    object Projects {
-
-        /**
-          * Represents the system project.
-          */
-        val SystemProject = ProjectADM(
-            id = OntologyConstants.KnoraBase.SystemProject,
-            shortname = "SystemProject",
-            shortcode = Some("FFFF"),
-            longname = Some("Knora System Project"),
-            description = Seq(StringLiteralV2(value = "Knora System Project", language = Some("en"))),
-            keywords = Seq.empty[String],
-            logo = None,
-            ontologies = Seq(OntologyInfoShortADM(
-                ontologyIri = "http://www.knora.org/ontology/knora-base",
-                ontologyName = "knora-base")),
-            status = true,
-            selfjoin = false
-        )
-
     }
 
 }
