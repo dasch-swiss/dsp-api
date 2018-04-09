@@ -65,9 +65,11 @@ OpenAPI / Swagger
 -----------------
 
 The Admin API uses OpenAPI_ for documentation purposes. To try it out, run `webapi` and open
-`http://host/api-docs/swagger.json` in http://petstore.swagger.io .
+`http://host/api-docs/swagger.json` in http://petstore.swagger.io . Alternatively, the documentation can be
+looked at by using ReDoc_ which is provided in ``knora/docs/redoc/index.html``.
 
 .. _OpenAPI: http://www.restapitutorial.com/lessons/httpmethods.html
+.. _ReDoc: https://github.com/Rebilly/ReDoc
 
 Different Admin API Endpoints
 -----------------------------
