@@ -118,7 +118,7 @@ object UsersRouteADM extends Authenticator {
 
                         /* the api request is already checked at time of creation. see case class. */
 
-                        val requestMessage = if (apiRequest.oldPassword.isDefined && apiRequest.newPassword.isDefined) {
+                        val requestMessage = if (apiRequest.currentPassword.isDefined && apiRequest.newPassword.isDefined) {
                             /* update existing user's password */
                             UserChangePasswordRequestADM(
                                 userIri = userIri,

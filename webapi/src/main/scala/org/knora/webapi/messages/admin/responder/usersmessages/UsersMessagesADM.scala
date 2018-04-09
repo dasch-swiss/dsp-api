@@ -63,20 +63,20 @@ case class CreateUserApiRequestADM(email: String,
   * be changed include the user's email, given name, family name, language, password, user status, and system admin
   * membership.
   *
-  * @param email       the new email address. Needs to be unique on the server.
-  * @param givenName   the new given name.
-  * @param familyName  the new family name.
-  * @param lang        the new ISO 639-1 code of the new preferred language.
-  * @param oldPassword the old password.
-  * @param newPassword the new password.
-  * @param status      the new user status (active = true, inactive = false).
-  * @param systemAdmin the new system admin membership status.
+  * @param email           the new email address. Needs to be unique on the server.
+  * @param givenName       the new given name.
+  * @param familyName      the new family name.
+  * @param lang            the new ISO 639-1 code of the new preferred language.
+  * @param currentPassword the current password of the user making the request.
+  * @param newPassword     the new password.
+  * @param status          the new user status (active = true, inactive = false).
+  * @param systemAdmin     the new system admin membership status.
   */
 case class ChangeUserApiRequestADM(email: Option[String] = None,
                                    givenName: Option[String] = None,
                                    familyName: Option[String] = None,
                                    lang: Option[String] = None,
-                                   oldPassword: Option[String] = None,
+                                   currentPassword: Option[String] = None,
                                    newPassword: Option[String] = None,
                                    status: Option[Boolean] = None,
                                    systemAdmin: Option[Boolean] = None) {
@@ -86,7 +86,7 @@ case class ChangeUserApiRequestADM(email: Option[String] = None,
         givenName,
         familyName,
         lang,
-        oldPassword,
+        currentPassword,
         newPassword,
         status,
         systemAdmin
@@ -99,7 +99,7 @@ case class ChangeUserApiRequestADM(email: Option[String] = None,
     /* check that only allowed information for the 4 cases is send and not more. */
 
     // change password case
-    if (oldPassword.isDefined || newPassword.isDefined) {
+    if (currentPassword.isDefined || newPassword.isDefined) {
         if (parametersCount > 2) {
             throw BadRequestException("To many parameters sent for password change.")
         } else if (parametersCount < 2) {
@@ -154,10 +154,10 @@ case class UsersGetRequestADM(userInformationTypeADM: UserInformationTypeADM = U
 /**
   * A message that requests a user's profile either by IRI or email. A successful response will be a [[UserADM]].
   *
-  * @param maybeIri           the IRI of the user to be queried.
-  * @param maybeEmail the email of the user to be queried.
+  * @param maybeIri               the IRI of the user to be queried.
+  * @param maybeEmail             the email of the user to be queried.
   * @param userInformationTypeADM the extent of the information returned.
-  * @param requestingUser the user initiating the request.
+  * @param requestingUser         the user initiating the request.
   */
 case class UserGetADM(maybeIri: Option[IRI],
                       maybeEmail: Option[String],
@@ -173,10 +173,10 @@ case class UserGetADM(maybeIri: Option[IRI],
 /**
   * A message that requests a user's profile either by IRI or email. A successful response will be a [[UserResponseADM]].
   *
-  * @param maybeIri           the IRI of the user to be queried.
-  * @param maybeEmail the email of the user to be queried.
+  * @param maybeIri               the IRI of the user to be queried.
+  * @param maybeEmail             the email of the user to be queried.
   * @param userInformationTypeADM the extent of the information returned.
-  * @param requestingUser the user initiating the request.
+  * @param requestingUser         the user initiating the request.
   */
 case class UserGetRequestADM(maybeIri: Option[IRI],
                              maybeEmail: Option[String],

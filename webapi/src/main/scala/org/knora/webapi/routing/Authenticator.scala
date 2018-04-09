@@ -343,13 +343,9 @@ object Authenticator {
       * @throws BadCredentialsException when no credentials are supplied; when user is not active;
       *                                 when the password does not match; when the supplied token is not valid.
       */
-    private def authenticateCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, executionContext: ExecutionContext): Boolean = {
+    def authenticateCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, executionContext: ExecutionContext): Boolean = {
 
         val settings = Settings(system)
-
-        if (credentials.isEmpty) {
-            throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
-        }
 
         credentials match {
             case Some(passCreds: KnoraPasswordCredentialsV2) => {
