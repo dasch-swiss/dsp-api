@@ -176,8 +176,8 @@ trait KnoraService {
         // needed for startup flags and the future map/flatmap in the end
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
-        if (settings.printConfig) {
-            println("")
+        val printConfig = Await.result(applicationStateActor ? GetPrintConfigState(), 1.second).asInstanceOf[Boolean]
+        if (printConfig) {
             println("================================================================")
             println("Server Configuration:")
 
@@ -243,7 +243,10 @@ trait KnoraService {
         }
 
         Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
-        println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}.")
+        println("")
+        println("----------------------------------------------------------------")
+        println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}")
+        println("----------------------------------------------------------------")
     }
 
     /**
