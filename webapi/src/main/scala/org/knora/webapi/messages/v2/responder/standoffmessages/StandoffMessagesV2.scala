@@ -22,6 +22,7 @@ package org.knora.webapi.messages.v2.responder.standoffmessages
 import java.util.UUID
 
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.{KnoraJsonLDRequestReaderV2, KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDObject, JsonLDString}
@@ -43,7 +44,7 @@ sealed trait StandoffResponderRequestV2 extends KnoraRequestV2
   * @param userProfile the profile of the user making the request.
   * @param apiRequestID the ID of the API request.
   */
-case class CreateMappingRequestV2(metadata: CreateMappingRequestMetadataV2, xml: CreateMappingRequestXMLV2, userProfile: UserProfileV1, apiRequestID: UUID) extends StandoffResponderRequestV2
+case class CreateMappingRequestV2(metadata: CreateMappingRequestMetadataV2, xml: CreateMappingRequestXMLV2, userProfile: UserADM, apiRequestID: UUID) extends StandoffResponderRequestV2
 
 /**
   * Represents the metadata describing the mapping that is to be created.
@@ -57,7 +58,7 @@ case class CreateMappingRequestMetadataV2(label: String, projectIri: SmartIri, m
 object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateMappingRequestMetadataV2] {
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
-                            userProfile: UserProfileV1): CreateMappingRequestMetadataV2 = {
+                            userProfile: UserADM): CreateMappingRequestMetadataV2 = {
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

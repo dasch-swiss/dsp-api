@@ -30,6 +30,7 @@ import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestMetadataV2, CreateMappingRequestV2, CreateMappingRequestXMLV2}
+import org.knora.webapi.routing.v1.StandoffRouteV1.getUserADM
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.jsonld.JsonLDUtil
@@ -63,7 +64,7 @@ object StandoffRouteV2 extends Authenticator {
 
                         type Name = String
 
-                        val userProfile = getUserProfileV1(requestContext)
+                        val userProfile = getUserADM(requestContext)
 
                         val apiRequestUUID = UUID.randomUUID
 

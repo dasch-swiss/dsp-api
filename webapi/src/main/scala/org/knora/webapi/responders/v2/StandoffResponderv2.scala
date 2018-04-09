@@ -31,6 +31,7 @@ import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{StandoffEntityInfoGetRequestV1, StandoffEntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1}
@@ -82,7 +83,7 @@ class StandoffResponderV2 extends Responder {
       * @param userProfile          The client making the request.
       * @return a [[GetXSLTransformationResponseV1]].
       */
-    private def getXSLTransformation(xslTransformationIri: IRI, userProfile: UserProfileV1): Future[GetXSLTransformationResponseV1] = {
+    private def getXSLTransformation(xslTransformationIri: IRI, userProfile: UserADM): Future[GetXSLTransformationResponseV1] = {
 
         val textLocationFuture: Future[LocationV1] = for {
             // get the `LocationV1` representing XSL transformation
@@ -182,9 +183,9 @@ class StandoffResponderV2 extends Responder {
       * @param xml         the provided mapping.
       * @param userProfile the client that made the request.
       */
-    private def createMappingV2(xml: String, label: String, projectIri: SmartIri, mappingName: String, userProfile: UserProfileV1, apiRequestID: UUID): Future[CreateMappingResponseV2] = {
+    private def createMappingV2(xml: String, label: String, projectIri: SmartIri, mappingName: String, userProfile: UserADM, apiRequestID: UUID): Future[CreateMappingResponseV2] = {
 
-        def createMappingAndCheck(xml: String, label: String, mappingIri: IRI, namedGraph: String, userProfile: UserProfileV1): Future[CreateMappingResponseV2] = {
+        def createMappingAndCheck(xml: String, label: String, mappingIri: IRI, namedGraph: String, userProfile: UserADM): Future[CreateMappingResponseV2] = {
 
             val knoraIdUtil = new KnoraIdUtil
 
@@ -367,17 +368,19 @@ class StandoffResponderV2 extends Responder {
 
         for {
             // Don't allow anonymous users to create a mapping.
+            // Don't allow anonymous users to create a mapping.
             userIri: IRI <- Future {
-                userProfile.userData.user_id match {
-                    case Some(iri) => iri
-                    case None => throw ForbiddenException("Anonymous users aren't allowed to create mappings")
+                if (userProfile.isAnonymousUser) {
+                    throw ForbiddenException("Anonymous users aren't allowed to create mappings")
+                } else {
+                    userProfile.id
                 }
             }
 
             // check if the given project IRI represents an actual project
             projectInfo: ProjectInfoResponseV1 <- (responderManager ? ProjectInfoByIRIGetRequestV1(
                 iri = projectIri.toString, // TODO: make sure that this is the internal project IRI
-                Some(userProfile)
+                Some(userProfile.asUserProfileV1)
             )).mapTo[ProjectInfoResponseV1]
 
             knoraIdUtil = new KnoraIdUtil
@@ -535,7 +538,7 @@ class StandoffResponderV2 extends Responder {
       * @param userProfile the user making the request.
       * @return a [[MappingXMLtoStandoff]].
       */
-    private def getMappingFromTriplestore(mappingIri: IRI, userProfile: UserProfileV1): Future[MappingXMLtoStandoff] = {
+    private def getMappingFromTriplestore(mappingIri: IRI, userProfile: UserADM): Future[MappingXMLtoStandoff] = {
 
         val getMappingSparql = queries.sparql.v1.txt.getMapping(
             triplestore = settings.triplestoreType,
@@ -633,7 +636,7 @@ class StandoffResponderV2 extends Responder {
       * @param userProfile          the client that made the request.
       * @return a [[StandoffEntityInfoGetResponseV1]] holding information about standoff classes and properties.
       */
-    private def getStandoffEntitiesFromMappingV1(mappingXMLtoStandoff: MappingXMLtoStandoff, userProfile: UserProfileV1): Future[StandoffEntityInfoGetResponseV1] = {
+    private def getStandoffEntitiesFromMappingV1(mappingXMLtoStandoff: MappingXMLtoStandoff, userProfile: UserADM): Future[StandoffEntityInfoGetResponseV1] = {
 
         // invert the mapping so standoff class Iris become keys
         val mappingStandoffToXML: Map[IRI, XMLTagItem] = StandoffTagUtilV1.invertXMLToStandoffMapping(mappingXMLtoStandoff)

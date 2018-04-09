@@ -16,7 +16,7 @@ try:
     mappingParams = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToProject": beolProjectIri,
         "http://www.w3.org/2000/01/rdf-schema#label": "BEBB letter mapping",
-        "http://api.knora.org/ontology/knora-api/v2#mappingHasName": "BEBBLetterMapping3"
+        "http://api.knora.org/ontology/knora-api/v2#mappingHasName": "BEBBLetterMapping4"
     }
 
     mappingRequest = requests.post(base_url + "mapping",
