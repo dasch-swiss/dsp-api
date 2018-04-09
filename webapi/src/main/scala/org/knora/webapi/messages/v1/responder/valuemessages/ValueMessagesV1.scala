@@ -116,6 +116,7 @@ case class CreateValueApiRequestV1(res_id: IRI,
   * @param mapping_id IRI of the mapping used to transform XML to standoff.
   */
 case class CreateRichtextV1(utf8str: Option[String] = None,
+                            lang: Option[String] = None,
                             xml: Option[String] = None,
                             mapping_id: Option[IRI] = None) {
 
@@ -632,6 +633,7 @@ case class CreateStandoffTagV1InTriplestore(standoffNode: StandoffTagV1, standof
 sealed trait TextValueV1 {
 
     def utf8str: String
+    def language: Option[String]
 
 }
 
@@ -639,11 +641,13 @@ sealed trait TextValueV1 {
   * Represents a textual value with additional information in standoff format.
   *
   * @param utf8str            text in mere utf8 representation (including newlines and carriage returns).
+  * @param language           language specification for text
   * @param standoff           attributes of the text in standoff format. For each attribute, several ranges may be given (a list of [[StandoffTagV1]]).
   * @param resource_reference referred Knora resources.
   * @param mapping            the mapping used to create standoff from another format.
   */
 case class TextValueWithStandoffV1(utf8str: String,
+                                   language: Option[String] = None,
                                    standoff: Seq[StandoffTagV1],
                                    resource_reference: Set[IRI] = Set.empty[IRI],
                                    mappingIri: IRI,
@@ -781,7 +785,7 @@ case class TextValueWithStandoffV1(utf8str: String,
 
 }
 
-case class TextValueSimpleV1(utf8str: String) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
+case class TextValueSimpleV1(utf8str: String, language: Option[String]= None) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
 
@@ -1592,7 +1596,7 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val valueVersionV1Format: JsonFormat[ValueVersionV1] = jsonFormat3(ValueVersionV1)
     implicit val linkValueV1Format: JsonFormat[LinkValueV1] = jsonFormat4(LinkValueV1)
     implicit val valueVersionHistoryGetResponseV1Format: RootJsonFormat[ValueVersionHistoryGetResponseV1] = jsonFormat1(ValueVersionHistoryGetResponseV1)
-    implicit val createRichtextV1Format: RootJsonFormat[CreateRichtextV1] = jsonFormat3(CreateRichtextV1)
+    implicit val createRichtextV1Format: RootJsonFormat[CreateRichtextV1] = jsonFormat4(CreateRichtextV1)
     implicit val createValueApiRequestV1Format: RootJsonFormat[CreateValueApiRequestV1] = jsonFormat15(CreateValueApiRequestV1)
     implicit val createValueResponseV1Format: RootJsonFormat[CreateValueResponseV1] = jsonFormat4(CreateValueResponseV1)
     implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat13(ChangeValueApiRequestV1)

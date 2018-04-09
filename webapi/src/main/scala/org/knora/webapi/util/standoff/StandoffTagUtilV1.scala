@@ -193,7 +193,7 @@ object StandoffTagUtilV1 {
       * @param text          the text as a mere sequence of characters.
       * @param standoffTagV1 the text's standoff markup.
       */
-    case class TextWithStandoffTagsV1(text: String, standoffTagV1: Seq[StandoffTagV1], mapping: GetMappingResponseV1)
+    case class TextWithStandoffTagsV1(text: String, language: Option[String] = None , standoffTagV1: Seq[StandoffTagV1], mapping: GetMappingResponseV1)
 
     /**
       * Converts XML to a [[TextWithStandoffTagsV1]].

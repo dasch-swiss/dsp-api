@@ -123,12 +123,20 @@ object ResourcesRouteV1 extends Authenticator {
                                     // check if text has markup
                                     if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
                                         // simple text
-                                        Future(CreateValueV1WithComment(TextValueSimpleV1(stringFormatter.toSparqlEncodedString(richtext.utf8str.get, throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
-                                            givenValue.comment))
+                                        if (richtext.lang.nonEmpty) {
+                                            Future(CreateValueV1WithComment(TextValueSimpleV1(utf8str = stringFormatter.toSparqlEncodedString(richtext.utf8str.get, throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'")),
+                                                    language = Some(richtext.lang.get)), givenValue.comment))
+                                        }
+                                        else {
+
+                                            Future(CreateValueV1WithComment(TextValueSimpleV1(utf8str = stringFormatter.toSparqlEncodedString(richtext.utf8str.get, throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
+                                                givenValue.comment))
+                                        }
                                     } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
                                         // XML: text with markup
 
                                         val mappingIri = stringFormatter.validateAndEscapeIri(richtext.mapping_id.get, throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid"))
+
 
                                         for {
 
@@ -146,7 +154,8 @@ object ResourcesRouteV1 extends Authenticator {
                                             resourceReferences: Set[IRI] = stringFormatter.getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV1)
 
                                         } yield CreateValueV1WithComment(TextValueWithStandoffV1(
-                                            utf8str = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
+                                            utf8str = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw InconsistentTriplestoreDataException("utf8str for TextValue contains invalid characters")),
+                                            language = Some(richtext.lang.get),
                                             resource_reference = resourceReferences,
                                             standoff = textWithStandoffTags.standoffTagV1,
                                             mappingIri = textWithStandoffTags.mapping.mappingIri,

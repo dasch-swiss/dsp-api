@@ -1357,7 +1357,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        <biblio:isPartOfJournal>
                    |            <biblio:Journal knoraType="link_value" target="math_intelligencer" linkType="ref"/>
                    |        </biblio:isPartOfJournal>
-                   |        <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
+                   |        <biblio:journalVolume knoraType="richtext_value" lang="en">27</biblio:journalVolume>
                    |        <biblio:publicationHasAuthor>
                    |            <p0801-beol:person knoraType="link_value" linkType="ref" target="abel"/>
                    |        </biblio:publicationHasAuthor>

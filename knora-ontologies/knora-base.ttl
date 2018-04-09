@@ -784,6 +784,17 @@
                   :subjectClassConstraint :TextValue .
 
 
+###  http://www.knora.org/ontology/knora-base#valueHasLanguage
+
+:valueHasLanguage rdf:type owl:ObjectProperty ;
+
+                  rdfs:subPropertyOf :valueHas ;
+
+                  :objectClassConstraint :TextValue ;
+
+                  :subjectClassConstraint xsd:string .
+
+
 ###  http://www.knora.org/ontology/knora-base#valueHasMapping
 
 :valueHasMapping rdf:type owl:ObjectProperty ;
@@ -2570,6 +2581,10 @@
            rdfs:subClassOf :Value ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasStandoff ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger
+                           ],
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :valueHasLanguage ;
                              owl:minCardinality "0"^^xsd:nonNegativeInteger
                            ],
                            [ rdf:type owl:Restriction ;
