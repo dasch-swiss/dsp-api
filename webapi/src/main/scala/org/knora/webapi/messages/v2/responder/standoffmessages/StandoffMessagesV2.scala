@@ -25,7 +25,9 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.{KnoraJsonLDRequestReaderV2, KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDObject, JsonLDString}
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
+
 
 /**
   * An abstract trait representing a Knora v2 API request message that can be sent to `StandoffResponderV2`.
@@ -86,13 +88,14 @@ case class CreateMappingRequestXMLV2(xml: String) extends StandoffResponderReque
   * @param mappingIri the IRI of the resource (knora-base:XMLToStandoffMapping) representing the mapping that has been created.
   */
 case class CreateMappingResponseV2(mappingIri: IRI) extends KnoraResponseV2 {
+
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val body = JsonLDObject(Map(
             "@id" -> JsonLDString(mappingIri),
-            "@type" -> JsonLDString(SmartIri(OntologyConstants.KnoraBase.XMLToStandoffMapping).toOntologySchema(targetSchema).toString)
+            "@type" -> JsonLDString(OntologyConstants.KnoraBase.XMLToStandoffMapping.toSmartIri.toOntologySchema(targetSchema).toString)
         ))
 
         val context = JsonLDObject(Map(
