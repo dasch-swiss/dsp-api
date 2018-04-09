@@ -77,6 +77,8 @@ object Main extends App with LiveCore with KnoraService {
               |
               |     -j                          Starts the Jaeger monitoring reporter.
               |
+              |     -c                          Print the configuration on startup.
+              |
               |     --help                      Shows this message.
             """.stripMargin)
     } else {
