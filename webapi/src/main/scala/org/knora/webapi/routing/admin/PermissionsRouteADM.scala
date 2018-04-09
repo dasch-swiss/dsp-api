@@ -33,19 +33,19 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 
 import scala.concurrent.ExecutionContextExecutor
 
-@Api(value = "/admin/permissions", produces = "application/json")
+@Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
-object PermissionsRouteADM extends Authenticator {
+class PermissionsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator {
 
     private val schemes = Array("http", "https")
     private val urlValidator = new UrlValidator(schemes)
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    implicit val system: ActorSystem = _system
+    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    implicit val timeout: Timeout = settings.defaultTimeout
+    val responderManager = system.actorSelection("/user/responderManager")
 
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
-        implicit val timeout: Timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
+    def knoraApiPath: Route = {
 
         path("admin" / "permissions" / Segment / Segment) { (projectIri, groupIri) =>
             get {

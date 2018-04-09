@@ -21,7 +21,7 @@ package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSelection, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -39,17 +39,17 @@ import scala.concurrent.ExecutionContextExecutor
   * Provides a spray-routing function for API routes that deal with groups.
   */
 
-@Api(value = "/admin/groups", produces = "application/json")
+@Api(value = "groups", produces = "application/json")
 @Path("/admin/groups")
-object GroupsRouteADM extends Authenticator with GroupsADMJsonProtocol {
+class GroupsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with GroupsADMJsonProtocol {
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    implicit val system: ActorSystem = _system
+    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    implicit val timeout: Timeout = settings.defaultTimeout
+    val responderManager: ActorSelection = system.actorSelection("/user/responderManager")
+    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
-        implicit val timeout: Timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
-        val stringFormatter = StringFormatter.getGeneralInstance
+    def knoraApiPath: Route = {
 
         path("admin" / "groups") {
             get {

@@ -38,7 +38,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{Initialized, Initial
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders._
-import org.knora.webapi.routing.{RejectingRoute, SwaggerDocsRoute}
+import org.knora.webapi.routing.{RejectingRoute, SwaggerApiDocsRoute}
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
@@ -138,13 +138,13 @@ trait KnoraService {
             SearchRouteV2.knoraApiPath(system, settings, log) ~
             ResourcesRouteV2.knoraApiPath(system, settings, log) ~
             AuthenticationRouteV2.knoraApiPath(system, settings, log) ~
-            GroupsRouteADM.knoraApiPath(system, settings, log) ~
-            ListsRouteADM.knoraApiPath(system, settings, log) ~
-            PermissionsRouteADM.knoraApiPath(system, settings, log) ~
-            ProjectsRouteADM.knoraApiPath(system, settings, log) ~
-            StoreRouteADM.knoraApiPath(system, settings, log) ~
+            new GroupsRouteADM(system, settings, log).knoraApiPath ~
+            new ListsRouteADM(system, settings, log).knoraApiPath ~
+            new PermissionsRouteADM(system, settings, log).knoraApiPath ~
+            new ProjectsRouteADM(system, settings, log).knoraApiPath ~
+            new StoreRouteADM(system, settings, log).knoraApiPath ~
             new UsersRouteADM(system, settings, log).knoraApiPath ~
-            new SwaggerDocsRoute(system, settings, log).knoraApiPath
+            new SwaggerApiDocsRoute(system, settings, log).knoraApiPath
         , settings,
         log
     )

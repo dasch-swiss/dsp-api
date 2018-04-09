@@ -40,7 +40,7 @@ import scala.concurrent.ExecutionContextExecutor
   * Provides a spray-routing function for API routes that deal with users.
   */
 
-@Api(value = "/admin/users", produces = "application/json")
+@Api(value = "users", produces = "application/json")
 @Path("/admin/users")
 class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator {
 

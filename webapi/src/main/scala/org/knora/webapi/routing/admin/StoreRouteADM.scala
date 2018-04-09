@@ -37,16 +37,16 @@ import scala.concurrent.duration._
   * A route used to send requests which can directly affect the data stored inside the triplestore.
   */
 
-@Api(value = "/admin/store", produces = "application/json")
+@Api(value = "store", produces = "application/json")
 @Path("/admin/store")
-object StoreRouteADM extends Authenticator with StoresADMJsonProtocol {
+class StoreRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with StoresADMJsonProtocol {
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) = Route {
+    implicit val system: ActorSystem = _system
+    implicit val executionContext = system.dispatcher
+    implicit val timeout = Timeout(300.seconds)
+    val responderManager = system.actorSelection("/user/responderManager")
 
-        implicit val system: ActorSystem = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = Timeout(300.seconds)
-        val responderManager = system.actorSelection("/user/responderManager")
+    def knoraApiPath = Route {
 
         path("admin" / "store") {
             get {

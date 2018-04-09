@@ -39,16 +39,18 @@ import scala.concurrent.ExecutionContextExecutor
   * Provides a spray-routing function for API routes that deal with lists.
   */
 
-@Api(value = "/admin/lists", produces = "application/json")
+@Api(value = "lists", produces = "application/json")
 @Path("/admin/lists")
-object ListsRouteADM extends Authenticator with ListADMJsonProtocol {
+class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with ListADMJsonProtocol {
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
-        implicit val timeout: Timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
-        val stringFormatter = StringFormatter.getGeneralInstance
+    implicit val system: ActorSystem = _system
+    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    implicit val timeout: Timeout = settings.defaultTimeout
+    val responderManager = system.actorSelection("/user/responderManager")
+    val stringFormatter = StringFormatter.getGeneralInstance
+
+    def knoraApiPath: Route = {
+
 
         path("admin" / "lists") {
             get {

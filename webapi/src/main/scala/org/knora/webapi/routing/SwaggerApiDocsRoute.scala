@@ -27,17 +27,22 @@ import com.github.swagger.akka.model.Info
 import io.swagger.models.auth.BasicAuthDefinition
 import io.swagger.models.{ExternalDocs, Scheme}
 import org.knora.webapi.SettingsImpl
-import org.knora.webapi.routing.admin.UsersRouteADM
+import org.knora.webapi.routing.admin._
 
 import scala.concurrent.ExecutionContextExecutor
 
-class SwaggerDocsRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends SwaggerHttpService {
+class SwaggerApiDocsRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends SwaggerHttpService {
 
     implicit val system: ActorSystem = _system
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
     // List all routes here
     override val apiClasses: Set[Class[_]] = Set(
+        classOf[GroupsRouteADM],
+        classOf[ListsRouteADM],
+        classOf[PermissionsRouteADM],
+        classOf[ProjectsRouteADM],
+        classOf[StoreRouteADM],
         classOf[UsersRouteADM]
     )
 

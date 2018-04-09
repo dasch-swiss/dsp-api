@@ -38,20 +38,22 @@ import org.knora.webapi.{BadRequestException, SettingsImpl}
 import scala.concurrent.ExecutionContextExecutor
 
 
-@Api(value = "/admin/projects", produces = "application/json")
+@Api(value = "projects", produces = "application/json")
 @Path("/admin/projects")
-object ProjectsRouteADM extends Authenticator with ProjectsADMJsonProtocol {
+class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with ProjectsADMJsonProtocol {
 
     private val schemes = Array("http", "https")
     private val urlValidator = new UrlValidator(schemes)
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    implicit val system: ActorSystem = _system
+    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    implicit val timeout: Timeout = settings.defaultTimeout
+    val responderManager = system.actorSelection("/user/responderManager")
+    val stringFormatter = StringFormatter.getGeneralInstance
 
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
-        implicit val timeout: Timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
-        val stringFormatter = StringFormatter.getGeneralInstance
+    def knoraApiPath: Route = {
+
+
 
         path("admin" / "projects") {
             get {
