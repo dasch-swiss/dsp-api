@@ -17,113 +17,144 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
- *
- * This file is part of Knora.
- *
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package org.knora.webapi.util
 
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.{CoreSpec, IRI, OntologyConstants, SharedTestDataV1}
+import org.knora.webapi.util.PermissionUtilADM._
+import org.knora.webapi._
 
 import scala.collection.Map
 
-object PermissionUtilV1Spec {
+object PermissionUtilADMSpec {
     val config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 }
-class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitSender with Authenticator {
+
+class PermissionUtilADMSpec extends CoreSpec("PermissionUtilSpec") with ImplicitSender with Authenticator {
 
     val permissionLiteral = "RV knora-base:UnknownUser|V knora-base:KnownUser|M knora-base:ProjectMember|CR knora-base:Creator"
 
-    val parsedPermissionLiteral = Map(
-        "RV" -> Set(OntologyConstants.KnoraBase.UnknownUser),
-        "V" -> Set(OntologyConstants.KnoraBase.KnownUser),
-        "M" -> Set(OntologyConstants.KnoraBase.ProjectMember),
-        "CR" -> Set(OntologyConstants.KnoraBase.Creator)
+    val parsedPermissionLiteral: Map[EntityPermission, Set[IRI]] = Map(
+        RestrictedViewPermission -> Set(OntologyConstants.KnoraBase.UnknownUser),
+        ViewPermission -> Set(OntologyConstants.KnoraBase.KnownUser),
+        ModifyPermission -> Set(OntologyConstants.KnoraBase.ProjectMember),
+        ChangeRightsPermission -> Set(OntologyConstants.KnoraBase.Creator)
     )
 
-    "PermissionUtil " should {
+    "PermissionUtil" should {
 
         "return user's max permission for a specific resource (incunabula normal project member user)" in {
             PermissionUtilADM.getUserPermissionV1(
-                subjectIri = "http://rdfh.ch/00014b43f902",
-                subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
-                subjectPermissionLiteral = permissionLiteral,
+                entityIri = "http://rdfh.ch/00014b43f902",
+                entityCreator = "http://rdfh.ch/users/91e19f1e01",
+                entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+                entityPermissionLiteral = permissionLiteral,
                 userProfile = SharedTestDataV1.incunabulaMemberUser
             ) should equal(Some(6)) // modify permission
+
+            PermissionUtilADM.getUserPermissionADM(
+                entityIri = "http://rdfh.ch/00014b43f902",
+                entityCreator = "http://rdfh.ch/users/91e19f1e01",
+                entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+                entityPermissionLiteral = permissionLiteral,
+                requestingUser = SharedTestDataADM.incunabulaMemberUser
+            ) should equal(Some(ModifyPermission)) // modify permission
         }
 
         "return user's max permission for a specific resource (incunabula project admin user)" in {
             PermissionUtilADM.getUserPermissionV1(
-                subjectIri = "http://rdfh.ch/00014b43f902",
-                subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
-                subjectPermissionLiteral = permissionLiteral,
+                entityIri = "http://rdfh.ch/00014b43f902",
+                entityCreator = "http://rdfh.ch/users/91e19f1e01",
+                entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+                entityPermissionLiteral = permissionLiteral,
                 userProfile = SharedTestDataV1.incunabulaProjectAdminUser
             ) should equal(Some(8)) // change rights permission
+
+            PermissionUtilADM.getUserPermissionADM(
+                entityIri = "http://rdfh.ch/00014b43f902",
+                entityCreator = "http://rdfh.ch/users/91e19f1e01",
+                entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+                entityPermissionLiteral = permissionLiteral,
+                requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
+            ) should equal(Some(ChangeRightsPermission)) // change rights permission
         }
 
         "return user's max permission for a specific resource (incunabula creator user)" in {
             PermissionUtilADM.getUserPermissionV1(
-                subjectIri = "http://rdfh.ch/00014b43f902",
-                subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
-                subjectPermissionLiteral = permissionLiteral,
+                entityIri = "http://rdfh.ch/00014b43f902",
+                entityCreator = "http://rdfh.ch/users/91e19f1e01",
+                entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+                entityPermissionLiteral = permissionLiteral,
                 userProfile = SharedTestDataV1.incunabulaCreatorUser
             ) should equal(Some(8)) // change rights permission
+
+            PermissionUtilADM.getUserPermissionADM(
+                entityIri = "http://rdfh.ch/00014b43f902",
+                entityCreator = "http://rdfh.ch/users/91e19f1e01",
+                entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+                entityPermissionLiteral = permissionLiteral,
+                requestingUser = SharedTestDataADM.incunabulaCreatorUser
+            ) should equal(Some(ChangeRightsPermission)) // change rights permission
         }
 
         "return user's max permission for a specific resource (root user)" in {
             PermissionUtilADM.getUserPermissionV1(
-                subjectIri = "http://rdfh.ch/00014b43f902",
-                subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
-                subjectPermissionLiteral = permissionLiteral,
+                entityIri = "http://rdfh.ch/00014b43f902",
+                entityCreator = "http://rdfh.ch/users/91e19f1e01",
+                entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+                entityPermissionLiteral = permissionLiteral,
                 userProfile = SharedTestDataV1.rootUser
             ) should equal(Some(8)) // change rights permission
+
+            PermissionUtilADM.getUserPermissionADM(
+                entityIri = "http://rdfh.ch/00014b43f902",
+                entityCreator = "http://rdfh.ch/users/91e19f1e01",
+                entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+                entityPermissionLiteral = permissionLiteral,
+                requestingUser = SharedTestDataADM.rootUser
+            ) should equal(Some(ChangeRightsPermission)) // change rights permission
         }
 
         "return user's max permission for a specific resource (normal user)" in {
             PermissionUtilADM.getUserPermissionV1(
-                subjectIri = "http://rdfh.ch/00014b43f902",
-                subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
-                subjectPermissionLiteral = permissionLiteral,
+                entityIri = "http://rdfh.ch/00014b43f902",
+                entityCreator = "http://rdfh.ch/users/91e19f1e01",
+                entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+                entityPermissionLiteral = permissionLiteral,
                 userProfile = SharedTestDataV1.normalUser
-            ) should equal(Some(2)) // restricted view permission
+            ) should equal(Some(2)) // view permission
+
+            PermissionUtilADM.getUserPermissionADM(
+                entityIri = "http://rdfh.ch/00014b43f902",
+                entityCreator = "http://rdfh.ch/users/91e19f1e01",
+                entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+                entityPermissionLiteral = permissionLiteral,
+                requestingUser = SharedTestDataADM.normalUser
+            ) should equal(Some(ViewPermission)) // view permission
         }
 
         "return user's max permission for a specific resource (anonymous user)" in {
             PermissionUtilADM.getUserPermissionV1(
-                subjectIri = "http://rdfh.ch/00014b43f902",
-                subjectCreator = "http://rdfh.ch/users/91e19f1e01",
-                subjectProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
-                subjectPermissionLiteral = permissionLiteral,
+                entityIri = "http://rdfh.ch/00014b43f902",
+                entityCreator = "http://rdfh.ch/users/91e19f1e01",
+                entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+                entityPermissionLiteral = permissionLiteral,
                 userProfile = SharedTestDataV1.anonymousUser
             ) should equal(Some(1)) // restricted view permission
+
+            PermissionUtilADM.getUserPermissionADM(
+                entityIri = "http://rdfh.ch/00014b43f902",
+                entityCreator = "http://rdfh.ch/users/91e19f1e01",
+                entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+                entityPermissionLiteral = permissionLiteral,
+                requestingUser = SharedTestDataADM.anonymousUser
+            ) should equal(Some(RestrictedViewPermission)) // restricted view permission
         }
 
         "return user's max permission from assertions for a specific resource" in {
@@ -132,11 +163,18 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
                 (OntologyConstants.KnoraBase.AttachedToProject, SharedTestDataV1.INCUNABULA_PROJECT_IRI),
                 (OntologyConstants.KnoraBase.HasPermissions, permissionLiteral)
             )
-            PermissionUtilADM.getUserPermissionV1FromAssertions(
-                subjectIri = "http://rdfh.ch/00014b43f902",
+
+            PermissionUtilADM.getUserPermissionFromAssertionsV1(
+                entityIri = "http://rdfh.ch/00014b43f902",
                 assertions = assertions,
                 userProfile = SharedTestDataV1.incunabulaMemberUser
             ) should equal(Some(6)) // modify permissions
+
+            PermissionUtilADM.getUserPermissionFromAssertionsADM(
+                entityIri = "http://rdfh.ch/00014b43f902",
+                assertions = assertions,
+                requestingUser = SharedTestDataADM.incunabulaMemberUser
+            ) should equal(Some(ModifyPermission)) // modify permissions
         }
 
 
@@ -243,7 +281,7 @@ class PermissionUtilV1Spec extends CoreSpec("PermissionUtilSpec") with ImplicitS
 
             val permissionsString = "CR knora-base:Creator,1|D 2|M knora-base:ProjectMember|V knora-base:KnownUser"
 
-            val result = PermissionUtilADM.formatPermissions(permissions, PermissionType.OAP)
+            val result = PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.OAP)
             result should equal(permissionsString)
 
         }

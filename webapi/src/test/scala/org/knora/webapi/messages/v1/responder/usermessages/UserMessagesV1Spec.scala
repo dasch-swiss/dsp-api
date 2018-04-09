@@ -21,7 +21,7 @@ package org.knora.webapi.messages.v1.responder.usermessages
 
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataType, PermissionsDataADM}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataType
 import org.scalatest.{Matchers, WordSpecLike}
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 

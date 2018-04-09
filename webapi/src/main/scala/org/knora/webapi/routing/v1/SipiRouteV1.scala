@@ -28,8 +28,6 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 
-import scala.concurrent.Future
-
 /**
   * Provides a spray-routing function for the API routes that Sipi connects to.
   */

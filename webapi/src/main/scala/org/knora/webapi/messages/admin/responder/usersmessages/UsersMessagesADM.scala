@@ -185,7 +185,13 @@ case class UserGetRequestADM(maybeIri: Option[IRI],
 
     // need either user IRI or email
     if (maybeIri.isEmpty && maybeEmail.isEmpty) {
-        throw BadRequestException("Need to provide the user IRI and/or email.")
+        try {
+            throw new Exception("foo")
+        } catch {
+            case e: Exception => e.printStackTrace()
+        }
+
+        throw BadRequestException("Need to provide the user IRI and/or email. GAGA 2")
     }
 }
 

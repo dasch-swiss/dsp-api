@@ -19,7 +19,7 @@
 
 package org.knora.webapi.util
 
-import java.util.function.{Function, BiFunction}
+import java.util.function.{BiFunction, Function}
 
 /**
   * Utility functions for working with Java libraries.

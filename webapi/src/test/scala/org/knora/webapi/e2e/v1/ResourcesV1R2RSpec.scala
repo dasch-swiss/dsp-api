@@ -29,13 +29,13 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi._
 import org.knora.webapi.SharedOntologyTestDataADM._
-import org.knora.webapi.SharedTestDataV1._
+import org.knora.webapi.SharedTestDataADM._
+import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store._
@@ -68,23 +68,23 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
-    private val imagesUser = SharedTestDataV1.imagesUser01
-    private val imagesUserEmail = imagesUser.userData.email.get
+    private val imagesUser = SharedTestDataADM.imagesUser01
+    private val imagesUserEmail = imagesUser.email
 
-    private val incunabulaUser = SharedTestDataV1.incunabulaProjectAdminUser
-    private val incunabulaUserEmail = incunabulaUser.userData.email.get
+    private val incunabulaUser = SharedTestDataADM.incunabulaProjectAdminUser
+    private val incunabulaUserEmail = incunabulaUser.email
 
-    private val incunabulaUser2 = SharedTestDataV1.incunabulaCreatorUser
-    private val incunabulaUserEmail2 = incunabulaUser2.userData.email.get
+    private val incunabulaUser2 = SharedTestDataADM.incunabulaCreatorUser
+    private val incunabulaUserEmail2 = incunabulaUser2.email
 
-    private val anythingUser = SharedTestDataV1.anythingUser1
-    private val anythingUserEmail = anythingUser.userData.email.get
+    private val anythingUser = SharedTestDataADM.anythingUser1
+    private val anythingUserEmail = anythingUser.email
 
-    private val anythingAdmin = SharedTestDataV1.anythingAdminUser
-    private val anythingAdminEmail = anythingAdmin.userData.email.get
+    private val anythingAdmin = SharedTestDataADM.anythingAdminUser
+    private val anythingAdminEmail = anythingAdmin.email
 
-    private val biblioUser = SharedTestDataV1.biblioUser
-    private val biblioUserEmail = biblioUser.userData.email.get
+    private val biblioUser = SharedTestDataADM.biblioUser
+    private val biblioUserEmail = biblioUser.email
 
 
     private val password = "test"
@@ -105,7 +105,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataV1.rootUser), 30.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataADM.rootUser), 30.seconds)
     }
 
     private val firstThingIri = new MutableTestIri

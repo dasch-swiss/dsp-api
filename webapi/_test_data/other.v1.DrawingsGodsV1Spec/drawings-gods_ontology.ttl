@@ -5,9 +5,11 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix drawings-gods: <http://www.knora.org/ontology/0105/drawings-gods#> .
 
-<http://www.knora.org/ontology/0105/drawings-gods> a owl:Ontology .
+<http://www.knora.org/ontology/0105/drawings-gods> a owl:Ontology ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0105> .
 
 drawings-gods:Annotation a owl:Class ;
 	rdfs:subClassOf knora-base:DocumentRepresentation , _:node1c6amen3ex1 , _:node1c6amen3ex2 , _:node1c6amen3ex3 ;

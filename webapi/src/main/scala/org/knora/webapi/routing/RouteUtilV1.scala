@@ -27,8 +27,8 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.http.ApiStatusCodesV1
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingRequestV1, GetMappingResponseV1}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagsV1
@@ -200,7 +200,7 @@ object RouteUtilV1 {
     def convertXMLtoStandoffTagV1(xml: String,
                                   mappingIri: IRI,
                                   acceptStandoffLinksToClientIDs: Boolean,
-                                  userProfile: UserProfileV1,
+                                  userProfile: UserADM,
                                   settings: SettingsImpl,
                                   responderManager: ActorSelection,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextWithStandoffTagsV1] = {

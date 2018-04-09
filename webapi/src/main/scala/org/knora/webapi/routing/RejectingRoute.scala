@@ -17,10 +17,10 @@ package org.knora.webapi.routing
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi.{Settings, SettingsImpl}
-import akka.http.scaladsl.model.StatusCodes._
 
 /**
   * A route used for faking the image server.

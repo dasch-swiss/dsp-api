@@ -12,8 +12,7 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.ResetTriplestoreContent
-import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
-import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologiesV2, KnoraApiV2WithValueObjects}
+import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologiesV2, LoadOntologiesRequestV2}
 import org.knora.webapi.responders._
 import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.store._
@@ -26,13 +25,12 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
 object OntologyV2R2RSpec {
-    private val imagesUserProfile = SharedTestDataV1.imagesUser01
-    private val imagesUsername = imagesUserProfile.userData.email.get
-    private val imagesProjectIri = SharedTestDataV1.IMAGES_PROJECT_IRI
+    private val imagesUserProfile = SharedTestDataADM.imagesUser01
+    private val imagesUsername = imagesUserProfile.email
+    private val imagesProjectIri = SharedTestDataADM.IMAGES_PROJECT_IRI
 
-    private val anythingUserProfile = SharedTestDataV1.anythingAdminUser
-    private val anythingUsername = anythingUserProfile.userData.email.get
-    private val anythingProjectIri = SharedTestDataV1.ANYTHING_PROJECT_IRI
+    private val anythingUserProfile = SharedTestDataADM.anythingAdminUser
+    private val anythingUsername = anythingUserProfile.email
 
     private val password = "test"
 }
@@ -103,7 +101,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataV1.rootUser), 30.seconds)
+        Await.result(responderManager ? LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser), 30.seconds)
     }
 
     "The Ontologies v2 Endpoint" should {
@@ -375,6 +373,15 @@ class OntologyV2R2RSpec extends R2RSpec {
 
                     case _ => throw AssertionException(s"Unexpected response: $responseJsonDoc")
                 }
+            }
+        }
+
+        "delete the 'foo' ontology" in {
+            val fooIriEncoded = URLEncoder.encode(fooIri.get, "UTF-8")
+            val lastModificationDate = URLEncoder.encode(fooLastModDate.toString, "UTF-8")
+
+            Delete(s"/v2/ontologies/$fooIriEncoded?lastModificationDate=$lastModificationDate") ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
             }
         }
 

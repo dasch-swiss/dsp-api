@@ -2,6 +2,7 @@
   "knora-api:hasOntologies" : {
     "@id" : "http://api.knora.org/ontology/salsah-gui/v2",
     "@type" : "owl:Ontology",
+    "knora-api:attachedToProject" : "http://www.knora.org/ontology/knora-base#SystemProject",
     "knora-api:hasClasses" : {
       "salsah-gui:Guielement" : {
         "@id" : "salsah-gui:Guielement",
@@ -108,7 +109,7 @@
         "knora-api:subjectType" : "http://www.w3.org/2002/07/owl#Restriction"
       }
     },
-    "rdfs:label" : "salsah-gui"
+    "rdfs:label" : "The salsah-gui ontology"
   },
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

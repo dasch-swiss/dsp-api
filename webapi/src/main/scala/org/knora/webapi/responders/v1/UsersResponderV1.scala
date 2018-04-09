@@ -32,7 +32,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.Use
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, MessageUtil}
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
 
 import scala.concurrent.Future
 

@@ -25,7 +25,8 @@ import akka.actor.Props
 import akka.testkit._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.messages.v2.responder.persistentmapmessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
@@ -37,8 +38,8 @@ import scala.concurrent.duration._
   */
 object PersistentMapResponderV2Spec {
     private val base64Encoder = Base64.getUrlEncoder.withoutPadding
-    private val userProfile = SharedTestDataV1.incunabulaProjectAdminUser
-    private val userEmailBytes = userProfile.userData.email.getOrElse(throw AssertionException(s"Test user has no email address")).getBytes("UTF-8")
+    private val userProfile = SharedTestDataADM.incunabulaProjectAdminUser
+    private val userEmailBytes = userProfile.email.getBytes("UTF-8")
     private val userEmailBase64 = base64Encoder.encodeToString(userEmailBytes)
     private val testMap1Path = s"user/$userEmailBase64/testmap1"
 
@@ -83,8 +84,8 @@ class PersistentMapResponderV2Spec extends CoreSpec() with ImplicitSender {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(userProfile)
-        expectMsg(10.seconds, LoadOntologiesResponse())
+        responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
+        expectMsgType[SuccessResponseV2](10.seconds)
     }
 
     "The persistent map responder" should {

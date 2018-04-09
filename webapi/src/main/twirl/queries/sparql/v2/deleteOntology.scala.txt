@@ -18,23 +18,15 @@
  *@
 
 @import org.knora.webapi.util.SmartIri
-@import java.time.Instant
 
 @*
- * Creates a new, empty ontology. If the ontology already exists, this update does nothing.
+ * Deletes an ontology.
  *
  * @param triplestore the name of the triplestore being used.
- * @param ontologyNamedGraphIri the IRI of the named graph where the ontology should be stored.
- * @param ontologyIri the IRI of the ontology to be created.
- * @param projectIri the IRI of the project that the ontology belongs to.
- * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
+ * @param ontologyNamedGraphIri the IRI of the named graph where the ontology is stored.
  *@
 @(triplestore: String,
-  ontologyNamedGraphIri: SmartIri,
-  ontologyIri: SmartIri,
-  projectIri: SmartIri,
-  ontologyLabel: String,
-  currentTime: Instant)
+  ontologyNamedGraphIri: SmartIri)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -42,12 +34,9 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-INSERT {
+DELETE {
     GRAPH ?ontologyNamedGraph {
-        ?ontology rdf:type owl:Ontology ;
-            knora-base:attachedToProject ?project ;
-            rdfs:label """@ontologyLabel"""^^xsd:string ;
-            knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+        ?s ?p ?o .
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
@@ -56,10 +45,8 @@ INSERT {
 }
 WHERE {
     BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
-    BIND(IRI("@ontologyIri") AS ?ontology)
-    BIND(IRI("@projectIri") AS ?project)
 
-    FILTER NOT EXISTS {
-        ?ontology rdf:type ?existingOntologyType .
+    GRAPH ?ontologyNamedGraph {
+        ?s ?p ?o .
     }
 }

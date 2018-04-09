@@ -19,15 +19,11 @@
 
 package org.knora.webapi
 
-import java.io.InputStream
-import java.security.{KeyStore, SecureRandom}
-
-import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
-import akka.actor.{ActorSystem, _}
+import akka.actor._
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.{ConnectionContext, Http}
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
@@ -35,7 +31,7 @@ import kamon.Kamon
 import kamon.jaeger.Jaeger
 import kamon.prometheus.PrometheusReporter
 import kamon.zipkin.ZipkinReporter
-import org.knora.webapi.app.{ApplicationStateActor, _}
+import org.knora.webapi.app._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
@@ -53,6 +49,7 @@ import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
+
 /**
   * Knora Core abstraction.
   */
@@ -98,17 +95,17 @@ trait KnoraService {
     /**
       * The actor used for storing the application application wide variables in a thread safe maner.
       */
-    protected val applicationStateActor = system.actorOf(Props(new ApplicationStateActor), name = APPLICATION_STATE_ACTOR_NAME)
+    protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor), name = APPLICATION_STATE_ACTOR_NAME)
 
     /**
       * The supervisor actor that forwards messages to responder actors to handle API requests.
       */
-    protected val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     /**
       * The supervisor actor that forwards messages to actors that deal with persistent storage.
       */
-    protected val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+    protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
@@ -118,7 +115,7 @@ trait KnoraService {
     /**
       * A user representing the Knora API server, used for initialisation on startup.
       */
-    private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
+    private val systemUser = KnoraSystemInstances.Users.SystemUser
 
     /**
       * All routes composed together and CORS activated.
@@ -143,7 +140,6 @@ trait KnoraService {
             AuthenticationRouteV2.knoraApiPath(system, settings, log) ~
             GroupsRouteADM.knoraApiPath(system, settings, log) ~
             ListsRouteADM.knoraApiPath(system, settings, log) ~
-            OntologiesRouteADM.knoraApiPath(system, settings, log) ~
             PermissionsRouteADM.knoraApiPath(system, settings, log) ~
             ProjectsRouteADM.knoraApiPath(system, settings, log) ~
             StoreRouteADM.knoraApiPath(system, settings, log) ~
@@ -248,11 +244,6 @@ trait KnoraService {
 
         Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
         println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}.")
-
-
-
-
-
     }
 
     /**

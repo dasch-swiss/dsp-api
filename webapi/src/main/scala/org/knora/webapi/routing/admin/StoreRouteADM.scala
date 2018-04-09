@@ -29,7 +29,7 @@ import javax.ws.rs.Path
 import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, StoresADMJsonProtocol}
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.routing.{Authenticator, RouteUtilADM, RouteUtilV1}
+import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 
 import scala.concurrent.duration._
 
