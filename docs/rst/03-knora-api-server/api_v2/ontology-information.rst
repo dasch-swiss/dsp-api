@@ -675,6 +675,21 @@ Currently, the only modifiable ontology metadata is the ontology's ``rdfs:label`
 A successful response will be a JSON-LD document containing ``knora-api:hasOntologies``,
 providing only the ontology's metadata.
 
+
+Deleting an Ontology
+^^^^^^^^^^^^^^^^^^^^
+
+An ontology can be deleted only if it is not used in data.
+
+::
+
+    HTTP DELETE to http://host/v2/ontologies/ONTOLOGY_IRI?lastModificationDate=ONTOLOGY_LAST_MODIFICATION_DATE
+
+The ontology IRI and the ontology's last modification date must be URL-encoded.
+
+A successful response will be a JSON-LD document containing a confirmation message.
+
+
 Creating a Class Without Cardinalities
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

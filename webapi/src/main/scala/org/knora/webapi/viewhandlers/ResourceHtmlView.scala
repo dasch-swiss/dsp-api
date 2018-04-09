@@ -23,12 +23,10 @@ import akka.actor.ActorSelection
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.{KnoraSystemInstances, OntologyConstants}
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceFullResponseV1
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
+import org.knora.webapi.{KnoraSystemInstances, OntologyConstants}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Await

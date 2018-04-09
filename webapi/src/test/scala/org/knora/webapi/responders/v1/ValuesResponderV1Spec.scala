@@ -25,14 +25,14 @@ import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.SharedOntologyTestDataADM._
-import org.knora.webapi.SharedTestDataV1._
+import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
@@ -58,11 +58,11 @@ object ValuesResponderV1Spec {
     private val miscResourceIri = "http://data.knora.org/miscResource"
     private val aThingIri = "http://data.knora.org/a-thing"
 
-    private val incunabulaUser = SharedTestDataV1.incunabulaMemberUser
+    private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
 
-    private val imagesUser = SharedTestDataV1.imagesUser01
+    private val imagesUser = SharedTestDataADM.imagesUser01
 
-    private val anythingUser = SharedTestDataV1.anythingUser1
+    private val anythingUser = SharedTestDataADM.anythingUser1
 
     private val versionHistoryWithHiddenVersion = ValueVersionHistoryGetResponseV1(
         valueVersions = Vector(
@@ -259,7 +259,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
+        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
         expectMsg(30.seconds, LoadOntologiesResponse())
     }
 
@@ -1474,11 +1474,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "change the partOf property of a page" in {
 
-            // A test UserProfileV1.
-            val userProfile = SharedTestDataV1.incunabulaCreatorUser
-
-            // A test UserDataV1.
-            val userData = userProfile.userData
+            // A test UserProfile.
+            val userProfile = SharedTestDataADM.incunabulaCreatorUser
 
             val linkTargetIri = "http://data.knora.org/e41ab5695c"
 
@@ -1506,11 +1503,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "try to change the partOf property of a page, but submit the current target Iri" in {
 
-            // A test UserProfileV1.
-            val userProfile = SharedTestDataV1.incunabulaProjectAdminUser
-
-            // A test UserDataV1.
-            val userData = userProfile.userData
+            // A test UserADM.
+            val userProfile = SharedTestDataADM.incunabulaProjectAdminUser
 
             val linkTargetIri = "http://data.knora.org/e41ab5695c"
 
@@ -1582,7 +1576,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 originalFilename = "Chlaus.jpg",
                 originalMimeType = "image/jpeg",
                 filename = "./test_server/images/Chlaus.jpg",
-                userProfile = incunabulaUser
+                userProfile = incunabulaUser.asUserProfileV1
             )
 
             val fileChangeRequest = ChangeFileValueRequestV1(

@@ -23,22 +23,19 @@
   */
 package org.knora.webapi.responders.v1
 
-import java.util.UUID
-
 import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.SharedTestDataV1._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse, NamedGraphV1}
+import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.util.MutableTestIri
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 
 
@@ -56,7 +53,7 @@ object ProjectsResponderV1Spec {
   */
 class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) with ImplicitSender {
 
-    private implicit val executionContext = system.dispatcher
+    private implicit val executionContext: ExecutionContextExecutor = system.dispatcher
     private val timeout = 5.seconds
 
     private val rootUserProfileV1 = SharedTestDataV1.rootUser
@@ -72,7 +69,7 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
+        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
@@ -131,32 +128,6 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
                 expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found")))
             }
 
-        }
-
-        "used to query named graphs" should {
-            "return all named graphs" in {
-                actorUnderTest ! ProjectsNamedGraphGetV1(SharedTestDataV1.rootUser)
-
-                val received: Seq[NamedGraphV1] = expectMsgType[Seq[NamedGraphV1]]
-                received.size should be (8)
-            }
-
-            /*
-            "return all named graphs after adding a new ontology" in {
-                actorUnderTest ! ProjectOntologyAddV1(
-                    projectIri = IMAGES_PROJECT_IRI,
-                    ontologyIri = "http://wwww.knora.org/ontology/00FF/blabla1",
-                    apiRequestID = UUID.randomUUID()
-                )
-                val received01: ProjectInfoV1 = expectMsgType[ProjectInfoV1](timeout)
-                received01.ontologies.size should be (2)
-
-                actorUnderTest ! ProjectsNamedGraphGetV1(SharedTestDataV1.rootUser)
-
-                val received02: Seq[NamedGraphV1] = expectMsgType[Seq[NamedGraphV1]]
-                received02.size should be (9)
-            }
-            */
         }
 
         "used to query members" should {

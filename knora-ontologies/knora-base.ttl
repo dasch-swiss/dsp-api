@@ -26,7 +26,11 @@
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @base <http://www.knora.org/ontology/knora-base> .
 
-<http://www.knora.org/ontology/knora-base> rdf:type owl:Ontology .
+<http://www.knora.org/ontology/knora-base> rdf:type owl:Ontology ;
+
+    rdfs:label "The Knora base ontology" ;
+
+    :attachedToProject :SystemProject .
 
 
 

@@ -21,7 +21,6 @@ package org.knora.webapi
 
 import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
-import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoShortADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -37,7 +36,7 @@ object SharedTestDataADM {
     /** System Admin Data                **/
     /** ***********************************/
 
-    val SYSTEM_PROJECT_IRI = OntologyConstants.KnoraBase.SystemProject // built-in project
+    val SYSTEM_PROJECT_IRI: IRI = OntologyConstants.KnoraBase.SystemProject // built-in project
 
     /* represents the user profile of 'root' as found in admin-data.ttl */
     def rootUser = UserADM(
@@ -113,7 +112,7 @@ object SharedTestDataADM {
     )
 
     /* represents an anonymous user */
-    def anonymousUser = KnoraSystemInstances.Users.AnonymousUser
+    def anonymousUser: UserADM = KnoraSystemInstances.Users.AnonymousUser
 
 
     /* represents the 'multiuser' as found in admin-data.ttl */
@@ -149,12 +148,23 @@ object SharedTestDataADM {
     )
 
     /* represents the full project info of the Knora System project */
-    def systemProject = KnoraSystemInstances.Projects.SystemProject
+    def systemProject = ProjectADM(
+        id = OntologyConstants.KnoraBase.SystemProject,
+        shortname = "SystemProject",
+        shortcode = Some("FFFF"),
+        longname = Some("Knora System Project"),
+        description = Seq(StringLiteralV2(value = "Knora System Project", language = Some("en"))),
+        keywords = Seq.empty[String],
+        logo = None,
+        ontologies = Seq(OntologyConstants.KnoraBase.KnoraBaseOntologyIri, OntologyConstants.SalsahGui.SalsahGuiOntologyIri, OntologyConstants.Standoff.StandoffOntologyIri),
+        status = true,
+        selfjoin = false
+    )
 
 
-    /*************************************/
+    /** ***********************************/
     /** Images Demo Project Admin Data  **/
-    /*************************************/
+    /** ***********************************/
 
     val IMAGES_PROJECT_IRI = "http://rdfh.ch/projects/00FF"
 
@@ -244,10 +254,7 @@ object SharedTestDataADM {
         description = Seq(StringLiteralV2(value = "A demo project of a collection of images", language = Some("en"))),
         keywords = Seq("images", "collection").sorted,
         logo = None,
-        ontologies = Seq(OntologyInfoShortADM(
-            ontologyIri = SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI,
-            ontologyName = "images"
-        )),
+        ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI),
         status = true,
         selfjoin = false
     )
@@ -283,9 +290,9 @@ object SharedTestDataADM {
     )
 
 
-    /*************************************/
+    /** ***********************************/
     /** Incunabula Project Admin Data   **/
-    /*************************************/
+    /** ***********************************/
 
     val INCUNABULA_PROJECT_IRI = "http://rdfh.ch/projects/77275339"
 
@@ -343,7 +350,7 @@ object SharedTestDataADM {
     /* represents 'root-alt' (Incunabula Creator and ProjectMember) as found in admin-data.ttl  */
     def incunabulaMemberUser = UserADM(
         id = "http://rdfh.ch/users/incunabulaMemberUser",
-        email = "user.test2t@test.ch",
+        email = "test.user2@test.ch",
         password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
         token = None,
         givenName = "User",
@@ -374,19 +381,41 @@ object SharedTestDataADM {
         description = Seq(StringLiteralV2(value = "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>", language = None)),
         keywords = Seq("Basler Frühdrucke", "Inkunabel", "Narrenschiff", "Wiegendrucke", "Sebastian Brant", "Bilderfolgen", "early print", "incunabula", "ship of fools", "Kunsthistorisches Seminar Universität Basel", "Late Middle Ages", "Letterpress Printing", "Basel", "Contectualisation of images").sorted,
         logo = Some("incunabula_logo.png"),
-        ontologies = Seq(OntologyInfoShortADM(
-            ontologyIri = SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI,
-            ontologyName = "incunabula"
-        )),
+        ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI),
         status = true,
         selfjoin = false
     )
 
-    /************************************/
+    /** **********************************/
     /** Anything Admin Data            **/
-    /************************************/
+    /** **********************************/
 
     val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/anything"
+
+    def anythingAdminUser = UserADM(
+        id = "http://rdfh.ch/users/AnythingAdminUser",
+        email = "anything.admin@example.org",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
+        token = None,
+        givenName = "Anything",
+        familyName = "Admin",
+        status = true,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq(anythingProject),
+        sessionId = None,
+        permissions = PermissionsDataADM(
+            groupsPerProject = Map(
+                ANYTHING_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
+            ),
+            administrativePermissionsPerProject = Map(
+                ANYTHING_PROJECT_IRI -> Set(
+                    PermissionADM.ProjectAdminAllPermission,
+                    PermissionADM.ProjectResourceCreateAllPermission
+                )
+            )
+        )
+    )
 
     def anythingUser1: UserADM = UserADM(
         id = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
@@ -445,18 +474,15 @@ object SharedTestDataADM {
         description = Seq(StringLiteralV2(value = "Anything Project", language = None)),
         keywords = Seq.empty[String],
         logo = None,
-        ontologies = Seq(OntologyInfoShortADM(
-            ontologyIri = SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI,
-            ontologyName = "anything"
-        )),
+        ontologies = Seq("http://www.knora.org/ontology/anything", "http://www.knora.org/ontology/something"),
         status = true,
         selfjoin = false
     )
 
 
-    /************************************/
+    /** **********************************/
     /** BEOL                           **/
-    /************************************/
+    /** **********************************/
 
     val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
 
@@ -468,18 +494,15 @@ object SharedTestDataADM {
         description = Seq(StringLiteralV2(value = "Bernoulli-Euler Online", language = None)),
         keywords = Seq.empty[String],
         logo = None,
-        ontologies = Seq(OntologyInfoShortADM(
-            ontologyIri = "http://www.knora.org/ontology/beol",
-            ontologyName = "beol"
-        )),
+        ontologies = Seq("http://www.knora.org/ontology/0801/beol"),
         status = true,
         selfjoin = false
     )
 
 
-    /************************************/
+    /** **********************************/
     /** BIBLIO                         **/
-    /************************************/
+    /** **********************************/
 
     val BIBLIO_PROJECT_IRI = "http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ"
 
@@ -491,10 +514,7 @@ object SharedTestDataADM {
         description = Seq(StringLiteralV2(value = "Bibliography", language = None)),
         keywords = Seq.empty[String],
         logo = None,
-        ontologies = Seq(OntologyInfoShortADM(
-            ontologyIri = "http://www.knora.org/ontology/biblio",
-            ontologyName = "biblio"
-        )),
+        ontologies = Seq("http://www.knora.org/ontology/biblio"),
         status = true,
         selfjoin = false
     )
@@ -515,9 +535,9 @@ object SharedTestDataADM {
         permissions = PermissionsDataADM()
     )
 
-    /************************************/
+    /** **********************************/
     /** DOKUBIB                        **/
-    /************************************/
+    /** **********************************/
 
     val DOKUBIB_PROJECT_IRI = "http://rdfh.ch/projects/00FE"
 
@@ -529,10 +549,7 @@ object SharedTestDataADM {
         description = Seq(StringLiteralV2(value = "Dokubib", language = None)),
         keywords = Seq.empty[String],
         logo = None,
-        ontologies = Seq(OntologyInfoShortADM(
-                ontologyIri = "http://www.knora.org/ontology/00FE/dokubib",
-                ontologyName = "dokubib"
-        )),
+        ontologies = Seq("http://www.knora.org/ontology/00FE/dokubib"),
         status = false,
         selfjoin = false
     )

@@ -20,7 +20,7 @@
 package org.knora.webapi.messages.v1.responder.ckanmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
 
@@ -38,9 +38,9 @@ sealed trait CkanResponderRequestV1 extends KnoraRequestV1
   * @param projects
   * @param limit
   * @param info
-  * @param userProfileV1
+  * @param userProfile
   */
-case class CkanRequestV1(projects: Option[Seq[String]], limit: Option[Int], info: Boolean, userProfileV1: UserProfileV1) extends CkanResponderRequestV1
+case class CkanRequestV1(projects: Option[Seq[String]], limit: Option[Int], info: Boolean, userProfile: UserADM) extends CkanResponderRequestV1
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API response

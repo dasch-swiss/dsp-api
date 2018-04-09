@@ -25,10 +25,6 @@ import net.sf.ehcache.{Cache, CacheManager, Ehcache, Element}
 import org.knora.webapi.ApplicationCacheException
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.Try
-
 /**
   * Maintains in-memory caches, and caches values, using Ehcache (http://ehcache.org/). Each cache is accessible
   * by name from any function running in the same JVM.

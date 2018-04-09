@@ -27,7 +27,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
-import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilADM}
@@ -888,7 +887,7 @@ class PermissionsResponderADM extends Responder {
       * @param requestingUser   the user initiating the request.
       * @return an optional string with object access permission statements
       */
-    def defaultObjectAccessPermissionsStringForEntityGetADM(projectIri: IRI, resourceClassIri: IRI, propertyIri: Option[IRI], entityType: String, targetUser: UserProfileV1, requestingUser: UserADM): Future[DefaultObjectAccessPermissionsStringResponseADM] = {
+    def defaultObjectAccessPermissionsStringForEntityGetADM(projectIri: IRI, resourceClassIri: IRI, propertyIri: Option[IRI], entityType: String, targetUser: UserADM, requestingUser: UserADM): Future[DefaultObjectAccessPermissionsStringResponseADM] = {
 
         //log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - projectIRI: $projectIRI, resourceClassIRI: $resourceClassIRI, propertyIRI: $propertyIRI, permissionData:$permissionData")
         for {
@@ -901,14 +900,14 @@ class PermissionsResponderADM extends Responder {
 
 
             /* Get the groups the user is member of. */
-            userGroupsOption: Option[Seq[IRI]] = targetUser.permissionData.groupsPerProject.get(projectIri)
+            userGroupsOption: Option[Seq[IRI]] = targetUser.permissions.groupsPerProject.get(projectIri)
             userGroups: Seq[IRI] = userGroupsOption match {
                 case Some(groups) => groups
                 case None => Seq.empty[IRI]
             }
 
             /* Explicitly add 'SystemAdmin' and 'KnownUser' groups. */
-            extendedUserGroups: List[IRI] = if (targetUser.permissionData.isSystemAdmin) {
+            extendedUserGroups: List[IRI] = if (targetUser.permissions.isSystemAdmin) {
                 OntologyConstants.KnoraBase.SystemAdmin :: OntologyConstants.KnoraBase.KnownUser :: userGroups.toList
             } else {
                 OntologyConstants.KnoraBase.KnownUser :: userGroups.toList
@@ -1095,7 +1094,7 @@ class PermissionsResponderADM extends Responder {
             /* Create permissions string */
             result = permissionsListBuffer.length match {
                 case 1 => {
-                    PermissionUtilADM.formatPermissions(permissionsListBuffer.head._2, PermissionType.OAP)
+                    PermissionUtilADM.formatPermissionADMs(permissionsListBuffer.head._2, PermissionType.OAP)
                 }
                 case _ => throw AssertionException("The permissions list buffer holding default object permissions should never be larger then 1.")
             }

@@ -14,7 +14,8 @@
 @prefix : <http://www.knora.org/ontology/0801/beol#> .
 
 <http://www.knora.org/ontology/0801/beol> rdf:type owl:Ontology ;
-    rdfs:label "The BEOL ontology" .
+    rdfs:label "The BEOL ontology" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0801> .
 
 ##########################################################
 #

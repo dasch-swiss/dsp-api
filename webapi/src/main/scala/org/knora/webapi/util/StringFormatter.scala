@@ -37,8 +37,8 @@ import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.JavaUtil.Optional
 import spray.json.JsonParser
 
-import scala.util.matching.Regex
 import scala.util.control.Exception._
+import scala.util.matching.Regex
 
 /**
   * Provides the singleton instance of [[StringFormatter]], as well as string formatting constants.
