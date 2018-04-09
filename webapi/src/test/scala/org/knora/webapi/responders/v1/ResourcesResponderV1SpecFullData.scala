@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -27,7 +26,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
-import org.knora.webapi.{OntologyConstants, Settings, SharedTestDataV1}
+import org.knora.webapi.{OntologyConstants, Settings}
 
 
 object ResourcesResponderV1SpecFullData {
@@ -51,7 +50,7 @@ object ResourcesResponderV1SpecFullData {
                     locdata = None,
                     locations = None,
                     preview = None,
-                    restype_iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "knora-base/link.gif"),
+                    restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/link.gif"),
                     restype_description = Some("Verkn\u00FCpfung mehrerer Resourcen"),
                     restype_label = Some("Verkn\u00FCpfungsobjekt"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
@@ -75,7 +74,7 @@ object ResourcesResponderV1SpecFullData {
                     locdata = None,
                     locations = None,
                     preview = None,
-                    restype_iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "knora-base/link.gif"),
+                    restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/link.gif"),
                     restype_description = Some("Verkn\u00FCpfung mehrerer Resourcen"),
                     restype_label = Some("Verkn\u00FCpfungsobjekt"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
@@ -395,7 +394,7 @@ object ResourcesResponderV1SpecFullData {
         ))),
         resdata = Some(ResourceDataV1(
             rights = Some(6),
-            iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"),
+            iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
             restype_label = Some("Buch"),
             restype_name = "http://www.knora.org/ontology/incunabula#book",
             res_id = "http://data.knora.org/c5058f3a"
@@ -409,7 +408,7 @@ object ResourcesResponderV1SpecFullData {
             locdata = None,
             locations = None,
             preview = None,
-            restype_iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"),
+            restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
             restype_description = Some("Diese Resource-Klasse beschreibt ein Buch"),
             restype_label = Some("Buch"),
             restype_name = Some("http://www.knora.org/ontology/incunabula#book"),
@@ -621,12 +620,12 @@ object ResourcesResponderV1SpecFullData {
                 locations = Nil,
                 value_rights = Vector(Some(2)),
                 value_firstprops = Vector(Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi")),
-                value_iconsrcs = Vector(Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif")),
+                value_iconsrcs = Vector(Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif")),
                 value_restype = Vector(Some("Buch")),
                 comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/8a0b1e75/values/ac9ddbf4-62a7-4cdc-b530-16cbbaa265bf"),
                 values = Vector(LinkV1(
-                    valueResourceClassIcon = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"),
+                    valueResourceClassIcon = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
                     valueResourceClassLabel = Some("Buch"),
                     valueResourceClass = Some("http://www.knora.org/ontology/incunabula#book"),
                     valueLabel = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
@@ -740,7 +739,7 @@ object ResourcesResponderV1SpecFullData {
         ))),
         resdata = Some(ResourceDataV1(
             rights = Some(6),
-            iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/page.gif"),
+            iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
             restype_label = Some("Seite"),
             restype_name = "http://www.knora.org/ontology/incunabula#page",
             res_id = "http://data.knora.org/8a0b1e75"
@@ -843,7 +842,7 @@ object ResourcesResponderV1SpecFullData {
                 origname = "ad+s167_druck1=0001.tif",
                 format_name = "JPEG"
             )),
-            restype_iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/page.gif"),
+            restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
             restype_description = Some("Eine Seite ist ein Teil eines Buchs"),
             restype_label = Some("Seite"),
             restype_name = Some("http://www.knora.org/ontology/incunabula#page"),
@@ -872,7 +871,7 @@ object ResourcesResponderV1SpecFullData {
                     locdata = None,
                     locations = None,
                     preview = None,
-                    restype_iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "knora-base/link.gif"),
+                    restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/link.gif"),
                     restype_description = Some("Verknüpfung mehrerer Resourcen (Systemobject)"),
                     restype_label = Some("Verknüpfungsobjekt"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
@@ -896,7 +895,7 @@ object ResourcesResponderV1SpecFullData {
                     locdata = None,
                     locations = None,
                     preview = None,
-                    restype_iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "knora-base/region.gif"),
+                    restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/region.gif"),
                     restype_description = Some("This Resource represents a geometric region of a resource. The geometry is represented currently as JSON string."),
                     restype_label = Some("Region"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),
@@ -920,7 +919,7 @@ object ResourcesResponderV1SpecFullData {
                     locdata = None,
                     locations = None,
                     preview = None,
-                    restype_iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "knora-base/region.gif"),
+                    restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/region.gif"),
                     restype_description = Some("This Resource represents a geometric region of a resource. The geometry is represented currently as JSON string."),
                     restype_label = Some("Region"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),
@@ -944,7 +943,7 @@ object ResourcesResponderV1SpecFullData {
                     locdata = None,
                     locations = None,
                     preview = None,
-                    restype_iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "knora-base/link.gif"),
+                    restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/link.gif"),
                     restype_description = Some("Verknüpfung mehrerer Resourcen (Systemobject)"),
                     restype_label = Some("Verknüpfungsobjekt"),
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
@@ -1045,12 +1044,12 @@ object ResourcesResponderV1SpecFullData {
                 locations = Nil,
                 value_rights = Vector(Some(6)),
                 value_firstprops = Vector(Some("Derselbe Holzschnitt wird auch auf Seite b8v der deutschen Ausgabe des Narrenschiffs verwendet.")),
-                value_iconsrcs = Vector(Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "knora-base/region.gif")),
+                value_iconsrcs = Vector(Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/region.gif")),
                 value_restype = Vector(Some("Region")),
                 comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"),
                 values = Vector(LinkV1(
-                    valueResourceClassIcon = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "knora-base/region.gif"),
+                    valueResourceClassIcon = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/region.gif"),
                     valueResourceClassLabel = Some("Region"),
                     valueResourceClass = Some("http://www.knora.org/ontology/knora-base#Region"),
                     valueLabel = Some("Derselbe Holzschnitt wird auch auf Seite b8v der deutschen Ausgabe des Narrenschiffs verwendet."),
@@ -1070,12 +1069,12 @@ object ResourcesResponderV1SpecFullData {
                 locations = Nil,
                 value_rights = Vector(Some(6)),
                 value_firstprops = Vector(Some("b8v")),
-                value_iconsrcs = Vector(Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/page.gif")),
+                value_iconsrcs = Vector(Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif")),
                 value_restype = Vector(Some("Seite")),
                 comments = Vector(None),
                 value_ids = Vector("http://data.knora.org/047db418ae06/values/2335c869-b649-4dd8-b4b5-e82c88449d62"),
                 values = Vector(LinkV1(
-                    valueResourceClassIcon = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/page.gif"),
+                    valueResourceClassIcon = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
                     valueResourceClassLabel = Some("Seite"),
                     valueResourceClass = Some("http://www.knora.org/ontology/incunabula#page"),
                     valueLabel = Some("b8v"),
@@ -1094,7 +1093,7 @@ object ResourcesResponderV1SpecFullData {
         ))),
         resdata = Some(ResourceDataV1(
             rights = Some(6),
-            iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "knora-base/region.gif"),
+            iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/region.gif"),
             restype_label = Some("Region"),
             restype_name = "http://www.knora.org/ontology/knora-base#Region",
             res_id = "http://data.knora.org/047db418ae06"
@@ -1108,7 +1107,7 @@ object ResourcesResponderV1SpecFullData {
             locdata = None,
             locations = None,
             preview = None,
-            restype_iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "knora-base/region.gif"),
+            restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/region.gif"),
             restype_description = Some("This Resource represents a geometric region of a resource. The geometry is represented currently as JSON string."),
             restype_label = Some("Region"),
             restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),

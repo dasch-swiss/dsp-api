@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -80,7 +79,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
+        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
     "The UsersResponder " when {

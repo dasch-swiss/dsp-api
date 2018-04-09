@@ -1,0 +1,242 @@
+/*
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+@import "project_default/_search";
+
+/******************************************************************************
+ * Tables for displaying search results
+ */
+table.searchres {
+	width: 100%;
+	margin: 0px;
+	border-collapse: collapse;
+	-webkit-border-vertical-spacing: 0px;
+	-webkit-border-horizontal-spacing: 0px;
+	-moz-border-vertical-spacing: 0px;
+	-moz-border-horizontal-spacing: 0px;
+	-khtml-border-vertical-spacing: 0px;
+	-khtml-border-horizontal-spacing: 0px;
+	border-vertical-spacing: 0px;
+	border-horizontal-spacing: 0px;
+    border-style: none;
+}
+table.searchres th {
+	background-color: @SEARCH_TABLE_TITLE_COL;
+	padding: 1px 3px 1px 3px;
+	margin: 0px;
+	border-style: none;
+	text-align: left;
+}
+
+.focus table.searchres th {
+	background-color: @SEARCH_TABLE_TITLE_COL_FOCUS;
+}
+
+table.searchres tr:nth-child(odd) {
+	background-color: @SEARCH_TABLE_ROW_ODD;
+	margin: 0px;
+}
+table.searchres tr:nth-child(even) {
+	background-color: @SEARCH_TABLE_ROW_EVEN;
+	margin: 0px;
+}
+table.searchres tr:hover {
+	background-color: @SEARCH_TABLE_ROW_HOVER;
+	cursor: pointer;
+}
+table.searchres td {
+	margin: 0px;
+	padding: 1px 3px 1px 3px;
+	border-style: none;
+
+	-webkit-border-vertical-spacing: 0px;
+	-webkit-border-horizontal-spacing: 0px;
+	-moz-border-vertical-spacing: 0px;
+	-moz-border-horizontal-spacing: 0px;
+	-khtml-border-vertical-spacing: 0px;
+	-khtml-border-horizontal-spacing: 0px;
+	border-vertical-spacing: 0px;
+	border-horizontal-spacing: 0px;
+}
+
+.searchres_highlight {
+	font-weight: bold;
+	background-color: @SEARCH_RES_HIGHLIGHT;
+}
+
+.searchinfowin {
+	background-color: #000;
+	opacity: 0.85;
+	filter:alpha(opacity=85);
+	color: #fff;
+	border-style: solid;
+	border-color: #000;
+	border-width: 2px;
+	border-radius: 10px;
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	-khtml-border-radius: 10px;
+  	-moz-box-shadow: 5px 5px 5px #222;
+  	-webkit-box-shadow: 5px 5px 5px #222;
+  	-khtml-box-shadow: 5px 5px 5px #222;
+	box-shadow: 5px 5px 5px #222;
+}
+.searchinfowin table {
+    color: white;
+}
+/*////////////////////////////////////////////////////////////////////////////*/
+.mainpage_simplesearch {
+	border-width: 0;
+	background-color: @MAIN_SEARCH_BGCOLOR;
+	-moz-border-radius: 6px;
+	-webkit-border-radius: 6px;
+	-khtml-border-radius: 6px;
+	border-radius: 6px;
+	position: relative; /*!!!!!!!!!!!!!!!*/
+	bottom: 2px; /*!!!!!!!!!!!!!!!*/
+}
+
+.workpage_simplesearch {
+	border-width: 0;
+	background-color: @WORK_SEARCH_BGCOLOR;
+	-moz-border-radius: 6px;
+	-webkit-border-radius: 6px;
+	-khtml-border-radius: 6px;
+	border-radius: 6px;
+	position: relative; /*!!!!!!!!!!!!!!!*/
+	bottom: 2px; /*!!!!!!!!!!!!!!!*/
+}
+
+.workwin_simplesearch {
+	border-width: 0;
+	background-color: @WORK_SEARCH_BGCOLOR;
+	-moz-border-radius: 6px;
+	-webkit-border-radius: 6px;
+	-khtml-border-radius: 6px;
+	border-radius: 6px;
+	position: relative; /*!!!!!!!!!!!!!!!*/
+	bottom: 2px; /*!!!!!!!!!!!!!!!*/
+}
+
+.extsearch input, .extsearch select {
+	background-color: #ddd;
+	border-width: 1px;
+	border-style: solid;
+	margin-top: 5px;
+	margin-bottom: 2px;
+}
+
+select.extsearch {
+	background-color: #eee;
+	border-width: 1px;
+	border-style: solid;
+	margin-top: 2px;
+	margin-bottom: 2px;
+}
+
+hr.extsearch {
+	border-width: 1px;
+}
+select.extsearch {
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+/* matrix/viewbox for extended search */
+/*
+.extsearch .viewbox .thumbframe {
+    float: left;
+    margin: 7px 7px 0 0;
+    width: 90px;
+    height: 125px;
+    border: 1px solid #000000;
+}
+*/
+
+/* DOES NOT WORK.....!
+.extsearch {
+    float: left;
+    margin: 7px 7px 0 0;
+    width: 90px;
+    height: 125px;
+}
+*/
+/*
+.thumbframe {
+   float: left;
+    margin: 7px 7px 0 0;
+    width: 90px;
+    height: 125px;
+}
+*/
+.paging_active {
+	color: #f00;
+}
+
+
+.viewbox {
+    float: left;
+    position: static;
+    width: 100%;
+    background-color: #999;
+}
+
+.thumbframe {
+    float: left;
+    width: 200px;
+    height: 210px;
+    background-color: #333;
+    padding: 5px;
+    border-style: solid;
+    border-width: 5px;
+
+    color: #fff;
+    margin: 5px;
+    text-align: center;
+    border-color: #333;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -khtml-border-radius: 5px;
+    border-radius: 5px;
+
+    -moz-box-shadow: 5px 5px 5px #000;
+    -webkit-box-shadow: 5px 5px 5px #000;
+    -khtml-box-shadow: 5px 5px 5px #000;
+    box-shadow: 5px 5px 5px #000;
+}
+
+input.disp_list, input.disp_lightbox, input.disp_tableedit, input.disp_csv {
+	border: none;
+	height: 24px;
+	margin: 6px 2px 0 2px;
+	cursor: pointer;
+}
+
+input.disp_list {
+	background: url('icons/sets/view/list_bullets_icon&16.png') no-repeat top left;
+}
+input.disp_lightbox {
+	background: url('icons/sets/view/2x2_grid_icon&16.png') no-repeat top left;
+}
+input.disp_tableedit {
+	background: url('icons/sets/view/3x3_grid_icon&16.png') no-repeat top left;
+}
+input.disp_csv {
+	background: url('icons/sets/view/csv_icon&16.png') no-repeat top left;
+}

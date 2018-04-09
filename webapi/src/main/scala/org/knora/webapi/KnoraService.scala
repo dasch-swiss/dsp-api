@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -20,15 +19,11 @@
 
 package org.knora.webapi
 
-import java.io.InputStream
-import java.security.{KeyStore, SecureRandom}
-import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
-
-import akka.actor.{ActorSystem, _}
+import akka.actor._
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.{ConnectionContext, Http}
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
@@ -36,7 +31,7 @@ import kamon.Kamon
 import kamon.jaeger.Jaeger
 import kamon.prometheus.PrometheusReporter
 import kamon.zipkin.ZipkinReporter
-import org.knora.webapi.app.{ApplicationStateActor, _}
+import org.knora.webapi.app._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
@@ -54,6 +49,7 @@ import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
+
 /**
   * Knora Core abstraction.
   */
@@ -119,7 +115,7 @@ trait KnoraService {
     /**
       * A user representing the Knora API server, used for initialisation on startup.
       */
-    private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
+    private val systemUser = KnoraSystemInstances.Users.SystemUser
 
     /**
       * All routes composed together and CORS activated.
@@ -144,7 +140,6 @@ trait KnoraService {
             AuthenticationRouteV2.knoraApiPath(system, settings, log) ~
             GroupsRouteADM.knoraApiPath(system, settings, log) ~
             ListsRouteADM.knoraApiPath(system, settings, log) ~
-            OntologiesRouteADM.knoraApiPath(system, settings, log) ~
             PermissionsRouteADM.knoraApiPath(system, settings, log) ~
             ProjectsRouteADM.knoraApiPath(system, settings, log) ~
             StoreRouteADM.knoraApiPath(system, settings, log) ~
@@ -181,6 +176,12 @@ trait KnoraService {
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
         CacheUtil.createCaches(settings.caches)
+
+        // which repository are we using
+        println(s"DB Server: ${settings.triplestoreHost}, DB Port: ${settings.triplestorePort}")
+        println(s"Repository: ${settings.triplestoreDatabaseName}")
+        println(s"DB User: ${settings.triplestoreUsername}")
+        println(s"DB Password: ${settings.triplestorePassword}")
 
         // get loadDemoData value from application state actor
         val loadDemoData = Await.result(applicationStateActor ? GetLoadDemoDataState(), 1.second).asInstanceOf[Boolean]
@@ -226,40 +227,8 @@ trait KnoraService {
             Kamon.addReporter(new Jaeger()) // tracing
         }
 
-
-
-        // Either HTTP or HTTPs, or both, must be enabled.
-        if (!(settings.knoraApiUseHttp || settings.knoraApiUseHttps)) {
-            throw HttpConfigurationException("Neither HTTP nor HTTPS is enabled")
-        }
-
-        // Activate HTTP if enabled.
-        if (settings.knoraApiUseHttp) {
-            Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.knoraApiHost, settings.knoraApiHttpPort)
-            println(s"Knora API Server using HTTP at http://${settings.knoraApiHost}:${settings.knoraApiHttpPort}.")
-        }
-
-        // Activate HTTPS if enabled.
-        if (settings.knoraApiUseHttps) {
-            val keystorePassword: Array[Char] = settings.httpsKeystorePassword.toCharArray
-            val keystore: KeyStore = KeyStore.getInstance("JKS")
-            val keystoreFile: InputStream = getClass.getClassLoader.getResourceAsStream(settings.httpsKeystore)
-            require(keystoreFile != null, s"Could not load keystore ${settings.httpsKeystore}")
-            keystore.load(keystoreFile, keystorePassword)
-
-            val keyManagerFactory: KeyManagerFactory = KeyManagerFactory.getInstance("SunX509")
-            keyManagerFactory.init(keystore, keystorePassword)
-
-            val trustManagerFactory: TrustManagerFactory = TrustManagerFactory.getInstance("SunX509")
-            trustManagerFactory.init(keystore)
-
-            val sslContext: SSLContext = SSLContext.getInstance("TLS")
-            sslContext.init(keyManagerFactory.getKeyManagers, trustManagerFactory.getTrustManagers, new SecureRandom)
-            val https = ConnectionContext.https(sslContext)
-
-            Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.knoraApiHost, settings.knoraApiHttpsPort, connectionContext = https)
-            println(s"Knora API Server using HTTPS at https://${settings.knoraApiHost}:${settings.knoraApiHttpsPort}.")
-        }
+        Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
+        println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}.")
     }
 
     /**

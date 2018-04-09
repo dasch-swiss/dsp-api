@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -20,8 +19,6 @@
 
 package org.knora.webapi
 
-import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoADM
-
 object SharedOntologyTestDataADM {
 
     // images
@@ -29,29 +26,23 @@ object SharedOntologyTestDataADM {
     val IMAGES_TITEL_PROPERTY: IRI = IMAGES_ONTOLOGY_IRI + "#" + "titel"
     val IMAGES_BILD_RESOURCE_CLASS: IRI = IMAGES_ONTOLOGY_IRI + "#" + "bild"
 
-    val imagesOntologyInfo = OntologyInfoADM(
-        ontologyIri = IMAGES_ONTOLOGY_IRI,
-        ontologyName = "images",
-        project = SharedTestDataADM.imagesProject
-    )
+    // beol
+    val BEOL_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "0801/beol"
+
+    // biblio
+    val BIBLIO_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "biblio"
+
+    // dokubib
+    val DOKUBIB_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "00FE/dokubib"
+
+    // webern
+    val WEBERN_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "08AE/webern"
 
     // incunabula
     val INCUNABULA_ONTOLOGY_IRI: IRI =  OntologyConstants.KnoraInternal.InternalOntologyStart + "incunabula"
     val INCUNABULA_BOOK_RESOURCE_CLASS: IRI = INCUNABULA_ONTOLOGY_IRI + "#" + "book"
     val INCUNABULA_PAGE_RESOURCE_CLASS: IRI = INCUNABULA_ONTOLOGY_IRI + "#" + "page"
 
-    val incunabulaOntologyInfo = OntologyInfoADM(
-        ontologyIri = INCUNABULA_ONTOLOGY_IRI,
-        ontologyName = "incunabula",
-        project = SharedTestDataADM.incunabulaProject
-    )
-
     // anything
     val ANYTHING_ONTOLOGY_IRI: IRI =  OntologyConstants.KnoraInternal.InternalOntologyStart + "anything"
-
-    val anythingOntologyInfo = OntologyInfoADM(
-        ontologyIri = ANYTHING_ONTOLOGY_IRI,
-        ontologyName = "anything",
-        project = SharedTestDataADM.anythingProject
-    )
 }

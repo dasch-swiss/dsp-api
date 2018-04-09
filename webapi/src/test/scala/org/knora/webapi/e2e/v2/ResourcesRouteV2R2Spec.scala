@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -26,19 +25,19 @@ import java.net.URLEncoder
 import akka.actor.{ActorSystem, Props}
 import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.{LiveActorMaker, R2RSpec, SharedTestDataV1}
+import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2.compareJSONLD
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
-import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import akka.pattern._
-import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2.compareJSONLD
 import org.knora.webapi.util.FileUtil
+import org.knora.webapi.{KnoraSystemInstances, LiveActorMaker, R2RSpec, SharedTestDataADM}
 
-import scala.concurrent.{Await, ExecutionContextExecutor}
 import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, ExecutionContextExecutor}
 
 /**
   * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
@@ -63,8 +62,7 @@ class ResourcesRouteV2R2Spec extends R2RSpec {
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    private val anythingUser = SharedTestDataV1.anythingUser1
-    private val anythingUserEmail = anythingUser.userData.email.get
+    private val anythingUser = SharedTestDataADM.anythingUser1
 
     private val password = "test"
 
@@ -78,7 +76,7 @@ class ResourcesRouteV2R2Spec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataV1.rootUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser), 30.seconds)
     }
 
     "The resources v2 endpoint" should {
@@ -116,6 +114,20 @@ class ResourcesRouteV2R2Spec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/ThingWithBCEDate2.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform a full resource request for a resource with a list value" in {
+
+            Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/anything/thing_with_list_value", "UTF-8")}") ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/ThingWithListValue.jsonld"))
 
                 compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 

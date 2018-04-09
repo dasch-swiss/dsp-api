@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -38,8 +37,8 @@ import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.JavaUtil.Optional
 import spray.json.JsonParser
 
-import scala.util.matching.Regex
 import scala.util.control.Exception._
+import scala.util.matching.Regex
 
 /**
   * Provides the singleton instance of [[StringFormatter]], as well as string formatting constants.
@@ -122,7 +121,8 @@ object StringFormatter {
     case class SalsahGuiAttributeDefinition(attributeName: String,
                                             isRequired: Boolean,
                                             allowedType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value,
-                                            enumeratedValues: Set[String] = Set.empty[String])
+                                            enumeratedValues: Set[String] = Set.empty[String],
+                                            unparsedString: String)
 
     /**
       * Represents a parsed object of the property `salsah-gui:guiAttribute`.
@@ -235,7 +235,7 @@ object StringFormatter {
         this.synchronized {
             generalInstance match {
                 case Some(_) => ()
-                case None => generalInstance = Some(new StringFormatter(Some(s"${settings.knoraApiHost}:${settings.knoraApiHttpPort}")))
+                case None => generalInstance = Some(new StringFormatter(Some(settings.externalKnoraApiHostPort)))
             }
         }
     }
@@ -624,10 +624,11 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
         ).r
 
-    // In XML import data, a property from another ontology is referred to as prefixLabel__localName. This regex parses
-    // that pattern.
+    // In XML import data, a property from another ontology is referred to as prefixLabel__localName. The prefix label
+    // may start with a project ID (prefixed with 'p') and a hyphen. This regex parses that pattern.
     private val PropertyFromOtherOntologyInXmlImportRegex: Regex = (
-        "^(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
+
+        "^(p(" + ProjectIDPattern + ")-)?(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
         ).r
 
     // In XML import data, a standoff link tag that refers to a resource described in the import must have the
@@ -639,7 +640,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     private val ApiVersionNumberRegex: Regex = "^v[0-9]+.*$".r
 
     // Parses an object of salsah-gui:guiAttributeDefinition.
-    private val SalsahGuiAttributeDefinitionRegex: Regex = """^(\p{L}+)(\(required\))?:(\p{L}+)(\(([\p{L}\|]+)\))?$""".r
+    private val SalsahGuiAttributeDefinitionRegex: Regex =
+        """^(\p{L}+)(\(required\))?:(\p{L}+)(\(([\p{L}\|]+)\))?$""".r
 
     // Parses an object of salsa-gui:guiAttribute.
     private val SalsahGuiAttributeRegex: Regex =
@@ -930,12 +932,12 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                         throw DataConversionException(s"Cannot convert $iri to $targetSchema")
                     }
                 } else if (isKnoraEntityIri) {
-                    // Can we do an automatic replacement of one predicate with another?
-                    OntologyConstants.CorrespondingPredicates.get((iriInfo.ontologySchema.get, targetSchema)) match {
+                    // Can we do an automatic replacement of one IRI with another?
+                    OntologyConstants.CorrespondingIris.get((iriInfo.ontologySchema.get, targetSchema)) match {
                         case Some(predicateMap: Map[IRI, IRI]) =>
                             predicateMap.get(iri) match {
                                 case Some(convertedIri) =>
-                                    // Yes. Return the corresponding predicate in the target schema.
+                                    // Yes. Return the corresponding IRI in the target schema.
                                     getOrCacheSmartIri(
                                         iriStr = convertedIri,
                                         creationFun = {
@@ -1004,49 +1006,27 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         }
 
         private def internalToExternalEntityIri(targetSchema: ApiV2Schema): SmartIri = {
-            // If we're converting to API v2 simple schema, replace value classes with simplified datatypes.
-            val datatype: Option[IRI] = targetSchema match {
-                case ApiV2Simple =>
-                    OntologyConstants.KnoraApiV2Simple.ValueClassesToSimplifiedTypes.get(iri) match {
-                        case Some(dType) => Some(dType)
-                        case None => None
-                    }
+            //Construct the string representation of this IRI in the target schema.
+            val entityName = getEntityName
+            val convertedOntologyIri = getOntologyFromEntity.toOntologySchema(targetSchema)
+            val convertedEntityIriStr = convertedOntologyIri.toString + "#" + entityName
 
-                case _ => None
-            }
+            // Get it from the cache, or construct it and cache it if it's not there.
+            getOrCacheSmartIri(
+                iriStr = convertedEntityIriStr,
+                creationFun = {
+                    () =>
+                        val convertedSmartIriInfo = iriInfo.copy(
+                            ontologyName = Some(internalToExternalOntologyName(getOntologyName)),
+                            ontologySchema = Some(targetSchema)
+                        )
 
-            // Are we converting to a simplified datatype?
-            datatype match {
-                case Some(dType) =>
-                    getOrCacheSmartIri(
-                        iriStr = dType,
-                        creationFun = {
-                            () => new SmartIriImpl(dType)
-                        })
-
-                case None =>
-                    // No. Construct the string representation of this IRI in the target schema.
-                    val entityName = getEntityName
-                    val convertedOntologyIri = getOntologyFromEntity.toOntologySchema(targetSchema)
-                    val convertedEntityIriStr = convertedOntologyIri.toString + "#" + entityName
-
-                    // Get it from the cache, or construct it and cache it if it's not there.
-                    getOrCacheSmartIri(
-                        iriStr = convertedEntityIriStr,
-                        creationFun = {
-                            () =>
-                                val convertedSmartIriInfo = iriInfo.copy(
-                                    ontologyName = Some(internalToExternalOntologyName(getOntologyName)),
-                                    ontologySchema = Some(targetSchema)
-                                )
-
-                                new SmartIriImpl(
-                                    iriStr = convertedEntityIriStr,
-                                    parsedIriInfo = Some(convertedSmartIriInfo)
-                                )
-                        }
-                    )
-            }
+                        new SmartIriImpl(
+                            iriStr = convertedEntityIriStr,
+                            parsedIriInfo = Some(convertedSmartIriInfo)
+                        )
+                }
+            )
         }
 
         private def internalToExternalOntologyIri(targetSchema: ApiV2Schema): SmartIri = {
@@ -1302,9 +1282,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       */
     def toOptionalIri(maybeString: Option[String], errorFun: => Nothing): Option[IRI] = {
         maybeString match {
-            case Some(s) => {
-                Some(validateAndEscapeIri(s, errorFun))
-            }
+            case Some(s) => Some(validateAndEscapeIri(s, errorFun))
             case None => None
         }
     }
@@ -1449,7 +1427,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                     attributeName = attributeName,
                     isRequired = maybeRequired.nonEmpty,
                     allowedType = allowedType,
-                    enumeratedValues = enumeratedValues
+                    enumeratedValues = enumeratedValues,
+                    unparsedString = s
                 )
 
             case _ => errorFun
@@ -1832,16 +1811,24 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     }
 
     /**
-      * In XML import data, a property from another ontology is referred to as `prefixLabel__localName`. This function
-      * attempts to parse a property name in that format.
+      * In XML import data, a property from another ontology is referred to as `prefixLabel__localName`. The prefix label
+      * may start with a project ID (prefixed with 'p') and a hyphen. This function attempts to parse a property name in
+      * that format.
       *
       * @param prefixLabelAndLocalName a string that may refer to a property in the format `prefixLabel__localName`.
       * @return if successful, a `Some` containing the entity's internal IRI, otherwise `None`.
       */
     def toPropertyIriFromOtherOntologyInXmlImport(prefixLabelAndLocalName: String): Option[IRI] = {
         prefixLabelAndLocalName match {
-            case PropertyFromOtherOntologyInXmlImportRegex(prefixLabel, localName) =>
-                Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}$prefixLabel#$localName")
+            case PropertyFromOtherOntologyInXmlImportRegex(_, Optional(maybeProjectID), prefixLabel, localName) =>
+                maybeProjectID match {
+                    case Some(projectID) =>
+                        Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}$projectID/$prefixLabel#$localName")
+
+                    case None =>
+                        Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}$prefixLabel#$localName")
+                }
+
             case _ => None
         }
     }

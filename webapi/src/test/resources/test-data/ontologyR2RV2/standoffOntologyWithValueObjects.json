@@ -1,0 +1,1458 @@
+{
+  "knora-api:hasOntologies" : {
+    "@id" : "http://api.knora.org/ontology/standoff/v2",
+    "@type" : "owl:Ontology",
+    "knora-api:attachedToProject" : "http://www.knora.org/ontology/knora-base#SystemProject",
+    "knora-api:hasClasses" : {
+      "standoff:StandoffBlockquoteTag" : {
+        "@id" : "standoff:StandoffBlockquoteTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a section that is quoted from another source in a text",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffBoldTag" : {
+        "@id" : "standoff:StandoffBoldTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents bold text in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffVisualTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffBrTag" : {
+        "@id" : "standoff:StandoffBrTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a linebreak",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffCiteTag" : {
+        "@id" : "standoff:StandoffCiteTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents the title of a work in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffCodeTag" : {
+        "@id" : "standoff:StandoffCodeTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a section of computer source code in a text",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffHeader1Tag" : {
+        "@id" : "standoff:StandoffHeader1Tag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a header of level 1 in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffHeader2Tag" : {
+        "@id" : "standoff:StandoffHeader2Tag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a header of level 2 in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffHeader3Tag" : {
+        "@id" : "standoff:StandoffHeader3Tag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a header of level 3 in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffHeader4Tag" : {
+        "@id" : "standoff:StandoffHeader4Tag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a header of level 4 in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffHeader5Tag" : {
+        "@id" : "standoff:StandoffHeader5Tag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a header of level 5 in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffHeader6Tag" : {
+        "@id" : "standoff:StandoffHeader6Tag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a header of level 6 in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffHyperlinkTag" : {
+        "@id" : "standoff:StandoffHyperlinkTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a hyperlink in a text",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#StandoffUriTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#uriValueAsUri"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/standoff/v2#standoffHyperlinkTagHasTarget"
+        } ]
+      },
+      "standoff:StandoffItalicTag" : {
+        "@id" : "standoff:StandoffItalicTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents italics in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffVisualTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffLineTag" : {
+        "@id" : "standoff:StandoffLineTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a line to seperate content in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffVisualTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffListElementTag" : {
+        "@id" : "standoff:StandoffListElementTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a list element in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffOrderedListTag" : {
+        "@id" : "standoff:StandoffOrderedListTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents an ordered list in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffParagraphTag" : {
+        "@id" : "standoff:StandoffParagraphTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a paragraph in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffPreTag" : {
+        "@id" : "standoff:StandoffPreTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a preformatted content in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffVisualTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffRootTag" : {
+        "@id" : "standoff:StandoffRootTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents the root node if the TextValue has been created from XML",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#StandoffTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/standoff/v2#standoffRootTagHasDocumentType"
+        } ]
+      },
+      "standoff:StandoffStrikethroughTag" : {
+        "@id" : "standoff:StandoffStrikethroughTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents struck text in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffVisualTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffStructuralTag" : {
+        "@id" : "standoff:StandoffStructuralTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents structural markup information in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#StandoffTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffSubscriptTag" : {
+        "@id" : "standoff:StandoffSubscriptTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents subscript in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffVisualTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffSuperscriptTag" : {
+        "@id" : "standoff:StandoffSuperscriptTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents superscript in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffVisualTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffTableBodyTag" : {
+        "@id" : "standoff:StandoffTableBodyTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a table body in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffTableCellTag" : {
+        "@id" : "standoff:StandoffTableCellTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a cell in a table",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffTableRowTag" : {
+        "@id" : "standoff:StandoffTableRowTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a row in a table",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffTableTag" : {
+        "@id" : "standoff:StandoffTableTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents a table in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffUnderlineTag" : {
+        "@id" : "standoff:StandoffUnderlineTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents underlined text in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffVisualTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffUnorderedListTag" : {
+        "@id" : "standoff:StandoffUnorderedListTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents an unordered list in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/standoff/v2#StandoffStructuralTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      },
+      "standoff:StandoffVisualTag" : {
+        "@id" : "standoff:StandoffVisualTag",
+        "@type" : "owl:Class",
+        "knora-api:isStandoffClass" : true,
+        "rdfs:comment" : "Represents visual markup information in a TextValue",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#StandoffTag", {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"
+        } ]
+      }
+    },
+    "knora-api:hasProperties" : {
+      "standoff:standoffHyperlinkTagHasTarget" : {
+        "@id" : "standoff:standoffHyperlinkTagHasTarget",
+        "@type" : "owl:DatatypeProperty",
+        "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
+        "knora-api:subjectType" : "http://api.knora.org/ontology/standoff/v2#StandoffHyperlinkTag",
+        "rdfs:comment" : "describes the target settings of a hyperlink"
+      },
+      "standoff:standoffRootTagHasDocumentType" : {
+        "@id" : "standoff:standoffRootTagHasDocumentType",
+        "@type" : "owl:DatatypeProperty",
+        "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
+        "knora-api:subjectType" : "http://api.knora.org/ontology/standoff/v2#StandoffRootTag",
+        "rdfs:comment" : "describes the document type"
+      }
+    },
+    "rdfs:label" : "The standoff ontology"
+  },
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "standoff" : "http://api.knora.org/ontology/standoff/v2#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "owl" : "http://www.w3.org/2002/07/owl#",
+    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+  }
+}

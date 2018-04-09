@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -22,10 +21,8 @@ package org.knora.webapi.twirl
 
 import java.util.UUID
 
-import org.knora.webapi.{IRI, NotFoundException}
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
-import org.knora.webapi.util.KnoraIdUtil
 
 /**
   * The following case classes represent standoff classes and attributes

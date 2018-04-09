@@ -13,7 +13,8 @@
 @prefix : <http://www.knora.org/ontology/00FE/dokubib#> .
 
 <http://www.knora.org/ontology/00FE/dokubib> rdf:type owl:Ontology ;
-    rdfs:label "The dokubib ontology" .
+    rdfs:label "The dokubib ontology" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/00FE> .
 
 ##########################################################
 #
@@ -158,7 +159,7 @@
 
 :phone rdf:type owl:ObjectProperty ;
 
-       rdfs:subPropertyOf knora-base:hasValue ;
+       rdfs:subPropertyOf knora-base:hasValue, foaf:phone ;
 
        rdfs:label """Telefon"""@de ;
 

@@ -10,7 +10,9 @@
 
 @prefix : <http://www.knora.org/ontology/08AE/webern#> .
 
-<http://www.knora.org/ontology/08AE/webern> rdf:type owl:Ontology .
+<http://www.knora.org/ontology/08AE/webern> rdf:type owl:Ontology ;
+    rdfs:label "The Anton Webern project ontology" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/08AE> .
 
     ##########################################################
     #

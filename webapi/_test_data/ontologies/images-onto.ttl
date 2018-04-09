@@ -13,7 +13,8 @@
 @prefix : <http://www.knora.org/ontology/00FF/images#> .
 
 <http://www.knora.org/ontology/00FF/images> rdf:type owl:Ontology ;
-    rdfs:label "The images demo ontology" .
+    rdfs:label "The images demo ontology" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/00FF> .
 
 ##########################################################
 #
@@ -158,7 +159,7 @@
 
 :phone rdf:type owl:ObjectProperty ;
 
-       rdfs:subPropertyOf foaf:phone ;
+       rdfs:subPropertyOf knora-base:hasValue, foaf:phone ;
 
        rdfs:label "Telefon"@de ;
 

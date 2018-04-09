@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -46,7 +45,7 @@ object CkanRouteV1 extends Authenticator {
         path("v1" / "ckan") {
             get {
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
                     val params = requestContext.request.uri.query().toMap
                     val project: Option[Seq[String]] = params.get("project").map(_.split(","))
                     val limit: Option[Int] = params.get("limit").map(_.toInt)

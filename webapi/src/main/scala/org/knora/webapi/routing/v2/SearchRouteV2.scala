@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -126,7 +125,7 @@ object SearchRouteV2 extends Authenticator {
             get {
                 requestContext =>
 
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
@@ -140,7 +139,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
-                    val requestMessage = FullTextSearchCountGetRequestV2(searchValue = searchString, limitToProject = limitToProject, limitToResourceClass = limitToResourceClass, userProfile = userProfile)
+                    val requestMessage = FullTextSearchCountGetRequestV2(searchValue = searchString, limitToProject = limitToProject, limitToResourceClass = limitToResourceClass, requestingUser = requestingUser)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,
@@ -153,7 +152,7 @@ object SearchRouteV2 extends Authenticator {
         } ~ path("v2" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
             get {
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
@@ -169,7 +168,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
-                    val requestMessage = FulltextSearchGetRequestV2(searchValue = searchString, offset = offset, limitToProject = limitToProject, limitToResourceClass = limitToResourceClass, userProfile = userProfile)
+                    val requestMessage = FulltextSearchGetRequestV2(searchValue = searchString, offset = offset, limitToProject = limitToProject, limitToResourceClass = limitToResourceClass, requestingUser = requestingUser)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,
@@ -184,11 +183,11 @@ object SearchRouteV2 extends Authenticator {
             get {
 
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     val constructQuery = SearchParserV2.parseSearchQuery(sparql)
 
-                    val requestMessage = ExtendedSearchCountGetRequestV2(constructQuery = constructQuery, userProfile = userProfile)
+                    val requestMessage = ExtendedSearchCountGetRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,
@@ -203,11 +202,11 @@ object SearchRouteV2 extends Authenticator {
             get {
 
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     val constructQuery = SearchParserV2.parseSearchQuery(sparql)
 
-                    val requestMessage = ExtendedSearchGetRequestV2(constructQuery = constructQuery, userProfile = userProfile)
+                    val requestMessage = ExtendedSearchGetRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,
@@ -224,7 +223,7 @@ object SearchRouteV2 extends Authenticator {
         } ~ path("v2" / "searchbylabel" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
             get {
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
@@ -242,7 +241,7 @@ object SearchRouteV2 extends Authenticator {
                         searchValue = searchString,
                         limitToProject = limitToProject,
                         limitToResourceClass = limitToResourceClass,
-                        userProfile = userProfile
+                        requestingUser = requestingUser
                     )
 
                     RouteUtilV2.runJsonRoute(
@@ -258,7 +257,7 @@ object SearchRouteV2 extends Authenticator {
             get {
                 requestContext => {
 
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
@@ -279,7 +278,7 @@ object SearchRouteV2 extends Authenticator {
                         offset = offset,
                         limitToProject = limitToProject,
                         limitToResourceClass = limitToResourceClass,
-                        userProfile = userProfile
+                        requestingUser = requestingUser
                     )
 
                     RouteUtilV2.runJsonRoute(

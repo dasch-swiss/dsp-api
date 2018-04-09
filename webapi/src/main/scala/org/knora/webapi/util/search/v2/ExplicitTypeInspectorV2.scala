@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -70,13 +69,7 @@ class ExplicitTypeInspectorV2 extends TypeInspector {
             OntologyConstants.KnoraApiV2Simple.Geoname,
             OntologyConstants.KnoraApiV2Simple.Interval,
             OntologyConstants.KnoraApiV2Simple.Color,
-            OntologyConstants.KnoraApiV2Simple.File,
-            OntologyConstants.KnoraApiV2Simple.StillImageFile,
-            OntologyConstants.KnoraApiV2Simple.TextFile,
-            OntologyConstants.KnoraApiV2Simple.MovingImageFile,
-            OntologyConstants.KnoraApiV2Simple.AudioFile,
-            OntologyConstants.KnoraApiV2Simple.DDDFile,
-            OntologyConstants.KnoraApiV2Simple.DocumentFile
+            OntologyConstants.KnoraApiV2Simple.File
         )
 
         /**

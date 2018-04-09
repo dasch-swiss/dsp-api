@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -23,8 +22,8 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
@@ -32,10 +31,10 @@ import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.ResponderWithStandoffV2
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util._
 import org.knora.webapi.util.search.ApacheLuceneSupport.{CombineSearchTerms, MatchStringWhileTyping}
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.v2._
-import org.knora.webapi.util.{ConstructResponseUtilV2, DateUtilV1, SmartIri, StringFormatter, _}
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -45,48 +44,94 @@ import scala.concurrent.Future
   */
 object SearchResponderV2Constants {
 
+    val forbiddenResourceIri: IRI = s"http://${KnoraIdUtil.IriDomain}/permissions/forbiddenResource"
+
     /**
       * Constants for fulltext query.
+      *
+      * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
       */
     object FullTextSearchConstants {
+
+        // SPARQL variable representing the concatenated IRIs of value objects matching the search criteria
+        val valueObjectConcatVar: QueryVariable = QueryVariable("valueObjectConcat")
+
+        // SPARQL variable representing the resources matching the search criteria
         val resourceVar: QueryVariable = QueryVariable("resource")
+
+        // SPARQL variable representing the predicates of a resource
         val resourcePropVar: QueryVariable = QueryVariable("resourceProp")
+
+        // SPARQL variable representing the objects of a resource
         val resourceObjectVar: QueryVariable = QueryVariable("resourceObj")
-        val resourceValueObject: QueryVariable = QueryVariable("resourceValueObject")
+
+        // SPARQL variable representing the property pointing to a value object from a resource
         val resourceValueProp: QueryVariable = QueryVariable("resourceValueProp")
+
+        // SPARQL variable representing the value objects of a resource
+        val resourceValueObject: QueryVariable = QueryVariable("resourceValueObject")
+
+        // SPARQL variable representing the predicates of a value object
         val resourceValueObjectProp: QueryVariable = QueryVariable("resourceValueObjectProp")
+
+        // SPARQL variable representing the objects of a value object
         val resourceValueObjectObj: QueryVariable = QueryVariable("resourceValueObjectObj")
 
+        // SPARQL variable representing the standoff nodes of a (text) value object
         val standoffNodeVar: QueryVariable = QueryVariable("standoffNode")
-        val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
-        val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
 
-        val valueObjectConcatVar: QueryVariable = QueryVariable("valueObjectConcat")
+        // SPARQL variable representing the predicates of a standoff node of a (text) value object
+        val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
+
+        // SPARQL variable representing the objects of a standoff node of a (text) value object
+        val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
     }
 
     /**
       * Constants for extended search.
+      *
+      * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
       */
     object ExtendedSearchConstants {
 
-        // variables representing the main resource and its properties
+        // SPARQL variable representing the main resource and its properties
         val mainResourceVar: QueryVariable = QueryVariable("mainResourceVar")
 
-        // variables representing main and dependent resources. direct assertions about them as well as their values
+        // SPARQL variable representing main and dependent resources
         val mainAndDependentResourceVar: QueryVariable = QueryVariable("mainAndDependentResource")
+
+        // SPARQL variable representing the predicates of the main and dependent resources
         val mainAndDependentResourcePropVar: QueryVariable = QueryVariable("mainAndDependentResourceProp")
+
+        // SPARQL variable representing the objects of the main and dependent resources
         val mainAndDependentResourceObjectVar: QueryVariable = QueryVariable("mainAndDependentResourceObj")
+
+        // SPARQL variable representing the value objects of the main and dependent resources
         val mainAndDependentResourceValueObject: QueryVariable = QueryVariable("mainAndDependentResourceValueObject")
+
+        // SPARQL variable representing the properties pointing to value objects from the main and dependent resources
         val mainAndDependentResourceValueProp: QueryVariable = QueryVariable("mainAndDependentResourceValueProp")
+
+        // SPARQL variable representing the predicates of value objects of the main and dependent resources
         val mainAndDependentResourceValueObjectProp: QueryVariable = QueryVariable("mainAndDependentResourceValueObjectProp")
+
+        // SPARQL variable representing the objects of value objects of the main and dependent resources
         val mainAndDependentResourceValueObjectObj: QueryVariable = QueryVariable("mainAndDependentResourceValueObjectObj")
 
+        // SPARQL variable representing the standoff nodes of a (text) value object
         val standoffNodeVar: QueryVariable = QueryVariable("standoffNode")
+
+        // SPARQL variable representing the predicates of a standoff node of a (text) value object
         val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
+
+        // SPARQL variable representing the objects of a standoff node of a (text) value object
         val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
 
-        val forbiddenResourceIri: IRI = s"http://${KnoraIdUtil.IriDomain}/permissions/forbiddenResource"
+        // SPARQL variable representing a list node pointed to by a (list) value object
+        val listNode: QueryVariable = QueryVariable("listNode")
 
+        // SPARQL variable representing the label of a list node pointed to by a (list) value object
+        val listNodeLabel: QueryVariable = QueryVariable("listNodeLabel")
     }
 
 }
@@ -94,12 +139,12 @@ object SearchResponderV2Constants {
 class SearchResponderV2 extends ResponderWithStandoffV2 {
 
     def receive = {
-        case FullTextSearchCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, userProfile), log)
-        case FulltextSearchGetRequestV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile), log)
-        case ExtendedSearchCountGetRequestV2(query, userProfile) => future2Message(sender(), extendedSearchCountV2(inputQuery = query, userProfile = userProfile), log)
-        case ExtendedSearchGetRequestV2(query, userProfile) => future2Message(sender(), extendedSearchV2(inputQuery = query, userProfile = userProfile), log)
-        case SearchResourceByLabelCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass, userProfile), log)
-        case SearchResourceByLabelGetRequestV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile) => future2Message(sender(), searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, userProfile), log)
+        case FullTextSearchCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, requestingUser) => future2Message(sender(), fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, requestingUser), log)
+        case FulltextSearchGetRequestV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser) => future2Message(sender(), fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser), log)
+        case ExtendedSearchCountGetRequestV2(query, requestingUser) => future2Message(sender(), extendedSearchCountV2(inputQuery = query, requestingUser = requestingUser), log)
+        case ExtendedSearchGetRequestV2(query, requestingUser) => future2Message(sender(), extendedSearchV2(inputQuery = query, requestingUser = requestingUser), log)
+        case SearchResourceByLabelCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, requestingUser) => future2Message(sender(), searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass, requestingUser), log)
+        case SearchResourceByLabelGetRequestV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser) => future2Message(sender(), searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -1135,15 +1180,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     /**
       * Gets the forbidden resource.
       *
-      * @param userProfile the user making the request.
+      * @param requestingUser the user making the request.
       * @return the forbidden resource.
       */
-    private def getForbiddenResource(userProfile: UserProfileV1) = {
-        import SearchResponderV2Constants.ExtendedSearchConstants.forbiddenResourceIri
+    private def getForbiddenResource(requestingUser: UserADM) = {
+        import SearchResponderV2Constants.forbiddenResourceIri
 
         for {
-
-            forbiddenResSeq: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Seq(forbiddenResourceIri), userProfile = userProfile)).mapTo[ReadResourcesSequenceV2]
+            forbiddenResSeq: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Seq(forbiddenResourceIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
             forbiddenRes = forbiddenResSeq.resources.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"$forbiddenResourceIri was not returned"))
         } yield Some(forbiddenRes)
     }
@@ -1157,10 +1201,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param searchValue          the values to search for.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param userProfile          the profile of the client making the request.
+      * @param requestingUser          the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the amount of resources that have been found.
       */
-    private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         val searchTerms: CombineSearchTerms = CombineSearchTerms(searchValue)
 
@@ -1200,10 +1244,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param offset               the offset to be used for paging.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param userProfile          the profile of the client making the request.
+      * @param requestingUser          the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         import SearchResponderV2Constants.FullTextSearchConstants._
 
@@ -1371,7 +1415,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificQuery.toSparql)).mapTo[SparqlConstructResponse]
 
                     // separate resources and value objects
-                    queryResultsSep = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
+                    queryResultsSep = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, requestingUser = requestingUser)
 
                     // for each main resource check if all dependent resources and value objects are still present after permission checking
                     // this ensures that the user has sufficient permissions on the whole query path
@@ -1419,14 +1463,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             forbiddenResourceOption: Option[ReadResourceV2] <- if (resourceIris.size > queryResultsSeparatedWithFullQueryPath.size) {
                 // some of the main resources have been suppressed, represent them using the forbidden resource
 
-                getForbiddenResource(userProfile)
+                getForbiddenResource(requestingUser)
             } else {
                 // all resources visible, no need for the forbidden resource
                 Future(None)
             }
 
             // get the mappings
-            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullQueryPath, userProfile)
+            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullQueryPath, requestingUser)
 
             // _ = println(mappingsAsMap)
 
@@ -1449,10 +1493,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * Performs a count query for an extended search Sparql query provided by the user.
       *
       * @param inputQuery  Sparql construct query provided by the client.
-      * @param userProfile the profile of the client making the request.
+      * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def extendedSearchCountV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, userProfile: UserProfileV1) = {
+    private def extendedSearchCountV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, requestingUser: UserADM) = {
 
         if (apiSchema != ApiV2Simple) {
             throw SparqlSearchException("Only api v2 simple is supported in v2 extended search count query")
@@ -1594,10 +1638,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * Performs an extended search using a Sparql query provided by the user.
       *
       * @param inputQuery  Sparql construct query provided by the client.
-      * @param userProfile the profile of the client making the request.
+      * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def extendedSearchV2(inputQuery: ConstructQuery, userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def extendedSearchV2(inputQuery: ConstructQuery, requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         /**
           * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -1924,9 +1968,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             if (valueObjectIris.nonEmpty) {
                 // value objects are to be queried
 
+                val mainAndDependentResourcesValueObjectsValuePattern = ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri)))
+
                 // WHERE patterns for statements about the main and dependent resources' values
                 val wherePatternsForMainAndDependentResourcesValues = Seq(
-                    ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri))),
+                    mainAndDependentResourcesValueObjectsValuePattern,
                     StatementPattern.makeInferred(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri), obj = mainAndDependentResourceValueObject),
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceVar, pred = mainAndDependentResourceValueProp, obj = mainAndDependentResourceValueObject),
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)),
@@ -1942,7 +1988,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 // WHERE patterns for standoff belonging to value objects (if any)
                 val wherePatternsForStandoff = Seq(
-                    ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri))),
+                    mainAndDependentResourcesValueObjectsValuePattern,
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
                     StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
                 )
@@ -1953,14 +1999,28 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
                 )
 
+                // WHERE patterns for list node pointed to by value objects (if any)
+                val wherePatternsForListNode = Seq(
+                    mainAndDependentResourcesValueObjectsValuePattern,
+                    StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.ListValue.toSmartIri)),
+                    StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri), obj = listNode),
+                    StatementPattern.makeExplicit(subj = listNode, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), obj = listNodeLabel)
+                )
+
+                // return list node assertions
+                val constructPatternsForListNode = Seq(
+                    StatementPattern(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri), obj = listNode),
+                    StatementPattern(subj = listNode, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), obj = listNodeLabel)
+                )
+
                 ConstructQuery(
                     constructClause = ConstructClause(
-                        statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues ++ constructPatternsForStandoff
+                        statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues ++ constructPatternsForStandoff ++ constructPatternsForListNode
                     ),
                     whereClause = WhereClause(
                         Seq(
                             UnionPattern(
-                                Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff)
+                                Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff, wherePatternsForListNode)
                             )
                         )
                     )
@@ -2129,7 +2189,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 // create the main query
                 // it is a Union of two sets: the main resources and the dependent resources
-                val mainQuery = createMainQuery(
+                val mainQuery: ConstructQuery = createMainQuery(
                     mainResourceIris = mainResourceIris.map(iri => IriRef(iri.toSmartIri)).toSet,
                     dependentResourceIris = allDependentResourceIris.map(iri => IriRef(iri.toSmartIri)),
                     valueObjectIris = allValueObjectIris
@@ -2160,7 +2220,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
 
                     // separate main resources and value objects (dependent resources are nested)
-                    queryResultsSep: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, userProfile = userProfile)
+                    queryResultsSep: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, requestingUser = requestingUser)
 
                     // for each main resource check if all dependent resources and value objects are still present after permission checking
                     // this ensures that the user has sufficient permissions on the whole query path
@@ -2297,14 +2357,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             forbiddenResourceOption: Option[ReadResourceV2] <- if (mainResourceIris.size > queryResultsSeparatedWithFullQueryPath.size) {
                 // some of the main resources have been suppressed, represent them using the forbidden resource
 
-                getForbiddenResource(userProfile)
+                getForbiddenResource(requestingUser)
             } else {
                 // all resources visible, no need for the forbidden resource
                 Future(None)
             }
 
             // get the mappings
-            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullQueryPath, userProfile)
+            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullQueryPath, requestingUser)
 
 
         } yield ReadResourcesSequenceV2(
@@ -2324,10 +2384,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param searchValue          the values to search for.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param userProfile          the profile of the client making the request.
+      * @param requestingUser          the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserProfileV1) = {
+    private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM) = {
 
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
@@ -2367,10 +2427,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param offset               the offset to be used for paging.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param userProfile          the profile of the client making the request.
+      * @param requestingUser          the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def searchResourcesByLabelV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], userProfile: UserProfileV1): Future[ReadResourcesSequenceV2] = {
+    private def searchResourcesByLabelV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
@@ -2410,12 +2470,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // _ = println(mainResourceIris.size)
 
             // separate resources and value objects
-            queryResultsSeparated = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResourceByLabelResponse, userProfile = userProfile)
+            queryResultsSeparated = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResourceByLabelResponse, requestingUser = requestingUser)
 
             // check if there are resources the user does not have sufficient permissions to see
             forbiddenResourceOption: Option[ReadResourceV2] <- if (mainResourceIris.size > queryResultsSeparated.size) {
                 // some of the main resources have been suppressed, represent them using the forbidden resource
-                getForbiddenResource(userProfile)
+                getForbiddenResource(requestingUser)
             } else {
                 // all resources visible, no need for the forbidden resource
                 Future(None)

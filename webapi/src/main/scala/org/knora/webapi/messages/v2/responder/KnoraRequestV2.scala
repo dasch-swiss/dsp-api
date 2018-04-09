@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -22,7 +21,7 @@ package org.knora.webapi.messages.v2.responder
 
 import java.util.UUID
 
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.util.jsonld.JsonLDDocument
 
 /**
@@ -41,10 +40,10 @@ trait KnoraJsonLDRequestReaderV2[C] {
       *
       * @param jsonLDDocument the JSON-LD input.
       * @param apiRequestID   the UUID of the API request.
-      * @param userProfile    the profile of the user making the request.
+      * @param requestingUser    the user making the request.
       * @return a case class instance representing the input.
       */
     def fromJsonLD(jsonLDDocument: JsonLDDocument,
                    apiRequestID: UUID,
-                   userProfile: UserProfileV1): C
+                   requestingUser: UserADM): C
 }

@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -162,12 +161,13 @@ class UsersResponderADM extends Responder {
             throw BadRequestException("Need to provide the user IRI and/or email.")
         }
 
-        val user = userFromCache match {
+        val maybeUserADM: Future[Option[UserADM]] = userFromCache match {
             case Some(user) =>
                 // found a user profile in the cache
                 log.debug("userGetADM - cache hit for: {}", List(maybeUserIri, maybeUserEmail).flatten.head)
                 FastFuture.successful(Some(user.ofType(userInformationType)))
-            case None => {
+
+            case None =>
                 // didn't find a user profile in the cache
                 log.debug("userGetADM - no cache hit for: {}", List(maybeUserIri, maybeUserEmail).flatten.head)
                 for {
@@ -192,15 +192,14 @@ class UsersResponderADM extends Responder {
                     result = maybeUserADM.map(_.ofType(userInformationType))
 
                 } yield result
-            }
         }
 
         // _ = log.debug("userGetADM - user: {}", MessageUtil.toSource(user))
-        user
+        maybeUserADM
     }
 
     /**
-      * Gets information about a Knora user, and returns it as a [[UserProfileResponseV1]].
+      * Gets information about a Knora user, and returns it as a [[UserResponseADM]].
       *
       * @param maybeUserIri     the IRI of the user.
       * @param maybeUserEmail the email of the user.

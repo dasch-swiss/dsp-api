@@ -112,8 +112,6 @@
 
                                 knora-base:belongsToInstitution <http://rdfh.ch/institutions/dhlab-basel> ;
 
-                                knora-base:projectOntology <http://www.knora.org/ontology/00FF/images> ;
-
                                 knora-base:status "true"^^xsd:boolean ;
 
                                 knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
@@ -241,8 +239,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                                                     "Basel"^^xsd:string,
                                                                     "Contectualisation of images"^^xsd:string ;
 
-                                          knora-base:projectOntology <http://www.knora.org/ontology/incunabula> ;
-
                                           knora-base:projectLogo "incunabula_logo.png"^^xsd:string ;
 
                                           knora-base:status "true"^^xsd:boolean ;
@@ -363,7 +359,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:projectShortname "anything"^^xsd:string ;
   knora-base:projectLongname "Anything Project"^^xsd:string ;
   knora-base:projectDescription "Anything Project"^^xsd:string ;
-  knora-base:projectOntology <http://www.knora.org/ontology/anything> ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -410,7 +405,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:projectShortcode "00FE"^^xsd:string ;
   knora-base:projectLongname "Dokubib"^^xsd:string ;
   knora-base:projectDescription "Dokubib"^^xsd:string ;
-  knora-base:projectOntology <http://www.knora.org/ontology/00FE/dokubib> ;
   knora-base:status "false"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -419,11 +413,11 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 # BEOL                            #
 ###################################
 
-<http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> a knora-base:knoraProject ;
+<http://rdfh.ch/projects/0801> a knora-base:knoraProject ;
   knora-base:projectShortname "beol"^^xsd:string ;
+  knora-base:projectShortcode "0801"^^xsd:string ;
   knora-base:projectLongname "Bernoulli-Euler Online"^^xsd:string ;
   knora-base:projectDescription "Bernoulli-Euler Online"^^xsd:string ;
-  knora-base:projectOntology <http://www.knora.org/ontology/beol> ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -435,7 +429,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:email "t.schweizer@unibas.ch"^^xsd:string ;
   knora-base:preferredLanguage "de"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
-  knora-base:isInProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+  knora-base:isInProject <http://rdfh.ch/projects/0801> ;
   knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE> a knora-base:User ;
@@ -446,9 +440,9 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:email "beol@example.com"^^xsd:string ;
   knora-base:preferredLanguage "de"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
-  knora-base:isInProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+  knora-base:isInProject <http://rdfh.ch/projects/0801> ;
   knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
-  knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> .
+  knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/0801> .
 
 
 ###################################
@@ -459,7 +453,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:projectShortname "biblio"^^xsd:string ;
   knora-base:projectLongname "Bibliography"^^xsd:string ;
   knora-base:projectDescription "Bibliography"^^xsd:string ;
-  knora-base:projectOntology <http://www.knora.org/ontology/biblio> ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
@@ -477,6 +470,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> .
 
 
+
 ###################################
 # WEBERN                          #
 ###################################
@@ -486,7 +480,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:projectShortcode "08AE"^^xsd:string ;
   knora-base:projectLongname "Anton Webern Gesamtausgabe"^^xsd:string ;
   knora-base:projectDescription "Historisch-kritische Edition des Gesamtschaffens von Anton Webern."^^xsd:string ;
-  knora-base:projectOntology <http://www.knora.org/ontology/08AE/webern> ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 

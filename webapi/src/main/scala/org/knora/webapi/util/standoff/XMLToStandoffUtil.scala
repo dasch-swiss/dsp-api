@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -22,15 +21,15 @@ package org.knora.webapi.util.standoff
 
 import java.io.{StringReader, StringWriter}
 import java.util.UUID
-import javax.xml.parsers.SAXParserFactory
-import javax.xml.transform.stream.StreamSource
 
 import akka.event.LoggingAdapter
 import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
+import javax.xml.parsers.SAXParserFactory
+import javax.xml.transform.stream.StreamSource
 import org.apache.commons.lang3.StringEscapeUtils
 import org.knora.webapi._
-import org.knora.webapi.util.{ErrorHandlingMap, StringFormatter, KnoraIdUtil}
+import org.knora.webapi.util.{ErrorHandlingMap, KnoraIdUtil, StringFormatter}
 
 import scala.xml._
 

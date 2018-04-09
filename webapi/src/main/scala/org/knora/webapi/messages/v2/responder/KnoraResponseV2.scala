@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -28,10 +27,10 @@ import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.twirl.StandoffTagV1
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import org.knora.webapi.util.{DateUtilV2, SmartIri, StringFormatter}
-import org.knora.webapi.util.IriConversions._
 
 /**
   * A trait for content classes that can convert themselves between internal and internal schemas.
@@ -322,7 +321,7 @@ case class GeomValueContentV2(valueHasString: String, valueHasGeometry: String, 
   * @param valueHasString        the string representation of the time interval.
   * @param valueHasIntervalStart the start of the time interval.
   * @param valueHasIntervalEnd   the end of the time interval.
-  * @param comment               a comment on this `GeomValueContentV2`, if any.
+  * @param comment               a comment on this `IntervalValueContentV2`, if any.
   */
 case class IntervalValueContentV2(valueHasString: String, valueHasIntervalStart: BigDecimal, valueHasIntervalEnd: BigDecimal, comment: Option[String]) extends ValueContentV2 {
 
@@ -344,16 +343,22 @@ case class IntervalValueContentV2(valueHasString: String, valueHasIntervalStart:
   *
   * @param valueHasString   the string representation of the hierarchical list node value.
   * @param valueHasListNode the IRI of the hierarchical list node pointed to.
-  * @param comment          a comment on this `GeomValueContentV2`, if any.
+  * @param listNodeLabel    the label of the hierarchical list node pointed to.
+  * @param comment          a comment on this `HierarchicalListValueContentV2`, if any.
   */
-case class HierarchicalListValueContentV2(valueHasString: String, valueHasListNode: IRI, comment: Option[String]) extends ValueContentV2 {
+case class HierarchicalListValueContentV2(valueHasString: String, valueHasListNode: IRI, listNodeLabel: String, comment: Option[String]) extends ValueContentV2 {
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.ListValue
 
     def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-        JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.HierarchicalListValueAsListNode -> JsonLDString(valueHasListNode)))
+        JsonLDObject(
+            Map(
+                OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNode -> JsonLDString(valueHasListNode),
+                OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNodeLabel -> JsonLDString(listNodeLabel)
+            )
+        )
     }
 
 }
@@ -466,7 +471,7 @@ case class StillImageFileValueContentV2(valueHasString: String,
       * @return the path to file value as an absolute URL.
       */
     def toURL(settings: SettingsImpl): String = {
-        s"${settings.sipiIIIFGetUrl}/$internalFilename/full/$dimX,$dimY/0/default.jpg"
+        s"${settings.externalSipiIIIFGetUrl}/$internalFilename/full/$dimX,$dimY/0/default.jpg"
     }
 
     def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
@@ -480,7 +485,7 @@ case class StillImageFileValueContentV2(valueHasString: String,
             OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimX -> JsonLDInt(dimX),
             OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimY -> JsonLDInt(dimY),
             OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> JsonLDString(internalFilename),
-            OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl -> JsonLDString(settings.sipiIIIFGetUrl)
+            OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl -> JsonLDString(settings.externalSipiIIIFGetUrl)
         ))
     }
 
@@ -510,7 +515,7 @@ case class TextFileValueContentV2(valueHasString: String, internalMimeType: Stri
       * @return the path to file value as an absolute URL.
       */
     def toURL(settings: SettingsImpl): String = {
-        s"${settings.sipiFileServerGetUrl}/$internalFilename"
+        s"${settings.externalSipiFileServerGetUrl}/$internalFilename"
     }
 
     def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {

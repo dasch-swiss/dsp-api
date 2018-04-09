@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -22,9 +21,9 @@ package org.knora.webapi.responders
 
 import akka.actor.{Actor, ActorLogging}
 import org.knora.webapi.Settings
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.store._
 import org.knora.webapi.app._
+import org.knora.webapi.store._
+import org.knora.webapi.util.StringFormatter
 
 import scala.language.postfixOps
 

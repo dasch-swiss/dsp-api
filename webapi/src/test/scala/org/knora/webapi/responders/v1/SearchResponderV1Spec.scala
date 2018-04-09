@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -22,14 +21,13 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Props
 import akka.testkit._
+import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.searchmessages._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
-
-import org.knora.webapi.SharedOntologyTestDataADM._
 
 import scala.concurrent.duration._
 
@@ -38,11 +36,11 @@ import scala.concurrent.duration._
   */
 object SearchResponderV1Spec {
 
-    private val incunabulaUser = SharedTestDataV1.incunabulaMemberUser
+    private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
 
-    private val anythingUser1 = SharedTestDataV1.anythingUser1
+    private val anythingUser1 = SharedTestDataADM.anythingUser1
 
-    private val anythingUser2 = SharedTestDataV1.anythingUser2
+    private val anythingUser2 = SharedTestDataADM.anythingUser2
 
     private val fulltextThingResultsForUser1 = Vector(SearchResultRowV1(
         rights = Some(8),
@@ -231,8 +229,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 ),
                 iconlabel = Some("Buch"),
                 icontitle = Some("Buch"),
-                iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"),
-                preview_path = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"),
+                iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
+                preview_path = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
                 obj_id = "http://data.knora.org/c5058f3a"
             ),
             SearchResultRowV1(
@@ -253,8 +251,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 ),
                 iconlabel = Some("Buch"),
                 icontitle = Some("Buch"),
-                iconsrc = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"),
-                preview_path = Some(settings.salsahBaseUrl + settings.salsahProjectIconsBasePath + "incunabula/book.gif"),
+                iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
+                preview_path = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
                 obj_id = "http://data.knora.org/ff17e5ef9601"
             )
         )
@@ -298,7 +296,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
+        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 

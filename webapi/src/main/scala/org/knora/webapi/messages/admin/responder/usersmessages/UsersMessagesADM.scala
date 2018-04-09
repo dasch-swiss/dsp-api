@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -186,7 +185,13 @@ case class UserGetRequestADM(maybeIri: Option[IRI],
 
     // need either user IRI or email
     if (maybeIri.isEmpty && maybeEmail.isEmpty) {
-        throw BadRequestException("Need to provide the user IRI and/or email.")
+        try {
+            throw new Exception("foo")
+        } catch {
+            case e: Exception => e.printStackTrace()
+        }
+
+        throw BadRequestException("Need to provide the user IRI and/or email. GAGA 2")
     }
 }
 

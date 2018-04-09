@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -24,8 +23,8 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.searchmessages.{ExtendedSearchGetRequestV1, FulltextSearchGetRequestV1, SearchComparisonOperatorV1}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
@@ -44,7 +43,7 @@ object SearchRouteV1 extends Authenticator {
       */
     private val defaultShowNRows = 25
 
-    def makeExtendedSearchRequestMessage(userProfile: UserProfileV1, reverseParams: Map[String, Seq[String]]): ExtendedSearchGetRequestV1 = {
+    def makeExtendedSearchRequestMessage(userProfile: UserADM, reverseParams: Map[String, Seq[String]]): ExtendedSearchGetRequestV1 = {
         val stringFormatter = StringFormatter.getGeneralInstance
 
         // Spray returns the parameters in reverse order, so reverse them before processing, because the JavaScript GUI expects the order to be preserved.
@@ -138,7 +137,7 @@ object SearchRouteV1 extends Authenticator {
         )
     }
 
-    def makeFulltextSearchRequestMessage(userProfile: UserProfileV1, searchval: String, params: Map[String, String]): FulltextSearchGetRequestV1 = {
+    def makeFulltextSearchRequestMessage(userProfile: UserADM, searchval: String, params: Map[String, String]): FulltextSearchGetRequestV1 = {
         val stringFormatter = StringFormatter.getGeneralInstance
 
         params.get("searchtype") match {
@@ -193,7 +192,7 @@ object SearchRouteV1 extends Authenticator {
             // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"
             get {
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
                     val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
                     val requestMessage = makeExtendedSearchRequestMessage(userProfile, params)
 
@@ -209,7 +208,7 @@ object SearchRouteV1 extends Authenticator {
         } ~ path("v1" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
             get {
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val userProfile = getUserADM(requestContext)
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
                     val requestMessage = makeFulltextSearchRequestMessage(userProfile, searchval, params)
 

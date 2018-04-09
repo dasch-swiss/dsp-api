@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, Sepideh Alassi, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -24,14 +23,14 @@ import java.io.File
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.twirl.{StandoffTagAttributeV1, StandoffTagInternalReferenceAttributeV1, StandoffTagV1}
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
-import org.knora.webapi.util.{DateUtilV1, StringFormatter, KnoraIdUtil}
+import org.knora.webapi.util.{DateUtilV1, KnoraIdUtil, StringFormatter}
 import org.knora.webapi.{BadRequestException, _}
 import spray.json._
 
@@ -239,7 +238,7 @@ sealed trait ValuesResponderRequestV1 extends KnoraRequestV1
   * @param valueIri    the IRI of the value requested.
   * @param userProfile the profile of the user making the request.
   */
-case class ValueGetRequestV1(valueIri: IRI, userProfile: UserProfileV1) extends ValuesResponderRequestV1
+case class ValueGetRequestV1(valueIri: IRI, userProfile: UserADM) extends ValuesResponderRequestV1
 
 /**
   * Represents a request for the details of a reification node describing a direct link between two resources.
@@ -250,7 +249,7 @@ case class ValueGetRequestV1(valueIri: IRI, userProfile: UserProfileV1) extends 
   * @param objectIri    the IRI of the resource that is the target of the link.
   * @param userProfile  the profile of the user making the request.
   */
-case class LinkValueGetRequestV1(subjectIri: IRI, predicateIri: IRI, objectIri: IRI, userProfile: UserProfileV1) extends ValuesResponderRequestV1
+case class LinkValueGetRequestV1(subjectIri: IRI, predicateIri: IRI, objectIri: IRI, userProfile: UserADM) extends ValuesResponderRequestV1
 
 /**
   * Provides details of a Knora value. A successful response will be a [[ValueGetResponseV1]].
@@ -284,7 +283,7 @@ case class ValueGetResponseV1(valuetype: IRI,
 case class ValueVersionHistoryGetRequestV1(resourceIri: IRI,
                                            propertyIri: IRI,
                                            currentValueIri: IRI,
-                                           userProfile: UserProfileV1) extends ValuesResponderRequestV1
+                                           userProfile: UserADM) extends ValuesResponderRequestV1
 
 /**
   * Provides the version history of a value.
@@ -312,7 +311,7 @@ case class CreateValueRequestV1(resourceIndex: Int = 0,
                                 propertyIri: IRI,
                                 value: UpdateValueV1,
                                 comment: Option[String] = None,
-                                userProfile: UserProfileV1,
+                                userProfile: UserADM,
                                 apiRequestID: UUID) extends ValuesResponderRequestV1
 
 /**
@@ -350,7 +349,7 @@ case class UnverifiedValueV1(newValueIri: IRI, value: UpdateValueV1)
   */
 case class VerifyMultipleValueCreationRequestV1(resourceIri: IRI,
                                                 unverifiedValues: Map[IRI, Seq[UnverifiedValueV1]],
-                                                userProfile: UserProfileV1) extends ValuesResponderRequestV1
+                                                userProfile: UserADM) extends ValuesResponderRequestV1
 
 /**
   * In response to a [[VerifyMultipleValueCreationRequestV1]], indicates that all requested values were
@@ -402,7 +401,7 @@ case class GenerateSparqlToCreateMultipleValuesRequestV1(projectIri: IRI,
                                                          values: Map[IRI, Seq[CreateValueV1WithComment]],
                                                          clientResourceIDsToResourceIris: Map[String, IRI],
                                                          currentTime: String,
-                                                         userProfile: UserProfileV1,
+                                                         userProfile: UserADM,
                                                          apiRequestID: UUID) extends ValuesResponderRequestV1
 
 
@@ -435,7 +434,7 @@ case class GenerateSparqlToCreateMultipleValuesResponseV1(insertSparql: String,
 case class ChangeValueRequestV1(valueIri: IRI,
                                 value: UpdateValueV1,
                                 comment: Option[String] = None,
-                                userProfile: UserProfileV1,
+                                userProfile: UserADM,
                                 apiRequestID: UUID) extends ValuesResponderRequestV1
 
 /**
@@ -448,7 +447,7 @@ case class ChangeValueRequestV1(valueIri: IRI,
   */
 case class ChangeCommentRequestV1(valueIri: IRI,
                                   comment: Option[String],
-                                  userProfile: UserProfileV1,
+                                  userProfile: UserADM,
                                   apiRequestID: UUID) extends ValuesResponderRequestV1
 
 /**
@@ -475,7 +474,7 @@ case class ChangeValueResponseV1(value: ApiValueV1,
   */
 case class DeleteValueRequestV1(valueIri: IRI,
                                 deleteComment: Option[String] = None,
-                                userProfile: UserProfileV1,
+                                userProfile: UserADM,
                                 apiRequestID: UUID) extends ValuesResponderRequestV1
 
 /**
@@ -497,7 +496,7 @@ case class DeleteValueResponseV1(id: IRI) extends KnoraResponseV1 {
   * @param resourceIri the resource whose files value(s) should be changed.
   * @param file        the file to be created and added.
   */
-case class ChangeFileValueRequestV1(resourceIri: IRI, file: SipiResponderConversionRequestV1, apiRequestID: UUID, userProfile: UserProfileV1) extends ValuesResponderRequestV1
+case class ChangeFileValueRequestV1(resourceIri: IRI, file: SipiResponderConversionRequestV1, apiRequestID: UUID, userProfile: UserADM) extends ValuesResponderRequestV1
 
 /**
   * Represents a response to a [[ChangeFileValueRequestV1]].

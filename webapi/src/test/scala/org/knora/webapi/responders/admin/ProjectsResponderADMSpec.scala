@@ -1,15 +1,18 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
  * This file is part of Knora.
+ *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * Knora is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
+ *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -27,7 +30,6 @@ import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologyInfoShortADM
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -70,7 +72,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
+        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
@@ -187,7 +189,6 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 received.project.shortcode should be(Some("1111"))
                 received.project.longname should contain("project longname")
                 received.project.description should be(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
-                received.project.ontologies.isEmpty should be (true)
 
                 newProjectIri.set(received.project.id)
                 //println(s"newProjectIri: ${newProjectIri.get}")
@@ -214,7 +215,6 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 received.project.shortcode should be(Some("1112"))
                 received.project.longname should contain("project longname")
                 received.project.description should be(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
-                received.project.ontologies.isEmpty should be (true)
 
                 //println(s"newProjectIri: ${newProjectIri.get}")
             }
@@ -315,33 +315,8 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 received.project.description should be (Seq(StringLiteralV2(value = """updated project description with "quotes" and <html tags>""", language = Some("en"))))
                 received.project.keywords.sorted should be (Seq("updated", "keywords").sorted)
                 received.project.logo should be (Some("/fu/bar/baz-updated.jpg"))
-                received.project.ontologies.isEmpty should be (true)
                 received.project.status should be (false)
                 received.project.selfjoin should be (true)
-            }
-
-            "ADD an ontology to the project" in {
-                actorUnderTest ! ProjectOntologyAddADM(
-                    projectIri = newProjectIri.get,
-                    ontologyIri = "http://www.knora.org/ontology/blabla1",
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = UUID.randomUUID()
-                )
-
-                val received: ProjectADM = expectMsgType[ProjectADM](timeout)
-                received.ontologies should be (Seq(OntologyInfoShortADM("http://www.knora.org/ontology/blabla1", "blabla1")))
-            }
-
-            "REMOVE an ontology from the project" in {
-                actorUnderTest ! ProjectOntologyRemoveADM(
-                    projectIri = newProjectIri.get,
-                    ontologyIri = "http://www.knora.org/ontology/blabla1",
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = UUID.randomUUID()
-                )
-
-                val received: ProjectADM = expectMsgType[ProjectADM](timeout)
-                received.ontologies.isEmpty should be (true)
             }
 
             "return 'NotFound' if a not existing project IRI is submitted during update" in {

@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -32,7 +31,7 @@ import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
-import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.store._
@@ -65,8 +64,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    private val anythingUser = SharedTestDataV1.anythingUser1
-    private val anythingUserEmail = anythingUser.userData.email.get
+    private val anythingUser = SharedTestDataADM.anythingUser1
+    private val anythingUserEmail = anythingUser.email
 
     private val password = "test"
 
@@ -80,7 +79,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataV1.rootUser), 10.seconds)
+        Await.result(responderManager ? LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser), 30.seconds)
     }
 
     "The Search v2 Endpoint" should {
@@ -1090,7 +1089,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 <http://data.knora.org/50e7460a7203> knora-api:seqnum ?seqnum .
 
-                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFileValue ?file .
+                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFile ?file .
 
             } WHERE {
 
@@ -1112,10 +1111,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 ?seqnum a xsd:integer .
 
-                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFileValue ?file .
-                knora-api:hasStillImageFileValue knora-api:objectType knora-api:StillImageFile .
+                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFile ?file .
+                knora-api:hasStillImageFile knora-api:objectType knora-api:File .
 
-                ?file a knora-api:StillImageFile .
+                ?file a knora-api:File .
 
             } OFFSET 0
             """.stripMargin
@@ -1167,10 +1166,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 ?seqnum a xsd:integer .
 
-                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFileValue ?file .
-                knora-api:hasStillImageFileValue knora-api:objectType knora-api:StillImageFile .
+                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFile ?file .
+                knora-api:hasStillImageFile knora-api:objectType knora-api:File .
 
-                ?file a knora-api:StillImageFile .
+                ?file a knora-api:File .
 
             } OFFSET 0
             """.stripMargin
@@ -1516,7 +1515,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkCountQuery(responseAs[String], 10)
+                checkCountQuery(responseAs[String], 12)
 
             }
 
@@ -1735,6 +1734,45 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"))
+
+                compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkCountQuery(responseAs[String], 2)
+
+            }
+
+        }
+
+        "search for a anything:Thing with a list value" in {
+
+            val sparqlSimplified =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?thing knora-api:isMainResource true .
+                  |
+                  |        ?thing anything:hasListItem ?listItem .
+                  |
+                  |    } WHERE {
+                  |        ?thing a knora-api:Resource .
+                  |
+                  |        ?thing anything:hasListItem ?listItem .
+                  |
+                  |        anything:hasListItem knora-api:objectType xsd:string .
+                  |
+                  |        ?listItem a xsd:string .
+                  |
+                  |    } OFFSET 0
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithListValue.jsonld"))
 
                 compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 

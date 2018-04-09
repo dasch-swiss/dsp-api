@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -22,8 +21,8 @@ package org.knora.webapi.responders
 
 import akka.pattern._
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingRequestV1, GetMappingResponseV1, GetXSLTransformationRequestV1, GetXSLTransformationResponseV1}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.util.ConstructResponseUtilV2
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 
@@ -41,7 +40,7 @@ abstract class ResponderWithStandoffV2 extends Responder {
       * @param userProfile           the user making the request.
       * @return the referred mappings.
       */
-    protected def getMappingsFromQueryResultsSeparated(queryResultsSeparated: Map[IRI, ResourceWithValueRdfData], userProfile: UserProfileV1): Future[Map[IRI, MappingAndXSLTransformation]] = {
+    protected def getMappingsFromQueryResultsSeparated(queryResultsSeparated: Map[IRI, ResourceWithValueRdfData], userProfile: UserADM): Future[Map[IRI, MappingAndXSLTransformation]] = {
 
         // collect the Iris of the mappings referred to in the resources' text values
         val mappingIris: Set[IRI] = queryResultsSeparated.flatMap {
