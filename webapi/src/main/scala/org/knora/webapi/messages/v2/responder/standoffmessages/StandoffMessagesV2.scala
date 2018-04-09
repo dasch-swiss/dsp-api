@@ -21,11 +21,11 @@ package org.knora.webapi.messages.v2.responder.standoffmessages
 
 import java.util.UUID
 
+import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v2.responder.{KnoraJsonLDRequestReaderV2, KnoraRequestV2, KnoraResponseV2}
+import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDObject, JsonLDString}
 import org.knora.webapi.util.{SmartIri, StringFormatter}
-import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDObject, JsonLDValue}
-import org.knora.webapi.{ApiV2Schema, IRI, OntologyConstants, SettingsImpl}
 
 /**
   * An abstract trait representing a Knora v2 API request message that can be sent to `StandoffResponderV2`.
@@ -88,19 +88,22 @@ case class CreateMappingRequestXMLV2(xml: String) extends StandoffResponderReque
 case class CreateMappingResponseV2(mappingIri: IRI) extends KnoraResponseV2 {
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
 
-        // TODO: implement this
-        JsonLDDocument(JsonLDObject(Map.empty[IRI, JsonLDValue]), JsonLDObject(Map.empty[IRI, JsonLDValue]))
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val body = JsonLDObject(Map(
+            "@id" -> JsonLDString(mappingIri),
+            "@type" -> JsonLDString(SmartIri(OntologyConstants.KnoraBase.XMLToStandoffMapping).toOntologySchema(targetSchema).toString)
+        ))
+
+        val context = JsonLDObject(Map(
+            "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
+            "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
+            "owl" -> JsonLDString("http://www.w3.org/2002/07/owl#"),
+            "xsd" -> JsonLDString("http://www.w3.org/2001/XMLSchema#")
+        ))
+
+        JsonLDDocument(body, context)
     }
 }
 
-/**
-  * Represents an API request to create a mapping.
-  *
-  * @param project_id  the project in which the mapping is to be added.
-  * @param label       the label describing the mapping.
-  * @param mappingName the name of the mapping (will be appended to the mapping IRI).
-  */
-case class CreateMappingApiRequestV2(project_id: IRI, label: String, mappingName: String) {
-
-}
 
