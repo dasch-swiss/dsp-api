@@ -1168,7 +1168,7 @@
         "rdfs:comment" : "describes the document type"
       }
     },
-    "rdfs:label" : "standoff"
+    "rdfs:label" : "The standoff ontology"
   },
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

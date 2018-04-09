@@ -23,8 +23,8 @@ package org.knora.webapi.responders.v1
 import akka.actor.Props
 import akka.testkit._
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
 import org.knora.webapi.util.MessageUtil
@@ -37,13 +37,10 @@ import scala.concurrent.duration._
 object OntologyResponderV1Spec {
 
     // A test user that prefers responses in German.
-    private val userProfileWithGerman = SharedTestDataV1.incunabulaProjectAdminUser
-
-    // A test user that prefers responses in French.
-    private val userProfileWithFrench = userProfileWithGerman.copy(userData = userProfileWithGerman.userData.copy(lang = "fr"))
+    private val userProfileWithGerman = SharedTestDataADM.incunabulaProjectAdminUser
 
     // A test user that prefers responses in English.
-    private val userProfileWithEnglish = userProfileWithGerman.copy(userData = userProfileWithGerman.userData.copy(lang = "en"))
+    private val userProfileWithEnglish = userProfileWithGerman.copy(lang = "en")
 
 }
 
@@ -619,75 +616,84 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         vocabularies = Vector(
             NamedGraphV1( // SystemProject
                 active = true,
-                uri = SharedTestDataV1.systemProjectInfo.ontologies.head,
+                uri = OntologyConstants.KnoraBase.KnoraBaseOntologyIri,
                 project_id = SharedTestDataV1.systemProjectInfo.id,
                 description = SharedTestDataV1.systemProjectInfo.description.get,
                 longname = SharedTestDataV1.systemProjectInfo.longname.get,
                 shortname = SharedTestDataV1.systemProjectInfo.shortname,
-                id = SharedTestDataV1.systemProjectInfo.ontologies.head
+                id = OntologyConstants.KnoraBase.KnoraBaseOntologyIri
             ),
             NamedGraphV1( // Incunabula
                 active = true,
-                uri = SharedTestDataV1.incunabulaProjectInfo.ontologies.head,
+                uri = SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI,
                 project_id = SharedTestDataV1.incunabulaProjectInfo.id,
                 description = SharedTestDataV1.incunabulaProjectInfo.description.get,
                 longname = SharedTestDataV1.incunabulaProjectInfo.longname.get,
                 shortname = SharedTestDataV1.incunabulaProjectInfo.shortname,
-                id = SharedTestDataV1.incunabulaProjectInfo.ontologies.head
+                id = SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI
             ),
             NamedGraphV1( // BEOL
                 active = true,
-                uri = SharedTestDataV1.beolProjectInfo.ontologies.head,
+                uri = SharedOntologyTestDataADM.BEOL_ONTOLOGY_IRI,
                 project_id = SharedTestDataV1.beolProjectInfo.id,
                 description = SharedTestDataV1.beolProjectInfo.description.get,
                 longname = SharedTestDataV1.beolProjectInfo.longname.get,
                 shortname = SharedTestDataV1.beolProjectInfo.shortname,
-                id = SharedTestDataV1.beolProjectInfo.ontologies.head
+                id = SharedOntologyTestDataADM.BEOL_ONTOLOGY_IRI
             ),
             NamedGraphV1( // BIBLIO
                 active = true,
-                uri = SharedTestDataV1.biblioProjectInfo.ontologies.head,
+                uri = SharedOntologyTestDataADM.BIBLIO_ONTOLOGY_IRI,
                 project_id = SharedTestDataV1.biblioProjectInfo.id,
                 description = SharedTestDataV1.biblioProjectInfo.description.get,
                 longname = SharedTestDataV1.biblioProjectInfo.longname.get,
                 shortname = SharedTestDataV1.biblioProjectInfo.shortname,
-                id = SharedTestDataV1.biblioProjectInfo.ontologies.head
+                id = SharedOntologyTestDataADM.BIBLIO_ONTOLOGY_IRI
             ),
             NamedGraphV1( // Images
                 active = true,
-                uri = SharedTestDataV1.imagesProjectInfo.ontologies.head,
+                uri = SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI,
                 project_id = SharedTestDataV1.imagesProjectInfo.id,
                 description = SharedTestDataV1.imagesProjectInfo.description.get,
                 longname = SharedTestDataV1.imagesProjectInfo.longname.get,
                 shortname = SharedTestDataV1.imagesProjectInfo.shortname,
-                id = SharedTestDataV1.imagesProjectInfo.ontologies.head
+                id = SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI
             ),
             NamedGraphV1( // Anything
                 active = true,
-                uri = SharedTestDataV1.anythingProjectInfo.ontologies.head,
+                uri = SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI,
                 project_id = SharedTestDataV1.anythingProjectInfo.id,
                 description = SharedTestDataV1.anythingProjectInfo.description.get,
                 longname = SharedTestDataV1.anythingProjectInfo.longname.get,
                 shortname = SharedTestDataV1.anythingProjectInfo.shortname,
-                id = SharedTestDataV1.anythingProjectInfo.ontologies.head
+                id = SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI
+            ),
+            NamedGraphV1( // something
+                shortname = "anything",
+                description = "Anything Project",
+                uri = "http://www.knora.org/ontology/something",
+                id = "http://www.knora.org/ontology/something",
+                project_id = "http://rdfh.ch/projects/anything",
+                longname = "Anything Project",
+                active = true
             ),
             NamedGraphV1( // Dokubib
                 active = false,
-                uri = SharedTestDataV1.dokubibProjectInfo.ontologies.head,
+                uri = SharedOntologyTestDataADM.DOKUBIB_ONTOLOGY_IRI,
                 project_id = SharedTestDataV1.dokubibProjectInfo.id,
                 description = SharedTestDataV1.dokubibProjectInfo.description.get,
                 longname = SharedTestDataV1.dokubibProjectInfo.longname.get,
                 shortname = SharedTestDataV1.dokubibProjectInfo.shortname,
-                id = SharedTestDataV1.dokubibProjectInfo.ontologies.head
+                id = SharedOntologyTestDataADM.DOKUBIB_ONTOLOGY_IRI
             ),
             NamedGraphV1( // Webern
                 active = true,
-                uri = SharedTestDataV1.webernProjectInfo.ontologies.head,
+                uri = SharedOntologyTestDataADM.WEBERN_ONTOLOGY_IRI,
                 project_id = SharedTestDataV1.webernProjectInfo.id,
                 description = SharedTestDataV1.webernProjectInfo.description.get,
                 longname = SharedTestDataV1.webernProjectInfo.longname.get,
                 shortname = SharedTestDataV1.webernProjectInfo.shortname,
-                id = SharedTestDataV1.webernProjectInfo.ontologies.head
+                id = SharedOntologyTestDataADM.WEBERN_ONTOLOGY_IRI
             )
         )
     )
@@ -995,7 +1001,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(OntologyResponderV1Spec.userProfileWithGerman)
+        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 

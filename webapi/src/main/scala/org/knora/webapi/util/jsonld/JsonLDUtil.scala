@@ -21,8 +21,8 @@ package org.knora.webapi.util.jsonld
 
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
-import org.knora.webapi.messages.store.triplestoremessages.{LiteralV2, StringLiteralV2}
-import org.knora.webapi.util.{JavaUtil, SmartIri, StringFormatter}
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.util.{JavaUtil, StringFormatter}
 import org.knora.webapi.{BadRequestException, IRI, LanguageCodes}
 
 /**

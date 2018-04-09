@@ -116,7 +116,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
             page.clickSaveButtonForResourceCreationForm()
 
-            val window = page.getWindow(1)
+            val window = page.getWindowByID(1)
 
             page.doLogout()
 
@@ -174,7 +174,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
             page.clickSaveButtonForResourceCreationForm()
 
-            val resource1Window = page.getWindow(1)
+            val resource1Window = page.getWindowByID(1)
 
             page.closeWindow(resource1Window)
 

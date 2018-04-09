@@ -414,19 +414,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#projectOntology
-
-:projectOntology rdf:type owl:DatatypeProperty ;
-
-            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-            rdfs:comment "The IRI of the project specific ontology"@en ;
-
-            :subjectClassConstraint :knoraProject ;
-
-            :objectDatatypeConstraint xsd:anyURI .
-
-
 
 ###  http://www.knora.org/ontology/knora-base#projectShortname
 
@@ -634,10 +621,6 @@
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :belongsToInstitution ;
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                              ] ,
-                              [ rdf:type owl:Restriction ;
-                                owl:onProperty :projectOntology ;
-                                owl:minCardinality "0"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :status ;

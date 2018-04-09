@@ -419,6 +419,18 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
 
     */
 
+    /**
+      * Finds a window by its CSS classes.
+      *
+      * @param windowClasses the CSS classes of the window.
+      * @return a [[WebElement]] representing the window.
+      */
+    def getWindowByClass(windowClasses: Seq[String]): WebElement = {
+        eventually {
+            driver.findElement(By.xpath(s"//div[${windowClasses.map(c => "contains(@class, '" + c + "')").mkString(" and ")}]"))
+        }
+    }
+
 
     /**
       * Get the window with the given id.
@@ -426,7 +438,7 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
       * @param winId the window's id.
       * @return a [[WebElement]] representing the window.
       */
-    def getWindow(winId: Int): WebElement = {
+    def getWindowByID(winId: Int): WebElement = {
 
         eventually {
             driver.findElement(By.id(winId.toString))
@@ -447,7 +459,7 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
 
     def getEditingFieldsFromMetadataSection(metadataSection: WebElement): List[WebElement] = {
         eventually {
-            val editingFields = metadataSection.findElements(By.xpath("div[@class='propedit datafield_1 winid_1']")).toList
+            val editingFields = metadataSection.findElements(By.xpath("div[contains(@class, 'propedit') and contains(@class, 'datafield_1')]")).toList
             if (editingFields.length < 1) throw new Exception
             editingFields
         }
@@ -726,5 +738,10 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
                 driver.switchTo().alert().accept()
             }
         }
+    }
+
+    def dragSeparator(offset: Int): Unit = {
+        val dragElementFrom = driver.findElement(By.xpath("//div[@class='separatorArea']"))
+        new Actions(driver).dragAndDropBy(dragElementFrom, offset, 0).build.perform()
     }
 }

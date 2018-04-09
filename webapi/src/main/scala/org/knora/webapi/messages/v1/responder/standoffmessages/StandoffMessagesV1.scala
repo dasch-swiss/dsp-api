@@ -22,8 +22,8 @@ package org.knora.webapi.messages.v1.responder.standoffmessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.{IRI, OntologyConstants}
 import spray.json._
@@ -45,7 +45,7 @@ sealed trait StandoffResponderRequestV1 extends KnoraRequestV1
   * @param mappingName the name of the mapping to be created.
   * @param userProfile the profile of the user making the request.
   */
-case class CreateMappingRequestV1(xml: String, label: String, projectIri: IRI, mappingName: String, userProfile: UserProfileV1, apiRequestID: UUID) extends StandoffResponderRequestV1
+case class CreateMappingRequestV1(xml: String, label: String, projectIri: IRI, mappingName: String, userProfile: UserADM, apiRequestID: UUID) extends StandoffResponderRequestV1
 
 /**
   * Provides the IRI of the created mapping.
@@ -62,7 +62,7 @@ case class CreateMappingResponseV1(mappingIri: IRI) extends KnoraResponseV1 {
   * @param mappingIri  the IRI of the mapping.
   * @param userProfile the profile of the user making the request.
   */
-case class GetMappingRequestV1(mappingIri: IRI, userProfile: UserProfileV1) extends StandoffResponderRequestV1
+case class GetMappingRequestV1(mappingIri: IRI, userProfile: UserADM) extends StandoffResponderRequestV1
 
 /**
   * Represents a response to a [[GetMappingRequestV1]].
@@ -79,7 +79,7 @@ case class GetMappingResponseV1(mappingIri: IRI, mapping: MappingXMLtoStandoff, 
   * @param xsltTextRepresentationIri the IRI of the `knora-base:XSLTransformation`.
   * @param userProfile               the profile of the user making the request.
   */
-case class GetXSLTransformationRequestV1(xsltTextRepresentationIri: IRI, userProfile: UserProfileV1) extends StandoffResponderRequestV1
+case class GetXSLTransformationRequestV1(xsltTextRepresentationIri: IRI, userProfile: UserADM) extends StandoffResponderRequestV1
 
 /**
   * Represents a response to a [[GetXSLTransformationRequestV1]].

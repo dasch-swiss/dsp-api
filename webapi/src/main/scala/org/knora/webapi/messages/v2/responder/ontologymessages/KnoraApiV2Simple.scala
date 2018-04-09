@@ -34,6 +34,7 @@ object KnoraApiV2Simple {
 
     val OntologyMetadata = OntologyMetadataV2(
         ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri,
+        projectIri = Some(OntologyConstants.KnoraBase.SystemProject.toSmartIri),
         label = Some("The simplified knora-api ontology")
     )
 
@@ -390,7 +391,6 @@ object KnoraApiV2Simple {
             OntologyConstants.KnoraBase.ProjectKeyword,
             OntologyConstants.KnoraBase.ProjectLogo,
             OntologyConstants.KnoraBase.BelongsToInstitution,
-            OntologyConstants.KnoraBase.ProjectOntology,
             OntologyConstants.KnoraBase.HasSelfJoinEnabled,
             OntologyConstants.KnoraBase.GroupName,
             OntologyConstants.KnoraBase.GroupDescription,

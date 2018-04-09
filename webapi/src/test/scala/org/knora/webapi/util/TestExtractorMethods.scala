@@ -19,7 +19,7 @@
 
 package org.knora.webapi.util
 
-import akka.actor.{Actor, ActorSystem}
+import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.HttpResponse
 import org.knora.webapi.InvalidApiJsonException

@@ -40,7 +40,7 @@ class StoresResponderADM extends Responder {
     /**
       * A user representing the Knora API server, used in those cases where a user is required.
       */
-    private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
+    private val systemUser = KnoraSystemInstances.Users.SystemUser
 
     def receive = {
         case ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject]) => future2Message(sender(), resetTriplestoreContent(rdfDataObjects), log)
