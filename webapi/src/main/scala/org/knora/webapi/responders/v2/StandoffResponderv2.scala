@@ -37,11 +37,10 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{StandoffEntityIn
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestV2, CreateMappingResponseV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestV2, CreateMappingResponseV2, GetXSLTransformationResponseV2}
 import org.knora.webapi.responders.v1.ValueUtilV1
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
@@ -83,10 +82,12 @@ class StandoffResponderV2 extends Responder {
       * @param userProfile          The client making the request.
       * @return a [[GetXSLTransformationResponseV1]].
       */
-    private def getXSLTransformation(xslTransformationIri: IRI, userProfile: UserADM): Future[GetXSLTransformationResponseV1] = {
+    private def getXSLTransformation(xslTransformationIri: IRI, userProfile: UserADM): Future[GetXSLTransformationResponseV2] = {
 
         val textLocationFuture: Future[LocationV1] = for {
             // get the `LocationV1` representing XSL transformation
+
+            // TODO: use v2 resources responder
             textRepresentationResponse: ResourceFullResponseV1 <- (responderManager ? ResourceFullGetRequestV1(iri = xslTransformationIri, userProfile = userProfile, getIncoming = false)).mapTo[ResourceFullResponseV1]
 
             textLocation: LocationV1 = textRepresentationResponse match {
@@ -171,7 +172,7 @@ class StandoffResponderV2 extends Responder {
                 } yield xslt
             }
 
-        } yield GetXSLTransformationResponseV1(xslt = xslt)
+        } yield GetXSLTransformationResponseV2(xslt = xslt)
 
     }
 
@@ -218,7 +219,7 @@ class StandoffResponderV2 extends Responder {
                         // try to obtain the XSL transformation to make sure that it really exists
                         // TODO: add a test to the integration tests
                         for {
-                            transform: GetXSLTransformationResponseV1 <- getXSLTransformation(transIri, userProfile)
+                            transform: GetXSLTransformationResponseV2 <- getXSLTransformation(transIri, userProfile)
                         } yield Some(transIri)
                     case _ => Future(None)
                 }
@@ -313,7 +314,7 @@ class StandoffResponderV2 extends Responder {
                 // checks if the standoff classes exist in the ontology
                 // checks if the standoff properties exist in the ontology
                 // checks if the attributes defined for XML elements have cardinalities for the standoff properties defined on the standoff class
-                _ <- getStandoffEntitiesFromMappingV1(mappingXMLToStandoff, userProfile)
+                _ <- getStandoffEntitiesFromMappingV2(mappingXMLToStandoff, userProfile)
 
                 // check if the mapping IRI already exists
                 getExistingMappingSparql = queries.sparql.v1.txt.getMapping(
@@ -636,7 +637,7 @@ class StandoffResponderV2 extends Responder {
       * @param userProfile          the client that made the request.
       * @return a [[StandoffEntityInfoGetResponseV1]] holding information about standoff classes and properties.
       */
-    private def getStandoffEntitiesFromMappingV1(mappingXMLtoStandoff: MappingXMLtoStandoff, userProfile: UserADM): Future[StandoffEntityInfoGetResponseV1] = {
+    private def getStandoffEntitiesFromMappingV2(mappingXMLtoStandoff: MappingXMLtoStandoff, userProfile: UserADM): Future[StandoffEntityInfoGetResponseV1] = {
 
         // invert the mapping so standoff class Iris become keys
         val mappingStandoffToXML: Map[IRI, XMLTagItem] = StandoffTagUtilV1.invertXMLToStandoffMapping(mappingXMLtoStandoff)

@@ -23,10 +23,11 @@ import java.util.UUID
 
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
+import org.knora.webapi.messages.v1.responder.standoffmessages.{MappingXMLtoStandoff, StandoffResponderRequestV1}
 import org.knora.webapi.messages.v2.responder.{KnoraJsonLDRequestReaderV2, KnoraRequestV2, KnoraResponseV2}
-import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDObject, JsonLDString}
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDObject, JsonLDString}
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 
@@ -110,4 +111,34 @@ case class CreateMappingResponseV2(mappingIri: IRI) extends KnoraResponseV2 {
     }
 }
 
+/**
+  * Represents a request to get a mapping from XML elements and attributes to standoff entities.
+  *
+  * @param mappingIri  the IRI of the mapping.
+  * @param userProfile the profile of the user making the request.
+  */
+case class GetMappingRequestV2(mappingIri: IRI, userProfile: UserADM) extends StandoffResponderRequestV2
 
+/**
+  * Represents a response to a [[GetMappingRequestV2]].
+  *
+  * @param mappingIri       the IRI of the requested mapping.
+  * @param mapping          the requested mapping.
+  * @param standoffEntities the standoff entities referred to in the mapping.
+  */
+case class GetMappingResponseV2(mappingIri: IRI, mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1) // TODO: there should be a route to obtain a mapping
+
+/**
+  * Represents a request that gets an XSL Transformation represented by a `knora-base:XSLTransformation`.
+  *
+  * @param xsltTextRepresentationIri the IRI of the `knora-base:XSLTransformation`.
+  * @param userProfile               the profile of the user making the request.
+  */
+case class GetXSLTransformationRequestV2(xsltTextRepresentationIri: IRI, userProfile: UserADM) extends StandoffResponderRequestV2
+
+/**
+  * Represents a response to a [[GetXSLTransformationRequestV2]].
+  *
+  * @param xslt the XSLT to be applied to the XML created from standoff.
+  */
+case class GetXSLTransformationResponseV2(xslt: String)
