@@ -123,19 +123,15 @@ object ResourcesRouteV1 extends Authenticator {
                                     // check if text has markup
                                     if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
                                         // simple text
-                                        if (richtext.lang.nonEmpty) {
-                                            Future(CreateValueV1WithComment(TextValueSimpleV1(utf8str = stringFormatter.toSparqlEncodedString(richtext.utf8str.get, throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'")),
-                                                    language = Some(richtext.lang.get)), givenValue.comment))
-                                        }
-                                        else {
 
-                                            Future(CreateValueV1WithComment(TextValueSimpleV1(utf8str = stringFormatter.toSparqlEncodedString(richtext.utf8str.get, throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
-                                                givenValue.comment))
-                                        }
+                                        Future(CreateValueV1WithComment(TextValueSimpleV1(utf8str = stringFormatter.toSparqlEncodedString(richtext.utf8str.get, throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'")),
+                                                    language = richtext.language), givenValue.comment))
+
                                     } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
                                         // XML: text with markup
 
                                         val mappingIri = stringFormatter.validateAndEscapeIri(richtext.mapping_id.get, throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid"))
+
 
 
                                         for {
@@ -155,7 +151,7 @@ object ResourcesRouteV1 extends Authenticator {
 
                                         } yield CreateValueV1WithComment(TextValueWithStandoffV1(
                                             utf8str = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw InconsistentTriplestoreDataException("utf8str for TextValue contains invalid characters")),
-                                            language = Some(richtext.lang.get),
+                                            language = richtext.language,
                                             resource_reference = resourceReferences,
                                             standoff = textWithStandoffTags.standoffTagV1,
                                             mappingIri = textWithStandoffTags.mapping.mappingIri,
@@ -775,6 +771,11 @@ object ResourcesRouteV1 extends Authenticator {
           */
         def knoraDataTypeXml(node: Node): CreateResourceValueV1 = {
             val knoraType: Seq[Node] = node.attribute("knoraType").getOrElse(throw BadRequestException(s"Attribute 'knoraType' missing in element '${node.label}'"))
+
+
+            val elementLanguage: String = node.attribute("lang").getOrElse(None).toString
+
+
             val elementValue = node.text
 
             if (knoraType.nonEmpty) {
@@ -790,13 +791,25 @@ object ResourcesRouteV1 extends Authenticator {
                                 if (childElements.nonEmpty) {
                                     val embeddedXmlRootNode = childElements.head
                                     val embeddedXmlDoc = """<?xml version="1.0" encoding="UTF-8"?>""" + embeddedXmlRootNode.toString
-                                    CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = None, xml = Some(embeddedXmlDoc), mapping_id = mappingIri)))
+                                    if (elementLanguage!="None") {
+                                        CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = None, language=Some(elementLanguage), xml = Some(embeddedXmlDoc), mapping_id = mappingIri)))
+                                    }
+                                    else {
+                                        CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = None, xml = Some(embeddedXmlDoc), mapping_id = mappingIri)))
+
+                                    }
                                 } else {
                                     throw BadRequestException(s"Element '${node.label}' provides a mapping_id, but its content is not XML")
                                 }
 
                             case None =>
-                                CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = Some(elementValue))))
+                                if (elementLanguage!="None") {
+                                    CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = Some(elementValue), language = Some(elementLanguage))))
+                                } else {
+                                        CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = Some(elementValue))))
+                                }
+
+
                         }
 
                     case "link_value" =>

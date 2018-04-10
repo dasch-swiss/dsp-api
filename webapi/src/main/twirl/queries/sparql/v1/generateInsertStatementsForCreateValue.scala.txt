@@ -60,7 +60,9 @@
         @value match {
 
             case textValueSimple: TextValueSimpleV1 => {
-                @* nothing to do *@
+             @if(!textValueSimple.language.isEmpty){
+                <@newValueIri> knora-base:valueHasLanguage """@textValueSimple.language.toString""" .
+              }
             }
 
             case textValueWithStandoff: TextValueWithStandoffV1 => {
@@ -68,7 +70,9 @@
                 @* Create a Standoff node for each StandoffTagV1. *@
 
                 <@newValueIri> knora-base:valueHasMapping <@textValueWithStandoff.mappingIri> .
-
+                @if(!textValueWithStandoff.language.isEmpty) {
+                    <@newValueIri> knora-base:valueHasLanguage """@textValueWithStandoff.language.toString""" .
+                }
                 @for((createStandoff, standoffNodeIndex) <- textValueWithStandoff.prepareForSparqlInsert(newValueIri).zipWithIndex) {
 
                     <@newValueIri> knora-base:valueHasStandoff <@createStandoff.standoffTagInstanceIri> .
