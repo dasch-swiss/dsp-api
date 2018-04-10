@@ -3,6 +3,7 @@ import NativePackagerHelper._
 import sbt.io.IO
 import sbtassembly.MergeStrategy
 import sbtassembly.MergeStrategy._
+import sun.util.logging.resources.logging
 
 connectInput in run := true
 
@@ -235,14 +236,15 @@ lazy val library =
         val jenaText               = "org.apache.jena"               % "jena-text"                % Version.jena exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec")
 
         // logging
-        val scalaLogging           = "com.typesafe.scala-logging"   %% "scala-logging"            % "3.5.0"
-        val logbackClassic         = "ch.qos.logback"                % "logback-classic"          % "1.1.7"
+        val commonsLogging         = "commons-logging"               % "commons-logging"          % "1.2"
+        val scalaLogging           = "com.typesafe.scala-logging"   %% "scala-logging"            % "3.8.0"
+        val logbackClassic         = "ch.qos.logback"                % "logback-classic"          % "1.2.3"
 
         // input validation
         val commonsValidator       = "commons-validator"             % "commons-validator"        % "1.6" exclude("commons-logging", "commons-logging")
 
         // authentication
-        val springSecurityCore     = "org.springframework.security"  % "spring-security-core"     % "5.0.4.RELEASE" exclude("commons-logging", "commons-logging") exclude("org.springframework", "spring-aop")
+        val springSecurityCore     = "org.springframework.security"  % "spring-security-core"     % "4.2.5.RELEASE" exclude("commons-logging", "commons-logging") exclude("org.springframework", "spring-aop")
         val jwt                    = "io.igl"                       %% "jwt"                      % "1.2.2" exclude("commons-codec", "commons-codec")
 
         // caching
@@ -258,9 +260,9 @@ lazy val library =
 
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",
-        val commonsLang3           = "org.apache.commons"            % "commons-lang3"            % "3.4"
-        val commonsIo              = "commons-io"                    % "commons-io"               % "2.4"
-        val commonsBeanUtil        = "commons-beanutils"             % "commons-beanutils"        % "1.9.2" exclude("commons-logging", "commons-logging") // not used by us, but need newest version to prevent this problem: http://stackoverflow.com/questions/14402745/duplicate-classes-in-commons-collections-and-commons-beanutils
+        val commonsLang3           = "org.apache.commons"            % "commons-lang3"            % "3.7"
+        val commonsIo              = "commons-io"                    % "commons-io"               % "2.6"
+        val commonsBeanUtil        = "commons-beanutils"             % "commons-beanutils"        % "1.9.3" exclude("commons-logging", "commons-logging") // not used by us, but need newest version to prevent this problem: http://stackoverflow.com/questions/14402745/duplicate-classes-in-commons-collections-and-commons-beanutils
         val jodd                   = "org.jodd"                      % "jodd"                     % "3.2.6"
         val jodaTime               = "joda-time"                     % "joda-time"                % "2.9.1"
         val jodaConvert            = "org.joda"                      % "joda-convert"             % "1.8"
@@ -282,7 +284,7 @@ lazy val library =
         val akkaHttpCirce          = "de.heikoseeberger"            %% "akka-http-circe"          % "1.20.0"
         val jacksonScala           = "com.fasterxml.jackson.module" %% "jackson-module-scala"     % "2.9.4"
 
-        val jsonldJava             = "com.github.jsonld-java"        % "jsonld-java"              % "0.11.1"
+        val jsonldJava             = "com.github.jsonld-java"        % "jsonld-java"              % "0.12.0"
     }
 
 lazy val javaRunOptions = Seq(
