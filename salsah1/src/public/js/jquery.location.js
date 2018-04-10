@@ -105,7 +105,7 @@
 									$this.find('.uploadButton').remove();
 
 									$this.append($('<div>').addClass('thumbNail')
-										.append($('<img>', {src: data.preview_path}))
+										.append($('<img>', {src: data.preview_path, style: "image-orientation: from-image"}))
 										.append($('<br>'))
 										.append(data.original_filename)
 									);
