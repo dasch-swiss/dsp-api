@@ -22,23 +22,19 @@ package org.knora.webapi.responders.v1
 import java.util.UUID
 
 import akka.actor.Status
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{CacheUtil, StringFormatter}
+import org.knora.webapi.util.StringFormatter
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
 
 
 /**
@@ -75,94 +71,11 @@ class StandoffResponderV1 extends Responder {
       */
     private def getXSLTransformation(xslTransformationIri: IRI, userProfile: UserADM): Future[GetXSLTransformationResponseV1] = {
 
-        val textLocationFuture: Future[LocationV1] = for {
-            // get the `LocationV1` representing XSL transformation
-            textRepresentationResponse: ResourceFullResponseV1 <- (responderManager ? ResourceFullGetRequestV1(iri = xslTransformationIri, userProfile = userProfile, getIncoming = false)).mapTo[ResourceFullResponseV1]
-
-            textLocation: LocationV1 = textRepresentationResponse match {
-                case textRepr: ResourceFullResponseV1 if textRepr.resinfo.isDefined && textRepr.resinfo.get.restype_id == OntologyConstants.KnoraBase.XSLTransformation =>
-                    val locations: Seq[LocationV1] = textRepr.resinfo.get.locations.getOrElse(throw BadRequestException(s"no location given for $xslTransformationIri"))
-
-                    locations.headOption.getOrElse(throw BadRequestException(s"no location given for $xslTransformationIri"))
-
-                case other => throw BadRequestException(s"$xslTransformationIri is not an ${OntologyConstants.KnoraBase.XSLTransformation}")
-            }
-
-            // check if `textLocation` represents an XSL transformation
-            _ = if (!(textLocation.format_name == "XML" && textLocation.origname.endsWith(".xsl"))) {
-                throw BadRequestException(s"$xslTransformationIri does not have a file value referring to a XSL transformation")
-            }
-        } yield textLocation
-
-        val recoveredTextLocationFuture = textLocationFuture.recover {
-            case notFound: NotFoundException => throw BadRequestException(s"XSL transformation $xslTransformationIri not found: ${notFound.message}")
-        }
-
         for {
-
-            // check if the XSL transformation is in the cache
-            textLocation <- recoveredTextLocationFuture
-
-            // for \\PI to be able to communicate with SIPI, we need to use SIPI's internal url
-            internalTextLocationPath = textLocation.path.replace(settings.externalSipiBaseUrl, settings.internalSipiBaseUrl)
-            // _ = println("StandoffResponderV1 - getXSLTransformation - original textLocation.path: {}", textLocation.path)
-            // _ = println("StandoffResponderV1 - getXSLTransformation - internalTextLocationPath: {}", internalTextLocationPath)
-
-            xsltMaybe: Option[String] = CacheUtil.get[String](cacheName = xsltCacheName, key = internalTextLocationPath)
-
-            xslt: String <- if (xsltMaybe.nonEmpty) {
-                // XSL transformation is cached
-                Future(xsltMaybe.get)
-            } else {
-                // ask SIPI to return the XSL transformation
-                val sipiResponseFuture: Future[HttpResponse] = for {
-
-                    // ask Sipi to return the XSL transformation file
-                    response: HttpResponse <- Http().singleRequest(
-                        HttpRequest(
-                            method = HttpMethods.GET,
-                            uri = internalTextLocationPath
-                        )
-                    )
-
-                } yield response
-
-                val sipiResponseFutureRecovered: Future[HttpResponse] = sipiResponseFuture.recoverWith {
-
-                    case noResponse: akka.stream.scaladsl.TcpIdleTimeoutException =>
-                        // this problem is hardly the user's fault. Create a SipiException
-                        throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
-
-
-                    // TODO: what other exceptions have to be handled here?
-                    // if Exception is used, also previous errors are caught here
-
-                }
-
-                for {
-
-                    sipiResponseRecovered: HttpResponse <- sipiResponseFutureRecovered
-
-                    httpStatusCode: StatusCode = sipiResponseRecovered.status
-
-                    messageBody <- sipiResponseRecovered.entity.toStrict(5.seconds)
-
-                    _ = if (httpStatusCode != StatusCodes.OK) {
-                        throw SipiException(s"Sipi returned status code ${httpStatusCode.intValue} with msg '${messageBody.data.decodeString("UTF-8")}'")
-                    }
-
-                    // get the XSL transformation
-                    xslt: String = messageBody.data.decodeString("UTF-8")
-
-                    textLocation <- textLocationFuture
-
-                    _ = CacheUtil.put(cacheName = xsltCacheName, key = textLocation.path, value = xslt)
-
-                } yield xslt
-            }
-
-        } yield GetXSLTransformationResponseV1(xslt = xslt)
-
+            xsltTransformation <- (responderManager ? GetXSLTransformationRequestV2).mapTo[GetXSLTransformationResponseV2]
+        } yield GetXSLTransformationResponseV1(
+            xslt = xsltTransformation.xslt
+        )
     }
 
     /**
@@ -194,7 +107,7 @@ class StandoffResponderV1 extends Responder {
         )
 
     }
-    
+
     /**
       * The name of the mapping cache.
       */
