@@ -116,7 +116,7 @@ case class CreateValueApiRequestV1(res_id: IRI,
   * @param mapping_id IRI of the mapping used to transform XML to standoff.
   */
 case class CreateRichtextV1(utf8str: Option[String] = None,
-                            lang: Option[String] = None,
+                            language: Option[String] = None,
                             xml: Option[String] = None,
                             mapping_id: Option[IRI] = None) {
 

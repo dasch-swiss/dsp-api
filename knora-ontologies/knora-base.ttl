@@ -790,9 +790,9 @@
 
                   rdfs:subPropertyOf :valueHas ;
 
-                  :objectClassConstraint :TextValue ;
+                  :objectClassConstraint xsd:string ;
 
-                  :subjectClassConstraint xsd:string .
+                  :subjectClassConstraint :TextValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#valueHasMapping
