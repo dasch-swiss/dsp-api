@@ -1357,7 +1357,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        <biblio:isPartOfJournal>
                    |            <biblio:Journal knoraType="link_value" target="math_intelligencer" linkType="ref"/>
                    |        </biblio:isPartOfJournal>
-                   |        <biblio:journalVolume knoraType="richtext_value" lang="en">27</biblio:journalVolume>
+                   |        <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
                    |        <biblio:publicationHasAuthor>
                    |            <p0801-beol:person knoraType="link_value" linkType="ref" target="abel"/>
                    |        </biblio:publicationHasAuthor>
@@ -1365,7 +1365,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |            <p0801-beol:person knoraType="link_value" linkType="ref" target="holmes"/>
                    |        </biblio:publicationHasAuthor>
                    |        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:19foo76</biblio:publicationHasDate>
-                   |        <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
+                   |        <biblio:publicationHasTitle knoraType="richtext_value" lang="en">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
                    |        <biblio:publicationHasTitle knoraType="richtext_value">An alternate title</biblio:publicationHasTitle>
                    |        <biblio:startPage knoraType="richtext_value">48</biblio:startPage>
                    |    </biblio:JournalArticle>
