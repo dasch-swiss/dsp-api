@@ -6,7 +6,8 @@
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<http://www.knora.org/ontology/0105/drawings-gods> a owl:Ontology.
+<http://www.knora.org/ontology/0105/drawings-gods> a owl:Ontology;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0105>.
 
 drawings-gods:Annotation a owl:Class;
   rdfs:label "Annotation"@en, "Annotation"@fr;
