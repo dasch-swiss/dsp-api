@@ -40,7 +40,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestV2, CreateMappingResponseV2, GetMappingResponseV2, GetXSLTransformationResponseV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.responders.v1.ValueUtilV1
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
@@ -65,12 +65,14 @@ class StandoffResponderV2 extends Responder {
     val valueUtilV1 = new ValueUtilV1(settings)
 
     /**
-      * Receives a message of type [[org.knora.webapi.messages.v1.responder.standoffmessages.StandoffResponderRequestV1]], and returns an appropriate response message, or
+      * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message, or
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
         case CreateMappingRequestV2(metadata, xml, userProfile, uuid) => future2Message(sender(), createMappingV2(xml.xml, metadata.label, metadata.projectIri, metadata.mappingName, userProfile, uuid), log)
+        case GetMappingRequestV2(mappingIri, userProfile) => future2Message(sender(), getMappingV2(mappingIri, userProfile), log)
+        case GetXSLTransformationRequestV2(xsltTextReprIri, userProfile) => future2Message(sender(), getXSLTransformation(xsltTextReprIri, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 

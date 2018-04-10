@@ -19,7 +19,6 @@
 
 package org.knora.webapi.responders.v1
 
-import java.io.{File, IOException, StringReader}
 import java.util.UUID
 
 import akka.actor.Status
@@ -27,30 +26,26 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.pattern._
 import akka.stream.ActorMaterializer
-import javax.xml.XMLConstants
-import javax.xml.transform.stream.StreamSource
-import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
+import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
-import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestMetadataV2, CreateMappingRequestV2, CreateMappingRequestXMLV2, CreateMappingResponseV2}
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.XMLTagItem
 import org.knora.webapi.util.standoff._
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, StringFormatter}
-import org.knora.webapi._
-import org.xml.sax.SAXException
+import org.knora.webapi.util.{CacheUtil, StringFormatter}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.xml.{Node, NodeSeq, XML}
 
 
 /**
@@ -186,227 +181,24 @@ class StandoffResponderV1 extends Responder {
       */
     private def createMappingV1(xml: String, label: String, projectIri: IRI, mappingName: String, userProfile: UserADM, apiRequestID: UUID): Future[CreateMappingResponseV1] = {
 
-        def createMappingAndCheck(xml: String, label: String, mappingIri: IRI, namedGraph: String, userProfile: UserADM): Future[CreateMappingResponseV1] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-            val knoraIdUtil = new KnoraIdUtil
-
-            val createMappingFuture = for {
-
-                factory <- Future(SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI))
-
-                // get the schema the mapping has to be validated against
-                schemaFile: File = new File("src/main/resources/mappingXMLToStandoff.xsd")
-
-                schemaSource: StreamSource = new StreamSource(schemaFile)
-
-                // create a schema instance
-                schemaInstance: Schema = factory.newSchema(schemaSource)
-                validator: JValidator = schemaInstance.newValidator()
-
-                // validate the provided mapping
-                _ = validator.validate(new StreamSource(new StringReader(xml)))
-
-                // the mapping conforms to the XML schema "src/main/resources/mappingXMLToStandoff.xsd"
-                mappingXML = XML.loadString(xml)
-
-                // get the default XSL transformation, if given (optional)
-                defaultXSLTransformation: Option[IRI] <- mappingXML \ "defaultXSLTransformation" match {
-                    case defaultTrans: NodeSeq if defaultTrans.length == 1 =>
-
-                        // check if the IRI is valid
-                        val transIri = stringFormatter.validateAndEscapeIri(defaultTrans.headOption.getOrElse(throw BadRequestException("could not access <defaultXSLTransformation>")).text, throw BadRequestException(s"XSL transformation ${defaultTrans.head.text} is not a valid IRI"))
-
-                        // try to obtain the XSL transformation to make sure that it really exists
-                        // TODO: add a test to the integration tests
-                        for {
-                            transform: GetXSLTransformationResponseV1 <- getXSLTransformation(transIri, userProfile)
-                        } yield Some(transIri)
-                    case _ => Future(None)
-                }
-
-                // create a collection of a all elements mappingElement
-                mappingElementsXML: NodeSeq = mappingXML \ "mappingElement"
-
-                mappingElements: Seq[MappingElement] = mappingElementsXML.map {
-
-                    curMappingEle: Node =>
-
-                        // get the name of the XML tag
-                        val tagName = (curMappingEle \ "tag" \ "name").headOption.getOrElse(throw BadRequestException(s"no '<name>' given for node $curMappingEle")).text
-
-                        // get the namespace the tag is defined in
-                        val tagNamespace = (curMappingEle \ "tag" \ "namespace").headOption.getOrElse(throw BadRequestException(s"no '<namespace>' given for node $curMappingEle")).text
-
-                        // get the class the tag is combined with
-                        val className = (curMappingEle \ "tag" \ "class").headOption.getOrElse(throw BadRequestException(s"no '<classname>' given for node $curMappingEle")).text
-
-                        // get the boolean indicating if the element requires a separator in the text once it is converted to standoff
-                        val separatorBooleanAsString = (curMappingEle \ "tag" \ "separatesWords").headOption.getOrElse(throw BadRequestException(s"no '<separatesWords>' given for node $curMappingEle")).text
-
-                        val separatorRequired: Boolean = stringFormatter.validateBoolean(separatorBooleanAsString, throw BadRequestException(s"<separatesWords> could not be converted to Boolean: $separatorBooleanAsString"))
-
-                        // get the standoff class IRI
-                        val standoffClassIri = (curMappingEle \ "standoffClass" \ "classIri").headOption.getOrElse(throw BadRequestException(s"no '<classIri>' given for node $curMappingEle")).text
-
-                        // get a collection containing all the attributes
-                        val attributeNodes: NodeSeq = curMappingEle \ "standoffClass" \ "attributes" \ "attribute"
-
-                        val attributes: Seq[MappingXMLAttribute] = attributeNodes.map {
-
-                            curAttributeNode =>
-
-                                // get the current attribute's name
-                                val attrName = (curAttributeNode \ "attributeName").headOption.getOrElse(throw BadRequestException(s"no '<attributeName>' given for attribute $curAttributeNode")).text
-
-                                val attributeNamespace = (curAttributeNode \ "namespace").headOption.getOrElse(throw BadRequestException(s"no '<namespace>' given for attribute $curAttributeNode")).text
-
-                                // get the standoff property IRI for the current attribute
-                                val propIri = (curAttributeNode \ "propertyIri").headOption.getOrElse(throw BadRequestException(s"no '<propertyIri>' given for attribute $curAttributeNode")).text
-
-                                MappingXMLAttribute(
-                                    attributeName = stringFormatter.toSparqlEncodedString(attrName, throw BadRequestException(s"tagname $attrName contains invalid characters")),
-                                    namespace = stringFormatter.toSparqlEncodedString(attributeNamespace, throw BadRequestException(s"tagname $attributeNamespace contains invalid characters")),
-                                    standoffProperty = stringFormatter.validateAndEscapeIri(propIri, throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")),
-                                    mappingXMLAttributeElementIri = knoraIdUtil.makeRandomMappingElementIri(mappingIri)
-                                )
-
-                        }
-
-                        // get the optional element datatype
-                        val datatypeMaybe: NodeSeq = curMappingEle \ "standoffClass" \ "datatype"
-
-                        // if "datatype" is given, get the the standoff class data type and the name of the XML data type attribute
-                        val standoffDataTypeOption: Option[MappingStandoffDatatypeClass] = if (datatypeMaybe.nonEmpty) {
-                            val dataTypeXML = (datatypeMaybe \ "type").headOption.getOrElse(throw BadRequestException(s"no '<type>' given for datatype")).text
-
-                            val dataType: StandoffDataTypeClasses.Value = StandoffDataTypeClasses.lookup(dataTypeXML, throw BadRequestException(s"Invalid data type provided for $tagName"))
-                            val dataTypeAttribute: String = (datatypeMaybe \ "attributeName").headOption.getOrElse(throw BadRequestException(s"no '<attributeName>' given for datatype")).text
-
-                            Some(MappingStandoffDatatypeClass(
-                                datatype = dataType.toString, // safe because it is an enumeration
-                                attributeName = stringFormatter.toSparqlEncodedString(dataTypeAttribute, throw BadRequestException(s"tagname $dataTypeAttribute contains invalid characters")),
-                                mappingStandoffDataTypeClassElementIri = knoraIdUtil.makeRandomMappingElementIri(mappingIri)
-                            ))
-                        } else {
-                            None
-                        }
-
-                        MappingElement(
-                            tagName = stringFormatter.toSparqlEncodedString(tagName, throw BadRequestException(s"tagname $tagName contains invalid characters")),
-                            namespace = stringFormatter.toSparqlEncodedString(tagNamespace, throw BadRequestException(s"namespace $tagNamespace contains invalid characters")),
-                            className = stringFormatter.toSparqlEncodedString(className, throw BadRequestException(s"classname $className contains invalid characters")),
-                            standoffClass = stringFormatter.validateAndEscapeIri(standoffClassIri, throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")),
-                            attributes = attributes,
-                            standoffDataTypeClass = standoffDataTypeOption,
-                            mappingElementIri = knoraIdUtil.makeRandomMappingElementIri(mappingIri),
-                            separatorRequired = separatorRequired
-                        )
-
-
-                }
-
-                // transform mappingElements to the structure that is used internally to convert to or from standoff
-                // in order to check for duplicates (checks are done during transformation)
-                // TODO: find a way to provide a default XSL transformation when the mapping is created
-                mappingXMLToStandoff: MappingXMLtoStandoff = transformMappingElementsToMappingXMLtoStandoff(mappingElements, None)
-
-                // get the standoff entities used in the mapping
-                // checks if the standoff classes exist in the ontology
-                // checks if the standoff properties exist in the ontology
-                // checks if the attributes defined for XML elements have cardinalities for the standoff properties defined on the standoff class
-                _ <- getStandoffEntitiesFromMappingV1(mappingXMLToStandoff, userProfile)
-
-                // check if the mapping IRI already exists
-                getExistingMappingSparql = queries.sparql.v1.txt.getMapping(
-                    triplestore = settings.triplestoreType,
-                    mappingIri = mappingIri
-                ).toString()
-                existingMappingResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(getExistingMappingSparql)).mapTo[SparqlConstructResponse]
-
-                _ = if (existingMappingResponse.statements.nonEmpty) {
-                    throw BadRequestException(s"mapping IRI $mappingIri already exists")
-                }
-
-                createNewMappingSparql = queries.sparql.v1.txt.createNewMapping(
-                    triplestore = settings.triplestoreType,
-                    dataNamedGraph = namedGraph,
-                    mappingIri = mappingIri,
-                    label = label,
-                    defaultXSLTransformation = defaultXSLTransformation,
-                    mappingElements = mappingElements
-                ).toString()
-
-                // Do the update.
-                createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewMappingSparql)).mapTo[SparqlUpdateResponse]
-
-                // check if the mapping has been created
-                newMappingResponse <- (storeManager ? SparqlConstructRequest(getExistingMappingSparql)).mapTo[SparqlConstructResponse]
-
-                _ = if (newMappingResponse.statements.isEmpty) {
-                    log.error(s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$newMappingResponse")
-                    throw UpdateNotPerformedException(s"Resource $mappingIri was not created. Please report this as a possible bug.")
-                }
-
-                // get the mapping from the triplestore and cache it thereby
-                _ = getMappingFromTriplestore(mappingIri, userProfile)
-
-
-            } yield {
-                CreateMappingResponseV1(mappingIri = mappingIri)
-            }
-
-
-            createMappingFuture.recover {
-                case validationException: SAXException => throw BadRequestException(s"the provided mapping is invalid: ${validationException.getMessage}")
-
-                case ioException: IOException => throw NotFoundException(s"The schema could not be found")
-
-                case unknown: Exception => throw BadRequestException(s"the provided mapping could not be handled correctly: ${unknown.getMessage}")
-
-            }
-
-        }
+        val createAMppingRequest = CreateMappingRequestV2(
+            metadata = CreateMappingRequestMetadataV2(
+                label = label,
+                projectIri = projectIri.toSmartIri,
+                mappingName = mappingName),
+            xml = CreateMappingRequestXMLV2(
+                xml = xml
+            ),
+            userProfile = userProfile,
+            apiRequestID = apiRequestID)
 
         for {
-            // Don't allow anonymous users to create a mapping.
-            userIri: IRI <- Future {
-                if (userProfile.isAnonymousUser) {
-                    throw ForbiddenException("Anonymous users aren't allowed to create mappings")
-                } else {
-                    userProfile.id
-                }
-            }
-
-            // check if the given project IRI represents an actual project
-            projectInfo: ProjectInfoResponseV1 <- (responderManager ? ProjectInfoByIRIGetRequestV1(
-                iri = projectIri,
-                Some(userProfile.asUserProfileV1)
-            )).mapTo[ProjectInfoResponseV1]
-
-            knoraIdUtil = new KnoraIdUtil
-
-            // TODO: make sure that has sufficient permissions to create a mapping in the given project
-
-            // create the mapping IRI from the project IRI and the name provided by the user
-            mappingIri = knoraIdUtil.makeProjectMappingIri(projectIri, mappingName)
-
-            // put the mapping into the named graph of the project
-            namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo.project_info)
-
-            result: CreateMappingResponseV1 <- IriLocker.runWithIriLock(
-                apiRequestID,
-                knoraIdUtil.createMappingLockIriForProject(projectIri), // use a special project specific IRI to lock the creation of mappings for the given project
-                () => createMappingAndCheck(
-                    xml = xml,
-                    label = label,
-                    mappingIri = mappingIri,
-                    namedGraph = namedGraph,
-                    userProfile = userProfile
-                )
-            )
-
-        } yield result
-
+            mappingResponse <- (responderManager ? createAMppingRequest).mapTo[CreateMappingResponseV2]
+        } yield CreateMappingResponseV1(
+            mappingResponse.mappingIri
+        )
 
     }
 
