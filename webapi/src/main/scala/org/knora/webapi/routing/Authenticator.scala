@@ -301,7 +301,7 @@ trait Authenticator {
             val user: UserADM = getUserADMThroughCredentialsV2(credentials)
             log.debug("getUserProfileV1 - I got a UserProfileV1: {}", user.toString)
 
-            /* we return the userProfileV1 without sensitive information */
+            /* we return the complete UserADM */
             user.ofType(UserInformationTypeADM.FULL)
         }
     }
