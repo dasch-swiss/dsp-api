@@ -302,7 +302,7 @@ trait Authenticator {
             log.debug("getUserProfileV1 - I got a UserProfileV1: {}", user.toString)
 
             /* we return the userProfileV1 without sensitive information */
-            user.ofType(UserInformationTypeADM.RESTRICTED)
+            user.ofType(UserInformationTypeADM.FULL)
         }
     }
 

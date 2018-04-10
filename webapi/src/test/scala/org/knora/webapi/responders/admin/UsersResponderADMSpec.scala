@@ -35,7 +35,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectAdminM
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.messages.v2.routing.authenticationmessages
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraPasswordCredentialsV2
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.routing.Authenticator
@@ -352,7 +351,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 actorUnderTest ! UserChangePasswordRequestADM(
                     userIri = SharedTestDataADM.normalUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(
-                        currentPassword = Some("test"), // of the requesting user
+                        requesterPassword = Some("test"), // of the requesting user
                         newPassword = Some("test123456")
                     ),
                     requestingUser = SharedTestDataADM.normalUser,
@@ -365,11 +364,11 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(normalUser.email, "test123456"))) should be (true)
             }
 
-            "UPDATE the user's password (by system admin)" in {
+            "UPDATE the user's password (by a system admin)" in {
                 actorUnderTest ! UserChangePasswordRequestADM(
                     userIri = SharedTestDataADM.normalUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(
-                        currentPassword = Some("test"), // of the requesting user
+                        requesterPassword = Some("test"), // of the requesting user
                         newPassword = Some("test654321")
                     ),
                     requestingUser = SharedTestDataADM.rootUser,
@@ -447,7 +446,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 actorUnderTest ! UserChangePasswordRequestADM(
                     userIri = SharedTestDataADM.superUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(
-                        currentPassword = Some("test"),
+                        requesterPassword = Some("test"),
                         newPassword = Some("test123456")
                     ),
                     requestingUser = SharedTestDataADM.normalUser,

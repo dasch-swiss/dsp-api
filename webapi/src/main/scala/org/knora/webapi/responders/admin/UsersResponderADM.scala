@@ -382,7 +382,9 @@ class UsersResponderADM extends Responder {
       */
     private def changePasswordADM(userIri: IRI, changeUserRequest: ChangeUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
-        //log.debug(s"changePasswordV1: changePasswordRequest: {}", changeUserRequest)
+        log.debug(s"changePasswordADM - userIri: {}", userIri)
+        log.debug(s"changePasswordADM - changeUserRequest: {}", changeUserRequest)
+        log.debug(s"changePasswordADM - requestingUser: {}", requestingUser)
 
         /**
           * The actual change password task run with an IRI lock.
@@ -391,7 +393,7 @@ class UsersResponderADM extends Responder {
 
             // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
-            _ = if (changeUserRequest.currentPassword.isEmpty || changeUserRequest.newPassword.isEmpty) throw BadRequestException("The user's old and new password need to be both supplied")
+            _ = if (changeUserRequest.requesterPassword.isEmpty || changeUserRequest.newPassword.isEmpty) throw BadRequestException("The user's old and new password need to be both supplied")
 
             // check if the requesting user is allowed to perform password change. it needs to be either the user himself, or a system admin
             _ = if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
@@ -400,8 +402,9 @@ class UsersResponderADM extends Responder {
             }
 
             // check if supplied password matches requesting user's password
-            _ = if (!requestingUser.passwordMatch(changeUserRequest.currentPassword.get)) {
-                throw ForbiddenException("The supplied password does not match the current user's password.")
+            _ = log.debug(s"changePasswordADM - requesterPassword: {}", changeUserRequest.requesterPassword.get)
+            _ = if (!requestingUser.passwordMatch(changeUserRequest.requesterPassword.get)) {
+                throw ForbiddenException("The supplied password does not match the requesting user's password.")
             }
 
             // create the update request
