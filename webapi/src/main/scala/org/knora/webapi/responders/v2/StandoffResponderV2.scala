@@ -40,11 +40,11 @@ import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestV2, CreateMappingResponseV2, GetXSLTransformationResponseV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestV2, CreateMappingResponseV2, GetMappingResponseV2, GetXSLTransformationResponseV2}
 import org.knora.webapi.responders.v1.ValueUtilV1
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
-import org.knora.webapi.util.ActorUtil.future2Message
+import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.XMLTagItem
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, SmartIri, StringFormatter}
@@ -71,6 +71,7 @@ class StandoffResponderV2 extends Responder {
       */
     def receive = {
         case CreateMappingRequestV2(metadata, xml, userProfile, uuid) => future2Message(sender(), createMappingV2(xml.xml, metadata.label, metadata.projectIri, metadata.mappingName, userProfile, uuid), log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     val xsltCacheName = "xsltCache"
@@ -530,6 +531,48 @@ class StandoffResponderV2 extends Responder {
       * The name of the mapping cache.
       */
     val mappingCacheName = "mappingCache"
+
+    /**
+      * Gets a mapping either from the cache or by making a request to the triplestore.
+      *
+      * @param mappingIri  the IRI of the mapping to retrieve.
+      * @param userProfile the user making the request.
+      * @return a [[MappingXMLtoStandoff]].
+      */
+    private def getMappingV2(mappingIri: IRI, userProfile: UserADM): Future[GetMappingResponseV2] = {
+
+        for {
+
+            mapping: GetMappingResponseV2 <- CacheUtil.get[MappingXMLtoStandoff](cacheName = mappingCacheName, key = mappingIri) match {
+                case Some(mapping: MappingXMLtoStandoff) =>
+
+                    for {
+
+                        entities: StandoffEntityInfoGetResponseV1 <- getStandoffEntitiesFromMappingV2(mapping, userProfile)
+
+                    } yield GetMappingResponseV2(
+                        mappingIri = mappingIri,
+                        mapping = mapping,
+                        standoffEntities = entities
+                    )
+
+                case None =>
+
+                    for {
+                        mapping: MappingXMLtoStandoff <- getMappingFromTriplestore(mappingIri, userProfile)
+
+                        entities: StandoffEntityInfoGetResponseV1 <- getStandoffEntitiesFromMappingV2(mapping, userProfile)
+
+                    } yield GetMappingResponseV2(
+                        mappingIri = mappingIri,
+                        mapping = mapping,
+                        standoffEntities = entities
+                    )
+            }
+
+        } yield mapping
+
+    }
 
     /**
       *
