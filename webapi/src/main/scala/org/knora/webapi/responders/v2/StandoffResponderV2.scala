@@ -320,7 +320,7 @@ class StandoffResponderV2 extends Responder {
                 _ <- getStandoffEntitiesFromMappingV2(mappingXMLToStandoff, userProfile)
 
                 // check if the mapping IRI already exists
-                getExistingMappingSparql = queries.sparql.v1.txt.getMapping(
+                getExistingMappingSparql = queries.sparql.v2.txt.getMapping(
                     triplestore = settings.triplestoreType,
                     mappingIri = mappingIri
                 ).toString()
@@ -330,7 +330,7 @@ class StandoffResponderV2 extends Responder {
                     throw BadRequestException(s"mapping IRI $mappingIri already exists")
                 }
 
-                createNewMappingSparql = queries.sparql.v1.txt.createNewMapping(
+                createNewMappingSparql = queries.sparql.v2.txt.createNewMapping(
                     triplestore = settings.triplestoreType,
                     dataNamedGraph = namedGraph,
                     mappingIri = mappingIri,
@@ -586,7 +586,7 @@ class StandoffResponderV2 extends Responder {
       */
     private def getMappingFromTriplestore(mappingIri: IRI, userProfile: UserADM): Future[MappingXMLtoStandoff] = {
 
-        val getMappingSparql = queries.sparql.v1.txt.getMapping(
+        val getMappingSparql = queries.sparql.v2.txt.getMapping(
             triplestore = settings.triplestoreType,
             mappingIri = mappingIri
         ).toString()
