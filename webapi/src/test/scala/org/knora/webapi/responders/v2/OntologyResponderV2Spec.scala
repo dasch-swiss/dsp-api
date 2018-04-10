@@ -54,9 +54,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    private val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
-    )
+    private val anythingData = RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
 
     // The default timeout for receiving reply messages from actors.
     private val timeout = 10.seconds
@@ -69,12 +67,19 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private val printErrorMessages = false
 
-    "Load test data" in {
-        storeManager ! ResetTriplestoreContent(rdfDataObjects)
+    private def loadTestData(rdfDataObjs: List[RdfDataObject], expectOK: Boolean = false): Unit = {
+        storeManager ! ResetTriplestoreContent(rdfDataObjs)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
         responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
-        expectMsgType[SuccessResponseV2](10.seconds)
+
+        if (expectOK) {
+            expectMsgType[SuccessResponseV2](10.seconds)
+        }
+    }
+
+    "Load test data" in {
+        loadTestData(rdfDataObjs = List(anythingData), expectOK = true)
     }
 
     "The ontology responder v2" should {
@@ -3134,6 +3139,31 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "not load an ontology containing a class that's missing a cardinality for a link value property" in {
+            val missingLinkValueCardinalityOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/missing-link-value-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            loadTestData(missingLinkValueCardinalityOnto)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            }
+        }
+
+
+        "not load an ontology containing a class that's missing a cardinality for a link property" in {
+            val missingLinkValueCardinalityOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/missing-link-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            loadTestData(missingLinkValueCardinalityOnto)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
             }
         }
     }

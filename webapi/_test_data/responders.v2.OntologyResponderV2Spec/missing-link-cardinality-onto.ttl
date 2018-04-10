@@ -1,0 +1,58 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@base <http://www.knora.org/ontology/wrongontology> .
+
+# An ontology that has a class with a link value property but without the corresponding link property.
+
+@prefix : <http://www.knora.org/ontology/invalid#> .
+<http://www.knora.org/ontology/invalid> rdf:type owl:Ontology ;
+    rdfs:label "The invalid ontology" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/anything> .
+
+
+:hasOtherInvalidThing rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+               rdfs:label "has other invalid thing"@en ;
+
+               knora-base:subjectClassConstraint :InvalidThing ;
+
+               knora-base:objectClassConstraint :InvalidThing ;
+
+               salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+:hasOtherInvalidThingValue rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+               rdfs:label "has other invalid thing"@en ;
+
+               knora-base:subjectClassConstraint :InvalidThing ;
+
+               knora-base:objectClassConstraint knora-base:LinkValue ;
+
+               salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+:InvalidThing rdf:type owl:Class ;
+
+      rdfs:subClassOf knora-base:Resource ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasOtherInvalidThingValue ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                         salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                      ] ;
+
+      knora-base:resourceIcon "thing.png" ;
+
+      rdfs:label "Invalid Thing"@en ;
+
+      rdfs:comment """An invalid thing"""@de .

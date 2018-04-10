@@ -2679,10 +2679,10 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the new labels/comments are different from the current ones.
 
-                currentLabelsOrComments: Seq[OntologyLiteralV2] = currentReadPropertyInfo.entityInfoContent.predicates.getOrElse(
-                    changePropertyLabelsOrCommentsRequest.predicateToUpdate,
-                    throw InconsistentTriplestoreDataException(s"Property $internalPropertyIri has no ${changePropertyLabelsOrCommentsRequest.predicateToUpdate}")
-                ).objects
+                currentLabelsOrComments: Seq[OntologyLiteralV2] = currentReadPropertyInfo.entityInfoContent.predicates.get(changePropertyLabelsOrCommentsRequest.predicateToUpdate) match {
+                    case Some(pred) => pred.objects
+                    case None => Seq.empty[OntologyLiteralV2]
+                }
 
                 _ = if (currentLabelsOrComments == changePropertyLabelsOrCommentsRequest.newObjects) {
                     throw BadRequestException(s"The submitted objects of ${changePropertyLabelsOrCommentsRequest.propertyIri} are the same as the current ones in property ${changePropertyLabelsOrCommentsRequest.propertyIri}")
@@ -2840,10 +2840,10 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the new labels/comments are different from the current ones.
 
-                currentLabelsOrComments: Seq[OntologyLiteralV2] = currentReadClassInfo.entityInfoContent.predicates.getOrElse(
-                    changeClassLabelsOrCommentsRequest.predicateToUpdate,
-                    throw InconsistentTriplestoreDataException(s"Class $internalClassIri has no ${changeClassLabelsOrCommentsRequest.predicateToUpdate}")
-                ).objects
+                currentLabelsOrComments: Seq[OntologyLiteralV2] = currentReadClassInfo.entityInfoContent.predicates.get(changeClassLabelsOrCommentsRequest.predicateToUpdate) match {
+                    case Some(pred) => pred.objects
+                    case None => Seq.empty[OntologyLiteralV2]
+                }
 
                 _ = if (currentLabelsOrComments == changeClassLabelsOrCommentsRequest.newObjects) {
                     throw BadRequestException(s"The submitted objects of ${changeClassLabelsOrCommentsRequest.predicateToUpdate} are the same as the current ones in class ${changeClassLabelsOrCommentsRequest.classIri}")
