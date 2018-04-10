@@ -31,6 +31,9 @@ import org.knora.webapi.routing.admin._
 
 import scala.concurrent.ExecutionContextExecutor
 
+/**
+  * Provides the '/api-docs' endpoint serving the 'swagger.json' OpenAPI specification
+  */
 class SwaggerApiDocsRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends SwaggerHttpService {
 
     implicit val system: ActorSystem = _system
