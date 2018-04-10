@@ -424,7 +424,6 @@ object KnoraApiV2Simple {
             OntologyConstants.KnoraBase.GeonameValue,
             OntologyConstants.KnoraBase.FileValue,
             OntologyConstants.KnoraBase.DefaultObjectAccessPermission,
-            OntologyConstants.KnoraBase.XSLTransformation,
             OntologyConstants.KnoraBase.MappingElement,
             OntologyConstants.KnoraBase.MappingComponent,
             OntologyConstants.KnoraBase.MappingStandoffDataTypeClass,

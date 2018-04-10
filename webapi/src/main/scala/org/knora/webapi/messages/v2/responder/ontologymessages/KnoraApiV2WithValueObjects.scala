@@ -1313,7 +1313,6 @@ object KnoraApiV2WithValueObjects {
           */
         val KnoraBaseClassesToRemove: Set[SmartIri] = Set(
             OntologyConstants.KnoraBase.DefaultObjectAccessPermission,
-            OntologyConstants.KnoraBase.XSLTransformation,
             OntologyConstants.KnoraBase.MappingElement,
             OntologyConstants.KnoraBase.MappingComponent,
             OntologyConstants.KnoraBase.MappingStandoffDataTypeClass,

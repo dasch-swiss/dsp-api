@@ -24,7 +24,7 @@ import spray.json._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
-object OntologyV2R2RSpec {
+    object OntologyV2R2RSpec {
     private val imagesUserProfile = SharedTestDataADM.imagesUser01
     private val imagesUsername = imagesUserProfile.email
     private val imagesProjectIri = SharedTestDataADM.IMAGES_PROJECT_IRI
