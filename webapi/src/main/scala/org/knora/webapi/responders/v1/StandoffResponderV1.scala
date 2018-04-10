@@ -72,7 +72,7 @@ class StandoffResponderV1 extends Responder {
     private def getXSLTransformation(xslTransformationIri: IRI, userProfile: UserADM): Future[GetXSLTransformationResponseV1] = {
 
         for {
-            xsltTransformation <- (responderManager ? GetXSLTransformationRequestV2).mapTo[GetXSLTransformationResponseV2]
+            xsltTransformation <- (responderManager ? GetXSLTransformationRequestV2(xsltTextRepresentationIri = xslTransformationIri, userProfile = userProfile)).mapTo[GetXSLTransformationResponseV2]
         } yield GetXSLTransformationResponseV1(
             xslt = xsltTransformation.xslt
         )
