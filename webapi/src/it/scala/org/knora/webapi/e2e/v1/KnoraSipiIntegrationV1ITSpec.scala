@@ -403,7 +403,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             checkResponseOK(sipiGetRequest)
         }
 
-        "create a TextRepresentation of type XSLTransformation, refer to it in a mapping, and use it when a TextValue is requested" in {
+        "create a TextRepresentation of type XSLTransformation and refer to it in a mapping" in {
 
             // create an XSL transformation
             val knoraParams = JsObject(

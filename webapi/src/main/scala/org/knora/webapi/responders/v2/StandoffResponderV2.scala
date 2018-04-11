@@ -219,7 +219,6 @@ class StandoffResponderV2 extends Responder {
                         val transIri = stringFormatter.validateAndEscapeIri(defaultTrans.headOption.getOrElse(throw BadRequestException("could not access <defaultXSLTransformation>")).text, throw BadRequestException(s"XSL transformation ${defaultTrans.head.text} is not a valid IRI"))
 
                         // try to obtain the XSL transformation to make sure that it really exists
-                        // TODO: add a test to the integration tests
                         for {
                             transform: GetXSLTransformationResponseV2 <- getXSLTransformation(transIri, userProfile)
                         } yield Some(transIri)
