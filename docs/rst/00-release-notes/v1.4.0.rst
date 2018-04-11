@@ -37,6 +37,7 @@ New features:
 -------------
 
 - A project-specific ontology can now be deleted via API v2.
+- Added OpenAPI / Swagger API documentation route
 
 Bugfixes:
 ---------
