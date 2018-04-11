@@ -35,19 +35,20 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{StandoffEntityInfoGetRequestV1, StandoffEntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1}
-import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.messages.v2.responder.{ReadResourceV2, ReadResourcesSequenceV2, ReadValueV2, TextFileValueContentV2}
 import org.knora.webapi.responders.v1.ValueUtilV1
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
+import org.knora.webapi.util._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.XMLTagItem
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, SmartIri, StringFormatter}
 import org.xml.sax.SAXException
 
 import scala.concurrent.Future
@@ -79,7 +80,7 @@ class StandoffResponderV2 extends Responder {
     val xsltCacheName = "xsltCache"
 
     /**
-      * Retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL file from Sipi.
+      * If not already in the cache, retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL transformation file from Sipi.
       *
       * @param xslTransformationIri The IRI of the resource representing the XSL Transformation (a [[OntologyConstants.KnoraBase.XSLTransformation]]).
       * @param userProfile          The client making the request.
@@ -87,55 +88,55 @@ class StandoffResponderV2 extends Responder {
       */
     private def getXSLTransformation(xslTransformationIri: IRI, userProfile: UserADM): Future[GetXSLTransformationResponseV2] = {
 
-        val textLocationFuture: Future[LocationV1] = for {
-            // get the `LocationV1` representing XSL transformation
+        val xsltUrlFuture = for {
 
-            // TODO: use v2 resources responder
-            textRepresentationResponse: ResourceFullResponseV1 <- (responderManager ? ResourceFullGetRequestV1(iri = xslTransformationIri, userProfile = userProfile, getIncoming = false)).mapTo[ResourceFullResponseV1]
+            textRepresentationResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Vector(xslTransformationIri), requestingUser = userProfile)).mapTo[ReadResourcesSequenceV2]
 
-            textLocation: LocationV1 = textRepresentationResponse match {
-                case textRepr: ResourceFullResponseV1 if textRepr.resinfo.isDefined && textRepr.resinfo.get.restype_id == OntologyConstants.KnoraBase.XSLTransformation =>
-                    val locations: Seq[LocationV1] = textRepr.resinfo.get.locations.getOrElse(throw BadRequestException(s"no location given for $xslTransformationIri"))
-
-                    locations.headOption.getOrElse(throw BadRequestException(s"no location given for $xslTransformationIri"))
-
-                case other => throw BadRequestException(s"$xslTransformationIri is not an ${OntologyConstants.KnoraBase.XSLTransformation}")
+            xsltFileValue: TextFileValueContentV2 = textRepresentationResponseV2.resources.headOption match {
+                case Some(resource: ReadResourceV2) if resource.resourceClass == OntologyConstants.KnoraBase.XSLTransformation => resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue) match {
+                    case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
+                        case value: ReadValueV2 => value.valueContent match {
+                            case textRepr: TextFileValueContentV2 => textRepr
+                            case other => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $xslTransformationIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
+                        }
+                    }
+                    case None => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
+                }
+                case None => throw BadRequestException(s"Resource $xslTransformationIri is not a ${OntologyConstants.KnoraBase.XSLTransformation}")
             }
 
-            // check if `textLocation` represents an XSL transformation
-            _ = if (!(textLocation.format_name == "XML" && textLocation.origname.endsWith(".xsl"))) {
-                throw BadRequestException(s"$xslTransformationIri does not have a file value referring to a XSL transformation")
+            // check if `xsltFileValue` represents an XSL transformation
+            _ = if (!(xsltFileValue.internalMimeType == "text/xml" && xsltFileValue.originalFilename.endsWith(".xsl"))) {
+                throw BadRequestException(s"$xslTransformationIri does not have a file value referring to an XSL transformation")
             }
-        } yield textLocation
 
-        val recoveredTextLocationFuture = textLocationFuture.recover {
+            xsltUrl: String = s"${settings.internalSipiFileServerGetUrl}/${xsltFileValue.internalFilename}"
+
+        } yield xsltUrl
+
+        val recoveredXsltUrlFuture = xsltUrlFuture.recover {
             case notFound: NotFoundException => throw BadRequestException(s"XSL transformation $xslTransformationIri not found: ${notFound.message}")
         }
 
         for {
 
             // check if the XSL transformation is in the cache
-            textLocation <- recoveredTextLocationFuture
+            xsltFileUrl <- recoveredXsltUrlFuture
 
-            // for \\PI to be able to communicate with SIPI, we need to use SIPI's internal url
-            internalTextLocationPath = textLocation.path.replace(settings.externalSipiBaseUrl, settings.internalSipiBaseUrl)
-            // _ = println("StandoffResponderV1 - getXSLTransformation - original textLocation.path: {}", textLocation.path)
-            // _ = println("StandoffResponderV1 - getXSLTransformation - internalTextLocationPath: {}", internalTextLocationPath)
-
-            xsltMaybe: Option[String] = CacheUtil.get[String](cacheName = xsltCacheName, key = internalTextLocationPath)
+            xsltMaybe: Option[String] = CacheUtil.get[String](cacheName = xsltCacheName, key = xsltFileUrl)
 
             xslt: String <- if (xsltMaybe.nonEmpty) {
                 // XSL transformation is cached
                 Future(xsltMaybe.get)
             } else {
-                // ask SIPI to return the XSL transformation
+                // ask Sipi to return the XSL transformation
                 val sipiResponseFuture: Future[HttpResponse] = for {
 
                     // ask Sipi to return the XSL transformation file
                     response: HttpResponse <- Http().singleRequest(
                         HttpRequest(
                             method = HttpMethods.GET,
-                            uri = internalTextLocationPath
+                            uri = xsltFileUrl
                         )
                     )
 
@@ -168,9 +169,7 @@ class StandoffResponderV2 extends Responder {
                     // get the XSL transformation
                     xslt: String = messageBody.data.decodeString("UTF-8")
 
-                    textLocation <- textLocationFuture
-
-                    _ = CacheUtil.put(cacheName = xsltCacheName, key = textLocation.path, value = xslt)
+                    _ = CacheUtil.put(cacheName = xsltCacheName, key = xsltFileUrl, value = xslt)
 
                 } yield xslt
             }
