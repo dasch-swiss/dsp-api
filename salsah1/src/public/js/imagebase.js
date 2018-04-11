@@ -2355,7 +2355,7 @@ $(function() {
 			//zoom_slider.ele.css('width', localdata.settings.slider_width + 'px'); // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! woher kommt localdata??
 		}
 
-		navigator_map.ele = $('<img>').css({position: 'absolute'}).appendTo(navigator_area.ele);
+		navigator_map.ele = $('<img>').css({position: 'absolute', 'image-orientation': 'from-image'}).appendTo(navigator_area.ele);
 
 		navigator_maprect.ele = $('<div>', {'class': 'mapRect'}).css({position: 'absolute'}).appendTo(navigator_area.ele);
 
@@ -2513,6 +2513,7 @@ $(function() {
 				);
 				image.src = src;
 				image.ele.attr({src: src});
+				image.ele.css({'image-orientation': 'from-image'});
 				if (viewer_settings.left_image_area) { // image is to the left
 					//
 					// create and activate the image zoomer
