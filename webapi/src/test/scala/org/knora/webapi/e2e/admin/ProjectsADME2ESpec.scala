@@ -62,7 +62,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
     private val projectIriEnc = java.net.URLEncoder.encode(projectIri, "utf-8")
     private val projectShortName = SharedTestDataADM.imagesProject.shortname
     private val projectShortnameEnc = java.net.URLEncoder.encode(projectShortName, "utf-8")
-    private val projectShortcode = SharedTestDataADM.imagesProject.shortcode.get
+    private val projectShortcode = SharedTestDataADM.imagesProject.shortcode
     private val projectShortcodeEnc = java.net.URLEncoder.encode(projectShortcode, "utf-8")
 
 

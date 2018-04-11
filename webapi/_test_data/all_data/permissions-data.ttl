@@ -242,7 +242,7 @@
 
                       rdf:type knora-base:AdministrativePermission ;
 
-                      knora-base:forProject <http://rdfh.ch/projects/0801> ;
+                      knora-base:forProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
 
                       knora-base:forGroup knora-base:ProjectMember ;
 
@@ -254,7 +254,7 @@
 
                       rdf:type knora-base:AdministrativePermission ;
 
-                      knora-base:forProject <http://rdfh.ch/projects/0801> ;
+                      knora-base:forProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
 
                       knora-base:forGroup knora-base:ProjectAdmin ;
 
@@ -266,7 +266,7 @@
 
                       rdf:type knora-base:DefaultObjectAccessPermission ;
 
-                      knora-base:forProject <http://rdfh.ch/projects/0801> ;
+                      knora-base:forProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
 
                       knora-base:forGroup knora-base:ProjectMember ;
 
@@ -286,7 +286,7 @@
 
                       rdf:type knora-base:AdministrativePermission ;
 
-                      knora-base:forProject <http://rdfh.ch/projects/0802> ;
+                      knora-base:forProject <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> ;
 
                       knora-base:forGroup knora-base:ProjectMember ;
 
@@ -298,7 +298,7 @@
 
                       rdf:type knora-base:AdministrativePermission ;
 
-                      knora-base:forProject <http://rdfh.ch/projects/0802> ;
+                      knora-base:forProject <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> ;
 
                       knora-base:forGroup knora-base:ProjectAdmin ;
 
@@ -310,7 +310,7 @@
 
                       rdf:type knora-base:DefaultObjectAccessPermission ;
 
-                      knora-base:forProject <http://rdfh.ch/projects/0802> ;
+                      knora-base:forProject <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> ;
 
                       knora-base:forGroup knora-base:ProjectMember ;
 

@@ -418,7 +418,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectMembersGetRequestADM(
                     maybeIri = None,
                     maybeShortname = None,
-                    maybeShortcode = Some(SharedTestDataADM.imagesProject.shortcode.get),
+                    maybeShortcode = Some(SharedTestDataADM.imagesProject.shortcode),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -504,7 +504,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectAdminMembersGetRequestADM(
                     maybeIri = None,
                     maybeShortname = None,
-                    maybeShortcode = Some(SharedTestDataADM.imagesProject.shortcode.get),
+                    maybeShortcode = Some(SharedTestDataADM.imagesProject.shortcode),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
