@@ -3143,11 +3143,11 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not load an ontology containing a class that's missing a cardinality for a link value property" in {
-            val missingLinkValueCardinalityOnto = List(RdfDataObject(
+            val invalidOnto = List(RdfDataObject(
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/missing-link-value-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(missingLinkValueCardinalityOnto)
+            loadTestData(invalidOnto)
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
@@ -3156,11 +3156,119 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
 
         "not load an ontology containing a class that's missing a cardinality for a link property" in {
-            val missingLinkValueCardinalityOnto = List(RdfDataObject(
+            val invalidOnto = List(RdfDataObject(
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/missing-link-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(missingLinkValueCardinalityOnto)
+            loadTestData(invalidOnto)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            }
+        }
+
+        "not load an ontology containing a class with a cardinality whose subject class constraint is incompatible with the class" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-incompatible-with-scc-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            loadTestData(invalidOnto)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            }
+        }
+
+        "not load an ontology containing a resource class without an rdfs:label" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-without-label-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            loadTestData(invalidOnto)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            }
+        }
+
+        "not load an ontology containing a resource property without an rdfs:label" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/property-without-label-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            loadTestData(invalidOnto)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            }
+        }
+
+        "not load an ontology containing a resource class that is also a standoff class" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/resource-class-is-standoff-class-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            loadTestData(invalidOnto)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            }
+        }
+
+        "not load an ontology containing a resource class with a cardinality on an undefined property" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-missing-property-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            loadTestData(invalidOnto)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            }
+        }
+
+        "not load an ontology containing a resource class with a directly defined cardinality on a non-resource property" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-non-resource-prop-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            loadTestData(invalidOnto)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            }
+        }
+
+        "not load an ontology containing a resource class with a cardinality on knora-base:resourceProperty" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-cardinality-on-kbresprop-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            loadTestData(invalidOnto)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            }
+        }
+
+        "not load an ontology containing a resource class with a cardinality on knora-base:hasValue" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-cardinality-on-kbhasvalue-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            loadTestData(invalidOnto)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            }
+        }
+
+        "not load an ontology containing a resource class with a base class that has a Knora IRI but isn't a resource class" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/resource-class-with-invalid-base-class-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            loadTestData(invalidOnto)
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)

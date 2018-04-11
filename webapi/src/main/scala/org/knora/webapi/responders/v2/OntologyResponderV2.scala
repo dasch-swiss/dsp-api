@@ -537,7 +537,7 @@ class OntologyResponderV2 extends Responder {
                 val directCardinalityPropertyIris = directCardinalities.keySet
                 val allBaseClasses = allSubClassOfRelations(classIri)
                 val isKnoraResourceClass = allBaseClasses.contains(OntologyConstants.KnoraBase.Resource.toSmartIri)
-                val isStandoffClass = !isKnoraResourceClass && allBaseClasses.contains(OntologyConstants.KnoraBase.StandoffTag.toSmartIri)
+                val isStandoffClass = allBaseClasses.contains(OntologyConstants.KnoraBase.StandoffTag.toSmartIri)
                 val isValueClass = !(isKnoraResourceClass || isStandoffClass) && allBaseClasses.contains(OntologyConstants.KnoraBase.Value.toSmartIri)
 
                 // If the class is defined in project-specific ontology, do the following checks.
@@ -555,7 +555,7 @@ class OntologyResponderV2 extends Responder {
                     }
 
                     if (isKnoraResourceClass) {
-                        // If it's a resource class, all its cardinalities must be on Knora resource properties, not including knora-base:resourceProperty or knora-base:hasValue.
+                        // If it's a resource class, all its directly defined cardinalities must be on Knora resource properties, not including knora-base:resourceProperty or knora-base:hasValue.
 
                         val cardinalitiesOnInvalidProps = directCardinalityPropertyIris.filterNot(allKnoraResourceProps)
 
@@ -575,6 +575,11 @@ class OntologyResponderV2 extends Responder {
                             if (baseClass.isKnoraDefinitionIri && !allSubClassOfRelations(baseClass).contains(OntologyConstants.KnoraBase.Resource.toSmartIri)) {
                                 throw InconsistentTriplestoreDataException(s"Class $classIri is a subclass of knora-base:Resource, but its base class $baseClass is not")
                             }
+                        }
+
+                        // It must have an rdfs:label.
+                        if (!classDef.predicates.contains(OntologyConstants.Rdfs.Label.toSmartIri)) {
+                            throw InconsistentTriplestoreDataException(s"Class $classIri has no rdfs:label")
                         }
                     } else {
                         // If it's a standoff class, none of its cardinalities must be on Knora resource properties.
@@ -714,6 +719,11 @@ class OntologyResponderV2 extends Responder {
                         if (baseProperty.isKnoraDefinitionIri && !allKnoraResourceProps.contains(baseProperty)) {
                             throw InconsistentTriplestoreDataException(s"Property $propertyIri is a subproperty of knora-base:hasValue or knora-base:hasLinkTo, but its base property $baseProperty is not")
                         }
+                    }
+
+                    // It must have an rdfs:label.
+                    if (!propertyDef.predicates.contains(OntologyConstants.Rdfs.Label.toSmartIri)) {
+                        throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:label")
                     }
                 }
 
@@ -1764,7 +1774,7 @@ class OntologyResponderV2 extends Responder {
                                 "would inherit"
                             }
 
-                            throw BadRequestException(s"Class ${internalClassDef.classIri.toOntologySchema(errorSchema)} $hasOrWouldInherit a cardinality for property ${propertyIri.toOntologySchema(errorSchema)}, but is not a subclass of that property's knora-api:subjectType, ${subjectClassConstraint.toOntologySchema(errorSchema)}")
+                            errorFun(s"Class ${internalClassDef.classIri.toOntologySchema(errorSchema)} $hasOrWouldInherit a cardinality for property ${propertyIri.toOntologySchema(errorSchema)}, but is not a subclass of that property's knora-api:subjectType, ${subjectClassConstraint.toOntologySchema(errorSchema)}")
                         }
 
                     case None => ()
