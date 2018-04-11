@@ -427,7 +427,8 @@ object ConstructResponseUtilV2 {
 
         valueObject.valueObjectClass match {
             case OntologyConstants.KnoraBase.TextValue =>
-
+                // every knora-base:TextValue may have a language
+                val valueLanguageOption: Option[String] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasLanguage)
                 if (valueObject.standoff.nonEmpty) {
                     // standoff nodes given
                     // get the IRI of the mapping
@@ -437,11 +438,11 @@ object ConstructResponseUtilV2 {
 
                     val standoffTags: Vector[StandoffTagV1] = StandoffTagUtilV1.createStandoffTagsV1FromSparqlResults(mapping.standoffEntities, valueObject.standoff)
 
-                    TextValueContentV2(valueHasString = valueObjectValueHasString, standoff = Some(StandoffAndMapping(standoff = standoffTags, mappingIri = mappingIri, mapping = mapping.mapping, XSLT = mapping.XSLTransformation)), comment = valueCommentOption)
+                    TextValueContentV2(valueHasString = valueObjectValueHasString, valueHasLanguage = valueLanguageOption, standoff = Some(StandoffAndMapping(standoff = standoffTags, mappingIri = mappingIri, mapping = mapping.mapping, XSLT = mapping.XSLTransformation)), comment = valueCommentOption)
 
                 } else {
                     // no standoff nodes given
-                    TextValueContentV2(valueHasString = valueObjectValueHasString, standoff = None, comment = valueCommentOption)
+                    TextValueContentV2(valueHasString = valueObjectValueHasString, valueHasLanguage = valueLanguageOption, standoff = None, comment = valueCommentOption)
                 }
 
 
