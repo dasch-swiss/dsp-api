@@ -15,7 +15,7 @@
                                     <http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
                                     <http://www.knora.org/ontology/knora-base#creationDate> "2017-09-01T15:21:10.735+02:00"^^xsd:dateTimeStamp ;
                                     <http://www.knora.org/ontology/knora-base#hasPermissions> "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
-                                    <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0801> ;
+                                    <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
                                     <http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
 <http://rdfh.ch/beol/page_resource> <http://www.knora.org/ontology/knora-base#hasStillImageFileValue> <http://rdfh.ch/beol/page_resource/values/DX6m0TSuRGesYXA0iQyA9A> .
@@ -89,7 +89,7 @@
 	<http://www.knora.org/ontology/knora-base#creationDate> "2017-09-01T14:15:04.846+02:00"^^xsd:dateTimeStamp ;
 	<http://www.knora.org/ontology/knora-base#lastModificationDate> "2017-09-01T15:21:16.480+02:00"^^xsd:dateTimeStamp ;
 	<http://www.knora.org/ontology/knora-base#hasPermissions> "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
-	<http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/0801> ;
+	<http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
 	<http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
 	<http://www.knora.org/ontology/0801/beol#title> <http://rdfh.ch/beol/letter_resource/values/naiFCtV2S5C6GIe_eKGTGQ> .
 
@@ -103,7 +103,7 @@
 
 <http://rdfh.ch/lists/0801/subject_index> a knora-base:ListNode ;
 	knora-base:isRootNode true ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/0801> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
 	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/mathematics> , <http://rdfh.ch/lists/0801/other_sciences> , <http://rdfh.ch/lists/0801/professional_activity> , <http://rdfh.ch/lists/0801/personal_life> ;
 	rdfs:label "Subject Index"@en .
 

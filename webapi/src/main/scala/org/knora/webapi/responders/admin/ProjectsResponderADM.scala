@@ -411,7 +411,7 @@ class ProjectsResponderADM extends Responder {
                 throw DuplicateValueException(s"Project with the shortcode: '${createRequest.shortcode}' already exists")
             }
 
-            newProjectIRI = knoraIdUtil.makeRandomProjectIri(Some(createRequest.shortcode))
+            newProjectIRI = knoraIdUtil.makeRandomProjectIri(createRequest.shortcode)
 
             // Create the new project.
             createNewProjectSparqlString = queries.sparql.admin.txt.createNewProject(
