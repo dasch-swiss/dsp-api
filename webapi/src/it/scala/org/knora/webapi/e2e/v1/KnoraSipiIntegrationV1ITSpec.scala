@@ -405,6 +405,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
         "create a TextRepresentation of type XSLTransformation, refer to it in a mapping, and use it when a TextValue is requested" in {
 
+            // create an XSL transformation
             val knoraParams = JsObject(
                 Map(
                     "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
@@ -430,23 +431,27 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             // Send the JSON in a POST request to the Knora API server.
-            val knoraPostRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
+            val knoraPostRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
+
+            checkResponseOK(knoraPostRequest)
 
             val responseJson: JsObject = getResponseJson(knoraPostRequest)
 
+            // get the Iri of the XSL transformation
             val resId = responseJson.fields.get("res_id") match {
                 case Some(JsString(resid: String)) => resid
                 case other => throw InvalidApiJsonException("member 'res_id' was expected")
             }
 
-            checkResponseOK(knoraPostRequest)
-
             val mappingWithXSLT = new File(pathToMappingWithXSLT)
+
+            // add a mapping referring to the XSLT as the default XSL transformation
 
             val mappingFile = Source.fromFile(mappingWithXSLT).getLines.mkString
 
             val mappingXML: Elem = XML.loadString(mappingFile)
 
+            // add the XSL transformation's Iri to the mapping XML (replacing the string 'toBeDefined')
             val rule = new RewriteRule() {
                 override def transform(node: Node): Node = {
 
@@ -462,6 +467,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             val transformer = new RuleTransformer(rule)
 
+            // apply transformer
             val trans: Node = transformer(mappingXML)
 
             val paramsCreateLetterMappingFromXML =
@@ -474,7 +480,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
              """.stripMargin
 
             // create a mapping referring to the XSL transformation
-
             val formDataMapping = Multipart.FormData(
                 Multipart.FormData.BodyPart(
                     "json",
