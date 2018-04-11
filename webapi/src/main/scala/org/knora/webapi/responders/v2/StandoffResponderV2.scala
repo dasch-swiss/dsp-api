@@ -53,7 +53,7 @@ import org.xml.sax.SAXException
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.xml.{Node, NodeSeq, XML}
+import scala.xml.{Elem, Node, NodeSeq, XML}
 
 /**
   * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
@@ -209,7 +209,7 @@ class StandoffResponderV2 extends Responder {
                 _ = validator.validate(new StreamSource(new StringReader(xml)))
 
                 // the mapping conforms to the XML schema "src/main/resources/mappingXMLToStandoff.xsd"
-                mappingXML = XML.loadString(xml)
+                mappingXML: Elem = XML.loadString(xml)
 
                 // get the default XSL transformation, if given (optional)
                 defaultXSLTransformation: Option[IRI] <- mappingXML \ "defaultXSLTransformation" match {

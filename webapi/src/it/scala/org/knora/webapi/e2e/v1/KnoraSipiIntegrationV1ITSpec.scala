@@ -20,17 +20,22 @@
 package org.knora.webapi.e2e.v1
 
 import java.io.File
+
+import scala.io.Source
 import java.net.URLEncoder
 
+import scala.xml._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.{MutableTestIri, TestingUtilities}
-import org.knora.webapi.{ITKnoraLiveSpec, InvalidApiJsonException}
+import org.knora.webapi.{ITKnoraLiveSpec, InvalidApiJsonException, NotFoundException}
 import spray.json._
 
+import scala.collection.immutable
 import scala.concurrent.duration._
+import scala.xml.transform.{RewriteRule, RuleTransformer}
 
 
 object KnoraSipiIntegrationV1ITSpec {
@@ -56,6 +61,8 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val password = "test"
     private val pathToChlaus = "_test_data/test_route/images/Chlaus.jpg"
     private val pathToMarbles = "_test_data/test_route/images/marbles.tif"
+    private val pathToXSLTransformation = "_test_data/test_route/texts/letterToHtml.xsl"
+    private val pathToMappingWithXSLT = "_test_data/test_route/texts/mappingForLetterWithXSLTransformation.xml"
     private val firstPageIri = new MutableTestIri
     private val secondPageIri = new MutableTestIri
 
@@ -395,6 +402,98 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val sipiGetRequest = Get(imageUrl) ~> addCredentials(BasicHttpCredentials(username, password))
             checkResponseOK(sipiGetRequest)
         }
+
+        "create a TextRepresentation of type XSLTransformation, refer to it in a mapping, and use it when a TextValue is requested" in {
+
+            val knoraParams = JsObject(
+                Map(
+                    "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
+                    "label" -> JsString("XSLT"),
+                    "project_id" -> JsString("http://rdfh.ch/projects/anything"),
+                    "properties" -> JsObject()
+                )
+            )
+
+            val XSLTransformationFile = new File(pathToXSLTransformation)
+
+            // A multipart/form-data request containing the image and the JSON.
+            val formData = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)
+                ),
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), XSLTransformationFile.toPath),
+                    Map("filename" -> XSLTransformationFile.getName)
+                )
+            )
+
+            // Send the JSON in a POST request to the Knora API server.
+            val knoraPostRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
+
+            val responseJson: JsObject = getResponseJson(knoraPostRequest)
+
+            val resId = responseJson.fields.get("res_id") match {
+                case Some(JsString(resid: String)) => resid
+                case other => throw InvalidApiJsonException("member 'res_id' was expected")
+            }
+
+            checkResponseOK(knoraPostRequest)
+
+            val mappingWithXSLT = new File(pathToMappingWithXSLT)
+
+            val mappingFile = Source.fromFile(mappingWithXSLT).getLines.mkString
+
+            val mappingXML: Elem = XML.loadString(mappingFile)
+
+            val rule = new RewriteRule() {
+                override def transform(node: Node): Node = {
+
+                    node match {
+                        case e: Elem if e.label == "defaultXSLTransformation" => e.copy(child = e.child collect {
+                            case Text(data) => Text(resId)
+                        })
+                        case other => other
+                    }
+
+                }
+            }
+
+            val transformer = new RuleTransformer(rule)
+
+            val trans: Node = transformer(mappingXML)
+
+            val paramsCreateLetterMappingFromXML =
+                s"""
+                   |{
+                   |  "project_id": "http://rdfh.ch/projects/anything",
+                   |  "label": "mapping for letters with XSLT",
+                   |  "mappingName": "LetterMappingXSLT"
+                   |}
+             """.stripMargin
+
+            // create a mapping referring to the XSL transformation
+
+            val formDataMapping = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, paramsCreateLetterMappingFromXML)
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity(ContentTypes.`text/xml(UTF-8)`, trans.toString),
+                    Map("filename" -> "mapping.xml")
+                )
+            )
+
+            // send mapping xml to route
+            val knoraPostRequest2 = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(username, password))
+
+            checkResponseOK(knoraPostRequest2)
+
+        }
+
     }
 }
 

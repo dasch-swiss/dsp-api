@@ -156,7 +156,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         "attempt to create a mapping with an invalid standoff class IRI http://www.knora.org/ontology/standoff#StandoffRot" in {
 
-            val brokenMapping = """<?xml version="1.0" encoding="UTF-8"?>
+            val brokenMapping: String = """<?xml version="1.0" encoding="UTF-8"?>
                               |<mapping>
                               |    <mappingElement>
                               |        <tag>
