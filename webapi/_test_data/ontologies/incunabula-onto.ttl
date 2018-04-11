@@ -13,7 +13,7 @@
 
 <http://www.knora.org/ontology/0803/incunabula> rdf:type owl:Ontology ;
     rdfs:label "The incunabula ontology" ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/77275339> .
+    knora-base:attachedToProject <http://rdfh.ch/projects/0803> .
 
 ##########################################################
 #
