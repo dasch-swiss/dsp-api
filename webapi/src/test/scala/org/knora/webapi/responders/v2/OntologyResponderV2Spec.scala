@@ -3274,5 +3274,31 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
             }
         }
+
+        "not load an ontology containing a standoff class with a cardinality on a resource property" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/standoff-class-with-resprop-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            loadTestData(invalidOnto)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            }
+        }
+
+        "not load an ontology containing a standoff class with a base class that's not a standoff class" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/standoff-class-with-invalid-base-class-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            loadTestData(invalidOnto)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            }
+        }
+
+        // TODO: checks on properties and other checks.
     }
 }
