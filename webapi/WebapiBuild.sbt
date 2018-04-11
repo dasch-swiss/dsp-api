@@ -162,6 +162,7 @@ lazy val webApiLibs = Seq(
     library.akkaStream,
     library.akkaStreamTestkit,
     library.akkaTestkit,
+    library.bcprov,
     library.commonsBeanUtil,
     library.commonsIo,
     library.commonsLang3,
@@ -243,6 +244,7 @@ lazy val library =
         val commonsValidator       = "commons-validator"             % "commons-validator"        % "1.6" exclude("commons-logging", "commons-logging")
 
         // authentication
+        val bcprov                 = "org.bouncycastle"              % "bcprov-jdk15on"           % "1.59"
         val springSecurityCore     = "org.springframework.security"  % "spring-security-core"     % "4.2.5.RELEASE" exclude("commons-logging", "commons-logging") exclude("org.springframework", "spring-aop")
         val jwt                    = "io.igl"                       %% "jwt"                      % "1.2.2" exclude("commons-codec", "commons-codec")
 
