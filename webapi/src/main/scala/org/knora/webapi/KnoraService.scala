@@ -38,7 +38,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{Initialized, Initial
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders._
-import org.knora.webapi.routing.RejectingRoute
+import org.knora.webapi.routing.{RejectingRoute, SwaggerApiDocsRoute}
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
@@ -95,17 +95,17 @@ trait KnoraService {
     /**
       * The actor used for storing the application application wide variables in a thread safe maner.
       */
-    protected val applicationStateActor = system.actorOf(Props(new ApplicationStateActor), name = APPLICATION_STATE_ACTOR_NAME)
+    protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor), name = APPLICATION_STATE_ACTOR_NAME)
 
     /**
       * The supervisor actor that forwards messages to responder actors to handle API requests.
       */
-    protected val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     /**
       * The supervisor actor that forwards messages to actors that deal with persistent storage.
       */
-    protected val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+    protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
@@ -139,13 +139,14 @@ trait KnoraService {
             ResourcesRouteV2.knoraApiPath(system, settings, log) ~
             StandoffRouteV2.knoraApiPath(system, settings, log) ~
             AuthenticationRouteV2.knoraApiPath(system, settings, log) ~
-            GroupsRouteADM.knoraApiPath(system, settings, log) ~
-            ListsRouteADM.knoraApiPath(system, settings, log) ~
-            PermissionsRouteADM.knoraApiPath(system, settings, log) ~
-            ProjectsRouteADM.knoraApiPath(system, settings, log) ~
-            StoreRouteADM.knoraApiPath(system, settings, log) ~
-            UsersRouteADM.knoraApiPath(system, settings, log),
-        settings,
+            new GroupsRouteADM(system, settings, log).knoraApiPath ~
+            new ListsRouteADM(system, settings, log).knoraApiPath ~
+            new PermissionsRouteADM(system, settings, log).knoraApiPath ~
+            new ProjectsRouteADM(system, settings, log).knoraApiPath ~
+            new StoreRouteADM(system, settings, log).knoraApiPath ~
+            new UsersRouteADM(system, settings, log).knoraApiPath ~
+            new SwaggerApiDocsRoute(system, settings, log).knoraApiPath
+        , settings,
         log
     )
 
@@ -176,13 +177,27 @@ trait KnoraService {
         // needed for startup flags and the future map/flatmap in the end
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
-        CacheUtil.createCaches(settings.caches)
+        val printConfig = Await.result(applicationStateActor ? GetPrintConfigState(), 1.second).asInstanceOf[Boolean]
+        if (printConfig) {
+            println("================================================================")
+            println("Server Configuration:")
 
-        // which repository are we using
-        println(s"DB Server: ${settings.triplestoreHost}, DB Port: ${settings.triplestorePort}")
-        println(s"Repository: ${settings.triplestoreDatabaseName}")
-        println(s"DB User: ${settings.triplestoreUsername}")
-        println(s"DB Password: ${settings.triplestorePassword}")
+            // which repository are we using
+            println(s"DB Server: ${settings.triplestoreHost}, DB Port: ${settings.triplestorePort}")
+            println(s"Repository: ${settings.triplestoreDatabaseName}")
+            println(s"DB User: ${settings.triplestoreUsername}")
+            println(s"DB Password: ${settings.triplestorePassword}")
+
+            println(s"Swagger Json: ${settings.externalKnoraApiBaseUrl}/api-docs/swagger.json")
+            println(s"Webapi internal URL: ${settings.internalKnoraApiBaseUrl}")
+            println(s"Webapi external URL: ${settings.externalKnoraApiBaseUrl}")
+            println(s"Sipi internal URL: ${settings.internalSipiBaseUrl}")
+            println(s"Sipi external URL: ${settings.externalSipiBaseUrl}")
+            println("================================================================")
+            println("")
+        }
+
+        CacheUtil.createCaches(settings.caches)
 
         // get loadDemoData value from application state actor
         val loadDemoData = Await.result(applicationStateActor ? GetLoadDemoDataState(), 1.second).asInstanceOf[Boolean]
@@ -229,7 +244,10 @@ trait KnoraService {
         }
 
         Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
-        println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}.")
+        println("")
+        println("----------------------------------------------------------------")
+        println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}")
+        println("----------------------------------------------------------------")
     }
 
     /**

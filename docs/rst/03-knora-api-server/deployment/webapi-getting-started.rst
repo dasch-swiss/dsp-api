@@ -169,12 +169,28 @@ The program uses the Turtle parsing and formatting library from RDF4J_. Addition
 be implemented as subclasses of ``org.eclipse.rdf4j.rio.RDFHandler``.
 
 Selectively Disabling Routes
------------------------------
+----------------------------
 
 In ``application.conf`` the setting ``app.routes-to-reject`` contains a list of strings, representing
 routes which should be rejected.
 
 For Example, the string ``"v1/users"`` would lead to rejection of any route which contains this string.
+
+
+Startup Flags
+-------------
+
+There is a number of flags that can be set on startup, they will override any value set in the application
+configuration file:
+
+* ``loadDemoData``, ``--loadDemoData``, ``-d``: Loads the demo data.
+* ``allowReloadOverHTTP``, ``--allow-reload-over-http``, ``-r``: Allows reloading of data over HTTP.
+* ``-p``: Starts the Prometheus monitoring reporter.
+* ``-z``: Starts the Zipkin monitoring reporter.
+* ``-j``: Starts the Jaeger monitoring reporter.
+* ``-c``: Print the configuration at startup.
+* ``--help``: Shows the help message with all startup flags.
+
 
 .. _RDF: https://www.w3.org/TR/rdf11-primer/
 .. _free software: http://www.gnu.org/philosophy/free-sw.en.html

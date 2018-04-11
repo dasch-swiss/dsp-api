@@ -15,26 +15,11 @@
    You should have received a copy of the GNU Affero General Public
    License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-.. _knora-api-server:
-
-####################
-The Knora API Server
-####################
-
-The Knora API server implements Knora's HTTP-based API, and manages data
-stored in an RDF triplestore and in files. It is designed to work with any
-standards-compliant RDF triplestore, and is configured to work out of the box
-with `Ontotext GraphDB`_ and `Apache Jena`_.
+******************************
+Using ADMIN API
+******************************
 
 .. toctree::
    :maxdepth: 2
 
-   deployment/index
-   design-documentation/index
-   development/index
-   api_v1/index
-   api_v2/index
-   api_admin/index
-
-.. _Ontotext GraphDB: http://ontotext.com/products/graphdb/
-.. _Apache Jena: https://jena.apache.org/
+   api-general

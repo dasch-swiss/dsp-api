@@ -19,7 +19,7 @@
 
 package org.knora.webapi
 
-import org.knora.webapi.messages.app.appmessages.{SetAllowReloadOverHTTPState, SetLoadDemoDataState, SetPrometheusReporterState, SetZipkinReporterState}
+import org.knora.webapi.messages.app.appmessages._
 
 /**
   * Starts Knora by bringing everything into scope by using the cake pattern. The [[LiveCore]] trait provides
@@ -52,6 +52,9 @@ object Main extends App with LiveCore with KnoraService {
     // starts zipkin monitoring reporter
     if (arglist.contains("-j")) applicationStateActor ! SetZipkinReporterState(true)
 
+    // print config on startup
+    if (arglist.contains("-c")) applicationStateActor ! SetPrintConfigState(true)
+
     if (arglist.contains("--help")) {
         println(
             """
@@ -73,6 +76,8 @@ object Main extends App with LiveCore with KnoraService {
               |     -z                          Starts the Zipkin monitoring reporter.
               |
               |     -j                          Starts the Jaeger monitoring reporter.
+              |
+              |     -c                          Print the configuration on startup.
               |
               |     --help                      Shows this message.
             """.stripMargin)
