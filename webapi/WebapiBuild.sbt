@@ -281,7 +281,7 @@ lazy val library =
         val scalaJava8Compat       = "org.scala-lang.modules"        % "scala-java8-compat_2.12"  % "0.8.0"
 
         // provides akka jackson (json) support
-        val akkaHttpCirce          = "de.heikoseeberger"            %% "akka-http-circe"          % "1.20.0"
+        val akkaHttpCirce          = "de.heikoseeberger"            %% "akka-http-circe"          % "1.20.1"
         val jacksonScala           = "com.fasterxml.jackson.module" %% "jackson-module-scala"     % "2.9.4"
 
         val jsonldJava             = "com.github.jsonld-java"        % "jsonld-java"              % "0.12.0"
