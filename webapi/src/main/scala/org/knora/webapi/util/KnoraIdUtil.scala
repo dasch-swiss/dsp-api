@@ -195,33 +195,22 @@ class KnoraIdUtil {
     /**
       * Creates a new project IRI based on a UUID or project shortcode.
       *
-      * @param maybeShortcode the optional project shortcode.
+      * @param shortcode the required project shortcode.
       * @return a new project IRI.
       */
-    def makeRandomProjectIri(maybeShortcode: Option[String]): IRI = {
-
-        if (maybeShortcode.isDefined) {
-            s"http://$IriDomain/projects/${maybeShortcode.get}"
-        } else {
-            val knoraProjectID = makeRandomBase64EncodedUuid
-            s"http://$IriDomain/projects/$knoraProjectID"
-        }
+    def makeRandomProjectIri(shortcode: String): IRI = {
+        s"http://$IriDomain/projects/${shortcode}"
     }
 
     /**
       * Creates a new group IRI based on a UUID.
       *
-      * @param maybeShortcode the optional project shortcode.
+      * @param shortcode the required project shortcode.
       * @return a new group IRI.
       */
-    def makeRandomGroupIri(maybeShortcode: Option[String]): String = {
+    def makeRandomGroupIri(shortcode: String): String = {
         val knoraGroupUuid = makeRandomBase64EncodedUuid
-
-        if (maybeShortcode.isDefined) {
-            s"http://$IriDomain/groups/${maybeShortcode.get}/$knoraGroupUuid"
-        } else {
-            s"http://$IriDomain/groups/$knoraGroupUuid"
-        }
+        s"http://$IriDomain/groups/${shortcode}/$knoraGroupUuid"
     }
 
     /**
@@ -237,17 +226,12 @@ class KnoraIdUtil {
     /**
       * Creates a new list IRI based on a UUID.
       *
-      * @param maybeShortcode the optional project shortcode.
+      * @param shortcode the required project shortcode.
       * @return a new list IRI.
       */
-    def makeRandomListIri(maybeShortcode: Option[String]): String = {
+    def makeRandomListIri(shortcode: String): String = {
         val knoraListUuid = makeRandomBase64EncodedUuid
-
-        if (maybeShortcode.isDefined) {
-            s"http://$IriDomain/lists/${maybeShortcode.get}/$knoraListUuid"
-        } else {
-            s"http://$IriDomain/lists/$knoraListUuid"
-        }
+        s"http://$IriDomain/lists/${shortcode}/$knoraListUuid"
     }
 
     /**

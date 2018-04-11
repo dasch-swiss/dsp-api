@@ -1895,11 +1895,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @return the IRI of the project's data named graph.
       */
     def projectDataNamedGraphV2(project: ProjectADM): IRI = {
-        if (project.shortcode.isDefined) {
-            OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortcode.get + "/" + project.shortname
-        } else {
-            OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortname
-        }
+        OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortcode + "/" + project.shortname
     }
 
     /**
