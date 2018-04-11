@@ -150,7 +150,7 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
 
                             /* the api request is already checked at time of creation. see case class. */
 
-                            val requestMessage = if (apiRequest.oldPassword.isDefined && apiRequest.newPassword.isDefined) {
+                            val requestMessage = if (apiRequest.requesterPassword.isDefined && apiRequest.newPassword.isDefined) {
                                 /* update existing user's password */
                                 UserChangePasswordRequestADM(
                                     userIri = userIri,
