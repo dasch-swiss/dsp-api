@@ -42,6 +42,7 @@ Bugfixes:
 ---------
 
 - API v1 extended search was not properly handling multiple conditions on list values (issue #800)
+- Fix image orientation in SALSAH 1 (issue #726)
 
 .. _release: https://github.com/dhlab-basel/Knora/releases/tag/v1.4.0
 .. _v1.4.0 milestone: https://github.com/dhlab-basel/Knora/milestone/8
