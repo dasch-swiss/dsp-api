@@ -371,7 +371,7 @@ class UsersResponderADM extends Responder {
       * Change the users password. The old password needs to be supplied for security purposes.
       *
       * @param userIri           the IRI of the existing user that we want to update.
-      * @param changeUserRequest the old and new password.
+      * @param changeUserRequest the current password of the requesting user and the new password.
       * @param requestingUser    the requesting user.
       * @param apiRequestID      the unique api request ID.
       * @return a future containing a [[UserOperationResponseADM]].
@@ -382,7 +382,9 @@ class UsersResponderADM extends Responder {
       */
     private def changePasswordADM(userIri: IRI, changeUserRequest: ChangeUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
-        //log.debug(s"changePasswordV1: changePasswordRequest: {}", changeUserRequest)
+        log.debug(s"changePasswordADM - userIri: {}", userIri)
+        log.debug(s"changePasswordADM - changeUserRequest: {}", changeUserRequest)
+        log.debug(s"changePasswordADM - requestingUser: {}", requestingUser)
 
         /**
           * The actual change password task run with an IRI lock.
@@ -391,21 +393,18 @@ class UsersResponderADM extends Responder {
 
             // check if necessary information is present
             _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
-            _ = if (changeUserRequest.oldPassword.isEmpty || changeUserRequest.newPassword.isEmpty) throw BadRequestException("The user's old and new password need to be both supplied")
+            _ = if (changeUserRequest.requesterPassword.isEmpty || changeUserRequest.newPassword.isEmpty) throw BadRequestException("The user's old and new password need to be both supplied")
 
-            // check if the requesting user is allowed to perform updates
-            _ = if (!requestingUser.id.equalsIgnoreCase(userIri)) {
-                // not the user
-                //log.debug("same user: {}", userProfile.userData.user_id.contains(userIri))
-                throw ForbiddenException("User's password can only be changed by the user itself")
+            // check if the requesting user is allowed to perform password change. it needs to be either the user himself, or a system admin
+            _ = if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+                // not the user or system admin
+                throw ForbiddenException("User's password can only be changed by the user itself or a system admin.")
             }
 
-            // check if old password matches current user password
-            maybeUserADM <- userGetADM(maybeUserIri = Some(userIri), maybeUserEmail = None, requestingUser = KnoraSystemInstances.Users.SystemUser, userInformationType = UserInformationTypeADM.FULL)
-            userADM = maybeUserADM.getOrElse(throw NotFoundException(s"User '$userIri' not found"))
-            _ = if (!userADM.passwordMatch(changeUserRequest.oldPassword.get)) {
-                log.debug("supplied oldPassword: {}, current hash: {}", changeUserRequest.oldPassword.get, userADM.password.get)
-                throw ForbiddenException("The supplied old password does not match the current users password.")
+            // check if supplied password matches requesting user's password
+            _ = log.debug(s"changePasswordADM - requesterPassword: {}", changeUserRequest.requesterPassword.get)
+            _ = if (!requestingUser.passwordMatch(changeUserRequest.requesterPassword.get)) {
+                throw ForbiddenException("The supplied password does not match the requesting user's password.")
             }
 
             // create the update request
