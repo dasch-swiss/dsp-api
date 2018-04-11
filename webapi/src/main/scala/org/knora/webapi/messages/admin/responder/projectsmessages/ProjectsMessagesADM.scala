@@ -332,6 +332,7 @@ case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraRespons
   *
   * @param id          The project's IRI.
   * @param shortname   The project's shortname. Needs to be system wide unique.
+  * @param shortcode   The project's shortcode. Needs to be system wide unique.
   * @param longname    The project's long name.
   * @param description The project's description.
   * @param keywords    The project's keywords.
@@ -342,7 +343,7 @@ case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraRespons
   */
 case class ProjectADM(id: IRI,
                       shortname: String,
-                      shortcode: Option[String],
+                      shortcode: String,
                       longname: Option[String],
                       description: Seq[StringLiteralV2],
                       keywords: Seq[String],
@@ -374,7 +375,7 @@ case class ProjectADM(id: IRI,
         ProjectInfoV1(
             id = id,
             shortname = shortname,
-            shortcode = shortcode,
+            shortcode = Some(shortcode),
             longname = longname,
             description = descriptionV1,
             keywords = keywordsV1,

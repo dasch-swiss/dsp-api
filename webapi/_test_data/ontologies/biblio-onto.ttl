@@ -10,11 +10,11 @@
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @prefix beol: <http://www.knora.org/ontology/0801/beol#> .
-@base <http://www.knora.org/ontology/biblio#> .
+@base <http://www.knora.org/ontology/0802/biblio#> .
 
-@prefix : <http://www.knora.org/ontology/biblio#> .
+@prefix : <http://www.knora.org/ontology/0802/biblio#> .
 
-<http://www.knora.org/ontology/biblio> rdf:type owl:Ontology ;
+<http://www.knora.org/ontology/0802/biblio> rdf:type owl:Ontology ;
     rdfs:label "The Biblio ontology" ;
     knora-base:attachedToProject <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> .
 

@@ -9,10 +9,6 @@
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @prefix beol: <http://www.knora.org/ontology/0801/beol#> .
 
-###
-### project and user moved to admin-data.ttl
-###
-
 ### page resource for R2R standoff tests
 <http://rdfh.ch/beol/page_resource> a <http://www.knora.org/ontology/0801/beol#page> ;
                                     rdfs:label "Test page" ;
