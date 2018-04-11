@@ -1163,6 +1163,12 @@
         "@type" : "rdf:Property",
         "rdfs:comment" : "Specifies the required type of the subjects of a property",
         "rdfs:label" : "Subject type"
+      },
+      "knora-api:valueHasLanguage": {
+        "@id": "knora-api:valueHasLanguage",
+        "@type": "owl:ObjectProperty",
+        "knora-api:objectType": "http://www.w3.org/2001/XMLSchema#string",
+        "knora-api:subjectType": "http://www.w3.org/2001/XMLSchema#string"
       }
     },
     "rdfs:label" : "The simplified knora-api ontology"
