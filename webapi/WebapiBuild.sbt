@@ -195,6 +195,7 @@ lazy val webApiLibs = Seq(
     library.scalaXml,
     library.scallop,
     library.springSecurityCore,
+    library.swaggerAkkaHttp,
     library.xmlunitCore
 )
 
@@ -285,6 +286,9 @@ lazy val library =
         val jacksonScala           = "com.fasterxml.jackson.module" %% "jackson-module-scala"     % "2.9.4"
 
         val jsonldJava             = "com.github.jsonld-java"        % "jsonld-java"              % "0.12.0"
+
+        // swagger (api documentation)
+        val swaggerAkkaHttp        = "com.github.swagger-akka-http" %% "swagger-akka-http"        % "0.14.0"
     }
 
 lazy val javaRunOptions = Seq(
