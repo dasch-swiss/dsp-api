@@ -27,6 +27,8 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
+import io.swagger.annotations.Api
+import javax.ws.rs.Path
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
@@ -35,18 +37,23 @@ import org.knora.webapi.{BadRequestException, SettingsImpl}
 
 import scala.concurrent.ExecutionContextExecutor
 
-object ProjectsRouteADM extends Authenticator with ProjectsADMJsonProtocol {
+
+@Api(value = "projects", produces = "application/json")
+@Path("/admin/projects")
+class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with ProjectsADMJsonProtocol {
 
     private val schemes = Array("http", "https")
     private val urlValidator = new UrlValidator(schemes)
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    implicit val system: ActorSystem = _system
+    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    implicit val timeout: Timeout = settings.defaultTimeout
+    val responderManager = system.actorSelection("/user/responderManager")
+    val stringFormatter = StringFormatter.getGeneralInstance
 
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
-        implicit val timeout: Timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
-        val stringFormatter = StringFormatter.getGeneralInstance
+    def knoraApiPath: Route = {
+
+
 
         path("admin" / "projects") {
             get {

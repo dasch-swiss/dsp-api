@@ -26,6 +26,8 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
+import io.swagger.annotations.Api
+import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
@@ -36,14 +38,19 @@ import scala.concurrent.ExecutionContextExecutor
 /**
   * Provides a spray-routing function for API routes that deal with lists.
   */
-object ListsRouteADM extends Authenticator with ListADMJsonProtocol {
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
-        implicit val timeout: Timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
-        val stringFormatter = StringFormatter.getGeneralInstance
+@Api(value = "lists", produces = "application/json")
+@Path("/admin/lists")
+class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with ListADMJsonProtocol {
+
+    implicit val system: ActorSystem = _system
+    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    implicit val timeout: Timeout = settings.defaultTimeout
+    val responderManager = system.actorSelection("/user/responderManager")
+    val stringFormatter = StringFormatter.getGeneralInstance
+
+    def knoraApiPath: Route = {
+
 
         path("admin" / "lists") {
             get {

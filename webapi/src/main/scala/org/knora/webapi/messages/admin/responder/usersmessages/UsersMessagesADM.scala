@@ -63,20 +63,20 @@ case class CreateUserApiRequestADM(email: String,
   * be changed include the user's email, given name, family name, language, password, user status, and system admin
   * membership.
   *
-  * @param email       the new email address. Needs to be unique on the server.
-  * @param givenName   the new given name.
-  * @param familyName  the new family name.
-  * @param lang        the new ISO 639-1 code of the new preferred language.
-  * @param oldPassword the old password.
-  * @param newPassword the new password.
-  * @param status      the new user status (active = true, inactive = false).
-  * @param systemAdmin the new system admin membership status.
+  * @param email             the new email address. Needs to be unique on the server.
+  * @param givenName         the new given name.
+  * @param familyName        the new family name.
+  * @param lang              the new ISO 639-1 code of the new preferred language.
+  * @param requesterPassword the password of the user making the request.
+  * @param newPassword       the new password.
+  * @param status            the new user status (active = true, inactive = false).
+  * @param systemAdmin       the new system admin membership status.
   */
 case class ChangeUserApiRequestADM(email: Option[String] = None,
                                    givenName: Option[String] = None,
                                    familyName: Option[String] = None,
                                    lang: Option[String] = None,
-                                   oldPassword: Option[String] = None,
+                                   requesterPassword: Option[String] = None,
                                    newPassword: Option[String] = None,
                                    status: Option[Boolean] = None,
                                    systemAdmin: Option[Boolean] = None) {
@@ -86,11 +86,13 @@ case class ChangeUserApiRequestADM(email: Option[String] = None,
         givenName,
         familyName,
         lang,
-        oldPassword,
+        requesterPassword,
         newPassword,
         status,
         systemAdmin
     ).flatten.size
+
+    // println(requesterPassword + " " + newPassword)
 
     // something needs to be sent, i.e. everything 'None' is not allowed
     if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
@@ -99,7 +101,7 @@ case class ChangeUserApiRequestADM(email: Option[String] = None,
     /* check that only allowed information for the 4 cases is send and not more. */
 
     // change password case
-    if (oldPassword.isDefined || newPassword.isDefined) {
+    if (requesterPassword.isDefined || newPassword.isDefined) {
         if (parametersCount > 2) {
             throw BadRequestException("To many parameters sent for password change.")
         } else if (parametersCount < 2) {
@@ -154,10 +156,10 @@ case class UsersGetRequestADM(userInformationTypeADM: UserInformationTypeADM = U
 /**
   * A message that requests a user's profile either by IRI or email. A successful response will be a [[UserADM]].
   *
-  * @param maybeIri           the IRI of the user to be queried.
-  * @param maybeEmail the email of the user to be queried.
+  * @param maybeIri               the IRI of the user to be queried.
+  * @param maybeEmail             the email of the user to be queried.
   * @param userInformationTypeADM the extent of the information returned.
-  * @param requestingUser the user initiating the request.
+  * @param requestingUser         the user initiating the request.
   */
 case class UserGetADM(maybeIri: Option[IRI],
                       maybeEmail: Option[String],
@@ -173,10 +175,10 @@ case class UserGetADM(maybeIri: Option[IRI],
 /**
   * A message that requests a user's profile either by IRI or email. A successful response will be a [[UserResponseADM]].
   *
-  * @param maybeIri           the IRI of the user to be queried.
-  * @param maybeEmail the email of the user to be queried.
+  * @param maybeIri               the IRI of the user to be queried.
+  * @param maybeEmail             the email of the user to be queried.
   * @param userInformationTypeADM the extent of the information returned.
-  * @param requestingUser the user initiating the request.
+  * @param requestingUser         the user initiating the request.
   */
 case class UserGetRequestADM(maybeIri: Option[IRI],
                              maybeEmail: Option[String],
@@ -466,8 +468,8 @@ case class UserADM(id: IRI,
     def compare(that: UserADM): Int = this.id.compareTo(that.id)
 
     /**
-      * Check password using either SHA-1 or SCrypt.
-      * The SCrypt password always starts with '$e0801$' (spring.framework implementation)
+      * Check password (in clear text) using SCrypt. The password supplied in clear text is hashed and
+      * compared against the stored hash.
       *
       * @param password the password to check.
       * @return true if password matches and false if password doesn't match.
@@ -475,15 +477,9 @@ case class UserADM(id: IRI,
     def passwordMatch(password: String): Boolean = {
         this.password.exists {
             hashedPassword =>
-                if (hashedPassword.startsWith("$e0801$")) {
-                    //println(s"UserProfileV1 - passwordMatch - password: $password, hashedPassword: hashedPassword")
-                    import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
-                    val encoder = new SCryptPasswordEncoder
-                    encoder.matches(password, hashedPassword.toString)
-                } else {
-                    val md = java.security.MessageDigest.getInstance("SHA-1")
-                    md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hashedPassword.toString)
-                }
+                import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
+                val encoder = new SCryptPasswordEncoder
+                encoder.matches(password, hashedPassword.toString)
         }
     }
 
@@ -768,7 +764,7 @@ object UsersADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
 
     implicit val userADMFormat: JsonFormat[UserADM] = jsonFormat12(UserADM)
     implicit val createUserApiRequestADMFormat: RootJsonFormat[CreateUserApiRequestADM] = jsonFormat7(CreateUserApiRequestADM)
-    implicit val changeUserApiRequestADMFormat: RootJsonFormat[ChangeUserApiRequestADM] = jsonFormat(ChangeUserApiRequestADM, "email", "givenName", "familyName", "lang", "oldPassword", "newPassword", "status", "systemAdmin")
+    implicit val changeUserApiRequestADMFormat: RootJsonFormat[ChangeUserApiRequestADM] = jsonFormat(ChangeUserApiRequestADM, "email", "givenName", "familyName", "lang", "requesterPassword", "newPassword", "status", "systemAdmin")
     implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] = jsonFormat1(UsersGetResponseADM)
     implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM] = jsonFormat1(UserResponseADM)
     implicit val userProjectMembershipsGetResponseADMFormat: RootJsonFormat[UserProjectMembershipsGetResponseADM] = jsonFormat1(UserProjectMembershipsGetResponseADM)
