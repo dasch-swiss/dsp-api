@@ -3443,6 +3443,40 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        // TODO: The predicates salsah-gui:guiOrder, salsah-gui:guiElement, and salsah-gui:guiAttribute must appear in the correct places.
+        "not load an ontology containing a property that contains salsah-gui:guiOrder" ignore { // Consistency checks don't allow this in GraphDB.
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-guiorder-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            loadTestData(invalidOnto)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            }
+        }
+
+        "not load an ontology containing a cardinality that contains salsah-gui:guiElement" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/cardinality-with-guielement-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            loadTestData(invalidOnto)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            }
+        }
+
+        "not load an ontology containing a cardinality that contains salsah-gui:guiAttribute" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/cardinality-with-guiattribute-onto.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            loadTestData(invalidOnto)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+            }
+        }
     }
 }

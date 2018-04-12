@@ -3078,6 +3078,11 @@ class OntologyResponderV2 extends Responder {
 
         val otherPreds: Map[SmartIri, PredicateInfoV2] = getEntityPredicatesFromConstructResponse(propertyDefMap - OntologyConstants.Rdfs.SubPropertyOf)
 
+        // salsah-gui:guiOrder isn't allowed here.
+        if (otherPreds.contains(OntologyConstants.SalsahGui.GuiOrder.toSmartIri)) {
+            throw InconsistentTriplestoreDataException(s"Property $propertyIri contains salsah-gui:guiOrder")
+        }
+
         PropertyInfoContentV2(
             propertyIri = propertyIri,
             subPropertyOf = subPropertyOf,
@@ -3234,6 +3239,16 @@ class OntologyResponderV2 extends Responder {
                     case Some(Seq(IntLiteralV2(intVal))) => Some(intVal)
                     case None => None
                     case other => throw InconsistentTriplestoreDataException(s"Expected one integer object for predicate ${OntologyConstants.SalsahGui.GuiOrder} in blank node '${blankNodeID.value}', got $other")
+                }
+
+                // salsah-gui:guiElement and salsah-gui:guiAttribute aren't allowed here.
+
+                if (blankNode.contains(OntologyConstants.SalsahGui.GuiElementProp)) {
+                    throw InconsistentTriplestoreDataException(s"Class $classIri contains salsah-gui:guiElement in an owl:Restriction")
+                }
+
+                if (blankNode.contains(OntologyConstants.SalsahGui.GuiAttribute)) {
+                    throw InconsistentTriplestoreDataException(s"Class $classIri contains salsah-gui:guiAttribute in an owl:Restriction")
                 }
 
                 propertyIri.toSmartIri -> Cardinality.owlCardinality2KnoraCardinality(

@@ -38,6 +38,7 @@ New features:
 
 - A project-specific ontology can now be deleted via API v2.
 - Added OpenAPI / Swagger API documentation route
+- The Knora API server now checks the validity of ontologies on startup.
 
 Bugfixes:
 ---------
