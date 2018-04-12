@@ -26,6 +26,7 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.v1.responder.ontologymessages.{ConvertOntologyClassV2ToV1, StandoffEntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
@@ -123,11 +124,16 @@ class StandoffResponderV1 extends Responder {
     private def getMappingV1(mappingIri: IRI, userProfile: UserADM): Future[GetMappingResponseV1] = {
 
         for {
-            mappingResponse <- (responderManager ? GetMappingRequestV2(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV2]
+            mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV2]
+
+
         } yield GetMappingResponseV1(
             mappingIri = mappingResponse.mappingIri,
             mapping = mappingResponse.mapping,
-            standoffEntities = mappingResponse.standoffEntities
+            standoffEntities = StandoffEntityInfoGetResponseV1(
+                standoffClassInfoMap = ConvertOntologyClassV2ToV1.classInfoMapV2ToV1(mappingResponse.standoffEntities.standoffClassInfoMap),
+                standoffPropertyInfoMap = ConvertOntologyClassV2ToV1.propertyInfoMapV2ToV1(mappingResponse.standoffEntities.standoffPropertyInfoMap)
+            )
         )
 
     }

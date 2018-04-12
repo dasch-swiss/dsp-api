@@ -31,15 +31,13 @@ import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 import org.knora.webapi._
-import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse, SparqlUpdateRequest, SparqlUpdateResponse}
-import org.knora.webapi.messages.v1.responder.ontologymessages.{StandoffEntityInfoGetRequestV1, StandoffEntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
-import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, StandoffEntityInfoGetRequestV2, StandoffEntityInfoGetResponseV2}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, ReadClassInfoV2, StandoffEntityInfoGetRequestV2, StandoffEntityInfoGetResponseV2}
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.{ReadResourceV2, ReadResourcesSequenceV2, ReadValueV2, TextFileValueContentV2}
@@ -47,6 +45,7 @@ import org.knora.webapi.responders.v1.ValueUtilV1
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.XMLTagItem
@@ -549,7 +548,7 @@ class StandoffResponderV2 extends Responder {
 
                     for {
 
-                        entities: StandoffEntityInfoGetResponseV1 <- getStandoffEntitiesFromMappingV2(mapping, userProfile)
+                        entities: StandoffEntityInfoGetResponseV2 <- getStandoffEntitiesFromMappingV2(mapping, userProfile)
 
                     } yield GetMappingResponseV2(
                         mappingIri = mappingIri,
@@ -562,7 +561,7 @@ class StandoffResponderV2 extends Responder {
                     for {
                         mapping: MappingXMLtoStandoff <- getMappingFromTriplestore(mappingIri, userProfile)
 
-                        entities: StandoffEntityInfoGetResponseV1 <- getStandoffEntitiesFromMappingV2(mapping, userProfile)
+                        entities: StandoffEntityInfoGetResponseV2 <- getStandoffEntitiesFromMappingV2(mapping, userProfile)
 
                     } yield GetMappingResponseV2(
                         mappingIri = mappingIri,
@@ -679,20 +678,22 @@ class StandoffResponderV2 extends Responder {
       *
       * @param mappingXMLtoStandoff the mapping to be used.
       * @param userProfile          the client that made the request.
-      * @return a [[StandoffEntityInfoGetResponseV1]] holding information about standoff classes and properties.
+      * @return a [[StandoffEntityInfoGetResponseV2]] holding information about standoff classes and properties.
       */
-    private def getStandoffEntitiesFromMappingV2(mappingXMLtoStandoff: MappingXMLtoStandoff, userProfile: UserADM): Future[StandoffEntityInfoGetResponseV1] = {
+    private def getStandoffEntitiesFromMappingV2(mappingXMLtoStandoff: MappingXMLtoStandoff, userProfile: UserADM): Future[StandoffEntityInfoGetResponseV2] = {
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        // TODO: think about refactoring the mapping so it uses SmartIris (that would also have to include `StandoffProperties`)
 
         // invert the mapping so standoff class Iris become keys
         val mappingStandoffToXML: Map[IRI, XMLTagItem] = StandoffTagUtilV1.invertXMLToStandoffMapping(mappingXMLtoStandoff)
 
         // collect standoff class Iris from the mapping
-        val standoffTagIrisFromMapping = mappingStandoffToXML.keySet
+        val standoffTagIrisFromMapping: Set[IRI] = mappingStandoffToXML.keySet
 
         // collect all the standoff property Iris from the mapping
-        val standoffPropertyIrisFromMapping = mappingStandoffToXML.values.foldLeft(Set.empty[IRI]) {
+        val standoffPropertyIrisFromMapping: Set[IRI] = mappingStandoffToXML.values.foldLeft(Set.empty[IRI]) {
             (acc: Set[IRI], xmlTag: XMLTagItem) =>
                 acc ++ xmlTag.attributes.keySet
         }
@@ -705,53 +706,51 @@ class StandoffResponderV2 extends Responder {
         for {
 
             // request information about standoff classes that should be created
-            standoffClassEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffClassIris = standoffTagIrisFromMapping, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
-
-            // standoffClassEntities2: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(standoffClassIris = standoffTagIrisFromMapping.map(_.toSmartIri), requestingUser = userProfile)).mapTo[StandoffEntityInfoGetResponseV2]
+            standoffClassEntities: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(standoffClassIris = standoffTagIrisFromMapping.map(_.toSmartIri), requestingUser = userProfile)).mapTo[StandoffEntityInfoGetResponseV2]
 
             // check that the ontology responder returned the information for all the standoff classes it was asked for
             // if the ontology responder does not return a standoff class it was asked for, then this standoff class does not exist
-            _ = if (standoffTagIrisFromMapping != standoffClassEntities.standoffClassInfoMap.keySet) {
-                throw NotFoundException(s"the ontology responder could not find information about these standoff classes: ${(standoffTagIrisFromMapping -- standoffClassEntities.standoffClassInfoMap.keySet).mkString(", ")}")
+            _ = if (standoffTagIrisFromMapping.map(_.toSmartIri) != standoffClassEntities.standoffClassInfoMap.keySet) {
+                throw NotFoundException(s"the ontology responder could not find information about these standoff classes: ${(standoffTagIrisFromMapping.map(_.toSmartIri) -- standoffClassEntities.standoffClassInfoMap.keySet).mkString(", ")}")
             }
 
             // get the property Iris that are defined on the standoff classes returned by the ontology responder
-            standoffPropertyIrisFromOntologyResponder = standoffClassEntities.standoffClassInfoMap.foldLeft(Set.empty[IRI]) {
-                case (acc, (standoffClassIri, standoffClassEntity)) =>
+            standoffPropertyIrisFromOntologyResponder: Set[SmartIri] = standoffClassEntities.standoffClassInfoMap.foldLeft(Set.empty[SmartIri]) {
+                case (acc, (standoffClassIri, standoffClassEntity: ReadClassInfoV2)) =>
                     val props = standoffClassEntity.allCardinalities.keySet
                     acc ++ props
             }
 
             // request information about the standoff properties
-            standoffPropertyEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffPropertyIris = standoffPropertyIrisFromOntologyResponder, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
+            standoffPropertyEntities: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(standoffPropertyIris = standoffPropertyIrisFromOntologyResponder, requestingUser = userProfile)).mapTo[StandoffEntityInfoGetResponseV2]
 
             // check that the ontology responder returned the information for all the standoff properties it was asked for
             // if the ontology responder does not return a standoff property it was asked for, then this standoff property does not exist
-            propertyDefinitionsFromMappingFoundInOntology: Set[IRI] = standoffPropertyEntities.standoffPropertyInfoMap.keySet.intersect(standoffPropertyIrisFromMapping)
+            propertyDefinitionsFromMappingFoundInOntology: Set[SmartIri] = standoffPropertyEntities.standoffPropertyInfoMap.keySet.intersect(standoffPropertyIrisFromMapping.map(_.toSmartIri))
 
-            _ = if (standoffPropertyIrisFromMapping != propertyDefinitionsFromMappingFoundInOntology) {
+            _ = if (standoffPropertyIrisFromMapping.map(_.toSmartIri) != propertyDefinitionsFromMappingFoundInOntology) {
                 throw NotFoundException(s"the ontology responder could not find information about these standoff properties: " +
-                    s"${(standoffPropertyIrisFromMapping -- propertyDefinitionsFromMappingFoundInOntology).mkString(", ")}")
+                    s"${(standoffPropertyIrisFromMapping.map(_.toSmartIri) -- propertyDefinitionsFromMappingFoundInOntology).mkString(", ")}")
             }
 
             // check that for each standoff property defined in the mapping element for a standoff class, a corresponding cardinality exists in the ontology
             _ = mappingStandoffToXML.foreach {
                 case (standoffClass: IRI, xmlTag: XMLTagItem) =>
                     // collect all the standoff properties defined for this standoff class
-                    val standoffPropertiesForStandoffClass: Set[IRI] = xmlTag.attributes.keySet
+                    val standoffPropertiesForStandoffClass: Set[SmartIri] = xmlTag.attributes.keySet.map(_.toSmartIri)
 
                     // check that the current standoff class has cardinalities for all the properties defined
-                    val cardinalitiesFound = standoffClassEntities.standoffClassInfoMap(standoffClass).allCardinalities.keySet.intersect(standoffPropertiesForStandoffClass)
+                    val cardinalitiesFound = standoffClassEntities.standoffClassInfoMap(standoffClass.toSmartIri).allCardinalities.keySet.intersect(standoffPropertiesForStandoffClass)
 
                     if (standoffPropertiesForStandoffClass != cardinalitiesFound) {
                         throw NotFoundException(s"the following standoff properties have no cardinality for $standoffClass: ${(standoffPropertiesForStandoffClass -- cardinalitiesFound).mkString(", ")}")
                     }
 
                     // collect the required standoff properties for the standoff class
-                    val requiredPropsForClass = standoffClassEntities.standoffClassInfoMap(standoffClass).allCardinalities.filter {
-                        case (property: IRI, card: KnoraCardinalityInfo) =>
+                    val requiredPropsForClass: Set[SmartIri] = standoffClassEntities.standoffClassInfoMap(standoffClass.toSmartIri).allCardinalities.filter {
+                        case (property: SmartIri, card: KnoraCardinalityInfo) =>
                             card.cardinality == Cardinality.MustHaveOne || card.cardinality == Cardinality.MustHaveSome
-                    }.keySet -- StandoffProperties.systemProperties -- StandoffProperties.dataTypeProperties
+                    }.keySet -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.dataTypeProperties.map(_.toSmartIri)
 
                     // check that all the required standoff properties exist in the mapping
                     if (standoffPropertiesForStandoffClass.intersect(requiredPropsForClass) != requiredPropsForClass) {
@@ -759,7 +758,7 @@ class StandoffResponderV2 extends Responder {
                     }
 
                     // check if the standoff class's data type is correct in the mapping
-                    standoffClassEntities.standoffClassInfoMap(standoffClass).standoffDataType match {
+                    standoffClassEntities.standoffClassInfoMap(standoffClass.toSmartIri).standoffDataType match {
                         case Some(dataType: StandoffDataTypeClasses.Value) =>
                             // check if this corresponds to the datatype in the mapping
                             val dataTypeFromMapping: XMLStandoffDataTypeClass = xmlTag.tagItem.mapping.dataType.getOrElse(throw InvalidStandoffException(s"no data type provided for $standoffClass, but $dataType required"))
@@ -775,7 +774,7 @@ class StandoffResponderV2 extends Responder {
             }
 
 
-        } yield StandoffEntityInfoGetResponseV1(
+        } yield StandoffEntityInfoGetResponseV2(
             standoffClassInfoMap = standoffClassEntities.standoffClassInfoMap,
             standoffPropertyInfoMap = standoffPropertyEntities.standoffPropertyInfoMap
         )

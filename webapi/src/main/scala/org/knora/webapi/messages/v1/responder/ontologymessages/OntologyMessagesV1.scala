@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -426,6 +426,31 @@ class PropertyInfoV1(propertyInfoV2: ReadPropertyInfoV2) extends EntityInfoV1 {
       * [[OntologyConstants.KnoraBase.StandoffTagHasInternalReference]].
       */
     def isStandoffInternalReferenceProperty: Boolean = propertyInfoV2.isStandoffInternalReferenceProperty
+}
+
+/**
+  * Methods to convert v2 ontology classes to v1.
+  */
+object ConvertOntologyClassV2ToV1 {
+
+    /**
+      * Wraps OWL class information from `OntologyResponderV2` for use in API v1.
+      */
+    def classInfoMapV2ToV1(classInfoMap: Map[SmartIri, ReadClassInfoV2]): Map[IRI, ClassInfoV1] = {
+        classInfoMap.map {
+            case (smartIri, classInfoV2) => smartIri.toString -> new ClassInfoV1(classInfoV2)
+        }
+    }
+
+    /**
+      * Wraps OWL property information from `OntologyResponderV2` for use in API v1.
+      */
+    def propertyInfoMapV2ToV1(propertyInfoMap: Map[SmartIri, ReadPropertyInfoV2]): Map[IRI, PropertyInfoV1] = {
+        propertyInfoMap.map {
+            case (smartIri, propertyInfoV2) => smartIri.toString -> new PropertyInfoV1(propertyInfoV2)
+        }
+    }
+
 }
 
 /**

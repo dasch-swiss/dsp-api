@@ -25,6 +25,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.{MappingXMLtoStandoff, StandoffResponderRequestV1}
+import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.{KnoraJsonLDRequestReaderV2, KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDObject, JsonLDString}
@@ -126,7 +127,7 @@ case class GetMappingRequestV2(mappingIri: IRI, userProfile: UserADM) extends St
   * @param mapping          the requested mapping.
   * @param standoffEntities the standoff entities referred to in the mapping.
   */
-case class GetMappingResponseV2(mappingIri: IRI, mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1) // TODO: there should be a route to obtain a mapping
+case class GetMappingResponseV2(mappingIri: IRI, mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV2) // TODO: there should be a route to obtain a mapping
 
 /**
   * Represents a request that gets an XSL Transformation represented by a `knora-base:XSLTransformation`.
