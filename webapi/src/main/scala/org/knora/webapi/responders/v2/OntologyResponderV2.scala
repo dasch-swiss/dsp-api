@@ -361,9 +361,9 @@ class OntologyResponderV2 extends Responder {
             case (propertyIri, readPropertyInfo) =>
                 val allSuperPropertyIris: Set[SmartIri] = allSubPropertyOfRelations.getOrElse(propertyIri, Set.empty[SmartIri])
 
-                // Each property's subject class constraint, if provided, must be a subclass of the subject class constraints of all its base properties.
                 readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri) match {
                     case Some(subjectClassConstraint) =>
+                        // Each property's subject class constraint, if provided, must be a subclass of the subject class constraints of all its base properties.
                         checkPropertyConstraint(
                             cacheData = ontologyCacheData,
                             internalPropertyIri = propertyIri,
@@ -374,12 +374,22 @@ class OntologyResponderV2 extends Responder {
                             errorFun = { msg: String => throw InconsistentTriplestoreDataException(msg) }
                         )
 
+                        // If the property is defined in a project-specific ontology, its subject class constraint, if provided, must be a Knora resource or standoff class.
+                        if (!propertyIri.isKnoraBuiltInDefinitionIri) {
+                            val baseClassesOfSubjectClassConstraint = allSubClassOfRelations(subjectClassConstraint)
+
+                            if (!(baseClassesOfSubjectClassConstraint.contains(OntologyConstants.KnoraBase.Resource.toSmartIri) ||
+                                baseClassesOfSubjectClassConstraint.contains(OntologyConstants.KnoraBase.StandoffTag.toSmartIri))) {
+                                throw InconsistentTriplestoreDataException(s"Property $propertyIri is defined in a project-specific ontology, but its knora-base:subjectClassConstraint, $subjectClassConstraint, is not a subclass of knora-base:Resource or knora-base:StandoffTag")
+                            }
+                        }
+
                     case None => ()
                 }
 
-                // Each property's object class constraint, if provided, must be a subclass of the object class constraints of all its base properties.
                 readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri) match {
                     case Some(objectClassConstraint) =>
+                        // Each property's object class constraint, if provided, must be a subclass of the object class constraints of all its base properties.
                         checkPropertyConstraint(
                             cacheData = ontologyCacheData,
                             internalPropertyIri = propertyIri,
@@ -518,13 +528,13 @@ class OntologyResponderV2 extends Responder {
                 // Make sure there is a link value property for each link property.
                 val missingLinkValueProps = linkPropsInClass.map(_.fromLinkPropToLinkValueProp) -- linkValuePropsInClass
                 if (missingLinkValueProps.nonEmpty) {
-                    throw InconsistentTriplestoreDataException(s"Resource class $classIri has cardinalities for one or more link properties without corresponding link value properties. The missing link value property or properties: ${missingLinkValueProps.mkString(", ")}")
+                    throw InconsistentTriplestoreDataException(s"Resource class $classIri has cardinalities for one or more link properties without corresponding link value properties. The missing (or incorrectly defined) property or properties: ${missingLinkValueProps.mkString(", ")}")
                 }
 
                 // Make sure there is a link property for each link value property.
                 val missingLinkProps = linkValuePropsInClass.map(_.fromLinkValuePropToLinkProp) -- linkPropsInClass
                 if (missingLinkProps.nonEmpty) {
-                    throw InconsistentTriplestoreDataException(s"Resource class $classIri has cardinalities for one or more link value properties without corresponding link properties. The missing link property or properties: ${missingLinkProps.mkString(", ")}")
+                    throw InconsistentTriplestoreDataException(s"Resource class $classIri has cardinalities for one or more link value properties without corresponding link properties. The missing (or incorrectly defined) property or properties: ${missingLinkProps.mkString(", ")}")
                 }
 
                 // Make maps of the class's direct and inherited cardinalities.
@@ -705,8 +715,8 @@ class OntologyResponderV2 extends Responder {
                 // If the property is defined in a project-specific ontology and is a Knora resource property (a subproperty of knora-base:hasValue or knora-base:hasLinkTo), do the following checks.
                 if (!propertyIri.isKnoraBuiltInDefinitionIri && isResourceProp) {
                     // The property must be a subproperty of knora-base:hasValue or knora-base:hasLinkTo, but not both.
-                    if (!(isValueProp ^ isLinkProp)) {
-                        throw InconsistentTriplestoreDataException(s"Property $propertyIri must be a subproperty of knora-base:hasValue or knora-base:hasLinkTo (but not both)")
+                    if (isValueProp && isLinkProp) {
+                        throw InconsistentTriplestoreDataException(s"Property $propertyIri cannot be a subproperty of both knora-base:hasValue and knora-base:hasLinkTo")
                     }
 
                     // It can't be a subproperty of knora-base:hasFileValue.
