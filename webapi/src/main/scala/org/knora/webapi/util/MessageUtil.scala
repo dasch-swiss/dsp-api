@@ -231,7 +231,7 @@ object MessageUtil {
     )
 
     private val searchForTitleWord = FulltextSearchGetRequestV1(
-        filterByRestype = Some("http://www.knora.org/ontology/incunabula#book"),
+        filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         filterByProject = None,
         searchValue = "Zeitglöcklein",
         startAt = 0,
@@ -258,7 +258,7 @@ object MessageUtil {
         showNRows = 25,
         startAt = 0,
         filterByProject = None,
-        filterByRestype = Some("http://www.knora.org/ontology/incunabula#book"),
+        filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         searchValue = "Zeitglöcklein"
     )
 

@@ -104,7 +104,7 @@ object OntologyConstants {
 
     object KnoraInternal {
         // The start and end of an internal Knora ontology IRI.
-        val InternalOntologyStart = "http://www.knora.org/ontology/"
+        val InternalOntologyStart = "http://www.knora.org/ontology"
     }
 
     /**
@@ -119,7 +119,7 @@ object OntologyConstants {
 
     object KnoraBase {
         val KnoraBaseOntologyLabel: String = "knora-base"
-        val KnoraBaseOntologyIri: IRI = KnoraInternal.InternalOntologyStart + KnoraBaseOntologyLabel
+        val KnoraBaseOntologyIri: IRI = KnoraInternal.InternalOntologyStart + "/" + KnoraBaseOntologyLabel
 
         val KnoraBasePrefix: String = KnoraBaseOntologyLabel + ":"
         val KnoraBasePrefixExpansion: IRI = KnoraBaseOntologyIri + "#"
@@ -483,7 +483,7 @@ object OntologyConstants {
 
     object Standoff {
         val StandoffOntologyLabel: String = "standoff"
-        val StandoffOntologyIri: IRI = KnoraInternal.InternalOntologyStart + StandoffOntologyLabel
+        val StandoffOntologyIri: IRI = KnoraInternal.InternalOntologyStart + "/" + StandoffOntologyLabel
         val StandoffPrefixExpansion: IRI = StandoffOntologyIri + "#"
 
         val StandoffRootTag: IRI = StandoffPrefixExpansion + "StandoffRootTag"
@@ -510,7 +510,7 @@ object OntologyConstants {
 
     object SalsahGui {
         val SalsahGuiOntologyLabel: String = "salsah-gui"
-        val SalsahGuiOntologyIri: IRI = KnoraInternal.InternalOntologyStart + SalsahGuiOntologyLabel
+        val SalsahGuiOntologyIri: IRI = KnoraInternal.InternalOntologyStart + "/" + SalsahGuiOntologyLabel
         val SalsahGuiPrefixExpansion: IRI = SalsahGuiOntologyIri + "#"
 
         val GuiAttribute: IRI = SalsahGuiPrefixExpansion + "guiAttribute"

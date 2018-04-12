@@ -69,7 +69,7 @@ class ValuesV1R2RSpec extends R2RSpec {
     private val boringComment = "This is a boring comment."
 
     private val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     private val anythingUser = SharedTestDataV1.anythingUser1
@@ -89,7 +89,7 @@ class ValuesV1R2RSpec extends R2RSpec {
                 """
                   |{
                   |    "res_id": "http://data.knora.org/a-thing",
-                  |    "prop": "http://www.knora.org/ontology/anything#hasInteger",
+                  |    "prop": "http://www.knora.org/ontology/0001/anything#hasInteger",
                   |    "int_value": 1234
                   |}
                 """.stripMargin
@@ -107,7 +107,7 @@ class ValuesV1R2RSpec extends R2RSpec {
                 """
                   |{
                   |    "res_id": "http://data.knora.org/a-thing",
-                  |    "prop": "http://www.knora.org/ontology/anything#hasInteger",
+                  |    "prop": "http://www.knora.org/ontology/0001/anything#hasInteger",
                   |    "int_value": 4321
                   |}
                 """.stripMargin
@@ -128,14 +128,14 @@ class ValuesV1R2RSpec extends R2RSpec {
 
 
         "get a link value" in {
-            Get(s"/v1/links/${URLEncoder.encode("http://data.knora.org/contained-thing-1", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/anything#isPartOfOtherThing", "UTF-8")}/${URLEncoder.encode("http://data.knora.org/containing-thing", "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
+            Get(s"/v1/links/${URLEncoder.encode("http://data.knora.org/contained-thing-1", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/0001/anything#isPartOfOtherThing", "UTF-8")}/${URLEncoder.encode("http://data.knora.org/containing-thing", "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val linkValue = AkkaHttpUtils.httpResponseToJson(response).fields("value").asJsObject.fields
 
                 assert(
                     linkValue("subjectIri").asInstanceOf[JsString].value == "http://data.knora.org/contained-thing-1" &&
-                        linkValue("predicateIri").asInstanceOf[JsString].value == "http://www.knora.org/ontology/anything#isPartOfOtherThing" &&
+                        linkValue("predicateIri").asInstanceOf[JsString].value == "http://www.knora.org/ontology/0001/anything#isPartOfOtherThing" &&
                         linkValue("objectIri").asInstanceOf[JsString].value == "http://data.knora.org/containing-thing" &&
                         linkValue("referenceCount").asInstanceOf[JsNumber].value.toInt == 1
                 )
@@ -147,7 +147,7 @@ class ValuesV1R2RSpec extends R2RSpec {
                 """
                   |{
                   |    "res_id": "http://data.knora.org/a-thing",
-                  |    "prop": "http://www.knora.org/ontology/anything#hasText",
+                  |    "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   |    "richtext_value": {"utf8str":""}
                   |}
                 """.stripMargin
@@ -170,7 +170,7 @@ class ValuesV1R2RSpec extends R2RSpec {
                 s"""
                   |{
                   |    "res_id": "http://data.knora.org/a-thing",
-                  |    "prop": "http://www.knora.org/ontology/anything#hasText",
+                  |    "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   |    "richtext_value": {"xml": ${xmlStr.toJson.compactPrint}, "mapping_id": "$mappingIri"}
                   |}
                 """.stripMargin
@@ -199,7 +199,7 @@ class ValuesV1R2RSpec extends R2RSpec {
                 s"""
                   |{
                   |    "res_id": "http://data.knora.org/a-thing",
-                  |    "prop": "http://www.knora.org/ontology/anything#hasText",
+                  |    "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   |    "richtext_value": {"xml": ${xmlStr.toJson.compactPrint}, "mapping_id": "$mappingIri"}
                   |}
                 """.stripMargin
@@ -217,7 +217,7 @@ class ValuesV1R2RSpec extends R2RSpec {
         }
 
         "get the version history of a value" in {
-            Get(s"/v1/values/history/${URLEncoder.encode("http://data.knora.org/a-thing", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/anything#hasText", "UTF-8")}/${URLEncoder.encode(textValueIri.get, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
+            Get(s"/v1/values/history/${URLEncoder.encode("http://data.knora.org/a-thing", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/0001/anything#hasText", "UTF-8")}/${URLEncoder.encode(textValueIri.get, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val versionHistory: JsValue = AkkaHttpUtils.httpResponseToJson(response).fields("valueVersions")
@@ -242,7 +242,7 @@ class ValuesV1R2RSpec extends R2RSpec {
                 """
                   |{
                   |    "res_id": "http://data.knora.org/a-thing",
-                  |    "prop": "http://www.knora.org/ontology/anything#hasOtherThing",
+                  |    "prop": "http://www.knora.org/ontology/0001/anything#hasOtherThing",
                   |    "link_value": "http://data.knora.org/another-thing"
                   |}
                 """.stripMargin
@@ -266,7 +266,7 @@ class ValuesV1R2RSpec extends R2RSpec {
                 s"""
                    |{
                    |    "res_id": "http://data.knora.org/a-thing",
-                   |    "prop": "http://www.knora.org/ontology/anything#hasOtherThing",
+                   |    "prop": "http://www.knora.org/ontology/0001/anything#hasOtherThing",
                    |    "link_value": "http://data.knora.org/another-thing",
                    |    "comment":"$boringComment"
                    |}
@@ -281,7 +281,7 @@ class ValuesV1R2RSpec extends R2RSpec {
         }
 
         "get a link value with a comment" in {
-            Get(s"/v1/links/${URLEncoder.encode("http://data.knora.org/a-thing", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/anything#hasOtherThing", "UTF-8")}/${URLEncoder.encode("http://data.knora.org/another-thing", "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
+            Get(s"/v1/links/${URLEncoder.encode("http://data.knora.org/a-thing", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/0001/anything#hasOtherThing", "UTF-8")}/${URLEncoder.encode("http://data.knora.org/another-thing", "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val responseObj = AkkaHttpUtils.httpResponseToJson(response).fields
@@ -290,7 +290,7 @@ class ValuesV1R2RSpec extends R2RSpec {
 
                 assert(
                     linkValue("subjectIri").asInstanceOf[JsString].value == "http://data.knora.org/a-thing" &&
-                        linkValue("predicateIri").asInstanceOf[JsString].value == "http://www.knora.org/ontology/anything#hasOtherThing" &&
+                        linkValue("predicateIri").asInstanceOf[JsString].value == "http://www.knora.org/ontology/0001/anything#hasOtherThing" &&
                         linkValue("objectIri").asInstanceOf[JsString].value == "http://data.knora.org/another-thing" &&
                         linkValue("referenceCount").asInstanceOf[JsNumber].value.toInt == 1 &&
                         comment == boringComment

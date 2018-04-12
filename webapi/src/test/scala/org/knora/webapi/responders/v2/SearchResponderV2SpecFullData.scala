@@ -21,7 +21,7 @@ class SearchResponderV2SpecFullData {
         resources = Vector(
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -29,13 +29,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/00505cf0a803/values/549527258a26"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "p7v",
                 resourceIri = "http://data.knora.org/00505cf0a803"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -43,13 +43,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/00c650d23303/values/af68552c3626"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "d4v",
                 resourceIri = "http://data.knora.org/00c650d23303"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -57,13 +57,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/02abe871e903/values/1852a8aa8526"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "o5v",
                 resourceIri = "http://data.knora.org/02abe871e903"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -71,13 +71,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/04416f64ef03/values/6ce3c0ef8b26"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "q2v",
                 resourceIri = "http://data.knora.org/04416f64ef03"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -85,13 +85,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/04f25db73f03/values/aa8971af4d26"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "g6v",
                 resourceIri = "http://data.knora.org/04f25db73f03"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -99,13 +99,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/05c7acceb703/values/5f23f3171d26"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "a1r; Titelblatt, recto",
                 resourceIri = "http://data.knora.org/05c7acceb703"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -113,13 +113,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/075d33c1bd03/values/77718ce21e26"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "b6r",
                 resourceIri = "http://data.knora.org/075d33c1bd03"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -127,13 +127,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/0b8940a6c903/values/f752218c3b26"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "e8r",
                 resourceIri = "http://data.knora.org/0b8940a6c903"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -141,13 +141,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/0d1fc798cf03/values/e75f1e764d26"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "g5r",
                 resourceIri = "http://data.knora.org/0d1fc798cf03"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -155,13 +155,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/0d5ac1099503/values/4dcdbebc7126"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "k4r",
                 resourceIri = "http://data.knora.org/0d5ac1099503"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -169,13 +169,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/0fb54d8bd503/values/9a966e995f26"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "i2r",
                 resourceIri = "http://data.knora.org/0fb54d8bd503"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -183,13 +183,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/0ff047fc9a03/values/b9ac70cc7926"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "m1r",
                 resourceIri = "http://data.knora.org/0ff047fc9a03"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -197,13 +197,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/114bd47ddb03/values/c99f73e26726"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "k7r",
                 resourceIri = "http://data.knora.org/114bd47ddb03"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -211,13 +211,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/14dd8cbc3403/values/7e39f54a3726"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "d6v",
                 resourceIri = "http://data.knora.org/14dd8cbc3403"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -225,13 +225,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/167313af3a03/values/1ab5d9ef4226"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "f3v",
                 resourceIri = "http://data.knora.org/167313af3a03"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -239,13 +239,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/1b746fabbe03/values/8318d9c71f26"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "b8r",
                 resourceIri = "http://data.knora.org/1b746fabbe03"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -253,13 +253,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/1baf691c8403/values/2882816d3a26"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "e7r",
                 resourceIri = "http://data.knora.org/1baf691c8403"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -267,13 +267,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/1d0af69dc403/values/4e9dc2b53326"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "d5r",
                 resourceIri = "http://data.knora.org/1d0af69dc403"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -281,13 +281,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/1fa07c90ca03/values/c623c1aa3c26"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "f2r",
                 resourceIri = "http://data.knora.org/1fa07c90ca03"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -295,13 +295,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/1fdb76019003/values/118a3f426d26"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "i1r",
                 resourceIri = "http://data.knora.org/1fdb76019003"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -309,13 +309,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/21360383d003/values/b630be944e26"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "g7r",
                 resourceIri = "http://data.knora.org/21360383d003"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -323,13 +323,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/2171fdf39503/values/59740ba27226"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "k6r",
                 resourceIri = "http://data.knora.org/2171fdf39503"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -337,13 +337,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/230784e69b03/values/4ba763247b26"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "m3r",
                 resourceIri = "http://data.knora.org/230784e69b03"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -351,13 +351,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/23427e576103/values/c32d62198426"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "q8r",
                 resourceIri = "http://data.knora.org/23427e576103"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#description" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -365,7 +365,7 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/23cc8975d603/values/a63dbb7e6026"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#page",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page",
                 label = "i4r",
                 resourceIri = "http://data.knora.org/23cc8975d603"
             )
@@ -377,7 +377,7 @@ class SearchResponderV2SpecFullData {
     val fulltextSearchForDinge = ReadResourcesSequenceV2(
         resources = Vector(ReadResourceV2(
             resourceInfos = Map(),
-            values = Map("http://www.knora.org/ontology/anything#hasText" -> Vector(
+            values = Map("http://www.knora.org/ontology/0001/anything#hasText" -> Vector(
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
@@ -1011,7 +1011,7 @@ class SearchResponderV2SpecFullData {
                     valueIri = "http://data.knora.org/a-thing-with-text-values/values/2"
                 )
             )),
-            resourceClass = "http://www.knora.org/ontology/anything#Thing",
+            resourceClass = "http://www.knora.org/ontology/0001/anything#Thing",
             label = "Ein Ding f\u00FCr jemanden, dem die Dinge gefallen",
             resourceIri = "http://data.knora.org/a-thing-with-text-values"
         )),
@@ -1051,7 +1051,7 @@ class SearchResponderV2SpecFullData {
         resources = Vector(
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#title" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#title" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -1059,13 +1059,13 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/c5058f3a/values/c3295339"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#book",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#book",
                 label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
                 resourceIri = "http://data.knora.org/c5058f3a"
             ),
             ReadResourceV2(
                 resourceInfos = Map(),
-                values = Map("http://www.knora.org/ontology/incunabula#title" -> Vector(ReadValueV2(
+                values = Map("http://www.knora.org/ontology/0803/incunabula#title" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
                         standoff = None,
@@ -1073,7 +1073,7 @@ class SearchResponderV2SpecFullData {
                     ),
                     valueIri = "http://data.knora.org/ff17e5ef9601/values/d9a522845006"
                 ))),
-                resourceClass = "http://www.knora.org/ontology/incunabula#book",
+                resourceClass = "http://www.knora.org/ontology/0803/incunabula#book",
                 label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
                 resourceIri = "http://data.knora.org/ff17e5ef9601"
             )

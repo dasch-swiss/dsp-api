@@ -11,7 +11,7 @@
 <http://data.knora.org/482a33d65c36> a incunabula:Sideband ;
 	incunabula:description <http://data.knora.org/482a33d65c36/values/a4167701aa4d03> ;
 	incunabula:sbTitle <http://data.knora.org/482a33d65c36/values/25279d8dcd8e01> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
 	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:creationDate "2016-03-02T15:05:55Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
@@ -74,7 +74,7 @@
 	incunabula:publoc <http://data.knora.org/c5058f3a/values/0ca74ce5> ;
 	incunabula:title <http://data.knora.org/c5058f3a/values/c3295339> ;
 	incunabula:url <http://data.knora.org/c5058f3a/values/10e00c7acc2704> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;

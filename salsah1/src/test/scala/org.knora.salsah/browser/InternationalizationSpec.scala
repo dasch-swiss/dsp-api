@@ -43,7 +43,7 @@ class InternationalizationSpec extends SalsahSpec {
     private val rdfDataObjectsJsonList: String =
         """
             [
-                {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/anything"}
+                {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/0001/anything"}
             ]
         """
 

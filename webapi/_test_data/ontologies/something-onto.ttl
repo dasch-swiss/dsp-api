@@ -5,15 +5,16 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
-@prefix anything: <http://www.knora.org/ontology/anything#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 
-@base <http://www.knora.org/ontology/0002/something> .
+@prefix anything: <http://www.knora.org/ontology/0001/anything#> .
+
+@base <http://www.knora.org/ontology/0001/something> .
 
 # A trivial ontology, based on anything-onto.ttl, used only for testing Knora.
 
-@prefix : <http://www.knora.org/ontology/0002/something#> .
-<http://www.knora.org/ontology/0002/something> rdf:type owl:Ontology ;
+@prefix : <http://www.knora.org/ontology/0001/something#> .
+<http://www.knora.org/ontology/0001/something> rdf:type owl:Ontology ;
     rdfs:label "The something ontology" ;
     knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
 

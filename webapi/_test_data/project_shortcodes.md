@@ -5,7 +5,6 @@
 
    - system: `0000`
    - anything: `0001`
-   - something: `0002`
    - images: `00FF`
 
    

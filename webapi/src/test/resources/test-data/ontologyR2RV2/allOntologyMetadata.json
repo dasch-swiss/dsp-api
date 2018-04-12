@@ -1,8 +1,8 @@
 {
   "knora-api:hasOntologies" : [ {
-    "@id" : "http://0.0.0.0:3333/ontology/00FE/dokubib/v2",
+    "@id" : "http://0.0.0.0:3333/ontology/0804/dokubib/v2",
     "@type" : "http://www.w3.org/2002/07/owl#Ontology",
-    "knora-api:attachedToProject" : "http://rdfh.ch/projects/00FE",
+    "knora-api:attachedToProject" : "http://rdfh.ch/projects/0804",
     "rdfs:label" : "The dokubib ontology"
   }, {
     "@id" : "http://0.0.0.0:3333/ontology/00FF/images/v2",
@@ -33,7 +33,7 @@
   }, {
     "@id" : "http://0.0.0.0:3333/ontology/incunabula/v2",
     "@type" : "http://www.w3.org/2002/07/owl#Ontology",
-    "knora-api:attachedToProject" : "http://rdfh.ch/projects/77275339",
+    "knora-api:attachedToProject" : "http://rdfh.ch/projects/0803",
     "rdfs:label" : "The incunabula ontology"
   }, {
     "@id" : "http://0.0.0.0:3333/ontology/something/v2",

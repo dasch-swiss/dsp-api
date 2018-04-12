@@ -76,7 +76,7 @@ class SipiV1R2RSpec extends R2RSpec {
     private val testPass = "test"
 
     val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
 
@@ -88,27 +88,27 @@ class SipiV1R2RSpec extends R2RSpec {
     object RequestParams {
 
         val createResourceParams = CreateResourceApiRequestV1(
-            restype_id = "http://www.knora.org/ontology/incunabula#page",
+            restype_id = "http://www.knora.org/ontology/0803/incunabula#page",
             properties = Map(
-                "http://www.knora.org/ontology/incunabula#pagenum" -> Seq(CreateResourceValueV1(
+                "http://www.knora.org/ontology/0803/incunabula#pagenum" -> Seq(CreateResourceValueV1(
                     richtext_value = Some(CreateRichtextV1(
                         utf8str = Some("test_page")
                     ))
                 )),
-                "http://www.knora.org/ontology/incunabula#origname" -> Seq(CreateResourceValueV1(
+                "http://www.knora.org/ontology/0803/incunabula#origname" -> Seq(CreateResourceValueV1(
                     richtext_value = Some(CreateRichtextV1(
                         utf8str = Some("test")
                     ))
                 )),
-                "http://www.knora.org/ontology/incunabula#partOf" -> Seq(CreateResourceValueV1(
+                "http://www.knora.org/ontology/0803/incunabula#partOf" -> Seq(CreateResourceValueV1(
                     link_value = Some("http://data.knora.org/5e77e98d2603")
                 )),
-                "http://www.knora.org/ontology/incunabula#seqnum" -> Seq(CreateResourceValueV1(
+                "http://www.knora.org/ontology/0803/incunabula#seqnum" -> Seq(CreateResourceValueV1(
                     int_value = Some(999)
                 ))
             ),
             label = "test",
-            project_id = "http://rdfh.ch/projects/77275339"
+            project_id = "http://rdfh.ch/projects/0803"
         )
 
         val pathToFile = "_test_data/test_route/images/Chlaus.jpg"

@@ -190,9 +190,9 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     // The default timeout for receiving reply messages from actors.
@@ -336,7 +336,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 startAt = 0,
                 showNRows = 25,
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#page")
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page")
             )
 
             expectMsgPF(timeout) {
@@ -380,8 +380,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("Zeitglöcklein"),
                 compareProps = Vector(SearchComparisonOperatorV1.LIKE),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#title"),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#book"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#title"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
                 startAt = 0,
                 showNRows = 25
             )
@@ -396,8 +396,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("Zeitglöcklein"),
                 compareProps = Vector(SearchComparisonOperatorV1.MATCH),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#title"),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#book"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#title"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
                 startAt = 0,
                 showNRows = 25
             )
@@ -411,8 +411,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("Zeitglöcklein", "JULIAN:1490"),
                 compareProps = Vector(SearchComparisonOperatorV1.MATCH, SearchComparisonOperatorV1.EQ),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#title", "http://www.knora.org/ontology/incunabula#pubdate"),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#book"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#title", "http://www.knora.org/ontology/0803/incunabula#pubdate"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
                 startAt = 0,
                 showNRows = 25
             )
@@ -428,8 +428,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("+Lebens -walfart"),
                 compareProps = Vector(SearchComparisonOperatorV1.MATCH_BOOLEAN),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#title"),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#book"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#title"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
                 startAt = 0,
                 showNRows = 25
             )
@@ -452,8 +452,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("Zeitglöcklein"),
                 compareProps = Vector(SearchComparisonOperatorV1.NOT_LIKE),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#title"),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#book"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#title"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
                 startAt = 0,
                 showNRows = 25
             )
@@ -469,8 +469,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("Zeitglöcklein des Lebens und Leidens Christi"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#title"),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#book"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#title"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
                 startAt = 0,
                 showNRows = 25
             )
@@ -484,8 +484,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("Zeitglöcklein des Lebens und Leidens Christi"),
                 compareProps = Vector(SearchComparisonOperatorV1.NOT_EQ),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#title"),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#book"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#title"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
                 startAt = 0,
                 showNRows = 25
             )
@@ -502,7 +502,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 searchValue = Vector(),
                 compareProps = Vector(),
                 propertyIri = Vector(),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#book"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
                 startAt = 0,
                 showNRows = 25
             )
@@ -518,8 +518,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector(""),
                 compareProps = Vector(SearchComparisonOperatorV1.EXISTS),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#title"),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#book"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#title"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
                 startAt = 0,
                 showNRows = 25
             )
@@ -535,8 +535,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("1"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#seqnum"),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#page"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#seqnum"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
                 startAt = 0,
                 showNRows = 25
             )
@@ -552,8 +552,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("450"),
                 compareProps = Vector(SearchComparisonOperatorV1.GT),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#seqnum"),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#page"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#seqnum"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
                 startAt = 0,
                 showNRows = 100
             )
@@ -568,7 +568,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("450"),
                 compareProps = Vector(SearchComparisonOperatorV1.GT),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#seqnum"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#seqnum"),
                 filterByRestype = Some("http://www.knora.org/ontology/knora-base#Representation"),
                 startAt = 0,
                 showNRows = 100
@@ -585,8 +585,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("JULIAN:1495-01"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#pubdate"),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#book"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#pubdate"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
                 startAt = 0,
                 showNRows = 25
             )
@@ -602,8 +602,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("JULIAN:1495-01"),
                 compareProps = Vector(SearchComparisonOperatorV1.GT_EQ),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#pubdate"),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#book"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#pubdate"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
                 startAt = 0,
                 showNRows = 25
             )
@@ -619,8 +619,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("JULIAN:1495-12"),
                 compareProps = Vector(SearchComparisonOperatorV1.LT_EQ),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#pubdate"),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#book"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#pubdate"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
                 startAt = 0,
                 showNRows = 25
             )
@@ -636,8 +636,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("http://data.knora.org/c5058f3a"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#partOf"),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#page"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#partOf"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
                 startAt = 0,
                 showNRows = 500
             )
@@ -653,8 +653,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("1", ""),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#seqnum", "http://www.knora.org/ontology/incunabula#partOf"),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#page"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#seqnum", "http://www.knora.org/ontology/0803/incunabula#partOf"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
                 startAt = 0,
                 showNRows = 25
             )
@@ -669,7 +669,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("1", ""),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#seqnum", "http://www.knora.org/ontology/knora-base#isPartOf"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#seqnum", "http://www.knora.org/ontology/knora-base#isPartOf"),
                 filterByRestype = Some("http://www.knora.org/ontology/knora-base#Representation"),
                 startAt = 0,
                 showNRows = 25
@@ -686,8 +686,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("http://data.knora.org/c5058f3a", ""),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#partOf", "http://www.knora.org/ontology/incunabula#seqnum"),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#page"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#partOf", "http://www.knora.org/ontology/0803/incunabula#seqnum"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
                 startAt = 0,
                 showNRows = 500
             )
@@ -720,8 +720,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("http://data.knora.org/c5058f3a", "200", "a1r, Titelblatt"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.LT_EQ, SearchComparisonOperatorV1.NOT_EQ),
-                propertyIri = Vector("http://www.knora.org/ontology/incunabula#partOf", "http://www.knora.org/ontology/incunabula#seqnum", "http://www.knora.org/ontology/incunabula#pagenum"),
-                filterByRestype = Some("http://www.knora.org/ontology/incunabula#page"),
+                propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#partOf", "http://www.knora.org/ontology/0803/incunabula#seqnum", "http://www.knora.org/ontology/0803/incunabula#pagenum"),
+                filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
                 startAt = 0,
                 showNRows = 300
             )
@@ -792,7 +792,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! FulltextSearchGetRequestV1(
                 searchValue = "die Dinge",
-                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 userProfile = anythingUser1,
                 startAt = 0,
                 showNRows = 25
@@ -806,7 +806,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! FulltextSearchGetRequestV1(
                 searchValue = "die Dinge",
-                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 userProfile = anythingUser2,
                 startAt = 0,
                 showNRows = 25
@@ -820,7 +820,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! FulltextSearchGetRequestV1(
                 searchValue = "für jemanden",
-                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 userProfile = anythingUser2,
                 startAt = 0,
                 showNRows = 25
@@ -835,7 +835,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! FulltextSearchGetRequestV1(
                 searchValue = "alles für mich",
-                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 userProfile = anythingUser1,
                 startAt = 0,
                 showNRows = 25
@@ -849,7 +849,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! FulltextSearchGetRequestV1(
                 searchValue = "alles für mich",
-                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 userProfile = anythingUser2,
                 startAt = 0,
                 showNRows = 25
@@ -863,7 +863,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! FulltextSearchGetRequestV1(
                 searchValue = "die Dinge",
-                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 userProfile = incunabulaUser,
                 startAt = 0,
                 showNRows = 25
@@ -875,7 +875,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! FulltextSearchGetRequestV1(
                 searchValue = "für jemanden",
-                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 userProfile = incunabulaUser,
                 startAt = 0,
                 showNRows = 25
@@ -887,7 +887,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! FulltextSearchGetRequestV1(
                 searchValue = "alles für mich",
-                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 userProfile = incunabulaUser,
                 startAt = 0,
                 showNRows = 25
@@ -903,8 +903,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = incunabulaUser,
                 searchValue = Vector("http://data.knora.org/project-thing-2"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
-                propertyIri = Vector("http://www.knora.org/ontology/anything#hasOtherThing"),
-                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                propertyIri = Vector("http://www.knora.org/ontology/0001/anything#hasOtherThing"),
+                filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 startAt = 0,
                 showNRows = 10
             )
@@ -918,7 +918,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 searchValue = Vector("http://data.knora.org/project-thing-2"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"),
-                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 startAt = 0,
                 showNRows = 10
             )
@@ -935,8 +935,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = anythingUser1,
                 searchValue = Vector("http://data.knora.org/project-thing-2"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
-                propertyIri = Vector("http://www.knora.org/ontology/anything#hasOtherThing"),
-                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                propertyIri = Vector("http://www.knora.org/ontology/0001/anything#hasOtherThing"),
+                filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 startAt = 0,
                 showNRows = 10
             )
@@ -950,7 +950,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 searchValue = Vector("http://data.knora.org/project-thing-2"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"),
-                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 startAt = 0,
                 showNRows = 10
             )
@@ -965,8 +965,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = anythingUser2,
                 searchValue = Vector("http://data.knora.org/project-thing-2"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
-                propertyIri = Vector("http://www.knora.org/ontology/anything#hasOtherThing"),
-                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                propertyIri = Vector("http://www.knora.org/ontology/0001/anything#hasOtherThing"),
+                filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 startAt = 0,
                 showNRows = 10
             )
@@ -980,7 +980,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 searchValue = Vector("http://data.knora.org/project-thing-2"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"),
-                filterByRestype = Some("http://www.knora.org/ontology/anything#Thing"),
+                filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 startAt = 0,
                 showNRows = 10
             )

@@ -77,10 +77,10 @@ class StandoffV1R2RSpec extends R2RSpec {
     implicit val ec = system.dispatcher
 
     private val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything"),
-        RdfDataObject(path = "_test_data/all_data/beol-data.ttl", name = "http://www.knora.org/data/beol")
+        RdfDataObject(path = "_test_data/all_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
     )
 
     "Load test data" in {
@@ -384,8 +384,8 @@ class StandoffV1R2RSpec extends R2RSpec {
                                   |            <separatesWords>true</separatesWords>
                                   |        </tag>
                                   |        <standoffClass>
-                                  |            <classIri>http://www.knora.org/ontology/anything#StandoffEventTag</classIri>
-                                  |            <!-- attribute definition for http://www.knora.org/ontology/anything#standoffEventTagHasDescription missing-->
+                                  |            <classIri>http://www.knora.org/ontology/0001/anything#StandoffEventTag</classIri>
+                                  |            <!-- attribute definition for http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription missing-->
                                   |            <datatype>
                                   |                <type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>
                                   |                <attributeName>src</attributeName>
@@ -416,8 +416,8 @@ class StandoffV1R2RSpec extends R2RSpec {
                 //println(responseAs[String])
 
                 // make sure the user gets informed about the missing required property anything:standoffEventTagHasDescription
-                assert(responseAs[String].contains("http://www.knora.org/ontology/anything#StandoffEventTag"))
-                assert(responseAs[String].contains("http://www.knora.org/ontology/anything#standoffEventTagHasDescription"))
+                assert(responseAs[String].contains("http://www.knora.org/ontology/0001/anything#StandoffEventTag"))
+                assert(responseAs[String].contains("http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription"))
 
             }
         }
@@ -453,12 +453,12 @@ class StandoffV1R2RSpec extends R2RSpec {
                                   |            <separatesWords>true</separatesWords>
                                   |        </tag>
                                   |        <standoffClass>
-                                  |            <classIri>http://www.knora.org/ontology/anything#StandoffEventTag</classIri>
+                                  |            <classIri>http://www.knora.org/ontology/0001/anything#StandoffEventTag</classIri>
                                   |             <attributes>
                                   |                <attribute>
                                   |                    <attributeName>desc</attributeName>
                                   |                    <namespace>noNamespace</namespace>
-                                  |                    <propertyIri>http://www.knora.org/ontology/anything#standoffEventTagHasDescription</propertyIri>
+                                  |                    <propertyIri>http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription</propertyIri>
                                   |                </attribute>
                                   |            </attributes>
                                   |            <!-- no data type provided, but required -->
@@ -488,7 +488,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                 //println(responseAs[String])
 
                 // make sure the user gets informed about the missing data type http://www.knora.org/ontology/knora-base#StandoffDateTag
-                assert(responseAs[String].contains("http://www.knora.org/ontology/anything#StandoffEventTag"))
+                assert(responseAs[String].contains("http://www.knora.org/ontology/0001/anything#StandoffEventTag"))
                 assert(responseAs[String].contains("http://www.knora.org/ontology/knora-base#StandoffDateTag"))
 
             }
@@ -525,12 +525,12 @@ class StandoffV1R2RSpec extends R2RSpec {
                                   |            <separatesWords>true</separatesWords>
                                   |        </tag>
                                   |        <standoffClass>
-                                  |            <classIri>http://www.knora.org/ontology/anything#StandoffEventTag</classIri>
+                                  |            <classIri>http://www.knora.org/ontology/0001/anything#StandoffEventTag</classIri>
                                   |             <attributes>
                                   |                <attribute>
                                   |                    <attributeName>desc</attributeName>
                                   |                    <namespace>noNamespace</namespace>
-                                  |                    <propertyIri>http://www.knora.org/ontology/anything#standoffEventTagHasDescription</propertyIri>
+                                  |                    <propertyIri>http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription</propertyIri>
                                   |                </attribute>
                                   |            </attributes>
                                   |            <datatype>
@@ -604,12 +604,12 @@ class StandoffV1R2RSpec extends R2RSpec {
                                   |            <separatesWords>true</separatesWords>
                                   |        </tag>
                                   |        <standoffClass>
-                                  |            <classIri>http://www.knora.org/ontology/anything#StandoffEventTag</classIri>
+                                  |            <classIri>http://www.knora.org/ontology/0001/anything#StandoffEventTag</classIri>
                                   |             <attributes>
                                   |                <attribute>
                                   |                    <attributeName>desc</attributeName>
                                   |                    <namespace>noNamespace</namespace>
-                                  |                    <propertyIri>http://www.knora.org/ontology/anything#standoffEventTagHasDescription</propertyIri>
+                                  |                    <propertyIri>http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription</propertyIri>
                                   |                </attribute>
                                   |            </attributes>
                                   |            <datatype>
@@ -687,9 +687,9 @@ class StandoffV1R2RSpec extends R2RSpec {
             val newValueParams =
                 s"""
                         {
-                          "project_id": "http://rdfh.ch/projects/anything",
+                          "project_id": "http://rdfh.ch/projects/0001",
                           "res_id": "http://data.knora.org/a-thing",
-                          "prop": "http://www.knora.org/ontology/anything#hasText",
+                          "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                           "richtext_value": {
                                 "xml": ${JsString(Source.fromFile(xmlFileToSend).mkString)},
                                 "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/LetterMapping"
@@ -742,7 +742,7 @@ class StandoffV1R2RSpec extends R2RSpec {
             val newValueParams =
                 s"""
                     {
-                      "project_id": "http://rdfh.ch/projects/anything",
+                      "project_id": "http://rdfh.ch/projects/0001",
                       "richtext_value": {
                             "xml": ${JsString(Source.fromFile(xmlFileToSend).mkString)},
                             "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/LetterMapping"
@@ -796,7 +796,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                 {
                   "project_id": "$ANYTHING_PROJECT_IRI",
                   "res_id": "http://data.knora.org/a-thing",
-                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(Source.fromFile(xmlFileToSend).mkString)},
                         "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/LetterMapping"
@@ -881,9 +881,9 @@ class StandoffV1R2RSpec extends R2RSpec {
             val newValueParams =
                 s"""
                 {
-                  "project_id": "http://rdfh.ch/projects/anything",
+                  "project_id": "http://rdfh.ch/projects/0001",
                   "res_id": "http://data.knora.org/a-thing",
-                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(Source.fromFile(xmlFileToSend).mkString)},
                         "mapping_id": "${OntologyConstants.KnoraBase.StandardMapping}"
@@ -935,9 +935,9 @@ class StandoffV1R2RSpec extends R2RSpec {
             val newValueParams =
                 s"""
                 {
-                  "project_id": "http://rdfh.ch/projects/anything",
+                  "project_id": "http://rdfh.ch/projects/0001",
                   "res_id": "http://data.knora.org/a-thing",
-                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(Source.fromFile(xmlFileToSend).mkString)},
                         "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/HTMLMapping"
@@ -993,9 +993,9 @@ class StandoffV1R2RSpec extends R2RSpec {
             val newValueParams =
                 s"""
                 {
-                  "project_id": "http://rdfh.ch/projects/anything",
+                  "project_id": "http://rdfh.ch/projects/0001",
                   "res_id": "http://data.knora.org/a-thing",
-                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(wrongXML)},
                         "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/HTMLMapping"
@@ -1008,8 +1008,8 @@ class StandoffV1R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.BadRequest, response.toString)
 
-                // the error message should inform the user that the required property http://www.knora.org/ontology/anything#standoffEventTagHasDescription is missing
-                assert(responseAs[String].contains("http://www.knora.org/ontology/anything#standoffEventTagHasDescription"))
+                // the error message should inform the user that the required property http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription is missing
+                assert(responseAs[String].contains("http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription"))
 
 
             }
@@ -1028,9 +1028,9 @@ class StandoffV1R2RSpec extends R2RSpec {
             val newValueParams =
                 s"""
                 {
-                  "project_id": "http://rdfh.ch/projects/anything",
+                  "project_id": "http://rdfh.ch/projects/0001",
                   "res_id": "http://data.knora.org/a-thing",
-                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(wrongXML)},
                         "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/HTMLMapping"
@@ -1063,9 +1063,9 @@ class StandoffV1R2RSpec extends R2RSpec {
             val newValueParams =
                 s"""
                 {
-                  "project_id": "http://rdfh.ch/projects/anything",
+                  "project_id": "http://rdfh.ch/projects/0001",
                   "res_id": "http://data.knora.org/a-thing",
-                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(wrongXML)},
                         "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/HTMLMapping"
@@ -1098,9 +1098,9 @@ class StandoffV1R2RSpec extends R2RSpec {
             val newValueParams =
                 s"""
                 {
-                  "project_id": "http://rdfh.ch/projects/anything",
+                  "project_id": "http://rdfh.ch/projects/0001",
                   "res_id": "http://data.knora.org/a-thing",
-                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(wrongXML)},
                         "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/HTMLMapping"
@@ -1135,9 +1135,9 @@ class StandoffV1R2RSpec extends R2RSpec {
             val newValueParams =
                 s"""
                 {
-                  "project_id": "http://rdfh.ch/projects/anything",
+                  "project_id": "http://rdfh.ch/projects/0001",
                   "res_id": "http://data.knora.org/a-thing",
-                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(wrongXML)},
                         "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/HTMLMapping"
@@ -1170,9 +1170,9 @@ class StandoffV1R2RSpec extends R2RSpec {
             val newValueParams =
                 s"""
                 {
-                  "project_id": "http://rdfh.ch/projects/anything",
+                  "project_id": "http://rdfh.ch/projects/0001",
                   "res_id": "http://data.knora.org/a-thing",
-                  "prop": "http://www.knora.org/ontology/anything#hasText",
+                  "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(xml)},
                         "mapping_id": "$ANYTHING_PROJECT_IRI/invalidPathForMappings/HTMLMapping"

@@ -87,7 +87,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val fooIri = new MutableTestIri
     private var fooLastModDate: Instant = Instant.now
 
-    private val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/anything/v2".toSmartIri
+    private val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
     private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
 
     private def getPropertyIrisFromResourceClassResponse(responseJsonDoc: JsonLDDocument): Set[SmartIri] = {
@@ -390,13 +390,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                 """
                   |{
                   |  "knora-api:hasOntologies" : {
-                  |    "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+                  |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                   |    "@type" : "owl:Ontology",
                   |    "knora-api:hasProperties" : {
                   |      "anything:hasName" : {
                   |        "@id" : "anything:hasName",
                   |        "@type" : "owl:ObjectProperty",
-                  |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/anything/v2#Thing",
+                  |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
                   |        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
                   |        "rdfs:comment" : [ {
                   |          "@language" : "en",
@@ -426,7 +426,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                   |    "owl" : "http://www.w3.org/2002/07/owl#",
                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                  |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+                  |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                   |  }
                   |}
                 """.stripMargin
@@ -565,7 +565,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 s"""
                    |{
                    |  "knora-api:hasOntologies" : {
-                   |    "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+                   |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |    "@type" : "owl:Ontology",
                    |    "knora-api:hasClasses" : {
                    |      "anything:WildThing" : {
@@ -580,11 +580,11 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |          "@value" : "A thing that is wild"
                    |        },
                    |        "rdfs:subClassOf" : [
-                   |            "http://0.0.0.0:3333/ontology/anything/v2#Thing",
+                   |            "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
                    |            {
                    |                "@type": "http://www.w3.org/2002/07/owl#Restriction",
                    |                "owl:maxCardinality": 1,
-                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/anything/v2#hasName",
+                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
                    |                "salsah-gui:guiOrder": 1
                    |            }
                    |        ]
@@ -599,39 +599,39 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |    "owl" : "http://www.w3.org/2002/07/owl#",
                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                    |  }
                    |}
             """.stripMargin
 
             val expectedProperties: Set[SmartIri] = Set(
-                "http://0.0.0.0:3333/ontology/anything/v2#hasBlueThing".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasName".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasInterval".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherThingValue".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBlueThing".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasThingPicture".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherListItem".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasListItem".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherThing".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasThingPictureValue".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#isPartOfOtherThingValue".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasDate".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPicture".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri,
                 "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#lastModificationDate".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#creationDate".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#isPartOfOtherThing".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasText".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasDecimal".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasBoolean".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasColor".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasBlueThingValue".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasRichtext".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasUri".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasInteger".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBlueThingValue".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
             )
 
@@ -662,7 +662,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 s"""
                    |{
                    |  "knora-api:hasOntologies" : {
-                   |    "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+                   |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |    "@type" : "owl:Ontology",
                    |    "knora-api:hasClasses" : {
                    |      "anything:Nothing" : {
@@ -687,7 +687,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |    "owl" : "http://www.w3.org/2002/07/owl#",
                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                    |  }
                    |}
             """.stripMargin
@@ -834,13 +834,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                 s"""
                    |{
                    |  "knora-api:hasOntologies" : {
-                   |    "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+                   |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |    "@type" : "owl:Ontology",
                    |    "knora-api:hasProperties" : {
                    |      "anything:hasNothingness" : {
                    |        "@id" : "anything:hasNothingness",
                    |        "@type" : "owl:ObjectProperty",
-                   |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/anything/v2#Nothing",
+                   |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing",
                    |        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#BooleanValue",
                    |        "rdfs:comment" : {
                    |          "@language" : "en",
@@ -861,7 +861,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |    "owl" : "http://www.w3.org/2002/07/owl#",
                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                    |  }
                    |}
             """.stripMargin
@@ -890,7 +890,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 s"""
                    |{
                    |  "knora-api:hasOntologies" : {
-                   |    "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+                   |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |    "@type" : "owl:Ontology",
                    |    "knora-api:hasClasses" : {
                    |      "anything:Nothing" : {
@@ -900,7 +900,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |            {
                    |                "@type": "http://www.w3.org/2002/07/owl#Restriction",
                    |                "owl:maxCardinality": 1,
-                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/anything/v2#hasNothingness"
+                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/0001/anything/v2#hasNothingness"
                    |            }
                    |        ]
                    |      }
@@ -913,14 +913,14 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |    "owl" : "http://www.w3.org/2002/07/owl#",
                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                    |  }
                    |}
             """.stripMargin
 
             val expectedProperties: Set[SmartIri] = Set(
                 "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasNothingness".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasNothingness".toSmartIri,
                 "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#lastModificationDate".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#creationDate".toSmartIri,
@@ -957,13 +957,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                 s"""
                    |{
                    |  "knora-api:hasOntologies" : {
-                   |    "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+                   |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |    "@type" : "owl:Ontology",
                    |    "knora-api:hasProperties" : {
                    |      "anything:hasEmptiness" : {
                    |        "@id" : "anything:hasEmptiness",
                    |        "@type" : "owl:ObjectProperty",
-                   |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/anything/v2#Nothing",
+                   |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing",
                    |        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#BooleanValue",
                    |        "rdfs:comment" : {
                    |          "@language" : "en",
@@ -984,7 +984,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |    "owl" : "http://www.w3.org/2002/07/owl#",
                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                    |  }
                    |}
             """.stripMargin
@@ -1013,7 +1013,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 s"""
                    |{
                    |  "knora-api:hasOntologies" : {
-                   |    "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+                   |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |    "@type" : "owl:Ontology",
                    |    "knora-api:hasClasses" : {
                    |      "anything:Nothing" : {
@@ -1023,7 +1023,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |            {
                    |                "@type": "http://www.w3.org/2002/07/owl#Restriction",
                    |                "owl:maxCardinality": 1,
-                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/anything/v2#hasEmptiness"
+                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/0001/anything/v2#hasEmptiness"
                    |            }
                    |        ]
                    |      }
@@ -1036,7 +1036,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |    "owl" : "http://www.w3.org/2002/07/owl#",
                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                    |  }
                    |}
             """.stripMargin
@@ -1047,7 +1047,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#lastModificationDate".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#creationDate".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo".toSmartIri,
-                "http://0.0.0.0:3333/ontology/anything/v2#hasEmptiness".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasEmptiness".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
@@ -1076,14 +1076,14 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "delete the property anything:hasNothingness" in {
-            val propertyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/anything/v2#hasNothingness", "UTF-8")
+            val propertyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasNothingness", "UTF-8")
             val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
 
             Delete(s"/v2/ontologies/properties/$propertyIri?lastModificationDate=$lastModificationDate") ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 val ontology = responseJsonDoc.requireObject(OntologyConstants.KnoraApiV2WithValueObjects.HasOntologies)
-                ontology.value("@id").asInstanceOf[JsonLDString].value should ===("http://0.0.0.0:3333/ontology/anything/v2")
+                ontology.value("@id").asInstanceOf[JsonLDString].value should ===("http://0.0.0.0:3333/ontology/0001/anything/v2")
                 val newAnythingLastModDate = Instant.parse(ontology.value(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).asInstanceOf[JsonLDString].value)
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
@@ -1095,7 +1095,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 s"""
                    |{
                    |  "knora-api:hasOntologies" : {
-                   |    "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+                   |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |    "@type" : "owl:Ontology",
                    |    "knora-api:hasClasses" : {
                    |      "anything:Nothing" : {
@@ -1111,7 +1111,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |    "owl" : "http://www.w3.org/2002/07/owl#",
                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                    |  }
                    |}
             """.stripMargin
@@ -1147,14 +1147,14 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "delete the property anything:hasEmptiness" in {
-            val propertyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/anything/v2#hasEmptiness", "UTF-8")
+            val propertyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasEmptiness", "UTF-8")
             val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
 
             Delete(s"/v2/ontologies/properties/$propertyIri?lastModificationDate=$lastModificationDate") ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 val ontology = responseJsonDoc.requireObject(OntologyConstants.KnoraApiV2WithValueObjects.HasOntologies)
-                ontology.value("@id").asInstanceOf[JsonLDString].value should ===("http://0.0.0.0:3333/ontology/anything/v2")
+                ontology.value("@id").asInstanceOf[JsonLDString].value should ===("http://0.0.0.0:3333/0001/ontology/anything/v2")
                 val newAnythingLastModDate = Instant.parse(ontology.value(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).asInstanceOf[JsonLDString].value)
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
@@ -1162,14 +1162,14 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "delete the class anything:Nothing" in {
-            val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/anything/v2#Nothing", "UTF-8")
+            val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing", "UTF-8")
             val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
 
             Delete(s"/v2/ontologies/classes/$classIri?lastModificationDate=$lastModificationDate") ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 val ontology = responseJsonDoc.requireObject(OntologyConstants.KnoraApiV2WithValueObjects.HasOntologies)
-                ontology.value("@id").asInstanceOf[JsonLDString].value should ===("http://0.0.0.0:3333/ontology/anything/v2")
+                ontology.value("@id").asInstanceOf[JsonLDString].value should ===("http://0.0.0.0:3333/ontology/0001/anything/v2")
                 val newAnythingLastModDate = Instant.parse(ontology.value(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).asInstanceOf[JsonLDString].value)
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate

@@ -53,7 +53,7 @@ class SipiResponderV1Spec extends CoreSpec() with ImplicitSender {
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/responders.v1.SipiResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula")
+        RdfDataObject(path = "_test_data/responders.v1.SipiResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
     )
 
     // The default timeout for receiving reply messages from actors.

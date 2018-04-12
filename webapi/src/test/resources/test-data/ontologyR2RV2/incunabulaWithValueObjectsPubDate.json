@@ -2,7 +2,7 @@
   "knora-api:hasOntologies" : {
     "@id" : "http://0.0.0.0:3333/ontology/incunabula/v2",
     "@type" : "owl:Ontology",
-    "knora-api:attachedToProject" : "http://rdfh.ch/projects/77275339",
+    "knora-api:attachedToProject" : "http://rdfh.ch/projects/0803",
     "knora-api:hasProperties" : {
       "incunabula:pubdate" : {
         "@id" : "incunabula:pubdate",

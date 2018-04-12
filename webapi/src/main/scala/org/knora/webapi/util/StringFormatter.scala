@@ -986,8 +986,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             val internalOntologyIri = new StringBuilder(OntologyConstants.KnoraInternal.InternalOntologyStart)
 
             iriInfo.projectCode match {
-                case Some(projectCode) => internalOntologyIri.append(projectCode).append('/')
-                case None => ()
+                case Some(projectCode) => internalOntologyIri.append('/').append(projectCode).append('/')
+                case None => internalOntologyIri.append('/')
             }
 
             val convertedIriStr = internalOntologyIri.append(externalToInternalOntologyName(ontologyName)).append("#").append(entityName).toString
@@ -1707,8 +1707,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         val internalOntologyIri = new StringBuilder(OntologyConstants.KnoraInternal.InternalOntologyStart)
 
         projectCode match {
-            case Some(code) => internalOntologyIri.append(code).append('/')
-            case None => ()
+            case Some(code) => internalOntologyIri.append('/').append(code).append('/')
+            case None => internalOntologyIri.append('/')
         }
 
         internalOntologyIri.append(internalOntologyName).toString
@@ -1881,11 +1881,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @return the IRI of the project's data named graph.
       */
     def projectDataNamedGraph(projectInfo: ProjectInfoV1): IRI = {
-        if (projectInfo.shortcode.isDefined) {
-            OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortcode.get + "/" + projectInfo.shortname
-        } else {
-            OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortname
-        }
+        OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortcode + "/" + projectInfo.shortname
     }
 
     /**

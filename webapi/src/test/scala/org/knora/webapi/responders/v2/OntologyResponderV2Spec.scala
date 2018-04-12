@@ -55,7 +55,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     // The default timeout for receiving reply messages from actors.
@@ -64,7 +64,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val fooIri = new MutableTestIri
     private var fooLastModDate: Instant = Instant.now
 
-    private val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/anything/v2".toSmartIri
+    private val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
     private var anythingLastModDate: Instant = Instant.now
 
     private val printErrorMessages = false
@@ -147,7 +147,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not delete an ontology that doesn't exist" in {
             actorUnderTest ! DeleteOntologyRequestV2(
-                ontologyIri = "http://0.0.0.0:3333/ontology/nonexistent/v2".toSmartIri,
+                ontologyIri = "http://0.0.0.0:3333/ontology/1234/nonexistent/v2".toSmartIri,
                 lastModificationDate = fooLastModDate,
                 apiRequestID = UUID.randomUUID,
                 requestingUser = imagesUser
@@ -230,8 +230,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     val expectedSubjects = Set(
                         "<http://data.knora.org/a-thing>", // rdf:type anything:Thing
                         "<http://data.knora.org/a-blue-thing>", // rdf:type anything:BlueThing, a subclass of anything:Thing
-                        "<http://www.knora.org/ontology/something#Something>", // a subclass of anything:Thing in another ontology
-                        "<http://www.knora.org/ontology/something#hasOtherSomething>" // a subproperty of anything:hasOtherThing in another ontology
+                        "<http://www.knora.org/ontology/0001/something#Something>", // a subclass of anything:Thing in another ontology
+                        "<http://www.knora.org/ontology/0001/something#hasOtherSomething>" // a subproperty of anything:hasOtherThing in another ontology
                     )
 
                     expectedSubjects.forall(s => errorMsg.contains(s)) should ===(true)
@@ -1824,26 +1824,26 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             val expectedProperties: Set[SmartIri] = Set(
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherThingValue",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasBlueThing",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasThingPicture",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasDate",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasBoolean",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasThingPictureValue",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasText",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasColor",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasInterval",
-                "http://0.0.0.0:3333/ontology/anything/v2#isPartOfOtherThing",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasDecimal",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherThing",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasBlueThingValue",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasInteger",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasListItem",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasRichtext",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasUri",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasName",
-                "http://0.0.0.0:3333/ontology/anything/v2#isPartOfOtherThingValue",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherListItem"
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBlueThing",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPicture",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBlueThingValue",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem"
             ).map(_.toSmartIri)
 
             expectMsgPF(timeout) {
@@ -1854,7 +1854,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     val ontology = externalMsg.ontologies.head
                     val readClassInfo = ontology.classes(classIri)
                     readClassInfo.entityInfoContent should ===(classInfoContent)
-                    readClassInfo.inheritedCardinalities.keySet.contains("http://0.0.0.0:3333/ontology/anything/v2#hasInteger".toSmartIri) should ===(false)
+                    readClassInfo.inheritedCardinalities.keySet.contains("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri) should ===(false)
                     readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
                     val metadata = ontology.ontologyMetadata

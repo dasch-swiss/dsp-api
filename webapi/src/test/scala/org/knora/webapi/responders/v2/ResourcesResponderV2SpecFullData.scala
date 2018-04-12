@@ -14,7 +14,7 @@ object ResourcesResponderV2SpecFullData {
     val expectedReadResourceV2ForZeitgloecklein = ReadResourceV2(
         resourceInfos = Map(),
         values = Map(
-            "http://www.knora.org/ontology/incunabula#hasAuthor" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#hasAuthor" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     comment = None,
                     standoff = None,
@@ -22,7 +22,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 valueIri = "http://data.knora.org/c5058f3a/values/8653a672"
             )),
-            "http://www.knora.org/ontology/incunabula#title" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#title" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     comment = None,
                     standoff = None,
@@ -30,7 +30,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 valueIri = "http://data.knora.org/c5058f3a/values/c3295339"
             )),
-            "http://www.knora.org/ontology/incunabula#citation" -> Vector(
+            "http://www.knora.org/ontology/0803/incunabula#citation" -> Vector(
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
@@ -56,7 +56,7 @@ object ResourcesResponderV2SpecFullData {
                     valueIri = "http://data.knora.org/c5058f3a/values/9ea13f3d02"
                 )
             ),
-            "http://www.knora.org/ontology/incunabula#location" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#location" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     comment = None,
                     standoff = None,
@@ -64,7 +64,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 valueIri = "http://data.knora.org/c5058f3a/values/92faf25701"
             )),
-            "http://www.knora.org/ontology/incunabula#url" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#url" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     comment = None,
                     standoff = None,
@@ -72,7 +72,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 valueIri = "http://data.knora.org/c5058f3a/values/10e00c7acc2704"
             )),
-            "http://www.knora.org/ontology/incunabula#physical_desc" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#physical_desc" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     comment = None,
                     standoff = None,
@@ -80,7 +80,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 valueIri = "http://data.knora.org/c5058f3a/values/5524469101"
             )),
-            "http://www.knora.org/ontology/incunabula#publoc" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#publoc" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     comment = None,
                     standoff = None,
@@ -88,7 +88,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 valueIri = "http://data.knora.org/c5058f3a/values/0ca74ce5"
             )),
-            "http://www.knora.org/ontology/incunabula#pubdate" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#pubdate" -> Vector(ReadValueV2(
                 valueContent = DateValueContentV2(
                     comment = None,
                     valueHasCalendar = KnoraCalendarV1.JULIAN,
@@ -100,7 +100,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 valueIri = "http://data.knora.org/c5058f3a/values/cfd09f1e01"
             )),
-            "http://www.knora.org/ontology/incunabula#publisher" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#publisher" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     comment = None,
                     standoff = None,
@@ -109,7 +109,7 @@ object ResourcesResponderV2SpecFullData {
                 valueIri = "http://data.knora.org/c5058f3a/values/497df9ab"
             ))
         ),
-        resourceClass = "http://www.knora.org/ontology/incunabula#book",
+        resourceClass = "http://www.knora.org/ontology/0803/incunabula#book",
         label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
         resourceIri = "http://data.knora.org/c5058f3a"
     )
@@ -117,7 +117,7 @@ object ResourcesResponderV2SpecFullData {
     val expectedReadResourceV2ForReiseInsHeiligeland = ReadResourceV2(
         resourceInfos = Map(),
         values = Map(
-            "http://www.knora.org/ontology/incunabula#hasAuthor" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#hasAuthor" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     comment = None,
                     standoff = None,
@@ -125,7 +125,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 valueIri = "http://data.knora.org/2a6221216701/values/1a7f08829105"
             )),
-            "http://www.knora.org/ontology/incunabula#title" -> Vector(
+            "http://www.knora.org/ontology/0803/incunabula#title" -> Vector(
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
@@ -151,7 +151,7 @@ object ResourcesResponderV2SpecFullData {
                     valueIri = "http://data.knora.org/2a6221216701/values/5755b5489105"
                 )
             ),
-            "http://www.knora.org/ontology/incunabula#citation" -> Vector(
+            "http://www.knora.org/ontology/0803/incunabula#citation" -> Vector(
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
@@ -225,7 +225,7 @@ object ResourcesResponderV2SpecFullData {
                     valueIri = "http://data.knora.org/2a6221216701/values/939834c39505"
                 )
             ),
-            "http://www.knora.org/ontology/incunabula#location" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#location" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     comment = None,
                     standoff = None,
@@ -233,7 +233,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 valueIri = "http://data.knora.org/2a6221216701/values/262655679205"
             )),
-            "http://www.knora.org/ontology/incunabula#url" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#url" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     comment = None,
                     standoff = None,
@@ -241,7 +241,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 valueIri = "http://data.knora.org/2a6221216701/values/f89173afca2704"
             )),
-            "http://www.knora.org/ontology/incunabula#physical_desc" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#physical_desc" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     comment = None,
                     standoff = None,
@@ -249,7 +249,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 valueIri = "http://data.knora.org/2a6221216701/values/e94fa8a09205"
             )),
-            "http://www.knora.org/ontology/incunabula#book_comment" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#book_comment" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     comment = None,
                     standoff = None,
@@ -257,7 +257,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 valueIri = "http://data.knora.org/2a6221216701/values/56c287fc9505"
             )),
-            "http://www.knora.org/ontology/incunabula#publoc" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#publoc" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     comment = None,
                     standoff = None,
@@ -265,7 +265,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 valueIri = "http://data.knora.org/2a6221216701/values/a0d2aef49105"
             )),
-            "http://www.knora.org/ontology/incunabula#pubdate" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#pubdate" -> Vector(ReadValueV2(
                 valueContent = DateValueContentV2(
                     comment = None,
                     valueHasCalendar = KnoraCalendarV1.JULIAN,
@@ -277,7 +277,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 valueIri = "http://data.knora.org/2a6221216701/values/63fc012e9205"
             )),
-            "http://www.knora.org/ontology/incunabula#publisher" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#publisher" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     comment = None,
                     standoff = None,
@@ -285,7 +285,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 valueIri = "http://data.knora.org/2a6221216701/values/dda85bbb9105"
             )),
-            "http://www.knora.org/ontology/incunabula#note" -> Vector(
+            "http://www.knora.org/ontology/0803/incunabula#note" -> Vector(
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         comment = None,
@@ -328,7 +328,7 @@ object ResourcesResponderV2SpecFullData {
                 )
             )
         ),
-        resourceClass = "http://www.knora.org/ontology/incunabula#book",
+        resourceClass = "http://www.knora.org/ontology/0803/incunabula#book",
         label = "Reise ins Heilige Land",
         resourceIri = "http://data.knora.org/2a6221216701"
     )

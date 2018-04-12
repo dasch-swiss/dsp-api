@@ -133,7 +133,7 @@ class ProjectsResponderV1 extends Responder {
                     ProjectInfoV1(
                         id = projectIri,
                         shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head,
-                        shortcode = propsMap.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head),
+                        shortcode = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortcode, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortcode defined.")).head,
                         longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head),
                         description = propsMap.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head),
                         keywords = maybeKeywords,
@@ -497,7 +497,7 @@ class ProjectsResponderV1 extends Responder {
             ProjectInfoV1(
                 id = projectIri,
                 shortname = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head,
-                shortcode = projectProperties.get(OntologyConstants.KnoraBase.ProjectShortcode).map(_.head),
+                shortcode = projectProperties.getOrElse(OntologyConstants.KnoraBase.ProjectShortcode, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortcode defined.")).head,
                 longname = projectProperties.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head),
                 description = projectProperties.get(OntologyConstants.KnoraBase.ProjectDescription).map(_.head),
                 keywords = maybeKeywords,

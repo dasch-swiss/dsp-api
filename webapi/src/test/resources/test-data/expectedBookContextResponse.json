@@ -25341,7 +25341,7 @@
       "restype_name": "http://www.knora.org/ontology/incunabula#book",
       "regions": null,
       "restype_description": "Diese Resource-Klasse beschreibt ein Buch",
-      "project_id": "http://rdfh.ch/projects/77275339",
+      "project_id": "http://rdfh.ch/projects/0803",
       "locdata": null,
       "restype_id": "http://www.knora.org/ontology/incunabula#book"
     },

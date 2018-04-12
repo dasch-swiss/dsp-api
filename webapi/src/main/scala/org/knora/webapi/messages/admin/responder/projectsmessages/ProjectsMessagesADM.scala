@@ -375,7 +375,7 @@ case class ProjectADM(id: IRI,
         ProjectInfoV1(
             id = id,
             shortname = shortname,
-            shortcode = Some(shortcode),
+            shortcode = shortcode,
             longname = longname,
             description = descriptionV1,
             keywords = keywordsV1,

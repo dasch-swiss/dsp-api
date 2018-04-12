@@ -581,7 +581,7 @@ class SearchParserV2Spec extends CoreSpec() {
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
           |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX incunabula: <http://www.knora.org/ontology/incunabula#>
+          |PREFIX incunabula: <http://www.knora.org/ontology/0803/incunabula#>
           |
           |CONSTRUCT {
           |    ?book a ?bookType .

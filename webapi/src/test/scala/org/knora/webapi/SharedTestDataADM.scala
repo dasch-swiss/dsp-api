@@ -474,7 +474,7 @@ object SharedTestDataADM {
         description = Seq(StringLiteralV2(value = "Anything Project", language = None)),
         keywords = Seq.empty[String],
         logo = None,
-        ontologies = Seq("http://www.knora.org/ontology/anything", "http://www.knora.org/ontology/something"),
+        ontologies = Seq("http://www.knora.org/ontology/0001/anything", "http://www.knora.org/ontology/0001/something"),
         status = true,
         selfjoin = false
     )

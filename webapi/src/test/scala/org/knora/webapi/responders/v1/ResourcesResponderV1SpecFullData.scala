@@ -56,7 +56,7 @@ object ResourcesResponderV1SpecFullData {
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
                     restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
                     person_id = "http://rdfh.ch/users/91e19f1e01",
-                    project_id = "http://rdfh.ch/projects/77275339"
+                    project_id = "http://rdfh.ch/projects/0803"
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
@@ -80,7 +80,7 @@ object ResourcesResponderV1SpecFullData {
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
                     restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
                     person_id = "http://rdfh.ch/users/b83acc5f05",
-                    project_id = "http://rdfh.ch/projects/77275339"
+                    project_id = "http://rdfh.ch/projects/0803"
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
@@ -108,7 +108,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(2),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#hasAuthor"
+                pid = "http://www.knora.org/ontology/0803/incunabula#hasAuthor"
             ),
             PropertyV1(
                 locations = Nil,
@@ -129,7 +129,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(1),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#title"
+                pid = "http://www.knora.org/ontology/0803/incunabula#title"
             ),
             PropertyV1(
                 locations = Nil,
@@ -182,7 +182,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(5),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#citation"
+                pid = "http://www.knora.org/ontology/0803/incunabula#citation"
             ),
             PropertyV1(
                 locations = Nil,
@@ -203,7 +203,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(6),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#location"
+                pid = "http://www.knora.org/ontology/0803/incunabula#location"
             ),
             PropertyV1(
                 locations = Nil,
@@ -224,7 +224,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(7),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#url"
+                pid = "http://www.knora.org/ontology/0803/incunabula#url"
             ),
             PropertyV1(
                 locations = Nil,
@@ -245,7 +245,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(9),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#physical_desc"
+                pid = "http://www.knora.org/ontology/0803/incunabula#physical_desc"
             ),
             PropertyV1(
                 locations = Nil,
@@ -266,7 +266,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(4),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#publoc"
+                pid = "http://www.knora.org/ontology/0803/incunabula#publoc"
             ),
             PropertyV1(
                 locations = Nil,
@@ -291,7 +291,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(5),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#DateValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#pubdate"
+                pid = "http://www.knora.org/ontology/0803/incunabula#pubdate"
             ),
             PropertyV1(
                 locations = Nil,
@@ -312,7 +312,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(3),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#publisher"
+                pid = "http://www.knora.org/ontology/0803/incunabula#publisher"
             ),
             PropertyV1(
                 locations = Nil,
@@ -331,7 +331,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(12),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#book_comment"
+                pid = "http://www.knora.org/ontology/0803/incunabula#book_comment"
             ),
             PropertyV1(
                 locations = Nil,
@@ -350,7 +350,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(2),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#description"
+                pid = "http://www.knora.org/ontology/0803/incunabula#description"
             ),
             PropertyV1(
                 locations = Nil,
@@ -369,7 +369,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(10),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#note"
+                pid = "http://www.knora.org/ontology/0803/incunabula#note"
             ),
             PropertyV1(
                 locations = Nil,
@@ -396,7 +396,7 @@ object ResourcesResponderV1SpecFullData {
             rights = Some(6),
             iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
             restype_label = Some("Buch"),
-            restype_name = "http://www.knora.org/ontology/incunabula#book",
+            restype_name = "http://www.knora.org/ontology/0803/incunabula#book",
             res_id = "http://data.knora.org/c5058f3a"
         )),
         resinfo = Some(ResourceInfoV1(
@@ -411,10 +411,10 @@ object ResourcesResponderV1SpecFullData {
             restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
             restype_description = Some("Diese Resource-Klasse beschreibt ein Buch"),
             restype_label = Some("Buch"),
-            restype_name = Some("http://www.knora.org/ontology/incunabula#book"),
-            restype_id = "http://www.knora.org/ontology/incunabula#book",
+            restype_name = Some("http://www.knora.org/ontology/0803/incunabula#book"),
+            restype_id = "http://www.knora.org/ontology/0803/incunabula#book",
             person_id = "http://rdfh.ch/users/91e19f1e01",
-            project_id = "http://rdfh.ch/projects/77275339"
+            project_id = "http://rdfh.ch/projects/0803"
         ))
     )
 
@@ -532,7 +532,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(1),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#pagenum"
+                pid = "http://www.knora.org/ontology/0803/incunabula#pagenum"
             ),
             PropertyV1(
                 locations = Nil,
@@ -553,7 +553,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(2),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#description"
+                pid = "http://www.knora.org/ontology/0803/incunabula#description"
             ),
             PropertyV1(
                 locations = Nil,
@@ -574,7 +574,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(6),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#page_comment"
+                pid = "http://www.knora.org/ontology/0803/incunabula#page_comment"
             ),
             PropertyV1(
                 locations = Nil,
@@ -595,7 +595,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(7),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#origname"
+                pid = "http://www.knora.org/ontology/0803/incunabula#origname"
             ),
             PropertyV1(
                 locations = Nil,
@@ -614,7 +614,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(3),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#IntValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#seqnum"
+                pid = "http://www.knora.org/ontology/0803/incunabula#seqnum"
             ),
             PropertyV1(
                 locations = Nil,
@@ -627,19 +627,19 @@ object ResourcesResponderV1SpecFullData {
                 values = Vector(LinkV1(
                     valueResourceClassIcon = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
                     valueResourceClassLabel = Some("Buch"),
-                    valueResourceClass = Some("http://www.knora.org/ontology/incunabula#book"),
+                    valueResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book"),
                     valueLabel = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
                     targetResourceIri = "http://data.knora.org/c5058f3a"
                 )),
                 occurrence = Some("1"),
-                attributes = "restypeid=http://www.knora.org/ontology/incunabula#book",
+                attributes = "restypeid=http://www.knora.org/ontology/0803/incunabula#book",
                 label = Some("ist ein Teil von"),
                 is_annotation = "0",
                 guielement = Some("searchbox"),
                 guiorder = Some(2),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#LinkValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#partOf"
+                pid = "http://www.knora.org/ontology/0803/incunabula#partOf"
             ),
             PropertyV1(
                 locations = Nil,
@@ -651,14 +651,14 @@ object ResourcesResponderV1SpecFullData {
                 value_ids = Nil,
                 values = Nil,
                 occurrence = Some("0-1"),
-                attributes = "numprops=1;restypeid=http://www.knora.org/ontology/incunabula#Sideband",
+                attributes = "numprops=1;restypeid=http://www.knora.org/ontology/0803/incunabula#Sideband",
                 label = Some("Randleistentyp links"),
                 is_annotation = "0",
                 guielement = Some("searchbox"),
                 guiorder = Some(10),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#LinkValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#hasLeftSideband"
+                pid = "http://www.knora.org/ontology/0803/incunabula#hasLeftSideband"
             ),
             PropertyV1(
                 locations = Nil,
@@ -670,14 +670,14 @@ object ResourcesResponderV1SpecFullData {
                 value_ids = Nil,
                 values = Nil,
                 occurrence = Some("0-1"),
-                attributes = "numprops=1;restypeid=http://www.knora.org/ontology/incunabula#Sideband",
+                attributes = "numprops=1;restypeid=http://www.knora.org/ontology/0803/incunabula#Sideband",
                 label = Some("Randleistentyp rechts"),
                 is_annotation = "0",
                 guielement = Some("searchbox"),
                 guiorder = Some(11),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#LinkValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#hasRightSideband"
+                pid = "http://www.knora.org/ontology/0803/incunabula#hasRightSideband"
             ),
             PropertyV1(
                 locations = Nil,
@@ -696,7 +696,7 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(5),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#citation"
+                pid = "http://www.knora.org/ontology/0803/incunabula#citation"
             ),
             PropertyV1(
                 locations = Nil,
@@ -734,14 +734,14 @@ object ResourcesResponderV1SpecFullData {
                 guiorder = Some(12),
                 valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
                 regular_property = 1,
-                pid = "http://www.knora.org/ontology/incunabula#transcription"
+                pid = "http://www.knora.org/ontology/0803/incunabula#transcription"
             )
         ))),
         resdata = Some(ResourceDataV1(
             rights = Some(6),
             iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
             restype_label = Some("Seite"),
-            restype_name = "http://www.knora.org/ontology/incunabula#page",
+            restype_name = "http://www.knora.org/ontology/0803/incunabula#page",
             res_id = "http://data.knora.org/8a0b1e75"
         )),
         resinfo = Some(ResourceInfoV1(
@@ -845,10 +845,10 @@ object ResourcesResponderV1SpecFullData {
             restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
             restype_description = Some("Eine Seite ist ein Teil eines Buchs"),
             restype_label = Some("Seite"),
-            restype_name = Some("http://www.knora.org/ontology/incunabula#page"),
-            restype_id = "http://www.knora.org/ontology/incunabula#page",
+            restype_name = Some("http://www.knora.org/ontology/0803/incunabula#page"),
+            restype_id = "http://www.knora.org/ontology/0803/incunabula#page",
             person_id = "http://rdfh.ch/users/91e19f1e01",
-            project_id = "http://rdfh.ch/projects/77275339"
+            project_id = "http://rdfh.ch/projects/0803"
         ))
     )
 
@@ -877,7 +877,7 @@ object ResourcesResponderV1SpecFullData {
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
                     restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
                     person_id = "http://rdfh.ch/users/91e19f1e01",
-                    project_id = "http://rdfh.ch/projects/77275339"
+                    project_id = "http://rdfh.ch/projects/0803"
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
@@ -901,7 +901,7 @@ object ResourcesResponderV1SpecFullData {
                     restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),
                     restype_id = "http://www.knora.org/ontology/knora-base#Region",
                     person_id = "http://rdfh.ch/users/91e19f1e01",
-                    project_id = "http://rdfh.ch/projects/77275339"
+                    project_id = "http://rdfh.ch/projects/0803"
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
@@ -925,7 +925,7 @@ object ResourcesResponderV1SpecFullData {
                     restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),
                     restype_id = "http://www.knora.org/ontology/knora-base#Region",
                     person_id = "http://rdfh.ch/users/1458b20f08",
-                    project_id = "http://rdfh.ch/projects/77275339"
+                    project_id = "http://rdfh.ch/projects/0803"
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
@@ -949,7 +949,7 @@ object ResourcesResponderV1SpecFullData {
                     restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
                     restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
                     person_id = "http://rdfh.ch/users/1458b20f08",
-                    project_id = "http://rdfh.ch/projects/77275339"
+                    project_id = "http://rdfh.ch/projects/0803"
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
@@ -1076,7 +1076,7 @@ object ResourcesResponderV1SpecFullData {
                 values = Vector(LinkV1(
                     valueResourceClassIcon = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
                     valueResourceClassLabel = Some("Seite"),
-                    valueResourceClass = Some("http://www.knora.org/ontology/incunabula#page"),
+                    valueResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#page"),
                     valueLabel = Some("b8v"),
                     targetResourceIri = "http://data.knora.org/883be8542e03"
                 )),
@@ -1113,7 +1113,7 @@ object ResourcesResponderV1SpecFullData {
             restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),
             restype_id = "http://www.knora.org/ontology/knora-base#Region",
             person_id = "http://rdfh.ch/users/1458b20f08",
-            project_id = "http://rdfh.ch/projects/77275339"
+            project_id = "http://rdfh.ch/projects/0803"
         ))
     )
 }

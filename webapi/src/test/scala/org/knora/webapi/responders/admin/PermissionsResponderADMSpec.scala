@@ -25,7 +25,7 @@ import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.SharedPermissionsTestData._
-import org.knora.webapi.SharedTestDataV1._
+import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
@@ -67,9 +67,9 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/responders.v1.PermissionsResponderV1Spec/additional_permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+        RdfDataObject(path = "_test_data/responders.admin.PermissionsResponderV1Spec/additional_permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     "Load test data" in {
@@ -219,7 +219,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             "fail and return a 'NotAuthorizedException' whe the user's permission are not high enough (e.g., not member of ProjectAdmin group" ignore {}
 
             "fail and return a 'DuplicateValueException' when permission for project and group combination already exists" in {
-                val iri = knoraIdUtil.makeRandomPermissionIri
+                val iri = knoraIdUtil.makeRandomPermissionIri(imagesProject.shortcode)
                 actorUnderTest ! AdministrativePermissionCreateRequestADM(
                     newAdministrativePermission = NewAdministrativePermissionADM(
                         iri = iri,
@@ -414,8 +414,8 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             "return the default object access permissions 'string' for the 'anything:hasInterval' property" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
                     projectIri = ANYTHING_PROJECT_IRI,
-                    resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
-                    propertyIri = "http://www.knora.org/ontology/anything#hasInterval",
+                    resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
+                    propertyIri = "http://www.knora.org/ontology/0001/anything#hasInterval",
                     targetUser = SharedTestDataADM.anythingUser1,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -425,7 +425,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             "return the default object access permissions 'string' for the 'anything:Thing' class" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
                     projectIri = ANYTHING_PROJECT_IRI,
-                    resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                    resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                     targetUser = SharedTestDataADM.anythingUser1,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -435,8 +435,8 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             "return the default object access permissions 'string' for the 'anything:Thing' class and 'anything:hasText' property" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
                     projectIri = ANYTHING_PROJECT_IRI,
-                    resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
-                    propertyIri = "http://www.knora.org/ontology/anything#hasText",
+                    resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
+                    propertyIri = "http://www.knora.org/ontology/0001/anything#hasText",
                     targetUser = SharedTestDataADM.anythingUser1,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -447,7 +447,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
                     projectIri = ANYTHING_PROJECT_IRI,
                     resourceClassIri = s"$IMAGES_ONTOLOGY_IRI#bild",
-                    propertyIri = "http://www.knora.org/ontology/anything#hasText",
+                    propertyIri = "http://www.knora.org/ontology/0001/anything#hasText",
                     targetUser = SharedTestDataADM.anythingUser1,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -456,7 +456,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "return the default object access permissions 'string' for the 'anything:Thing' resource class for the root user (system admin and not member of project)" in {
                 actorUnderTest ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-                    projectIri = ANYTHING_PROJECT_IRI, resourceClassIri = "http://www.knora.org/ontology/anything#Thing",
+                    projectIri = ANYTHING_PROJECT_IRI, resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                     targetUser = SharedTestDataADM.rootUser,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )

@@ -619,11 +619,19 @@ class StringFormatterSpec extends CoreSpec() {
         }
 
         "return the data named graph of a project with short code" in {
-            val shortcode = SharedTestDataV1.imagesProjectInfo.shortcode.get
+            val shortcode = SharedTestDataV1.imagesProjectInfo.shortcode
             val shortname = SharedTestDataV1.imagesProjectInfo.shortname
             val expected = s"http://www.knora.org/data/$shortcode/$shortname"
             val result = stringFormatter.projectDataNamedGraph(SharedTestDataV1.imagesProjectInfo)
             result should be(expected)
+
+            // check consistency of our test data
+            stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.anythingProject) should be (SharedOntologyTestDataADM.ANYTHING_DATA_IRI)
+            stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.imagesProject) should be (SharedOntologyTestDataADM.IMAGES_DATA_IRI)
+            stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.beolProject) should be (SharedOntologyTestDataADM.BEOL_DATA_IRI)
+            stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.biblioProject) should be (SharedOntologyTestDataADM.BIBLIO_DATA_IRI)
+            stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.incunabulaProject) should be (SharedOntologyTestDataADM.INCUNABULA_DATA_IRI)
+            stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.dokubibProject) should be (SharedOntologyTestDataADM.DOKUBIB_DATA_IRI)
         }
 
         "validate project shortcode" in {

@@ -19,7 +19,7 @@
 	incunabula:publoc <http://data.knora.org/21abac2162/values/40e459f18201> ;
 	incunabula:title <http://data.knora.org/21abac2162/values/f76660458201> ;
 	incunabula:url <http://data.knora.org/21abac2162/values/8abc888d079e04> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
@@ -139,7 +139,7 @@
 	incunabula:partOf <http://data.knora.org/c5058f3a> ;
 	incunabula:partOfValue <http://data.knora.org/4f11adaf/values/0490c077-a754-460b-9633-c78bfe97c784> ;
 	incunabula:seqnum <http://data.knora.org/4f11adaf/values/f3c585ce03> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
@@ -221,7 +221,7 @@
 	knora-base:valueHasString "2" .
 
 <http://data.knora.org/5e51519c4407> a knora-base:Region ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
 	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:creationDate "Z"^^xsd:dateTimeStamp ;
 	knora-base:hasColor <http://data.knora.org/5e51519c4407/values/59b04e21ed2a> ;
@@ -277,7 +277,7 @@
 	incunabula:pagenum <http://data.knora.org/8a0b1e75/values/61cb927602> ;
 	incunabula:partOf <http://data.knora.org/c5058f3a> ;
 	incunabula:partOfValue <http://data.knora.org/8a0b1e75/values/3a7b5130-22c2-4400-a794-062b7a3e3436> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
@@ -363,7 +363,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 
 <http://data.knora.org/9935159f67> a incunabula:book ;
 	incunabula:title <http://data.knora.org/9935159f67/values/e6e02fe39801> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
@@ -389,7 +389,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	incunabula:publoc <http://data.knora.org/c3f913666f/values/965ef721b901> ;
 	incunabula:title <http://data.knora.org/c3f913666f/values/8ab7aa3cb801> , <http://data.knora.org/c3f913666f/values/4de1fd75b801> ;
 	incunabula:url <http://data.knora.org/c3f913666f/values/dfdbf0cdb901> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
@@ -731,7 +731,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	incunabula:publoc <http://data.knora.org/c5058f3a/values/0ca74ce5> ;
 	incunabula:title <http://data.knora.org/c5058f3a/values/c3295339> ;
 	incunabula:url <http://data.knora.org/c5058f3a/values/10e00c7acc2704> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
@@ -832,7 +832,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "GW 4168" .
 
 <http://data.knora.org/cb1a74e3e2f6> a knora-base:LinkObj ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
 	knora-base:hasComment <http://data.knora.org/cb1a74e3e2f6/values/dfe0ce1e099e04> ;
@@ -872,7 +872,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	incunabula:publoc <http://data.knora.org/e41ab5695c/values/45c33d6e6b01> ;
 	incunabula:title <http://data.knora.org/e41ab5695c/values/391cf1886a01> , <http://data.knora.org/e41ab5695c/values/fc4544c26a01> ;
 	incunabula:url <http://data.knora.org/e41ab5695c/values/10102f00089e04> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
@@ -1003,7 +1003,7 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
 	knora-base:valueHasString "Sant Brigitten gebettly" .
 
 <http://data.knora.org/miscResource> a incunabula:misc ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-03-02T15:05:15Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;

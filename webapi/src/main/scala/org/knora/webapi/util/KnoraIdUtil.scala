@@ -140,11 +140,7 @@ class KnoraIdUtil {
       */
     def makeRandomResourceIri(projectInfo: ProjectInfoV1): IRI = {
         val knoraResourceID = makeRandomBase64EncodedUuid
-        if (projectInfo.shortcode.isDefined) {
-            s"http://$IriDomain/${projectInfo.shortcode.get}/${projectInfo.shortname}/$knoraResourceID"
-        } else {
-            s"http://$IriDomain/${projectInfo.shortname}/$knoraResourceID"
-        }
+        s"http://$IriDomain/${projectInfo.shortcode}/${projectInfo.shortname}/$knoraResourceID"
     }
 
     /**
@@ -264,11 +260,12 @@ class KnoraIdUtil {
     /**
       * Creates a new permission IRI based on a UUID.
       *
+      * @param shortcode the required project shortcode.
       * @return the IRI of the permission object.
       */
-    def makeRandomPermissionIri: IRI = {
+    def makeRandomPermissionIri(shortcode: String): IRI = {
         val knoraPermissionUuid = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/permissions/$knoraPermissionUuid"
+        s"http://$IriDomain/permissions/$shortcode/$knoraPermissionUuid"
     }
 
     /**

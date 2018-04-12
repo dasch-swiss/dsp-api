@@ -54,7 +54,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     val rootCreds = CredentialsADM(
