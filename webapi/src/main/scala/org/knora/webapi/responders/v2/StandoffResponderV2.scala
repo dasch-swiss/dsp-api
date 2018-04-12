@@ -31,13 +31,14 @@ import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 import org.knora.webapi._
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{StandoffEntityInfoGetRequestV1, StandoffEntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
+import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, StandoffEntityInfoGetRequestV2, StandoffEntityInfoGetResponseV2}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
@@ -381,7 +382,7 @@ class StandoffResponderV2 extends Responder {
 
             // check if the given project IRI represents an actual project
             projectInfo: ProjectInfoResponseV1 <- (responderManager ? ProjectInfoByIRIGetRequestV1(
-                iri = projectIri.toString, // TODO: make sure that this is the internal project IRI
+                iri = projectIri.toString,
                 Some(userProfile.asUserProfileV1)
             )).mapTo[ProjectInfoResponseV1]
 
@@ -390,14 +391,14 @@ class StandoffResponderV2 extends Responder {
             // TODO: make sure that has sufficient permissions to create a mapping in the given project
 
             // create the mapping IRI from the project IRI and the name provided by the user
-            mappingIri = knoraIdUtil.makeProjectMappingIri(projectIri.toString, mappingName) // TODO: make sure that this is the internal project IRI
+            mappingIri = knoraIdUtil.makeProjectMappingIri(projectIri.toString, mappingName)
 
             // put the mapping into the named graph of the project
             namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo.project_info)
 
             result: CreateMappingResponseV2 <- IriLocker.runWithIriLock(
                 apiRequestID,
-                knoraIdUtil.createMappingLockIriForProject(projectIri.toString), // use a special project specific IRI to lock the creation of mappings for the given project // TODO: make sure that this is the internal project IRI
+                knoraIdUtil.createMappingLockIriForProject(projectIri.toString), // use a special project specific IRI to lock the creation of mappings for the given project
                 () => createMappingAndCheck(
                     xml = xml,
                     label = label,
@@ -682,6 +683,8 @@ class StandoffResponderV2 extends Responder {
       */
     private def getStandoffEntitiesFromMappingV2(mappingXMLtoStandoff: MappingXMLtoStandoff, userProfile: UserADM): Future[StandoffEntityInfoGetResponseV1] = {
 
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
         // invert the mapping so standoff class Iris become keys
         val mappingStandoffToXML: Map[IRI, XMLTagItem] = StandoffTagUtilV1.invertXMLToStandoffMapping(mappingXMLtoStandoff)
 
@@ -703,6 +706,8 @@ class StandoffResponderV2 extends Responder {
 
             // request information about standoff classes that should be created
             standoffClassEntities: StandoffEntityInfoGetResponseV1 <- (responderManager ? StandoffEntityInfoGetRequestV1(standoffClassIris = standoffTagIrisFromMapping, userProfile = userProfile)).mapTo[StandoffEntityInfoGetResponseV1]
+
+            // standoffClassEntities2: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(standoffClassIris = standoffTagIrisFromMapping.map(_.toSmartIri), requestingUser = userProfile)).mapTo[StandoffEntityInfoGetResponseV2]
 
             // check that the ontology responder returned the information for all the standoff classes it was asked for
             // if the ontology responder does not return a standoff class it was asked for, then this standoff class does not exist
