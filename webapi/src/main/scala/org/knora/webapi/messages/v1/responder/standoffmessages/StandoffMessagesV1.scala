@@ -89,6 +89,29 @@ case class GetXSLTransformationRequestV1(xsltTextRepresentationIri: IRI, userPro
 case class GetXSLTransformationResponseV1(xslt: String)
 
 /**
+  * Represents an API request to create a mapping.
+  *
+  * @param project_id  the project in which the mapping is to be added.
+  * @param label       the label describing the mapping.
+  * @param mappingName the name of the mapping (will be appended to the mapping IRI).
+  */
+case class CreateMappingApiRequestV1(project_id: IRI, label: String, mappingName: String) {
+    def toJsValue: JsValue = RepresentationV1JsonProtocol.createMappingApiRequestV1Format.write(this)
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// JSON formatting
+
+/**
+  * A spray-json protocol for generating Knora API v1 JSON for standoff handling.
+  */
+object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
+
+    implicit val createMappingApiRequestV1Format: RootJsonFormat[CreateMappingApiRequestV1] = jsonFormat3(CreateMappingApiRequestV1)
+    implicit val createMappingResponseV1Format: RootJsonFormat[CreateMappingResponseV1] = jsonFormat1(CreateMappingResponseV1)
+}
+
+/**
   * Represents a mapping between XML tags and standoff entities (classes and properties).
   *
   * Example:
@@ -132,17 +155,6 @@ case class XMLTagToStandoffClass(standoffClassIri: IRI, attributesToProps: Map[S
   * @param dataTypeXMLAttribute  the XML attribute holding the information needed for the standoff class data type (e.g., a date string).
   */
 case class XMLStandoffDataTypeClass(standoffDataTypeClass: StandoffDataTypeClasses.Value, dataTypeXMLAttribute: String)
-
-/**
-  * Represents an API request to create a mapping.
-  *
-  * @param project_id  the project in which the mapping is to be added.
-  * @param label       the label describing the mapping.
-  * @param mappingName the name of the mapping (will be appended to the mapping IRI).
-  */
-case class CreateMappingApiRequestV1(project_id: IRI, label: String, mappingName: String) {
-    def toJsValue: JsValue = RepresentationV1JsonProtocol.createMappingApiRequestV1Format.write(this)
-}
 
 /**
   * Represents the data types of standoff classes.
@@ -242,16 +254,4 @@ object StandoffProperties {
     val internalReferenceProperties = Set(OntologyConstants.KnoraBase.StandoffTagHasInternalReference)
 
     val dataTypeProperties: Set[IRI] = dateProperties ++ intervalProperties ++ booleanProperties ++ decimalProperties ++ integerProperties ++ uriProperties ++ colorProperties ++ linkProperties ++ internalReferenceProperties
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// JSON formatting
-
-/**
-  * A spray-json protocol for generating Knora API v1 JSON for standoff handling.
-  */
-object RepresentationV1JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
-
-    implicit val createMappingApiRequestV1Format: RootJsonFormat[CreateMappingApiRequestV1] = jsonFormat3(CreateMappingApiRequestV1)
-    implicit val createMappingResponseV1Format: RootJsonFormat[CreateMappingResponseV1] = jsonFormat1(CreateMappingResponseV1)
 }
