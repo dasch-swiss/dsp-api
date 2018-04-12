@@ -41,7 +41,9 @@
 
                    rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-                   rdfs:comment "Connects a Resource or a ListNode (only the root node) to a project"@en ;
+                   rdfs:label "attached to project"@en ;
+
+                   rdfs:comment "Connects something to a project"@en ;
 
                    :objectClassConstraint :knoraProject .
 
@@ -53,7 +55,9 @@
 
                 rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-                rdfs:comment "Connects a Resource or a Value to a user"@en ;
+                rdfs:label "attached to user"@en ;
+
+                rdfs:comment "Connects something to a user"@en ;
 
                 :objectClassConstraint :User .
 
