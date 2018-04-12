@@ -22,7 +22,7 @@ package org.knora.webapi.twirl
 import java.util.UUID
 
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 
 /**
   * The following case classes represent standoff classes and attributes

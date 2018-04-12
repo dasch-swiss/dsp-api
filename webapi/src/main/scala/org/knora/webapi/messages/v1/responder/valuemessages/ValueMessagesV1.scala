@@ -26,8 +26,8 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
-import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.twirl.{StandoffTagAttributeV1, StandoffTagInternalReferenceAttributeV1, StandoffTagV1}
 import org.knora.webapi.util.standoff.StandoffTagUtilV1
 import org.knora.webapi.util.{DateUtilV1, KnoraIdUtil, StringFormatter}

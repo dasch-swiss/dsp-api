@@ -23,7 +23,7 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.messages.v1.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
 import org.knora.webapi.{OntologyConstants, Settings}

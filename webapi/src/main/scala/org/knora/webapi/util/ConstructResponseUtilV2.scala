@@ -23,7 +23,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{LiteralV2, SparqlConstructResponse}
 import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
-import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
+import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.twirl._

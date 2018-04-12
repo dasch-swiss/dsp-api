@@ -24,7 +24,7 @@ import java.io.{StringReader, StringWriter}
 import javax.xml.transform.stream.StreamSource
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
-import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
+import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.twirl.StandoffTagV1
 import org.knora.webapi.util.IriConversions._

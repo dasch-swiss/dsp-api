@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetReq
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
-import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality

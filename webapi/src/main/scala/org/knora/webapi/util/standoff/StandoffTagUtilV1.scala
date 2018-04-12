@@ -28,6 +28,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.{DateUtilV1, StringFormatter}
 
