@@ -84,7 +84,7 @@ class StandoffResponderV2 extends Responder {
       *
       * @param xslTransformationIri The IRI of the resource representing the XSL Transformation (a [[OntologyConstants.KnoraBase.XSLTransformation]]).
       * @param userProfile          The client making the request.
-      * @return a [[GetXSLTransformationResponseV1]].
+      * @return a [[GetXSLTransformationResponseV2]].
       */
     private def getXSLTransformation(xslTransformationIri: IRI, userProfile: UserADM): Future[GetXSLTransformationResponseV2] = {
 
@@ -353,7 +353,11 @@ class StandoffResponderV2 extends Responder {
 
 
             } yield {
-                CreateMappingResponseV2(mappingIri = mappingIri)
+                CreateMappingResponseV2(
+                    mappingIri = mappingIri,
+                    label = label,
+                    projectIri = projectIri
+                )
             }
 
 

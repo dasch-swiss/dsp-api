@@ -89,8 +89,10 @@ case class CreateMappingRequestXMLV2(xml: String) extends StandoffResponderReque
   * Provides the IRI of the created mapping.
   *
   * @param mappingIri the IRI of the resource (knora-base:XMLToStandoffMapping) representing the mapping that has been created.
+  * @param label the label describing the mapping.
+  * @param projectIri the project the mapping belongs to.
   */
-case class CreateMappingResponseV2(mappingIri: IRI) extends KnoraResponseV2 {
+case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: SmartIri) extends KnoraResponseV2 {
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
 
@@ -98,7 +100,9 @@ case class CreateMappingResponseV2(mappingIri: IRI) extends KnoraResponseV2 {
 
         val body = JsonLDObject(Map(
             "@id" -> JsonLDString(mappingIri),
-            "@type" -> JsonLDString(OntologyConstants.KnoraBase.XMLToStandoffMapping.toSmartIri.toOntologySchema(targetSchema).toString)
+            "@type" -> JsonLDString(OntologyConstants.KnoraBase.XMLToStandoffMapping.toSmartIri.toOntologySchema(targetSchema).toString),
+            "rdfs:label" -> JsonLDString(label),
+            OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject.toSmartIri.toOntologySchema(targetSchema).toString -> JsonLDString(projectIri.toString)
         ))
 
         val context = JsonLDObject(Map(
