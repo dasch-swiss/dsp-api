@@ -669,12 +669,12 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 id = SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI
             ),
             NamedGraphV1( // something
-                shortname = "anything",
-                description = "Anything Project",
+                shortname = SharedTestDataV1.anythingProjectInfo.shortname,
+                description = SharedTestDataV1.anythingProjectInfo.description.get,
                 uri = "http://www.knora.org/ontology/0001/something",
                 id = "http://www.knora.org/ontology/0001/something",
-                project_id = "http://rdfh.ch/projects/0001",
-                longname = "Anything Project",
+                project_id = SharedTestDataV1.anythingProjectInfo.id,
+                longname = SharedTestDataV1.anythingProjectInfo.longname.get,
                 active = true
             ),
             NamedGraphV1( // Dokubib
@@ -1090,12 +1090,9 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = OntologyResponderV1Spec.userProfileWithEnglish
             )
 
-            expectMsgPF(timeout) {
-                case receivedMsg: NamedGraphsResponseV1 => {
-                    checkVocabularies(received = receivedMsg, expected = vocabulariesResponseV1)
-                    receivedMsg.vocabularies should contain allElementsOf vocabulariesResponseV1.vocabularies
-                }
-            }
+            val receivedMsg = expectMsgType[NamedGraphsResponseV1](timeout)
+            checkVocabularies(received = receivedMsg, expected = vocabulariesResponseV1)
+            // receivedMsg.vocabularies should contain allElementsOf vocabulariesResponseV1.vocabularies
 
         }
 
