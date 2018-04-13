@@ -30,8 +30,8 @@ import org.knora.webapi.http.ApiStatusCodesV1
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingRequestV1, GetMappingResponseV1}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.util.standoff.StandoffTagUtilV1
-import org.knora.webapi.util.standoff.StandoffTagUtilV1.TextWithStandoffTagsV1
+import org.knora.webapi.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import spray.json.{JsNumber, JsObject}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -182,7 +182,7 @@ object RouteUtilV1 {
 
     /**
       *
-      * Converts XML to a [[TextWithStandoffTagsV1]], representing the text and its standoff markup.
+      * Converts XML to a [[TextWithStandoffTagsV2]], representing the text and its standoff markup.
       *
       * @param xml                            the given XML to be converted to standoff.
       * @param mappingIri                     the mapping to be used to convert the XML to standoff.
@@ -195,7 +195,7 @@ object RouteUtilV1 {
       * @param log                            a logging adapter.
       * @param timeout                        a timeout for `ask` messages.
       * @param executionContext               an execution context for futures.
-      * @return a [[TextWithStandoffTagsV1]].
+      * @return a [[TextWithStandoffTagsV2]].
       */
     def convertXMLtoStandoffTagV1(xml: String,
                                   mappingIri: IRI,
@@ -203,14 +203,14 @@ object RouteUtilV1 {
                                   userProfile: UserADM,
                                   settings: SettingsImpl,
                                   responderManager: ActorSelection,
-                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextWithStandoffTagsV1] = {
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextWithStandoffTagsV2] = {
 
         for {
 
             // get the mapping
             mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV1]
 
-            textWithStandoffTagV1 = StandoffTagUtilV1.convertXMLtoStandoffTagV1(
+            textWithStandoffTagV1 = StandoffTagUtilV2.convertXMLtoStandoffTagV2(
                 xml = xml,
                 mapping = mappingResponse,
                 acceptStandoffLinksToClientIDs = acceptStandoffLinksToClientIDs,

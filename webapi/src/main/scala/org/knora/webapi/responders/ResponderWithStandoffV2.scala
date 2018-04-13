@@ -42,6 +42,8 @@ abstract class ResponderWithStandoffV2 extends Responder {
       */
     protected def getMappingsFromQueryResultsSeparated(queryResultsSeparated: Map[IRI, ResourceWithValueRdfData], userProfile: UserADM): Future[Map[IRI, MappingAndXSLTransformation]] = {
 
+        // TODO: use v2 mapping
+
         // collect the Iris of the mappings referred to in the resources' text values
         val mappingIris: Set[IRI] = queryResultsSeparated.flatMap {
             case (_, assertions: ResourceWithValueRdfData) =>

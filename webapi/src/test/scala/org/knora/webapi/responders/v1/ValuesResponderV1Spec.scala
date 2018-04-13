@@ -35,7 +35,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStan
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
+import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
@@ -111,8 +111,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     private val currentGeomValueIri = new MutableTestIri
     private val partOfLinkValueIri = new MutableTestIri
     // a sample set of standoff tags
-    private val sampleStandoff: Vector[StandoffTagV1] = Vector(
-        StandoffTagV1(
+    private val sampleStandoff: Vector[StandoffTagV2] = Vector(
+        StandoffTagV2(
             standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
             startPosition = 0,
             endPosition = 7,
@@ -120,7 +120,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             originalXMLID = None,
             startIndex = 0
         ),
-        StandoffTagV1(
+        StandoffTagV2(
             standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
             startPosition = 0,
             endPosition = 10,
@@ -134,7 +134,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         defaultXSLTransformation = None
     )
 
-    private def checkComment1aResponse(response: CreateValueResponseV1, utf8str: String, standoff: Seq[StandoffTagV1] = Seq.empty[StandoffTagV1]): Unit = {
+    private def checkComment1aResponse(response: CreateValueResponseV1, utf8str: String, standoff: Seq[StandoffTagV2] = Seq.empty[StandoffTagV2]): Unit = {
         assert(response.rights == 8, "rights was not 8")
         assert(response.value.asInstanceOf[TextValueV1].utf8str == utf8str, "comment value did not match")
 
@@ -162,14 +162,14 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         // expected Standoff information for <http://data.knora.org/e41ab5695c/values/d3398239089e04> in incunabula-data.ttl
         val standoff = Vector(
-            StandoffTagV1(
+            StandoffTagV2(
                 standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag,
                 startPosition = 0,
                 endPosition = 62,
                 uuid = "4800e53e-3835-498e-b658-6cc4f93ab894",
                 originalXMLID = None,
                 startIndex = 0
-            ), StandoffTagV1(
+            ), StandoffTagV2(
                 standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
                 startPosition = 21,
                 endPosition = 25,
@@ -183,7 +183,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         assert(response.value.asInstanceOf[TextValueWithStandoffV1].standoff.sortBy(_.standoffTagClassIri) == standoff.sortBy(_.standoffTagClassIri), "standoff did not match")
     }
 
-    private def checkComment1bResponse(response: ChangeValueResponseV1, utf8str: String, standoff: Seq[StandoffTagV1] = Seq.empty[StandoffTagV1]): Unit = {
+    private def checkComment1bResponse(response: ChangeValueResponseV1, utf8str: String, standoff: Seq[StandoffTagV2] = Seq.empty[StandoffTagV2]): Unit = {
         assert(response.rights == 8, "rights was not 8")
 
         assert(response.value.asInstanceOf[TextValueV1].utf8str == utf8str, "comment value did not match")
@@ -771,12 +771,12 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val textValueWithResourceRef = TextValueWithStandoffV1(
                 utf8str = "This comment refers to another resource",
                 standoff = Vector(
-                    StandoffTagV1(
+                    StandoffTagV2(
                         dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                         standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                         startPosition = 31,
                         endPosition = 39,
-                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
                         uuid = UUID.randomUUID().toString,
                         originalXMLID = None,
                         startIndex = 0
@@ -849,22 +849,22 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val textValueWithResourceRef = TextValueWithStandoffV1(
                 utf8str = "This updated comment refers to another resource",
                 standoff = Vector(
-                        StandoffTagV1(
+                        StandoffTagV2(
                             dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                             standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                             startPosition = 39,
                             endPosition = 47,
-                            attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                            attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
                             uuid = UUID.randomUUID().toString,
                             originalXMLID = None,
                             startIndex = 0
                         ),
-                        StandoffTagV1(
+                        StandoffTagV2(
                             dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                             standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                             startPosition = 0,
                             endPosition = 4,
-                            attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                            attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
                             uuid = UUID.randomUUID().toString,
                             originalXMLID = None,
                             startIndex = 0
@@ -934,12 +934,12 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val textValueWithResourceRef = TextValueWithStandoffV1(
                 utf8str = "This remark refers to another resource",
                 standoff = Vector(
-                    StandoffTagV1(
+                    StandoffTagV2(
                         dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                         standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                         startPosition = 30,
                         endPosition = 38,
-                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
                         uuid = UUID.randomUUID().toString,
                         originalXMLID = None,
                         startIndex = 0
@@ -1134,12 +1134,12 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val textValueWithResourceRef = TextValueWithStandoffV1(
                 utf8str = "This updated comment refers again to another resource",
                 standoff = Vector(
-                    StandoffTagV1(
+                    StandoffTagV2(
                         dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                         standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                         startPosition = 45,
                         endPosition = 53,
-                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
                         uuid = UUID.randomUUID().toString,
                         originalXMLID = None,
                         startIndex = 0
@@ -1930,13 +1930,13 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val textValueWithResourceRef = TextValueWithStandoffV1(
                 utf8str = "This comment refers to another resource",
                 standoff = Vector(
-                    StandoffTagV1(
+                    StandoffTagV2(
                         standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                         dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                         startPosition = 31,
                         endPosition = 39,
                         startIndex = 0,
-                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = nonexistentIri)),
+                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = nonexistentIri)),
                         uuid = UUID.randomUUID().toString,
                         originalXMLID = None
                     )

@@ -27,7 +27,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStand
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.twirl._
-import org.knora.webapi.util.standoff.StandoffTagUtilV1
+import org.knora.webapi.util.standoff.StandoffTagUtilV2
 
 
 
@@ -435,7 +435,7 @@ object ConstructResponseUtilV2 {
 
                     val mapping: MappingAndXSLTransformation = mappings(mappingIri)
 
-                    val standoffTags: Vector[StandoffTagV1] = StandoffTagUtilV1.createStandoffTagsV1FromSparqlResults(mapping.standoffEntities, valueObject.standoff)
+                    val standoffTags: Vector[StandoffTagV2] = StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(mapping.standoffEntities, valueObject.standoff)
 
                     TextValueContentV2(valueHasString = valueObjectValueHasString, standoff = Some(StandoffAndMapping(standoff = standoffTags, mappingIri = mappingIri, mapping = mapping.mapping, XSLT = mapping.XSLTransformation)), comment = valueCommentOption)
 

@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingReques
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.twirl._
-import org.knora.webapi.util.standoff.StandoffTagUtilV1
+import org.knora.webapi.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -477,7 +477,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             // get the mapping and the related standoff entities
             mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV1]
 
-            standoffTags: Seq[StandoffTagV1] = StandoffTagUtilV1.createStandoffTagsV1FromSparqlResults(mappingResponse.standoffEntities, valueProps.standoff)
+            standoffTags: Seq[StandoffTagV2] = StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(mappingResponse.standoffEntities, valueProps.standoff)
 
         } yield TextValueWithStandoffV1(
             utf8str = utf8str,

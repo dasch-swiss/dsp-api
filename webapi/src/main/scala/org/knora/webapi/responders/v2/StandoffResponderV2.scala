@@ -47,8 +47,8 @@ import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, Map
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
-import org.knora.webapi.util.standoff.StandoffTagUtilV1
-import org.knora.webapi.util.standoff.StandoffTagUtilV1.XMLTagItem
+import org.knora.webapi.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.util.standoff.StandoffTagUtilV2.XMLTagItem
 import org.xml.sax.SAXException
 
 import scala.concurrent.Future
@@ -525,7 +525,7 @@ class StandoffResponderV2 extends Responder {
 
         // invert mapping in order to run checks for duplicate use of
         // standoff class Iris and property Iris in the attributes for a standoff class
-        StandoffTagUtilV1.invertXMLToStandoffMapping(mappingXMLToStandoff)
+        StandoffTagUtilV2.invertXMLToStandoffMapping(mappingXMLToStandoff)
 
         mappingXMLToStandoff
 
@@ -691,7 +691,7 @@ class StandoffResponderV2 extends Responder {
         // TODO: think about refactoring the mapping so it uses SmartIris (that would also have to include `StandoffProperties`)
 
         // invert the mapping so standoff class Iris become keys
-        val mappingStandoffToXML: Map[IRI, XMLTagItem] = StandoffTagUtilV1.invertXMLToStandoffMapping(mappingXMLtoStandoff)
+        val mappingStandoffToXML: Map[IRI, XMLTagItem] = StandoffTagUtilV2.invertXMLToStandoffMapping(mappingXMLtoStandoff)
 
         // collect standoff class Iris from the mapping
         val standoffTagIrisFromMapping: Set[IRI] = mappingStandoffToXML.keySet

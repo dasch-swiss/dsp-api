@@ -33,7 +33,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
-import org.knora.webapi.twirl.StandoffTagV1
+import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.JavaUtil.Optional
 import spray.json.JsonParser
 
@@ -1599,16 +1599,16 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     /**
       * Map over all standoff tags to collect IRIs that are referred to by linking standoff tags.
       *
-      * @param standoffTags The list of [[StandoffTagV1]].
-      * @return a set of Iris referred to in the [[StandoffTagV1]].
+      * @param standoffTags The list of [[StandoffTagV2]].
+      * @return a set of Iris referred to in the [[StandoffTagV2]].
       */
-    def getResourceIrisFromStandoffTags(standoffTags: Seq[StandoffTagV1]): Set[IRI] = {
+    def getResourceIrisFromStandoffTags(standoffTags: Seq[StandoffTagV2]): Set[IRI] = {
         standoffTags.foldLeft(Set.empty[IRI]) {
-            case (acc: Set[IRI], standoffNode: StandoffTagV1) =>
+            case (acc: Set[IRI], standoffNode: StandoffTagV2) =>
 
                 standoffNode match {
 
-                    case node: StandoffTagV1 if node.dataType.isDefined && node.dataType.get == StandoffDataTypeClasses.StandoffLinkTag =>
+                    case node: StandoffTagV2 if node.dataType.isDefined && node.dataType.get == StandoffDataTypeClasses.StandoffLinkTag =>
                         acc + node.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $node")).stringValue
 
                     case _ => acc

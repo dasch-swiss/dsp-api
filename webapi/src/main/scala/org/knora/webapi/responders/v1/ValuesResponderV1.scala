@@ -36,7 +36,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagIriAttributeV1, StandoffTagV1}
+import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
 
@@ -477,10 +477,10 @@ class ValuesResponderV1 extends Responder {
                                         val valueWithRealStandoffLinkIris = updateValueV1 match {
                                             case textValueWithStandoff: TextValueWithStandoffV1 =>
                                                 val standoffWithRealStandoffLinkIris = textValueWithStandoff.standoff.map {
-                                                    standoffTag: StandoffTagV1 =>
+                                                    standoffTag: StandoffTagV2 =>
                                                         standoffTag.copy(
                                                             attributes = standoffTag.attributes.map {
-                                                                case iriAttribute: StandoffTagIriAttributeV1 =>
+                                                                case iriAttribute: StandoffTagIriAttributeV2 =>
                                                                     iriAttribute.copy(
                                                                         value = stringFormatter.toRealStandoffLinkTargetResourceIri(
                                                                             iri = iriAttribute.value,
@@ -2542,7 +2542,7 @@ class ValuesResponderV1 extends Responder {
     }
 
     /**
-      * Checks a [[TextValueV1]] to make sure that the resource references in its [[StandoffTagV1]] objects match
+      * Checks a [[TextValueV1]] to make sure that the resource references in its [[StandoffTagV2]] objects match
       * the list of resource IRIs in its `resource_reference` member variable.
       *
       * @param textValue the [[TextValueV1]] to be checked.
@@ -2553,11 +2553,11 @@ class ValuesResponderV1 extends Responder {
         // please note that the function `StringFormatter.getResourceIrisFromStandoffTags` is not used here
         // because we want a double check (the function has already been called in the route or in standoff responder)
         val resourceRefsInStandoff: Set[IRI] = textValue.standoff.foldLeft(Set.empty[IRI]) {
-            case (acc: Set[IRI], standoffNode: StandoffTagV1) =>
+            case (acc: Set[IRI], standoffNode: StandoffTagV2) =>
 
                 standoffNode match {
 
-                    case node: StandoffTagV1 if node.dataType.isDefined && node.dataType.get == StandoffDataTypeClasses.StandoffLinkTag =>
+                    case node: StandoffTagV2 if node.dataType.isDefined && node.dataType.get == StandoffDataTypeClasses.StandoffLinkTag =>
                         acc + node.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $node")).stringValue
 
                     case _ => acc
