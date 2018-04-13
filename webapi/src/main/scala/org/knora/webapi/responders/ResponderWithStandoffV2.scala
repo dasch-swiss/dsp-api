@@ -22,8 +22,7 @@ package org.knora.webapi.responders
 import akka.pattern._
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v1.responder.standoffmessages.{GetXSLTransformationRequestV1, GetXSLTransformationResponseV1}
-import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
 import org.knora.webapi.util.ConstructResponseUtilV2
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 
@@ -42,8 +41,6 @@ abstract class ResponderWithStandoffV2 extends Responder {
       * @return the referred mappings.
       */
     protected def getMappingsFromQueryResultsSeparated(queryResultsSeparated: Map[IRI, ResourceWithValueRdfData], userProfile: UserADM): Future[Map[IRI, MappingAndXSLTransformation]] = {
-
-        // TODO: use v2 mapping
 
         // collect the Iris of the mappings referred to in the resources' text values
         val mappingIris: Set[IRI] = queryResultsSeparated.flatMap {
@@ -72,7 +69,7 @@ abstract class ResponderWithStandoffV2 extends Responder {
                     // if given, get the default XSL transformation
                         xsltOption: Option[String] <- if (mapping.mapping.defaultXSLTransformation.nonEmpty) {
                             for {
-                                xslTransformation: GetXSLTransformationResponseV1 <- (responderManager ? GetXSLTransformationRequestV1(mapping.mapping.defaultXSLTransformation.get, userProfile = userProfile)).mapTo[GetXSLTransformationResponseV1]
+                                xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(mapping.mapping.defaultXSLTransformation.get, userProfile = userProfile)).mapTo[GetXSLTransformationResponseV2]
                             } yield Some(xslTransformation.xslt)
                         } else {
                             Future(None)
