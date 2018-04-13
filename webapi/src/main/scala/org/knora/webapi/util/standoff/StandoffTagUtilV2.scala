@@ -23,14 +23,16 @@ import java.util.UUID
 
 import akka.event.LoggingAdapter
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{PropertyInfoV1, StandoffEntityInfoGetResponseV1}
+import org.knora.webapi.messages.store.triplestoremessages.{IriLiteralV2, SmartIriLiteralV2}
+import org.knora.webapi.messages.v1.responder.ontologymessages.{PredicateInfoV1, PropertyInfoV1, StandoffEntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
+import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, PredicateInfoV2, StandoffEntityInfoGetResponseV2}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.twirl._
-import org.knora.webapi.util.{DateUtilV1, StringFormatter}
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.{DateUtilV1, SmartIri, StringFormatter}
 
 object StandoffTagUtilV2 {
 
@@ -700,7 +702,9 @@ object StandoffTagUtilV2 {
       * @param standoffAssertions standoff assertions to be converted into [[StandoffTagV2]]
       * @return a sequence of [[StandoffTagV2]].
       */
-    def createStandoffTagsV2FromSparqlResults(standoffEntities: StandoffEntityInfoGetResponseV1, standoffAssertions: Map[IRI, Map[IRI, String]]): Vector[StandoffTagV2] = { // TODO: use v2 standoff entity classes
+    def createStandoffTagsV2FromSparqlResults(standoffEntities: StandoffEntityInfoGetResponseV2, standoffAssertions: Map[IRI, Map[IRI, String]]): Vector[StandoffTagV2] = {
+
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         standoffAssertions.map {
 
@@ -708,17 +712,17 @@ object StandoffTagUtilV2 {
 
                 // create a sequence of `StandoffTagAttributeV2` from the given attributes
                 val attributes: Seq[StandoffTagAttributeV2] = (standoffNodes -- StandoffProperties.systemProperties - OntologyConstants.Rdf.Type).map {
-                    case (propIri, value) =>
+                    case (propIri: IRI, value) =>
 
-                        val propPredicates = standoffEntities.standoffPropertyInfoMap(propIri).predicates
+                        val propPredicates: Map[SmartIri, PredicateInfoV2] = standoffEntities.standoffPropertyInfoMap(propIri.toSmartIri).entityInfoContent.predicates
 
                         // check if the given property has an object type constraint (linking property) or an object data type constraint
-                        if (propPredicates.get(OntologyConstants.KnoraBase.ObjectClassConstraint).isDefined) {
+                        if (propPredicates.get(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri).isDefined) {
 
                             // it is a linking property
                             // check if it refers to a resource or a standoff node
 
-                            if (standoffEntities.standoffPropertyInfoMap(propIri).isStandoffInternalReferenceProperty) {
+                            if (standoffEntities.standoffPropertyInfoMap(propIri.toSmartIri).isStandoffInternalReferenceProperty) {
                                 // it refers to a standoff node, recreate the original id
 
                                 // value points to another standoff node
@@ -731,25 +735,25 @@ object StandoffTagUtilV2 {
                                 // it refers to a knora resource
                                 StandoffTagIriAttributeV2(standoffPropertyIri = propIri, value = value)
                             }
-                        } else if (propPredicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint).isDefined) {
+                        } else if (propPredicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint.toSmartIri).isDefined) {
 
                             // it is a data type property (literal)
-                            val propDataType = propPredicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint)
+                            val propDataType: PredicateInfoV2 = propPredicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint.toSmartIri)
 
                             propDataType.objects.headOption match {
-                                case Some(OntologyConstants.Xsd.String) =>
+                                case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.String))) =>
                                     StandoffTagStringAttributeV2(standoffPropertyIri = propIri, value = value)
 
-                                case Some(OntologyConstants.Xsd.Integer) =>
+                                case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Integer))) =>
                                     StandoffTagIntegerAttributeV2(standoffPropertyIri = propIri, value = value.toInt)
 
-                                case Some(OntologyConstants.Xsd.Decimal) =>
+                                case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Decimal))) =>
                                     StandoffTagDecimalAttributeV2(standoffPropertyIri = propIri, value = BigDecimal(value))
 
-                                case Some(OntologyConstants.Xsd.Boolean) =>
+                                case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Boolean))) =>
                                     StandoffTagBooleanAttributeV2(standoffPropertyIri = propIri, value = value.toBoolean)
 
-                                case Some(OntologyConstants.Xsd.Uri) => StandoffTagIriAttributeV2(standoffPropertyIri = propIri, value = value)
+                                case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Uri))) => StandoffTagIriAttributeV2(standoffPropertyIri = propIri, value = value)
 
                                 case None => throw InconsistentTriplestoreDataException(s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $propIri")
 
@@ -766,7 +770,7 @@ object StandoffTagUtilV2 {
                     standoffTagClassIri = standoffNodes(OntologyConstants.Rdf.Type),
                     startPosition = standoffNodes(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
                     endPosition = standoffNodes(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
-                    dataType = standoffEntities.standoffClassInfoMap(standoffNodes(OntologyConstants.Rdf.Type)).standoffDataType,
+                    dataType = standoffEntities.standoffClassInfoMap(standoffNodes(OntologyConstants.Rdf.Type).toSmartIri).standoffDataType,
                     startIndex = standoffNodes(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt,
                     endIndex = standoffNodes.get(OntologyConstants.KnoraBase.StandoffTagHasEndIndex) match {
                         case Some(endIndex: String) => Some(endIndex.toInt)
