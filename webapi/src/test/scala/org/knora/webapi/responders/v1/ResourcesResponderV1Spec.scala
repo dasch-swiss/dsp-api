@@ -1503,9 +1503,12 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 userProfile = SharedTestDataADM.anythingUser1
             )
 
-            expectMsgPF(timeout) {
-                case response: GraphDataGetResponseV1 => response should ===(graphForAnythingUser1)
-            }
+            val response = expectMsgType[GraphDataGetResponseV1](timeout)
+            val edges = response.edges
+            val nodes = response.nodes
+
+            edges should contain theSameElementsAs graphForAnythingUser1.edges
+            nodes should contain theSameElementsAs graphForAnythingUser1.nodes
         }
 
         "return a graph of resources reachable via links from/to a given resource, filtering the results according to the user's permissions" in {
@@ -1515,9 +1518,12 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 userProfile = SharedTestDataADM.incunabulaProjectAdminUser
             )
 
-            expectMsgPF(timeout) {
-                case response: GraphDataGetResponseV1 => response should ===(graphForIncunabulaUser)
-            }
+            val response = expectMsgType[GraphDataGetResponseV1](timeout)
+            val edges = response.edges
+            val nodes = response.nodes
+
+            edges should contain theSameElementsAs graphForIncunabulaUser.edges
+            nodes should contain theSameElementsAs graphForIncunabulaUser.nodes
         }
 
         "return a graph containing a standoff link" in {
