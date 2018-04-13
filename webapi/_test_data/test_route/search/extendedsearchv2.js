@@ -198,7 +198,7 @@ CONSTRUCT {
 // Attention: link objects have several instances of knora-api:hasLinkTo
 queryArr.push(`
     PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-    PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
     
     CONSTRUCT {
         ?linkObj knora-api:isMainResource true .
@@ -230,7 +230,7 @@ queryArr.push(`
 // Attention: link objects have several instances of knora-api:hasLinkTo
 queryArr.push(`
     PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-    PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
     
     CONSTRUCT {
         ?linkObj knora-api:isMainResource true .

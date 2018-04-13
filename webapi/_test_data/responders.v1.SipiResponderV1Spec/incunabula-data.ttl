@@ -6,8 +6,8 @@
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
-@prefix incunabula: <http://www.knora.org/ontology/incunabula#> .
-@prefix dokubib: <http://www.knora.org/ontology/dokubib#> .
+@prefix incunabula: <http://www.knora.org/ontology/0803/incunabula#> .
+@prefix dokubib: <http://www.knora.org/ontology/0804/dokubib#> .
 
 <http://data.knora.org/8a0b1e75> a incunabula:page ;
 	incunabula:description <http://data.knora.org/8a0b1e75/values/3e3d4dc0e922> ;

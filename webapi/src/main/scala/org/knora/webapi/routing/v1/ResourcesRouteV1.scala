@@ -608,6 +608,9 @@ object ResourcesRouteV1 extends Authenticator {
         def validateImportXml(xml: String, defaultNamespace: IRI, userProfile: UserADM): Future[Unit] = {
             // Convert the default namespace of the submitted XML to an internal ontology IRI. This should be the
             // IRI of the main ontology used in the import.
+
+            println("validateImportXml:" + defaultNamespace)
+
             val mainOntologyIri: SmartIri = stringFormatter.xmlImportNamespaceToInternalOntologyIriV1(
                 defaultNamespace, throw BadRequestException(s"Invalid XML import namespace: $defaultNamespace")
             )

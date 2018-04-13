@@ -20,11 +20,11 @@ send "load ../_test_data/all_data/admin-data.ttl into http://www.knora.org/data/
 expect $prompt
 send "load ../_test_data/all_data/permissions-data.ttl into http://www.knora.org/data/permissions .\r"
 expect $prompt
-send "load ../_test_data/all_data/system-data.ttl into http://www.knora.org/data/FFFF/SystemProject .\r"
+send "load ../_test_data/all_data/system-data.ttl into http://www.knora.org/data/0000/SystemProject .\r"
 expect $prompt
-send "load ../_test_data/ontologies/incunabula-onto.ttl into http://www.knora.org/ontology/incunabula .\r"
+send "load ../_test_data/ontologies/incunabula-onto.ttl into http://www.knora.org/ontology/0803/incunabula .\r"
 expect $prompt
-send "load ../_test_data/all_data/incunabula-data.ttl into http://www.knora.org/data/incunabula .\r"
+send "load ../_test_data/all_data/incunabula-data.ttl into http://www.knora.org/data/0803/incunabula .\r"
 expect $prompt
 send "load ../_test_data/ontologies/dokubib-onto.ttl into http://www.knora.org/ontology/0804/dokubib .\r"
 expect $prompt
@@ -32,17 +32,17 @@ send "load ../_test_data/ontologies/images-onto.ttl into http://www.knora.org/on
 expect $prompt
 send "load ../_test_data/demo_data/images-demo-data.ttl into http://www.knora.org/data/00FF/images .\r"
 expect $prompt
-send "load ../_test_data/ontologies/anything-onto.ttl into http://www.knora.org/ontology/anything .\r"
+send "load ../_test_data/ontologies/anything-onto.ttl into http://www.knora.org/ontology/0001/anything .\r"
 expect $prompt
-send "load ../_test_data/all_data/anything-data.ttl into http://www.knora.org/data/anything .\r"
+send "load ../_test_data/all_data/anything-data.ttl into http://www.knora.org/data/0001/anything .\r"
 expect $prompt
-send "load ../_test_data/ontologies/something-onto.ttl into http://www.knora.org/ontology/something .\r"
+send "load ../_test_data/ontologies/something-onto.ttl into http://www.knora.org/ontology/0001/something .\r"
 expect $prompt
 send "load ../_test_data/ontologies/beol-onto.ttl into http://www.knora.org/ontology/0801/beol .\r"
 expect $prompt
-send "load ../_test_data/ontologies/biblio-onto.ttl into http://www.knora.org/ontology/biblio .\r"
+send "load ../_test_data/ontologies/biblio-onto.ttl into http://www.knora.org/ontology/0802/biblio .\r"
 expect $prompt
-send "load ../_test_data/all_data/biblio-data.ttl into http://www.knora.org/data/biblio .\r"
+send "load ../_test_data/all_data/biblio-data.ttl into http://www.knora.org/data/0802/biblio .\r"
 expect $prompt
 send "load ../_test_data/all_data/beol-data.ttl into http://www.knora.org/data/0801/beol .\r"
 expect $prompt

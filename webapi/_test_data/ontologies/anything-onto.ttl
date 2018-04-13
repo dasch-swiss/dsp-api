@@ -386,7 +386,7 @@
 #################################################################
 
 
-###  http://www.knora.org/ontology/anything#standoffEventTagHasDescription
+###  http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription
 
 :standoffEventTagHasDescription rdf:type owl:DatatypeProperty ;
 

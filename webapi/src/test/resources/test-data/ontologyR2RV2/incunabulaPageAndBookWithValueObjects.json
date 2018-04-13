@@ -1,6 +1,6 @@
 {
   "knora-api:hasOntologies" : {
-    "@id" : "http://0.0.0.0:3333/ontology/incunabula/v2",
+    "@id" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2",
     "@type" : "owl:Ontology",
     "knora-api:attachedToProject" : "http://rdfh.ch/projects/0803",
     "knora-api:hasClasses" : {
@@ -61,62 +61,62 @@
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 1,
           "owl:minCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#title"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 2,
           "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#description"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#description"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 2,
           "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#hasAuthor"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#hasAuthor"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 3,
           "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#publisher"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publisher"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 4,
           "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#publoc"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publoc"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 5,
           "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#citation"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#citation"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 5,
           "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#pubdate"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 6,
           "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#location"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#location"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 7,
           "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#url"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#url"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 9,
           "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#physical_desc"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#physical_desc"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 10,
           "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#note"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#note"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 12,
           "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#book_comment"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment"
         } ]
       },
       "incunabula:page" : {
@@ -181,67 +181,67 @@
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 1,
           "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#pagenum"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pagenum"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 2,
           "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#description"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#description"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 2,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#partOf"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOf"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 2,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#partOfValue"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 3,
           "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#seqnum"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#seqnum"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 5,
           "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#citation"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#citation"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 6,
           "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#page_comment"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page_comment"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 7,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#origname"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#origname"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 10,
           "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#hasLeftSideband"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#hasLeftSideband"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 10,
           "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#hasLeftSidebandValue"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#hasLeftSidebandValue"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 11,
           "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#hasRightSideband"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#hasRightSideband"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 11,
           "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#hasRightSidebandValue"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#hasRightSidebandValue"
         }, {
           "@type" : "owl:Restriction",
           "salsah-gui:guiOrder" : 12,
           "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/incunabula/v2#transcription"
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#transcription"
         } ]
       }
     },
@@ -253,7 +253,7 @@
     "owl" : "http://www.w3.org/2002/07/owl#",
     "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "incunabula" : "http://0.0.0.0:3333/ontology/incunabula/v2#",
+    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#",
     "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }
 }

@@ -175,7 +175,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "serve a project-specific ontology as JSON-LD via the /ontologies/allentities route using the simple schema" in {
-            val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/simple/v2", "UTF-8")
+            val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2", "UTF-8")
 
             Get(s"/v2/ontologies/allentities/$ontologyIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
@@ -191,7 +191,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "serve a project-specific ontology as JSON-LD via the /ontologies/allentities route using the value object schema" in {
-            val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/v2", "UTF-8")
+            val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2", "UTF-8")
 
             Get(s"/v2/ontologies/allentities/$ontologyIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
@@ -243,7 +243,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "serve a project-specific property as JSON-LD using the simple schema" in {
-            val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/simple/v2#pubdate", "UTF-8")
+            val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate", "UTF-8")
 
             Get(s"/v2/ontologies/properties/$classIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
@@ -252,7 +252,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "serve a project-specific property as JSON-LD using the value object schema" in {
-            val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/v2#pubdate", "UTF-8")
+            val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate", "UTF-8")
 
             Get(s"/v2/ontologies/properties/$classIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
@@ -261,8 +261,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "serve two project-specific classes as JSON-LD using the value object schema" in {
-            val pageIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/v2#page", "UTF-8")
-            val bookIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/v2#book", "UTF-8")
+            val pageIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#page", "UTF-8")
+            val bookIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book", "UTF-8")
 
             Get(s"/v2/ontologies/classes/$pageIri/$bookIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
@@ -1154,7 +1154,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 val ontology = responseJsonDoc.requireObject(OntologyConstants.KnoraApiV2WithValueObjects.HasOntologies)
-                ontology.value("@id").asInstanceOf[JsonLDString].value should ===("http://0.0.0.0:3333/0001/ontology/anything/v2")
+                ontology.value("@id").asInstanceOf[JsonLDString].value should ===("http://0.0.0.0:3333/ontology/0001/anything/v2")
                 val newAnythingLastModDate = Instant.parse(ontology.value(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).asInstanceOf[JsonLDString].value)
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate

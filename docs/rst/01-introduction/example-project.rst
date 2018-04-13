@@ -83,7 +83,7 @@ ontology itself:
 
 ::
 
-    @prefix : <http://www.knora.org/ontology/incunabula#> .
+    @prefix : <http://www.knora.org/ontology/0803/incunabula#> .
 
 However, outside the ontology file, it would make more sense to define an
 ``incunabula`` prefix to refer to the ``incunabula`` ontology.

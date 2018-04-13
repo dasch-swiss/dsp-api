@@ -69,11 +69,9 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
     private val password = "test"
 
     private val rdfDataObjects = List(
-
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
-
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
     )
 
     "Load test data" in {
@@ -106,7 +104,11 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
                 val receivedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(JsonUtils.fromString(responseAs[String])).asInstanceOf[Map[IRI, Any]]
 
+                println(receivedJSONLDAsScala)
+
                 val expectedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(JsonUtils.fromString(FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPage.jsonld")))).asInstanceOf[Map[IRI, Any]]
+
+                println(expectedJSONLDAsScala)
 
                 assert(receivedJSONLDAsScala("@context") == expectedJSONLDAsScala("@context"), "@context incorrect")
 

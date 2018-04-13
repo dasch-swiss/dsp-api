@@ -39,7 +39,7 @@ class TypeInspectorSpec extends CoreSpec() {
 
     val WhereClauseWithoutAnnotations = WhereClause(patterns = Vector(
         StatementPattern(
-            obj = IriRef(iri = "http://0.0.0.0:3333/ontology/beol/simple/v2#letter".toSmartIri),
+            obj = IriRef(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri),
             pred = IriRef(iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
             subj = QueryVariable(variableName = "letter")
         ),
@@ -55,24 +55,24 @@ class TypeInspectorSpec extends CoreSpec() {
         ),
         FilterPattern(expression = OrExpression(
             rightArg = CompareExpression(
-                rightArg = IriRef(iri = "http://0.0.0.0:3333/ontology/beol/simple/v2#hasRecipient".toSmartIri),
+                rightArg = IriRef(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri),
                 operator = CompareExpressionOperator.EQUALS,
                 leftArg = QueryVariable(variableName = "linkingProp2")
             ),
             leftArg = CompareExpression(
-                rightArg = IriRef(iri = "http://0.0.0.0:3333/ontology/beol/simple/v2#hasAuthor".toSmartIri),
+                rightArg = IriRef(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri),
                 operator = CompareExpressionOperator.EQUALS,
                 leftArg = QueryVariable(variableName = "linkingProp2")
             )
         )),
         FilterPattern(expression = OrExpression(
             rightArg = CompareExpression(
-                rightArg = IriRef(iri = "http://0.0.0.0:3333/ontology/beol/simple/v2#hasRecipient".toSmartIri),
+                rightArg = IriRef(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri),
                 operator = CompareExpressionOperator.EQUALS,
                 leftArg = QueryVariable(variableName = "linkingProp1")
             ),
             leftArg = CompareExpression(
-                rightArg = IriRef(iri = "http://0.0.0.0:3333/ontology/beol/simple/v2#hasAuthor".toSmartIri),
+                rightArg = IriRef(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri),
                 operator = CompareExpressionOperator.EQUALS,
                 leftArg = QueryVariable(variableName = "linkingProp1")
             )

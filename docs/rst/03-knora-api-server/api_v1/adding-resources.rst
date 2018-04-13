@@ -161,26 +161,26 @@ Bulk Import Example
 
 Suppose we have a project with existing data (but no digital representations), which
 we want to import into Knora. We have created an ontology called
-``http://www.knora.org/ontology/biblio`` for the project, and this ontology
+``http://www.knora.org/ontology/0802/biblio`` for the project, and this ontology
 also uses definitions from another ontology, called
-``http://www.knora.org/ontology/beol``.
+``http://www.knora.org/ontology/0801/beol``.
 
 Get XML Schemas
 ~~~~~~~~~~~~~~~
 
 To get XML schemas for an import, we use the following route, specifying the IRI of our project's
-main ontology (in this case ``http://www.knora.org/ontology/biblio``):
+main ontology (in this case ``http://www.knora.org/ontology/0802/biblio``):
 
 ::
 
      HTTP GET to http://host/v1/resources/xmlimportschemas/ontologyIRI
 
-This returns a Zip archive called ``biblio-xml-schemas.zip``, containing three files:
+This returns a Zip archive called ``p0802-biblio-xml-schemas.zip``, containing three files:
 
-``biblio.xsd``
+``p0802-biblio.xsd``
     The schema for our main ontology.
 
-``beol.xsd``
+``p0801-beol.xsd``
     A schema for another ontology that our main ontology depends on.
 
 ``knoraXmlImport.xsd``
@@ -195,47 +195,47 @@ XML looks like this:
 ::
 
     <?xml version="1.0" encoding="UTF-8"?>
-    <knoraXmlImport:resources xmlns="http://api.knora.org/ontology/biblio/xml-import/v1#"
+    <knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://api.knora.org/ontology/biblio/xml-import/v1# biblio.xsd"
-        xmlns:biblio="http://api.knora.org/ontology/biblio/xml-import/v1#"
-        xmlns:beol="http://api.knora.org/ontology/beol/xml-import/v1#"
+        xsi:schemaLocation="http://api.knora.org/ontology/0802/biblio/xml-import/v1# p0802-biblio.xsd"
+        xmlns:p0802-biblio="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
+        xmlns:p0801-beol="http://api.knora.org/ontology/0801/beol/xml-import/v1#"
         xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
-        <beol:person id="abel">
+        <p0801-beol:person id="abel">
             <knoraXmlImport:label>Niels Henrik Abel</knoraXmlImport:label>
-            <beol:hasFamilyName knoraType="richtext_value">Abel</beol:hasFamilyName>
-            <beol:hasGivenName knoraType="richtext_value">Niels Henrik</beol:hasGivenName>
-        </beol:person>
-        <beol:person id="holmes">
+            <p0801-beol:hasFamilyName knoraType="richtext_value">Abel</p0801-beol:hasFamilyName>
+            <p0801-beol:hasGivenName knoraType="richtext_value">Niels Henrik</p0801-beol:hasGivenName>
+        </p0801-beol:person>
+        <p0801-beol:person id="holmes">
             <knoraXmlImport:label>Sherlock Holmes</knoraXmlImport:label>
-            <beol:hasFamilyName knoraType="richtext_value">Holmes</beol:hasFamilyName>
-            <beol:hasGivenName knoraType="richtext_value">Sherlock</beol:hasGivenName>
-        </beol:person>
-        <biblio:Journal id="math_intelligencer">
+            <p0801-beol:hasFamilyName knoraType="richtext_value">Holmes</p0801-beol:hasFamilyName>
+            <p0801-beol:hasGivenName knoraType="richtext_value">Sherlock</p0801-beol:hasGivenName>
+        </p0801-beol:person>
+        <p0802-biblio:Journal id="math_intelligencer">
             <knoraXmlImport:label>Math Intelligencer</knoraXmlImport:label>
-            <biblio:hasName knoraType="richtext_value">Math Intelligencer</biblio:hasName>
-        </biblio:Journal>
-        <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
+            <p0802-biblio:hasName knoraType="richtext_value">Math Intelligencer</p0802-biblio:hasName>
+        </p0802-biblio:Journal>
+        <p0802-biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
             <knoraXmlImport:label>Strings in the 16th and 17th Centuries</knoraXmlImport:label>
-            <biblio:beol__comment knoraType="richtext_value" mapping_id="http://rdfh.ch/standoff/mappings/StandardMapping">
+            <p0802-biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="http://rdfh.ch/standoff/mappings/StandardMapping">
                 <text xmlns="">The most <strong>interesting</strong> article in <a class="salsah-link" href="ref:math_intelligencer">Math Intelligencer</a>.</text>
-            </biblio:beol__comment>
-            <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
-            <biblio:isPartOfJournal>
-                <biblio:Journal knoraType="link_value" target="math_intelligencer" linkType="ref"/>
-            </biblio:isPartOfJournal>
-            <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
-            <biblio:publicationHasAuthor>
-                <beol:person knoraType="link_value" linkType="ref" target="abel"/>
-            </biblio:publicationHasAuthor>
-            <biblio:publicationHasAuthor>
-                <beol:person knoraType="link_value" linkType="ref" target="holmes"/>
-            </biblio:publicationHasAuthor>
-            <biblio:publicationHasDate knoraType="date_value">GREGORIAN:1976</biblio:publicationHasDate>
-            <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
-            <biblio:publicationHasTitle knoraType="richtext_value">An alternate title</biblio:publicationHasTitle>
-            <biblio:startPage knoraType="richtext_value">48</biblio:startPage>
-        </biblio:JournalArticle>
+            </p0802-biblio:p0801-beol__comment>
+            <p0802-biblio:endPage knoraType="richtext_value">73</p0802-biblio:endPage>
+            <p0802-biblio:isPartOfJournal>
+                <p0802-biblio:Journal knoraType="link_value" target="math_intelligencer" linkType="ref"/>
+            </p0802-biblio:isPartOfJournal>
+            <p0802-biblio:journalVolume knoraType="richtext_value">27</p0802-biblio:journalVolume>
+            <p0802-biblio:publicationHasAuthor>
+                <p0801-beol:person knoraType="link_value" linkType="ref" target="abel"/>
+            </p0802-biblio:publicationHasAuthor>
+            <p0802-biblio:publicationHasAuthor>
+                <p0801-beol:person knoraType="link_value" linkType="ref" target="holmes"/>
+            </p0802-biblio:publicationHasAuthor>
+            <p0802-biblio:publicationHasDate knoraType="date_value">GREGORIAN:1976</p0802-biblio:publicationHasDate>
+            <p0802-biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</p0802-biblio:publicationHasTitle>
+            <p0802-biblio:publicationHasTitle knoraType="richtext_value">An alternate title</p0802-biblio:publicationHasTitle>
+            <p0802-biblio:startPage knoraType="richtext_value">48</p0802-biblio:startPage>
+        </p0802-biblio:JournalArticle>
     </knoraXmlImport:resources>
 
 This illustrates several aspects of XML imports:
@@ -243,8 +243,8 @@ This illustrates several aspects of XML imports:
 - The root XML element must be ``knoraXmlImport:resources``.
 - There is an XML namespace corresponding each ontology used in the import. These namespaces can be found in the
   XML schema files returned by the Knora API server.
-- We have copied and pasted ``xmlns="http://api.knora.org/ontology/biblio/xml-import/v1#"`` from the main XML schema,
-  ``biblio.xsd``. This enables the Knora API server to identify the main ontology we are using.
+- We have copied and pasted ``xmlns="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"`` from the main XML schema,
+  ``p0802-biblio.xsd``. This enables the Knora API server to identify the main ontology we are using.
 - We have used ``xsi:schemaLocation`` to indicate the main schema's namespace and filename. If we put our XML document in
   the same directory as the schemas, and we run an XML validator to check the XML, it should load the schemas.
 - The child elements of ``knoraXmlImport:resources`` represent resources to be created. The order of these elements
@@ -261,9 +261,9 @@ This illustrates several aspects of XML imports:
 - A link to another resource described in the XML import is represented as a child element of a property element,
   with attributes ``knoraType="link_value"`` and ``linkType="ref"``, and a ``target`` attribute containing
   the ID of the target resource.
-- There is a specfic syntax for referring to properties from other ontologies. In the example, ``beol:comment``
-  is defined in the ontology ``http://www.knora.org/ontology/beol``. In the XML, we refer to it as
-  ``biblio:beol__comment``.
+- There is a specfic syntax for referring to properties from other ontologies. In the example, ``p0801-beol:comment``
+  is defined in the ontology ``http://www.knora.org/ontology/0001/beol``. In the XML, we refer to it as
+  ``p0802-biblio:p0801-beol__comment``.
 - A text value can contain XML markup. If it does:
     - The text value element must have the attribute ``mapping_id``, specifying a mapping from XML to standoff markup (see :ref:`XML-to-standoff-mapping`).
     - It is necessary to specify the appropriate XML namespace (in this case the null namespace, ``xmlns=""``) for the XML markup in the text value.
@@ -290,29 +290,29 @@ in the triplestore:
 ::
 
     <?xml version="1.0" encoding="UTF-8"?>
-    <knoraXmlImport:resources xmlns="http://api.knora.org/ontology/biblio/xml-import/v1#"
+    <knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://api.knora.org/ontology/biblio/xml-import/v1# biblio.xsd"
-        xmlns:biblio="http://api.knora.org/ontology/biblio/xml-import/v1#"
-        xmlns:beol="http://api.knora.org/ontology/beol/xml-import/v1#"
+        xsi:schemaLocation="http://api.knora.org/ontology/0802/biblio/xml-import/v1# p0802-biblio.xsd"
+        xmlns:p0802-biblio="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
+        xmlns:p0801-beol="http://api.knora.org/ontology/0801/beol/xml-import/v1#"
         xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
-        <biblio:JournalArticle id="strings_in_the_18th_century">
+        <p0802-biblio:JournalArticle id="strings_in_the_18th_century">
             <knoraXmlImport:label>Strings in the 18th Century</knoraXmlImport:label>
-            <biblio:beol__comment knoraType="richtext_value" mapping_id="http://rdfh.ch/standoff/mappings/StandardMapping">
+            <p0802-biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="http://rdfh.ch/standoff/mappings/StandardMapping">
                 <text xmlns="">The most <strong>boring</strong> article in <a class="salsah-link" href="http://rdfh.ch/biblio/QMDEHvBNQeOdw85Z2NSi9A">Math Intelligencer</a>.</text>
-            </biblio:beol__comment>
-            <biblio:endPage knoraType="richtext_value">76</biblio:endPage>
-            <biblio:isPartOfJournal>
-                <biblio:Journal knoraType="link_value" linkType="iri" target="http://rdfh.ch/biblio/QMDEHvBNQeOdw85Z2NSi9A"/>
-            </biblio:isPartOfJournal>
-            <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
-            <biblio:publicationHasAuthor>
-                <beol:person knoraType="link_value" linkType="iri" target="http://rdfh.ch/biblio/c-xMB3qkRs232pWyjdUUvA"/>
-            </biblio:publicationHasAuthor>
-            <biblio:publicationHasDate knoraType="date_value">GREGORIAN:1977</biblio:publicationHasDate>
-            <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 18th Century</biblio:publicationHasTitle>
-            <biblio:startPage knoraType="richtext_value">52</biblio:startPage>
-        </biblio:JournalArticle>
+            </p0802-biblio:p0801-beol__comment>
+            <p0802-biblio:endPage knoraType="richtext_value">76</p0802-biblio:endPage>
+            <p0802-biblio:isPartOfJournal>
+                <p0802-biblio:Journal knoraType="link_value" linkType="iri" target="http://rdfh.ch/biblio/QMDEHvBNQeOdw85Z2NSi9A"/>
+            </p0802-biblio:isPartOfJournal>
+            <p0802-biblio:journalVolume knoraType="richtext_value">27</p0802-biblio:journalVolume>
+            <p0802-biblio:publicationHasAuthor>
+                <p0801-beol:person knoraType="link_value" linkType="iri" target="http://rdfh.ch/biblio/c-xMB3qkRs232pWyjdUUvA"/>
+            </p0802-biblio:publicationHasAuthor>
+            <p0802-biblio:publicationHasDate knoraType="date_value">GREGORIAN:1977</p0802-biblio:publicationHasDate>
+            <p0802-biblio:publicationHasTitle knoraType="richtext_value">Strings in the 18th Century</p0802-biblio:publicationHasTitle>
+            <p0802-biblio:startPage knoraType="richtext_value">52</p0802-biblio:startPage>
+        </p0802-biblio:JournalArticle>
     </knoraXmlImport:resources>
 
 Note that in the link elements referring to existing resources, the ``linkType`` attribute has

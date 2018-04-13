@@ -213,12 +213,12 @@ The following simple mapping illustrates this principle::
                 <separatesWords>false</separatesWords>
             </tag>
             <standoffClass>
-                <classIri>http://www.knora.org/ontology/anything#StandoffEventTag</classIri>
+                <classIri>http://www.knora.org/ontology/0001/anything#StandoffEventTag</classIri>
                 <attributes>
                     <attribute>
                         <attributeName>description</attributeName>
                         <namespace>noNamespace</namespace>
-                        <propertyIri>http://www.knora.org/ontology/anything#standoffEventTagHasDescription</propertyIri>
+                        <propertyIri>http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription</propertyIri>
                     </attribute>
                 </attributes>
                 <datatype>

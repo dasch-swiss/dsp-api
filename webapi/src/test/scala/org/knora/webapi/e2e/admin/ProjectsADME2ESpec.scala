@@ -139,7 +139,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
                 val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
                 result.shortname should be ("newproject")
-                result.shortcode should be (Some("1111"))
+                result.shortcode should be ("1111")
                 result.longname should be (Some("project longname"))
                 result.description should be (Seq(StringLiteralV2(value = "project description", language = Some("en"))))
                 result.keywords should be (Seq("keywords"))
@@ -239,7 +239,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
                 val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
                 result.shortname should be ("newproject")
-                result.shortcode should be (Some("1111"))
+                result.shortcode should be ("1111")
                 result.longname should be (Some("updated project longname"))
                 result.description should be (Seq(StringLiteralV2(value = "updated project description", language = Some("en"))))
                 result.keywords.sorted should be (Seq("updated", "keywords").sorted)

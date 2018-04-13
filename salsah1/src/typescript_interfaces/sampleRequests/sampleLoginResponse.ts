@@ -62,20 +62,20 @@ let login:sessionResponseFormats.loginResponse = {
                 "selfjoin":false,
                 "keywords":"Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images",
                 "longname":"Bilderfolgen Basler Frühdrucke",
-                "ontologies":["http://www.knora.org/ontology/incunabula"]
+                "ontologies":["http://www.knora.org/ontology/0803/incunabula"]
             },
-            "http://rdfh.ch/projects/anything":{
+            "http://rdfh.ch/projects/0001":{
                 "shortname":"anything",
                 "description":"Anything Project",
                 "institution":null,
                 "shortcode":null,
                 "logo":null,
-                "id":"http://rdfh.ch/projects/anything",
+                "id":"http://rdfh.ch/projects/0001",
                 "status":true,
                 "selfjoin":false,
                 "keywords":null,
                 "longname":"Anything Project",
-                "ontologies":["http://www.knora.org/ontology/anything"]
+                "ontologies":["http://www.knora.org/ontology/0001/anything"]
             }
         },
         "sessionId":null,
@@ -91,7 +91,7 @@ let login:sessionResponseFormats.loginResponse = {
                     "http://www.knora.org/ontology/knora-base#ProjectMember",
                     "http://www.knora.org/ontology/knora-base#ProjectAdmin"
                 ],
-                "http://rdfh.ch/projects/anything":[
+                "http://rdfh.ch/projects/0001":[
                     "http://www.knora.org/ontology/knora-base#ProjectMember",
                     "http://www.knora.org/ontology/knora-base#ProjectAdmin"
                 ]
@@ -121,7 +121,7 @@ let login:sessionResponseFormats.loginResponse = {
                         "v1Code":null
                     }
                 ],
-                "http://rdfh.ch/projects/anything":[
+                "http://rdfh.ch/projects/0001":[
                     {
                         "name":"ProjectAdminAllPermission",
                         "additionalInformation":null,

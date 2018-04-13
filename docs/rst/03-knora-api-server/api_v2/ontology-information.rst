@@ -56,11 +56,11 @@ The response is in the default API v2 schema. Sample response:
        "@type" : "http://www.w3.org/2002/07/owl#Ontology",
        "rdfs:label" : "The images demo ontology"
      }, {
-       "@id" : "http://0.0.0.0:3333/ontology/incunabula/v2",
+       "@id" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2",
        "@type" : "http://www.w3.org/2002/07/owl#Ontology",
        "rdfs:label" : "The incunabula ontology"
      }, {
-       "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+       "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
        "@type" : "http://www.w3.org/2002/07/owl#Ontology",
        "rdfs:label" : "The anything ontology",
        "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
@@ -82,13 +82,13 @@ To get metadata about the ontologies that belong to a particular project:
     HTTP GET to http://host/v2/ontologies/metadata/PROJECT_IRI
 
 The project IRI must be URL-encoded. Example response for the ``anything`` test project
-(project IRI ``http://rdfh.ch/projects/anything``):
+(project IRI ``http://rdfh.ch/projects/0001``):
 
 .. code-block:: jsonld
 
    {
      "knora-api:hasOntologies" : {
-       "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+       "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
        "@type" : "http://www.w3.org/2002/07/owl#Ontology",
        "rdfs:label" : "The anything ontology",
        "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
