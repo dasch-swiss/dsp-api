@@ -428,6 +428,16 @@ class StringFormatterSpec extends CoreSpec() {
                 xsdIri.getProjectCode.isEmpty)
         }
 
+        "validate import namespace with project shortcode" in {
+
+            val defaultNamespace = "http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
+
+            stringFormatter.xmlImportNamespaceToInternalOntologyIriV1(
+                defaultNamespace, throw AssertionException("Invalid XML import namespace")
+            ).toString should be ("http://www.knora.org/ontology/0802/biblio")
+        }
+
+
         "reject an empty IRI string" in {
             assertThrows[AssertionException] {
                 "".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))

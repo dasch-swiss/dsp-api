@@ -619,8 +619,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
     // A regex for a project-specific XML import namespace.
     private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
-        "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart + "(" +
-            ProjectIDPattern + ")/(" + NCNamePattern + ")" +
+        "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart + "((" +
+            ProjectIDPattern + ")/)?(" + NCNamePattern + ")" +
             OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
         ).r
 
@@ -1823,7 +1823,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     def toPropertyIriFromOtherOntologyInXmlImport(prefixLabelAndLocalName: String): Option[IRI] = {
         prefixLabelAndLocalName match {
             case PropertyFromOtherOntologyInXmlImportRegex(_, projectID, prefixLabel, localName) =>
-                Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}$projectID/$prefixLabel#$localName")
+                Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/$projectID/$prefixLabel#$localName")
 
             case _ => None
         }
