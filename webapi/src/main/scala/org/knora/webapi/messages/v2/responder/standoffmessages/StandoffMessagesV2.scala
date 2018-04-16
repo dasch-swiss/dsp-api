@@ -155,7 +155,7 @@ case class GetXSLTransformationResponseV2(xslt: String)
   *
   * namespace = Map("myXMLNamespace" -> Map("myXMLTagName" -> Map("myXMLClassname" -> XMLTag(...))))
   *
-  * The class names allow for the ruse of the same tag name. This is important when using HTML since the tag set is very limited.
+  * The class names allow for the reuse of the same tag name. This is important when using HTML since the tag set is very limited.
   *
   * @param namespace                a Map of XML namespaces and a Map of tag names and [[XMLTag]].
   * @param defaultXSLTransformation the IRI of the default XSL transformation for the resulting XML, if any.

@@ -302,7 +302,6 @@ class StandoffResponderV2 extends Responder {
 
                 // transform mappingElements to the structure that is used internally to convert to or from standoff
                 // in order to check for duplicates (checks are done during transformation)
-                // TODO: find a way to provide a default XSL transformation when the mapping is created
                 mappingXMLToStandoff: MappingXMLtoStandoff = transformMappingElementsToMappingXMLtoStandoff(mappingElements, None)
 
                 // get the standoff entities used in the mapping
@@ -332,7 +331,7 @@ class StandoffResponderV2 extends Responder {
                 ).toString()
 
                 // Do the update.
-                createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewMappingSparql)).mapTo[SparqlUpdateResponse]
+                createResourceResponse: SparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(createNewMappingSparql)).mapTo[SparqlUpdateResponse]
 
                 // check if the mapping has been created
                 newMappingResponse <- (storeManager ? SparqlConstructRequest(getExistingMappingSparql)).mapTo[SparqlConstructResponse]
