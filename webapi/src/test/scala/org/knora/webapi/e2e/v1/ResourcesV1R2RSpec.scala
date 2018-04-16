@@ -1469,7 +1469,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     }
                 }
 
-                assert(zippedFilenames == Set("p0801-beol.xsd", "biblio.xsd", "knoraXmlImport.xsd"))
+                assert(zippedFilenames == Set("p0801-beol.xsd", "p0802-biblio.xsd", "knoraXmlImport.xsd"))
             }
         }
 
@@ -1492,7 +1492,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     }
                 }
 
-                assert(zippedFilenames == Set("something.xsd", "knoraXmlImport.xsd", "anything.xsd"))
+                assert(zippedFilenames == Set("p0001-something.xsd", "knoraXmlImport.xsd", "p0001-anything.xsd"))
             }
         }
 
