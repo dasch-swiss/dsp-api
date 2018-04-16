@@ -1515,7 +1515,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkCountSearchQuery(responseAs[String], 12)
+                checkCountSearchQuery(responseAs[String], 13)
 
             }
 
@@ -1777,6 +1777,48 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 checkCountSearchQuery(responseAs[String], 2)
+
+            }
+
+        }
+
+        "do a fulltext search for the term 'text' marked up as a paragraph" in {
+
+            Get("/v2/search/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffParagraphTag", "UTF-8")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "do a fulltext search for the term 'text' marked up as italic" in {
+
+            Get("/v2/search/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "do a fulltext search for the terms 'interesting' and 'text' marked up as italic" in {
+
+            Get("/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
 
