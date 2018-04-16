@@ -1824,5 +1824,28 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
+        "do a fulltext search for the terms 'interesting' and 'boring' marked up as italic" in {
+
+            Get("/v2/search/interesting%20boring?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // there is no single italic element that contains both 'interesting' and 'boring':
+
+                /*
+                <?xml version="1.0" encoding="UTF-8"?>
+                <text>
+                    <p>
+                        This is a test that contains marked up elements. This is <em>interesting text</em> in italics. This is <em>boring text</em> in italics.
+                    </p>
+                </text>
+                 */
+
+                checkCountSearchQuery(responseAs[String], 0)
+
+            }
+
+        }
+
     }
 }
