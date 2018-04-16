@@ -28,8 +28,8 @@ import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.http.ApiStatusCodesV1
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingRequestV1, GetMappingResponseV1}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2}
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import spray.json.{JsNumber, JsObject}
@@ -207,8 +207,8 @@ object RouteUtilV1 {
 
         for {
 
-            // get the mapping
-            mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV1]
+            // get the mapping directly from v2 responder directly (to avoid useless back and forth conversions between v2 and v1 message formats)
+            mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV2]
 
             textWithStandoffTagV1 = StandoffTagUtilV2.convertXMLtoStandoffTagV2(
                 xml = xml,
