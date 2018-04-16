@@ -45,9 +45,6 @@ class StandoffResponderV1 extends Responder {
 
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-    // Converts SPARQL query results to ApiValueV1 objects.
-    val valueUtilV1 = new ValueUtilV1(settings)
-
     /**
       * Receives a message of type [[StandoffResponderRequestV1]], and returns an appropriate response message, or
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this

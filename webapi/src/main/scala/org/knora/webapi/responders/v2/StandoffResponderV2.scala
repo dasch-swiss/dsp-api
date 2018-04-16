@@ -34,13 +34,11 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1}
-import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, ReadClassInfoV2, StandoffEntityInfoGetRequestV2, StandoffEntityInfoGetResponseV2}
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.{ReadResourceV2, ReadResourcesSequenceV2, ReadValueV2, TextFileValueContentV2}
-import org.knora.webapi.responders.v1.ValueUtilV1
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
@@ -60,9 +58,6 @@ import scala.xml.{Elem, Node, NodeSeq, XML}
 class StandoffResponderV2 extends Responder {
 
     implicit val materializer: ActorMaterializer = ActorMaterializer()
-
-    // Converts SPARQL query results to ApiValueV1 objects.
-    val valueUtilV1 = new ValueUtilV1(settings)
 
     /**
       * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message, or
@@ -180,7 +175,7 @@ class StandoffResponderV2 extends Responder {
 
     /**
       * Creates a mapping between XML elements and attributes to standoff classes and properties.
-      * The mapping is used to convert XML documents to [[TextValueV1]] and back.
+      * The mapping is used to convert XML documents to texts with standoff and back.
       *
       * @param xml         the provided mapping.
       * @param userProfile the client that made the request.
