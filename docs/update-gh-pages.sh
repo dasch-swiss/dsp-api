@@ -30,6 +30,7 @@ make jsonformat
 rm -rf $TMP_HTML
 mkdir $TMP_HTML
 cp -R target/site/sphinx $TMP_HTML/manual
+cp -R target/site/paradox $TMP_HTML/manual-new
 cp -R _format_docu $TMP_HTML/api
 
 # Switch to the gh-pages branch and remove the existing HTML docs from it.
@@ -40,11 +41,12 @@ git rm -rf ../documentation/api
 
 # Move the new docs from the temporary directory into the git repository tree.
 
-mv $TMP_HTML/manual $TMP_HTML/api ../documentation
+mv $TMP_HTML/manual $TMP_HTML/manual-new $TMP_HTML/api ../documentation
 
 # Commit the changes to the gh-pages branch, and push to origin.
 
 git add ../documentation/manual
+git add ../documentation/manual-new
 git add ../documentation/api
 git commit -m "Update gh-pages." || true
 git push origin gh-pages
