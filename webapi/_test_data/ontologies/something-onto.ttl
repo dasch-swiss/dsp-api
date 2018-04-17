@@ -52,7 +52,9 @@
 
 	knora-base:subjectClassConstraint :Something ;
 
-	knora-base:objectClassConstraint :Something .
+	knora-base:objectClassConstraint :Something ;
+
+	salsah-gui:guiElement salsah-gui:Searchbox .
 
 
 :hasOtherSomethingValue rdf:type owl:ObjectProperty ;
@@ -65,4 +67,6 @@
 
 	knora-base:subjectClassConstraint :Something ;
 
-	knora-base:objectClassConstraint knora-base:LinkValue .
+	knora-base:objectClassConstraint knora-base:LinkValue ;
+
+	salsah-gui:guiElement salsah-gui:Searchbox .
