@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -25,13 +24,13 @@ import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.routing.v1.SearchRouteV1
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.{InvalidApiJsonException, LiveActorMaker, R2RSpec, SharedTestDataV1}
-import spray.json.{JsNumber, JsValue, _}
+import spray.json._
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}
@@ -69,7 +68,7 @@ class SearchV1R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataV1.rootUser), 30.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataADM.rootUser), 30.seconds)
     }
 
     /**
@@ -250,6 +249,51 @@ class SearchV1R2RSpec extends R2RSpec {
 
         }
 
+        val props_two_lists_one = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fanything%23hasListItem&compop=EQ&searchval=http%3A%2F%2Fdata.knora.org%2Fanything%2FtreeList01"
+
+        "perform an extended search for an anything:Thing that has two list values on one of the lists (EQ)" in {
+
+            val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Frdfh.ch%2Fprojects%2Fanything"
+
+            Get("/v1/search/?searchtype=extended" + props_two_lists_one + filter) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfHits(responseAs[String], 1)
+
+            }
+
+        }
+
+        val props_two_lists_two = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fanything%23hasOtherListItem&compop=EQ&searchval=http%3A%2F%2Fdata.knora.org%2Fanything%2FotherTreeList02"
+
+        "perform an extended search for an anything:Thing that has two list values on the other lists (EQ)" in {
+
+            val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Frdfh.ch%2Fprojects%2Fanything"
+
+            Get("/v1/search/?searchtype=extended" + props_two_lists_two + filter) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfHits(responseAs[String], 1)
+
+            }
+
+        }
+
+        "perform an extended search for an anything:Thing that has two list values on both lists (EQ)" in {
+
+            val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Frdfh.ch%2Fprojects%2Fanything"
+
+            Get("/v1/search/?searchtype=extended" + props_two_lists_one + props_two_lists_two + filter) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfHits(responseAs[String], 1)
+
+            }
+
+        }
 
     }
 

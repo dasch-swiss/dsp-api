@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -233,6 +232,22 @@ class KnoraIdUtil {
     def makeRandomPersonIri: IRI = {
         val knoraPersonUuid = makeRandomBase64EncodedUuid
         s"http://$IriDomain/users/$knoraPersonUuid"
+    }
+
+    /**
+      * Creates a new list IRI based on a UUID.
+      *
+      * @param maybeShortcode the optional project shortcode.
+      * @return a new list IRI.
+      */
+    def makeRandomListIri(maybeShortcode: Option[String]): String = {
+        val knoraListUuid = makeRandomBase64EncodedUuid
+
+        if (maybeShortcode.isDefined) {
+            s"http://$IriDomain/lists/${maybeShortcode.get}/$knoraListUuid"
+        } else {
+            s"http://$IriDomain/lists/$knoraListUuid"
+        }
     }
 
     /**

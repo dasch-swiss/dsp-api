@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -24,8 +23,11 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.util.Timeout
 import org.knora.webapi.SettingsImpl
 import org.knora.webapi.routing.Authenticator
+
+import scala.concurrent.ExecutionContextExecutor
 
 /**
   * A route providing authentication support. It allows the creation of "sessions", which is used in the SALSAH app.
@@ -33,9 +35,9 @@ import org.knora.webapi.routing.Authenticator
 object AuthenticationRouteV1 extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-        implicit val system = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = settings.defaultTimeout
+        implicit val system: ActorSystem = _system
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = settings.defaultTimeout
 
         path("v1" / "authenticate") {
             get {

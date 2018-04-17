@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -57,13 +56,6 @@ case class ProjectsGetRequestV1(userProfile: Option[UserProfileV1]) extends Proj
 case class ProjectsGetV1(userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
-  * Get all the existing named graphs from all projects as a vector of [[org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1]].
-  *
-  * @param userProfile the profile of the user making the request.
-  */
-case class ProjectsNamedGraphGetV1(userProfile: UserProfileV1) extends ProjectsResponderRequestV1
-
-/**
   * Get info about a single project identified through its IRI. A successful response will be a [[ProjectInfoResponseV1]].
   *
   * @param iri           the IRI of the project.
@@ -86,14 +78,6 @@ case class ProjectInfoByIRIGetV1(iri: IRI, userProfileV1: Option[UserProfileV1])
   * @param userProfileV1 the profile of the user making the request.
   */
 case class ProjectInfoByShortnameGetRequestV1(shortname: String, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
-
-/**
-  * Gets info about a single project identified by an ontology that belongs to the project. A successful response will be a [[ProjectInfoResponseV1]].
-  *
-  * @param ontologyIri the ontology IRI.
-  * @param userProfileV1 the profile of the user making the request.
-  */
-case class ProjectInfoByOntologyGetRequestV1(ontologyIri: IRI, userProfileV1: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
   * Returns all users belonging to a project.

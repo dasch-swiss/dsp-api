@@ -1,5 +1,4 @@
-.. Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
-   Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+.. Copyright © 2015-2018 the contributors (see Contributors.md).
 
    This file is part of Knora.
 
@@ -24,122 +23,15 @@ The Knora Base Ontology
 
 .. contents:: :local:
 
-Introduction
-============
+Overview
+========
 
-Resource Description Framework (RDF)
-------------------------------------
+The Knora base ontology is the main built-in Knora ontology. Each project that uses Knora must
+describe its data model by creating ontologies that extend this ontology.
 
-Knora uses a hierarchy of ontologies based on the Resource Description
-Framework (RDF_), RDF Schema (RDFS_), and the Web Ontology Language (OWL_).
-Both RDFS and OWL are expressed in RDF. RDF expresses information as a set of
-statements (called *triples*). A triple consists of a subject, a predicate,
-and an object:
-
-.. graphviz::
-
-   digraph {
-       rankdir = LR
-
-       node [style = filled, fontcolor = white]
-
-       subject [color = navy, fillcolor = slateblue4]
-       object [color = tomato3, fillcolor = tomato2]
-
-       subject -> object [label = "predicate", fontsize = 11, color = cyan4]
-   }
-
-The object may be either a literal value (such as a name or number) or
-another subject. Thus it is possible to create complex graphs that
-connect many subjects, like this:
-
-.. graphviz::
-
-   digraph {
-       rankdir = LR
-
-       {
-           node [color = navy, fillcolor = slateblue4, style = filled, fontcolor = white]
-
-           sub1 [label = "subject no. 1"]
-           sub2 [label = "subject no. 2"]
-           sub3 [label = "subject no. 3"]
-       }
-
-       {
-           node [shape = box, color = firebrick]
-
-           lit1 [label = "literal no. 1"]
-           lit2 [label = "literal no. 2"]
-           lit3 [label = "literal no. 3"]
-       }
-
-       edge [fontsize = 11, color = cyan4]
-
-       sub1 -> lit1 [label = "predicate no. 1"]
-       sub1 -> lit2 [label = "predicate no. 2"]
-       sub1 -> sub2 [label = "predicate no. 3"]
-
-       sub2 -> lit3 [label = "predicate no. 4"]
-       sub2 -> sub3 [label = "predicate no. 5"]
-
-       // Add invisible edges to order the nodes from top to bottom.
-
-       {
-           rank = same
-           lit1 -> lit2 -> sub2 [style = invis]
-           rankdir = TB
-       }
-
-       {
-           rank = same
-           lit3 -> sub3 [style = invis]
-           rankdir = TB
-       }
-   }
-
-In RDF, each subject and predicate has a unique, URL-like identifier
-called an Internationalized Resource Identifier (IRI_). Within a given project,
-IRIs typically differ only in their last component (the “local part”), which
-is often the fragment following a ``#`` character. Such IRIs share a
-long “prefix”. In Turtle_ and similar formats for
-writing RDF, a short prefix label can be defined to represent the long
-prefix. Then an IRI can be written as a prefix label and a local part,
-separated by a colon (``:``). For example, if the “example” project’s
-long prefix is ``http://www.example.org/rdf#``, and it contains subjects
-with IRIs like ``http://www.example.org/rdf#book``, we can define the
-prefix label ``ex`` to represent the prefix label, and write prefixed
-names for IRIs:
-
-.. graphviz::
-
-   digraph {
-       {
-           node [color = navy, fillcolor = slateblue4, style = filled, fontcolor = white]
-
-           book [label = "ex:book1"]
-           page [label = "ex:page1"]
-       }
-
-       {
-           node [shape = box, color = firebrick]
-
-           title [label = "‘Das Narrenschiff’"]
-           author [label = "‘Sebastian Brant’"]
-           pagename [label = "‘a4r’"]
-       }
-
-       edge [fontsize = 11, color = cyan4]
-
-       book -> title [label = "ex:title"]
-       book -> author [label = "ex:author"]
-       page -> book [label = "ex:pageOf"]
-       page -> pagename [label = "ex:pagename"]
-    }
-
-
-In this document, we use the prefix label ``kb`` to represent the Knora base
-ontology, [#]_ but we usually omit it for brevity.
+The Knora base ontology is identified by the IRI ``http://www.knora.org/ontology/knora-base``.
+In the Knora documentation in general, it is identified by the prefix ``knora-base``, but for brevity,
+in this document, we use ``kb`` or omit the prefix entirely.
 
 .. _knora-data-model:
 
@@ -258,7 +150,7 @@ Resources are not versioned; only their values are versioned (see
 Every resource is required to have an ``rdfs:label``. The object of this
 property is an ``xsd:string``, rather than a Knora value; hence it is not
 versioned. A user who has modify permission on a resource
-:ref:`knora-base-authorization` can change its label.
+(see :ref:`knora-base-authorization`) can change its label.
 
 A resource can be marked as deleted; the Knora API server does this by adding
 the predicate ``kb:isDeleted true`` to the resource. An optional
@@ -970,7 +862,7 @@ Knora's built-in support for “standoff” markup, which is stored
 separately from the text. This has some advantages over embedded markup
 such as XML. [#]_ While XML requires markup to have a hierarchical
 structure, and does not allow overlapping tags, standoff nodes do not
-have these limitations (Schmidt2016_). A standoff tag can be attached to
+have these limitations. [Schmidt2016]_ A standoff tag can be attached to
 any substring in the text by giving its start and end positions. [#]_
 For example, suppose we have the following text:
 
@@ -1572,6 +1464,10 @@ following example from ``knora-base``:
               owl:onProperty :hasStillImageFileValue ;
               owl:minCardinality "1"^^xsd:nonNegativeInteger ] .
 
+Each ``owl:Restriction`` may have the predicate ``salsah-gui:guiOrder``
+to indicate the order in which properties should be displayed in a GUI
+(see :ref:`salsah-gui-properties`).
+
 A resource class inherits cardinalities from its superclasses. This follows
 from the rules of RDFS_ inference. Also, in Knora, cardinalities in the
 subclass can override cardinalities that would otherwise be inherited from the
@@ -1646,15 +1542,17 @@ this simplified example:
         knora-base:subjectClassConstraint :book ;
         knora-base:objectClassConstraint knora-base:TextValue .
 
-Open Questions
-==============
+Standardisation
+===============
 
-Extending Existing Resource Definitions
----------------------------------------
-
-How should extensions of existing resources be handled? Project B
-extends a resource defined in the project A ontology, by adding new
-properties/values which are interesting for project B.
+The DaSCH_ intends to coordinate the standardisation of generally useful
+entities proposed in project-specific ontologies. We envisage a process in which
+two or more projects would initiate the process by starting a public discussion
+on proposed entities to be shared. Once a consensus was reached, the DaSCH_
+would publish these entities in an ontology that could be used by multiple projects,
+and would ensure that such ontologies are not subsequently modified in ways that break
+compatibility with existing data. Functionality may be added to :ref:`knora-api-server`
+to facilitate this process.
 
 .. _TEI: http://www.tei-c.org/release/doc/tei-p5-doc/en/html/index.html
 
@@ -1674,11 +1572,10 @@ properties/values which are interesting for project B.
 
 .. _GeoNames: http://geonames.org
 
+.. _DaSCH: http://dasch.swiss/
+
 Notes
 =====
-
-.. [#]
-   ``http://www.knora.org/ontology/knora-base#``
 
 .. [#]
    TEI refers both to an organization and an XML-based markup language

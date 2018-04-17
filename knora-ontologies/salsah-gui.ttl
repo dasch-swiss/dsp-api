@@ -1,5 +1,4 @@
-# Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
-# Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+# Copyright © 2015-2018 the contributors (see Contributors.md).
 #
 # This file is part of Knora.
 #
@@ -25,51 +24,54 @@
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @base <http://www.knora.org/ontology/salsah-gui> .
 
-<http://www.knora.org/ontology/salsah-gui> rdf:type owl:Ontology .
+<http://www.knora.org/ontology/salsah-gui> rdf:type owl:Ontology ;
+
+    rdfs:label "The salsah-gui ontology" ;
+
+    knora-base:attachedToProject knora-base:SystemProject .
 
 
 #################################################################
 #
-#    Annotation properties
+#    Properties
 #
 #################################################################
 
 
-###  http://www.knora.org/ontology/salsah-gui#guiAttribute
+###  http://www.knora.org/ontology/salsah-gui#guiOrder
 
-:guiAttribute rdf:type owl:AnnotationProperty .
+:guiOrder rdf:type owl:DatatypeProperty ;
+
+          knora-base:subjectClassConstraint owl:Restriction ;
+
+          knora-base:objectDatatypeConstraint xsd:nonNegativeInteger .
 
 
 
 ###  http://www.knora.org/ontology/salsah-gui#guiElement
 
-:guiElement rdf:type owl:AnnotationProperty .
+:guiElement rdf:type owl:ObjectProperty ;
+
+          knora-base:subjectClassConstraint owl:ObjectProperty .
 
 
 
-###  http://www.knora.org/ontology/salsah-gui#guiOrder
+###  http://www.knora.org/ontology/salsah-gui#guiAttribute
 
-:guiOrder rdf:type owl:AnnotationProperty ;
-          
-          knora-base:objectDatatypeConstraint xsd:integer .
+:guiAttribute rdf:type owl:DatatypeProperty ;
 
+          knora-base:subjectClassConstraint owl:ObjectProperty ;
 
+          knora-base:objectDatatypeConstraint xsd:string .
 
-
-
-#################################################################
-#
-#    Data properties
-#
-#################################################################
 
 
 ###  http://www.knora.org/ontology/salsah-gui#guiAttributeDefinition
 
 :guiAttributeDefinition rdf:type owl:DatatypeProperty ;
-                        
+
                         knora-base:subjectClassConstraint :Guielement ;
-                        
+
                         knora-base:objectDatatypeConstraint xsd:string .
 
 
@@ -102,8 +104,8 @@
 
 :Colorpicker rdf:type :Guielement ,
                       owl:NamedIndividual ;
-             
-             :guiAttributeDefinition "ncolors=numeric" .
+
+             :guiAttributeDefinition "ncolors:integer" .
 
 
 
@@ -130,8 +132,8 @@
 
 ###  http://www.knora.org/ontology/salsah-gui#Iconclass
 
-:Iconclass rdf:type :Guielement ,
-                    owl:NamedIndividual .
+# :Iconclass rdf:type :Guielement ,
+#                     owl:NamedIndividual .
 
 
 
@@ -145,7 +147,9 @@
 ###  http://www.knora.org/ontology/salsah-gui#List
 
 :List rdf:type :Guielement ,
-               owl:NamedIndividual .
+               owl:NamedIndividual  ;
+
+          :guiAttributeDefinition "hlist(required):iri" .
 
 
 
@@ -153,8 +157,8 @@
 
 :Pulldown rdf:type :Guielement ,
                    owl:NamedIndividual ;
-          
-          :guiAttributeDefinition "selection=api:lists" .
+
+          :guiAttributeDefinition "hlist(required):iri" .
 
 
 
@@ -162,8 +166,8 @@
 
 :Radio rdf:type :Guielement ,
                 owl:NamedIndividual ;
-       
-       :guiElement "selection=api:list" .
+
+       :guiAttributeDefinition "hlist(required):iri" .
 
 
 
@@ -178,10 +182,8 @@
 
 :Searchbox rdf:type :Guielement ,
                     owl:NamedIndividual ;
-           
-           :guiAttributeDefinition "numprops=numeric" ,
-                                   "resource=api:resources",
-				                   "size=numeric" .
+
+           :guiAttributeDefinition "numprops:integer" .
 
 
 
@@ -189,9 +191,9 @@
 
 :SimpleText rdf:type :Guielement ,
                      owl:NamedIndividual ;
-            
-            :guiAttributeDefinition "size=numeric" ,
-                                    "maxlength=numeric" .
+
+            :guiAttributeDefinition "size:integer" ,
+                                    "maxlength:integer" .
 
 
 
@@ -199,10 +201,9 @@
 
 :Slider rdf:type :Guielement ,
                  owl:NamedIndividual ;
-        
-        :guiAttributeDefinition "stepsize=numeric" ,
-                                "max=numeric" ,
-                                "min=numeric" .
+
+        :guiAttributeDefinition "max(required):decimal" ,
+                                "min(required):decimal" .
 
 
 
@@ -210,10 +211,9 @@
 
 :Spinbox rdf:type :Guielement ,
                   owl:NamedIndividual ;
-         
-         :guiAttributeDefinition "stepsize=numeric" ,
-                                 "max=numeric" ,
-                                 "min=numeric" .
+
+         :guiAttributeDefinition "max:decimal" ,
+                                 "min:decimal" .
 
 
 
@@ -221,9 +221,11 @@
 
 :Textarea rdf:type :Guielement ,
                    owl:NamedIndividual ;
-          
-          :guiAttributeDefinition "width=numeric|percent" ,
-                                  "rows=numeric" .
+
+          :guiAttributeDefinition "cols:integer" ,
+                                  "rows:integer" ,
+                                  "width:percent" ,
+                                  "wrap:string(soft|hard)" .
 
 
 ###  http://www.knora.org/ontology/salsah-gui#Checkbox

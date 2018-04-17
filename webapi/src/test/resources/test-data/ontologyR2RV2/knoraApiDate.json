@@ -17,9 +17,6 @@
         }
       }
     },
-    "knora-api:hasProperties" : { },
-    "knora-api:hasStandoffClasses" : { },
-    "knora-api:hasStandoffProperties" : { },
     "rdfs:label" : "The simplified knora-api ontology"
   },
   "@context" : {

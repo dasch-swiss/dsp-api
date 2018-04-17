@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -25,10 +24,6 @@ import net.sf.ehcache.event.CacheEventListener
 import net.sf.ehcache.{Cache, CacheManager, Ehcache, Element}
 import org.knora.webapi.ApplicationCacheException
 import org.slf4j.LoggerFactory
-
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.Try
 
 /**
   * Maintains in-memory caches, and caches values, using Ehcache (http://ehcache.org/). Each cache is accessible

@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -28,6 +27,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{PropertyInfoV1, 
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.{DateUtilV1, StringFormatter}
 
@@ -80,7 +80,7 @@ object StandoffTagUtilV1 {
       * @param standoffPropertyEntities the ontology information about the standoff properties.
       * @return a sequence of [[StandoffTagAttributeV1]]
       */
-    private def createAttributes(xmlToStandoffMapping: XMLTagToStandoffClass, classSpecificProps: Map[IRI, Cardinality.Value], existingXMLIDs: Seq[String], standoffNodeFromXML: StandoffTag, standoffPropertyEntities: Map[IRI, PropertyInfoV1]): Seq[StandoffTagAttributeV1] = {
+    private def createAttributes(xmlToStandoffMapping: XMLTagToStandoffClass, classSpecificProps: Map[IRI, KnoraCardinalityInfo], existingXMLIDs: Seq[String], standoffNodeFromXML: StandoffTag, standoffPropertyEntities: Map[IRI, PropertyInfoV1]): Seq[StandoffTagAttributeV1] = {
         val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         if (classSpecificProps.nonEmpty) {
@@ -139,7 +139,7 @@ object StandoffTagUtilV1 {
             // filter all the required props
             val mustExistOnce: Set[IRI] = classSpecificProps.filter {
                 case (propIri, card) =>
-                    card == Cardinality.MustHaveOne || card == Cardinality.MustHaveSome
+                    card.cardinality == Cardinality.MustHaveOne || card.cardinality == Cardinality.MustHaveSome
             }.keySet
 
             // check if all the min cardinalities are respected
@@ -155,7 +155,7 @@ object StandoffTagUtilV1 {
             // filter all the props that have a limited occurrence
             val mayExistOnce = classSpecificProps.filter {
                 case (propIri, card) =>
-                    card == Cardinality.MustHaveOne || card == Cardinality.MayHaveOne
+                    card.cardinality == Cardinality.MustHaveOne || card.cardinality == Cardinality.MayHaveOne
             }.keySet
 
             // check if all the max cardinalities are respected
@@ -322,7 +322,7 @@ object StandoffTagUtilV1 {
                 val standoffClassIri: IRI = standoffDefFromMapping.standoffClassIri
 
                 // get the cardinalities of the current standoff class
-                val cardinalities: Map[IRI, Cardinality.Value] = standoffEntities.standoffClassInfoMap.getOrElse(standoffClassIri, throw NotFoundException(s"information about standoff class $standoffClassIri was not found in ontology")).cardinalities
+                val cardinalities: Map[IRI, KnoraCardinalityInfo] = standoffEntities.standoffClassInfoMap.getOrElse(standoffClassIri, throw NotFoundException(s"information about standoff class $standoffClassIri was not found in ontology")).allCardinalities
 
                 // create a standoff base tag with the information available from standoff util
                 val standoffBaseTagV1: StandoffTagV1 = standoffNodeFromXML match {
@@ -604,7 +604,7 @@ object StandoffTagUtilV1 {
                     case None =>
 
                         // ignore the system properties since they are provided by StandoffUtil
-                        val classSpecificProps: Map[IRI, Cardinality.Value] = cardinalities -- StandoffProperties.systemProperties
+                        val classSpecificProps: Map[IRI, KnoraCardinalityInfo] = cardinalities -- StandoffProperties.systemProperties
 
                         val attributesV1 = createAttributes(standoffDefFromMapping, classSpecificProps, existingXMLIDs, standoffNodeFromXML, standoffEntities.standoffPropertyInfoMap)
 

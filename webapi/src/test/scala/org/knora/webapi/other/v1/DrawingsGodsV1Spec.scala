@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -19,18 +18,20 @@ package org.knora.webapi.other.v1
 import java.util.UUID
 
 import akka.actor.Props
+import akka.event.LoggingAdapter
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM}
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserInformationTypeADM}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceCreateRequestV1, ResourceCreateResponseV1, _}
-import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.{CreateValueV1WithComment, TextValueSimpleV1, _}
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.util.{MutableTestIri, MutableUserProfileV1}
+import org.knora.webapi.util.MutableUserADM
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 
 object DrawingsGodsV1Spec {
@@ -46,12 +47,12 @@ object DrawingsGodsV1Spec {
   */
 class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with TriplestoreJsonProtocol {
 
-    implicit val executionContext = system.dispatcher
+    private implicit val executionContext: ExecutionContextExecutor = system.dispatcher
     private val timeout = 5.seconds
-    implicit val log = akka.event.Logging(system, this.getClass())
+    private implicit val log: LoggingAdapter = akka.event.Logging(system, this.getClass())
 
-    val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin-data.ttl", name = "http://www.knora.org/data/admin"),
@@ -64,7 +65,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
+        responderManager ! LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
@@ -78,25 +79,21 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         val drawingsGodsProjectIri = "http://rdfh.ch/projects/0105"
         val drawingsGodsOntologyIri = "http://www.knora.org/ontology/0105/drawings-gods"
         val rootUserIri = "http://rdfh.ch/users/root"
-        val rootUser = new MutableUserProfileV1
+        val rootUser = new MutableUserADM
         val ddd1UserIri = "http://rdfh.ch/users/drawings-gods-test-ddd1"
-        val ddd1 = new MutableUserProfileV1
+        val ddd1 = new MutableUserADM
         val ddd2UserIri = "http://rdfh.ch/users/drawings-gods-test-ddd2"
-        val ddd2 = new MutableUserProfileV1
-        val testPass = "test"
-        val thingIri = new MutableTestIri
-        val firstValueIri = new MutableTestIri
-        val secondValueIri = new MutableTestIri
+        val ddd2 = new MutableUserADM
 
         "retrieve the drawings gods user's profile" in {
-            responderManager ! UserProfileByIRIGetV1(rootUserIri, UserProfileTypeV1.FULL)
-            rootUser.set(expectMsgType[Option[UserProfileV1]](timeout).get)
+            responderManager ! UserGetADM(maybeIri = Some(rootUserIri), maybeEmail = None, userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            rootUser.set(expectMsgType[Option[UserADM]](timeout).get)
 
-            responderManager ! UserProfileByIRIGetV1(ddd1UserIri, UserProfileTypeV1.FULL)
-            ddd1.set(expectMsgType[Option[UserProfileV1]](timeout).get)
+            responderManager ! UserGetADM(maybeIri = Some(ddd1UserIri), maybeEmail = None, userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            ddd1.set(expectMsgType[Option[UserADM]](timeout).get)
 
-            responderManager ! UserProfileByIRIGetV1(ddd2UserIri, UserProfileTypeV1.FULL)
-            ddd2.set(expectMsgType[Option[UserProfileV1]](timeout).get)
+            responderManager ! UserGetADM(maybeIri = Some(ddd2UserIri), maybeEmail = None, userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            ddd2.set(expectMsgType[Option[UserADM]](timeout).get)
         }
 
         "return correct drawings-gods:QualityData resource permissions string for drawings-gods-test-ddd2 user" in {

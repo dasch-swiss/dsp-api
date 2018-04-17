@@ -16,5 +16,8 @@
        sail:sailType "owlim:Sail" ;
        owlim:base-URL "http://data.knora.org/" ;
        owlim:repository-type "file-repository" ;
+       owlim:query-timeout "5" ;
+       owlim:throw-QueryEvaluationException-on-timeout "true";
+       owlim:query-limit-results "50000";
       ]
    ].

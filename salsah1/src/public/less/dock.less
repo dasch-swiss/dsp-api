@@ -1,0 +1,65 @@
+/*
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+@import "project_default/_dock";
+
+.dock {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: @DOCK_HEIGHT;
+}
+
+.dock > div {
+	float: left;
+	color: @DOCK_FG_COLOR;
+	background-color: @DOCK_BG_COLOR;
+	height: @DOCK_HEIGHT - 2*@DOCK_ELE_BORDER_WIDTH;
+	border: @DOCK_ELE_BORDER_WIDTH solid @DOCK_ELE_BORDER_COLOR;
+	padding-left: @DOCK_ELE_PADDING_LEFT;
+	padding-right: @DOCK_ELE_PADDING_RIGHT;
+	overflow: hidden;
+	-moz-border-radius: @DOCK_CORNER_RADIUS;
+	-webkit-border-radius: @DOCK_CORNER_RADIUS;
+	-khtml-border-radius: @DOCK_CORNER_RADIUS;
+	border-radius: @DOCK_CORNER_RADIUS;
+	cursor: pointer;
+}
+
+.dock > div.toggled {
+	color: @DOCK_FG_COLOR_TOGGLED;
+	background-color: @DOCK_BG_COLOR_TOGGLED;
+}
+
+.dock > div:hover {
+	border-color: @DOCK_ELE_BORDER_COLOR_HOVER;	
+}
+
+.fader {
+	width: 100%;
+	height: 100%;
+	background-color: #000000;
+	position: relative;
+	filter:alpha(opacity=50);
+	-moz-opacity:0.5;
+	-khtml-opacity: 0.5;
+	-webkit-opacity: 0.5;
+	opacity: 0.5;
+}

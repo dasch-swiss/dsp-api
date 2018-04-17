@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -302,8 +301,8 @@ trait Authenticator {
             val user: UserADM = getUserADMThroughCredentialsV2(credentials)
             log.debug("getUserProfileV1 - I got a UserProfileV1: {}", user.toString)
 
-            /* we return the userProfileV1 without sensitive information */
-            user.ofType(UserInformationTypeADM.RESTRICTED)
+            /* we return the complete UserADM */
+            user.ofType(UserInformationTypeADM.FULL)
         }
     }
 
@@ -344,13 +343,9 @@ object Authenticator {
       * @throws BadCredentialsException when no credentials are supplied; when user is not active;
       *                                 when the password does not match; when the supplied token is not valid.
       */
-    private def authenticateCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, executionContext: ExecutionContext): Boolean = {
+    def authenticateCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, executionContext: ExecutionContext): Boolean = {
 
         val settings = Settings(system)
-
-        if (credentials.isEmpty) {
-            throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
-        }
 
         credentials match {
             case Some(passCreds: KnoraPasswordCredentialsV2) => {

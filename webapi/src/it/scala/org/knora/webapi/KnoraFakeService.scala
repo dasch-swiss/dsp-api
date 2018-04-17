@@ -1,15 +1,18 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
  * This file is part of Knora.
+ *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * Knora is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
+ *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -65,18 +68,8 @@ trait KnoraFakeService {
         // needed for startup flags and the future map/flatmap in the end
         implicit val executionContext = system.dispatcher
 
-        // Either HTTP or HTTPs, or both, must be enabled.
-        if (!(settings.knoraApiUseHttp || settings.knoraApiUseHttps)) {
-            throw HttpConfigurationException("Neither HTTP nor HTTPS is enabled")
-        }
-
-        // Activate HTTP if enabled.
-        if (settings.knoraApiUseHttp) {
-            Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.knoraApiHost, settings.knoraApiHttpPort)
-            println(s"Knora API Server using HTTP at http://${settings.knoraApiHost}:${settings.knoraApiHttpPort}.")
-        }
-
-        // HTTPS not supported for integration testing
+        Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
+        println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}.")
     }
 
     /**

@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -36,7 +35,9 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectAdminM
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraPasswordCredentialsV2
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
+import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 
 import scala.concurrent.duration._
@@ -54,7 +55,7 @@ object UsersResponderADMSpec {
 /**
   * This spec is used to test the messages received by the [[UsersResponderADM]] actor.
   */
-class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with ImplicitSender {
+class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with ImplicitSender with Authenticator {
 
     private implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
@@ -80,7 +81,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
-        responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
+        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
     "The UsersResponder " when {
@@ -346,35 +347,38 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             }
 
-            "UPDATE the user's password" in {
+            "UPDATE the user's password (by himself)" in {
                 actorUnderTest ! UserChangePasswordRequestADM(
                     userIri = SharedTestDataADM.normalUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(
-                        oldPassword = Some("test"),
+                        requesterPassword = Some("test"), // of the requesting user
                         newPassword = Some("test123456")
                     ),
                     requestingUser = SharedTestDataADM.normalUser,
                     apiRequestID = UUID.randomUUID()
                 )
 
-                // Can't check if password was changed directly, since it will not be returned. If no error message
-                // is returned, then I can assume that the password was successfully changed, as this check is
-                // performed in the responder itself.
                 expectMsgType[UserOperationResponseADM](timeout)
 
+                // need to be able to authenticate credentials with new password
+                Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(normalUser.email, "test123456"))) should be (true)
+            }
 
-                // By doing the change again, I can check if the first change was indeed successful.
+            "UPDATE the user's password (by a system admin)" in {
                 actorUnderTest ! UserChangePasswordRequestADM(
                     userIri = SharedTestDataADM.normalUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(
-                        oldPassword = Some("test123456"),
-                        newPassword = Some("test")
+                        requesterPassword = Some("test"), // of the requesting user
+                        newPassword = Some("test654321")
                     ),
-                    requestingUser = SharedTestDataADM.normalUser,
+                    requestingUser = SharedTestDataADM.rootUser,
                     apiRequestID = UUID.randomUUID()
                 )
 
                 expectMsgType[UserOperationResponseADM](timeout)
+
+                // need to be able to authenticate credentials with new password
+                Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(normalUser.email, "test654321"))) should be (true)
             }
 
             "UPDATE the user's status, (deleting) making him inactive " in {
@@ -442,13 +446,13 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 actorUnderTest ! UserChangePasswordRequestADM(
                     userIri = SharedTestDataADM.superUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(
-                        oldPassword = Some("test"),
+                        requesterPassword = Some("test"),
                         newPassword = Some("test123456")
                     ),
                     requestingUser = SharedTestDataADM.normalUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(ForbiddenException("User's password can only be changed by the user itself")))
+                expectMsg(Failure(ForbiddenException("User's password can only be changed by the user itself or a system admin.")))
 
                 /* Status is updated by other normal user */
                 actorUnderTest ! UserChangeStatusRequestADM(

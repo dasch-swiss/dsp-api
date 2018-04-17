@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -88,7 +87,7 @@ object SharedTestDataV1 {
     )
 
     /* represents the full project info of the Knora System project */
-    def systemProjectInfo: ProjectInfoV1 = SharedTestDataADM.systemProject.asProjectInfoV1
+    def systemProjectInfo: ProjectInfoV1 = SharedTestDataADM.systemProject.asProjectInfoV1.copy(ontologies = Seq(OntologyConstants.KnoraBase.KnoraBaseOntologyIri))
 
 
     /** ***********************************/
@@ -190,7 +189,7 @@ object SharedTestDataV1 {
         keywords = Some("collection, images"),
         logo = None,
         institution = Some("http://rdfh.ch/institutions/dhlab-basel"),
-        ontologies = Seq(IMAGES_ONTOLOGY_IRI),
+        ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI),
         status = true,
         selfjoin = false
     )
@@ -263,7 +262,7 @@ object SharedTestDataV1 {
             user_id = Some("http://rdfh.ch/users/incunabulaMemberUser"),
             firstname = Some("User"),
             lastname = Some("Test2"),
-            email = Some("user.test2t@test.ch"),
+            email = Some("test.user2@test.ch"),
             password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), // -> "test"
             token = None,
             status = Some(true),
@@ -294,7 +293,7 @@ object SharedTestDataV1 {
         keywords = Some("Basel, Basler Frühdrucke, Bilderfolgen, Contectualisation of images, Inkunabel, Kunsthistorisches Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Narrenschiff, Sebastian Brant, Wiegendrucke, early print, incunabula, ship of fools"),
         logo = Some("incunabula_logo.png"),
         institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/incunabula"),
+        ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI),
         status = true,
         selfjoin = false
     )
@@ -393,7 +392,7 @@ object SharedTestDataV1 {
         keywords = None,
         logo = None,
         institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/anything"),
+        ontologies = Seq("http://www.knora.org/ontology/anything", "http://www.knora.org/ontology/something"),
         status = true,
         selfjoin = false
     )
@@ -403,7 +402,7 @@ object SharedTestDataV1 {
     /** BEOL                            **/
     /** **********************************/
 
-    val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+    val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/0801"
 
     def beolProjectInfo = ProjectInfoV1(
         id = BEOL_PROJECT_IRI,
@@ -414,7 +413,7 @@ object SharedTestDataV1 {
         keywords = None,
         logo = None,
         institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/beol"),
+        ontologies = Seq("http://www.knora.org/ontology/0801/beol"),
         status = true,
         selfjoin = false
     )

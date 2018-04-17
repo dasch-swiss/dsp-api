@@ -1,6 +1,5 @@
 @*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -20,6 +19,7 @@
 
 @import org.knora.webapi._
 @import org.knora.webapi.messages.v2.responder.ontologymessages._
+@import org.knora.webapi.util.StringFormatter
 
 @*
  * Called by createProperty.scala.txt to generate INSERT statements for creating a property.
@@ -28,26 +28,18 @@
  *@
 @(propertyDef: PropertyInfoContentV2)
 
-@for(predicate <- propertyDef.predicates.values) {
+@defining(StringFormatter.getGeneralInstance) { stringFormatter =>
 
-    @* In a property definition, all objects that don't have languages must be IRIs (#668). *@
-
-    @for(obj <- predicate.objects) {
-
-        <@propertyDef.propertyIri> <@predicate.predicateIri> <@obj> .
-
+    @{
+        queries.sparql.v2.txt.generateInsertStatementsForPredicates(
+            entityIri = propertyDef.propertyIri,
+            predicates = propertyDef.predicates.values
+        )
     }
 
-    @for((lang, text) <- predicate.objectsWithLang) {
+    @for(superProp <- propertyDef.subPropertyOf) {
 
-        <@propertyDef.propertyIri> <@predicate.predicateIri> """@text"""@@@lang .
+        <@propertyDef.propertyIri> rdfs:subPropertyOf <@superProp> .
 
     }
-
-}
-
-@for(superProp <- propertyDef.subPropertyOf) {
-
-    <@propertyDef.propertyIri> rdfs:subPropertyOf <@superProp> .
-
 }

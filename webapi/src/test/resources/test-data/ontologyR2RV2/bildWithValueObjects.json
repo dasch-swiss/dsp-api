@@ -2,87 +2,36 @@
   "knora-api:hasOntologies" : {
     "@id" : "http://0.0.0.0:3333/ontology/00FF/images/v2",
     "@type" : "owl:Ontology",
+    "knora-api:attachedToProject" : "http://rdfh.ch/projects/00FF",
     "knora-api:hasClasses" : {
       "p00FF-images:bild" : {
         "@id" : "p00FF-images:bild",
         "@type" : "owl:Class",
         "knora-api:canBeInstantiated" : true,
+        "knora-api:isResourceClass" : true,
         "knora-api:resourceIcon" : "bild.png",
         "rdfs:comment" : "An image of the demo image collection",
         "rdfs:label" : "Image",
         "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#StillImageRepresentation", {
           "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bearbeiter"
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#attachedToProject"
         }, {
           "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildnr"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#copyright"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#copyrightValue"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#description"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#erfassungsdatum"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#hatBildformat"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:minCardinality" : 0,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#hatBildformatValue"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#jahr_exakt"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:minCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#jahreszeit"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#jahrzehnt"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#mutationsdatum"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#negativnummer"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#signatur"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:cardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#titel"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#urheber"
-        }, {
-          "@type" : "owl:Restriction",
-          "owl:maxCardinality" : 1,
-          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#urheberValue"
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#attachedToUser"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#creationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#hasIncomingLink"
         }, {
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
@@ -112,13 +61,95 @@
           "@type" : "owl:Restriction",
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
-          "owl:onProperty" : "http://schema.org/name"
+          "owl:onProperty" : "http://www.w3.org/2000/01/rdf-schema#label"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 0,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#titel"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 1,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#signatur"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 2,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bildnr"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 3,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#description"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 4,
+          "owl:minCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#jahreszeit"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 5,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#jahrzehnt"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 6,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#jahr_exakt"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 7,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#hatBildformat"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 7,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#hatBildformatValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 8,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#erfassungsdatum"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 9,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#mutationsdatum"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 10,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#bearbeiter"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 11,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#negativnummer"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 12,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#urheber"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 12,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#urheberValue"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 13,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#copyright"
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 13,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://0.0.0.0:3333/ontology/00FF/images/v2#copyrightValue"
         } ]
       }
     },
-    "knora-api:hasProperties" : { },
-    "knora-api:hasStandoffClasses" : { },
-    "knora-api:hasStandoffProperties" : { },
     "rdfs:label" : "The images demo ontology"
   },
   "@context" : {
@@ -126,6 +157,7 @@
     "p00FF-images" : "http://0.0.0.0:3333/ontology/00FF/images/v2#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
+    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
     "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }

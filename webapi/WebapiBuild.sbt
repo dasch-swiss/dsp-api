@@ -1,5 +1,9 @@
 import sbt._
 import NativePackagerHelper._
+import sbt.io.IO
+import sbtassembly.MergeStrategy
+import sbtassembly.MergeStrategy._
+import sun.util.logging.resources.logging
 
 connectInput in run := true
 
@@ -93,6 +97,8 @@ lazy val webapi = (project in file(".")).
             test in assembly := {},
             test in (Test, assembly) := {},
             test in (IntegrationTest, assembly) := {},
+            // need to use our custom merge strategy because of aop.xml (AspectJ)
+            assemblyMergeStrategy in assembly := customMergeStrategy,
             // Skip packageDoc task on stage
             mappings in (Compile, packageDoc) := Seq(),
             mappings in Universal := {
@@ -113,7 +119,9 @@ lazy val webapi = (project in file(".")).
                 // copy the configuration files to config directory
                 contentOf("configs").toMap.mapValues("config/" + _) ++
                 // copy configuration files to config directory
-                contentOf("src/main/resources").toMap.mapValues("config/" + _)
+                contentOf("src/main/resources").toMap.mapValues("config/" + _) ++
+                // copy the aspectj weaver jar
+                contentOf("vendor").toMap.mapValues("aspectjweaver/" + _)
             },
             // the bash scripts classpath only needs the fat jar
             scriptClasspath := Seq( (assemblyJarName in assembly).value ),
@@ -135,7 +143,7 @@ lazy val webapi = (project in file(".")).
 lazy val webApiCommonSettings = Seq(
     organization := "org.knora",
     name := "webapi",
-    version := "0.1.0-beta",
+    version := "1.3.0",
     scalaVersion := "2.12.4"
 )
 
@@ -188,14 +196,15 @@ lazy val webApiLibs = Seq(
     library.scalaXml,
     library.scallop,
     library.springSecurityCore,
+    library.swaggerAkkaHttp,
     library.xmlunitCore
 )
 
 lazy val library =
     new {
         object Version {
-            val akkaBase = "2.5.9"
-            val akkaHttp = "10.0.11"
+            val akkaBase = "2.5.11"
+            val akkaHttp = "10.1.0"
             val jena = "3.4.0"
             val aspectj = "1.8.13"
             val kamon = "1.0.0"
@@ -206,13 +215,15 @@ lazy val library =
         val akkaAgent              = "com.typesafe.akka"            %% "akka-agent"               % Version.akkaBase
         val akkaStream             = "com.typesafe.akka"            %% "akka-stream"              % Version.akkaBase
         val akkaSlf4j              = "com.typesafe.akka"            %% "akka-slf4j"               % Version.akkaBase
+        val akkaTestkit            = "com.typesafe.akka"            %% "akka-testkit"             % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val akkaStreamTestkit      = "com.typesafe.akka"            %% "akka-stream-testkit"      % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
+
+        // akka http
         val akkaHttp               = "com.typesafe.akka"            %% "akka-http"                % Version.akkaHttp
         val akkaHttpXml            = "com.typesafe.akka"            %% "akka-http-xml"            % Version.akkaHttp
         val akkaHttpSprayJson      = "com.typesafe.akka"            %% "akka-http-spray-json"     % Version.akkaHttp
         val akkaHttpJacksonJava    = "com.typesafe.akka"            %% "akka-http-jackson"        % Version.akkaHttp
-        val akkaTestkit            = "com.typesafe.akka"            %% "akka-testkit"             % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
         val akkaHttpTestkit        = "com.typesafe.akka"            %% "akka-http-testkit"        % Version.akkaHttp    % "test, fuseki, graphdb, tdb, it, fuseki-it"
-        val akkaStreamTestkit      = "com.typesafe.akka"            %% "akka-stream-testkit"      % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
 
         // testing
         val scalaTest              = "org.scalatest"                %% "scalatest"                % "3.0.4"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
@@ -220,22 +231,23 @@ lazy val library =
         val gatlingTestFramework   = "io.gatling"                    % "gatling-test-framework"   % "2.3.0"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
 
         //CORS support
-        val akkaHttpCors           = "ch.megard"                    %% "akka-http-cors"           % "0.1.10"
+        val akkaHttpCors           = "ch.megard"                    %% "akka-http-cors"           % "0.2.2"
 
         // jena
         val jenaLibs               = "org.apache.jena"               % "apache-jena-libs"         % Version.jena exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec")
         val jenaText               = "org.apache.jena"               % "jena-text"                % Version.jena exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec")
 
         // logging
-        val scalaLogging           = "com.typesafe.scala-logging"   %% "scala-logging"            % "3.5.0"
-        val logbackClassic         = "ch.qos.logback"                % "logback-classic"          % "1.1.7"
+        val commonsLogging         = "commons-logging"               % "commons-logging"          % "1.2"
+        val scalaLogging           = "com.typesafe.scala-logging"   %% "scala-logging"            % "3.8.0"
+        val logbackClassic         = "ch.qos.logback"                % "logback-classic"          % "1.2.3"
 
         // input validation
         val commonsValidator       = "commons-validator"             % "commons-validator"        % "1.6" exclude("commons-logging", "commons-logging")
 
         // authentication
-        val bcprov                 = "org.bouncycastle"              % "bcprov-jdk15on"           % "1.56"
-        val springSecurityCore     = "org.springframework.security"  % "spring-security-core"     % "4.2.3.RELEASE" exclude("commons-logging", "commons-logging") exclude("org.springframework", "spring-aop")
+        val bcprov                 = "org.bouncycastle"              % "bcprov-jdk15on"           % "1.59"
+        val springSecurityCore     = "org.springframework.security"  % "spring-security-core"     % "4.2.5.RELEASE" exclude("commons-logging", "commons-logging") exclude("org.springframework", "spring-aop")
         val jwt                    = "io.igl"                       %% "jwt"                      % "1.2.2" exclude("commons-codec", "commons-codec")
 
         // caching
@@ -251,9 +263,9 @@ lazy val library =
 
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",
-        val commonsLang3           = "org.apache.commons"            % "commons-lang3"            % "3.4"
-        val commonsIo              = "commons-io"                    % "commons-io"               % "2.4"
-        val commonsBeanUtil        = "commons-beanutils"             % "commons-beanutils"        % "1.9.2" exclude("commons-logging", "commons-logging") // not used by us, but need newest version to prevent this problem: http://stackoverflow.com/questions/14402745/duplicate-classes-in-commons-collections-and-commons-beanutils
+        val commonsLang3           = "org.apache.commons"            % "commons-lang3"            % "3.7"
+        val commonsIo              = "commons-io"                    % "commons-io"               % "2.6"
+        val commonsBeanUtil        = "commons-beanutils"             % "commons-beanutils"        % "1.9.3" exclude("commons-logging", "commons-logging") // not used by us, but need newest version to prevent this problem: http://stackoverflow.com/questions/14402745/duplicate-classes-in-commons-collections-and-commons-beanutils
         val jodd                   = "org.jodd"                      % "jodd"                     % "3.2.6"
         val jodaTime               = "joda-time"                     % "joda-time"                % "2.9.1"
         val jodaConvert            = "org.joda"                      % "joda-convert"             % "1.8"
@@ -261,8 +273,8 @@ lazy val library =
         val xmlunitCore            = "org.xmlunit"                   % "xmlunit-core"             % "2.1.1"
 
         // other
-        val rdf4jRioTurtle         = "org.eclipse.rdf4j"             % "rdf4j-rio-turtle"         % "2.2.1"
-        val rdf4jQueryParserSparql = "org.eclipse.rdf4j"             % "rdf4j-queryparser-sparql" % "2.2.1"
+        val rdf4jRioTurtle         = "org.eclipse.rdf4j"             % "rdf4j-rio-turtle"         % "2.2.4"
+        val rdf4jQueryParserSparql = "org.eclipse.rdf4j"             % "rdf4j-queryparser-sparql" % "2.2.4"
         val scallop                = "org.rogach"                   %% "scallop"                  % "2.0.5"
         val gwtServlet             = "com.google.gwt"                % "gwt-servlet"              % "2.8.0"
         val sayonHE                = "net.sf.saxon"                  % "Saxon-HE"                 % "9.7.0-14"
@@ -272,10 +284,13 @@ lazy val library =
         val scalaJava8Compat       = "org.scala-lang.modules"        % "scala-java8-compat_2.12"  % "0.8.0"
 
         // provides akka jackson (json) support
-        val akkaHttpCirce          = "de.heikoseeberger"            %% "akka-http-circe"          % "1.18.0"
-        val jacksonScala           = "com.fasterxml.jackson.module" %% "jackson-module-scala"     % "2.9.0"
+        val akkaHttpCirce          = "de.heikoseeberger"            %% "akka-http-circe"          % "1.20.1"
+        val jacksonScala           = "com.fasterxml.jackson.module" %% "jackson-module-scala"     % "2.9.4"
 
-        val jsonldJava             = "com.github.jsonld-java"        % "jsonld-java"              % "0.10.0"
+        val jsonldJava             = "com.github.jsonld-java"        % "jsonld-java"              % "0.12.0"
+
+        // swagger (api documentation)
+        val swaggerAkkaHttp        = "com.github.swagger-akka-http" %% "swagger-akka-http"        % "0.14.0"
     }
 
 lazy val javaRunOptions = Seq(
@@ -327,3 +342,37 @@ lazy val javaEmbeddedJenaTDBTestOptions = Seq(
 lazy val javaIntegrationTestOptions = Seq(
     "-Dconfig.resource=graphdb.conf"
 ) ++ javaBaseTestOptions
+
+
+// Create a new MergeStrategy for aop.xml files, as the aop.xml file is present in more than one package.
+// When we create a fat JAR (assembly task), then we need to resolve this conflict.
+val aopMerge: MergeStrategy = new MergeStrategy {
+    val name = "aopMerge"
+    import scala.xml._
+    import scala.xml.dtd._
+
+    def apply(tempDir: File, path: String, files: Seq[File]): Either[String, Seq[(File, String)]] = {
+        val dt = DocType("aspectj", PublicID("-//AspectJ//DTD//EN", "http://www.eclipse.org/aspectj/dtd/aspectj.dtd"), Nil)
+        val file = MergeStrategy.createMergeTarget(tempDir, path)
+        val xmls: Seq[Elem] = files.map(XML.loadFile)
+        val aspectsChildren: Seq[Node] = xmls.flatMap(_ \\ "aspectj" \ "aspects" \ "_")
+        val weaverChildren: Seq[Node] = xmls.flatMap(_ \\ "aspectj" \ "weaver" \ "_")
+        val options: String = xmls.map(x => (x \\ "aspectj" \ "weaver" \ "@options").text).mkString(" ").trim
+        val weaverAttr = if (options.isEmpty) Null else new UnprefixedAttribute("options", options, Null)
+        val aspects = new Elem(null, "aspects", Null, TopScope, false, aspectsChildren: _*)
+        val weaver = new Elem(null, "weaver", weaverAttr, TopScope, false, weaverChildren: _*)
+        val aspectj = new Elem(null, "aspectj", Null, TopScope, false, aspects, weaver)
+        XML.save(file.toString, aspectj, "UTF-8", xmlDecl = false, dt)
+        IO.append(file, IO.Newline.getBytes(IO.defaultCharset))
+        Right(Seq(file -> path))
+    }
+}
+
+// Use defaultMergeStrategy with a case for aop.xml
+// I like this better than the inline version mentioned in assembly's README
+val customMergeStrategy: String => MergeStrategy = {
+    case PathList("META-INF", "aop.xml") =>
+        aopMerge
+    case s =>
+        defaultMergeStrategy(s)
+}

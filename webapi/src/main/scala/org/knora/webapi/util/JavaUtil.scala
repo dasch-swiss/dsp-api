@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -20,7 +19,7 @@
 
 package org.knora.webapi.util
 
-import java.util.function.{Function, BiFunction}
+import java.util.function.{BiFunction, Function}
 
 /**
   * Utility functions for working with Java libraries.

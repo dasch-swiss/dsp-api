@@ -1,15 +1,18 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
  * This file is part of Knora.
+ *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * Knora is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
+ *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -24,7 +27,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.{AuthenticationV2JsonProtocol, LoginResponse}
-import org.knora.webapi.{E2ESpec, SharedTestDataV1}
+import org.knora.webapi.{E2ESpec, SharedTestDataADM}
 import spray.json._
 
 import scala.concurrent.Await
@@ -55,11 +58,11 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
         // RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
 
-    private val rootIri = SharedTestDataV1.rootUser.userData.user_id.get
+    private val rootIri = SharedTestDataADM.rootUser.id
     private val rootIriEnc = java.net.URLEncoder.encode(rootIri, "utf-8")
-    private val rootEmail = SharedTestDataV1.rootUser.userData.email.get
+    private val rootEmail = SharedTestDataADM.rootUser.email
     private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
-    private val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedTestDataV1.inactiveUser.userData.email.get, "utf-8")
+    private val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedTestDataADM.inactiveUser.email, "utf-8")
     private val wrongEmail = "wrong@example.com"
     private val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
     private val testPass = java.net.URLEncoder.encode("test", "utf-8")

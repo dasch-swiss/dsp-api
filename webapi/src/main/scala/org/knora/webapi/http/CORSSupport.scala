@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -24,8 +23,10 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.headers.HttpOriginRange
 import akka.http.scaladsl.server.{Directives, RejectionHandler, Route}
-import ch.megard.akka.http.cors.CorsDirectives._
-import ch.megard.akka.http.cors.{CorsDirectives, CorsSettings, HttpHeaderRange}
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+import ch.megard.akka.http.cors.scaladsl.model.HttpHeaderRange
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import org.knora.webapi.{KnoraExceptionHandler, SettingsImpl}
 
 import scala.collection.immutable.Seq

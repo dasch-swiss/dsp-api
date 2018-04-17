@@ -4,8 +4,8 @@ import akka.actor.Props
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, SparqlUpdateRequest}
-import org.knora.webapi.{CoreSpec, LiveActorMaker, TriplestoreResponseException}
 import org.knora.webapi.store._
+import org.knora.webapi.{CoreSpec, LiveActorMaker, TriplestoreResponseException}
 
 import scala.concurrent.duration._
 
@@ -2027,7 +2027,6 @@ object GraphDBConsistencyCheckingSpec {
           |            rdfs:comment "A property used only in tests"@en ;
           |            knora-base:subjectClassConstraint incunabula:book ;
           |            knora-base:objectClassConstraint knora-base:TextValue ;
-          |            salsah-gui:guiOrder "1"^^xsd:integer ;
           |            salsah-gui:guiElement salsah-gui:SimpleText ;
           |            salsah-gui:guiAttribute "min=4" ,
           |                                    "max=8" .

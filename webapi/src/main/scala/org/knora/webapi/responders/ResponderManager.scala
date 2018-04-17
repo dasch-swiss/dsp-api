@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -26,7 +25,6 @@ import akka.routing.FromConfig
 import org.knora.webapi.ActorMaker
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
-import org.knora.webapi.messages.admin.responder.ontologiesmessages.OntologiesResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
@@ -259,17 +257,6 @@ class ResponderManager extends Actor with ActorLogging {
     protected val listsAdminRouter: ActorRef = makeDefaultListsAdminRouter
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[OntologiesResponderADM]].
-      */
-    protected final def makeDefaultOntologiesRouterADM: ActorRef = makeActor(FromConfig.props(Props[OntologiesResponderADM]), ONTOLOGIES_ROUTER_ADM_ACTOR_NAME)
-
-    /**
-      * The Akka routing actor that should receive messages addressed to the lists responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default lists responder.
-      */
-    protected val ontologiesRouterADM: ActorRef = makeDefaultOntologiesRouterADM
-
-    /**
       * Constructs the default Akka routing actor that routes messages to [[PermissionsResponderADM]].
       */
     protected final def makeDefaultPermissionsRouterADM: ActorRef = makeActor(FromConfig.props(Props[PermissionsResponderADM]), PERMISSIONS_ROUTER_ADM_ACTOR_NAME)
@@ -336,7 +323,6 @@ class ResponderManager extends Actor with ActorLogging {
         // Knora Admin message
         case groupsResponderRequestADM: GroupsResponderRequestADM => groupsRouterADM.forward(groupsResponderRequestADM)
         case listsResponderRequest: ListsResponderRequestADM => listsAdminRouter forward listsResponderRequest
-        case ontologiesResponderRequest: OntologiesResponderRequestADM => ontologiesRouterADM forward ontologiesResponderRequest
         case permissionsResponderRequestADM: PermissionsResponderRequestADM => permissionsRouterADM.forward(permissionsResponderRequestADM)
         case projectsResponderRequestADM: ProjectsResponderRequestADM => projectsRouterADM.forward(projectsResponderRequestADM)
         case storeResponderRequestADM: StoreResponderRequestADM => storeRouterV1.forward(storeResponderRequestADM)

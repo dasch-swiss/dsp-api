@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -25,24 +24,29 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
+import io.swagger.annotations.Api
+import javax.ws.rs.Path
 import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, StoresADMJsonProtocol}
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.routing.{Authenticator, RouteUtilADM, RouteUtilV1}
+import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 
 import scala.concurrent.duration._
 
 /**
   * A route used to send requests which can directly affect the data stored inside the triplestore.
   */
-object StoreRouteADM extends Authenticator with StoresADMJsonProtocol {
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) = Route {
+@Api(value = "store", produces = "application/json")
+@Path("/admin/store")
+class StoreRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with StoresADMJsonProtocol {
 
-        implicit val system: ActorSystem = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = Timeout(300.seconds)
-        val responderManager = system.actorSelection("/user/responderManager")
+    implicit val system: ActorSystem = _system
+    implicit val executionContext = system.dispatcher
+    implicit val timeout = Timeout(300.seconds)
+    val responderManager = system.actorSelection("/user/responderManager")
+
+    def knoraApiPath = Route {
 
         path("admin" / "store") {
             get {

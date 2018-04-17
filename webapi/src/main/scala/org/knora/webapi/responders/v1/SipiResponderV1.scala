@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -28,15 +27,15 @@ import akka.http.scaladsl.model._
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.sipimessages.RepresentationV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiConstants.FileType
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{FileValueV1, StillImageFileValueV1, TextFileValueV1}
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{StringFormatter, PermissionUtilADM}
+import org.knora.webapi.util.PermissionUtilADM
 import spray.json._
 
 import scala.concurrent.Future
@@ -95,10 +94,10 @@ class SipiResponderV1 extends Responder {
 
             valueProps = valueUtilV1.createValueProps(filename, rows)
 
-            permissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1WithValueProps(
+            permissionCode: Option[Int] = PermissionUtilADM.getUserPermissionWithValuePropsV1(
                 valueIri = filename,
                 valueProps = valueProps,
-                subjectProject = None, // no need to specify this here, because it's in valueProps
+                entityProject = None, // no need to specify this here, because it's in valueProps
                 userProfile = userProfile
             )
         } yield SipiFileInfoGetResponseV1(
@@ -114,7 +113,7 @@ class SipiResponderV1 extends Responder {
       * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
       */
     private def convertPathV1(conversionRequest: SipiResponderConversionPathRequestV1): Future[SipiResponderConversionResponseV1] = {
-        val url = s"${settings.sipiImageConversionUrl}/${settings.sipiPathConversionRoute}"
+        val url = s"${settings.internalSipiImageConversionUrl}/${settings.sipiPathConversionRoute}"
 
         callSipiConvertRoute(url, conversionRequest)
 
@@ -128,7 +127,7 @@ class SipiResponderV1 extends Responder {
       * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
       */
     private def convertFileV1(conversionRequest: SipiResponderConversionFileRequestV1): Future[SipiResponderConversionResponseV1] = {
-        val url = s"${settings.sipiImageConversionUrl}/${settings.sipiFileConversionRoute}"
+        val url = s"${settings.internalSipiImageConversionUrl}/${settings.sipiFileConversionRoute}"
 
         callSipiConvertRoute(url, conversionRequest)
     }
@@ -160,7 +159,7 @@ class SipiResponderV1 extends Responder {
         // handle unsuccessful requests to Sipi
         //
         val recoveredConversionResultFuture = conversionResultFuture.recoverWith {
-            case noResponse: akka.http.impl.engine.HttpConnectionTimeoutException =>
+            case noResponse: akka.stream.scaladsl.TcpIdleTimeoutException =>
                 // this problem is hardly the user's fault. Create a SipiException
                 throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
 
@@ -258,7 +257,7 @@ class SipiResponderV1 extends Responder {
                     val textStoreResult = try {
                         responseAsJson.convertTo[SipiTextResponse]
                     } catch {
-                        case e: DeserializationException => throw SipiException(message = "JSON response returned by Sipi is invalid, it cannot be turned into a SipiImageConversionResponse", e = e, log = log)
+                        case e: DeserializationException => throw SipiException(message = "JSON response returned by Sipi is invalid, it cannot be turned into a SipiTextResponse", e = e, log = log)
                     }
 
                     Vector(TextFileValueV1(

@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and André Fatton.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -18,10 +17,13 @@ package org.knora.webapi.routing
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.util.Timeout
 import org.knora.webapi.{Settings, SettingsImpl}
-import akka.http.scaladsl.model.StatusCodes._
+
+import scala.concurrent.ExecutionContextExecutor
 
 /**
   * A route used for faking the image server.
@@ -29,16 +31,17 @@ import akka.http.scaladsl.model.StatusCodes._
 object RejectingRoute {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-        implicit val system = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = settings.defaultTimeout
+
+        implicit val system: ActorSystem = _system
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = settings.defaultTimeout
 
         path(Remaining) { wholepath =>
                 requestContext => {
                     log.debug(s"got request: ${requestContext.toString}")
                     val settings = Settings(system)
-                    val reject: Seq[Option[Boolean]] = settings.routesToReject.map { pathtoreject =>
-                        if (wholepath.contains(pathtoreject.toCharArray)) {
+                    val reject: Seq[Option[Boolean]] = settings.routesToReject.map { pathToReject =>
+                        if (wholepath.contains(pathToReject.toCharArray)) {
                             Some(true)
                         } else {
                             None

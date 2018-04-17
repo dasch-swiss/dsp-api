@@ -1,15 +1,18 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
  * This file is part of Knora.
+ *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * Knora is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
+ *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -18,11 +21,13 @@ package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSelection, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
+import io.swagger.annotations._
+import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
@@ -30,15 +35,21 @@ import org.knora.webapi.{BadRequestException, SettingsImpl}
 
 import scala.concurrent.ExecutionContextExecutor
 
-object GroupsRouteADM extends Authenticator with GroupsADMJsonProtocol {
+/**
+  * Provides a spray-routing function for API routes that deal with groups.
+  */
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+@Api(value = "groups", produces = "application/json")
+@Path("/admin/groups")
+class GroupsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with GroupsADMJsonProtocol {
 
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
-        implicit val timeout: Timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
-        val stringFormatter = StringFormatter.getGeneralInstance
+    implicit val system: ActorSystem = _system
+    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    implicit val timeout: Timeout = settings.defaultTimeout
+    val responderManager: ActorSelection = system.actorSelection("/user/responderManager")
+    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    def knoraApiPath: Route = {
 
         path("admin" / "groups") {
             get {

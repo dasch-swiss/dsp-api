@@ -1,0 +1,49 @@
+.. Copyright © 2015-2018 the contributors (see Contributors.md).
+
+   This file is part of Knora.
+
+   Knora is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Affero General Public License as published
+   by the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   Knora is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU Affero General Public License for more details.
+
+   You should have received a copy of the GNU Affero General Public
+   License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+
+***************************************
+v1.4.0 Release Notes (not released yet)
+***************************************
+
+See the `release`_ and closed tickets on the `v1.4.0 milestone`_ on Github.
+
+
+Required changes to existing data:
+----------------------------------
+
+Every ontology must now have the property ``knora-base:attachedToProject``, which points to the IRI of the
+project that is responsible for the ontology. This must be added to each project-specific ontology in existing
+repositories. All built-in ontologies have been updated to have this property, and must therefore be reloaded
+into existing repositories.
+
+The property ``knora-base:projectOntology`` has been removed, and must be removed from project
+definitions in existing repositories.
+
+New features:
+-------------
+
+- A project-specific ontology can now be deleted via API v2.
+- Added OpenAPI / Swagger API documentation route
+
+Bugfixes:
+---------
+
+- API v1 extended search was not properly handling multiple conditions on list values (issue #800)
+- Fix image orientation in SALSAH 1 (issue #726)
+
+.. _release: https://github.com/dhlab-basel/Knora/releases/tag/v1.4.0
+.. _v1.4.0 milestone: https://github.com/dhlab-basel/Knora/milestone/8

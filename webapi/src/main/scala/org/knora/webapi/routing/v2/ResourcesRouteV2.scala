@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -49,7 +48,7 @@ object ResourcesRouteV2 extends Authenticator {
         path("v2" / "resources" / Segments) { (resIris: Seq[String]) =>
             get {
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     if (resIris.size > settings.v2ResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ResultsPerPage}")
 
@@ -58,7 +57,7 @@ object ResourcesRouteV2 extends Authenticator {
                             stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
                     }
 
-                    val requestMessage = ResourcesGetRequestV2(resourceIris = resourceIris, userProfile = userProfile)
+                    val requestMessage = ResourcesGetRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,
@@ -72,7 +71,7 @@ object ResourcesRouteV2 extends Authenticator {
         } ~ path("v2" / "resourcespreview" / Segments) { (resIris: Seq[String]) =>
             get {
                 requestContext => {
-                    val userProfile = getUserProfileV1(requestContext)
+                    val requestingUser = getUserADM(requestContext)
 
                     if (resIris.size > settings.v2ResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ResultsPerPage}")
 
@@ -81,7 +80,7 @@ object ResourcesRouteV2 extends Authenticator {
                             stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
                     }
 
-                    val requestMessage = ResourcePreviewRequestV2(resourceIris = resourceIris, userProfile = userProfile)
+                    val requestMessage = ResourcePreviewRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,

@@ -9,13 +9,14 @@
 @prefix event: <http://purl.org/NET/c4dm/event.owl#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
-@prefix beol: <http://www.knora.org/ontology/beol#> .
+@prefix beol: <http://www.knora.org/ontology/0801/beol#> .
 @base <http://www.knora.org/ontology/biblio#> .
 
 @prefix : <http://www.knora.org/ontology/biblio#> .
 
 <http://www.knora.org/ontology/biblio> rdf:type owl:Ontology ;
-    rdfs:label "The Biblio ontology" .
+    rdfs:label "The Biblio ontology" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> .
 
 
 #################################################################
@@ -70,9 +71,9 @@
 :publicationHasDate rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Datum der Veröffentlichung "@de ,
-                            "Publication Date "@en,
-                            "date de publication"@fr ,
-                            "data di pubblicazione"@it ;
+                               "Publication Date "@en,
+                               "date de publication"@fr ,
+                               "data di pubblicazione"@it ;
 
 
                     rdfs:comment """Represents a Publication Date."""@en ;
@@ -103,13 +104,14 @@
 
                     rdfs:subPropertyOf knora-base:hasValue .
 
+
 ###  http://www.knora.org/ontology/biblio#publicationHasPublisher
 :publicationHasPublisher rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Verlag"@de ,
-                            "Publisher "@en,
-                            "éditeur "@fr ,
-                            "casa editrice"@it ;
+                               "Publisher "@en,
+                               "éditeur "@fr ,
+                               "casa editrice"@it ;
 
                     rdfs:comment """Represents the publisher of the publication."""@en ;
 
@@ -126,6 +128,13 @@
 ###  http://www.knora.org/ontology/biblio#publicationHasPublisherValue
 
 :publicationHasPublisherValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "Verlag"@de ,
+                               "Publisher "@en,
+                               "éditeur "@fr ,
+                               "casa editrice"@it ;
+
+                    rdfs:comment """Represents the publisher of the publication."""@en ;
+
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -133,11 +142,12 @@
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
+
 ###  http://www.knora.org/ontology/biblio#publicationIsEdited
 :publicationIsEdited rdf:type owl:ObjectProperty ;
 
-                    rdfs:label "ist editiert"@de ,
-                            "Edited "@en;
+                    rdfs:label "ist bearbeitet"@de ,
+                               "Edited "@en;
 
                     rdfs:comment """Represents the edition of the publication."""@en ;
 
@@ -154,6 +164,10 @@
 ###  http://www.knora.org/ontology/biblio#publicationIsEditedValue
 
 :publicationIsEditedValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "ist bearbeitet"@de ,
+                               "Edited "@en;
+
+                    rdfs:comment """Represents the edition of the publication."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -161,11 +175,13 @@
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
+
+
 ###  http://www.knora.org/ontology/biblio#publicationIsEditionOf
 :publicationIsEditionOf rdf:type owl:ObjectProperty ;
 
                     rdfs:label "ist Edition von"@de ,
-                            "Edition Of "@en;
+                               "Edition Of "@en;
 
                     rdfs:comment """Represents original publication of an edition."""@en ;
 
@@ -182,12 +198,18 @@
 ###  http://www.knora.org/ontology/biblio#publicationIsEditionOfValue
 
 :publicationIsEditionOfValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "ist Edition von"@de ,
+                               "Edition Of "@en;
+
+                    rdfs:comment """Represents original publication of an edition."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
                     knora-base:subjectClassConstraint :Publication ;
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
+
+
 
 ###  http://www.knora.org/ontology/biblio#publicationHasAuthor
 
@@ -214,6 +236,12 @@
 ###  http://www.knora.org/ontology/biblio#publicationHasAuthorValue
 
 :publicationHasAuthorValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "Autor"@de ,
+                               "Author"@en ,
+                               "Auteur"@fr ,
+                               "Autore"@it ;
+
+                    rdfs:comment """Represents the author of the publication."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -221,12 +249,14 @@
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
+
+
 ###  http://www.knora.org/ontology/biblio#publicationHasEditor
 
 :publicationHasEditor rdf:type owl:ObjectProperty ;
 
-                    rdfs:label "Editor"@de ,
-                            "Editor"@en ;
+                    rdfs:label "Redaktor (person)"@de ,
+                               "Editor (person)"@en ;
 
                     rdfs:comment """Represents the editor of the publication."""@en ;
 
@@ -244,6 +274,10 @@
 ###  http://www.knora.org/ontology/biblio#publicationHasEditorValue
 
 :publicationHasEditorValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "Redaktor (person)"@de ,
+                               "Editor (person)"@en ;
+
+                    rdfs:comment """Represents the editor of the publication."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -257,7 +291,7 @@
 :publicationHasEditorOrg rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Editorische Organisation"@de ,
-                            "Editorial Organization"@en ;
+                               "Editorial Organization"@en ;
 
                     rdfs:comment """Represents the editorial organization of the publication."""@en ;
 
@@ -275,6 +309,10 @@
 ###  http://www.knora.org/ontology/biblio#publicationHasEditorOrgValue
 
 :publicationHasEditorOrgValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "Editorische Organisation"@de ,
+                               "Editorial Organization"@en ;
+
+                    rdfs:comment """Represents the editorial organization of the publication."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -307,9 +345,9 @@
 :publicationIsReprinted rdf:type owl:ObjectProperty ;
 
                     rdfs:label "wieder abgedruckt"@de ,
-                            "Reprinted"@en,
-                            "réimprimé"@fr ,
-                            "ristampato"@it ;
+                               "Reprinted"@en,
+                               "réimprimé"@fr ,
+                               "ristampato"@it ;
 
                     rdfs:comment """Represents the reprinted publication."""@en ;
 
@@ -324,7 +362,12 @@
 ###  http://www.knora.org/ontology/biblio#publicationIsReprintedValue
 
 :publicationIsReprintedValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "wieder abgedruckt"@de ,
+                                "Reprinted"@en,
+                                "réimprimé"@fr ,
+                                "ristampato"@it ;
 
+                    rdfs:comment """Represents the reprinted publication."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -335,7 +378,7 @@
 :publicationIsReprintOf rdf:type owl:ObjectProperty ;
 
                     rdfs:label "wieder abgedruckt von"@de ,
-                            "Reprint of"@en ;
+                               "Reprint of"@en ;
 
                     rdfs:comment """Represents original publication of a reprint."""@en ;
 
@@ -351,6 +394,11 @@
 
 :publicationIsReprintOfValue rdf:type owl:ObjectProperty ;
 
+                    rdfs:label "wieder abgedruckt von"@de ,
+                               "Reprint of"@en ;
+
+                    rdfs:comment """Represents original publication of a reprint."""@en ;
+
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -360,8 +408,8 @@
 ###  http://www.knora.org/ontology/biblio#publicationIsReviewed
 :publicationIsReviewed rdf:type owl:ObjectProperty ;
 
-                    rdfs:label "Besprochen"@de ,
-                            "Reviewed"@en;
+                    rdfs:label "Bewertet"@de ,
+                               "Reviewed"@en;
 
                     rdfs:comment """Represents the reviewed publication."""@en ;
 
@@ -376,7 +424,10 @@
 ###  http://www.knora.org/ontology/biblio#publicationIsReviewedValue
 
 :publicationIsReviewedValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "Bewertet"@de ,
+                               "Reviewed"@en;
 
+                    rdfs:comment """Represents the reviewed publication."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -387,7 +438,7 @@
 :publicationIsReviewOf rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Kritik von"@de ,
-                            "Review Of"@en;
+                               "Review Of"@en;
 
                     rdfs:comment """Represents the original publication of a review."""@en ;
 
@@ -403,20 +454,24 @@
 
 :publicationIsReviewOfValue rdf:type owl:ObjectProperty ;
 
+                    rdfs:label "Kritik von"@de ,
+                               "Review Of"@en;
 
+                    rdfs:comment """Represents the original publication of a review."""@en ;
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
+
 
 ###  http://www.knora.org/ontology/biblio#publicationHasManuscript
 :publicationHasManuscript rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Manuskript"@de ,
-                            "Has Manuscript"@en;
+                               "Has Manuscript"@en;
 
                     rdfs:comment """Represents the original manuscript of a publication."""@en ;
 
-                    knora-base:objectClassConstraint :Manuscript ;
+                    knora-base:objectClassConstraint beol:manuscript ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
@@ -427,17 +482,21 @@
 ###  http://www.knora.org/ontology/biblio#publicationHasManuscriptValue
 
 :publicationHasManuscriptValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "Manuskript"@de ,
+                               "Has Manuscript"@en;
 
+                    rdfs:comment """Represents the original manuscript of a publication."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
+
 ###  http://www.knora.org/ontology/biblio#publicationIsTranslationOf
 :publicationIsTranslationOf rdf:type owl:ObjectProperty ;
 
                     rdfs:label "ist Übersetztung von "@de ,
-                            "Translation of"@en ;
+                               "Translation of"@en ;
 
                     rdfs:comment """Represents original publication of translation."""@en ;
 
@@ -452,17 +511,21 @@
 ###  http://www.knora.org/ontology/biblio#publicationIsTranslationOfValue
 
 :publicationIsTranslationOfValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "ist Übersetztung von "@de ,
+                               "Translation of"@en ;
 
+                    rdfs:comment """Represents original publication of translation."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
+
 ###  http://www.knora.org/ontology/biblio#publicationIsTranslated
 :publicationIsTranslated rdf:type owl:ObjectProperty ;
 
-                    rdfs:label "ist übersetztung"@de ,
-                            "Translated to"@en ;
+                    rdfs:label "ist übersetzt"@de ,
+                               "Translated to"@en ;
 
                     rdfs:comment """Represents translation of a publication."""@en ;
 
@@ -477,21 +540,26 @@
 ###  http://www.knora.org/ontology/biblio#publicationIsTranslatedValue
 
 :publicationIsTranslatedValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "ist übersetzt"@de ,
+                               "Translated to"@en ;
 
+                    rdfs:comment """Represents translation of a publication."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
+
+
 
 ###  http://www.knora.org/ontology/biblio#publicationHasDOI
 
 :publicationHasDOI rdf:type owl:ObjectProperty ;
 
                     rdfs:label "DOI"@de ,
-                            "DOI"@en ;
+                               "DOI"@en ;
 
                     rdfs:comment """Repräsentiert ein DOI."""@de,
-                              """Represents a DOI."""@en ;
+                                 """Represents a DOI."""@en ;
 
                     knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -522,7 +590,7 @@
 :hasLink rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Link"@de ,
-                            "Link "@en ;
+                               "Link "@en ;
 
                     rdfs:comment """Represents a link of the publication."""@en ;
 
@@ -537,6 +605,10 @@
 ###  http://www.knora.org/ontology/biblio#hasLinkValue
 
 :hasLinkValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "Link"@de ,
+                               "Link "@en ;
+
+                    rdfs:comment """Represents a link of the publication."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -567,11 +639,19 @@
 
 :editionHasEditorValue rdf:type owl:ObjectProperty ;
 
+                    rdfs:label "Redaktor (Person)"@de ,
+                               "Editor (Person) "@en ;
+
+                    rdfs:comment """Represents the editor of the publication."""@en ;
+
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
                     knora-base:subjectClassConstraint :Edition ;
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
+
+
+
 
 ###  http://www.knora.org/ontology/biblio#editionHasOrganization
 
@@ -596,6 +676,10 @@
 ###  http://www.knora.org/ontology/biblio#editionHasorganizationValue
 
 :editionHasOrganizationValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "Organisation"@de ,
+                               "Organization"@en ;
+
+                    rdfs:comment """Represents the organization which has edited the publication."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -643,9 +727,9 @@
 :hasName rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Name"@de ,
-                            "Name"@en ,
-                            "nom"@fr ,
-                            "nome"@it ;
+                               "Name"@en ,
+                               "nom"@fr ,
+                               "nome"@it ;
 
                     rdfs:comment """Represents a Name."""@en ;
 
@@ -661,9 +745,9 @@
 :hasURI rdf:type owl:ObjectProperty ;
 
                     rdfs:label "URI"@de ,
-                            "URI"@en ,
-                            "URI"@fr ,
-                            "URI"@it ;
+                               "URI"@en ,
+                               "URI"@fr ,
+                               "URI"@it ;
 
                     rdfs:comment """Represents a URI."""@en ;
 
@@ -679,9 +763,9 @@
 :startPage rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Erste Seite"@de ,
-                            "Starting Page"@en ,
-                            "page de démarrage"@fr ,
-                            "pagina iniziale"@it ;
+                               "Starting Page"@en ,
+                               "page de démarrage"@fr ,
+                               "pagina iniziale"@it ;
 
                     rdfs:comment """Represents the starting page."""@en ;
 
@@ -698,9 +782,9 @@
 :endPage rdf:type owl:ObjectProperty ;
 
                     rdfs:label "letzte Seite"@de ,
-                            "last Page"@en ,
-                            "dernière page"@fr ,
-                            "ultima pagina"@it ;
+                               "last Page"@en ,
+                               "dernière page"@fr ,
+                               "ultima pagina"@it ;
 
                     rdfs:comment """Represents the last page."""@en ;
 
@@ -716,7 +800,7 @@
 :volumeSubtitle rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Untertitel des Bandes"@de ,
-                            "volume subtitle"@en ;
+                               "volume subtitle"@en ;
 
                     rdfs:comment """Represents the subtitle of volume."""@en ;
 
@@ -748,6 +832,12 @@
 ###  http://www.knora.org/ontology/biblio#isPartOfJournalValue
 
 :isPartOfJournalValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "ist Teil von"@de ,
+                               "is part of"@en ,
+                               "fait partie de"@fr ,
+                               "fa parte di"@it ;
+
+                    rdfs:comment """Represents the journal the article is published in."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -776,6 +866,12 @@
 ###  http://www.knora.org/ontology/biblio#isPartOfEditedBookValue
 
 :isPartOfEditedBookValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "ist Teil von"@de ,
+                               "is part of"@en ,
+                               "fait partie de"@fr ,
+                               "fa parte di"@it ;
+
+                    rdfs:comment """Represents the collection the article is published in."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -789,7 +885,7 @@
                                "fait partie de"@fr ,
                                "fa parte di"@it ;
 
-                    rdfs:comment """Represents the collection ."""@en ;
+                    rdfs:comment """Represents the collection."""@en ;
 
                     knora-base:objectClassConstraint :Collection ;
 
@@ -801,6 +897,12 @@
 ###  http://www.knora.org/ontology/biblio#isPartOfCollectionValue
 
 :isPartOfCollectionValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "ist Teil von"@de ,
+                               "is part of"@en ,
+                               "fait partie de"@fr ,
+                               "fa parte di"@it ;
+
+                    rdfs:comment """Represents the collection."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -853,10 +955,10 @@
 :bookHasISBN rdf:type owl:ObjectProperty ;
 
                     rdfs:label "ISBN"@de ,
-                            "ISBN"@en ;
+                               "ISBN"@en ;
 
                     rdfs:comment """Repräsentiert eine ISBN-Nummer."""@de,
-                              """Represents a  ISBN."""@en ;
+                                 """Represents a  ISBN."""@en ;
 
                     knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -867,13 +969,96 @@
                     rdfs:subPropertyOf knora-base:hasValue , bibo:isbn.
 
 
+###  http://www.knora.org/ontology/biblio#bookHasContent
+:bookHasContent rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Buch-Inhalt"@de ,
+                               "Book Content"@en ;
+
+                    rdfs:comment """Represents content of Book ."""@en ;
+
+                    knora-base:objectClassConstraint :BookContent ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
+
+
+###  http://www.knora.org/ontology/biblio#bookHasContentValue
+
+:bookHasContentValue rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Buch-Inhalt"@de ,
+                               "Book Content"@en ;
+
+                    rdfs:comment """Represents content of Book ."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
+
+###  http://www.knora.org/ontology/biblio#hasIntroduction
+:hasIntroduction rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Einleitung"@de ,
+                               "Introduction"@en ;
+
+                    rdfs:comment """Represents introduction."""@en ;
+
+                    knora-base:objectClassConstraint beol:introduction;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
+
+
+###  http://www.knora.org/ontology/biblio#hasIntroductionValue
+
+:hasIntroductionValue rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Einleitung"@de ,
+                               "Introduction"@en ;
+
+                    rdfs:comment """Represents introduction."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
+
+
+###  http://www.knora.org/ontology/biblio#hasContent
+:hasContent rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Inhalt"@de ,
+                               "Content"@en ;
+
+                    rdfs:comment """Represents content of book."""@en ;
+
+                    knora-base:objectClassConstraint beol:letter;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
+
+
+###  http://www.knora.org/ontology/biblio#hasContentValue
+
+:hasContentValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "Inhalt"@de ,
+                               "Content"@en ;
+
+                    rdfs:comment """Represents content of book."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 ###  http://www.knora.org/ontology/biblio#numPages
 
 :numPages rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Seitenzahl"@de ,
-                             "Number of Pages"@en ;
+                               "Number of Pages"@en ;
 
                     rdfs:comment """Repräsentiert die Seitenzahl."""@de,
                                """Represents number of pages."""@en ;
@@ -939,6 +1124,10 @@
 ###  http://www.knora.org/ontology/biblio#translationOfValue
 
 :translationOfValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "ist Übersetzung von"@de ,
+                               "is translation of"@en ;
+
+                    rdfs:comment """Represents the publication in original language."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -986,7 +1175,7 @@
 :publicationHasTranslator rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Übersetzer"@de ,
-                            "Translator"@en ;
+                               "Translator"@en ;
 
                     rdfs:comment """Represents the translator of a publication."""@en ;
 
@@ -1004,6 +1193,10 @@
 ###  http://www.knora.org/ontology/biblio#publicationHasTranslatorValue
 
 :publicationHasTranslatorValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "Übersetzer"@de ,
+                               "Translator"@en ;
+
+                    rdfs:comment """Represents the translator of a publication."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -1016,7 +1209,7 @@
 :translationHasDate rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Datum der Übersetzung"@de ,
-                            "Translation Date "@en ;
+                               "Translation Date "@en ;
 
 
                     rdfs:comment """Represents a Publication Date."""@en ;
@@ -1067,154 +1260,16 @@
 ###  http://www.knora.org/ontology/biblio#isPartOfWebsiteValue
 
 :isPartOfWebsiteValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "ist Teil von"@de ,
+                               "is part of"@en ,
+                               "fait partie de"@fr ,
+                               "fa parte di"@it ;
+
+                    rdfs:comment """Represents the website the article is published in."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
-
-
-###  http://www.knora.org/ontology/biblio#manuscriptStartFolium
-
-:manuscriptStartFolium rdf:type owl:ObjectProperty ;
-
-                    rdfs:label "Start Folium"@en ;
-
-                    rdfs:comment """Represents the start folium."""@en ;
-
-                    knora-base:objectClassConstraint knora-base:TextValue ;
-
-                    salsah-gui:guiElement salsah-gui:SimpleText ;
-
-                    knora-base:subjectClassConstraint :Manuscript ;
-
-                    rdfs:subPropertyOf knora-base:hasValue .
-
-
-###  http://www.knora.org/ontology/biblio#manuscriptEndFolium
-
-:manuscriptEndFolium rdf:type owl:ObjectProperty ;
-
-                    rdfs:label "End Folium"@en ;
-
-                    rdfs:comment """Represents the last folium."""@en ;
-
-                    knora-base:objectClassConstraint knora-base:TextValue ;
-
-                    salsah-gui:guiElement salsah-gui:SimpleText ;
-
-                    knora-base:subjectClassConstraint :Manuscript ;
-
-                    rdfs:subPropertyOf knora-base:hasValue .
-
-
-###  http://www.knora.org/ontology/biblio#manuscriptHasArchive
-
-:manuscriptHasArchive rdf:type owl:ObjectProperty ;
-
-                    rdfs:label "Archive of Manuscript"@en ;
-
-                    rdfs:comment """Represents the archive where manuscript is stored."""@en ;
-
-                    knora-base:objectClassConstraint :Archive ;
-
-                    salsah-gui:guiElement salsah-gui:Searchbox ;
-
-
-                    rdfs:subPropertyOf knora-base:hasLinkTo .
-
-
-###  http://www.knora.org/ontology/biblio#manuscriptHasArchiveValue
-
-:manuscriptHasArchiveValue rdf:type owl:ObjectProperty ;
-
-                    knora-base:objectClassConstraint knora-base:LinkValue ;
-
-                    rdfs:subPropertyOf knora-base:hasLinkToValue .
-
-
-###  http://www.knora.org/ontology/biblio#manuscriptIsPublished
-
-:manuscriptIsPublished rdf:type owl:ObjectProperty ;
-
-                    rdfs:label "Publication of Manuscript"@en ;
-
-                    rdfs:comment """Represents the publication of Manuscript."""@en ;
-
-                    knora-base:objectClassConstraint :Publication ;
-
-                    salsah-gui:guiElement salsah-gui:Searchbox ;
-
-
-                    rdfs:subPropertyOf knora-base:hasLinkTo .
-
-
-###  http://www.knora.org/ontology/biblio#manuscriptIsPublishedValue
-
-:manuscriptIsPublishedValue rdf:type owl:ObjectProperty ;
-
-                    knora-base:objectClassConstraint knora-base:LinkValue ;
-
-                    rdfs:subPropertyOf knora-base:hasLinkToValue .
-
-
-###  http://www.knora.org/ontology/biblio#manuscriptHasAuthor
-
-:manuscriptHasAuthor rdf:type owl:ObjectProperty ;
-
-                    rdfs:label "Author of Manuscript"@en ;
-
-                    rdfs:comment """Represents the author of manuscript."""@en ;
-
-                    knora-base:objectClassConstraint beol:person ;
-
-                    salsah-gui:guiElement salsah-gui:Searchbox ;
-
-
-                    rdfs:subPropertyOf knora-base:hasLinkTo .
-
-
-###  http://www.knora.org/ontology/biblio#manuscriptHasAuthorValue
-
-:manuscriptHasAuthorValue rdf:type owl:ObjectProperty ;
-
-                    knora-base:objectClassConstraint knora-base:LinkValue ;
-
-                    rdfs:subPropertyOf knora-base:hasLinkToValue .
-
-
-###  http://www.knora.org/ontology/biblio#manuscriptHasShelfMark
-
-:manuscriptHasShelfMark rdf:type owl:ObjectProperty ;
-
-                    rdfs:label "End Folium"@en ;
-
-                    rdfs:comment """Represents the shelf mark of manuscript in archive."""@en ;
-
-                    knora-base:objectClassConstraint knora-base:TextValue ;
-
-                    salsah-gui:guiElement salsah-gui:SimpleText ;
-
-                    knora-base:subjectClassConstraint :Manuscript ;
-
-                    rdfs:subPropertyOf knora-base:hasValue .
-
-###  http://www.knora.org/ontology/biblio#manuscriptHasDate
-:manuscriptHasDate rdf:type owl:ObjectProperty ;
-
-                    rdfs:label "Datum des ManusKripts "@de ,
-                            "Manuscript Date "@en ;
-
-
-                    rdfs:comment """Represents a Publication Date."""@en ;
-
-                    knora-base:objectClassConstraint knora-base:DateValue  ;
-
-                    salsah-gui:guiElement salsah-gui:Date ;
-
-                    knora-base:subjectClassConstraint :Manuscript ;
-
-                    rdfs:subPropertyOf knora-base:hasValue, dcterms:issued .
-
 
 
 
@@ -1632,6 +1687,31 @@
 
                     rdfs:comment "A resource representing a journal "@en .
 
+###  http://www.knora.org/ontology/biblio#BookContent
+
+:BookContent rdf:type owl:Class ;
+                    rdfs:subClassOf knora-base:Resource,
+                    [ rdf:type owl:Restriction ;
+                       owl:onProperty :hasIntroduction ;
+                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                       owl:onProperty :hasIntroductionValue ;
+                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                       owl:onProperty :hasContent ;
+                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ],
+                    [ rdf:type owl:Restriction ;
+                       owl:onProperty :hasContentValue ;
+                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ];
+
+                    rdfs:label "Buch-Inhalt"@de ,
+                                "Book Content"@en ;
+
+                    rdfs:comment "A resource representing content of a book "@en .
 
 ###  http://www.knora.org/ontology/biblio#Book
 
@@ -1662,6 +1742,15 @@
                                       owl:onProperty :collectionNumber;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :bookHasContent ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+                                    [ rdf:type owl:Restriction ;
+                                       owl:onProperty :bookHasContentValue ;
+                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                                    ],
+
                                     [ rdf:type owl:Restriction ;
                                         owl:onProperty beol:comment ;
                                         owl:minCardinality "0"^^xsd:nonNegativeInteger
@@ -1806,101 +1895,3 @@
                                 "Website Article"@en ;
 
                     rdfs:comment "A resource representing a website article "@en .
-
-
-###  http://www.knora.org/ontology/biblio#Archive
-
-:Archive rdf:type owl:Class ;
-
-                    rdfs:subClassOf knora-base:Resource ,
-                        [   rdf:type owl:Restriction ;
-                            owl:onProperty :hasName ;
-                            owl:minCardinality "1"^^xsd:nonNegativeInteger
-                        ],
-                        [ rdf:type owl:Restriction ;
-                          owl:onProperty beol:mentionedIn ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger
-                        ];
-                    rdfs:label "Archive"@de ,
-                                "Archive"@en ;
-
-                    rdfs:comment "A resource representing an Archive "@en .
-
-###  http://www.knora.org/ontology/biblio#Manuscript
-
-:Manuscript rdf:type owl:Class ;
-
-                   rdfs:subClassOf knora-base:Resource, bibo:Manuscript,
-                                  [ rdf:type owl:Restriction ;
-                                    owl:onProperty :hasName ;
-                                    owl:minCardinality "1"^^xsd:nonNegativeInteger
-                                  ],
-                                  [ rdf:type owl:Restriction ;
-                                    owl:onProperty beol:mentionedIn ;
-                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                  ],
-                                  [ rdf:type owl:Restriction ;
-                                    owl:onProperty :manuscriptHasAuthor ;
-                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                  ],
-                                  [ rdf:type owl:Restriction ;
-                                    owl:onProperty :manuscriptHasAuthorValue ;
-                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                  ],
-                                  [ rdf:type owl:Restriction ;
-                                    owl:onProperty :manuscriptHasArchive ;
-                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                  ],
-                                  [ rdf:type owl:Restriction ;
-                                    owl:onProperty :manuscriptHasArchiveValue ;
-                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                  ],
-                                  [ rdf:type owl:Restriction ;
-                                    owl:onProperty :startPage ;
-                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                  ],
-                                  [ rdf:type owl:Restriction ;
-                                    owl:onProperty :endPage ;
-                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                  ],
-                                  [ rdf:type owl:Restriction ;
-                                    owl:onProperty :manuscriptStartFolium ;
-                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                  ],
-                                  [ rdf:type owl:Restriction ;
-                                    owl:onProperty :manuscriptEndFolium ;
-                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                  ],
-                                  [ rdf:type owl:Restriction ;
-                                    owl:onProperty :manuscriptHasShelfMark ;
-                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                  ],
-                                  [ rdf:type owl:Restriction ;
-                                    owl:onProperty :manuscriptHasDate ;
-                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                  ],
-                                  [ rdf:type owl:Restriction ;
-                                     owl:onProperty :hasLink ;
-                                     owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                  ],
-                                  [ rdf:type owl:Restriction ;
-                                     owl:onProperty :hasLinkValue ;
-                                     owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                  ],
-                                  [ rdf:type owl:Restriction ;
-                                      owl:onProperty :manuscriptIsPublished ;
-                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                  ],
-                                  [ rdf:type owl:Restriction ;
-                                      owl:onProperty :manuscriptIsPublishedValue ;
-                                      owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                  ],
-                                  [ rdf:type owl:Restriction ;
-                                    owl:onProperty beol:comment ;
-                                    owl:minCardinality "0"^^xsd:nonNegativeInteger
-                                  ] ;
-
-                    rdfs:label "Manuskript"@de ,
-                                "Manuscript"@en ;
-
-                                        rdfs:comment "A resource representing a manuscript "@en .

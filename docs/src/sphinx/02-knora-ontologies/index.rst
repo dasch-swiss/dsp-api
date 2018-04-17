@@ -1,5 +1,4 @@
-.. Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
-   Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+.. Copyright © 2015-2018 the contributors (see Contributors.md).
 
    This file is part of Knora.
 
@@ -29,4 +28,7 @@ and reused.
 .. toctree::
    :maxdepth: 2
 
+   introduction
    knora-base
+   salsah-gui
+

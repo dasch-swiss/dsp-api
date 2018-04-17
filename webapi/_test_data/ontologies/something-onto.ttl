@@ -13,11 +13,24 @@
 
 @prefix : <http://www.knora.org/ontology/something#> .
 <http://www.knora.org/ontology/something> rdf:type owl:Ontology ;
-    rdfs:label "The something ontology" .
+    rdfs:label "The something ontology" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/anything> .
 
 :Something rdf:type owl:Class ;
 
-      rdfs:subClassOf anything:Thing ;
+      rdfs:subClassOf anything:Thing ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasOtherSomething ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                         salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasOtherSomethingValue ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                         salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                      ] ;
 
       knora-base:resourceIcon "something.png" ;
 
@@ -27,3 +40,33 @@
                  "Something"@en ;
 
       rdfs:comment """A something is a thing."""@en .
+
+
+:hasOtherSomething rdf:type owl:ObjectProperty ;
+
+	rdfs:label "has other something"@en ;
+
+	rdfs:comment """Has another something."""@en ;
+
+	rdfs:subPropertyOf anything:hasOtherThing ;
+
+	knora-base:subjectClassConstraint :Something ;
+
+	knora-base:objectClassConstraint :Something ;
+
+	salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+:hasOtherSomethingValue rdf:type owl:ObjectProperty ;
+
+	rdfs:label "has other something"@en ;
+
+	rdfs:comment """Has another something."""@en ;
+
+	rdfs:subPropertyOf anything:hasOtherThingValue ;
+
+	knora-base:subjectClassConstraint :Something ;
+
+	knora-base:objectClassConstraint knora-base:LinkValue ;
+
+	salsah-gui:guiElement salsah-gui:Searchbox .

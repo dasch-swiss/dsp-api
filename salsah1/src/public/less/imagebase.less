@@ -1,0 +1,418 @@
+/*
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+@import "project_default/_imagebase";
+/*
+ ********************************************************************
+ */
+
+.imageBase .leftArea {
+	border: none;
+	/* background-color: #ccccff; */
+}
+
+.imageBase .topArea {
+	border: none;
+}
+
+.imageBase .bottomArea {
+	border: none;
+}
+
+.imageBase .rightArea {
+	border: none;
+	/* background-color: #ffcccc; */
+}
+
+/*
+ * vertical separator
+ */
+.imageBase .separatorArea {
+	border: none;
+	width: @SEPARATOR_WIDTH;
+	background-color: @SEPARATOR_BGCOLOR;
+	cursor: ew-resize;
+}
+
+.imageBase.focus .separatorArea {
+	background-color: @SEPARATOR_BGCOLOR_FOCUS;
+}
+
+/*
+ * horizontal separator
+ */
+.imageBase .hseparatorArea {
+	border: none;
+	height: @SEPARATOR_WIDTH;
+	background-color: @SEPARATOR_BGCOLOR;
+	cursor: ns-resize;
+}
+
+.imageBase.focus .hseparatorArea {
+	background-color: @SEPARATOR_BGCOLOR_FOCUS;
+}
+
+.imageBase .controlArea {
+	border: none;
+	background-color: @CONTROL_AREA_BGCOLOR;
+	overflow: visible;
+	height: max(@IMG_IMAGESLIDER_PREV_Height, @IMG_IMAGESLIDER_NEXT_Height, @IMG_IMAGESLIDER_SLIDERBUTTON_Height);
+}
+
+.imageBase .il_clickhandle {
+	top: @METADATA_SHOWTOGGLE_TOP;
+	background-color: white;
+	border-top-style: solid;
+	border-left-style: solid;
+	border-bottom-style: solid;
+	border-width: 1px;
+	border-color: black;
+	-moz-border-radius-topleft: 5px;
+	-moz-border-radius-bottomleft: 5px;
+	-webkit-border-top-left-radius: 5px;
+	-webkit-border-bottom-left-radius: 5px;
+	-khtml-border-top-left-radius: 5px;
+	-khtml-border-bottom-left-radius: 5px;
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
+	padding: 3px;
+	vertical-align: middle;
+}
+
+.imageBase .ir_clickhandle {
+	top: @METADATA_SHOWTOGGLE_TOP;
+	background-color: white;	
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-width: 1px;
+	border-color: black;
+	-moz-border-radius-topright: 5px;
+	-moz-border-radius-bottomright: 5px;
+	-webkit-border-top-right-radius: 5px;
+	-webkit-border-bottom-right-radius: 5px;
+	-khtml-border-top-right-radius: 5px;
+	-khtml-border-bottom-right-radius: 5px;
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+	padding: 3px;
+	vertical-align: middle;
+}
+
+/* image- (aka movie-) area top */
+.imageBase .it_clickhandle {
+	left: @METADATA_SHOWTOGGLE_TOP;
+	background-color: white;
+	border-top-style: solid;
+	border-left-style: solid;
+	border-right-style: solid;
+	border-width: 1px;
+	border-color: black;
+	-moz-border-radius-topleft: 5px;
+	-moz-border-radius-topright: 5px;
+	-webkit-border-top-left-radius: 5px;
+	-webkit-border-top-right-radius: 5px;
+	-khtml-border-top-left-radius: 5px;
+	-khtml-border-top-right-radius: 5px;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+	padding: 3px;
+	vertical-align: middle;
+}
+
+.imageBase .navigatorArea {
+	left: 25px;
+	bottom: 25px;
+	width: 148px;
+	height: 143px;
+	border-style: solid;
+	background-color: @NAVIGATOR_BACKGROUND;
+	-moz-border-radius: @NAVIGATOR_CORNER_RADIUS;
+	-webkit-border-radius: @NAVIGATOR_CORNER_RADIUS;
+	-khtml-border-radius: @NAVIGATOR_CORNER_RADIUS;
+	border-radius: @NAVIGATOR_CORNER_RADIUS;
+	border-width: 1px;
+}
+
+.imageBase .navigatorHandle {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	height: 10px;
+	border-bottom-style: solid;
+	border-width: 1px;
+	background-color: @NAVIGATOR_HANDLE_BG;
+}
+.navigatorMinimize {
+	background-color: blue;
+	background: @IMG_NAVIGATOR_MINIMIZE_BUTTON;
+	background-position: center center;
+	height: @IMG_NAVIGATOR_MINIMIZE_BUTTON_Height;
+	width: @IMG_NAVIGATOR_MINIMIZE_BUTTON_Width;
+}
+.navigatorShow {
+	position: absolute;
+	left: 10px;
+	bottom: 10px;
+	display: none;
+	border-style: solid;
+	background-color: rgba(50, 50, 50, 0.5);
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	-khtml-border-radius: 4px;
+	border-radius: 4px;
+	border-width: 1px;
+	background: @IMG_NAVIGATOR_SHOW_BUTTON;
+	background-position: center center;
+	height: @IMG_NAVIGATOR_SHOW_BUTTON_Height;
+	width: @IMG_NAVIGATOR_SHOW_BUTTON_Width;
+}
+
+.imageBase .navigatorArea .slider {
+	background: @IMG_NAVIGATOR_SLIDER_BG_VERTICAL repeat-y;
+	background-position: bottom;
+	width: @IMG_NAVIGATOR_SLIDER_BG_VERTICAL_Width;
+}
+
+.imageBase .navigatorArea .sliderButton {
+	background-color: transparent;
+	background: @IMG_NAVIGATOR_SLIDERBUTTON_LEFT;
+	width: @IMG_NAVIGATOR_SLIDERBUTTON_LEFT_Width;
+	height: @IMG_NAVIGATOR_SLIDERBUTTON_LEFT_Height;
+}
+
+.imageBase .navigatorArea .sliderBalloon {
+	background-color: yellow;
+	border-style: solid;
+	border-width: 1px;
+	border-color: black;
+}
+
+.imageBase .navigatorArea .mapRect {
+	background-color: transparent;
+	border-style: solid;
+	border-width: 1px;
+	border-color: red;	
+}
+
+.imageBase .imageSlider .sliderButton {
+	background-color: transparent;
+	background: @IMG_IMAGESLIDER_SLIDERBUTTON;
+	background-position: center center;
+	width: @IMG_IMAGESLIDER_SLIDERBUTTON_Width;
+	height: @IMG_IMAGESLIDER_SLIDERBUTTON_Height;
+	cursor: pointer;	
+}
+
+.imageBase .controlArea .prevImage {
+	background-color: transparent;
+	background: @IMG_IMAGESLIDER_PREV;
+	background-position: center center;
+	width: @IMG_IMAGESLIDER_PREV_Width;
+	height: @IMG_IMAGESLIDER_PREV_Height;
+}
+
+.imageBase .controlArea .nextImage {
+	background-color: transparent;
+	background: @IMG_IMAGESLIDER_NEXT;
+	background-position: center center;
+	width: @IMG_IMAGESLIDER_NEXT_Width;
+	height: @IMG_IMAGESLIDER_NEXT_Height;	
+}
+
+.imageBase .controlArea .sliderBalloon {
+	padding: 2px;
+	background-color: yellow;
+	border-style: solid;
+	border-width: 1px;
+	border-color: black;
+}
+
+.imageBase .tabLabel {
+	border-left-style: solid;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-width: 1px;
+	border-color: black;
+	-moz-border-radius-topleft: @METADATA_AREA_CORNER_RADIUS;
+	-moz-border-radius-topright: @METADATA_AREA_CORNER_RADIUS;
+	-webkit-border-top-left-radius: @METADATA_AREA_CORNER_RADIUS;
+	-webkit-border-top-right-radius: @METADATA_AREA_CORNER_RADIUS;
+	-khtml-border-top-left-radius: @METADATA_AREA_CORNER_RADIUS;
+	-khtml-border-top-right-radius: @METADATA_AREA_CORNER_RADIUS;
+	border-top-right-radius: @METADATA_AREA_CORNER_RADIUS;
+	border-top-left-radius: @METADATA_AREA_CORNER_RADIUS;
+	padding: 1px;
+	margin: 2px 2px -1px 2px;
+	cursor: pointer;
+}
+
+.imageBase .tabVisible {
+	background-color: #fff;
+	color: #000;
+	opacity: 1.0;
+	filter: alpha(opacity=100);
+}
+
+.imageBase .tabInvisible {
+	background-color: #aaa;
+	color: #777;
+	opacity: 0.6;
+	filter: alpha(opacity=60);
+}
+
+.imageBase .tabContent {
+	overflow-y: auto;
+}
+
+.imageBase .tabContainer {
+	background-color: @TABCONTAINER_BACKGROUND;
+	border-bottom: 1px solid #000;	
+}
+
+/* css configuration for transcription */
+
+.imageBase .tabContent.transcr {
+    background-color: #DDDDDD;
+}
+
+.imageBase .transcriptionField > div {
+	white-space: nowrap;
+	overflow: auto;
+}
+
+.imageBase .transcriptionField * {
+    font-size: inherit;
+    line-height: inherit;
+}
+
+.imageBase .transcriptionField > div:focus {
+	background-color: #FFFFFF;
+}
+
+.textareaControls button {
+    font-size: 14px;
+    vertical-align: baseline;
+}
+
+.textareaControls button.active {
+    color: red;
+}
+
+/*.imageBase .transcriptionTabContainer .transcriptionField * {}*/
+
+/* the following classes are assigned by jquery.texteditor.js */
+
+.textareaControls .bold,
+.imageBase .transcriptionField .bold {
+    font-weight: bold;
+}
+
+.textareaControls .underline,
+.imageBase .transcriptionField .underline {
+    text-decoration: underline;
+}
+
+.textareaControls .italic,
+.imageBase .transcriptionField .italic {
+    font-style: italic;
+} 
+
+.textareaControls ._link,
+.imageBase .transcriptionField ._link {
+    background-color: red
+}
+
+.textareaControls .strike,
+.imageBase .transcriptionField .strike {
+    text-decoration: line-through;
+}
+
+.textareaControls .super,
+.imageBase .transcriptionField .super {
+    vertical-align: super;
+}
+
+.textareaControls .sub,
+.imageBase .transcriptionField .sub {
+    vertical-align: sub;
+}
+
+.imageBase .transcriptionField .red_tc,
+.value_container .red_tc {
+    color: red; 
+}
+
+.imageBase .transcriptionField .blue_tc,
+.value_container .blue_tc {
+    color: blue; 
+}
+
+.imageBase .transcriptionField .yellow_tc,
+.value_container .yellow_tc {
+    color: yellow; 
+}
+
+.imageBase .transcriptionField .green_tc,
+.value_container .green_tc {
+    color: green; 
+}
+
+.imageBase .transcriptionField .red_bg,
+.value_container .red_bg {
+    background-color: red; 
+}
+
+.imageBase .transcriptionField .blue_bg,
+.value_container .blue_bg {
+    background-color: blue; 
+}
+
+.imageBase .transcriptionField .yellow_bg,
+.value_container .yellow_bg {
+    background-color: yellow; 
+}
+
+.imageBase .transcriptionField .green_bg,
+.value_container .green_bg {
+    background-color: green; 
+}
+
+.imageBase .transcriptionField .Arial,
+.value_container .Arial {
+    font-family: Arial;
+}
+
+.imageBase .transcriptionField .Verdana,
+.value_container .Verdana {
+    font-family: Verdana;
+}
+
+
+/* chartable */
+table.chartable {
+    background-color: #ffffff;
+}
+
+table.chartable, table.chartable td {
+    border: 1px solid #000000;
+}
+
+

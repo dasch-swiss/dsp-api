@@ -1,49 +1,62 @@
-
 {
   "knora-api:hasOntologies" : {
     "@id" : "http://api.knora.org/ontology/knora-api/v2",
     "@type" : "owl:Ontology",
+    "knora-api:attachedToProject" : "http://www.knora.org/ontology/knora-base#SystemProject",
     "knora-api:hasClasses" : {
       "knora-api:DateValue" : {
         "@id" : "knora-api:DateValue",
         "@type" : "owl:Class",
-        "rdfs:comment" : "Represents a date as a period with different possible precisions.",
-        "rdfs:label" : "Date value",
         "knora-api:isValueClass" : true,
-        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#Value", {
+        "rdfs:comment" : "Represents a Knora date value",
+        "rdfs:subClassOf" : [ "http://api.knora.org/ontology/knora-api/v2#DateBase", "http://api.knora.org/ontology/knora-api/v2#Value", {
           "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#attachedToUser"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
           "owl:maxCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar"
         }, {
           "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
           "owl:maxCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay"
         }, {
           "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra"
         }, {
           "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
           "owl:maxCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth"
         }, {
           "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear"
         }, {
           "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
           "owl:maxCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay"
         }, {
           "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra"
         }, {
           "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
           "owl:maxCardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth"
         }, {
           "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear"
         }, {
@@ -61,18 +74,21 @@
           "knora-api:isInherited" : true,
           "owl:cardinality" : 1,
           "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#valueCreationDate"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : "http://api.knora.org/ontology/knora-api/v2#valueHasComment"
         } ]
       }
     },
-    "knora-api:hasProperties" : { },
-    "knora-api:hasStandoffClasses" : { },
-    "knora-api:hasStandoffProperties" : { },
     "rdfs:label" : "The default knora-api ontology"
   },
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
+    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
     "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }

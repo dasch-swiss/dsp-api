@@ -1,2 +1,0 @@
-cd /builds/salsah-suite/rapier-scala
-sbt "project webapi" "tdb:test"

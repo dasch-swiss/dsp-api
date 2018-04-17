@@ -1,6 +1,5 @@
 @*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -21,6 +20,8 @@
 @import org.knora.webapi._
 @import org.knora.webapi.util.SmartIri
 @import org.knora.webapi.messages.v2.responder.ontologymessages._
+@import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
+@import org.knora.webapi.messages.store.triplestoremessages._
 @import java.time.Instant
 
 @*
@@ -45,6 +46,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
 
 DELETE {
     GRAPH ?ontologyNamedGraph {
@@ -56,22 +58,11 @@ DELETE {
 
         @* Insert the class. *@
 
-        @for(predicate <- classDef.predicates.values) {
-
-            @* In a class definition, all objects that don't have languages must be IRIs (#668). *@
-
-            @for(obj <- predicate.objects) {
-
-                <@classDef.classIri> <@predicate.predicateIri> <@obj> .
-
-            }
-
-            @for((lang, text) <- predicate.objectsWithLang) {
-
-                <@classDef.classIri> <@predicate.predicateIri> """@text"""@@@lang .
-
-            }
-
+        @{
+            queries.sparql.v2.txt.generateInsertStatementsForPredicates(
+                entityIri = classDef.classIri,
+                predicates = classDef.predicates.values
+            )
         }
 
         @for(baseClass <- classDef.subClassOf) {
@@ -86,6 +77,15 @@ DELETE {
 
                 <@classDef.classIri> rdfs:subClassOf [ rdf:type owl:Restriction ;
                                                        owl:onProperty <@propertyIri> ;
+
+                                                       @owlCardinalityInfo.guiOrder match {
+                                                           case Some(guiOrder) => {
+                                                               salsah-gui:guiOrder "@guiOrder"^^xsd:nonNegativeInteger ;
+                                                           }
+
+                                                           case None => {}
+                                                       }
+
                                                        <@owlCardinalityInfo.owlCardinalityIri> "@owlCardinalityInfo.owlCardinalityValue"^^xsd:nonNegativeInteger ] .
 
             }

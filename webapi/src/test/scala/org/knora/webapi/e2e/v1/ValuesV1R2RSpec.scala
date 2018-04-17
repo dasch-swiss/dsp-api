@@ -1,15 +1,18 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
  * This file is part of Knora.
+ *
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * Knora is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
+ *
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -24,14 +27,14 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.store._
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{IRI, LiveActorMaker, R2RSpec, SharedTestDataV1}
-import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import spray.json._
 
 import scala.concurrent.Await
@@ -53,7 +56,7 @@ class ValuesV1R2RSpec extends R2RSpec {
 
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
-    private val incunabulaUser = SharedTestDataV1.incunabulaProjectAdminUser
+    private val incunabulaUser = SharedTestDataADM.incunabulaProjectAdminUser
 
     implicit val timeout: Timeout = settings.defaultRestoreTimeout
 
@@ -77,7 +80,7 @@ class ValuesV1R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(incunabulaUser), 30.seconds)
+        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataADM.rootUser), 30.seconds)
     }
 
     "The Values Endpoint" should {

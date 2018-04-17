@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -22,30 +21,31 @@ package org.knora.webapi.responders.v1
 
 import java.io.{File, IOException, StringReader}
 import java.util.UUID
-import javax.xml.XMLConstants
-import javax.xml.transform.stream.StreamSource
-import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 
 import akka.actor.Status
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{StatusCodes, _}
+import akka.http.scaladsl.model._
 import akka.pattern._
 import akka.stream.ActorMaterializer
+import javax.xml.XMLConstants
+import javax.xml.transform.stream.StreamSource
+import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.standoffmessages._
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.standoff.StandoffTagUtilV1.XMLTagItem
 import org.knora.webapi.util.standoff._
-import org.knora.webapi.util.{CacheUtil, StringFormatter, KnoraIdUtil}
-import org.knora.webapi.{BadRequestException, _}
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, StringFormatter}
+import org.knora.webapi._
 import org.xml.sax.SAXException
 
 import scala.concurrent.Future
@@ -85,7 +85,7 @@ class StandoffResponderV1 extends Responder {
       * @param userProfile          The client making the request.
       * @return a [[GetXSLTransformationResponseV1]].
       */
-    private def getXSLTransformation(xslTransformationIri: IRI, userProfile: UserProfileV1): Future[GetXSLTransformationResponseV1] = {
+    private def getXSLTransformation(xslTransformationIri: IRI, userProfile: UserADM): Future[GetXSLTransformationResponseV1] = {
 
         val textLocationFuture: Future[LocationV1] = for {
             // get the `LocationV1` representing XSL transformation
@@ -115,7 +115,12 @@ class StandoffResponderV1 extends Responder {
             // check if the XSL transformation is in the cache
             textLocation <- recoveredTextLocationFuture
 
-            xsltMaybe: Option[String] = CacheUtil.get[String](cacheName = xsltCacheName, key = textLocation.path)
+            // for \\PI to be able to communicate with SIPI, we need to use SIPI's internal url
+            internalTextLocationPath = textLocation.path.replace(settings.externalSipiBaseUrl, settings.internalSipiBaseUrl)
+            // _ = println("StandoffResponderV1 - getXSLTransformation - original textLocation.path: {}", textLocation.path)
+            // _ = println("StandoffResponderV1 - getXSLTransformation - internalTextLocationPath: {}", internalTextLocationPath)
+
+            xsltMaybe: Option[String] = CacheUtil.get[String](cacheName = xsltCacheName, key = internalTextLocationPath)
 
             xslt: String <- if (xsltMaybe.nonEmpty) {
                 // XSL transformation is cached
@@ -124,13 +129,11 @@ class StandoffResponderV1 extends Responder {
                 // ask SIPI to return the XSL transformation
                 val sipiResponseFuture: Future[HttpResponse] = for {
 
-                    textLocation <- textLocationFuture
-
                     // ask Sipi to return the XSL transformation file
                     response: HttpResponse <- Http().singleRequest(
                         HttpRequest(
                             method = HttpMethods.GET,
-                            uri = textLocation.path
+                            uri = internalTextLocationPath
                         )
                     )
 
@@ -138,7 +141,7 @@ class StandoffResponderV1 extends Responder {
 
                 val sipiResponseFutureRecovered: Future[HttpResponse] = sipiResponseFuture.recoverWith {
 
-                    case noResponse: akka.http.impl.engine.HttpConnectionTimeoutException =>
+                    case noResponse: akka.stream.scaladsl.TcpIdleTimeoutException =>
                         // this problem is hardly the user's fault. Create a SipiException
                         throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
 
@@ -181,9 +184,9 @@ class StandoffResponderV1 extends Responder {
       * @param xml         the provided mapping.
       * @param userProfile the client that made the request.
       */
-    private def createMappingV1(xml: String, label: String, projectIri: IRI, mappingName: String, userProfile: UserProfileV1, apiRequestID: UUID): Future[CreateMappingResponseV1] = {
+    private def createMappingV1(xml: String, label: String, projectIri: IRI, mappingName: String, userProfile: UserADM, apiRequestID: UUID): Future[CreateMappingResponseV1] = {
 
-        def createMappingAndCheck(xml: String, label: String, mappingIri: IRI, namedGraph: String, userProfile: UserProfileV1): Future[CreateMappingResponseV1] = {
+        def createMappingAndCheck(xml: String, label: String, mappingIri: IRI, namedGraph: String, userProfile: UserADM): Future[CreateMappingResponseV1] = {
 
             val knoraIdUtil = new KnoraIdUtil
 
@@ -367,16 +370,17 @@ class StandoffResponderV1 extends Responder {
         for {
             // Don't allow anonymous users to create a mapping.
             userIri: IRI <- Future {
-                userProfile.userData.user_id match {
-                    case Some(iri) => iri
-                    case None => throw ForbiddenException("Anonymous users aren't allowed to create mappings")
+                if (userProfile.isAnonymousUser) {
+                    throw ForbiddenException("Anonymous users aren't allowed to create mappings")
+                } else {
+                    userProfile.id
                 }
             }
 
             // check if the given project IRI represents an actual project
             projectInfo: ProjectInfoResponseV1 <- (responderManager ? ProjectInfoByIRIGetRequestV1(
                 iri = projectIri,
-                Some(userProfile)
+                Some(userProfile.asUserProfileV1)
             )).mapTo[ProjectInfoResponseV1]
 
             knoraIdUtil = new KnoraIdUtil
@@ -533,7 +537,7 @@ class StandoffResponderV1 extends Responder {
       * @param userProfile the user making the request.
       * @return a [[MappingXMLtoStandoff]].
       */
-    private def getMappingV1(mappingIri: IRI, userProfile: UserProfileV1): Future[GetMappingResponseV1] = {
+    private def getMappingV1(mappingIri: IRI, userProfile: UserADM): Future[GetMappingResponseV1] = {
 
         for {
 
@@ -576,7 +580,7 @@ class StandoffResponderV1 extends Responder {
       * @param userProfile the user making the request.
       * @return a [[MappingXMLtoStandoff]].
       */
-    private def getMappingFromTriplestore(mappingIri: IRI, userProfile: UserProfileV1): Future[MappingXMLtoStandoff] = {
+    private def getMappingFromTriplestore(mappingIri: IRI, userProfile: UserADM): Future[MappingXMLtoStandoff] = {
 
         val getMappingSparql = queries.sparql.v1.txt.getMapping(
             triplestore = settings.triplestoreType,
@@ -608,28 +612,28 @@ class StandoffResponderV1 extends Responder {
                     // check for attributes
                     val attributes: Seq[MappingXMLAttribute] = assertions.filter {
                         case (propIri, obj) =>
-                            propIri == OntologyConstants.KnoraBase.mappingHasXMLAttribute
+                            propIri == OntologyConstants.KnoraBase.MappingHasXMLAttribute
                     }.map {
                         case (attrProp: IRI, attributeElementIri: String) =>
 
                             val attributeStatementsAsMap: Map[IRI, String] = otherStatements(attributeElementIri).toMap
 
                             MappingXMLAttribute(
-                                attributeName = attributeStatementsAsMap(OntologyConstants.KnoraBase.mappingHasXMLAttributename),
-                                namespace = attributeStatementsAsMap(OntologyConstants.KnoraBase.mappingHasXMLNamespace),
-                                standoffProperty = attributeStatementsAsMap(OntologyConstants.KnoraBase.mappingHasStandoffProperty),
+                                attributeName = attributeStatementsAsMap(OntologyConstants.KnoraBase.MappingHasXMLAttributename),
+                                namespace = attributeStatementsAsMap(OntologyConstants.KnoraBase.MappingHasXMLNamespace),
+                                standoffProperty = attributeStatementsAsMap(OntologyConstants.KnoraBase.MappingHasStandoffProperty),
                                 mappingXMLAttributeElementIri = attributeElementIri
                             )
                     }
 
                     // check for standoff data type class
-                    val dataTypeOption: Option[IRI] = assertionsAsMap.get(OntologyConstants.KnoraBase.mappingHasStandoffDataTypeClass)
+                    val dataTypeOption: Option[IRI] = assertionsAsMap.get(OntologyConstants.KnoraBase.MappingHasStandoffDataTypeClass)
 
                     MappingElement(
-                        tagName = assertionsAsMap(OntologyConstants.KnoraBase.mappingHasXMLTagname),
-                        namespace = assertionsAsMap(OntologyConstants.KnoraBase.mappingHasXMLNamespace),
-                        className = assertionsAsMap(OntologyConstants.KnoraBase.mappingHasXMLClass),
-                        standoffClass = assertionsAsMap(OntologyConstants.KnoraBase.mappingHasStandoffClass),
+                        tagName = assertionsAsMap(OntologyConstants.KnoraBase.MappingHasXMLTagname),
+                        namespace = assertionsAsMap(OntologyConstants.KnoraBase.MappingHasXMLNamespace),
+                        className = assertionsAsMap(OntologyConstants.KnoraBase.MappingHasXMLClass),
+                        standoffClass = assertionsAsMap(OntologyConstants.KnoraBase.MappingHasStandoffClass),
                         mappingElementIri = subjectIri,
                         standoffDataTypeClass = dataTypeOption match {
                             case Some(dataTypeElementIri: IRI) =>
@@ -637,14 +641,14 @@ class StandoffResponderV1 extends Responder {
                                 val dataTypeAssertionsAsMap: Map[IRI, String] = otherStatements(dataTypeElementIri).toMap
 
                                 Some(MappingStandoffDatatypeClass(
-                                    datatype = dataTypeAssertionsAsMap(OntologyConstants.KnoraBase.mappingHasStandoffClass),
-                                    attributeName = dataTypeAssertionsAsMap(OntologyConstants.KnoraBase.mappingHasXMLAttributename),
+                                    datatype = dataTypeAssertionsAsMap(OntologyConstants.KnoraBase.MappingHasStandoffClass),
+                                    attributeName = dataTypeAssertionsAsMap(OntologyConstants.KnoraBase.MappingHasXMLAttributename),
                                     mappingStandoffDataTypeClassElementIri = dataTypeElementIri
                                 ))
                             case None => None
                         },
                         attributes = attributes,
-                        separatorRequired = assertionsAsMap(OntologyConstants.KnoraBase.mappingElementRequiresSeparator).toBoolean
+                        separatorRequired = assertionsAsMap(OntologyConstants.KnoraBase.MappingElementRequiresSeparator).toBoolean
                     )
 
             }.toSeq
@@ -652,7 +656,7 @@ class StandoffResponderV1 extends Responder {
             // check if there is a default XSL transformation
             defaultXSLTransformationOption: Option[IRI] = otherStatements(mappingIri).find {
                 case (pred: IRI, obj: String) =>
-                    pred == OntologyConstants.KnoraBase.mappingHasDefaultXSLTransformation
+                    pred == OntologyConstants.KnoraBase.MappingHasDefaultXSLTransformation
             }.map {
                 case (hasDefaultTransformation: IRI, xslTransformationIri: IRI) =>
                     xslTransformationIri
@@ -674,7 +678,7 @@ class StandoffResponderV1 extends Responder {
       * @param userProfile          the client that made the request.
       * @return a [[StandoffEntityInfoGetResponseV1]] holding information about standoff classes and properties.
       */
-    private def getStandoffEntitiesFromMappingV1(mappingXMLtoStandoff: MappingXMLtoStandoff, userProfile: UserProfileV1): Future[StandoffEntityInfoGetResponseV1] = {
+    private def getStandoffEntitiesFromMappingV1(mappingXMLtoStandoff: MappingXMLtoStandoff, userProfile: UserADM): Future[StandoffEntityInfoGetResponseV1] = {
 
         // invert the mapping so standoff class Iris become keys
         val mappingStandoffToXML: Map[IRI, XMLTagItem] = StandoffTagUtilV1.invertXMLToStandoffMapping(mappingXMLtoStandoff)
@@ -707,7 +711,7 @@ class StandoffResponderV1 extends Responder {
             // get the property Iris that are defined on the standoff classes returned by the ontology responder
             standoffPropertyIrisFromOntologyResponder = standoffClassEntities.standoffClassInfoMap.foldLeft(Set.empty[IRI]) {
                 case (acc, (standoffClassIri, standoffClassEntity)) =>
-                    val props = standoffClassEntity.cardinalities.keySet
+                    val props = standoffClassEntity.allCardinalities.keySet
                     acc ++ props
             }
 
@@ -730,16 +734,16 @@ class StandoffResponderV1 extends Responder {
                     val standoffPropertiesForStandoffClass: Set[IRI] = xmlTag.attributes.keySet
 
                     // check that the current standoff class has cardinalities for all the properties defined
-                    val cardinalitiesFound = standoffClassEntities.standoffClassInfoMap(standoffClass).cardinalities.keySet.intersect(standoffPropertiesForStandoffClass)
+                    val cardinalitiesFound = standoffClassEntities.standoffClassInfoMap(standoffClass).allCardinalities.keySet.intersect(standoffPropertiesForStandoffClass)
 
                     if (standoffPropertiesForStandoffClass != cardinalitiesFound) {
                         throw NotFoundException(s"the following standoff properties have no cardinality for $standoffClass: ${(standoffPropertiesForStandoffClass -- cardinalitiesFound).mkString(", ")}")
                     }
 
                     // collect the required standoff properties for the standoff class
-                    val requiredPropsForClass = standoffClassEntities.standoffClassInfoMap(standoffClass).cardinalities.filter {
-                        case (property: IRI, card: Cardinality.Value) =>
-                            card == Cardinality.MustHaveOne || card == Cardinality.MustHaveSome
+                    val requiredPropsForClass = standoffClassEntities.standoffClassInfoMap(standoffClass).allCardinalities.filter {
+                        case (property: IRI, card: KnoraCardinalityInfo) =>
+                            card.cardinality == Cardinality.MustHaveOne || card.cardinality == Cardinality.MustHaveSome
                     }.keySet -- StandoffProperties.systemProperties -- StandoffProperties.dataTypeProperties
 
                     // check that all the required standoff properties exist in the mapping

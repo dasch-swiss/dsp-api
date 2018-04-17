@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -22,12 +21,14 @@ package org.knora.webapi.messages.v1.responder.ontologymessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.util.{SmartIri, StringFormatter}
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.StringFormatter
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,7 +45,7 @@ sealed trait OntologyResponderRequestV1 extends KnoraRequestV1
   *
   * @param userProfile the profile of the user making the request.
   */
-case class LoadOntologiesRequest(userProfile: UserProfileV1) extends OntologyResponderRequestV1
+case class LoadOntologiesRequest(userProfile: UserADM) extends OntologyResponderRequestV1
 
 /**
   * Indicates that all ontologies were loaded.
@@ -61,7 +62,7 @@ case class LoadOntologiesResponse() extends KnoraResponseV1 {
   * @param propertyIris      the IRIs of the properties to be queried.
   * @param userProfile       the profile of the user making the request.
   */
-case class EntityInfoGetRequestV1(resourceClassIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1) extends OntologyResponderRequestV1
+case class EntityInfoGetRequestV1(resourceClassIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserADM) extends OntologyResponderRequestV1
 
 
 /**
@@ -82,7 +83,7 @@ case class EntityInfoGetResponseV1(resourceClassInfoMap: Map[IRI, ClassInfoV1],
   * @param standoffPropertyIris the IRIs of the property entities to be queried.
   * @param userProfile          the profile of the user making the request.
   */
-case class StandoffEntityInfoGetRequestV1(standoffClassIris: Set[IRI] = Set.empty[IRI], standoffPropertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserProfileV1) extends OntologyResponderRequestV1
+case class StandoffEntityInfoGetRequestV1(standoffClassIris: Set[IRI] = Set.empty[IRI], standoffPropertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserADM) extends OntologyResponderRequestV1
 
 
 /**
@@ -100,7 +101,7 @@ case class StandoffEntityInfoGetResponseV1(standoffClassInfoMap: Map[IRI, ClassI
   *
   * @param userProfile the profile of the user making the request.
   */
-case class StandoffClassesWithDataTypeGetRequestV1(userProfile: UserProfileV1) extends OntologyResponderRequestV1
+case class StandoffClassesWithDataTypeGetRequestV1(userProfile: UserADM) extends OntologyResponderRequestV1
 
 
 /**
@@ -116,7 +117,7 @@ case class StandoffClassesWithDataTypeGetResponseV1(standoffClassInfoMap: Map[IR
   *
   * @param userProfile the profile of the user making the request.
   */
-case class StandoffAllPropertiesGetRequestV1(userProfile: UserProfileV1) extends OntologyResponderRequestV1
+case class StandoffAllPropertiesGetRequestV1(userProfile: UserADM) extends OntologyResponderRequestV1
 
 
 /**
@@ -134,7 +135,7 @@ case class StandoffAllPropertiesGetResponseV1(standoffAllPropertiesInfoMap: Map[
   * @param resourceTypeIri the IRI of the resource type to be queried.
   * @param userProfile     the profile of the user making the request.
   */
-case class ResourceTypeGetRequestV1(resourceTypeIri: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
+case class ResourceTypeGetRequestV1(resourceTypeIri: IRI, userProfile: UserADM) extends OntologyResponderRequestV1
 
 /**
   * Represents the Knora API v1 JSON response to a request for information about a resource type.
@@ -152,7 +153,7 @@ case class ResourceTypeResponseV1(restype_info: ResTypeInfoV1) extends KnoraResp
   * @param subClassIri   the IRI of the subclass.
   * @param superClassIri the IRI of the superclass.
   */
-case class CheckSubClassRequestV1(subClassIri: IRI, superClassIri: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
+case class CheckSubClassRequestV1(subClassIri: IRI, superClassIri: IRI, userProfile: UserADM) extends OntologyResponderRequestV1
 
 /**
   * Represents a response to a [[CheckSubClassRequestV1]].
@@ -162,19 +163,19 @@ case class CheckSubClassRequestV1(subClassIri: IRI, superClassIri: IRI, userProf
 case class CheckSubClassResponseV1(isSubClass: Boolean)
 
 /**
-  * Requests all existing named graphs.
-  * This corresponds to the concept of vocabularies in the SALSAH prototype.
+  * Requests information about named graphs containing ontologies. This corresponds to the concept of vocabularies in
+  * the SALSAH prototype.
   *
+  * @param projectIris    the IRIs of the projects for which named graphs should be returned. If this set is empty, information
+  *                       about all ontology named graphs is returned.
   * @param userProfile the profile of the user making the request.
-  *
   */
-case class NamedGraphsGetRequestV1(userProfile: UserProfileV1) extends OntologyResponderRequestV1
+case class NamedGraphsGetRequestV1(projectIris: Set[IRI] = Set.empty[IRI], userProfile: UserADM) extends OntologyResponderRequestV1
 
 /**
   * Represents the Knora API V1 response to a [[NamedGraphsGetRequestV1]].
-  * It contains all the existing named graphs.
   *
-  * @param vocabularies all the existing named graphs.
+  * @param vocabularies information about named graphs containing ontologies.
   */
 case class NamedGraphsResponseV1(vocabularies: Seq[NamedGraphV1]) extends KnoraResponseV1 {
     def toJsValue = ResourceTypeV1JsonProtocol.namedGraphsResponseV1Format.write(this)
@@ -186,7 +187,7 @@ case class NamedGraphsResponseV1(vocabularies: Seq[NamedGraphV1]) extends KnoraR
   * @param namedGraph  the named graph for which the resource classes shall be returned.
   * @param userProfile the profile of the user making the request.
   */
-case class ResourceTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userProfile: UserProfileV1) extends OntologyResponderRequestV1
+case class ResourceTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userProfile: UserADM) extends OntologyResponderRequestV1
 
 /**
   * Represents the Knora API V1 response to a [[ResourceTypesForNamedGraphGetRequestV1]].
@@ -205,7 +206,7 @@ case class ResourceTypesForNamedGraphResponseV1(resourcetypes: Seq[ResourceTypeV
   * @param namedGraph  the named graph to query for or None if all the named graphs should be queried.
   * @param userProfile the profile of the user making the request.
   */
-case class PropertyTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userProfile: UserProfileV1) extends OntologyResponderRequestV1
+case class PropertyTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userProfile: UserADM) extends OntologyResponderRequestV1
 
 /**
   * Represents the Knora API V1 response to a [[PropertyTypesForNamedGraphGetRequestV1]].
@@ -223,7 +224,7 @@ case class PropertyTypesForNamedGraphResponseV1(properties: Seq[PropertyDefiniti
   * @param resourceClassIri the IRI of the resource class to query for.
   * @param userProfile      the profile of the user making the request.
   */
-case class PropertyTypesForResourceTypeGetRequestV1(resourceClassIri: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
+case class PropertyTypesForResourceTypeGetRequestV1(resourceClassIri: IRI, userProfile: UserADM) extends OntologyResponderRequestV1
 
 /**
   * Represents the Knora API V1 response to a [[PropertyTypesForResourceTypeGetRequestV1]].
@@ -242,7 +243,7 @@ case class PropertyTypesForResourceTypeResponseV1(properties: Vector[PropertyDef
   * @param resourceClassIri the IRI of the Knora resource class.
   * @param userProfile      the profile of the user making the request.
   */
-case class SubClassesGetRequestV1(resourceClassIri: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
+case class SubClassesGetRequestV1(resourceClassIri: IRI, userProfile: UserADM) extends OntologyResponderRequestV1
 
 /**
   * Provides information about the subclasses of a Knora resource class.
@@ -260,7 +261,7 @@ case class SubClassesGetResponseV1(subClasses: Seq[SubClassInfoV1]) extends Knor
   * @param namedGraphIri the IRI of the named graph.
   * @param userProfile   the profile of the user making the request.
   */
-case class NamedGraphEntityInfoRequestV1(namedGraphIri: IRI, userProfile: UserProfileV1) extends OntologyResponderRequestV1
+case class NamedGraphEntityInfoRequestV1(namedGraphIri: IRI, userProfile: UserADM) extends OntologyResponderRequestV1
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -279,12 +280,17 @@ class PredicateInfoV1(predicateInfoV2: PredicateInfoV2) {
     /**
       * Returns the objects of the predicate that have no language codes.
       */
-    def objects: Set[String] = predicateInfoV2.objects
+    def objects: Set[String] = predicateInfoV2.objects.filter {
+        case StringLiteralV2(_, Some(_)) => false
+        case _ => true
+    }.map(_.toString).toSet
 
     /**
       * Returns the objects of the predicate that have language codes: a Map of language codes to literals.
       */
-    def objectsWithLang: Map[String, String] = predicateInfoV2.objectsWithLang
+    def objectsWithLang: Map[String, String] = predicateInfoV2.objects.collect {
+        case StringLiteralV2(str, Some(lang)) => lang -> str
+    }.toMap
 }
 
 /**
@@ -298,7 +304,7 @@ sealed trait EntityInfoV1 {
     /**
       * Returns a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
       */
-    def predicates: Map[IRI, PredicateInfoV1] = {
+    lazy val predicates: Map[IRI, PredicateInfoV1] = {
         entityInfoContent.predicates.map {
             case (smartIri, predicateInfoV2) => smartIri.toString -> new PredicateInfoV1(predicateInfoV2)
         }
@@ -314,20 +320,23 @@ sealed trait EntityInfoV1 {
       *         if the predicate has no objects.
       */
     def getPredicateObject(predicateIri: IRI, preferredLangs: Option[(String, String)] = None): Option[String] = {
-        entityInfoContent.getPredicateLiteralObject(
+        entityInfoContent.getPredicateStringLiteralObject(
             predicateIri = predicateIri.toSmartIri,
             preferredLangs = preferredLangs
-        )
+        ) match {
+            case Some(obj) => Some(obj)
+            case None => predicates.get(predicateIri).flatMap(_.objects.headOption)
+        }
     }
 
     /**
-      * Returns all the objects specified for a given predicate.
+      * Returns all the string (non-IRI) objects specified without language tags for a given predicate.
       *
       * @param predicateIri the IRI of the predicate.
       * @return the predicate's objects, or an empty set if this entity doesn't have the specified predicate.
       */
-    def getPredicateObjectsWithoutLang(predicateIri: IRI): Set[String] = {
-        entityInfoContent.getPredicateLiteralsWithoutLang(predicateIri.toSmartIri)
+    def getPredicateStringObjectsWithoutLang(predicateIri: IRI): Set[String] = {
+        entityInfoContent.getPredicateStringLiteralObjectsWithoutLang(predicateIri.toSmartIri).toSet
     }
 }
 
@@ -342,12 +351,18 @@ class ClassInfoV1(classInfoV2: ReadClassInfoV2) extends EntityInfoV1 {
       */
     def resourceClassIri: IRI = classInfoV2.entityInfoContent.classIri.toString
 
+    def allCardinalities: Map[IRI, KnoraCardinalityInfo] = {
+        classInfoV2.allCardinalities.map {
+            case (smartIri, cardinality) => smartIri.toString -> cardinality
+        }
+    }
+
     /**
       * Returns a [[Map]] of properties to [[Cardinality.Value]] objects representing the resource class's
       *                            cardinalities on those properties.
       */
-    def cardinalities: Map[IRI, Cardinality.Value] = {
-        classInfoV2.allCardinalities.map {
+    def knoraResourceCardinalities: Map[IRI, KnoraCardinalityInfo] = {
+        classInfoV2.allResourcePropertyCardinalities.map {
             case (smartIri, cardinality) => smartIri.toString -> cardinality
         }
     }
@@ -467,6 +482,7 @@ trait PropertyDefinitionBaseV1 {
   * @param attributes   HTML attributes to be used with the property's GUI element.
   * @param gui_name     the IRI of a named individual of type `salsah-gui:Guielement`, representing the type of GUI element
   *                     that should be used for inputting values for this property.
+  * @param guiorder     the property's order among the properties defined on some particular class.
   */
 case class PropertyDefinitionV1(id: IRI,
                                 name: IRI,

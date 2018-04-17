@@ -1,5 +1,4 @@
-.. Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
-   Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+.. Copyright © 2015-2018 the contributors (see Contributors.md).
 
    This file is part of Knora.
 
@@ -35,6 +34,7 @@ with `Ontotext GraphDB`_ and `Apache Jena`_.
    development/index
    api_v1/index
    api_v2/index
+   api_admin/index
 
 .. _Ontotext GraphDB: http://ontotext.com/products/graphdb/
 .. _Apache Jena: https://jena.apache.org/

@@ -12,8 +12,7 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.ResetTriplestoreContent
-import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
-import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologiesV2, KnoraApiV2WithValueObjects}
+import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologiesV2, LoadOntologiesRequestV2}
 import org.knora.webapi.responders._
 import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.store._
@@ -26,13 +25,12 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
 object OntologyV2R2RSpec {
-    private val imagesUserProfile = SharedTestDataV1.imagesUser01
-    private val imagesUsername = imagesUserProfile.userData.email.get
-    private val imagesProjectIri = SharedTestDataV1.IMAGES_PROJECT_IRI
+    private val imagesUserProfile = SharedTestDataADM.imagesUser01
+    private val imagesUsername = imagesUserProfile.email
+    private val imagesProjectIri = SharedTestDataADM.IMAGES_PROJECT_IRI
 
-    private val anythingUserProfile = SharedTestDataV1.anythingAdminUser
-    private val anythingUsername = anythingUserProfile.userData.email.get
-    private val anythingProjectIri = SharedTestDataV1.ANYTHING_PROJECT_IRI
+    private val anythingUserProfile = SharedTestDataADM.anythingAdminUser
+    private val anythingUsername = anythingUserProfile.email
 
     private val password = "test"
 }
@@ -73,6 +71,9 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val bildWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/bildWithValueObjects.json")))
     private val knoraApiOntologySimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiOntologySimple.json")))
     private val knoraApiWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiWithValueObjects.json")))
+    private val salsahGui: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/salsahGuiOntology.json")))
+    private val standoffSimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/standoffOntologySimple.json")))
+    private val standoffWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/standoffOntologyWithValueObjects.json")))
     private val incunabulaOntologySimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaOntologySimple.json")))
     private val incunabulaOntologyWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaOntologyWithValueObjects.json")))
     private val knoraApiDate: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiDate.json")))
@@ -100,7 +101,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     "Load test data" in {
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataV1.rootUser), 30.seconds)
+        Await.result(responderManager ? LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser), 30.seconds)
     }
 
     "The Ontologies v2 Endpoint" should {
@@ -149,6 +150,27 @@ class OntologyV2R2RSpec extends R2RSpec {
             Get("/ontology/knora-api/v2") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
                 assert(responseJson == knoraApiWithValueObjects)
+            }
+        }
+
+        "serve the salsah-gui ontology as JSON-LD via the /ontology route" in {
+            Get("/ontology/salsah-gui/v2") ~> ontologiesPath ~> check {
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                assert(responseJson == salsahGui)
+            }
+        }
+
+        "serve the standoff ontology as JSON-LD via the /ontology route using the simple schema" in {
+            Get("/ontology/standoff/simple/v2") ~> ontologiesPath ~> check {
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                assert(responseJson == standoffSimple)
+            }
+        }
+
+        "serve the standoff ontology as JSON-LD via the /ontology route using the value object schema" in {
+            Get("/ontology/standoff/v2") ~> ontologiesPath ~> check {
+                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                assert(responseJson == standoffWithValueObjects)
             }
         }
 
@@ -238,7 +260,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             }
         }
 
-        "serve two project-specific classes and their properties as JSON-LD using the value object schema" in {
+        "serve two project-specific classes as JSON-LD using the value object schema" in {
             val pageIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/v2#page", "UTF-8")
             val bookIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/incunabula/v2#book", "UTF-8")
 
@@ -354,6 +376,15 @@ class OntologyV2R2RSpec extends R2RSpec {
             }
         }
 
+        "delete the 'foo' ontology" in {
+            val fooIriEncoded = URLEncoder.encode(fooIri.get, "UTF-8")
+            val lastModificationDate = URLEncoder.encode(fooLastModDate.toString, "UTF-8")
+
+            Delete(s"/v2/ontologies/$fooIriEncoded?lastModificationDate=$lastModificationDate") ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+            }
+        }
+
         "create a property anything:hasName as a subproperty of knora-api:hasValue and schema:name" in {
             val params =
                 """
@@ -381,7 +412,9 @@ class OntologyV2R2RSpec extends R2RSpec {
                   |          "@language" : "de",
                   |          "@value" : "hat Namen"
                   |        } ],
-                  |        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://schema.org/name" ]
+                  |        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://schema.org/name" ],
+                  |        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
+                  |        "salsah-gui:guiAttribute" : [ "size=80", "maxlength=100" ]
                   |      }
                   |    },
                   |    "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
@@ -389,6 +422,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                   |  "@context" : {
                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                  |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
                   |    "owl" : "http://www.w3.org/2002/07/owl#",
                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
@@ -462,7 +496,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 // Comvert the response to an InputOntologiesV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
                 assert(responseAsInput.ontologies.size == 1)
-                responseAsInput.ontologies.head.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objectsWithLang should ===(paramsAsInput.ontologies.head.properties.head._2.predicates.head._2.objectsWithLang)
+                responseAsInput.ontologies.head.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(paramsAsInput.ontologies.head.properties.head._2.predicates.head._2.objects)
 
                 // Check that the ontology's last modification date was updated.
                 val newAnythingLastModDate = responseAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get
@@ -517,7 +551,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 // Comvert the response to an InputOntologiesV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
                 assert(responseAsInput.ontologies.size == 1)
-                responseAsInput.ontologies.head.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objectsWithLang should ===(paramsAsInput.ontologies.head.properties.head._2.predicates.head._2.objectsWithLang)
+                responseAsInput.ontologies.head.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(paramsAsInput.ontologies.head.properties.head._2.predicates.head._2.objects)
 
                 // Check that the ontology's last modification date was updated.
                 val newAnythingLastModDate = responseAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get
@@ -550,7 +584,8 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |            {
                    |                "@type": "http://www.w3.org/2002/07/owl#Restriction",
                    |                "owl:maxCardinality": 1,
-                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/anything/v2#hasName"
+                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/anything/v2#hasName",
+                   |                "salsah-gui:guiOrder": 1
                    |            }
                    |        ]
                    |      }
@@ -560,6 +595,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |  "@context" : {
                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
                    |    "owl" : "http://www.w3.org/2002/07/owl#",
                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
@@ -569,27 +605,35 @@ class OntologyV2R2RSpec extends R2RSpec {
             """.stripMargin
 
             val expectedProperties: Set[SmartIri] = Set(
-                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherThingValue",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasBlueThing",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasThingPicture",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasDate",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasBoolean",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasThingPictureValue",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasText",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasColor",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasInterval",
-                "http://0.0.0.0:3333/ontology/anything/v2#isPartOfOtherThing",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasDecimal",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherThing",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasBlueThingValue",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasInteger",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasListItem",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasRichtext",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasUri",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasName",
-                "http://0.0.0.0:3333/ontology/anything/v2#isPartOfOtherThingValue",
-                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherListItem"
-            ).map(_.toSmartIri) ++ KnoraApiV2WithValueObjects.Resource.allCardinalities.keySet
+                "http://0.0.0.0:3333/ontology/anything/v2#hasBlueThing".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasName".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasInterval".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherThingValue".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasThingPicture".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherListItem".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasListItem".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasOtherThing".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasThingPictureValue".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#isPartOfOtherThingValue".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasDate".toSmartIri,
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#lastModificationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#creationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#isPartOfOtherThing".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasText".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasDecimal".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasBoolean".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasColor".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasBlueThingValue".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasRichtext".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasUri".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasInteger".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
+            )
 
             // Convert the submitted JSON-LD to an InputOntologiesV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -648,7 +692,16 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |}
             """.stripMargin
 
-            val expectedProperties: Set[SmartIri] = KnoraApiV2WithValueObjects.Resource.allCardinalities.keySet
+            val expectedProperties: Set[SmartIri] = Set(
+                "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#lastModificationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#creationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
+            )
 
             // Convert the submitted JSON-LD to an InputOntologiesV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -715,7 +768,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 // Comvert the response to an InputOntologiesV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
                 assert(responseAsInput.ontologies.size == 1)
-                responseAsInput.ontologies.head.classes.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objectsWithLang should ===(paramsAsInput.ontologies.head.classes.head._2.predicates.head._2.objectsWithLang)
+                responseAsInput.ontologies.head.classes.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(paramsAsInput.ontologies.head.classes.head._2.predicates.head._2.objects)
 
                 // Check that the ontology's last modification date was updated.
                 val newAnythingLastModDate = responseAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get
@@ -739,7 +792,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |          "@language" : "en",
                    |          "@value" : "Represents nothing"
                    |        }, {
-                   |          "@language" : "en",
+                   |          "@language" : "fr",
                    |          "@value" : "ne représente rien"
                    |        } ]
                    |      }
@@ -767,7 +820,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 // Comvert the response to an InputOntologiesV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
                 assert(responseAsInput.ontologies.size == 1)
-                responseAsInput.ontologies.head.classes.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objectsWithLang should ===(paramsAsInput.ontologies.head.classes.head._2.predicates.head._2.objectsWithLang)
+                responseAsInput.ontologies.head.classes.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(paramsAsInput.ontologies.head.classes.head._2.predicates.head._2.objects)
 
                 // Check that the ontology's last modification date was updated.
                 val newAnythingLastModDate = responseAsInput.ontologies.head.ontologyMetadata.lastModificationDate.get
@@ -865,8 +918,17 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |}
             """.stripMargin
 
-            val expectedProperties: Set[SmartIri] = KnoraApiV2WithValueObjects.Resource.allCardinalities.keySet +
-                "http://0.0.0.0:3333/ontology/anything/v2#hasNothingness".toSmartIri
+            val expectedProperties: Set[SmartIri] = Set(
+                "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasNothingness".toSmartIri,
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#lastModificationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#creationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
+            )
 
             // Convert the submitted JSON-LD to an InputOntologiesV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -979,8 +1041,17 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |}
             """.stripMargin
 
-            val expectedProperties: Set[SmartIri] = KnoraApiV2WithValueObjects.Resource.allCardinalities.keySet +
-                "http://0.0.0.0:3333/ontology/anything/v2#hasEmptiness".toSmartIri
+            val expectedProperties: Set[SmartIri] = Set(
+                "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#lastModificationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#creationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo".toSmartIri,
+                "http://0.0.0.0:3333/ontology/anything/v2#hasEmptiness".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
+            )
 
             // Convert the submitted JSON-LD to an InputOntologiesV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -1045,7 +1116,16 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |}
             """.stripMargin
 
-            val expectedProperties: Set[SmartIri] = KnoraApiV2WithValueObjects.Resource.allCardinalities.keySet
+            val expectedProperties: Set[SmartIri] = Set(
+                "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#lastModificationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#creationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
+            )
 
             Put("/v2/ontologies/cardinalities", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)

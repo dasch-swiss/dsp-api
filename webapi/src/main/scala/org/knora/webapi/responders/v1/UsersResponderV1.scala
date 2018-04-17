@@ -1,6 +1,5 @@
 /*
- * Copyright © 2015 Lukas Rosenthaler, Benjamin Geer, Ivan Subotic,
- * Tobias Schweizer, André Kilchenmann, and Sepideh Alassi.
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -33,7 +32,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.Use
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, MessageUtil}
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
 
 import scala.concurrent.Future
 
