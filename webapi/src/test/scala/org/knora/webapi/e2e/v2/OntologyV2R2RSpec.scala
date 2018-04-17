@@ -184,7 +184,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "serve a project-specific ontology as JSON-LD via the /ontology route using the simple schema" in {
-            Get("/ontology/incunabula/simple/v2") ~> ontologiesPath ~> check {
+            Get("/ontology/0803/incunabula/simple/v2") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
                 assert(responseJson == incunabulaOntologySimple)
             }
@@ -200,7 +200,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         }
 
         "serve a project-specific ontology as JSON-LD via the /ontology route using the value object schema" in {
-            Get("/ontology/incunabula/v2") ~> ontologiesPath ~> check {
+            Get("/ontology/0803/incunabula/v2") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
                 assert(responseJson == incunabulaOntologyWithValueObjects)
             }
