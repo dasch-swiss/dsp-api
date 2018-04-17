@@ -340,31 +340,31 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
         }
 
 
-        "create an 'incunabula:book' and an 'incunabula:page' with file parameters via XML import" in {
+        "create an 'p0803-incunabula:book' and an 'p0803-incunabula:page' with file parameters via XML import" in {
             val fileToUpload = new File(pathToChlaus)
             val absoluteFilePath = fileToUpload.getAbsolutePath
 
             val knoraParams =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
-                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/incunabula/xml-import/v1#"
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0803/incunabula/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   |    xsi:schemaLocation="http://api.knora.org/ontology/incunabula/xml-import/v1# incunabula.xsd"
-                   |    xmlns:incunabula="http://api.knora.org/ontology/incunabula/xml-import/v1#"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/0803/incunabula/xml-import/v1# p0803-incunabula.xsd"
+                   |    xmlns:p0803-incunabula="http://api.knora.org/ontology/0803/incunabula/xml-import/v1#"
                    |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
-                   |    <incunabula:book id="test_book">
+                   |    <p0803-incunabula:book id="test_book">
                    |        <knoraXmlImport:label>a book with one page</knoraXmlImport:label>
-                   |        <incunabula:title knoraType="richtext_value">the title of a book with one page</incunabula:title>
-                   |    </incunabula:book>
-                   |    <incunabula:page id="test_page">
+                   |        <p0803-incunabula:title knoraType="richtext_value">the title of a book with one page</p0803-incunabula:title>
+                   |    </p0803-incunabula:book>
+                   |    <p0803-incunabula:page id="test_page">
                    |        <knoraXmlImport:label>a page with an image</knoraXmlImport:label>
                    |        <knoraXmlImport:file path="$absoluteFilePath" mimetype="${MediaTypes.`image/jpeg`.toString}"/>
-                   |        <incunabula:origname knoraType="richtext_value">Chlaus</incunabula:origname>
-                   |        <incunabula:pagenum knoraType="richtext_value">1a</incunabula:pagenum>
-                   |        <incunabula:partOf>
-                   |            <incunabula:book knoraType="link_value" linkType="ref" target="test_book"/>
-                   |        </incunabula:partOf>
-                   |        <incunabula:seqnum knoraType="int_value">1</incunabula:seqnum>
-                   |    </incunabula:page>
+                   |        <p0803-incunabula:origname knoraType="richtext_value">Chlaus</p0803-incunabula:origname>
+                   |        <p0803-incunabula:pagenum knoraType="richtext_value">1a</p0803-incunabula:pagenum>
+                   |        <p0803-incunabula:partOf>
+                   |            <p0803-incunabula:book knoraType="link_value" linkType="ref" target="test_book"/>
+                   |        </p0803-incunabula:partOf>
+                   |        <p0803-incunabula:seqnum knoraType="int_value">1</p0803-incunabula:seqnum>
+                   |    </p0803-incunabula:page>
                    |</knoraXmlImport:resources>""".stripMargin
 
             val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0803", "UTF-8")
