@@ -263,6 +263,16 @@ case class OrExpression(leftArg: Expression, rightArg: Expression) extends Expre
 }
 
 /**
+  * Represents a function call in a filter.
+  *
+  * @param functionIri the IRI of the function.
+  * @param args the arguments passed to the function.
+  */
+case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extends Expression {
+    def toSparql: String = s"<$functionIri>(${args.map(_.toSparql).mkString(", ")})"
+}
+
+/**
   * Represents a FILTER pattern in a query.
   *
   * @param expression the expression in the FILTER.
@@ -280,18 +290,6 @@ case class FilterPattern(expression: Expression) extends QueryPattern {
   */
 case class RegexFunction(textValueVar: QueryVariable, pattern: String, modifier: String) extends Expression {
     def toSparql: String = s"""regex(${textValueVar.toSparql}, "$pattern", "$modifier")"""
-}
-
-/**
-  * Represents a match function in a query (in a FILTER).
-  *
-  * This function has to be rewritten using a special property which is supported by Lucene.
-  *
-  * @param textValueVar the variable representing the text value to be checked against the provided pattern.
-  * @param searchTerm the term to search for.
-  */
-case class MatchFunction(textValueVar: QueryVariable, searchTerm: String) extends Expression {
-    def toSparql = s"""""" // additional statements will be generated, this expression won't end up in generated SPARQL as a FILTER
 }
 
 /**

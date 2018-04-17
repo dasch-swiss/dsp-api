@@ -157,6 +157,7 @@ object OntologyConstants {
 
         val IsMainResource: IRI = KnoraBasePrefixExpansion + "isMainResource"
         val MatchesTextIndex: IRI = KnoraBasePrefixExpansion + "matchesTextIndex" // virtual property to be replaced by a triplestore-specific one
+        val MatchFunctionIri: IRI = KnoraBasePrefixExpansion + "match"
 
         val SubjectClassConstraint: IRI = KnoraBasePrefixExpansion + "subjectClassConstraint"
         val ObjectClassConstraint: IRI = KnoraBasePrefixExpansion + "objectClassConstraint"

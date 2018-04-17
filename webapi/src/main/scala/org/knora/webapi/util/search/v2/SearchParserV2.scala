@@ -45,10 +45,6 @@ object SearchParserV2 {
     private val sparqlParserFactory = new SPARQLParserFactory()
     private val sparqlParser = sparqlParserFactory.getParser
 
-    object supportedFunctions {
-        val contains: IRI = OntologyConstants.XPathFunctions.Contains
-    }
-
     /**
       * Given a string representation of a simple SPARQL CONSTRUCT query, returns a [[ConstructQuery]].
       *
@@ -638,7 +634,21 @@ object SearchParserV2 {
 
                     case sparqlVar: algebra.Var => makeEntity(sparqlVar)
 
+                    case functionCall: algebra.FunctionCall =>
+                        val functionIri = IriRef(functionCall.getURI.toSmartIri)
+                        val args: Seq[Entity] = functionCall.getArgs.asScala.map(arg => makeFilterExpression(arg)).map {
+                            case entity: Entity => entity
+                            case other => throw SparqlSearchException(s"Unsupported argument in function: $other")
+                        }
+
+                        FunctionCallExpression(
+                            functionIri = functionIri,
+                            args = args
+                        )
+
                     case regex: algebra.Regex =>
+
+                        // TODO: make this a FunctionCallExpression
 
                         // first argument representing the text value to be checked
                         val textValueArg: algebra.ValueExpr = regex.getArg
@@ -678,46 +688,6 @@ object SearchParserV2 {
                             modifier = modifier
                         )
 
-                    case functionCall: algebra.FunctionCall =>
-
-                        val functionUri: IRI = functionCall.getURI
-
-                        val args = functionCall.getArgs
-
-                        functionUri match {
-
-                            case SearchParserV2.supportedFunctions.contains =>
-
-                                // check that there are two arguments:
-
-                                if (args.size() != 2) throw SparqlSearchException(s"Wrong number of args given for $functionUri")
-
-                                // 1. arg: query variable
-                                val textValVar: QueryVariable = args.get(0) match {
-                                    case objVar: algebra.Var =>
-                                        makeEntity(objVar) match {
-                                            case queryVar: QueryVariable => queryVar
-                                            case _ => throw SparqlSearchException(s"Entity $objVar not allowed in match function as the first argument, a variable is required")
-                                        }
-                                    case other => throw SparqlSearchException(s"$other is not allowed in match function as first argument, a variable is required")
-                                }
-
-                                // 2. arg: string
-                                val searchTerm: String = args.get(1) match {
-                                    case valConstant: algebra.ValueConstant =>
-                                        valConstant.getValue.stringValue()
-                                    case other => throw SparqlSearchException(s"$other not allowed in match function as the second argument, a string is expected")
-
-                                }
-
-                                MatchFunction(
-                                    textValueVar = textValVar,
-                                    searchTerm = searchTerm
-                                )
-
-                            case other => throw SparqlSearchException(s"Unsupported function in FILTER expression: $other")
-
-                        }
 
                     case other => throw SparqlSearchException(s"Unsupported FILTER expression: ${other.getClass}")
                 }
