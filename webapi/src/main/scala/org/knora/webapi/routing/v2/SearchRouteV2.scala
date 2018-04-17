@@ -115,6 +115,12 @@ object SearchRouteV2 extends Authenticator {
         }
     }
 
+    /**
+      * Gets the standoff class the search should be restricted to.
+      *
+      * @param params the GET parameters.
+      * @return the internal standoff class, if any.
+      */
     private def getStandoffClass(params: Map[String, String]): Option[SmartIri] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val limitToStandoffClassIriStr: Option[String] = params.get(LIMIT_TO_STANDOFF_CLASS)
