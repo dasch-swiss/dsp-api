@@ -606,8 +606,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
     // A regex for the URL path of an API v2 ontology (built-in or project-specific).
     private val ApiV2OntologyUrlPathRegex: Regex = (
-        "^" + "/ontology/(" +
-            ProjectIDPattern + ")/(" + NCNamePattern + ")(" +
+        "^" + "/ontology/((" +
+            ProjectIDPattern + ")/)?(" + NCNamePattern + ")(" +
             OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")$"
         ).r
 
