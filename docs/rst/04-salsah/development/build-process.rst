@@ -79,19 +79,24 @@ Run the automated tests
 
 In order to run the tests, the Selenium driver for Chrome has to be installed.
 
-It is architecture-dependant, please go to ``salsah/lib/chromedriver`` directory and unzip the distribution that matches your architecture, or download it from `here <https://sites.google.com/a/chromium.org/chromedriver/downloads>`_ and install it in this directory.
+It is architecture-dependent, please go to ``salsah/lib/chromedriver`` directory and unzip the distribution that matches your architecture, or download it from `here <https://sites.google.com/a/chromium.org/chromedriver/downloads>`_ and install it in this directory.
 
-Then, launch the services as described above; the triple store with the test data, the api server with the ``allowReloadOverHTTP`` option, sipi with the test configuration and salsah where you can run the tests in the same SBT session:
+Then, launch the services as described above:
+
+- the triplestore (test data will be loaded automatically as you run the tests)
+- the webapi server with ``reStart -r`` (with ``allowReloadOverHTTP``-flag) from SBT (from ``KNORA_PROJECT_DIRECTORY/webapi``)
+- Sipi with the test configuration (``--config config/sipi.knora-test-config.lua``)
+
+Then start Salsah1 and run the tests from SBT:
 
 ::
 
-    $ cd KNORA_PROJECT_DIRECTORY/salsah
+    $ cd KNORA_PROJECT_DIRECTORY/salsah1
     $ sbt
-    > compile
-    > re-start
+    > reStart -r
     > test # or headless:test for running tests in headless mode
 
-Note: please be patient as salsah can take up to one mimute (end of a time-out) before reporting some errors.
+Note: please be patient as Salsah1 can take up to one minute (end of a time-out) before reporting some errors.
 
 Runing automated tests in headless browser mode
 -----------------------------------------------

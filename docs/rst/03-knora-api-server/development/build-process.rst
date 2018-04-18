@@ -215,7 +215,7 @@ Usage:
 ``allowReloadOverHTTP`` - Flag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When the webapi.server is started with the ``allowReloadOverHTTP`` flag, then the
+When the webapi.server is started with the ``allowReloadOverHTTP`` flag (``reStart -r``), then the
 ``v1/store/ResetTriplestoreContent`` route is activated. This route accepts a ``POST`` request, with a json payload
 consisting of the following exemplary content:
 
