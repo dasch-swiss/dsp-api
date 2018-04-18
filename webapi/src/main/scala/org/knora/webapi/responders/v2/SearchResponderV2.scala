@@ -969,14 +969,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             // two arguments are expected: the first is expected to be a variable representing a string value,
                             // the second is expected to be a string literal
 
-                            if (functionCall.args.size != 2) throw BadRequestException(s"Two arguments are expected for ${functionCall.functionIri}")
+                            if (functionCall.args.size != 2) throw SparqlSearchException(s"Two arguments are expected for ${functionCall.functionIri}")
 
                             // a QueryVariable expected to represent a text value
-                            val textValueVar: QueryVariable = functionCall.args.head match {
-                                case queryVar: QueryVariable => queryVar
-
-                                case other => throw BadRequestException(s"$other is expected to be a QueryVariable")
-                            }
+                            val textValueVar: QueryVariable = functionCall.getArgAsQueryVar(pos = 0)
 
                             // make a key to look up information in type inspection results
                             val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(textValueVar)
@@ -1011,12 +1007,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
                             valueVariablesCreatedInFilters.put(textValueVar, textValHasString)
 
-                            val searchTerm: XsdLiteral = functionCall.args(1) match {
-                                case stringLiteral: XsdLiteral if stringLiteral.datatype == OntologyConstants.Xsd.String.toSmartIri => stringLiteral
-
-                                case other => throw BadRequestException(s"other is expected to be a string literal")
-
-                            }
+                            val searchTerm: XsdLiteral = functionCall.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
 
                             // combine search terms with a logical AND (Lucene syntax)
                             val searchTerms: CombineSearchTerms = CombineSearchTerms(searchTerm.value)
@@ -2237,8 +2228,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // Convert the result to a SPARQL string and send it to the triplestore.
                 val triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
-                //println("++++++++")
-                //println(triplestoreSpecificQuery.toSparql)
+                // println("++++++++")
+                // println(triplestoreSpecificQuery.toSparql)
 
                 for {
                     searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]

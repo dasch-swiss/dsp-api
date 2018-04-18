@@ -648,12 +648,10 @@ object SearchParserV2 {
 
                     case regex: algebra.Regex =>
 
-                        // TODO: make this a FunctionCallExpression
-
                         // first argument representing the text value to be checked
                         val textValueArg: algebra.ValueExpr = regex.getArg
 
-                        val textValueVar = textValueArg match {
+                        val textValueVar: QueryVariable = textValueArg match {
                             case objVar: algebra.Var =>
                                 makeEntity(objVar) match {
                                     case queryVar: QueryVariable => queryVar
@@ -687,7 +685,6 @@ object SearchParserV2 {
                             pattern = pattern,
                             modifier = modifier
                         )
-
 
                     case other => throw SparqlSearchException(s"Unsupported FILTER expression: ${other.getClass}")
                 }

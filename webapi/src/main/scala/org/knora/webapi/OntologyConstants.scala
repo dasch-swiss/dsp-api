@@ -561,7 +561,9 @@ object OntologyConstants {
     }
 
     object XPathFunctions {
-        val Contains = "http://www.w3.org/2005/xpath-functions#contains"
+        val XPathPrefixExpansion: IRI = "http://www.w3.org/2005/xpath-functions#"
+
+        val Contains: IRI = XPathPrefixExpansion + "contains"
     }
 
     object KnoraXmlImportV1 {
