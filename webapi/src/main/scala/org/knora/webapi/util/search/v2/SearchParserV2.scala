@@ -688,9 +688,6 @@ object SearchParserV2 {
 
                     case lang: algebra.Lang =>
 
-                        // TODO: We expect the lang function to be part of a CompareExpression along with a string literal, e.g. lang(?textaVar) = "en"
-                        // TODO: do we need to check for this?
-
                         val textValueVar = lang.getArg match {
                             case objVar: algebra.Var =>
                                 makeEntity(objVar) match {

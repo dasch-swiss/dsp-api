@@ -1782,5 +1782,44 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
+        "search for a text using the lang function" in {
+
+            val sparqlSimplified =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |} WHERE {
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasText ?text .
+                  |
+                  |     anything:hasText knora-api:objectType xsd:string .
+                  |
+                  |     ?text a xsd:string .
+                  |
+                  |     FILTER(lang(?text) = "en")
+                  |}
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // TODO: add some test data that have a language annotation and check for results
+
+                checkCountQuery(responseAs[String], 0)
+
+            }
+
+        }
+
     }
 }
