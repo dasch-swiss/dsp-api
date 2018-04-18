@@ -686,6 +686,22 @@ object SearchParserV2 {
                             modifier = modifier
                         )
 
+                    case lang: algebra.Lang =>
+
+                        // TODO: We expect the lang function to be part of a CompareExpression along with a string literal, e.g. lang(?textaVar) = "en"
+                        // TODO: do we need to check for this?
+
+                        val textValueVar = lang.getArg match {
+                            case objVar: algebra.Var =>
+                                makeEntity(objVar) match {
+                                    case queryVar: QueryVariable => queryVar
+                                    case _ => throw SparqlSearchException(s"Entity $objVar not allowed in lang function as an argument, a variable is required")
+                                }
+                            case other => throw SparqlSearchException(s"$other is not allowed in lang function as an argument, a variable is required")
+                        }
+
+                        LangFunction(textValueVar)
+
                     case other => throw SparqlSearchException(s"Unsupported FILTER expression: ${other.getClass}")
                 }
             }

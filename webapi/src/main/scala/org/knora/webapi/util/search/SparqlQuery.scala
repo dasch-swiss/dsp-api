@@ -274,6 +274,15 @@ case class RegexFunction(textValueVar: QueryVariable, pattern: String, modifier:
 }
 
 /**
+  * Represents a lang function in  a query (in a FILTER).
+  *
+  * @param textValueVar the variable representing the text value to be restricted to the specified language.
+  */
+case class LangFunction(textValueVar: QueryVariable) extends Expression {
+    def toSparql: String = s"""lang(${textValueVar.toSparql})"""
+}
+
+/**
   * Represents a function call in a filter.
   *
   * @param functionIri the IRI of the function.

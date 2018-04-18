@@ -173,6 +173,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 case andExpr: AndExpression => AndExpression(leftArg = preprocessFilterExpression(andExpr.leftArg), rightArg = preprocessFilterExpression(andExpr.rightArg))
                 case orExpr: OrExpression => OrExpression(leftArg = preprocessFilterExpression(orExpr.leftArg), rightArg = preprocessFilterExpression(orExpr.rightArg))
                 case regex: RegexFunction => regex // no preprocessing needed since no Knora entity IRIs are involved (schema conversion)
+                case lang: LangFunction => throw NotImplementedException("Lang function not implemented yet") // TODO: implement this
                 case functionCallExpr: FunctionCallExpression => FunctionCallExpression(functionIri = functionCallExpr.functionIri, args = functionCallExpr.args.map(arg => preprocessEntity(arg)))
             }
         }
