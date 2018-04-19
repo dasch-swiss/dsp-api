@@ -1,20 +1,18 @@
+import scala.sys.process._
+
 // Define `Configuration` instances representing our different documentation trees
-val WrapperSite = config("wrapper")
 val ParadoxSite = config("paradox")
 val SphinxSite = config("sphinx")
 
 
 lazy val root = (project in file(".")).
         configs(
-            WrapperSite,
             ParadoxSite,
             SphinxSite
         ).
-        enablePlugins(ParadoxPlugin, ParadoxSitePlugin, ParadoxMaterialThemePlugin, SphinxPlugin, GhpagesPlugin).
+        enablePlugins(JekyllPlugin, ParadoxPlugin, ParadoxSitePlugin, ParadoxMaterialThemePlugin, SphinxPlugin, GhpagesPlugin).
         settings(
             // Apply default settings to our two custom configuration instances
-            ParadoxSitePlugin.paradoxSettings(WrapperSite),
-            ParadoxMaterialThemePlugin.paradoxMaterialThemeSettings(WrapperSite),
             ParadoxSitePlugin.paradoxSettings(ParadoxSite),
             ParadoxMaterialThemePlugin.paradoxMaterialThemeGlobalSettings, // paradoxTheme and version
             ParadoxMaterialThemePlugin.paradoxMaterialThemeSettings(ParadoxSite),
@@ -28,34 +26,16 @@ lazy val root = (project in file(".")).
             ghpagesNoJekyll := true,
             git.remoteRepo := "git@github.com:dhlab-basel/Knora.git",
 
-            // Customize the source directory
+            // (sbt-site) Customize the source directory
+            // sourceDirectory in Jekyll := sourceDirectory.value / "overview",
             sourceDirectory in ParadoxSite := sourceDirectory.value / "paradox",
             sourceDirectory in SphinxSite := sourceDirectory.value / "sphinx",
 
-            // Customize the output directory (subdirectory of site)
+            // (sbt-site) Customize the output directory (subdirectory of site)
             siteSubdirName in ParadoxSite := "paradox",
             siteSubdirName in SphinxSite := "sphinx",
 
-
-            paradoxProperties in WrapperSite ++= Map(
-                "project.name" -> "Knora Documentation Overview",
-                "github.base_url" -> "https://github.com/dhlab-basel/Knora/docs"
-            ),
-            // Paradox Material Theme Settings
-            paradoxMaterialTheme in WrapperSite ~= {
-                _.withColor("blue", "yellow")
-                        .withRepository(uri("https://github.com/dhlab-basel/Knora"))
-                        .withFavicon("cloud")
-                        .withLogoIcon("cloud")
-                        .withSocial(
-                            uri("https://github.com/dhlab-basel"),
-                            uri("https://twitter.com/dhlabbasel")
-                        )
-                        .withLanguage(java.util.Locale.ENGLISH)
-                        .withCopyright("Copyright 2015-2018 the contributors (see Contributors.md)")
-            },
-
-
+            // Set some paradox properties
             paradoxProperties in ParadoxSite ++= Map(
                 "project.name" -> "Knora Documentation",
                 "github.base_url" -> "https://github.com/dhlab-basel/Knora"
@@ -75,11 +55,28 @@ lazy val root = (project in file(".")).
                  .withCopyright("Copyright 2015-2018 the contributors (see Contributors.md)")
             },
             mappings in makeSite ++= Seq(
-                file("redoc/index.html") -> "api-admin/index.html",
-                file("_format_docu") -> "api-v1",
-                file("_format_docu_v2") -> "api-v2"
-            )
+                file("src/api-admin/index.html") -> "api-admin/index.html",
+                file("src/api-admin/swagger.json") -> "api-admin/swagger.json"
+            ),
+            // only execute building of typescript docs after makeSite
+            makeSite := makeSite.dependsOn(buildTypescriptDocs).value
         )
+
+
+
+lazy val buildTypescriptDocs = taskKey[Unit]("Build typescript API V1 and API V2 documentation.")
+
+buildTypescriptDocs := {
+    val s: TaskStreams = streams.value
+    val shell: Seq[String] = if (sys.props("os.name").contains("Windows")) Seq("cmd", "/c") else Seq("bash", "-c")
+    val jsonformat: Seq[String] = shell :+ "make jsonformat"
+    s.log.info("building typescript documentation...")
+    if((jsonformat !) == 0) {
+        s.log.success("typescript documentation build successful!")
+    } else {
+        throw new IllegalStateException("typescript documentation build failed!")
+    }
+}
 
 
 

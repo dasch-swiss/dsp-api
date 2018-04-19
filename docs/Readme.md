@@ -183,3 +183,18 @@ export LANG=de_CH.UTF-8
 ```
 
 
+## 6 Jekyll
+
+### Installation
+
+Jekyll is used for building the *Knora Documentation Overview* website, which source can be found under `src/jekyll`.
+To install the necessary dependencies, run the following commands from inside the `src/jekyll` folder:
+
+```
+$ gem install jekyll bundler
+$ bundle
+```
+
+If you run into any trouble during installation, try to update your local installation beforehand, e.g., on a mac
+run `brew update`, `brew upgrade`, `gem update`. Also, if there is a problem installing `nokogiri` try `brew unlink xz`,
+then installing `nokogiri` and then `brew link xz`.
