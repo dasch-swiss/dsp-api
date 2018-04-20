@@ -92,7 +92,11 @@ jobs:
     - stage: test
       script:
         # install the necessary packages
-        - sudo apt-get install -y python3-sphinx graphviz ruby-full
+        - sudo apt-get install -y python3-sphinx graphviz software-properties-common
+        - sudo apt-add-repository -y ppa:rael-gc/rvm
+        - sudo apt-get update
+        - sudo apt-get install rvm
+        - rvm install ruby
         # check if sphinx is working
         - sphinx-build --version
         # install typedoc
