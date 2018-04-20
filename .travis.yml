@@ -10,10 +10,13 @@ git:
 language: scala
 
 scala:
-- 2.12.1
+  - 2.12.1
 
 jdk:
-- oraclejdk8
+  - oraclejdk8
+
+rvm:
+  - 2.4.1
 
 services:
   - docker
