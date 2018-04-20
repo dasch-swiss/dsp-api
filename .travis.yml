@@ -85,16 +85,19 @@ jobs:
         - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop
         # start the integration tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt it:test
-    # testing docs
+    # testing docs generation
     - stage: test
       script:
-        # install the necessary sphinx package
-        - sudo apt-get install python3-sphinx
+        # install the necessary sphinx packages
+        - sudo apt-get install -y python3-sphinx graphviz
         # check if sphinx is working
         - sphinx-build --version
         # install typedoc
         - npm install --global typedoc
-        # compile docs (both sphinx and paradox) - any links to missing files should result in an build error
+        # install jekyll and dependencies
+        - sudo gem install jekyll bundler
+        - cd $TRAVIS_BUILD_DIR/docs/src/jekyll && bundle install
+        # compile and build all docs (sphinx, paradox, typescript, jekyll)
         - cd $TRAVIS_BUILD_DIR/docs && sbt makeSite
     # Salsah browser tests
     #- stage: test
