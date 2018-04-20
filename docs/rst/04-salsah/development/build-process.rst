@@ -25,21 +25,24 @@ TODO: complete this file.
 
 
 Building and Running
----------------------
+--------------------
 
-Start the provided Fuseki triplestore:
+Start a triplestore (GraphDB-Free or GraphDB-SE). Download distribution from Ontotext_. Unzip distribution
+to a place of your choosing and run the following:
 
 ::
 
-    $ cd KNORA_PROJECT_DIRECTORY/triplestores/fuseki
-    $ ./fuseki-server
+    $ cd /to/unziped/location
+    $ ./bin/graphdb -Dgraphdb.license.file=/path/to/GRAPHDB_SE.license
 
-Then in another terminal, load some test data into the triplestore:
+Here we use GraphDB-SE which needs to be licensed separately.
+
+Then in another terminal, initialize the data repository and load some test data:
 
 ::
 
     $ cd KNORA_PROJECT_DIRECTORY/webapi/scripts
-    $ ./fuseki-load-test-data.sh
+    $ ./graphdb-se-local-init-knora-test.sh
 
 Then go back to the webapi root directory and use SBT to start the API server:
 
@@ -48,52 +51,54 @@ Then go back to the webapi root directory and use SBT to start the API server:
     $ cd KNORA_PROJECT_DIRECTORY/webapi
     $ sbt
     > compile
-    > re-start allowReloadOverHTTP
+    > reStart
 
-Then in another terminal, go to the SIPI project root directory and start the server:
-
-::
-
-    $ ./local/bin/sipi --config=config/sipi.knora-config.lua (for production)
-    $ ./local/bin/sipi --config=config/sipi.knora-test-config.lua (for running tests)
-
-Then in another terminal, go to the SALSAH root directory and start the server:
+Then in another terminal, start the SIPI server by using Docker:
 
 ::
 
-    $ cd KNORA_PROJECT_DIRECTORY/salsah
+    $ docker run -d --add-host webapihost:[local-IP-address] -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 dhlabbasel/sipi:develop /sipi/local/bin/sipi --config=/sipi/config/sipi.knora-docker-config.lua
+
+Don't forget to set ``local-IP-address`` with the IP address of your computer.
+
+Then in another terminal, go to the SALSAH1 root directory and start the server:
+
+::
+
+    $ cd KNORA_PROJECT_DIRECTORY/salsah1
     $ sbt
     > compile
-    > re-start
+    > reStart
 
 
 To shut down the SALSAH server:
 
 ::
 
-  > re-stop
+  > reStop
 
 
 Run the automated tests
-------------------------
+-----------------------
 
 In order to run the tests, the Selenium driver for Chrome has to be installed.
 
-It is architecture-dependent, please go to ``salsah/lib/chromedriver`` directory and unzip the distribution that matches your architecture, or download it from `here <https://sites.google.com/a/chromium.org/chromedriver/downloads>`_ and install it in this directory.
+It is architecture-dependent, please go to ``salsah1/lib/chromedriver`` directory and unzip the distribution that
+matches your architecture, or download it from `here <https://sites.google.com/a/chromium.org/chromedriver/downloads>`_
+and install it in this directory.
 
-Then, launch the services as described above:
+Then, launch the services as described above with some slight changes:
 
-- the triplestore (test data will be loaded automatically as you run the tests)
-- the webapi server with ``reStart -r`` (with ``allowReloadOverHTTP``-flag) from SBT (from ``KNORA_PROJECT_DIRECTORY/webapi``)
-- Sipi with the test configuration (``--config config/sipi.knora-test-config.lua``)
+- run the ``Webapi`` server with ``reStart -r`` (with ``allowReloadOverHTTP``-flag) from SBT (from ``KNORA_PROJECT_DIRECTORY/webapi``)
+- run ``Sipi`` with the test configuration (``--config=config/sipi.knora-test-docker-config.lua``)
 
-Then start Salsah1 and run the tests from SBT:
+Then start Salsah1 it it is not running and run the tests from SBT:
 
 ::
 
     $ cd KNORA_PROJECT_DIRECTORY/salsah1
     $ sbt
-    > reStart -r
+    > reStart
     > test # or headless:test for running tests in headless mode
 
 Note: please be patient as Salsah1 can take up to one minute (end of a time-out) before reporting some errors.
@@ -109,3 +114,5 @@ SBT Build Configuration
 ------------------------
 
 .. literalinclude:: ../../../../salsah1/SalsahBuild.sbt
+
+.. _Ontotext: http://ontotext.com
