@@ -15,9 +15,6 @@ scala:
 jdk:
   - oraclejdk8
 
-rvm:
-  - 2.4.1
-
 services:
   - docker
 
@@ -96,7 +93,8 @@ jobs:
         - sudo apt-add-repository -y ppa:rael-gc/rvm
         - sudo apt-get update
         - sudo apt-get install rvm
-        - rvm install ruby
+        - rvm install ruby 2.4.1
+        - rvm use 2.4.1
         # check if sphinx is working
         - sphinx-build --version
         # install typedoc
