@@ -88,8 +88,8 @@ jobs:
     # testing docs generation
     - stage: test
       script:
-        # install the necessary sphinx packages
-        - sudo apt-get install -y python3-sphinx graphviz
+        # install the necessary packages
+        - sudo apt-get install -y python3-sphinx graphviz ruby-full
         # check if sphinx is working
         - sphinx-build --version
         # install typedoc
