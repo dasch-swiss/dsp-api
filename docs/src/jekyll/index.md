@@ -1,6 +1,25 @@
 ---
-# You don't need to edit this file, it's empty on purpose.
-# Edit theme's home layout instead if you wanna make some changes
-# See: https://jekyllrb.com/docs/themes/#overriding-theme-defaults
+# see _layouts/home.html
 layout: home
 ---
+
+# Knora Documentation Overview
+
+The Knora Stack consist of the following components:
+
+ - The Frontend:
+    - [Salsah1](http://wiki.salsah.org) (old version)
+    - [Salsah2](https://dhlab-basel.github.io/Salsah/) (new version still in development)
+ - The API Server: 
+    - [webapi (new documentation style)](/paradox/index.html)
+    - [webapi (old documentation style)](/sphinx/index.html)
+ - The IIIF Server: [The SIPI Manual](https://dhlab-basel.github.io/Sipi/documentation/index.html)
+ - A triplestore: [Graphdb-Free](http://graphdb.ontotext.com/documentation/free/) or [GraphDB-SE](http://graphdb.ontotext.com/documentation/standard/)
+
+
+
+
+
+
+
+

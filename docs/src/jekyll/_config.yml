@@ -13,7 +13,7 @@
 # you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
-title: Knora Documentation Overview
+title: Knora
 email: sekretariat-dhlab@unibas.ch
 description: >- # this means to ignore newlines until "baseurl:"
   This site represents the starting point for accessing the documentation of all the different components used in the

@@ -25,6 +25,10 @@ lazy val root = (project in file(".")).
             // Ghpages settings
             ghpagesNoJekyll := true,
             git.remoteRepo := "git@github.com:dhlab-basel/Knora.git",
+            excludeFilter in ghpagesCleanSite :=
+                new FileFilter{
+                    def accept(f: File) = (ghpagesRepository.value / "CNAME").getCanonicalPath == f.getCanonicalPath
+                } || "LICENSE.md" || "README.md",
 
             // (sbt-site) Customize the source directory
             // sourceDirectory in Jekyll := sourceDirectory.value / "overview",
@@ -69,9 +73,10 @@ lazy val buildTypescriptDocs = taskKey[Unit]("Build typescript API V1 and API V2
 buildTypescriptDocs := {
     val s: TaskStreams = streams.value
     val shell: Seq[String] = if (sys.props("os.name").contains("Windows")) Seq("cmd", "/c") else Seq("bash", "-c")
+    val clean: Seq[String] = shell :+ "make clean"
     val jsonformat: Seq[String] = shell :+ "make jsonformat"
     s.log.info("building typescript documentation...")
-    if((jsonformat !) == 0) {
+    if((clean #&& jsonformat !) == 0) {
         s.log.success("typescript documentation build successful!")
     } else {
         throw new IllegalStateException("typescript documentation build failed!")
