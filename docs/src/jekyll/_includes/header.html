@@ -1,33 +1,35 @@
-  <header class="mdl-layout__header">
+<header class="mdl-layout__header">
 
     <div class="mdl-layout__header-row">
-      <!-- Title -->
-      <span class="mdl-layout-title">{{ site.title }}</span>
-      <!-- Add spacer, to align navigation to the right -->
-      <div class="mdl-layout-spacer"></div>
+        <!-- Title -->
+        <span class="mdl-layout-title">{{ site.title }}</span>
 
+        <!-- Add spacer, to align navigation to the right -->
+        <div class="mdl-layout-spacer"></div>
 
-      <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="menu-lower-left">
-          <li><a href="http://knora.org" class="mdl-menu__item">Home</a></li>
-          <li><a href="http://docs.knora.org" class="mdl-menu__item">Docs</a></li>
-          <li><a href="http://docs.knora.org/paradox" class="mdl-menu__item">Docs</a></li>
-          <li><a href="http://docs.knora.org/sphinx" class="mdl-menu__item">Docs</a></li>
-          <li><a href="http://docs.knora.org" class="mdl-menu__item">Docs</a></li>
-      </ul>
+        <!-- Button to Docs on the right -->
+        <a href="https://docs.knora.org" target="_blank" class="mdl-navigation__button">
+            <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--primary">
+                Docs
+            </button>
+        </a>
+
+        <!-- Button to Github on the right -->
+        <a href="https://github.com/dhlab-basel/Knora" target="_blank" class="mdl-navigation__button">
+            <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--primary">
+                View on GitHub
+            </button>
+        </a>
+
     </div>
-  </header>
+</header>
 
-  <div class="mdl-layout__drawer">
+<div class="mdl-layout__drawer">
     <span class="mdl-layout-title">Menu</span>
-        <nav class="mdl-navigation">
-            <a class="mdl-navigation__link" href="http://knora.org">Home</a>
-            <a class="mdl-navigation__link" href="http://docs.knora.org">Docs</a>
-            <a class="mdl-navigation__link" href="http://docs.knora.org/paradox">Knora Manual (new style)</a>
-            <a class="mdl-navigation__link" href="http://docs.knora.org/sphinx">Knora Manual (old style)</a>
-            <a class="mdl-navigation__link" href="http://docs.knora.org/api-v1">API-V1</a>
-            <a class="mdl-navigation__link" href="http://docs.knora.org/api-v1">API-V2</a>
-            <a class="mdl-navigation__link" href="http://docs.knora.org/api-v1">API-Admin</a>
-        </nav>
+    <nav class="mdl-navigation">
+        <a class="mdl-navigation__link" href="http://knora.org">Home</a>
+        <a class="mdl-navigation__link" href="http://docs.knora.org">Docs</a>
+    </nav>
 
-  </div>
+</div>
 
