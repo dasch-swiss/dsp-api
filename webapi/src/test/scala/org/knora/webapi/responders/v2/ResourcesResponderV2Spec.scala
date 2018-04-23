@@ -69,7 +69,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "The resources responder v2" should {
         "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
 
-            actorUnderTest ! ResourcesGetRequestV2(Seq("http://data.knora.org/c5058f3a"), userProfile)
+            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/c5058f3a"), userProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein, received = response)
@@ -79,7 +79,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return a full description of the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-            actorUnderTest ! ResourcesGetRequestV2(Seq("http://data.knora.org/2a6221216701"), userProfile)
+            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/2a6221216701"), userProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForReise, received = response)
@@ -89,7 +89,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-            actorUnderTest ! ResourcesGetRequestV2(Seq("http://data.knora.org/c5058f3a", "http://data.knora.org/2a6221216701"), userProfile)
+            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/c5058f3a", "http://rdfh.ch/2a6221216701"), userProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise, received = response)
@@ -99,7 +99,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two full description of the 'Reise ins Heilige Land' and the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data (inversed order)" in {
 
-            actorUnderTest ! ResourcesGetRequestV2(Seq("http://data.knora.org/2a6221216701", "http://data.knora.org/c5058f3a"), userProfile)
+            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/2a6221216701", "http://rdfh.ch/c5058f3a"), userProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = ResourcesResponderV2SpecFullData.expectedFullResourceResponseForReiseInversedAndZeitgloeckleinInversedOrder, received = response)
@@ -109,7 +109,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data providing redundant resource Iris" in {
 
-            actorUnderTest ! ResourcesGetRequestV2(Seq("http://data.knora.org/c5058f3a", "http://data.knora.org/c5058f3a", "http://data.knora.org/2a6221216701"), userProfile)
+            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/c5058f3a", "http://rdfh.ch/c5058f3a", "http://rdfh.ch/2a6221216701"), userProfile)
 
             // the redundant Iri should be ignored (distinct)
             expectMsgPF(timeout) {

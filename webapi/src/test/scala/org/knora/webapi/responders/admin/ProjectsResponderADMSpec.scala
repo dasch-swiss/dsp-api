@@ -335,7 +335,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
                 /*
                 actorUnderTest ! ProjectChangeRequestADM(
-                    projectIri = "http://data.knora.org/projects/notexisting",
+                    projectIri = "http://rdfh.ch/projects/notexisting",
                     changeProjectRequest = ChangeProjectApiRequestADM(None, None, None, None, None, None, None, None, None, None),
                     SharedAdminTestData.rootUser,
                     UUID.randomUUID()

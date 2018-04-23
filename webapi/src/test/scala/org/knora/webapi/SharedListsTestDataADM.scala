@@ -26,7 +26,7 @@ object SharedListsTestDataADM {
 
 
     val otherTreeListInfo: ListInfoADM = ListInfoADM (
-        id = "http://data.knora.org/anything/otherTreeList",
+        id = "http://rdfh.ch/anything/otherTreeList",
         projectIri = "http://rdfh.ch/projects/0001",
         labels = Seq(StringLiteralV2("Tree list root", Some("en"))),
         comments = Seq.empty[StringLiteralV2]

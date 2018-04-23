@@ -405,8 +405,8 @@ class StringFormatterSpec extends CoreSpec() {
             assert(dataIri.isKnoraDataIri)
         }
 
-        "parse http://data.knora.org/0123456789abcdef" in {
-            val dataIri = "http://data.knora.org/0123456789abcdef".toSmartIri
+        "parse http://rdfh.ch/0123456789abcdef" in {
+            val dataIri = "http://rdfh.ch/0123456789abcdef".toSmartIri
             assert(dataIri.isKnoraDataIri)
         }
 

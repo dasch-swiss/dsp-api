@@ -44,7 +44,7 @@ class ProjectsResponderV1 extends Responder {
     val knoraIdUtil = new KnoraIdUtil
 
     // Global lock IRI used for project creation and update
-    val PROJECTS_GLOBAL_LOCK_IRI = "http://data.knora.org/projects"
+    val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"
 
     /**
       * Receives a message extending [[org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1]], and returns an appropriate response message, or

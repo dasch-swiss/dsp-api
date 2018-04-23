@@ -379,7 +379,7 @@ class SearchParserV2Spec extends CoreSpec() {
           |    ?thing rdfs:label ?thingLabel .
           |} WHERE {
           |    ?thing a anything:Thing .
-          |    BIND(<http://data.knora.org/a-thing> AS ?aThing)
+          |    BIND(<http://rdfh.ch/a-thing> AS ?aThing)
           |    ?thing anything:hasOtherThing ?aThing .
           |}
         """.stripMargin
@@ -787,11 +787,11 @@ class SearchParserV2Spec extends CoreSpec() {
           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
           |
           |CONSTRUCT {
-          |    ?resource knora-api:hasLinkTo <http://data.knora.org/a-thing> .
+          |    ?resource knora-api:hasLinkTo <http://rdfh.ch/a-thing> .
           |} WHERE {
           |    ?resource a anything:Thing .
           |
-          |    ?resource ?linkingProp <http://data.knora.org/a-thing> .
+          |    ?resource ?linkingProp <http://rdfh.ch/a-thing> .
           |    FILTER(?linkingProp = anything:isPartOfOtherThing || ?linkingProp = anything:hasOtherThing)
           |
           |}
@@ -806,7 +806,7 @@ class SearchParserV2Spec extends CoreSpec() {
                 subj = QueryVariable(variableName = "resource")
             ),
             StatementPattern(
-                obj = IriRef("http://data.knora.org/a-thing".toSmartIri),
+                obj = IriRef("http://rdfh.ch/a-thing".toSmartIri),
                 pred = QueryVariable(variableName = "linkingProp"),
                 subj = QueryVariable(variableName = "resource")
             ),
@@ -826,14 +826,14 @@ class SearchParserV2Spec extends CoreSpec() {
             positiveEntities = Set(
                 QueryVariable("linkingProp"),
                 QueryVariable("resource"),
-                IriRef("http://data.knora.org/a-thing".toSmartIri, None),
+                IriRef("http://rdfh.ch/a-thing".toSmartIri, None),
                 IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
                 IriRef("http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo".toSmartIri, None),
                 IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri, None)
             )
         ),
         constructClause = ConstructClause(statements = Vector(StatementPattern(
-            obj = IriRef("http://data.knora.org/a-thing".toSmartIri),
+            obj = IriRef("http://rdfh.ch/a-thing".toSmartIri),
             pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo".toSmartIri),
             subj = QueryVariable(variableName = "resource")
         )))

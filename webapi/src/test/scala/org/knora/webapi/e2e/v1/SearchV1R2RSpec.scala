@@ -94,7 +94,7 @@ class SearchV1R2RSpec extends R2RSpec {
     "The Search Endpoint" should {
         "perform an extended search for the pages of a book whose seqnum is lower than or equals 10" in {
 
-            val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0803%2Fincunabula%23partOf&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0803%2Fincunabula%23seqnum&compop=EQ&compop=LT_EQ&searchval=http%3A%2F%2Fdata.knora.org%2F5e77e98d2603&searchval=10"
+            val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0803%2Fincunabula%23partOf&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0803%2Fincunabula%23seqnum&compop=EQ&compop=LT_EQ&searchval=http%3A%2F%2Frdfh.ch%2F5e77e98d2603&searchval=10"
             val filter = "&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2F0803%2Fincunabula%23page"
 
             Get("/v1/search/?searchtype=extended" + props + filter) ~> searchPath ~> check {
@@ -247,7 +247,7 @@ class SearchV1R2RSpec extends R2RSpec {
 
         }
 
-        val props_two_lists_one = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0001%2Fanything%23hasListItem&compop=EQ&searchval=http%3A%2F%2Fdata.knora.org%2Fanything%2FtreeList01"
+        val props_two_lists_one = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0001%2Fanything%23hasListItem&compop=EQ&searchval=http%3A%2F%2Frdfh.ch%2Fanything%2FtreeList01"
 
         "perform an extended search for an anything:Thing that has two list values on one of the lists (EQ)" in {
 
@@ -263,7 +263,7 @@ class SearchV1R2RSpec extends R2RSpec {
 
         }
 
-        val props_two_lists_two = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0001%2Fanything%23hasOtherListItem&compop=EQ&searchval=http%3A%2F%2Fdata.knora.org%2Fanything%2FotherTreeList02"
+        val props_two_lists_two = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0001%2Fanything%23hasOtherListItem&compop=EQ&searchval=http%3A%2F%2Frdfh.ch%2Fanything%2FotherTreeList02"
 
         "perform an extended search for an anything:Thing that has two list values on the other lists (EQ)" in {
 

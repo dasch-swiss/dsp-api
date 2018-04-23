@@ -60,7 +60,7 @@ object ResourcesResponderV1SpecFullData {
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
-                    id = "http://data.knora.org/ab79ffa43935"
+                    id = "http://rdfh.ch/ab79ffa43935"
                 )
             ),
             IncomingV1(
@@ -84,7 +84,7 @@ object ResourcesResponderV1SpecFullData {
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
-                    id = "http://data.knora.org/cb1a74e3e2f6"
+                    id = "http://rdfh.ch/cb1a74e3e2f6"
                 )
             )
         ),
@@ -96,7 +96,7 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/c5058f3a/values/8653a672"),
+                value_ids = Vector("http://rdfh.ch/c5058f3a/values/8653a672"),
                 values = Vector(TextValueSimpleV1(
                     utf8str = "Berthold, der Bruder"
                 )),
@@ -117,7 +117,7 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/c5058f3a/values/c3295339"),
+                value_ids = Vector("http://rdfh.ch/c5058f3a/values/c3295339"),
                 values = Vector(TextValueSimpleV1(
                     utf8str = "Zeitgl\u00F6cklein des Lebens und Leidens Christi"
                 )),
@@ -159,9 +159,9 @@ object ResourcesResponderV1SpecFullData {
                     None
                 ),
                 value_ids = Vector(
-                    "http://data.knora.org/c5058f3a/values/184e99ca01",
-                    "http://data.knora.org/c5058f3a/values/db77ec0302",
-                    "http://data.knora.org/c5058f3a/values/9ea13f3d02"
+                    "http://rdfh.ch/c5058f3a/values/184e99ca01",
+                    "http://rdfh.ch/c5058f3a/values/db77ec0302",
+                    "http://rdfh.ch/c5058f3a/values/9ea13f3d02"
                 ),
                 values = Vector(
                     TextValueSimpleV1(
@@ -191,7 +191,7 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/c5058f3a/values/92faf25701"),
+                value_ids = Vector("http://rdfh.ch/c5058f3a/values/92faf25701"),
                 values = Vector(TextValueSimpleV1(
                     utf8str = "Universit\u00E4ts- und Stadtbibliothek K\u00F6ln, Sign: AD+S167"
                 )),
@@ -212,7 +212,7 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/c5058f3a/values/10e00c7acc2704"),
+                value_ids = Vector("http://rdfh.ch/c5058f3a/values/10e00c7acc2704"),
                 values = Vector(TextValueSimpleV1(
                     utf8str = "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1"
                 )),
@@ -233,7 +233,7 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/c5058f3a/values/5524469101"),
+                value_ids = Vector("http://rdfh.ch/c5058f3a/values/5524469101"),
                 values = Vector(TextValueSimpleV1(
                     utf8str = "Dimension: 8\u00B0"
                 )),
@@ -254,7 +254,7 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/c5058f3a/values/0ca74ce5"),
+                value_ids = Vector("http://rdfh.ch/c5058f3a/values/0ca74ce5"),
                 values = Vector(TextValueSimpleV1(
                     utf8str = "Basel"
                 )),
@@ -275,7 +275,7 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/c5058f3a/values/cfd09f1e01"),
+                value_ids = Vector("http://rdfh.ch/c5058f3a/values/cfd09f1e01"),
                 values = Vector(DateValueV1(
                     calendar = KnoraCalendarV1.JULIAN,
                     dateval2 = "1492",
@@ -300,7 +300,7 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/c5058f3a/values/497df9ab"),
+                value_ids = Vector("http://rdfh.ch/c5058f3a/values/497df9ab"),
                 values = Vector(TextValueSimpleV1(
                     utf8str = "Johann Amerbach"
                 )),
@@ -397,7 +397,7 @@ object ResourcesResponderV1SpecFullData {
             iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
             restype_label = Some("Buch"),
             restype_name = "http://www.knora.org/ontology/0803/incunabula#book",
-            res_id = "http://data.knora.org/c5058f3a"
+            res_id = "http://rdfh.ch/c5058f3a"
         )),
         resinfo = Some(ResourceInfoV1(
             firstproperty = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
@@ -520,7 +520,7 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/8a0b1e75/values/61cb927602"),
+                value_ids = Vector("http://rdfh.ch/8a0b1e75/values/61cb927602"),
                 values = Vector(TextValueSimpleV1(
                     utf8str = "a1r, Titelblatt"
                 )),
@@ -541,7 +541,7 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/8a0b1e75/values/3e3d4dc0e922"),
+                value_ids = Vector("http://rdfh.ch/8a0b1e75/values/3e3d4dc0e922"),
                 values = Vector(TextValueSimpleV1(
                     utf8str = "Titel: \"Das andechtig zitglo(e)gglyn | des lebens vnd lide(n)s christi nach | den xxiiij stunden v\u00DFgeteilt.\"\nHolzschnitt: Schlaguhr mit Zifferblatt f\u00FCr 24 Stunden, auf deren oberem Rand zu beiden Seiten einer Glocke die Verk\u00FCndigungsszene mit Maria (links) und dem Engel (rechts) zu sehen ist.\nBord\u00FCre: Ranken mit Fabelwesen, Holzschnitt.\nKolorierung: Rot, Blau, Gr\u00FCn, Gelb, Braun.\nBeschriftung oben Mitte (Graphitstift) \"B 1\"."
                 )),
@@ -562,7 +562,7 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/8a0b1e75/values/e80b2d895f23"),
+                value_ids = Vector("http://rdfh.ch/8a0b1e75/values/e80b2d895f23"),
                 values = Vector(TextValueSimpleV1(
                     utf8str = "Schramm, Bd. 21, Abb. 601."
                 )),
@@ -583,7 +583,7 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/8a0b1e75/values/aa488c2203"),
+                value_ids = Vector("http://rdfh.ch/8a0b1e75/values/aa488c2203"),
                 values = Vector(TextValueSimpleV1(
                     utf8str = "ad+s167_druck1=0001.tif"
                 )),
@@ -604,7 +604,7 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/8a0b1e75/values/e71e39e902"),
+                value_ids = Vector("http://rdfh.ch/8a0b1e75/values/e71e39e902"),
                 values = Vector(IntegerValueV1(ival = 1)),
                 occurrence = Some("0-1"),
                 attributes = "max=-1;min=0",
@@ -623,13 +623,13 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif")),
                 value_restype = Vector(Some("Buch")),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/8a0b1e75/values/ac9ddbf4-62a7-4cdc-b530-16cbbaa265bf"),
+                value_ids = Vector("http://rdfh.ch/8a0b1e75/values/ac9ddbf4-62a7-4cdc-b530-16cbbaa265bf"),
                 values = Vector(LinkV1(
                     valueResourceClassIcon = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
                     valueResourceClassLabel = Some("Buch"),
                     valueResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book"),
                     valueLabel = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
-                    targetResourceIri = "http://data.knora.org/c5058f3a"
+                    targetResourceIri = "http://rdfh.ch/c5058f3a"
                 )),
                 occurrence = Some("1"),
                 attributes = "restypeid=http://www.knora.org/ontology/0803/incunabula#book",
@@ -742,7 +742,7 @@ object ResourcesResponderV1SpecFullData {
             iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
             restype_label = Some("Seite"),
             restype_name = "http://www.knora.org/ontology/0803/incunabula#page",
-            res_id = "http://data.knora.org/8a0b1e75"
+            res_id = "http://rdfh.ch/8a0b1e75"
         )),
         resinfo = Some(ResourceInfoV1(
             firstproperty = Some("a1r, Titelblatt"),
@@ -881,7 +881,7 @@ object ResourcesResponderV1SpecFullData {
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
-                    id = "http://data.knora.org/faa4d435a9f7"
+                    id = "http://rdfh.ch/faa4d435a9f7"
                 )
             ),
             IncomingV1(
@@ -905,7 +905,7 @@ object ResourcesResponderV1SpecFullData {
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
-                    id = "http://data.knora.org/c5cf5a2bc6be"
+                    id = "http://rdfh.ch/c5cf5a2bc6be"
                 )
             ),
             IncomingV1(
@@ -929,7 +929,7 @@ object ResourcesResponderV1SpecFullData {
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
-                    id = "http://data.knora.org/c9824353ae06"
+                    id = "http://rdfh.ch/c9824353ae06"
                 )
             ),
             IncomingV1(
@@ -953,7 +953,7 @@ object ResourcesResponderV1SpecFullData {
                 ),
                 ext_res_id = ExternalResourceIDV1(
                     pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
-                    id = "http://data.knora.org/8e88d28dae06"
+                    id = "http://rdfh.ch/8e88d28dae06"
                 )
             )
         ),
@@ -965,9 +965,9 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/047db418ae06/values/7331b94196a104"),
+                value_ids = Vector("http://rdfh.ch/047db418ae06/values/7331b94196a104"),
                 values = Vector(TextValueWithStandoffV1(
-                    resource_reference = Set("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"), // TODO: Why is this a Value onject IRI?
+                    resource_reference = Set("http://rdfh.ch/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"), // TODO: Why is this a Value onject IRI?
                     standoff =
                         Vector(StandoffTagV1(
                             standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
@@ -982,7 +982,7 @@ object ResourcesResponderV1SpecFullData {
                                 dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                                 endPosition = 39,
                                 startPosition = 36,
-                                attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103")),
+                                attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://rdfh.ch/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103")),
                                 uuid = UUID.randomUUID().toString,
                                 originalXMLID = None,
                                 startIndex = 0
@@ -1009,7 +1009,7 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/047db418ae06/values/cca179c00527"),
+                value_ids = Vector("http://rdfh.ch/047db418ae06/values/cca179c00527"),
                 values = Vector(ColorValueV1(color = "#ff3333")),
                 occurrence = Some("1"),
                 attributes = "ncolors=8",
@@ -1028,7 +1028,7 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(None),
                 value_restype = Vector(None),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/047db418ae06/values/097826870527"),
+                value_ids = Vector("http://rdfh.ch/047db418ae06/values/097826870527"),
                 values = Vector(GeomValueV1(geom = "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.24285714285714285,\"y\":0.1712962962962963},{\"x\":0.8678571428571429,\"y\":0.16666666666666666},{\"x\":0.8892857142857142,\"y\":0.7222222222222222},{\"x\":0.25,\"y\":0.7361111111111112},{\"x\":0.2392857142857143,\"y\":0.16898148148148148}],\"type\":\"polygon\"}")),
                 occurrence = Some("1-n"),
                 attributes = "width=95%;rows=4;wrap=soft",
@@ -1047,13 +1047,13 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/region.gif")),
                 value_restype = Vector(Some("Region")),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"),
+                value_ids = Vector("http://rdfh.ch/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"),
                 values = Vector(LinkV1(
                     valueResourceClassIcon = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/region.gif"),
                     valueResourceClassLabel = Some("Region"),
                     valueResourceClass = Some("http://www.knora.org/ontology/knora-base#Region"),
                     valueLabel = Some("Derselbe Holzschnitt wird auch auf Seite b8v der deutschen Ausgabe des Narrenschiffs verwendet."),
-                    targetResourceIri = "http://data.knora.org/c9824353ae06"
+                    targetResourceIri = "http://rdfh.ch/c9824353ae06"
                 )),
                 occurrence = None,
                 attributes = "",
@@ -1072,13 +1072,13 @@ object ResourcesResponderV1SpecFullData {
                 value_iconsrcs = Vector(Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif")),
                 value_restype = Vector(Some("Seite")),
                 comments = Vector(None),
-                value_ids = Vector("http://data.knora.org/047db418ae06/values/2335c869-b649-4dd8-b4b5-e82c88449d62"),
+                value_ids = Vector("http://rdfh.ch/047db418ae06/values/2335c869-b649-4dd8-b4b5-e82c88449d62"),
                 values = Vector(LinkV1(
                     valueResourceClassIcon = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
                     valueResourceClassLabel = Some("Seite"),
                     valueResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#page"),
                     valueLabel = Some("b8v"),
-                    targetResourceIri = "http://data.knora.org/883be8542e03"
+                    targetResourceIri = "http://rdfh.ch/883be8542e03"
                 )),
                 occurrence = Some("1"),
                 attributes = "",
@@ -1096,7 +1096,7 @@ object ResourcesResponderV1SpecFullData {
             iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/region.gif"),
             restype_label = Some("Region"),
             restype_name = "http://www.knora.org/ontology/knora-base#Region",
-            res_id = "http://data.knora.org/047db418ae06"
+            res_id = "http://rdfh.ch/047db418ae06"
         )),
         resinfo = Some(ResourceInfoV1(
             firstproperty = Some("Derselbe Holzschnitt wird auf Seite c7r der lateinischen Ausgabe des Narrenschiffs verwendet."),

@@ -82,7 +82,7 @@ class ResourcesRouteV2R2Spec extends R2RSpec {
     "The resources v2 endpoint" should {
         "perform a resource request for the book 'Reise ins Heilige Land'" in {
 
-            Get(s"/v2/resources/${URLEncoder.encode("http://data.knora.org/2a6221216701", "UTF-8")}") ~> resourcesPath ~> check {
+            Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}") ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 

@@ -65,7 +65,7 @@ object SearchResponderV1Spec {
         icontitle = Some("Ding"),
         iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
         preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
-        obj_id = "http://data.knora.org/a-thing-with-text-values"
+        obj_id = "http://rdfh.ch/a-thing-with-text-values"
     ))
 
     private val fulltextValueInThingResultsForUser1 = Vector(SearchResultRowV1(
@@ -88,7 +88,7 @@ object SearchResponderV1Spec {
         icontitle = Some("Ding"),
         iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
         preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
-        obj_id = "http://data.knora.org/a-thing-with-text-values"
+        obj_id = "http://rdfh.ch/a-thing-with-text-values"
     ))
 
     private val fulltextThingResultsForUser2 = Vector(SearchResultRowV1(
@@ -102,7 +102,7 @@ object SearchResponderV1Spec {
         icontitle = Some("Ding"),
         iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
         preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
-        obj_id = "http://data.knora.org/a-thing-with-text-values"
+        obj_id = "http://rdfh.ch/a-thing-with-text-values"
     ))
 
     private val hasOtherThingResultsForUser1 = Vector(SearchResultRowV1(
@@ -125,7 +125,7 @@ object SearchResponderV1Spec {
         icontitle = Some("Ding"),
         iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
         preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
-        obj_id = "http://data.knora.org/project-thing-1"
+        obj_id = "http://rdfh.ch/project-thing-1"
     ))
 
     private val hasStandoffLinkToResultsForUser1 = Vector(SearchResultRowV1(
@@ -148,7 +148,7 @@ object SearchResponderV1Spec {
         icontitle = Some("Ding"),
         iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
         preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
-        obj_id = "http://data.knora.org/project-thing-1"
+        obj_id = "http://rdfh.ch/project-thing-1"
     ))
 
     private val hasStandoffLinkToResultsForUser2 = Vector(SearchResultRowV1(
@@ -171,7 +171,7 @@ object SearchResponderV1Spec {
         icontitle = Some("Ding"),
         iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
         preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
-        obj_id = "http://data.knora.org/project-thing-1"
+        obj_id = "http://rdfh.ch/project-thing-1"
     ))
 
 }
@@ -231,7 +231,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 icontitle = Some("Buch"),
                 iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
                 preview_path = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
-                obj_id = "http://data.knora.org/c5058f3a"
+                obj_id = "http://rdfh.ch/c5058f3a"
             ),
             SearchResultRowV1(
                 rights = Some(6),
@@ -253,7 +253,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 icontitle = Some("Buch"),
                 iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
                 preview_path = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
-                obj_id = "http://data.knora.org/ff17e5ef9601"
+                obj_id = "http://rdfh.ch/ff17e5ef9601"
             )
         )
     )
@@ -261,7 +261,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
     val bertholdResponse = SearchGetResponseV1(
         subjects = Vector(
             SearchResultRowV1(
-                obj_id = "http://data.knora.org/c5058f3a",
+                obj_id = "http://rdfh.ch/c5058f3a",
                 preview_path = Some("http://localhost:3335/project-icons/incunabula/book.gif"),
                 iconsrc = Some("http://localhost:3335/project-icons/incunabula/book.gif"),
                 icontitle = Some("Buch"),
@@ -274,7 +274,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 rights = Some(6)
             ),
             SearchResultRowV1(
-                obj_id = "http://data.knora.org/ff17e5ef9601",
+                obj_id = "http://rdfh.ch/ff17e5ef9601",
                 preview_path = Some("http://localhost:3335/project-icons/incunabula/book.gif"),
                 iconsrc = Some("http://localhost:3335/project-icons/incunabula/book.gif"),
                 icontitle = Some("Buch"),
@@ -631,10 +631,10 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "return all the pages that are part of Zeitglöcklein des Lebens" in {
-            // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23partOf&compop=EQ&searchval=http%3A%2F%2Fdata.knora.org%2Fc5058f3a
+            // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23partOf&compop=EQ&searchval=http%3A%2F%2Frdfh.ch%2Fc5058f3a
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
-                searchValue = Vector("http://data.knora.org/c5058f3a"),
+                searchValue = Vector("http://rdfh.ch/c5058f3a"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#partOf"),
                 filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
@@ -681,10 +681,10 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "return all the pages that are part of Zeitglöcklein des Lebens and have a seqnum" in {
-            // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23partOf&compop=EQ&searchval=http%3A%2F%2Fdata.knora.org%2Fc5058f3a&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23seqnum&compop=EXISTS&searchval=
+            // http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23partOf&compop=EQ&searchval=http%3A%2F%2Frdfh.ch%2Fc5058f3a&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23seqnum&compop=EXISTS&searchval=
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
-                searchValue = Vector("http://data.knora.org/c5058f3a", ""),
+                searchValue = Vector("http://rdfh.ch/c5058f3a", ""),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
                 propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#partOf", "http://www.knora.org/ontology/0803/incunabula#seqnum"),
                 filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
@@ -701,7 +701,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return all the representations that are part of Zeitglöcklein des Lebens and have a seqnum (using base properties from knora-base)" in {
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
-                searchValue = Vector("http://data.knora.org/c5058f3a", ""),
+                searchValue = Vector("http://rdfh.ch/c5058f3a", ""),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
                 propertyIri = Vector("http://www.knora.org/ontology/knora-base#isPartOf", "http://www.knora.org/ontology/knora-base#seqnum"),
                 filterByRestype = Some("http://www.knora.org/ontology/knora-base#Representation"),
@@ -718,7 +718,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return all the pages that are part of Zeitglöcklein des Lebens, have a seqnum less than or equal to 200, and have a page number that is not 'a1r, Titelblatt'" in {
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
-                searchValue = Vector("http://data.knora.org/c5058f3a", "200", "a1r, Titelblatt"),
+                searchValue = Vector("http://rdfh.ch/c5058f3a", "200", "a1r, Titelblatt"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.LT_EQ, SearchComparisonOperatorV1.NOT_EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#partOf", "http://www.knora.org/ontology/0803/incunabula#seqnum", "http://www.knora.org/ontology/0803/incunabula#pagenum"),
                 filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
@@ -733,7 +733,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "return all the images from the images-demo project whose title belong to the category 'Sport'" in {
-            // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Fdata.knora.org%2Flists%2F71a1543cce&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
+            // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Frdfh.ch%2Flists%2F71a1543cce&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
                 searchValue = Vector("http://rdfh.ch/lists/00FF/71a1543cce"), // list node SPORT
@@ -751,7 +751,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "return all the images from the images-demo project whose title belong to the category 'Spazieren'" in {
-            // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Fdata.knora.org%2Flists%2F38c73482e3&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
+            // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Frdfh.ch%2Flists%2F38c73482e3&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
                 searchValue = Vector("http://rdfh.ch/lists/00FF/38c73482e3"), // list node SPAZIEREN
@@ -769,7 +769,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "return all the images from the images-demo project whose title belong to the category 'Alpinismus'" in {
-            // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Fdata.knora.org%2Flists%2F3bc59463e2&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
+            // http://localhost:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Frdfh.ch%2Flists%2F3bc59463e2&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
                 searchValue = Vector("http://rdfh.ch/lists/00FF/3bc59463e2"), // list node ALPINISMUS
@@ -901,7 +901,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "should not show resources that the user doesn't have permission to see in an extended search" in {
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
-                searchValue = Vector("http://data.knora.org/project-thing-2"),
+                searchValue = Vector("http://rdfh.ch/project-thing-2"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/0001/anything#hasOtherThing"),
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
@@ -915,7 +915,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
-                searchValue = Vector("http://data.knora.org/project-thing-2"),
+                searchValue = Vector("http://rdfh.ch/project-thing-2"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"),
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
@@ -933,7 +933,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = anythingUser1,
-                searchValue = Vector("http://data.knora.org/project-thing-2"),
+                searchValue = Vector("http://rdfh.ch/project-thing-2"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/0001/anything#hasOtherThing"),
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
@@ -947,7 +947,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = anythingUser1,
-                searchValue = Vector("http://data.knora.org/project-thing-2"),
+                searchValue = Vector("http://rdfh.ch/project-thing-2"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"),
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
@@ -963,7 +963,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = anythingUser2,
-                searchValue = Vector("http://data.knora.org/project-thing-2"),
+                searchValue = Vector("http://rdfh.ch/project-thing-2"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/0001/anything#hasOtherThing"),
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
@@ -977,7 +977,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = anythingUser2,
-                searchValue = Vector("http://data.knora.org/project-thing-2"),
+                searchValue = Vector("http://rdfh.ch/project-thing-2"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"),
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),

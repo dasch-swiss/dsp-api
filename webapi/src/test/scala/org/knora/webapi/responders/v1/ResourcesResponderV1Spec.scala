@@ -529,49 +529,49 @@ object ResourcesResponderV1Spec {
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Whiskey",
-                resourceIri = "http://data.knora.org/MiBwAFcxQZGHNL-WfgFAPQ"
+                resourceIri = "http://rdfh.ch/MiBwAFcxQZGHNL-WfgFAPQ"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "X-ray",
-                resourceIri = "http://data.knora.org/nResNuvARcWYUdWyo0GWGw"
+                resourceIri = "http://rdfh.ch/nResNuvARcWYUdWyo0GWGw"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Uniform",
-                resourceIri = "http://data.knora.org/LOV-6aLYQFW15jwdyS51Yw"
+                resourceIri = "http://rdfh.ch/LOV-6aLYQFW15jwdyS51Yw"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Sierra",
-                resourceIri = "http://data.knora.org/0C-0L1kORryKzJAJxxRyRQ"
+                resourceIri = "http://rdfh.ch/0C-0L1kORryKzJAJxxRyRQ"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Romeo",
-                resourceIri = "http://data.knora.org/anything/start"
+                resourceIri = "http://rdfh.ch/anything/start"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Quebec",
-                resourceIri = "http://data.knora.org/iqW_PBiHRdyTFzik8tuSog"
+                resourceIri = "http://rdfh.ch/iqW_PBiHRdyTFzik8tuSog"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Papa",
-                resourceIri = "http://data.knora.org/L5xU7Qe5QUu6Wz3cDaCxbA"
+                resourceIri = "http://rdfh.ch/L5xU7Qe5QUu6Wz3cDaCxbA"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Victor",
-                resourceIri = "http://data.knora.org/A67ka6UQRHWf313tbhQBjw"
+                resourceIri = "http://rdfh.ch/A67ka6UQRHWf313tbhQBjw"
             )
         )
     )
@@ -580,21 +580,21 @@ object ResourcesResponderV1Spec {
         edges = Vector(GraphEdgeV1(
             propertyLabel = "hat Standoff Link zu",
             propertyIri = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
-            target = "http://data.knora.org/a-thing",
-            source = "http://data.knora.org/a-thing-with-text-values"
+            target = "http://rdfh.ch/a-thing",
+            source = "http://rdfh.ch/a-thing-with-text-values"
         )),
         nodes = Vector(
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Ein Ding f\u00FCr jemanden, dem die Dinge gefallen",
-                resourceIri = "http://data.knora.org/a-thing-with-text-values"
+                resourceIri = "http://rdfh.ch/a-thing-with-text-values"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "A thing",
-                resourceIri = "http://data.knora.org/a-thing"
+                resourceIri = "http://rdfh.ch/a-thing"
             )
         )
     )
@@ -605,7 +605,7 @@ object ResourcesResponderV1Spec {
             resourceClassLabel = "Ding",
             resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
             resourceLabel = "Another thing",
-            resourceIri = "http://data.knora.org/another-thing"
+            resourceIri = "http://rdfh.ch/another-thing"
         ))
     )
 }
@@ -799,16 +799,16 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         val regions: Seq[PropsGetForRegionV1] = received.resource_context.resinfo.get.regions.get
 
         val region1 = regions.filter {
-            region => region.res_id == "http://data.knora.org/021ec18f1735"
+            region => region.res_id == "http://rdfh.ch/021ec18f1735"
         }
 
         val region2 = regions.filter {
-            region => region.res_id == "http://data.knora.org/b6b64a62b006"
+            region => region.res_id == "http://rdfh.ch/b6b64a62b006"
         }
 
-        assert(region1.length == 1, "No region found with Iri 'http://data.knora.org/021ec18f1735'")
+        assert(region1.length == 1, "No region found with Iri 'http://rdfh.ch/021ec18f1735'")
 
-        assert(region2.length == 1, "No region found with Iri 'http://data.knora.org/b6b64a62b006'")
+        assert(region2.length == 1, "No region found with Iri 'http://rdfh.ch/b6b64a62b006'")
 
     }
 
@@ -858,8 +858,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
     "The resources responder" should {
         "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
-            // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/c5058f3a", userProfile = SharedTestDataADM.incunabulaMemberUser)
+            // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/c5058f3a", userProfile = SharedTestDataADM.incunabulaMemberUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedBookResourceFullResponse)
@@ -867,8 +867,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return a full description of the first page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
-            // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F8a0b1e75
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/8a0b1e75", userProfile = SharedTestDataADM.incunabulaMemberUser)
+            // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F8a0b1e75
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/8a0b1e75", userProfile = SharedTestDataADM.incunabulaMemberUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedPageResourceFullResponse)
@@ -876,8 +876,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return a region with a comment containing standoff information" in {
-            // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F047db418ae06
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/047db418ae06", userProfile = SharedTestDataADM.incunabulaMemberUser)
+            // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F047db418ae06
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/047db418ae06", userProfile = SharedTestDataADM.incunabulaMemberUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -886,8 +886,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return the context (describing 402 pages) of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
-            // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?reqtype=context&resinfo=true
-            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/c5058f3a", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
+            // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a?reqtype=context&resinfo=true
+            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/c5058f3a", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 =>
@@ -897,8 +897,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return the context of a page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
-            // http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2F8a0b1e75?reqtype=context&resinfo=true
-            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/8a0b1e75", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
+            // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F8a0b1e75?reqtype=context&resinfo=true
+            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/8a0b1e75", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 => compareResourcePartOfContextResponses(received = response, expected = ResourcesResponderV1SpecContextData.expectedPageResourceContextResponse)
@@ -1072,7 +1072,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "not create a resource containing a text value with a standoff reference to a nonexistent resource" in {
-            val nonexistentIri = "http://data.knora.org/nonexistent"
+            val nonexistentIri = "http://rdfh.ch/nonexistent"
 
             val title1 = TextValueSimpleV1("A beautiful book")
 
@@ -1143,7 +1143,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                         dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                         startPosition = 32,
                         endPosition = 40,
-                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://data.knora.org/c5058f3a")),
+                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://rdfh.ch/c5058f3a")),
                         uuid = UUID.randomUUID().toString,
                         originalXMLID = None,
                         startIndex = 0
@@ -1151,7 +1151,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 ),
                 mapping = ResourcesResponderV1SpecFullData.dummyMapping,
                 mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-                resource_reference = Set("http://data.knora.org/c5058f3a")
+                resource_reference = Set("http://rdfh.ch/c5058f3a")
             )
             val citation3 = TextValueSimpleV1("und noch eines")
             val citation4 = TextValueSimpleV1("noch ein letztes")
@@ -1243,7 +1243,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             val book = newBookResourceIri.get
 
             val valuesToBeCreated = Map(
-                "http://www.knora.org/ontology/0803/incunabula#hasRightSideband" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://data.knora.org/482a33d65c36"))),
+                "http://www.knora.org/ontology/0803/incunabula#hasRightSideband" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://rdfh.ch/482a33d65c36"))),
                 "http://www.knora.org/ontology/0803/incunabula#pagenum" -> Vector(CreateValueV1WithComment(recto)),
                 "http://www.knora.org/ontology/0803/incunabula#partOf" -> Vector(CreateValueV1WithComment(LinkUpdateV1(book))),
                 "http://www.knora.org/ontology/0803/incunabula#origname" -> Vector(CreateValueV1WithComment(origname)),
@@ -1251,7 +1251,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             )
 
             val expected = Map(
-                "http://www.knora.org/ontology/0803/incunabula#hasRightSideband" -> Vector(LinkV1(targetResourceIri = "http://data.knora.org/482a33d65c36", valueResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#Sideband"))),
+                "http://www.knora.org/ontology/0803/incunabula#hasRightSideband" -> Vector(LinkV1(targetResourceIri = "http://rdfh.ch/482a33d65c36", valueResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#Sideband"))),
                 "http://www.knora.org/ontology/0803/incunabula#pagenum" -> Vector(recto),
                 "http://www.knora.org/ontology/0803/incunabula#partOf" -> Vector(LinkV1(book)),
                 "http://www.knora.org/ontology/0803/incunabula#origname" -> Vector(origname),
@@ -1332,7 +1332,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "get the properties of a resource" in {
 
             val propertiesGetRequest = PropertiesGetRequestV1(
-                "http://data.knora.org/021ec18f1735",
+                "http://rdfh.ch/021ec18f1735",
                 SharedTestDataADM.incunabulaProjectAdminUser
             )
 
@@ -1345,7 +1345,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "get the regions of a page pointed to by regions" in {
 
-            val resourceContextPage = ResourceContextGetRequestV1(iri = "http://data.knora.org/9d626dc76c03", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
+            val resourceContextPage = ResourceContextGetRequestV1(iri = "http://rdfh.ch/9d626dc76c03", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
             actorUnderTest ! resourceContextPage
 
@@ -1357,7 +1357,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "show incoming standoff links if the user has view permission on both resources, but show other incoming links only if the user also has view permission on the link" in {
             // The link's owner, anythingUser1, should see the hasOtherThing link as well as the hasStandoffLinkTo link.
 
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/project-thing-2", userProfile = SharedTestDataADM.anythingUser1)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/project-thing-2", userProfile = SharedTestDataADM.anythingUser1)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -1368,7 +1368,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
             // But another user should see only the hasStandoffLinkTo link.
 
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/project-thing-2", userProfile = SharedTestDataADM.anythingUser2)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/project-thing-2", userProfile = SharedTestDataADM.anythingUser2)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -1380,7 +1380,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "show outgoing standoff links if the user has view permission on both resources, but show other outgoing links only if the user also has view permission on the link" in {
             // The link's owner, anythingUser1, should see the hasOtherThing link as well as the hasStandoffLinkTo link.
 
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/project-thing-1", userProfile = SharedTestDataADM.anythingUser1)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/project-thing-1", userProfile = SharedTestDataADM.anythingUser1)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -1396,7 +1396,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
             // But another user should see only the hasStandoffLinkTo link.
 
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://data.knora.org/project-thing-1", userProfile = SharedTestDataADM.anythingUser2)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/project-thing-1", userProfile = SharedTestDataADM.anythingUser2)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -1413,28 +1413,28 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "show a contained resource in a context request only if the user has permission to see the containing resource, the contained resource, and the link value" in {
             // The owner of the resources and the link should see two contained resources.
 
-            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/containing-thing", resinfo = true, userProfile = SharedTestDataADM.anythingUser1)
+            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/containing-thing", resinfo = true, userProfile = SharedTestDataADM.anythingUser1)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 =>
                     response.resource_context.res_id should ===(Some(Vector(
-                        "http://data.knora.org/contained-thing-1",
-                        "http://data.knora.org/contained-thing-2"
+                        "http://rdfh.ch/contained-thing-1",
+                        "http://rdfh.ch/contained-thing-2"
                     )))
             }
 
             // Another user in the project, who doesn't have permission to see the second link, should see only one contained resource.
 
-            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/containing-thing", resinfo = true, userProfile = SharedTestDataADM.anythingUser2)
+            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/containing-thing", resinfo = true, userProfile = SharedTestDataADM.anythingUser2)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 =>
-                    response.resource_context.res_id should ===(Some(Vector("http://data.knora.org/contained-thing-1")))
+                    response.resource_context.res_id should ===(Some(Vector("http://rdfh.ch/contained-thing-1")))
             }
 
             // A user who's not in the project shouldn't see any contained resources.
 
-            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://data.knora.org/containing-thing", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
+            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/containing-thing", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 =>
@@ -1462,7 +1462,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             val myNewLabel = "my new beautiful label"
 
             actorUnderTest ! ChangeResourceLabelRequestV1(
-                resourceIri = "http://data.knora.org/c5058f3a",
+                resourceIri = "http://rdfh.ch/c5058f3a",
                 label = myNewLabel,
                 userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
@@ -1477,7 +1477,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "not create an anything:Thing with property anything:hasBlueThing pointing to an anything:Thing" in {
             val valuesToBeCreated = Map(
-                "http://www.knora.org/ontology/0001/anything#hasBlueThing" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://data.knora.org/a-thing")))
+                "http://www.knora.org/ontology/0001/anything#hasBlueThing" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://rdfh.ch/a-thing")))
             )
 
             actorUnderTest ! ResourceCreateRequestV1(
@@ -1498,7 +1498,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "return a graph of resources reachable via links from/to a given resource" in {
             actorUnderTest ! GraphDataGetRequestV1(
-                resourceIri = "http://data.knora.org/anything/start",
+                resourceIri = "http://rdfh.ch/anything/start",
                 depth = 6,
                 userProfile = SharedTestDataADM.anythingUser1
             )
@@ -1513,7 +1513,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "return a graph of resources reachable via links from/to a given resource, filtering the results according to the user's permissions" in {
             actorUnderTest ! GraphDataGetRequestV1(
-                resourceIri = "http://data.knora.org/anything/start",
+                resourceIri = "http://rdfh.ch/anything/start",
                 depth = 6,
                 userProfile = SharedTestDataADM.incunabulaProjectAdminUser
             )
@@ -1528,7 +1528,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "return a graph containing a standoff link" in {
             actorUnderTest ! GraphDataGetRequestV1(
-                resourceIri = "http://data.knora.org/a-thing",
+                resourceIri = "http://rdfh.ch/a-thing",
                 depth = 4,
                 userProfile = SharedTestDataADM.anythingUser1
             )
@@ -1540,7 +1540,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "return a graph containing just one node" in {
             actorUnderTest ! GraphDataGetRequestV1(
-                resourceIri = "http://data.knora.org/another-thing",
+                resourceIri = "http://rdfh.ch/another-thing",
                 depth = 4,
                 userProfile = SharedTestDataADM.anythingUser1
             )

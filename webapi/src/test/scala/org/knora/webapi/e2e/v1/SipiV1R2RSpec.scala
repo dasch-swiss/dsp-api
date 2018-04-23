@@ -101,7 +101,7 @@ class SipiV1R2RSpec extends R2RSpec {
                     ))
                 )),
                 "http://www.knora.org/ontology/0803/incunabula#partOf" -> Seq(CreateResourceValueV1(
-                    link_value = Some("http://data.knora.org/5e77e98d2603")
+                    link_value = Some("http://rdfh.ch/5e77e98d2603")
                 )),
                 "http://www.knora.org/ontology/0803/incunabula#seqnum" -> Seq(CreateResourceValueV1(
                     int_value = Some(999)
@@ -228,7 +228,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
             RequestParams.createTmpFileDir()
 
-            val resIri = URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8")
+            val resIri = URLEncoder.encode("http://rdfh.ch/8a0b1e75", "UTF-8")
 
             Put("/v1/filevalue/" + resIri, formData) ~> addCredentials(BasicHttpCredentials(incunabulaProjectAdminEmail, testPass)) ~> valuesPath ~> check {
 
@@ -257,7 +257,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
             RequestParams.createTmpFileDir()
 
-            val resIri = URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8")
+            val resIri = URLEncoder.encode("http://rdfh.ch/8a0b1e75", "UTF-8")
 
             Put("/v1/filevalue/" + resIri, formData) ~> addCredentials(BasicHttpCredentials(incunabulaProjectAdminEmail, testPass)) ~> valuesPath ~> check {
 
@@ -284,7 +284,7 @@ class SipiV1R2RSpec extends R2RSpec {
                 )
             )
 
-            val resIri = URLEncoder.encode("http://data.knora.org/8a0b1e75", "UTF-8")
+            val resIri = URLEncoder.encode("http://rdfh.ch/8a0b1e75", "UTF-8")
 
             Put("/v1/filevalue/" + resIri, HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(BasicHttpCredentials(incunabulaProjectAdminEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
