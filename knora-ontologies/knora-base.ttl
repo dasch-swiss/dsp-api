@@ -111,8 +111,6 @@
 
 :isEditable rdf:type owl:AnnotationProperty ;
 
-    :subjectClassConstraint owl:ObjectProperty ;
-
     :objectDatatypeConstraint xsd:boolean ;
 
     rdfs:label "is editable"@en ;
@@ -911,9 +909,7 @@
 
                rdfs:comment """IRI of the standoff property"""@en ;
 
-               :subjectClassConstraint :MappingXMLAttribute ;
-
-               :objectClassConstraint owl:DatatypeProperty.
+               :subjectClassConstraint :MappingXMLAttribute .
 
 
 ###  http://www.knora.org/ontology/knora-base#mappingHasStandoffDataTypeClass

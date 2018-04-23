@@ -20,7 +20,7 @@
 package org.knora.webapi.util.search.v2
 
 import org.eclipse.rdf4j
-import org.eclipse.rdf4j.query.parser.ParsedQuery
+import org.eclipse.rdf4j.query.parser.{ParsedQuery, QueryParser}
 import org.eclipse.rdf4j.query.parser.sparql._
 import org.eclipse.rdf4j.query.{MalformedQueryException, algebra}
 import org.knora.webapi._
@@ -43,7 +43,7 @@ import scala.collection.JavaConverters._
 object SearchParserV2 {
     // This implementation uses the RDF4J SPARQL parser.
     private val sparqlParserFactory = new SPARQLParserFactory()
-    private val sparqlParser = sparqlParserFactory.getParser
+    private val sparqlParser: QueryParser = sparqlParserFactory.getParser
 
     object supportedFunctions {
         val contains: IRI = OntologyConstants.XPathFunctions.Contains

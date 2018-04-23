@@ -490,12 +490,6 @@ object IriConversions {
           * @param errorFun A function that throws an exception. It will be called if the string cannot be converted.
           */
         def toSmartIriWithErr(errorFun: => Nothing)(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIriWithErr(self, errorFun)
-
-        /**
-          * Converts an IRI string to a [[SmartIri]], verifying that the resulting [[SmartIri]] is a Knora internal definition IRI,
-          * and throwing [[DataConversionException]] otherwise.
-          */
-        def toKnoraInternalSmartIri(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIri(self, requireInternal = true)
     }
 
 }

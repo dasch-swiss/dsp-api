@@ -312,7 +312,7 @@
 
     knora-base:subjectClassConstraint :Thing ;
 
-    knora-base:objectClassConstraint :LinkValue ;
+    knora-base:objectClassConstraint knora-base:LinkValue ;
 
     salsah-gui:guiElement salsah-gui:Searchbox .
 
@@ -371,6 +371,11 @@
 
 
 :hasBlueThingValue rdf:type owl:ObjectProperty ;
+
+               rdfs:label "Ein blaues Ding"@de ,
+                          "Une chose bleue"@fr ,
+                          "Una cosa azzurra"@it ,
+                          "A blue thing"@en ;
 
                rdfs:subPropertyOf :hasOtherThingValue ;
 

@@ -1543,7 +1543,7 @@
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
-                                      owl:onProperty :volumeSubitle ;
+                                      owl:onProperty :volumeSubtitle ;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ];
 
