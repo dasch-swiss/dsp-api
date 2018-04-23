@@ -32,7 +32,7 @@
 
        salsah-gui:guiElement salsah-gui:List ;
 
-       salsah-gui:guiAttribute "hlist=<http://data.knora.org/anything/treeList>" .
+       salsah-gui:guiAttribute "hlist=<http://rdfh.ch/anything/treeList>" .
 
 
 :hasOtherListItem rdf:type owl:ObjectProperty ;
@@ -50,7 +50,7 @@
 
        salsah-gui:guiElement salsah-gui:List ;
 
-       salsah-gui:guiAttribute "hlist=<http://data.knora.org/anything/otherTreeList>" .
+       salsah-gui:guiAttribute "hlist=<http://rdfh.ch/anything/otherTreeList>" .
 
 
 

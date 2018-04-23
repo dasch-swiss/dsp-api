@@ -12,7 +12,7 @@
 @prefix : <http://www.knora.org/ontology/invalid#> .
 <http://www.knora.org/ontology/invalid> rdf:type owl:Ontology ;
     rdfs:label "The invalid ontology" ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/anything> .
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
 
 
 :FooHolder rdf:type owl:Class ;

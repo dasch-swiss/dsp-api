@@ -14,7 +14,7 @@
        owlim:ruleset "/graphdb/KnoraRules.pie" ;
        owlim:check-for-inconsistencies "true";
        sail:sailType "graphdb:FreeSail" ;
-       owlim:base-URL "http://data.knora.org/" ;
+       owlim:base-URL "http://rdfh.ch/" ;
        owlim:repository-type "file-repository" ;
       ]
    ].
