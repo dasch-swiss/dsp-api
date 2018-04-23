@@ -264,7 +264,7 @@
 
             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-            rdfs:comment "A description of a user group"@en ;
+            rdfs:comment "A description of an institution"@en ;
 
             :subjectClassConstraint :Institution ;
 
