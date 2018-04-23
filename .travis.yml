@@ -93,8 +93,9 @@ jobs:
         - sudo apt-add-repository -y ppa:rael-gc/rvm
         - sudo apt-get update
         - sudo apt-get install rvm
-        - rvm install ruby 2.4.1
-        - rvm use 2.4.1
+        - rvm install ruby 2.5.1
+        - rvm use 2.5.1
+        - ruby --version
         # check if sphinx is working
         - sphinx-build --version
         # install typedoc
