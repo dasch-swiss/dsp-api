@@ -53,7 +53,7 @@ object ResourcesResponderV1Spec {
 
     val ReiseInsHeiligelandThreeValues = ResourceSearchResponseV1(
         resources = Vector(ResourceSearchResultRowV1(
-            id = "http://data.knora.org/2a6221216701",
+            id = "http://rdfh.ch/2a6221216701",
             value = Vector("Reise ins Heilige Land", "Reysen und wanderschafften durch das Gelobte Land", "Itinerarius"),
             rights = Some(6)
         ))
@@ -61,7 +61,7 @@ object ResourcesResponderV1Spec {
 
     val ReiseInsHeiligelandOneValueRestrictedToBook = ResourceSearchResponseV1(
         resources = Vector(ResourceSearchResultRowV1(
-            id = "http://data.knora.org/2a6221216701",
+            id = "http://rdfh.ch/2a6221216701",
             value = Vector("Reise ins Heilige Land"),
             rights = Some(6)
         ))
@@ -84,7 +84,7 @@ object ResourcesResponderV1Spec {
                             None,
                             "Siehe Seite c5v",
                             TextValueSimpleV1("Siehe Seite c5v"),
-                            "http://data.knora.org/021ec18f1735/values/8a96c303338201",
+                            "http://rdfh.ch/021ec18f1735/values/8a96c303338201",
                             None,
                             None))),
                 PropertyGetV1(
@@ -102,7 +102,7 @@ object ResourcesResponderV1Spec {
                             None,
                             "#ff3333",
                             ColorValueV1("#ff3333"),
-                            "http://data.knora.org/021ec18f1735/values/10ea6976338201",
+                            "http://rdfh.ch/021ec18f1735/values/10ea6976338201",
                             None,
                             None))),
                 PropertyGetV1(
@@ -119,7 +119,7 @@ object ResourcesResponderV1Spec {
                             None,
                             "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}",
                             GeomValueV1("{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}"),
-                            "http://data.knora.org/021ec18f1735/values/4dc0163d338201",
+                            "http://rdfh.ch/021ec18f1735/values/4dc0163d338201",
                             None,
                             None))),
                 PropertyGetV1(
@@ -134,15 +134,15 @@ object ResourcesResponderV1Spec {
                         PropertyGetValueV1(
                             None,
                             None,
-                            "http://data.knora.org/9d626dc76c03",
+                            "http://rdfh.ch/9d626dc76c03",
                             LinkV1(
-                                "http://data.knora.org/9d626dc76c03",
+                                "http://rdfh.ch/9d626dc76c03",
                                 Some("u1r"),
                                 Some(
                                     "http://www.knora.org/ontology/0803/incunabula#page"),
                                 None,
                                 None),
-                            "http://data.knora.org/021ec18f1735/values/fbcb88bf-cd16-4b7b-b843-51e17c0669d7",
+                            "http://rdfh.ch/021ec18f1735/values/fbcb88bf-cd16-4b7b-b843-51e17c0669d7",
                             None,
                             None))))))
 
@@ -164,7 +164,7 @@ object ResourcesResponderV1Spec {
         ),
         ext_res_id = ExternalResourceIDV1(
             pid = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-            id = "http://data.knora.org/project-thing-1"
+            id = "http://rdfh.ch/project-thing-1"
         )
     )
 
@@ -186,7 +186,7 @@ object ResourcesResponderV1Spec {
         ),
         ext_res_id = ExternalResourceIDV1(
             pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
-            id = "http://data.knora.org/project-thing-1"
+            id = "http://rdfh.ch/project-thing-1"
         )
     )
 
@@ -197,13 +197,13 @@ object ResourcesResponderV1Spec {
         value_iconsrcs = Vector(Some("http://localhost:3335/project-icons/anything/thing.png")),
         value_restype = Vector(Some("Ding")),
         comments = Vector(None),
-        value_ids = Vector("http://data.knora.org/project-thing-1/values/0"),
+        value_ids = Vector("http://rdfh.ch/project-thing-1/values/0"),
         values = Vector(LinkV1(
             valueResourceClassIcon = Some("http://localhost:3335/project-icons/anything/thing.png"),
             valueResourceClassLabel = Some("Ding"),
             valueResourceClass = Some("http://www.knora.org/ontology/0001/anything#Thing"),
             valueLabel = Some("Another thing that only project members can see"),
-            targetResourceIri = "http://data.knora.org/project-thing-2"
+            targetResourceIri = "http://rdfh.ch/project-thing-2"
         )),
         occurrence = Some("0-n"),
         attributes = "restypeid=http://www.knora.org/ontology/0001/anything#Thing",
@@ -221,13 +221,13 @@ object ResourcesResponderV1Spec {
         value_iconsrcs = Vector(Some("http://localhost:3335/project-icons/anything/thing.png")),
         value_restype = Vector(Some("Ding")),
         comments = Vector(None),
-        value_ids = Vector("http://data.knora.org/project-thing-1/values/1"),
+        value_ids = Vector("http://rdfh.ch/project-thing-1/values/1"),
         values = Vector(LinkV1(
             valueResourceClassIcon = Some("http://localhost:3335/project-icons/anything/thing.png"),
             valueResourceClassLabel = Some("Ding"),
             valueResourceClass = Some("http://www.knora.org/ontology/0001/anything#Thing"),
             valueLabel = Some("Another thing that only project members can see"),
-            targetResourceIri = "http://data.knora.org/project-thing-2"
+            targetResourceIri = "http://rdfh.ch/project-thing-2"
         )),
         occurrence = Some("0-n"),
         attributes = "restypeid=http://www.knora.org/ontology/knora-base#Resource",
@@ -243,92 +243,92 @@ object ResourcesResponderV1Spec {
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A",
-                source = "http://data.knora.org/nResNuvARcWYUdWyo0GWGw"
+                target = "http://rdfh.ch/tPfZeNMvRVujCQqbIbvO0A",
+                source = "http://rdfh.ch/nResNuvARcWYUdWyo0GWGw"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/cmfk1DMHRBiR4-_6HXpEFA",
-                source = "http://data.knora.org/5IEswyQFQp2bxXDrOyEfEA"
+                target = "http://rdfh.ch/cmfk1DMHRBiR4-_6HXpEFA",
+                source = "http://rdfh.ch/5IEswyQFQp2bxXDrOyEfEA"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/7uuGcnFcQJq08dMOralyCQ",
-                source = "http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ"
+                target = "http://rdfh.ch/7uuGcnFcQJq08dMOralyCQ",
+                source = "http://rdfh.ch/sHCLAGg-R5qJ6oPZPV-zOQ"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/nResNuvARcWYUdWyo0GWGw",
-                source = "http://data.knora.org/MiBwAFcxQZGHNL-WfgFAPQ"
+                target = "http://rdfh.ch/nResNuvARcWYUdWyo0GWGw",
+                source = "http://rdfh.ch/MiBwAFcxQZGHNL-WfgFAPQ"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/0C-0L1kORryKzJAJxxRyRQ",
-                source = "http://data.knora.org/anything/start"
+                target = "http://rdfh.ch/0C-0L1kORryKzJAJxxRyRQ",
+                source = "http://rdfh.ch/anything/start"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/iqW_PBiHRdyTFzik8tuSog",
-                source = "http://data.knora.org/L5xU7Qe5QUu6Wz3cDaCxbA"
+                target = "http://rdfh.ch/iqW_PBiHRdyTFzik8tuSog",
+                source = "http://rdfh.ch/L5xU7Qe5QUu6Wz3cDaCxbA"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/anything/start",
-                source = "http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg"
+                target = "http://rdfh.ch/anything/start",
+                source = "http://rdfh.ch/Lz7WEqJETJqqsUZQYexBQg"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ",
-                source = "http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg"
+                target = "http://rdfh.ch/sHCLAGg-R5qJ6oPZPV-zOQ",
+                source = "http://rdfh.ch/Lz7WEqJETJqqsUZQYexBQg"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w",
-                source = "http://data.knora.org/anything/start"
+                target = "http://rdfh.ch/WLSHxQUgTOmG1T0lBU2r5w",
+                source = "http://rdfh.ch/anything/start"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/A67ka6UQRHWf313tbhQBjw",
-                source = "http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w"
+                target = "http://rdfh.ch/A67ka6UQRHWf313tbhQBjw",
+                source = "http://rdfh.ch/WLSHxQUgTOmG1T0lBU2r5w"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/MiBwAFcxQZGHNL-WfgFAPQ",
-                source = "http://data.knora.org/LOV-6aLYQFW15jwdyS51Yw"
+                target = "http://rdfh.ch/MiBwAFcxQZGHNL-WfgFAPQ",
+                source = "http://rdfh.ch/LOV-6aLYQFW15jwdyS51Yw"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/anything/start",
-                source = "http://data.knora.org/iqW_PBiHRdyTFzik8tuSog"
+                target = "http://rdfh.ch/anything/start",
+                source = "http://rdfh.ch/iqW_PBiHRdyTFzik8tuSog"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg",
-                source = "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A"
+                target = "http://rdfh.ch/Lz7WEqJETJqqsUZQYexBQg",
+                source = "http://rdfh.ch/tPfZeNMvRVujCQqbIbvO0A"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A",
-                source = "http://data.knora.org/anything/start"
+                target = "http://rdfh.ch/tPfZeNMvRVujCQqbIbvO0A",
+                source = "http://rdfh.ch/anything/start"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/L5xU7Qe5QUu6Wz3cDaCxbA",
-                source = "http://data.knora.org/cmfk1DMHRBiR4-_6HXpEFA"
+                target = "http://rdfh.ch/L5xU7Qe5QUu6Wz3cDaCxbA",
+                source = "http://rdfh.ch/cmfk1DMHRBiR4-_6HXpEFA"
             )
         ),
         nodes = Vector(
@@ -336,91 +336,91 @@ object ResourcesResponderV1Spec {
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Tango",
-                resourceIri = "http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w"
+                resourceIri = "http://rdfh.ch/WLSHxQUgTOmG1T0lBU2r5w"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Foxtrot",
-                resourceIri = "http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg"
+                resourceIri = "http://rdfh.ch/Lz7WEqJETJqqsUZQYexBQg"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Echo",
-                resourceIri = "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A"
+                resourceIri = "http://rdfh.ch/tPfZeNMvRVujCQqbIbvO0A"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Golf",
-                resourceIri = "http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ"
+                resourceIri = "http://rdfh.ch/sHCLAGg-R5qJ6oPZPV-zOQ"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Whiskey",
-                resourceIri = "http://data.knora.org/MiBwAFcxQZGHNL-WfgFAPQ"
+                resourceIri = "http://rdfh.ch/MiBwAFcxQZGHNL-WfgFAPQ"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Mike",
-                resourceIri = "http://data.knora.org/cmfk1DMHRBiR4-_6HXpEFA"
+                resourceIri = "http://rdfh.ch/cmfk1DMHRBiR4-_6HXpEFA"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "X-ray",
-                resourceIri = "http://data.knora.org/nResNuvARcWYUdWyo0GWGw"
+                resourceIri = "http://rdfh.ch/nResNuvARcWYUdWyo0GWGw"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Uniform",
-                resourceIri = "http://data.knora.org/LOV-6aLYQFW15jwdyS51Yw"
+                resourceIri = "http://rdfh.ch/LOV-6aLYQFW15jwdyS51Yw"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Sierra",
-                resourceIri = "http://data.knora.org/0C-0L1kORryKzJAJxxRyRQ"
+                resourceIri = "http://rdfh.ch/0C-0L1kORryKzJAJxxRyRQ"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Romeo",
-                resourceIri = "http://data.knora.org/anything/start"
+                resourceIri = "http://rdfh.ch/anything/start"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Quebec",
-                resourceIri = "http://data.knora.org/iqW_PBiHRdyTFzik8tuSog"
+                resourceIri = "http://rdfh.ch/iqW_PBiHRdyTFzik8tuSog"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Hotel",
-                resourceIri = "http://data.knora.org/7uuGcnFcQJq08dMOralyCQ"
+                resourceIri = "http://rdfh.ch/7uuGcnFcQJq08dMOralyCQ"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Papa",
-                resourceIri = "http://data.knora.org/L5xU7Qe5QUu6Wz3cDaCxbA"
+                resourceIri = "http://rdfh.ch/L5xU7Qe5QUu6Wz3cDaCxbA"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Victor",
-                resourceIri = "http://data.knora.org/A67ka6UQRHWf313tbhQBjw"
+                resourceIri = "http://rdfh.ch/A67ka6UQRHWf313tbhQBjw"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Delta",
-                resourceIri = "http://data.knora.org/5IEswyQFQp2bxXDrOyEfEA"
+                resourceIri = "http://rdfh.ch/5IEswyQFQp2bxXDrOyEfEA"
             )
         )
     )
@@ -430,74 +430,74 @@ object ResourcesResponderV1Spec {
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A",
-                source = "http://data.knora.org/nResNuvARcWYUdWyo0GWGw"
+                target = "http://rdfh.ch/tPfZeNMvRVujCQqbIbvO0A",
+                source = "http://rdfh.ch/nResNuvARcWYUdWyo0GWGw"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/nResNuvARcWYUdWyo0GWGw",
-                source = "http://data.knora.org/MiBwAFcxQZGHNL-WfgFAPQ"
+                target = "http://rdfh.ch/nResNuvARcWYUdWyo0GWGw",
+                source = "http://rdfh.ch/MiBwAFcxQZGHNL-WfgFAPQ"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/0C-0L1kORryKzJAJxxRyRQ",
-                source = "http://data.knora.org/anything/start"
+                target = "http://rdfh.ch/0C-0L1kORryKzJAJxxRyRQ",
+                source = "http://rdfh.ch/anything/start"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/iqW_PBiHRdyTFzik8tuSog",
-                source = "http://data.knora.org/L5xU7Qe5QUu6Wz3cDaCxbA"
+                target = "http://rdfh.ch/iqW_PBiHRdyTFzik8tuSog",
+                source = "http://rdfh.ch/L5xU7Qe5QUu6Wz3cDaCxbA"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/anything/start",
-                source = "http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg"
+                target = "http://rdfh.ch/anything/start",
+                source = "http://rdfh.ch/Lz7WEqJETJqqsUZQYexBQg"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ",
-                source = "http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg"
+                target = "http://rdfh.ch/sHCLAGg-R5qJ6oPZPV-zOQ",
+                source = "http://rdfh.ch/Lz7WEqJETJqqsUZQYexBQg"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w",
-                source = "http://data.knora.org/anything/start"
+                target = "http://rdfh.ch/WLSHxQUgTOmG1T0lBU2r5w",
+                source = "http://rdfh.ch/anything/start"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/A67ka6UQRHWf313tbhQBjw",
-                source = "http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w"
+                target = "http://rdfh.ch/A67ka6UQRHWf313tbhQBjw",
+                source = "http://rdfh.ch/WLSHxQUgTOmG1T0lBU2r5w"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/MiBwAFcxQZGHNL-WfgFAPQ",
-                source = "http://data.knora.org/LOV-6aLYQFW15jwdyS51Yw"
+                target = "http://rdfh.ch/MiBwAFcxQZGHNL-WfgFAPQ",
+                source = "http://rdfh.ch/LOV-6aLYQFW15jwdyS51Yw"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/anything/start",
-                source = "http://data.knora.org/iqW_PBiHRdyTFzik8tuSog"
+                target = "http://rdfh.ch/anything/start",
+                source = "http://rdfh.ch/iqW_PBiHRdyTFzik8tuSog"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg",
-                source = "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A"
+                target = "http://rdfh.ch/Lz7WEqJETJqqsUZQYexBQg",
+                source = "http://rdfh.ch/tPfZeNMvRVujCQqbIbvO0A"
             ),
             GraphEdgeV1(
                 propertyLabel = "Ein anderes Ding",
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                target = "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A",
-                source = "http://data.knora.org/anything/start"
+                target = "http://rdfh.ch/tPfZeNMvRVujCQqbIbvO0A",
+                source = "http://rdfh.ch/anything/start"
             )
         ),
         nodes = Vector(
@@ -505,25 +505,25 @@ object ResourcesResponderV1Spec {
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Tango",
-                resourceIri = "http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w"
+                resourceIri = "http://rdfh.ch/WLSHxQUgTOmG1T0lBU2r5w"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Foxtrot",
-                resourceIri = "http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg"
+                resourceIri = "http://rdfh.ch/Lz7WEqJETJqqsUZQYexBQg"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Echo",
-                resourceIri = "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A"
+                resourceIri = "http://rdfh.ch/tPfZeNMvRVujCQqbIbvO0A"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 resourceLabel = "Golf",
-                resourceIri = "http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ"
+                resourceIri = "http://rdfh.ch/sHCLAGg-R5qJ6oPZPV-zOQ"
             ),
             GraphNodeV1(
                 resourceClassLabel = "Ding",

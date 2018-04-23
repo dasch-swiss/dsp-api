@@ -102,7 +102,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                    |         ],
                    |         "http://www.knora.org/ontology/0803/incunabula#partOf": [
                    |             {
-                   |                 "link_value": "http://data.knora.org/5e77e98d2603"
+                   |                 "link_value": "http://rdfh.ch/5e77e98d2603"
                    |             }
                    |         ],
                    |         "http://www.knora.org/ontology/0803/incunabula#seqnum": [
@@ -232,7 +232,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                    |            {"richtext_value": {"utf8str": "Chlaus"}}
                    |        ],
                    |        "http://www.knora.org/ontology/0803/incunabula#partOf": [
-                   |            {"link_value": "http://data.knora.org/5e77e98d2603"}
+                   |            {"link_value": "http://rdfh.ch/5e77e98d2603"}
                    |        ],
                    |        "http://www.knora.org/ontology/0803/incunabula#seqnum": [{"int_value": 99999999}]
                    |    },
@@ -301,7 +301,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val standoffXml =
                 """<?xml version="1.0" encoding="UTF-8"?>
                   |<text>
-                  |    <u><strong>Wild thing</strong></u>, <u>you make my</u> <a class="salsah-link" href="http://data.knora.org/9935159f67">heart</a> sing
+                  |    <u><strong>Wild thing</strong></u>, <u>you make my</u> <a class="salsah-link" href="http://rdfh.ch/9935159f67">heart</a> sing
                   |</text>
                 """.stripMargin
 
