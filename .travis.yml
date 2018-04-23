@@ -105,7 +105,6 @@ jobs:
         # install typedoc
         - npm install --global typedoc
         # install jekyll dependencies
-        - sudo gem install jekyll bundler
         - cd $TRAVIS_BUILD_DIR/docs/src/jekyll && bundle install
         # compile and build all docs (sphinx, paradox, typescript, jekyll)
         - cd $TRAVIS_BUILD_DIR/docs && sbt makeSite
