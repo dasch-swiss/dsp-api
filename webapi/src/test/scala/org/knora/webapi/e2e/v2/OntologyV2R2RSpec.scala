@@ -309,7 +309,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 s"""
                    |{
                    |    "knora-api:ontologyName": "foo",
-                   |    "knora-api:projectIri": "$imagesProjectIri",
+                   |    "knora-api:attachedToProject": "$imagesProjectIri",
                    |    "rdfs:label": "$label",
                    |    "@context": {
                    |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",

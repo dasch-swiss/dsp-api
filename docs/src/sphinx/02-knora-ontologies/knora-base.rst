@@ -1517,6 +1517,11 @@ is done using the following Knora-specific properties:
     to enforce this constraint, but it is useful for documentation
     purposes.
 
+Note that it is possible for a subproperty to have a more restrictive contraint than
+its base property, by specifing a subject or object class that is a subclass of the
+one specified in the base property. However, it is not possible for the subproperty
+to make the base property's constraint less restrictive.
+
 Consistency Constraint Example
 ------------------------------
 
@@ -1541,6 +1546,29 @@ this simplified example:
     :hasAuthor rdf:type owl:ObjectProperty ;
         knora-base:subjectClassConstraint :book ;
         knora-base:objectClassConstraint knora-base:TextValue .
+
+Summary of Restrictions on Project-Specific Ontologies
+======================================================
+
+Restrictions on Classes
+-----------------------
+
+- Each class must be a subclass of either ``kb:Resource`` or ``kb:StandoffTag``, but not both (note that this forbids project-specific subclasses of ``kb:Value``).
+- All the cardinalities that a class defines directly (i.e. does not inherit from ``kb:Resource``) must be on properties that are defined in the triplestore.
+- Within the cardinalities of a class, there must be a link value property for each link property and vice versa.
+- Each class must be a subclass of all the classes that are subject class constraints of the properties in its cardinalities.
+- If it's a resource class, all its directly defined cardinalities must be on Knora resource properties (subproperties of ``kb:hasValue`` or ``kb:hasLinkTo``), and all its base classes with Knora IRIs must also be resource classes. A cardinality on ``kb:resourceProperty`` or ``kb:hasValue`` is forbidden. It must also have an ``rdfs:label``.
+- If it's a standoff class, none of its cardinalities may be on Knora resource properties, and all its base classes with Knora IRIs must also be standoff classes.
+
+Restrictions on properties
+--------------------------
+
+- The property's subject class constraint, if provided, must be a subclass of ``kb:Resource`` or ``kb:StandoffTag``, and must be a subclass of the subject class constraints of all its base properties.
+- Its object class constraint, if provided, must be a subclass of the object class constraints of all its base properties.
+- If the property is a Knora resource property, it must have an object class constraint and an ``rdfs:label``.
+- It can't be a subproperty of both ``kb:hasValue`` and ``kb:hasLinkTo``.
+- It can't be a subproperty of ``kb:hasFileValue``.
+- Each of its base properties that has a Knora IRI must also be a Knora resource property.
 
 Standardisation
 ===============

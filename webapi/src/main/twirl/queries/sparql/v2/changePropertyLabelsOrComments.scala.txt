@@ -108,13 +108,17 @@ WHERE {
         ?ontology rdf:type owl:Ontology ;
             knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
 
-        ?property <@predicateToUpdate> ?oldObj .
+        OPTIONAL {
+            ?property <@predicateToUpdate> ?oldObj .
+        }
 
         @maybeLinkValuePropertyIri match {
 
             case Some(linkValuePropertyIri) => {
 
-                <@linkValuePropertyIri> <@predicateToUpdate> ?oldLinkValuePropertyObj .
+                OPTIONAL {
+                    <@linkValuePropertyIri> <@predicateToUpdate> ?oldLinkValuePropertyObj .
+                }
 
             }
 
