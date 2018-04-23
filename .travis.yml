@@ -94,13 +94,17 @@ jobs:
         - sudo apt-get update
         - sudo apt-get install rvm
         - rvm install ruby 2.5.1
-        - rvm use 2.5.1
-        - ruby --version
+        - rvm use 2.5.1 --default
+        - ruby -v
+        # install bundler
+        - gem install bundler
+        # install jekyll
+        - gem install jekyll
         # check if sphinx is working
         - sphinx-build --version
         # install typedoc
         - npm install --global typedoc
-        # install jekyll and dependencies
+        # install jekyll dependencies
         - sudo gem install jekyll bundler
         - cd $TRAVIS_BUILD_DIR/docs/src/jekyll && bundle install
         # compile and build all docs (sphinx, paradox, typescript, jekyll)
