@@ -206,8 +206,6 @@ lazy val library =
             val akkaBase = "2.5.11"
             val akkaHttp = "10.1.0"
             val jena = "3.4.0"
-            val aspectj = "1.8.13"
-            val kamon = "1.0.0"
         }
 
         // akka
@@ -227,11 +225,11 @@ lazy val library =
 
         // testing
         val scalaTest              = "org.scalatest"                %% "scalatest"                % "3.0.4"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
-        val gatlingHighcharts      = "io.gatling.highcharts"         % "gatling-charts-highcharts"% "2.3.0"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
-        val gatlingTestFramework   = "io.gatling"                    % "gatling-test-framework"   % "2.3.0"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val gatlingHighcharts      = "io.gatling.highcharts"         % "gatling-charts-highcharts"% "2.3.1"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val gatlingTestFramework   = "io.gatling"                    % "gatling-test-framework"   % "2.3.1"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
 
         //CORS support
-        val akkaHttpCors           = "ch.megard"                    %% "akka-http-cors"           % "0.2.2"
+        val akkaHttpCors           = "ch.megard"                    %% "akka-http-cors"           % "0.3.0"
 
         // jena
         val jenaLibs               = "org.apache.jena"               % "apache-jena-libs"         % Version.jena exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec")
@@ -254,12 +252,12 @@ lazy val library =
         val ehcache                = "net.sf.ehcache"                % "ehcache"                  % "2.10.0"
 
         // monitoring
-        val kamonCore              = "io.kamon"                     %% "kamon-core"               % Version.kamon
-        val kamonAkka              = "io.kamon"                     %% "kamon-akka-2.5"           % Version.kamon
-        val kamonPrometheus        = "io.kamon"                     %% "kamon-prometheus"         % Version.kamon
-        val kamonZipkin            = "io.kamon"                     %% "kamon-zipkin"             % Version.kamon
-        val kamonJaeger            = "io.kamon"                     %% "kamon-jaeger"             % Version.kamon
-        val aspectJWeaver          = "org.aspectj"                   % "aspectjweaver"            % Version.aspectj
+        val kamonCore              = "io.kamon"                     %% "kamon-core"               % "1.1.0"
+        val kamonAkka              = "io.kamon"                     %% "kamon-akka-2.5"           % "1.0.0"
+        val kamonPrometheus        = "io.kamon"                     %% "kamon-prometheus"         % "1.0.0"
+        val kamonZipkin            = "io.kamon"                     %% "kamon-zipkin"             % "1.0.0"
+        val kamonJaeger            = "io.kamon"                     %% "kamon-jaeger"             % "1.0.1"
+        val aspectJWeaver          = "org.aspectj"                   % "aspectjweaver"            % "1.8.13"
 
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",
@@ -273,13 +271,13 @@ lazy val library =
         val xmlunitCore            = "org.xmlunit"                   % "xmlunit-core"             % "2.1.1"
 
         // other
-        val rdf4jRioTurtle         = "org.eclipse.rdf4j"             % "rdf4j-rio-turtle"         % "2.2.4"
+        val rdf4jRioTurtle         = "org.eclipse.rdf4j"             % "rdf4j-rio-turtle"         % "2.3.0"
         val rdf4jQueryParserSparql = "org.eclipse.rdf4j"             % "rdf4j-queryparser-sparql" % "2.2.4"
         val scallop                = "org.rogach"                   %% "scallop"                  % "2.0.5"
         val gwtServlet             = "com.google.gwt"                % "gwt-servlet"              % "2.8.0"
         val sayonHE                = "net.sf.saxon"                  % "Saxon-HE"                 % "9.7.0-14"
 
-        val scalaXml               = "org.scala-lang.modules"       %% "scala-xml"                % "1.0.6"
+        val scalaXml               = "org.scala-lang.modules"       %% "scala-xml"                % "1.1.0"
         val scalaArm               = "com.jsuereth"                  % "scala-arm_2.12"           % "2.0"
         val scalaJava8Compat       = "org.scala-lang.modules"        % "scala-java8-compat_2.12"  % "0.8.0"
 

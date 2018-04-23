@@ -633,7 +633,7 @@ the client submits a JSON-LD document that does not contain ``knora-api:hasOntol
 
    {
        "knora-api:ontologyName": "ONTOLOGY_NAME",
-       "knora-api:projectIri": "PROJECT_IRI",
+       "knora-api:attachedToProject": "PROJECT_IRI",
        "rdfs:label": "ONTOLOGY_NAME",
        "@context": {
            "rdfs": "http://www.w3.org/2000/01/rdf-schema#",

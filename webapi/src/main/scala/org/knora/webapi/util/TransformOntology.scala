@@ -3,11 +3,11 @@ package org.knora.webapi.util
 import java.io._
 
 import com.typesafe.scalalogging.Logger
-import org.eclipse.rdf4j.model.Statement
+import org.eclipse.rdf4j.model.{Resource, Statement}
 import org.eclipse.rdf4j.rio.RDFWriter
 import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings
 import org.eclipse.rdf4j.rio.turtle._
-import org.knora.webapi.{IRI, OntologyConstants}
+import org.knora.webapi.OntologyConstants
 import org.rogach.scallop._
 import org.slf4j.LoggerFactory
 
@@ -108,14 +108,12 @@ object TransformOntology extends App {
         val fileInputStream = new FileInputStream(inputFile)
         val fileOutputStream = new FileOutputStream(outputFile)
         val turtleParser = new TurtleParser()
-        val turtleWriter = new TurtleWriter(fileOutputStream)
-
-        // TODO: In RDF4J 2.3, TurtleWriter should be able to output anonymous blank nodes, as per https://github.com/eclipse/rdf4j/pull/890.
-        // For now, it can only output labelled blank nodes.
-        turtleWriter.getWriterConfig.set[java.lang.Boolean](BasicWriterSettings.PRETTY_PRINT, true)
+        val turtleWriter = new TurtleWriterFactory().getWriter(fileOutputStream)
+        turtleWriter.getWriterConfig.set[java.lang.Boolean](BasicWriterSettings.PRETTY_PRINT, true).set[java.lang.Boolean](BasicWriterSettings.INLINE_BLANK_NODES, true)
 
         val handler = transformation match {
             case GuiOrderTransformationOption => new GuiOrderHandler(turtleWriter)
+
             case _ => throw new Exception(s"Unsupported transformation $transformation")
         }
 
@@ -132,11 +130,11 @@ object TransformOntology extends App {
       */
     private class GuiOrderHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
         override def endRDF(): Unit = {
-            var guiOrders: TreeMap[IRI, Int] = TreeMap.empty[IRI, Int]
-            var statementsWithoutGuiOrders: TreeMap[IRI, Vector[Statement]] = TreeMap.empty[IRI, Vector[Statement]]
+            var guiOrders: TreeMap[Resource, Int] = TreeMap.empty[Resource, Int]
+            var statementsWithoutGuiOrders: TreeMap[Resource, Vector[Statement]] = TreeMap.empty[Resource, Vector[Statement]]
 
             statements.foreach {
-                case (subjectIri: IRI, subjectStatements: Vector[Statement]) =>
+                case (subject: Resource, subjectStatements: Vector[Statement]) =>
                     val subjectType = subjectStatements.find(_.getPredicate.stringValue == OntologyConstants.Rdf.Type).get.getObject.stringValue
 
                     if (subjectType == OntologyConstants.Owl.ObjectProperty) {
@@ -145,29 +143,29 @@ object TransformOntology extends App {
                         maybeGuiOrderStatement match {
                             case Some(guiOrderStatement: Statement) =>
                                 val guiOrder = guiOrderStatement.getObject.stringValue.toInt
-                                guiOrders += (subjectIri -> guiOrder)
+                                guiOrders += (subject -> guiOrder)
                                 val subjectStatementsWithoutGuiOrders = subjectStatements.filterNot(_.getPredicate.stringValue == OntologyConstants.SalsahGui.GuiOrder)
-                                statementsWithoutGuiOrders += (subjectIri -> subjectStatementsWithoutGuiOrders)
+                                statementsWithoutGuiOrders += (subject -> subjectStatementsWithoutGuiOrders)
 
                             case None =>
-                                statementsWithoutGuiOrders += (subjectIri -> subjectStatements)
+                                statementsWithoutGuiOrders += (subject -> subjectStatements)
                         }
                     } else {
-                        statementsWithoutGuiOrders += (subjectIri -> subjectStatements)
+                        statementsWithoutGuiOrders += (subject -> subjectStatements)
                     }
             }
 
             statementsWithoutGuiOrders.foreach {
-                case (subjectIri: IRI, subjectStatements: Vector[Statement]) =>
+                case (subject: Resource, subjectStatements: Vector[Statement]) =>
                     val subjectType = subjectStatements.find(_.getPredicate.stringValue == OntologyConstants.Rdf.Type).get.getObject.stringValue
 
                     val outputStatements = if (subjectType == OntologyConstants.Owl.Restriction) {
-                        val onProperty = subjectStatements.find(_.getPredicate.stringValue == OntologyConstants.Owl.OnProperty).get.getObject.stringValue
+                        val onProperty = valueFactory.createIRI(subjectStatements.find(_.getPredicate.stringValue == OntologyConstants.Owl.OnProperty).get.getObject.stringValue)
 
                         guiOrders.get(onProperty) match {
                             case Some(guiOrder) =>
                                 val guiOrderStatement = valueFactory.createStatement(
-                                    valueFactory.createBNode(subjectIri),
+                                    subject,
                                     valueFactory.createIRI(OntologyConstants.SalsahGui.GuiOrder),
                                     valueFactory.createLiteral(guiOrder)
                                 )

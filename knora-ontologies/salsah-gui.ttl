@@ -50,17 +50,13 @@
 
 ###  http://www.knora.org/ontology/salsah-gui#guiElement
 
-:guiElement rdf:type owl:ObjectProperty ;
-
-          knora-base:subjectClassConstraint owl:ObjectProperty .
+:guiElement rdf:type owl:ObjectProperty .
 
 
 
 ###  http://www.knora.org/ontology/salsah-gui#guiAttribute
 
 :guiAttribute rdf:type owl:DatatypeProperty ;
-
-          knora-base:subjectClassConstraint owl:ObjectProperty ;
 
           knora-base:objectDatatypeConstraint xsd:string .
 

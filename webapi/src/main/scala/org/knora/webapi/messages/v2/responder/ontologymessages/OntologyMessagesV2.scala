@@ -75,7 +75,7 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
 
         val ontologyName: String = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName, stringFormatter.validateProjectSpecificOntologyName)
         val label: String = jsonLDDocument.requireString(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
-        val projectIri: SmartIri = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.ProjectIri, stringFormatter.toSmartIriWithErr)
+        val projectIri: SmartIri = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
 
         CreateOntologyRequestV2(
             ontologyName = ontologyName,
@@ -1601,7 +1601,9 @@ object Cardinality extends Enumeration {
       * @param cardinality the Knora cardinality.
       * @param guiOrder    the SALSAH GUI order.
       */
-    case class KnoraCardinalityInfo(cardinality: Value, guiOrder: Option[Int] = None)
+    case class KnoraCardinalityInfo(cardinality: Value, guiOrder: Option[Int] = None) {
+        override def toString: String = cardinality.toString
+    }
 
     type Cardinality = Value
 
