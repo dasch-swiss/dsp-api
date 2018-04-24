@@ -1,10 +1,10 @@
 {
   "@type" : "schema:ItemList",
   "schema:itemListElement" : {
-    "@id" : "http://data.knora.org/68ef9568b903",
+    "@id" : "http://rdfh.ch/68ef9568b903",
     "@type" : "incunabula:page",
     "incunabula:seqnum" : {
-      "@id" : "http://data.knora.org/68ef9568b903/values/ee2c66c2e20e",
+      "@id" : "http://rdfh.ch/68ef9568b903/values/ee2c66c2e20e",
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 10
     },

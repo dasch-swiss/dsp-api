@@ -889,11 +889,11 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a?reqtype=context&resinfo=true
             actorUnderTest ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/c5058f3a", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
-            expectMsgPF(timeout) {
-                case response: ResourceContextResponseV1 =>
-                    val responseAsJson = response.toJsValue
-                    assert(responseAsJson == ResourcesResponderV1SpecContextData.expectedBookResourceContextResponse, "book context response did not match")
-            }
+            val response = expectMsgType[ResourceContextResponseV1](timeout).toJsValue
+
+            // println(response)
+
+            response should be (ResourcesResponderV1SpecContextData.expectedBookResourceContextResponse)
         }
 
         "return the context of a page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {

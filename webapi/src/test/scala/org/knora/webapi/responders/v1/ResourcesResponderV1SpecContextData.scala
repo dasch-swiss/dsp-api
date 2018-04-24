@@ -25,7 +25,7 @@ import akka.actor.ActorSystem
 import org.knora.webapi.Settings
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.util.FileUtil
-import spray.json.JsonParser
+import spray.json.{JsValue, JsonParser}
 
 object ResourcesResponderV1SpecContextData {
 
@@ -47,7 +47,7 @@ object ResourcesResponderV1SpecContextData {
         settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"
     )
 
-    val expectedBookResourceContextResponse = JsonParser(expectedBookResourceContextResponseStr)
+    val expectedBookResourceContextResponse: JsValue = JsonParser(expectedBookResourceContextResponseStr)
 
     val expectedPageResourceContextResponse = ResourceContextResponseV1(
         resource_context = ResourceContextV1(

@@ -6,7 +6,7 @@
     "anything:hasListItem" : {
       "@id" : "http://rdfh.ch/anything/thing_with_list_value/list_value",
       "@type" : "knora-api:ListValue",
-      "knora-api:listValueAsListNode" : "http://data.knora.org/anything/treeList02",
+      "knora-api:listValueAsListNode" : "http://rdfh.ch/anything/treeList02",
       "knora-api:listValueAsListNodeLabel" : "Baumlistenknoten 02"
     },
     "schema:name" : "A thing that has a list value"

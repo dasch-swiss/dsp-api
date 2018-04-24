@@ -1,11 +1,11 @@
 {
   "@type" : "schema:ItemList",
   "schema:itemListElement" : [ {
-    "@id" : "http://data.knora.org/c5058f3a",
+    "@id" : "http://rdfh.ch/c5058f3a",
     "@type" : "incunabula:book",
     "schema:name" : "Zeitglöcklein des Lebens und Leidens Christi"
   }, {
-    "@id" : "http://data.knora.org/ff17e5ef9601",
+    "@id" : "http://rdfh.ch/ff17e5ef9601",
     "@type" : "incunabula:book",
     "schema:name" : "Zeitglöcklein des Lebens und Leidens Christi"
   } ],

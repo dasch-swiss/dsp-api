@@ -1,13 +1,13 @@
 {
   "@type" : "schema:ItemList",
   "schema:itemListElement" : {
-    "@id" : "http://data.knora.org/881405205304",
+    "@id" : "http://rdfh.ch/881405205304",
     "@type" : "knora-api:LinkObj",
     "knora-api:hasLinkToValue" : {
-      "@id" : "http://data.knora.org/881405205304/values/9a126ec9-9387-4cc5-b565-0029a7344bf0",
+      "@id" : "http://rdfh.ch/881405205304/values/9a126ec9-9387-4cc5-b565-0029a7344bf0",
       "@type" : "knora-api:LinkValue",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://data.knora.org/8be1b7cf7103",
+        "@id" : "http://rdfh.ch/8be1b7cf7103",
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
         "schema:name" : "[Das] Narrenschiff (lat.)"
       }
