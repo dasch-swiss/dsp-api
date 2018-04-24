@@ -613,8 +613,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
     // A regex for a project-specific XML import namespace.
     private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
-        "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart + "((" +
-            ProjectIDPattern + ")/)?(" + NCNamePattern + ")" +
+        "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart + "(" +
+            ProjectIDPattern + ")/(" + NCNamePattern + ")" +
             OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
         ).r
 
@@ -1781,7 +1781,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       */
     def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: => Nothing): SmartIri = {
         namespace match {
-            case ProjectSpecificXmlImportNamespaceRegex(_, projectCode, ontologyName) if !isBuiltInOntologyName(ontologyName) =>
+            case ProjectSpecificXmlImportNamespaceRegex(projectCode, ontologyName) if !isBuiltInOntologyName(ontologyName) =>
                 makeProjectSpecificInternalOntologyIri(
                     internalOntologyName = externalToInternalOntologyName(ontologyName),
                     projectCode = projectCode
