@@ -243,9 +243,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "not create an ontology called '0000'" ignore {
-            // TODO: re-enable when #667 is resolved.
-
+        "not create an ontology called '0000'" in {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "0000",
                 projectIri = imagesProjectIri,
@@ -260,9 +258,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        "not create an ontology called '-foo'" ignore {
-            // TODO: re-enable when #667 is resolved.
-
+        "not create an ontology called '-foo'" in {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "-foo",
                 projectIri = imagesProjectIri,
