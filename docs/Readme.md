@@ -102,11 +102,16 @@ On Linux, use your distribution's package manager.
 
 ### Installation
 
-Jekyll is used for building the *Knora Documentation Overview* website, which source can be found under `src/jekyll`.
-To install the necessary dependencies, run the following commands from inside the `src/jekyll` folder:
+Jekyll is used for building the *Knora Documentation Overview* website, which source can be found under `src/jekyll`. To
+install Jekyll run:
 
 ```
 $ gem install jekyll bundler
+```
+
+Also, to install the necessary dependencies, run the following commands from inside the `src/jekyll` folder:
+
+```
 $ bundle
 ```
 
