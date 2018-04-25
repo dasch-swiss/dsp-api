@@ -56,7 +56,7 @@ object ValuesResponderV1Spec {
 
     private val zeitglöckleinIri = "http://rdfh.ch/c5058f3a"
     private val miscResourceIri = "http://rdfh.ch/miscResource"
-    private val aThingIri = "http://rdfh.ch/a-thing"
+    private val aThingIri = "http://rdfh.ch/0001/a-thing"
 
     private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
 
@@ -330,7 +330,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "query a standoff link as an ordinary value" in {
             actorUnderTest ! ValueGetRequestV1(
-                valueIri = "http://rdfh.ch/a-thing-with-text-values/values/0",
+                valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/0",
                 userProfile = incunabulaUser
             )
 
@@ -1753,9 +1753,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
 
         "delete two text values containing the same standoff resource reference" in {
-            val thingWithTextValues = "http://rdfh.ch/a-thing-with-text-values"
-            val firstTextValue = "http://rdfh.ch/a-thing-with-text-values/values/1"
-            val secondTextValue = "http://rdfh.ch/a-thing-with-text-values/values/2"
+            val thingWithTextValues = "http://rdfh.ch/0001/a-thing-with-text-values"
+            val firstTextValue = "http://rdfh.ch/0001/a-thing-with-text-values/values/1"
+            val secondTextValue = "http://rdfh.ch/0001/a-thing-with-text-values/values/2"
             val lastModBeforeFirstDelete = getLastModificationDate(thingWithTextValues)
 
             // Check that the link value has an initial reference count of 2.

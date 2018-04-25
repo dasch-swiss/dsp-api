@@ -2624,8 +2624,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |    BIND(IRI("http://www.knora.org/ontology/0001/anything#hasBlueThing") AS ?linkProperty0)
           |    BIND(IRI("http://www.knora.org/ontology/0001/anything#hasBlueThingValue") AS ?linkValueProperty0)
-          |    BIND(IRI("http://rdfh.ch/twoLabels/values/GjV_4ayjRDebneEQM0zHuw") AS ?newLinkValue0)
-          |    BIND(IRI("http://rdfh.ch/a-thing") AS ?linkTarget0)
+          |    BIND(IRI("http://rdfh.ch/0001/twoLabels/values/GjV_4ayjRDebneEQM0zHuw") AS ?newLinkValue0)
+          |    BIND(IRI("http://rdfh.ch/0001/a-thing") AS ?linkTarget0)
           |}
         """.stripMargin
 
@@ -2659,7 +2659,7 @@ object GraphDBConsistencyCheckingSpec {
           |            rdf:subject ?resource ;
           |            rdf:predicate ?linkProperty0 ;
           |            rdf:object ?linkTarget0 ;
-          |            knora-base:valueHasString "http://rdfh.ch/a-thing" ;
+          |            knora-base:valueHasString "http://rdfh.ch/0001/a-thing" ;
           |            knora-base:valueHasRefCount 1 ;
           |            knora-base:valueHasOrder ?nextOrder0 ;
           |            knora-base:isDeleted false ;
@@ -2687,8 +2687,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |    BIND(IRI("http://www.knora.org/ontology/0001/anything#hasOtherThing") AS ?linkProperty0)
           |    BIND(IRI("http://www.knora.org/ontology/0001/anything#hasOtherThingValue") AS ?linkValueProperty0)
-          |    BIND(IRI("http://rdfh.ch/missingValuePermissions/values/GjV_4ayjRDebneEQM0zHuw") AS ?newLinkValue0)
-          |    BIND(IRI("http://rdfh.ch/a-thing") AS ?linkTarget0)
+          |    BIND(IRI("http://rdfh.ch/0001/missingValuePermissions/values/GjV_4ayjRDebneEQM0zHuw") AS ?newLinkValue0)
+          |    BIND(IRI("http://rdfh.ch/0001/a-thing") AS ?linkTarget0)
           |
           |
           |

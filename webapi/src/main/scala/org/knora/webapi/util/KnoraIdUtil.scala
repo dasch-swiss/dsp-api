@@ -140,7 +140,7 @@ class KnoraIdUtil {
       */
     def makeRandomResourceIri(projectInfo: ProjectInfoV1): IRI = {
         val knoraResourceID = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/${projectInfo.shortcode}/${projectInfo.shortname}/$knoraResourceID"
+        s"http://$IriDomain/${projectInfo.shortcode}/$knoraResourceID"
     }
 
     /**
