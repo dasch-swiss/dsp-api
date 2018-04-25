@@ -1,0 +1,513 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "description" : "",
+    "version" : "1.3.0",
+    "title" : "",
+    "termsOfService" : ""
+  },
+  "host" : "0.0.0.0:3333",
+  "basePath" : "/",
+  "tags" : [ {
+    "name" : "groups"
+  }, {
+    "name" : "lists"
+  }, {
+    "name" : "permissions"
+  }, {
+    "name" : "projects"
+  }, {
+    "name" : "store"
+  }, {
+    "name" : "users"
+  } ],
+  "schemes" : [ "http" ],
+  "paths" : {
+    "/admin/users" : {
+      "get" : {
+        "tags" : [ "users" ],
+        "summary" : "Get users",
+        "description" : "",
+        "operationId" : "getUsers",
+        "produces" : [ "application/json" ],
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/UsersGetResponseADM"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error"
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "users" ],
+        "summary" : "Add new user",
+        "description" : "",
+        "operationId" : "addUser",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "description" : "\"user\" to create",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/CreateUserApiRequestADM"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/UserOperationResponseADM"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/users/{IRI}" : {
+      "get" : {
+        "tags" : [ "users" ],
+        "summary" : "Return a single user identified by IRI or Email",
+        "description" : "",
+        "operationId" : "getUser",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "name",
+          "in" : "path",
+          "description" : "Name of person to greet",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Return User",
+            "schema" : {
+              "$ref" : "#/definitions/UserResponseADM"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions" : {
+    "basicAuth" : {
+      "type" : "basic"
+    }
+  },
+  "definitions" : {
+    "GroupADM" : {
+      "type" : "object",
+      "required" : [ "description", "id", "name", "project", "selfjoin", "status" ],
+      "properties" : {
+        "id" : {
+          "type" : "string"
+        },
+        "name" : {
+          "type" : "string"
+        },
+        "description" : {
+          "type" : "string"
+        },
+        "project" : {
+          "$ref" : "#/definitions/ProjectADM"
+        },
+        "status" : {
+          "type" : "boolean"
+        },
+        "selfjoin" : {
+          "type" : "boolean"
+        }
+      }
+    },
+    "JsonFormat" : {
+      "type" : "object"
+    },
+    "JsonFormatAdministrativePermissionADM" : {
+      "type" : "object"
+    },
+    "JsonFormatDefaultObjectAccessPermissionADM" : {
+      "type" : "object"
+    },
+    "JsonFormatObjectAccessPermissionADM" : {
+      "type" : "object"
+    },
+    "JsonFormatPermissionADM" : {
+      "type" : "object"
+    },
+    "JsonFormatPermissionsDataADM" : {
+      "type" : "object"
+    },
+    "JsonFormatProjectADM" : {
+      "type" : "object"
+    },
+    "PermissionADM" : {
+      "type" : "object",
+      "required" : [ "administrativePermissionADMFormat", "administrativePermissionCreateResponseADMFormat", "administrativePermissionForIriGetResponseADMFormat", "administrativePermissionForProjectGroupGetResponseADMFormat", "administrativePermissionsForProjectGetResponseADMFormat", "changeProjectApiRequestADMFormat", "createProjectApiRequestADMFormat", "defaultObjectAccessPermissionADMFormat", "defaultObjectAccessPermissionForIriGetResponseADMFormat", "defaultObjectAccessPermissionForProjectGroupGetResponseADMFormat", "defaultObjectAccessPermissionsForProjectGetResponseADMFormat", "name", "objectAccessPermissionADMFormat", "permissionADMFormat", "permissionsDataADMFormat", "projectADMFormat", "projectAdminMembersGetResponseADMFormat", "projectKeywordsGetResponseADMFormat", "projectMembersGetResponseADMFormat", "projectOperationResponseADMFormat", "projectResponseADMFormat", "projectsKeywordsGetResponseADMFormat", "projectsResponseADMFormat", "rdfDataObjectFormat", "resetTriplestoreContentFormat" ],
+      "properties" : {
+        "name" : {
+          "type" : "string"
+        },
+        "additionalInformation" : {
+          "type" : "string"
+        },
+        "permissionCode" : {
+          "type" : "object"
+        },
+        "permissionADMFormat" : {
+          "$ref" : "#/definitions/JsonFormatPermissionADM"
+        },
+        "administrativePermissionADMFormat" : {
+          "$ref" : "#/definitions/JsonFormatAdministrativePermissionADM"
+        },
+        "objectAccessPermissionADMFormat" : {
+          "$ref" : "#/definitions/JsonFormatObjectAccessPermissionADM"
+        },
+        "defaultObjectAccessPermissionADMFormat" : {
+          "$ref" : "#/definitions/JsonFormatDefaultObjectAccessPermissionADM"
+        },
+        "permissionsDataADMFormat" : {
+          "$ref" : "#/definitions/JsonFormatPermissionsDataADM"
+        },
+        "administrativePermissionsForProjectGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatAdministrativePermissionsForProjectGetResponseADM"
+        },
+        "administrativePermissionForIriGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatAdministrativePermissionForIriGetResponseADM"
+        },
+        "administrativePermissionForProjectGroupGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatAdministrativePermissionForProjectGroupGetResponseADM"
+        },
+        "administrativePermissionCreateResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatAdministrativePermissionCreateResponseADM"
+        },
+        "defaultObjectAccessPermissionsForProjectGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatDefaultObjectAccessPermissionsForProjectGetResponseADM"
+        },
+        "defaultObjectAccessPermissionForIriGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatDefaultObjectAccessPermissionForIriGetResponseADM"
+        },
+        "defaultObjectAccessPermissionForProjectGroupGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatDefaultObjectAccessPermissionGetResponseADM"
+        },
+        "projectADMFormat" : {
+          "$ref" : "#/definitions/JsonFormatProjectADM"
+        },
+        "projectsResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatProjectsGetResponseADM"
+        },
+        "projectResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatProjectGetResponseADM"
+        },
+        "projectAdminMembersGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatProjectAdminMembersGetResponseADM"
+        },
+        "projectMembersGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatProjectMembersGetResponseADM"
+        },
+        "createProjectApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatCreateProjectApiRequestADM"
+        },
+        "changeProjectApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatChangeProjectApiRequestADM"
+        },
+        "projectsKeywordsGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatProjectsKeywordsGetResponseADM"
+        },
+        "projectKeywordsGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatProjectKeywordsGetResponseADM"
+        },
+        "projectOperationResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatProjectOperationResponseADM"
+        },
+        "rdfDataObjectFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatRdfDataObject"
+        },
+        "resetTriplestoreContentFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatResetTriplestoreContent"
+        }
+      }
+    },
+    "PermissionsDataADM" : {
+      "type" : "object",
+      "required" : [ "administrativePermissionsPerProject", "groupsPerProject", "systemAdmin" ],
+      "properties" : {
+        "groupsPerProject" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "administrativePermissionsPerProject" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "$ref" : "#/definitions/PermissionADM"
+            }
+          }
+        },
+        "systemAdmin" : {
+          "type" : "boolean"
+        }
+      }
+    },
+    "ProjectADM" : {
+      "type" : "object",
+      "required" : [ "description", "id", "keywords", "ontologies", "selfjoin", "shortname", "status" ],
+      "properties" : {
+        "id" : {
+          "type" : "string"
+        },
+        "shortname" : {
+          "type" : "string"
+        },
+        "shortcode" : {
+          "type" : "string"
+        },
+        "longname" : {
+          "type" : "string"
+        },
+        "description" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/StringLiteralV2"
+          }
+        },
+        "keywords" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "logo" : {
+          "type" : "string"
+        },
+        "ontologies" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "status" : {
+          "type" : "boolean"
+        },
+        "selfjoin" : {
+          "type" : "boolean"
+        }
+      }
+    },
+    "RootJsonFormat" : {
+      "type" : "object"
+    },
+    "RootJsonFormatAdministrativePermissionCreateResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatAdministrativePermissionForIriGetResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatAdministrativePermissionForProjectGroupGetResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatAdministrativePermissionsForProjectGetResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatChangeProjectApiRequestADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatCreateProjectApiRequestADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatDefaultObjectAccessPermissionForIriGetResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatDefaultObjectAccessPermissionGetResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatDefaultObjectAccessPermissionsForProjectGetResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatProjectAdminMembersGetResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatProjectGetResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatProjectKeywordsGetResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatProjectMembersGetResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatProjectOperationResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatProjectsGetResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatProjectsKeywordsGetResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatRdfDataObject" : {
+      "type" : "object"
+    },
+    "RootJsonFormatResetTriplestoreContent" : {
+      "type" : "object"
+    },
+    "StringLiteralV2" : {
+      "type" : "object",
+      "required" : [ "value" ],
+      "properties" : {
+        "value" : {
+          "type" : "string"
+        },
+        "language" : {
+          "type" : "string"
+        }
+      }
+    },
+    "UserADM" : {
+      "type" : "object",
+      "required" : [ "active", "anonymousUser", "digest", "email", "familyName", "givenName", "groups", "id", "lang", "permissions", "projects", "status", "systemAdmin", "systemUser" ],
+      "properties" : {
+        "id" : {
+          "type" : "string"
+        },
+        "email" : {
+          "type" : "string"
+        },
+        "password" : {
+          "type" : "string"
+        },
+        "token" : {
+          "type" : "string"
+        },
+        "givenName" : {
+          "type" : "string"
+        },
+        "familyName" : {
+          "type" : "string"
+        },
+        "status" : {
+          "type" : "boolean"
+        },
+        "lang" : {
+          "type" : "string"
+        },
+        "groups" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/GroupADM"
+          }
+        },
+        "projects" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/ProjectADM"
+          }
+        },
+        "sessionId" : {
+          "type" : "string"
+        },
+        "permissions" : {
+          "$ref" : "#/definitions/PermissionsDataADM"
+        },
+        "active" : {
+          "type" : "boolean"
+        },
+        "systemUser" : {
+          "type" : "boolean"
+        },
+        "anonymousUser" : {
+          "type" : "boolean"
+        },
+        "digest" : {
+          "type" : "string"
+        },
+        "systemAdmin" : {
+          "type" : "boolean"
+        }
+      }
+    },
+    "UsersGetResponseADM" : {
+      "type" : "object",
+      "required" : [ "users" ],
+      "properties" : {
+        "users" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/UserADM"
+          }
+        }
+      }
+    },
+    "UserOperationResponseADM" : {
+      "type" : "object",
+      "required" : [ "user" ],
+      "properties" : {
+        "user" : {
+          "$ref" : "#/definitions/UserADM"
+        }
+      }
+    },
+    "CreateUserApiRequestADM" : {
+      "type" : "object",
+      "required" : [ "email", "familyName", "givenName", "lang", "password", "status", "systemAdmin" ],
+      "properties" : {
+        "email" : {
+          "type" : "string"
+        },
+        "givenName" : {
+          "type" : "string"
+        },
+        "familyName" : {
+          "type" : "string"
+        },
+        "password" : {
+          "type" : "string"
+        },
+        "status" : {
+          "type" : "boolean"
+        },
+        "lang" : {
+          "type" : "string"
+        },
+        "systemAdmin" : {
+          "type" : "boolean"
+        }
+      }
+    },
+    "Function1" : {
+      "type" : "object"
+    },
+    "Function1RequestContextFutureRouteResult" : {
+      "type" : "object"
+    },
+    "UserResponseADM" : {
+      "type" : "object",
+      "required" : [ "user" ],
+      "properties" : {
+        "user" : {
+          "$ref" : "#/definitions/UserADM"
+        }
+      }
+    }
+  },
+  "externalDocs" : {
+    "description" : "Knora Docs",
+    "url" : "http://www.knora.org/documentation/manual/rst/"
+  }
+}
