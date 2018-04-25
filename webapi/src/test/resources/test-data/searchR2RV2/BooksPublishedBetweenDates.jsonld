@@ -22,7 +22,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Defensorium inviolate perpetueque virginitatis castissime de genitricis Mariae"
     } ],
-    "schema:name" : "De generatione Christi"
+    "rdfs:label" : "De generatione Christi"
   }, {
     "@id" : "http://data.knora.org/1967a9933401",
     "@type" : "incunabula:book",
@@ -41,7 +41,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Itinerarius sive peregrinarius Beatissime Virginis Marie"
     },
-    "schema:name" : "Itinerarius sive peregrinarius Beatissime Virginis Marie"
+    "rdfs:label" : "Itinerarius sive peregrinarius Beatissime Virginis Marie"
   }, {
     "@id" : "http://data.knora.org/41d01bd9fb",
     "@type" : "incunabula:book",
@@ -60,7 +60,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens"
     },
-    "schema:name" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens"
+    "rdfs:label" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens"
   }, {
     "@id" : "http://data.knora.org/9311a421b501",
     "@type" : "incunabula:book",
@@ -79,7 +79,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Bereitung zu dem Heiligen Sakrament"
     },
-    "schema:name" : "Bereitung zu dem Heiligen Sakrament"
+    "rdfs:label" : "Bereitung zu dem Heiligen Sakrament"
   }, {
     "@id" : "http://data.knora.org/ff17e5ef9601",
     "@type" : "incunabula:book",
@@ -102,7 +102,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Horologium devotionis circa vitam Christi"
     } ],
-    "schema:name" : "Zeitglöcklein des Lebens und Leidens Christi"
+    "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   } ],
   "schema:numberOfItems" : 5,
   "@context" : {

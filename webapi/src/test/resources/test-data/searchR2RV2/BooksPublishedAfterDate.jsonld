@@ -18,7 +18,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)"
     },
-    "schema:name" : "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)"
+    "rdfs:label" : "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)"
   },
   "schema:numberOfItems" : 1,
   "@context" : {

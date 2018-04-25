@@ -9,10 +9,10 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/8be1b7cf7103",
         "@type" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
-    "schema:name" : "Lateinische Übersetzung"
+    "rdfs:label" : "Lateinische Übersetzung"
   },
   "schema:numberOfItems" : 1,
   "@context" : {

@@ -1,38 +1,37 @@
 package org.knora.webapi.responders.v2
 
-import akka.actor.ActorSystem
-import org.knora.webapi.Settings
+import org.knora.webapi.OntologyConstants
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
-import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.IriConversions._
 
-object ResourcesResponderV2SpecFullData {
-
-    implicit lazy val system = ActorSystem("webapi")
-
-    val settings = Settings(system)
+class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
     val expectedReadResourceV2ForZeitgloecklein = ReadResourceV2(
-        resourceInfos = Map(),
         values = Map(
-            "http://www.knora.org/ontology/incunabula#hasAuthor" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/incunabula#hasAuthor".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
+                    valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                     comment = None,
                     standoff = None,
                     valueHasString = "Berthold, der Bruder"
                 ),
                 valueIri = "http://data.knora.org/c5058f3a/values/8653a672"
             )),
-            "http://www.knora.org/ontology/incunabula#title" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/incunabula#title".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
+                    valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                     comment = None,
                     standoff = None,
                     valueHasString = "Zeitgl\u00F6cklein des Lebens und Leidens Christi"
                 ),
                 valueIri = "http://data.knora.org/c5058f3a/values/c3295339"
             )),
-            "http://www.knora.org/ontology/incunabula#citation" -> Vector(
+            "http://www.knora.org/ontology/incunabula#citation".toSmartIri -> Vector(
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "Schramm Bd. XXI, S. 27"
@@ -41,6 +40,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "GW 4168"
@@ -49,6 +49,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "ISTC ib00512000"
@@ -56,40 +57,45 @@ object ResourcesResponderV2SpecFullData {
                     valueIri = "http://data.knora.org/c5058f3a/values/9ea13f3d02"
                 )
             ),
-            "http://www.knora.org/ontology/incunabula#location" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/incunabula#location".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
+                    valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                     comment = None,
                     standoff = None,
                     valueHasString = "Universit\u00E4ts- und Stadtbibliothek K\u00F6ln, Sign: AD+S167"
                 ),
                 valueIri = "http://data.knora.org/c5058f3a/values/92faf25701"
             )),
-            "http://www.knora.org/ontology/incunabula#url" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/incunabula#url".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
+                    valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                     comment = None,
                     standoff = None,
                     valueHasString = "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1"
                 ),
                 valueIri = "http://data.knora.org/c5058f3a/values/10e00c7acc2704"
             )),
-            "http://www.knora.org/ontology/incunabula#physical_desc" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/incunabula#physical_desc".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
+                    valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                     comment = None,
                     standoff = None,
                     valueHasString = "Dimension: 8\u00B0"
                 ),
                 valueIri = "http://data.knora.org/c5058f3a/values/5524469101"
             )),
-            "http://www.knora.org/ontology/incunabula#publoc" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/incunabula#publoc".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
+                    valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                     comment = None,
                     standoff = None,
                     valueHasString = "Basel"
                 ),
                 valueIri = "http://data.knora.org/c5058f3a/values/0ca74ce5"
             )),
-            "http://www.knora.org/ontology/incunabula#pubdate" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/incunabula#pubdate".toSmartIri -> Vector(ReadValueV2(
                 valueContent = DateValueContentV2(
+                    valueType = OntologyConstants.KnoraBase.DateValue.toSmartIri,
                     comment = None,
                     valueHasCalendar = KnoraCalendarV1.JULIAN,
                     valueHasEndPrecision = KnoraPrecisionV1.YEAR,
@@ -100,8 +106,9 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 valueIri = "http://data.knora.org/c5058f3a/values/cfd09f1e01"
             )),
-            "http://www.knora.org/ontology/incunabula#publisher" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/incunabula#publisher".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
+                    valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                     comment = None,
                     standoff = None,
                     valueHasString = "Johann Amerbach"
@@ -109,25 +116,26 @@ object ResourcesResponderV2SpecFullData {
                 valueIri = "http://data.knora.org/c5058f3a/values/497df9ab"
             ))
         ),
-        resourceClass = "http://www.knora.org/ontology/incunabula#book",
+        resourceClass = "http://www.knora.org/ontology/incunabula#book".toSmartIri,
         label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
         resourceIri = "http://data.knora.org/c5058f3a"
     )
 
     val expectedReadResourceV2ForReiseInsHeiligeland = ReadResourceV2(
-        resourceInfos = Map(),
         values = Map(
-            "http://www.knora.org/ontology/incunabula#hasAuthor" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/incunabula#hasAuthor".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
+                    valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                     comment = None,
                     standoff = None,
                     valueHasString = "Jean Mandeville"
                 ),
                 valueIri = "http://data.knora.org/2a6221216701/values/1a7f08829105"
             )),
-            "http://www.knora.org/ontology/incunabula#title" -> Vector(
+            "http://www.knora.org/ontology/incunabula#title".toSmartIri -> Vector(
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "Reise ins Heilige Land"
@@ -136,6 +144,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "Reysen und wanderschafften durch das Gelobte Land"
@@ -144,6 +153,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "Itinerarius"
@@ -151,9 +161,10 @@ object ResourcesResponderV2SpecFullData {
                     valueIri = "http://data.knora.org/2a6221216701/values/5755b5489105"
                 )
             ),
-            "http://www.knora.org/ontology/incunabula#citation" -> Vector(
+            "http://www.knora.org/ontology/incunabula#citation".toSmartIri -> Vector(
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "Van der Haegen I: 9,14"
@@ -162,6 +173,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "Goff M165"
@@ -170,6 +182,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "C 3833"
@@ -178,6 +191,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "Klebs 651.2"
@@ -186,6 +200,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "Schr 4799"
@@ -194,6 +209,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "Schramm XXI p. 9 & 26"
@@ -202,6 +218,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "FairMur(G) 283"
@@ -210,6 +227,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "IBP 3556"
@@ -218,6 +236,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "Borm 1751"
@@ -225,48 +244,54 @@ object ResourcesResponderV2SpecFullData {
                     valueIri = "http://data.knora.org/2a6221216701/values/939834c39505"
                 )
             ),
-            "http://www.knora.org/ontology/incunabula#location" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/incunabula#location".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
+                    valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                     comment = None,
                     standoff = None,
                     valueHasString = "Basel UB, Sign: Aleph D III 13:1"
                 ),
                 valueIri = "http://data.knora.org/2a6221216701/values/262655679205"
             )),
-            "http://www.knora.org/ontology/incunabula#url" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/incunabula#url".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
+                    valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                     comment = None,
                     standoff = None,
                     valueHasString = "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320"
                 ),
                 valueIri = "http://data.knora.org/2a6221216701/values/f89173afca2704"
             )),
-            "http://www.knora.org/ontology/incunabula#physical_desc" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/incunabula#physical_desc".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
+                    valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                     comment = None,
                     standoff = None,
                     valueHasString = "Extent: 1 Bd.; Dimensions: f\u00B0"
                 ),
                 valueIri = "http://data.knora.org/2a6221216701/values/e94fa8a09205"
             )),
-            "http://www.knora.org/ontology/incunabula#book_comment" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/incunabula#book_comment".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
+                    valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                     comment = None,
                     standoff = None,
                     valueHasString = "Katalogaufnahme anhand ISTC und v.d.Haegen"
                 ),
                 valueIri = "http://data.knora.org/2a6221216701/values/56c287fc9505"
             )),
-            "http://www.knora.org/ontology/incunabula#publoc" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/incunabula#publoc".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
+                    valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                     comment = None,
                     standoff = None,
                     valueHasString = "Basel"
                 ),
                 valueIri = "http://data.knora.org/2a6221216701/values/a0d2aef49105"
             )),
-            "http://www.knora.org/ontology/incunabula#pubdate" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/incunabula#pubdate".toSmartIri -> Vector(ReadValueV2(
                 valueContent = DateValueContentV2(
+                    valueType = OntologyConstants.KnoraBase.DateValue.toSmartIri,
                     comment = None,
                     valueHasCalendar = KnoraCalendarV1.JULIAN,
                     valueHasEndPrecision = KnoraPrecisionV1.YEAR,
@@ -277,17 +302,19 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 valueIri = "http://data.knora.org/2a6221216701/values/63fc012e9205"
             )),
-            "http://www.knora.org/ontology/incunabula#publisher" -> Vector(ReadValueV2(
+            "http://www.knora.org/ontology/incunabula#publisher".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
+                    valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                     comment = None,
                     standoff = None,
                     valueHasString = "Bernhard Richel"
                 ),
                 valueIri = "http://data.knora.org/2a6221216701/values/dda85bbb9105"
             )),
-            "http://www.knora.org/ontology/incunabula#note" -> Vector(
+            "http://www.knora.org/ontology/incunabula#note".toSmartIri -> Vector(
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "deutsch von Otto von Diemeringen"
@@ -296,6 +323,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "Rubr. mit Init. J zu Beginn"
@@ -304,6 +332,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "Holzschnitte nicht koloriert"
@@ -312,6 +341,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "Besitzervermerke: Kartause, H. Zscheckenb\u00FCrlin"
@@ -320,6 +350,7 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
+                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
                         comment = None,
                         standoff = None,
                         valueHasString = "Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516"
@@ -328,7 +359,7 @@ object ResourcesResponderV2SpecFullData {
                 )
             )
         ),
-        resourceClass = "http://www.knora.org/ontology/incunabula#book",
+        resourceClass = "http://www.knora.org/ontology/incunabula#book".toSmartIri,
         label = "Reise ins Heilige Land",
         resourceIri = "http://data.knora.org/2a6221216701"
     )

@@ -24,7 +24,7 @@ import java.util
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi.util.JavaUtil
-import org.knora.webapi.{IRI, InvalidApiJsonException}
+import org.knora.webapi.{IRI, InvalidApiJsonException, OntologyConstants}
 
 object ResponseCheckerR2RV2 {
 
@@ -32,13 +32,11 @@ object ResponseCheckerR2RV2 {
 
     private val itemListElementMember: IRI = "http://schema.org/itemListElement"
 
-    private val name: IRI = "http://schema.org/name"
-
     private val jsonldId = "@id"
 
     private val jsonldType = "@type"
 
-    private val noPropertyKeys: Set[IRI] = Set(jsonldId, jsonldType, name)
+    private val noPropertyKeys: Set[IRI] = Set(jsonldId, jsonldType, OntologyConstants.Rdfs.Label)
 
 
     /**
@@ -85,7 +83,7 @@ object ResponseCheckerR2RV2 {
 
         assert(expectedResource(jsonldType) == receivedResource(jsonldType), s"Received resource type ${receivedResource(jsonldType)} does not match expected type ${expectedResource(jsonldType)}")
 
-        assert(expectedResource(name) == receivedResource(name), s"$name did not match for ${receivedResource(jsonldId)}")
+        assert(expectedResource(OntologyConstants.Rdfs.Label) == receivedResource(OntologyConstants.Rdfs.Label), s"rdfs:label did not match for ${receivedResource(jsonldId)}")
 
         assert(expectedResource.keySet -- noPropertyKeys == receivedResource.keySet -- noPropertyKeys, s"property Iris are different for resource ${receivedResource(jsonldId)}: expected ${expectedResource.keySet -- noPropertyKeys}, received ${receivedResource.keySet -- noPropertyKeys}")
 

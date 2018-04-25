@@ -18,7 +18,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Itinerarius seu peregrinatio beatae virginis Mariae"
     },
-    "schema:name" : "Itinerarius seu peregrinatio beatae virginis Mariae"
+    "rdfs:label" : "Itinerarius seu peregrinatio beatae virginis Mariae"
   }, {
     "@id" : "http://data.knora.org/8be1b7cf7103",
     "@type" : "incunabula:book",
@@ -45,7 +45,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Stultifera navis (...)"
     } ],
-    "schema:name" : "[Das] Narrenschiff (lat.)"
+    "rdfs:label" : "[Das] Narrenschiff (lat.)"
   } ],
   "schema:numberOfItems" : 2,
   "@context" : {

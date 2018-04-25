@@ -22,7 +22,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Geschichte von der schönen Melusine"
     },
-    "schema:name" : "Geschichte von der schönen Melusine"
+    "rdfs:label" : "Geschichte von der schönen Melusine"
   }, {
     "@id" : "http://data.knora.org/2a6221216701",
     "@type" : "incunabula:book",
@@ -49,7 +49,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Itinerarius"
     } ],
-    "schema:name" : "Reise ins Heilige Land"
+    "rdfs:label" : "Reise ins Heilige Land"
   }, {
     "@id" : "http://data.knora.org/c3f913666f",
     "@type" : "incunabula:book",
@@ -72,7 +72,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Defensorium inviolate perpetueque virginitatis castissime de genitricis Mariae"
     } ],
-    "schema:name" : "De generatione Christi"
+    "rdfs:label" : "De generatione Christi"
   }, {
     "@id" : "http://data.knora.org/1967a9933401",
     "@type" : "incunabula:book",
@@ -91,7 +91,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Itinerarius sive peregrinarius Beatissime Virginis Marie"
     },
-    "schema:name" : "Itinerarius sive peregrinarius Beatissime Virginis Marie"
+    "rdfs:label" : "Itinerarius sive peregrinarius Beatissime Virginis Marie"
   }, {
     "@id" : "http://data.knora.org/41d01bd9fb",
     "@type" : "incunabula:book",
@@ -110,7 +110,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens"
     },
-    "schema:name" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens"
+    "rdfs:label" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens"
   }, {
     "@id" : "http://data.knora.org/9311a421b501",
     "@type" : "incunabula:book",
@@ -129,7 +129,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Bereitung zu dem Heiligen Sakrament"
     },
-    "schema:name" : "Bereitung zu dem Heiligen Sakrament"
+    "rdfs:label" : "Bereitung zu dem Heiligen Sakrament"
   }, {
     "@id" : "http://data.knora.org/ff17e5ef9601",
     "@type" : "incunabula:book",
@@ -152,7 +152,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Horologium devotionis circa vitam Christi"
     } ],
-    "schema:name" : "Zeitglöcklein des Lebens und Leidens Christi"
+    "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   }, {
     "@id" : "http://data.knora.org/3341c4984004",
     "@type" : "incunabula:book",
@@ -175,7 +175,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Die wunderbare Meerfahrt des hl. Brandan"
     },
-    "schema:name" : "Die wunderbare Meerfahrt des hl. Brandan"
+    "rdfs:label" : "Die wunderbare Meerfahrt des hl. Brandan"
   }, {
     "@id" : "http://data.knora.org/939baf3f2a02",
     "@type" : "incunabula:book",
@@ -198,7 +198,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Postilla super epistolas et evangelia"
     },
-    "schema:name" : "Postilla super epistolas et evangelia"
+    "rdfs:label" : "Postilla super epistolas et evangelia"
   }, {
     "@id" : "http://data.knora.org/21abac2162",
     "@type" : "incunabula:book",
@@ -217,7 +217,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Lob der Glieder Mariens"
     },
-    "schema:name" : "Lob der Glieder Mariens"
+    "rdfs:label" : "Lob der Glieder Mariens"
   }, {
     "@id" : "http://data.knora.org/c5058f3a",
     "@type" : "incunabula:book",
@@ -236,7 +236,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi"
     },
-    "schema:name" : "Zeitglöcklein des Lebens und Leidens Christi"
+    "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   }, {
     "@id" : "http://data.knora.org/e41ab5695c",
     "@type" : "incunabula:book",
@@ -259,7 +259,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Sant Brigitten gebettly"
     } ],
-    "schema:name" : "Orationes"
+    "rdfs:label" : "Orationes"
   }, {
     "@id" : "http://data.knora.org/861b5644b302",
     "@type" : "incunabula:book",
@@ -278,7 +278,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Quadragesimale de filio prodigo"
     },
-    "schema:name" : "Quadragesimale de filio prodigo"
+    "rdfs:label" : "Quadragesimale de filio prodigo"
   }, {
     "@id" : "http://data.knora.org/5e77e98d2603",
     "@type" : "incunabula:book",
@@ -301,7 +301,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "[Das] Narrenschiff (dt.)"
     },
-    "schema:name" : "[Das] Narrenschiff (dt.)"
+    "rdfs:label" : "[Das] Narrenschiff (dt.)"
   }, {
     "@id" : "http://data.knora.org/6fad5b8c1e03",
     "@type" : "incunabula:book",
@@ -324,7 +324,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Passio sancti Meynrhadi martyris et heremite"
     },
-    "schema:name" : "Passio sancti Meynrhadi martyris et heremite"
+    "rdfs:label" : "Passio sancti Meynrhadi martyris et heremite"
   } ],
   "schema:numberOfItems" : 15,
   "@context" : {

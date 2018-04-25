@@ -8,7 +8,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 10
     },
-    "schema:name" : "a4v"
+    "rdfs:label" : "a4v"
   },
   "schema:numberOfItems" : 1,
   "@context" : {

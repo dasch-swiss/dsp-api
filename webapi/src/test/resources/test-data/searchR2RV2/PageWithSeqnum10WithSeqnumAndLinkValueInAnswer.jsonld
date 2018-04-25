@@ -9,7 +9,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -17,7 +17,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 10
     },
-    "schema:name" : "a4v"
+    "rdfs:label" : "a4v"
   },
   "schema:numberOfItems" : 1,
   "@context" : {

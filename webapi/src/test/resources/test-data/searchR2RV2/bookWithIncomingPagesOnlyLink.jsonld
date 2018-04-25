@@ -23,10 +23,10 @@
           "@type" : "knora-api:LinkValue",
           "knora-api:linkValueHasTargetIri" : "http://data.knora.org/8be1b7cf7103"
         },
-        "schema:name" : "vorderer Spiegel"
+        "rdfs:label" : "vorderer Spiegel"
       }
     },
-    "schema:name" : "[Das] Narrenschiff (lat.)"
+    "rdfs:label" : "[Das] Narrenschiff (lat.)"
   },
   "schema:numberOfItems" : 1,
   "@context" : {

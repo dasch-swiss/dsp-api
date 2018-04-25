@@ -9,7 +9,7 @@
       "knora-api:listValueAsListNode" : "http://data.knora.org/anything/treeList02",
       "knora-api:listValueAsListNodeLabel" : "Baumlistenknoten 02"
     },
-    "schema:name" : "A thing that has a list value"
+    "rdfs:label" : "A thing that has a list value"
   }, {
     "@id" : "http://rdfh.ch/anything/thing_with_two_list_values",
     "@type" : "anything:Thing",
@@ -19,7 +19,7 @@
       "knora-api:listValueAsListNode" : "http://data.knora.org/anything/treeList01",
       "knora-api:listValueAsListNodeLabel" : "Tree list node 01"
     },
-    "schema:name" : "A thing that has two list values"
+    "rdfs:label" : "A thing that has two list values"
   } ],
   "schema:numberOfItems" : 2,
   "@context" : {

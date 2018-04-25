@@ -8,7 +8,7 @@
       "@type" : "knora-api:DecimalValue",
       "knora-api:decimalValueAsDecimal" : "2.1"
     },
-    "schema:name" : "Testding for extended search"
+    "rdfs:label" : "Testding for extended search"
   },
   "schema:numberOfItems" : 1,
   "@context" : {

@@ -3,47 +3,47 @@
   "schema:itemListElement" : [ {
     "@id" : "http://data.knora.org/nResNuvARcWYUdWyo0GWGw",
     "@type" : "anything:Thing",
-    "schema:name" : "X-ray"
+    "rdfs:label" : "X-ray"
   }, {
     "@id" : "http://data.knora.org/nVh9YJ1ZStSmCHb9hIdwWw",
     "@type" : "anything:Thing",
-    "schema:name" : "excluded Charlie"
+    "rdfs:label" : "excluded Charlie"
   }, {
     "@id" : "http://data.knora.org/project-thing-1",
     "@type" : "anything:Thing",
-    "schema:name" : "A thing that only project members can see"
+    "rdfs:label" : "A thing that only project members can see"
   }, {
     "@id" : "http://data.knora.org/project-thing-2",
     "@type" : "anything:Thing",
-    "schema:name" : "Another thing that only project members can see"
+    "rdfs:label" : "Another thing that only project members can see"
  }, {
     "@id" : "http://data.knora.org/rzRrc2G1StKUMyZVjJnxuw",
     "@type" : "anything:Thing",
-    "schema:name" : "Kilo"
+    "rdfs:label" : "Kilo"
   }, {
     "@id" : "http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ",
     "@type" : "anything:Thing",
-    "schema:name" : "Golf"
+    "rdfs:label" : "Golf"
   }, {
     "@id" : "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A",
     "@type" : "anything:Thing",
-    "schema:name" : "Echo"
+    "rdfs:label" : "Echo"
   }, {
     "@id" : "http://rdfh.ch/anything/thing_with_BCE_date",
     "@type" : "anything:Thing",
-    "schema:name" : "A thing that has a BCE date value"
+    "rdfs:label" : "A thing that has a BCE date value"
   }, {
     "@id" : "http://rdfh.ch/anything/thing_with_BCE_date2",
     "@type" : "anything:Thing",
-    "schema:name" : "A thing that has a BCE date value"
+    "rdfs:label" : "A thing that has a BCE date value"
   }, {
     "@id" : "http://rdfh.ch/anything/thing_with_list_value",
     "@type" : "anything:Thing",
-    "schema:name" : "A thing that has a list value"
+    "rdfs:label" : "A thing that has a list value"
   }, {
     "@id" : "http://rdfh.ch/anything/thing_with_two_list_values",
     "@type" : "anything:Thing",
-    "schema:name" : "A thing that has two list values"
+    "rdfs:label" : "A thing that has two list values"
   }, {
     "@id" : "http://rdfh.ch/anything/uqmMo72OQ2K2xe7mkIytlg",
     "@type" : "anything:Thing",
@@ -52,7 +52,7 @@
       "@type" : "knora-api:BooleanValue",
       "knora-api:booleanValueAsBoolean" : true
     },
-    "schema:name" : "Testding for extended search"
+    "rdfs:label" : "Testding for extended search"
   } ],
   "schema:numberOfItems" : 12,
   "@context" : {

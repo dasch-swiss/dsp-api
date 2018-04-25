@@ -24,10 +24,10 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/9d626dc76c03",
         "@type" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
-        "schema:name" : "u1r"
+        "rdfs:label" : "u1r"
       }
     },
-    "schema:name" : "Siehe Seite c5v"
+    "rdfs:label" : "Siehe Seite c5v"
   }, {
     "@id" : "http://data.knora.org/b6b64a62b006",
     "@type" : "knora-api:Region",
@@ -52,10 +52,10 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/9d626dc76c03",
         "@type" : "http://0.0.0.0:3333/ontology/incunabula/v2#page",
-        "schema:name" : "u1r"
+        "rdfs:label" : "u1r"
       }
     },
-    "schema:name" : "Derselbe Holzschnitt wird auf Seite c5v verwendet."
+    "rdfs:label" : "Derselbe Holzschnitt wird auf Seite c5v verwendet."
   } ],
   "schema:numberOfItems" : 2,
   "@context" : {

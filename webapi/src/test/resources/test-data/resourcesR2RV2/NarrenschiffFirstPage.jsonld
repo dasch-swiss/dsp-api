@@ -19,7 +19,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -46,7 +46,7 @@
       "knora-api:stillImageFileValueHasDimY" : 5251,
       "knora-api:stillImageFileValueHasIIIFBaseUrl" : "http://localhost:1024/knora"
     } ],
-    "schema:name" : "Vorsatzblatt, recto"
+    "rdfs:label" : "Vorsatzblatt, recto"
   },
   "schema:numberOfItems" : 1,
   "@context" : {

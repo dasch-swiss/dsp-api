@@ -114,7 +114,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320"
     },
-    "schema:name" : "Reise ins Heilige Land"
+    "rdfs:label" : "Reise ins Heilige Land"
   },
   "schema:numberOfItems" : 1,
   "@context" : {

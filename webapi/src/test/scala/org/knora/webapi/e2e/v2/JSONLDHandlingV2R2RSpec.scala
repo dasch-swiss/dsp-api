@@ -64,10 +64,6 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    private val anythingUser = SharedTestDataADM.anythingUser1
-
-    private val password = "test"
-
     private val rdfDataObjects = List(
 
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),

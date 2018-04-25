@@ -9,7 +9,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -17,7 +17,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 1
     },
-    "schema:name" : "Vorsatzblatt, recto"
+    "rdfs:label" : "Vorsatzblatt, recto"
   }, {
     "@id" : "http://data.knora.org/40c11d94b703",
     "@type" : "incunabula:page",
@@ -27,7 +27,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -35,7 +35,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 2
     },
-    "schema:name" : "Vorsatzblatt, verso"
+    "rdfs:label" : "Vorsatzblatt, verso"
   }, {
     "@id" : "http://data.knora.org/05c7acceb703",
     "@type" : "incunabula:page",
@@ -45,7 +45,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -53,7 +53,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 3
     },
-    "schema:name" : "a1r; Titelblatt, recto"
+    "rdfs:label" : "a1r; Titelblatt, recto"
   }, {
     "@id" : "http://data.knora.org/cacc3b09b803",
     "@type" : "incunabula:page",
@@ -63,7 +63,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -71,7 +71,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 4
     },
-    "schema:name" : "a1v; Titelblatt, verso"
+    "rdfs:label" : "a1v; Titelblatt, verso"
   }, {
     "@id" : "http://data.knora.org/8fd2ca43b803",
     "@type" : "incunabula:page",
@@ -81,7 +81,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -89,7 +89,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 5
     },
-    "schema:name" : "a2r"
+    "rdfs:label" : "a2r"
   }, {
     "@id" : "http://data.knora.org/54d8597eb803",
     "@type" : "incunabula:page",
@@ -99,7 +99,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -107,7 +107,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 6
     },
-    "schema:name" : "a2v"
+    "rdfs:label" : "a2v"
   }, {
     "@id" : "http://data.knora.org/19dee8b8b803",
     "@type" : "incunabula:page",
@@ -117,7 +117,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -125,7 +125,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 7
     },
-    "schema:name" : "a3r"
+    "rdfs:label" : "a3r"
   }, {
     "@id" : "http://data.knora.org/dee377f3b803",
     "@type" : "incunabula:page",
@@ -135,7 +135,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -143,7 +143,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 8
     },
-    "schema:name" : "a3v"
+    "rdfs:label" : "a3v"
   }, {
     "@id" : "http://data.knora.org/a3e9062eb903",
     "@type" : "incunabula:page",
@@ -153,7 +153,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -161,7 +161,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 9
     },
-    "schema:name" : "a4r"
+    "rdfs:label" : "a4r"
   }, {
     "@id" : "http://data.knora.org/68ef9568b903",
     "@type" : "incunabula:page",
@@ -171,7 +171,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -179,7 +179,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 10
     },
-    "schema:name" : "a4v"
+    "rdfs:label" : "a4v"
   }, {
     "@id" : "http://data.knora.org/2df524a3b903",
     "@type" : "incunabula:page",
@@ -189,7 +189,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -197,7 +197,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 11
     },
-    "schema:name" : "a5r"
+    "rdfs:label" : "a5r"
   }, {
     "@id" : "http://data.knora.org/f2fab3ddb903",
     "@type" : "incunabula:page",
@@ -207,7 +207,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -215,7 +215,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 12
     },
-    "schema:name" : "a5v"
+    "rdfs:label" : "a5v"
   }, {
     "@id" : "http://data.knora.org/b7004318ba03",
     "@type" : "incunabula:page",
@@ -225,7 +225,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -233,7 +233,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 13
     },
-    "schema:name" : "a6r"
+    "rdfs:label" : "a6r"
   }, {
     "@id" : "http://data.knora.org/7c06d252ba03",
     "@type" : "incunabula:page",
@@ -243,7 +243,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -251,7 +251,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 14
     },
-    "schema:name" : "a6v"
+    "rdfs:label" : "a6v"
   }, {
     "@id" : "http://data.knora.org/410c618dba03",
     "@type" : "incunabula:page",
@@ -261,7 +261,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -269,7 +269,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 15
     },
-    "schema:name" : "a7r"
+    "rdfs:label" : "a7r"
   }, {
     "@id" : "http://data.knora.org/0612f0c7ba03",
     "@type" : "incunabula:page",
@@ -279,7 +279,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -287,7 +287,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 16
     },
-    "schema:name" : "a7v"
+    "rdfs:label" : "a7v"
   }, {
     "@id" : "http://data.knora.org/cb177f02bb03",
     "@type" : "incunabula:page",
@@ -297,7 +297,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -305,7 +305,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 17
     },
-    "schema:name" : "a8r"
+    "rdfs:label" : "a8r"
   }, {
     "@id" : "http://data.knora.org/901d0e3dbb03",
     "@type" : "incunabula:page",
@@ -315,7 +315,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -323,7 +323,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 18
     },
-    "schema:name" : "a8v"
+    "rdfs:label" : "a8v"
   }, {
     "@id" : "http://data.knora.org/55239d77bb03",
     "@type" : "incunabula:page",
@@ -333,7 +333,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -341,7 +341,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 19
     },
-    "schema:name" : "b1r"
+    "rdfs:label" : "b1r"
   }, {
     "@id" : "http://data.knora.org/1a292cb2bb03",
     "@type" : "incunabula:page",
@@ -351,7 +351,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -359,7 +359,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 20
     },
-    "schema:name" : "b1v"
+    "rdfs:label" : "b1v"
   }, {
     "@id" : "http://data.knora.org/df2ebbecbb03",
     "@type" : "incunabula:page",
@@ -369,7 +369,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -377,7 +377,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 21
     },
-    "schema:name" : "b2r"
+    "rdfs:label" : "b2r"
   }, {
     "@id" : "http://data.knora.org/a4344a27bc03",
     "@type" : "incunabula:page",
@@ -387,7 +387,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -395,7 +395,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 22
     },
-    "schema:name" : "b2v"
+    "rdfs:label" : "b2v"
   }, {
     "@id" : "http://data.knora.org/693ad961bc03",
     "@type" : "incunabula:page",
@@ -405,7 +405,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -413,7 +413,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 23
     },
-    "schema:name" : "b3r"
+    "rdfs:label" : "b3r"
   }, {
     "@id" : "http://data.knora.org/2e40689cbc03",
     "@type" : "incunabula:page",
@@ -423,7 +423,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -431,7 +431,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 24
     },
-    "schema:name" : "b3v"
+    "rdfs:label" : "b3v"
   }, {
     "@id" : "http://data.knora.org/f345f7d6bc03",
     "@type" : "incunabula:page",
@@ -441,7 +441,7 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://data.knora.org/b6b5ff1eb703",
         "@type" : "incunabula:book",
-        "schema:name" : "[Das] Narrenschiff (lat.)"
+        "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
     "incunabula:seqnum" : {
@@ -449,7 +449,7 @@
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 25
     },
-    "schema:name" : "b4r"
+    "rdfs:label" : "b4r"
   } ],
   "schema:numberOfItems" : 25,
   "@context" : {

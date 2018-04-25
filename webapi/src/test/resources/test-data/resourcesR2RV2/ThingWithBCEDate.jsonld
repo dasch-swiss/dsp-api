@@ -17,7 +17,7 @@
       "knora-api:dateValueHasStartYear" : 44,
       "knora-api:valueAsString" : "0044-03-15 BCE"
     },
-    "schema:name" : "A thing that has a BCE date value"
+    "rdfs:label" : "A thing that has a BCE date value"
   },
   "schema:numberOfItems" : 1,
   "@context" : {

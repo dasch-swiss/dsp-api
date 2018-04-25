@@ -8,7 +8,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi"
     },
-    "schema:name" : "Zeitglöcklein des Lebens und Leidens Christi"
+    "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   }, {
     "@id" : "http://data.knora.org/ff17e5ef9601",
     "@type" : "incunabula:book",
@@ -17,7 +17,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi"
     },
-    "schema:name" : "Zeitglöcklein des Lebens und Leidens Christi"
+    "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   } ],
   "schema:numberOfItems" : 2,
   "@context" : {

@@ -9,7 +9,7 @@
       "knora-api:listValueAsListNode" : "http://data.knora.org/anything/treeList02",
       "knora-api:listValueAsListNodeLabel" : "Baumlistenknoten 02"
     },
-    "schema:name" : "A thing that has a list value"
+    "rdfs:label" : "A thing that has a list value"
   },
   "schema:numberOfItems" : 1,
   "@context" : {
