@@ -1515,7 +1515,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 // this is the second page of results
                 checkCountQuery(responseAs[String], 12)
-
             }
 
         }

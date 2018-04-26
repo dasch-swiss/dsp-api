@@ -1,10 +1,10 @@
 {
   "@type" : "schema:ItemList",
   "schema:itemListElement" : {
-    "@id" : "http://rdfh.ch/anything/uqmMo72OQ2K2xe7mkIytlg",
+    "@id" : "http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg",
     "@type" : "anything:Thing",
     "anything:hasBoolean" : {
-      "@id" : "http://rdfh.ch/anything/WOPBNzp4TM-QxrEVt6U6hQ/values/azE8tXC6RFKv296GXYEg5Q",
+      "@id" : "http://rdfh.ch/0001/WOPBNzp4TM-QxrEVt6U6hQ/values/azE8tXC6RFKv296GXYEg5Q",
       "@type" : "knora-api:BooleanValue",
       "knora-api:booleanValueAsBoolean" : true
     },

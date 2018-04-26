@@ -1,53 +1,58 @@
 {
   "@type" : "schema:ItemList",
   "schema:itemListElement" : [ {
-    "@id" : "http://rdfh.ch/contained-thing-1",
-    "@type" : "p0001-anything:Thing",
-    "schema:name" : "A contained thing that only project members can see"
-  }, {
-    "@id" : "http://rdfh.ch/contained-thing-2",
-    "@type" : "p0001-anything:Thing",
-    "schema:name" : "Another contained thing that only project members can see"
-  }, {
-    "@id" : "http://rdfh.ch/containing-thing",
-    "@type" : "p0001-anything:Thing",
-    "schema:name" : "A containing thing"
-  }, {
-    "@id" : "http://rdfh.ch/iqW_PBiHRdyTFzik8tuSog",
-    "@type" : "p0001-anything:Thing",
-    "schema:name" : "Quebec"
-  }, {
-    "@id" : "http://rdfh.ch/lklGBGI2RR-nWemGTL4uOQ",
-    "@type" : "p0001-anything:Thing",
-    "schema:name" : "Lima"
-  }, {
-    "@id" : "http://rdfh.ch/nResNuvARcWYUdWyo0GWGw",
-    "@type" : "p0001-anything:Thing",
-    "schema:name" : "X-ray"
-  }, {
-    "@id" : "http://rdfh.ch/nVh9YJ1ZStSmCHb9hIdwWw",
+    "@id" : "http://rdfh.ch/0001/nVh9YJ1ZStSmCHb9hIdwWw",
     "@type" : "p0001-anything:Thing",
     "schema:name" : "excluded Charlie"
   }, {
-    "@id" : "http://rdfh.ch/project-thing-1",
+    "@id" : "http://rdfh.ch/0001/project-thing-1",
     "@type" : "p0001-anything:Thing",
     "schema:name" : "A thing that only project members can see"
   }, {
-    "@id" : "http://rdfh.ch/project-thing-2",
+    "@id" : "http://rdfh.ch/0001/project-thing-2",
     "@type" : "p0001-anything:Thing",
     "schema:name" : "Another thing that only project members can see"
   }, {
-    "@id" : "http://rdfh.ch/rzRrc2G1StKUMyZVjJnxuw",
+    "@id" : "http://rdfh.ch/0001/rzRrc2G1StKUMyZVjJnxuw",
     "@type" : "p0001-anything:Thing",
     "schema:name" : "Kilo"
   }, {
-    "@id" : "http://rdfh.ch/sHCLAGg-R5qJ6oPZPV-zOQ",
+    "@id" : "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
     "@type" : "p0001-anything:Thing",
     "schema:name" : "Golf"
   }, {
-    "@id" : "http://rdfh.ch/tPfZeNMvRVujCQqbIbvO0A",
+    "@id" : "http://rdfh.ch/0001/start",
+    "@type" : "p0001-anything:Thing",
+    "schema:name" : "Romeo"
+  }, {
+    "@id" : "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
     "@type" : "p0001-anything:Thing",
     "schema:name" : "Echo"
+  }, {
+    "@id" : "http://rdfh.ch/0001/thing_with_BCE_date",
+    "@type" : "p0001-anything:Thing",
+    "schema:name" : "A thing that has a BCE date value"
+  }, {
+    "@id" : "http://rdfh.ch/0001/thing_with_BCE_date2",
+    "@type" : "p0001-anything:Thing",
+    "schema:name" : "A thing that has a BCE date value"
+  }, {
+    "@id" : "http://rdfh.ch/0001/thing_with_list_value",
+    "@type" : "p0001-anything:Thing",
+    "schema:name" : "A thing that has a list value"
+  }, {
+    "@id" : "http://rdfh.ch/0001/thing_with_two_list_values",
+    "@type" : "p0001-anything:Thing",
+    "schema:name" : "A thing that has two list values"
+  }, {
+    "@id" : "http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg",
+    "@type" : "p0001-anything:Thing",
+    "p0001-anything:hasBoolean" : {
+      "@id" : "http://rdfh.ch/0001/WOPBNzp4TM-QxrEVt6U6hQ/values/azE8tXC6RFKv296GXYEg5Q",
+      "@type" : "knora-api:BooleanValue",
+      "knora-api:booleanValueAsBoolean" : true
+    },
+    "schema:name" : "Testding for extended search"
   } ],
   "schema:numberOfItems" : 12,
   "@context" : {
