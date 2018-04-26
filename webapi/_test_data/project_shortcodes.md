@@ -4,7 +4,7 @@
 #### Default range - `0000` - `00FF`
 
    - system: `0000`
-   - dokubib: `00FE`
+   - anything: `0001`
    - images: `00FF`
 
    
@@ -15,4 +15,7 @@
 
 #### Basel range - `0800` to `08FF`
    - beol: `0801`
+   - biblio: `0802`
+   - incunabula: `0803`
+   - dokubib: `0804`
    - webern: `08AE`

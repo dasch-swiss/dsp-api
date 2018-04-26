@@ -322,7 +322,7 @@ value, or nothing otherwise:
     SELECT ?p ?o
     WHERE {
         BIND(IRI("http://data.knora.org/c5058f3a") as ?resource)
-        BIND(IRI("http://www.knora.org/ontology/incunabula#book_comment") as ?property)
+        BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book_comment") as ?property)
         BIND(IRI("http://data.knora.org/c5058f3a/values/testComment002") as ?searchValue)
 
         ?resource ?property ?currentValue .
@@ -339,7 +339,7 @@ Creating the initial version of a value
     prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-    WITH <http://www.knora.org/ontology/incunabula>
+    WITH <http://www.knora.org/ontology/0803/incunabula>
     INSERT {
         ?newValue rdf:type ?valueType ;
                   knora-base:valueHasString """Comment 1""" ;
@@ -351,7 +351,7 @@ Creating the initial version of a value
         ?resource ?property ?newValue .
     } WHERE {
         BIND(IRI("http://data.knora.org/c5058f3a") as ?resource)
-        BIND(IRI("http://www.knora.org/ontology/incunabula#book_comment") as ?property)
+        BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book_comment") as ?property)
         BIND(IRI("http://data.knora.org/c5058f3a/values/testComment001") AS ?newValue)
         BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType)
         BIND(NOW() AS ?currentTime)
@@ -376,7 +376,7 @@ Adding a new version of a value
     prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-    WITH <http://www.knora.org/ontology/incunabula>
+    WITH <http://www.knora.org/ontology/0803/incunabula>
     DELETE {
         ?resource ?property ?currentValue .
     } INSERT {
@@ -434,7 +434,7 @@ Getting all versions of a value
     SELECT ?value ?valueTimestamp ?previousValue
     WHERE {
         BIND(IRI("http://data.knora.org/c5058f3a") as ?resource)
-        BIND(IRI("http://www.knora.org/ontology/incunabula#book_comment") as ?property)
+        BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book_comment") as ?property)
         BIND(IRI("http://data.knora.org/c5058f3a/values/testComment002") AS ?currentValue)
 
         ?resource ?property ?currentValue .

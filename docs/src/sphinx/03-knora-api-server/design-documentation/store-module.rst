@@ -152,7 +152,7 @@ In ``application.conf`` set to use the embedded triplestore:
             }
             {
                 path = "_test_data/ontologies/incunabula-onto.ttl"
-                name = "http://www.knora.org/ontology/incunabula"
+                name = "http://www.knora.org/ontology/0803/incunabula"
             }
             {
                 path = "_test_data/demo_data/incunabula-demo-data.ttl"
@@ -160,7 +160,7 @@ In ``application.conf`` set to use the embedded triplestore:
             }
             {
                 path = "_test_data/ontologies/images-onto.ttl"
-                name = "http://www.knora.org/ontology/dokubib"
+                name = "http://www.knora.org/ontology/0804/dokubib"
             }
             {
                 path = "_test_data/demo_data/images-demo-data.ttl"
@@ -212,7 +212,7 @@ As an example, to use it inside a test you could write something like:
            RdfDataObject(path = "../knora-ontologies/salsah-gui.ttl",
                          name = "http://www.knora.org/ontology/salsah-gui"),
            RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl",
-                         name = "http://www.knora.org/ontology/incunabula"),
+                         name = "http://www.knora.org/ontology/0803/incunabula"),
            RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl",
                          name = "http://www.knora.org/data/incunabula")
     )

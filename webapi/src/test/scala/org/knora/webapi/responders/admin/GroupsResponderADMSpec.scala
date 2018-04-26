@@ -97,8 +97,8 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                 expectMsg(GroupGetResponseADM(imagesReviewerGroup))
             }
             "return 'NotFoundException' when the group is unknown " in {
-                actorUnderTest ! GroupGetRequestADM("http://data.knora.org/groups/notexisting", rootUser)
-                expectMsg(Failure(NotFoundException(s"For the given group iri 'http://data.knora.org/groups/notexisting' no information was found")))
+                actorUnderTest ! GroupGetRequestADM("http://rdfh.ch/groups/notexisting", rootUser)
+                expectMsg(Failure(NotFoundException(s"For the given group iri 'http://rdfh.ch/groups/notexisting' no information was found")))
             }
         }
 
@@ -174,13 +174,13 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
             "return 'NotFound' if a not-existing group IRI is submitted during update" in {
                 actorUnderTest ! GroupChangeRequestADM(
-                    groupIri = "http://data.knora.org/groups/notexisting",
+                    groupIri = "http://rdfh.ch/groups/notexisting",
                     ChangeGroupApiRequestADM(Some("UpdatedGroupName"), Some("UpdatedDescription")),
                     SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
                 )
 
-                expectMsg(Failure(NotFoundException(s"Group 'http://data.knora.org/groups/notexisting' not found. Aborting update request.")))
+                expectMsg(Failure(NotFoundException(s"Group 'http://rdfh.ch/groups/notexisting' not found. Aborting update request.")))
             }
 
             "return 'BadRequest' if the new group name already exists inside the project" in {
@@ -227,10 +227,10 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
             "return 'NotFound' when the group IRI is unknown" in {
                 actorUnderTest ! GroupMembersGetRequestADM(
-                    groupIri = "http://data.knora.org/groups/notexisting",
+                    groupIri = "http://rdfh.ch/groups/notexisting",
                     requestingUser = SharedTestDataADM.rootUser
                 )
-                expectMsg(Failure(NotFoundException(s"Group 'http://data.knora.org/groups/notexisting' not found.")))
+                expectMsg(Failure(NotFoundException(s"Group 'http://rdfh.ch/groups/notexisting' not found.")))
             }
         }
     }

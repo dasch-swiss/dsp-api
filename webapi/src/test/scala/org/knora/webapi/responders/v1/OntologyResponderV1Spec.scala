@@ -81,23 +81,23 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = Some("maxlength=8;size=8"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Eine eindeutige numerische Bezeichnung einer Buchseite"),
                     label = Some("Seitenbezeichnung"),
-                    name = "http://www.knora.org/ontology/incunabula#pagenum",
-                    id = "http://www.knora.org/ontology/incunabula#pagenum"
+                    name = "http://www.knora.org/ontology/0803/incunabula#pagenum",
+                    id = "http://www.knora.org/ontology/0803/incunabula#pagenum"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(2),
                     gui_name = Some("searchbox"),
-                    attributes = Some("restypeid=http://www.knora.org/ontology/incunabula#book"),
+                    attributes = Some("restypeid=http://www.knora.org/ontology/0803/incunabula#book"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."),
                     label = Some("ist ein Teil von"),
-                    name = "http://www.knora.org/ontology/incunabula#partOf",
-                    id = "http://www.knora.org/ontology/incunabula#partOf"
+                    name = "http://www.knora.org/ontology/0803/incunabula#partOf",
+                    id = "http://www.knora.org/ontology/0803/incunabula#partOf"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(2),
@@ -105,11 +105,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = None,
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Beschreibung"),
                     label = Some("Beschreibung (Richtext)"),
-                    name = "http://www.knora.org/ontology/incunabula#description",
-                    id = "http://www.knora.org/ontology/incunabula#description"
+                    name = "http://www.knora.org/ontology/0803/incunabula#description",
+                    id = "http://www.knora.org/ontology/0803/incunabula#description"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(3),
@@ -117,11 +117,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = Some("max=-1;min=0"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#IntValue",
                     occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Diese Property bezeichnet die Position in einer geordneten Reihenfolge"),
                     label = Some("Sequenznummer"),
-                    name = "http://www.knora.org/ontology/incunabula#seqnum",
-                    id = "http://www.knora.org/ontology/incunabula#seqnum"
+                    name = "http://www.knora.org/ontology/0803/incunabula#seqnum",
+                    id = "http://www.knora.org/ontology/0803/incunabula#seqnum"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(5),
@@ -129,11 +129,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = Some("cols=60;rows=3;wrap=soft"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Stellt einen Verweis dar."),
                     label = Some("Verweis"),
-                    name = "http://www.knora.org/ontology/incunabula#citation",
-                    id = "http://www.knora.org/ontology/incunabula#citation"
+                    name = "http://www.knora.org/ontology/0803/incunabula#citation",
+                    id = "http://www.knora.org/ontology/0803/incunabula#citation"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(6),
@@ -141,11 +141,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = Some("rows=7;width=95%;wrap=soft"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Unstrukturierte Bemerkungen zu einem Objekt"),
                     label = Some("Kommentar"),
-                    name = "http://www.knora.org/ontology/incunabula#page_comment",
-                    id = "http://www.knora.org/ontology/incunabula#page_comment"
+                    name = "http://www.knora.org/ontology/0803/incunabula#page_comment",
+                    id = "http://www.knora.org/ontology/0803/incunabula#page_comment"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(7),
@@ -153,35 +153,35 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = Some("maxlength=128;size=54"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Der originale Dateiname"),
                     label = Some("Urspr\u00FCnglicher Dateiname"),
-                    name = "http://www.knora.org/ontology/incunabula#origname",
-                    id = "http://www.knora.org/ontology/incunabula#origname"
+                    name = "http://www.knora.org/ontology/0803/incunabula#origname",
+                    id = "http://www.knora.org/ontology/0803/incunabula#origname"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(10),
                     gui_name = Some("searchbox"),
-                    attributes = Some("numprops=1;restypeid=http://www.knora.org/ontology/incunabula#Sideband"),
+                    attributes = Some("numprops=1;restypeid=http://www.knora.org/ontology/0803/incunabula#Sideband"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Verweis auf einen Randleistentyp"),
                     label = Some("Randleistentyp links"),
-                    name = "http://www.knora.org/ontology/incunabula#hasLeftSideband",
-                    id = "http://www.knora.org/ontology/incunabula#hasLeftSideband"
+                    name = "http://www.knora.org/ontology/0803/incunabula#hasLeftSideband",
+                    id = "http://www.knora.org/ontology/0803/incunabula#hasLeftSideband"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(11),
                     gui_name = Some("searchbox"),
-                    attributes = Some("numprops=1;restypeid=http://www.knora.org/ontology/incunabula#Sideband"),
+                    attributes = Some("numprops=1;restypeid=http://www.knora.org/ontology/0803/incunabula#Sideband"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
                     occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Verweis auf einen Randleistentyp"),
                     label = Some("Randleistentyp rechts"),
-                    name = "http://www.knora.org/ontology/incunabula#hasRightSideband",
-                    id = "http://www.knora.org/ontology/incunabula#hasRightSideband"
+                    name = "http://www.knora.org/ontology/0803/incunabula#hasRightSideband",
+                    id = "http://www.knora.org/ontology/0803/incunabula#hasRightSideband"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(12),
@@ -189,17 +189,17 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = None,
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Transkription"),
                     label = Some("Transkription"),
-                    name = "http://www.knora.org/ontology/incunabula#transcription",
-                    id = "http://www.knora.org/ontology/incunabula#transcription"
+                    name = "http://www.knora.org/ontology/0803/incunabula#transcription",
+                    id = "http://www.knora.org/ontology/0803/incunabula#transcription"
                 )
             ),
             iconsrc = Some("page.gif"),
             description = Some("Eine Seite ist ein Teil eines Buchs"),
             label = Some("Seite"),
-            name = "http://www.knora.org/ontology/incunabula#page"
+            name = "http://www.knora.org/ontology/0803/incunabula#page"
         )
     )
 
@@ -212,11 +212,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = Some("maxlength=255;size=80"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "1-n",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Titel"),
                     label = Some("Titel"),
-                    name = "http://www.knora.org/ontology/incunabula#title",
-                    id = "http://www.knora.org/ontology/incunabula#title"
+                    name = "http://www.knora.org/ontology/0803/incunabula#title",
+                    id = "http://www.knora.org/ontology/0803/incunabula#title"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(2),
@@ -224,11 +224,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = Some("maxlength=255;size=60"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Erzeuger/Autor"),
                     label = Some("Creator"),
-                    name = "http://www.knora.org/ontology/incunabula#hasAuthor",
-                    id = "http://www.knora.org/ontology/incunabula#hasAuthor"
+                    name = "http://www.knora.org/ontology/0803/incunabula#hasAuthor",
+                    id = "http://www.knora.org/ontology/0803/incunabula#hasAuthor"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(2),
@@ -236,11 +236,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = None,
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Beschreibung"),
                     label = Some("Beschreibung (Richtext)"),
-                    name = "http://www.knora.org/ontology/incunabula#description",
-                    id = "http://www.knora.org/ontology/incunabula#description"
+                    name = "http://www.knora.org/ontology/0803/incunabula#description",
+                    id = "http://www.knora.org/ontology/0803/incunabula#description"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(3),
@@ -248,11 +248,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = Some("maxlength=255;size=60"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Ein Verlag ist ein Medienunternehmen, das Werke der Literatur, Kunst, Musik oder Wissenschaft vervielf\u00E4ltigt und verbreitet. Der Verkauf kann \u00FCber den Handel (Kunst-, Buchhandel etc.) oder durch den Verlag selbst erfolgen. Das Wort \u201Everlegen\u201C bedeutet im Mittelhochdeutschen \u201EGeld ausgeben\u201C oder \u201Eetwas auf seine Rechnung nehmen\u201C. (Wikipedia http://de.wikipedia.org/wiki/Verlag)"),
                     label = Some("Verleger"),
-                    name = "http://www.knora.org/ontology/incunabula#publisher",
-                    id = "http://www.knora.org/ontology/incunabula#publisher"
+                    name = "http://www.knora.org/ontology/0803/incunabula#publisher",
+                    id = "http://www.knora.org/ontology/0803/incunabula#publisher"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(4),
@@ -260,11 +260,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = Some("maxlength=100;size=60"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Ort der Herausgabe"),
                     label = Some("Ort der Herausgabe"),
-                    name = "http://www.knora.org/ontology/incunabula#publoc",
-                    id = "http://www.knora.org/ontology/incunabula#publoc"
+                    name = "http://www.knora.org/ontology/0803/incunabula#publoc",
+                    id = "http://www.knora.org/ontology/0803/incunabula#publoc"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(5),
@@ -272,11 +272,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = Some("cols=60;rows=3;wrap=soft"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Stellt einen Verweis dar."),
                     label = Some("Verweis"),
-                    name = "http://www.knora.org/ontology/incunabula#citation",
-                    id = "http://www.knora.org/ontology/incunabula#citation"
+                    name = "http://www.knora.org/ontology/0803/incunabula#citation",
+                    id = "http://www.knora.org/ontology/0803/incunabula#citation"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(5),
@@ -284,11 +284,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = None,
                     valuetype_id = "http://www.knora.org/ontology/knora-base#DateValue",
                     occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Datum der Herausgabe"),
                     label = Some("Datum der Herausgabe"),
-                    name = "http://www.knora.org/ontology/incunabula#pubdate",
-                    id = "http://www.knora.org/ontology/incunabula#pubdate"
+                    name = "http://www.knora.org/ontology/0803/incunabula#pubdate",
+                    id = "http://www.knora.org/ontology/0803/incunabula#pubdate"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(6),
@@ -296,11 +296,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = Some("cols=60;rows=4;wrap=soft"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Der Ort wo sich das physische Original befindet"),
                     label = Some("Standort"),
-                    name = "http://www.knora.org/ontology/incunabula#location",
-                    id = "http://www.knora.org/ontology/incunabula#location"
+                    name = "http://www.knora.org/ontology/0803/incunabula#location",
+                    id = "http://www.knora.org/ontology/0803/incunabula#location"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(7),
@@ -308,11 +308,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = Some("maxlength=200;size=60"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Uniform Resource Identifier"),
                     label = Some("URI"),
-                    name = "http://www.knora.org/ontology/incunabula#url",
-                    id = "http://www.knora.org/ontology/incunabula#url"
+                    name = "http://www.knora.org/ontology/0803/incunabula#url",
+                    id = "http://www.knora.org/ontology/0803/incunabula#url"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(9),
@@ -320,11 +320,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = Some("cols=60;rows=3;wrap=soft"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-1",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Generelle physische Beschreibung des Objektes wie Material, Gr\u00F6sse etc."),
                     label = Some("Physische Beschreibung"),
-                    name = "http://www.knora.org/ontology/incunabula#physical_desc",
-                    id = "http://www.knora.org/ontology/incunabula#physical_desc"
+                    name = "http://www.knora.org/ontology/0803/incunabula#physical_desc",
+                    id = "http://www.knora.org/ontology/0803/incunabula#physical_desc"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(10),
@@ -332,11 +332,11 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = Some("cols=60;rows=3;wrap=soft"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Eine Anmerkung zum Objekt"),
                     label = Some("Anmerkung"),
-                    name = "http://www.knora.org/ontology/incunabula#note",
-                    id = "http://www.knora.org/ontology/incunabula#note"
+                    name = "http://www.knora.org/ontology/0803/incunabula#note",
+                    id = "http://www.knora.org/ontology/0803/incunabula#note"
                 ),
                 PropertyDefinitionV1(
                     guiorder = Some(12),
@@ -344,17 +344,17 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     attributes = Some("rows=7;width=95%;wrap=soft"),
                     valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                     occurrence = "0-n",
-                    vocabulary = "http://www.knora.org/ontology/incunabula",
+                    vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                     description = Some("Unstrukturierte Bemerkungen zu einem Objekt"),
                     label = Some("Kommentar"),
-                    name = "http://www.knora.org/ontology/incunabula#book_comment",
-                    id = "http://www.knora.org/ontology/incunabula#book_comment"
+                    name = "http://www.knora.org/ontology/0803/incunabula#book_comment",
+                    id = "http://www.knora.org/ontology/0803/incunabula#book_comment"
                 )
             ),
             iconsrc = Some("book.gif"),
             description = Some("Diese Resource-Klasse beschreibt ein Buch"),
             label = Some("Buch"),
-            name = "http://www.knora.org/ontology/incunabula#book"
+            name = "http://www.knora.org/ontology/0803/incunabula#book"
         )
     )
 
@@ -471,143 +471,143 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 properties = Vector(
                     PropertyTypeV1(
                         label = "Publication location",
-                        id = "http://www.knora.org/ontology/incunabula#publoc"
+                        id = "http://www.knora.org/ontology/0803/incunabula#publoc"
                     ),
                     PropertyTypeV1(
                         label = "Creator",
-                        id = "http://www.knora.org/ontology/incunabula#hasAuthor"
+                        id = "http://www.knora.org/ontology/0803/incunabula#hasAuthor"
                     ),
                     PropertyTypeV1(
                         label = "Location",
-                        id = "http://www.knora.org/ontology/incunabula#location"
+                        id = "http://www.knora.org/ontology/0803/incunabula#location"
                     ),
                     PropertyTypeV1(
                         label = "Datum der Herausgabe",
-                        id = "http://www.knora.org/ontology/incunabula#pubdate"
+                        id = "http://www.knora.org/ontology/0803/incunabula#pubdate"
                     ),
                     PropertyTypeV1(
                         label = "Phyiscal description",
-                        id = "http://www.knora.org/ontology/incunabula#physical_desc"
+                        id = "http://www.knora.org/ontology/0803/incunabula#physical_desc"
                     ),
                     PropertyTypeV1(
                         label = "Comment",
-                        id = "http://www.knora.org/ontology/incunabula#book_comment"
+                        id = "http://www.knora.org/ontology/0803/incunabula#book_comment"
                     ),
                     PropertyTypeV1(
                         label = "Note",
-                        id = "http://www.knora.org/ontology/incunabula#note"
+                        id = "http://www.knora.org/ontology/0803/incunabula#note"
                     ),
                     PropertyTypeV1(
                         label = "URI",
-                        id = "http://www.knora.org/ontology/incunabula#url"
+                        id = "http://www.knora.org/ontology/0803/incunabula#url"
                     ),
                     PropertyTypeV1(
                         label = "Citation/reference",
-                        id = "http://www.knora.org/ontology/incunabula#citation"
+                        id = "http://www.knora.org/ontology/0803/incunabula#citation"
                     ),
                     PropertyTypeV1(
                         label = "Publisher",
-                        id = "http://www.knora.org/ontology/incunabula#publisher"
+                        id = "http://www.knora.org/ontology/0803/incunabula#publisher"
                     ),
                     PropertyTypeV1(
                         label = "Title",
-                        id = "http://www.knora.org/ontology/incunabula#title"
+                        id = "http://www.knora.org/ontology/0803/incunabula#title"
                     ),
                     PropertyTypeV1(
                         label = "Description",
-                        id = "http://www.knora.org/ontology/incunabula#description"
+                        id = "http://www.knora.org/ontology/0803/incunabula#description"
                     )
                 ),
                 label = "Book",
-                id = "http://www.knora.org/ontology/incunabula#book"
+                id = "http://www.knora.org/ontology/0803/incunabula#book"
             ),
             ResourceTypeV1(
                 properties = Vector(
                     PropertyTypeV1(
                         label = "Randleistentyp rechts",
-                        id = "http://www.knora.org/ontology/incunabula#hasRightSideband"
+                        id = "http://www.knora.org/ontology/0803/incunabula#hasRightSideband"
                     ),
                     PropertyTypeV1(
                         label = "Comment",
-                        id = "http://www.knora.org/ontology/incunabula#page_comment"
+                        id = "http://www.knora.org/ontology/0803/incunabula#page_comment"
                     ),
                     PropertyTypeV1(
                         label = "Original filename",
-                        id = "http://www.knora.org/ontology/incunabula#origname"
+                        id = "http://www.knora.org/ontology/0803/incunabula#origname"
                     ),
                     PropertyTypeV1(
                         label = "Randleistentyp links",
-                        id = "http://www.knora.org/ontology/incunabula#hasLeftSideband"
+                        id = "http://www.knora.org/ontology/0803/incunabula#hasLeftSideband"
                     ),
                     PropertyTypeV1(
                         label = "Transkription",
-                        id = "http://www.knora.org/ontology/incunabula#transcription"
+                        id = "http://www.knora.org/ontology/0803/incunabula#transcription"
                     ),
                     PropertyTypeV1(
                         label = "Page identifier",
-                        id = "http://www.knora.org/ontology/incunabula#pagenum"
+                        id = "http://www.knora.org/ontology/0803/incunabula#pagenum"
                     ),
                     PropertyTypeV1(
                         "http://www.knora.org/ontology/knora-base#hasStillImageFileValue",
                         "has image file"),
                     PropertyTypeV1(
                         label = "Citation/reference",
-                        id = "http://www.knora.org/ontology/incunabula#citation"
+                        id = "http://www.knora.org/ontology/0803/incunabula#citation"
                     ),
                     PropertyTypeV1(
                         label = "is a part of",
-                        id = "http://www.knora.org/ontology/incunabula#partOf"
+                        id = "http://www.knora.org/ontology/0803/incunabula#partOf"
                     ),
                     PropertyTypeV1(
                         label = "Sequence number",
-                        id = "http://www.knora.org/ontology/incunabula#seqnum"
+                        id = "http://www.knora.org/ontology/0803/incunabula#seqnum"
                     ),
                     PropertyTypeV1(
                         label = "Description",
-                        id = "http://www.knora.org/ontology/incunabula#description"
+                        id = "http://www.knora.org/ontology/0803/incunabula#description"
                     )
                 ),
                 label = "Page",
-                id = "http://www.knora.org/ontology/incunabula#page"
+                id = "http://www.knora.org/ontology/0803/incunabula#page"
             ),
             ResourceTypeV1(
                 properties = Vector(
                     PropertyTypeV1(
                         label = "Kommentar (Richtext)",
-                        id = "http://www.knora.org/ontology/incunabula#sideband_comment"
+                        id = "http://www.knora.org/ontology/0803/incunabula#sideband_comment"
                     ),
                     PropertyTypeV1(
                         label = "Title",
-                        id = "http://www.knora.org/ontology/incunabula#sbTitle"
+                        id = "http://www.knora.org/ontology/0803/incunabula#sbTitle"
                     ),
                     PropertyTypeV1(
                         "http://www.knora.org/ontology/knora-base#hasStillImageFileValue",
                         "has image file"),
                     PropertyTypeV1(
                         label = "Description",
-                        id = "http://www.knora.org/ontology/incunabula#description"
+                        id = "http://www.knora.org/ontology/0803/incunabula#description"
                     )
                 ),
                 label = "Randleiste",
-                id = "http://www.knora.org/ontology/incunabula#Sideband"
+                id = "http://www.knora.org/ontology/0803/incunabula#Sideband"
             ),
             ResourceTypeV1(
                 properties = Vector(
                     PropertyTypeV1(
                         label = "Verbindung mit einem Buch",
-                        id = "http://www.knora.org/ontology/incunabula#miscHasBook"
+                        id = "http://www.knora.org/ontology/0803/incunabula#miscHasBook"
                     ),
                     PropertyTypeV1(
                         label = "Farbe",
-                        id = "http://www.knora.org/ontology/incunabula#miscHasColor"
+                        id = "http://www.knora.org/ontology/0803/incunabula#miscHasColor"
                     ),
                     PropertyTypeV1(
                         label = "Geometrie",
-                        id = "http://www.knora.org/ontology/incunabula#miscHasGeometry"
+                        id = "http://www.knora.org/ontology/0803/incunabula#miscHasGeometry"
                     )
                 ),
                 label = "Sonstiges",
-                id = "http://www.knora.org/ontology/incunabula#misc"
+                id = "http://www.knora.org/ontology/0803/incunabula#misc"
             )
         )
     )
@@ -669,12 +669,12 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 id = SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI
             ),
             NamedGraphV1( // something
-                shortname = "anything",
-                description = "Anything Project",
-                uri = "http://www.knora.org/ontology/something",
-                id = "http://www.knora.org/ontology/something",
-                project_id = "http://rdfh.ch/projects/anything",
-                longname = "Anything Project",
+                shortname = SharedTestDataV1.anythingProjectInfo.shortname,
+                description = SharedTestDataV1.anythingProjectInfo.description.get,
+                uri = "http://www.knora.org/ontology/0001/something",
+                id = "http://www.knora.org/ontology/0001/something",
+                project_id = SharedTestDataV1.anythingProjectInfo.id,
+                longname = SharedTestDataV1.anythingProjectInfo.longname.get,
                 active = true
             ),
             NamedGraphV1( // Dokubib
@@ -704,251 +704,251 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 gui_name = Some("text"),
                 attributes = Some("maxlength=255;size=60"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Erzeuger/Autor"),
                 label = Some("Creator"),
-                name = "http://www.knora.org/ontology/incunabula#hasAuthor",
-                id = "http://www.knora.org/ontology/incunabula#hasAuthor"
+                name = "http://www.knora.org/ontology/0803/incunabula#hasAuthor",
+                id = "http://www.knora.org/ontology/0803/incunabula#hasAuthor"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("geometry"),
                 attributes = None,
                 valuetype_id = "http://www.knora.org/ontology/knora-base#GeomValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = None,
                 label = Some("Geometrie"),
-                name = "http://www.knora.org/ontology/incunabula#miscHasGeometry",
-                id = "http://www.knora.org/ontology/incunabula#miscHasGeometry"
+                name = "http://www.knora.org/ontology/0803/incunabula#miscHasGeometry",
+                id = "http://www.knora.org/ontology/0803/incunabula#miscHasGeometry"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("text"),
                 attributes = Some("maxlength=255;size=80"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Titel"),
                 label = Some("Title"),
-                name = "http://www.knora.org/ontology/incunabula#title",
-                id = "http://www.knora.org/ontology/incunabula#title"
+                name = "http://www.knora.org/ontology/0803/incunabula#title",
+                id = "http://www.knora.org/ontology/0803/incunabula#title"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("textarea"),
                 attributes = Some("cols=60;rows=3;wrap=soft"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Stellt einen Verweis dar."),
                 label = Some("Citation/reference"),
-                name = "http://www.knora.org/ontology/incunabula#citation",
-                id = "http://www.knora.org/ontology/incunabula#citation"
+                name = "http://www.knora.org/ontology/0803/incunabula#citation",
+                id = "http://www.knora.org/ontology/0803/incunabula#citation"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("richtext"),
                 attributes = None,
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Unstrukturierte Bemerkungen zu einem Objekt"),
                 label = Some("Kommentar (Richtext)"),
-                name = "http://www.knora.org/ontology/incunabula#sideband_comment",
-                id = "http://www.knora.org/ontology/incunabula#sideband_comment"
+                name = "http://www.knora.org/ontology/0803/incunabula#sideband_comment",
+                id = "http://www.knora.org/ontology/0803/incunabula#sideband_comment"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("searchbox"),
-                attributes = Some("restypeid=http://www.knora.org/ontology/incunabula#book"),
+                attributes = Some("restypeid=http://www.knora.org/ontology/0803/incunabula#book"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."),
                 label = Some("is a part of"),
-                name = "http://www.knora.org/ontology/incunabula#partOf",
-                id = "http://www.knora.org/ontology/incunabula#partOf"
+                name = "http://www.knora.org/ontology/0803/incunabula#partOf",
+                id = "http://www.knora.org/ontology/0803/incunabula#partOf"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("textarea"),
                 attributes = Some("cols=60;rows=4;wrap=soft"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Der Ort wo sich das physische Original befindet"),
                 label = Some("Location"),
-                name = "http://www.knora.org/ontology/incunabula#location",
-                id = "http://www.knora.org/ontology/incunabula#location"
+                name = "http://www.knora.org/ontology/0803/incunabula#location",
+                id = "http://www.knora.org/ontology/0803/incunabula#location"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("colorpicker"),
                 attributes = None,
                 valuetype_id = "http://www.knora.org/ontology/knora-base#ColorValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = None,
                 label = Some("Farbe"),
-                name = "http://www.knora.org/ontology/incunabula#miscHasColor",
-                id = "http://www.knora.org/ontology/incunabula#miscHasColor"
+                name = "http://www.knora.org/ontology/0803/incunabula#miscHasColor",
+                id = "http://www.knora.org/ontology/0803/incunabula#miscHasColor"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("text"),
                 attributes = Some("maxlength=255;size=80"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = None,
                 label = Some("Title"),
-                name = "http://www.knora.org/ontology/incunabula#sbTitle",
-                id = "http://www.knora.org/ontology/incunabula#sbTitle"
+                name = "http://www.knora.org/ontology/0803/incunabula#sbTitle",
+                id = "http://www.knora.org/ontology/0803/incunabula#sbTitle"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("text"),
                 attributes = Some("maxlength=8;size=8"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("A distinct identification of a book page"),
                 label = Some("Page identifier"),
-                name = "http://www.knora.org/ontology/incunabula#pagenum",
-                id = "http://www.knora.org/ontology/incunabula#pagenum"
+                name = "http://www.knora.org/ontology/0803/incunabula#pagenum",
+                id = "http://www.knora.org/ontology/0803/incunabula#pagenum"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("richtext"),
                 attributes = None,
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Transkription"),
                 label = Some("Transkription"),
-                name = "http://www.knora.org/ontology/incunabula#transcription",
-                id = "http://www.knora.org/ontology/incunabula#transcription"
+                name = "http://www.knora.org/ontology/0803/incunabula#transcription",
+                id = "http://www.knora.org/ontology/0803/incunabula#transcription"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("text"),
                 attributes = Some("maxlength=200;size=60"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Uniform Resource Identifier"),
                 label = Some("URI"),
-                name = "http://www.knora.org/ontology/incunabula#url",
-                id = "http://www.knora.org/ontology/incunabula#url"
+                name = "http://www.knora.org/ontology/0803/incunabula#url",
+                id = "http://www.knora.org/ontology/0803/incunabula#url"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("searchbox"),
-                attributes = Some("restypeid=http://www.knora.org/ontology/incunabula#book"),
+                attributes = Some("restypeid=http://www.knora.org/ontology/0803/incunabula#book"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = None,
                 label = Some("Verbindung mit einem Buch"),
-                name = "http://www.knora.org/ontology/incunabula#miscHasBook",
-                id = "http://www.knora.org/ontology/incunabula#miscHasBook"
+                name = "http://www.knora.org/ontology/0803/incunabula#miscHasBook",
+                id = "http://www.knora.org/ontology/0803/incunabula#miscHasBook"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("searchbox"),
-                attributes = Some("numprops=1;restypeid=http://www.knora.org/ontology/incunabula#Sideband"),
+                attributes = Some("numprops=1;restypeid=http://www.knora.org/ontology/0803/incunabula#Sideband"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Verweis auf einen Randleistentyp"),
                 label = Some("Randleistentyp rechts"),
-                name = "http://www.knora.org/ontology/incunabula#hasRightSideband",
-                id = "http://www.knora.org/ontology/incunabula#hasRightSideband"
+                name = "http://www.knora.org/ontology/0803/incunabula#hasRightSideband",
+                id = "http://www.knora.org/ontology/0803/incunabula#hasRightSideband"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("textarea"),
                 attributes = Some("cols=60;rows=3;wrap=soft"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Generelle physische Beschreibung des Objektes wie Material, Gr\u00F6sse etc."),
                 label = Some("Phyiscal description"),
-                name = "http://www.knora.org/ontology/incunabula#physical_desc",
-                id = "http://www.knora.org/ontology/incunabula#physical_desc"
+                name = "http://www.knora.org/ontology/0803/incunabula#physical_desc",
+                id = "http://www.knora.org/ontology/0803/incunabula#physical_desc"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("searchbox"),
-                attributes = Some("numprops=1;restypeid=http://www.knora.org/ontology/incunabula#Sideband"),
+                attributes = Some("numprops=1;restypeid=http://www.knora.org/ontology/0803/incunabula#Sideband"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Verweis auf einen Randleistentyp"),
                 label = Some("Randleistentyp links"),
-                name = "http://www.knora.org/ontology/incunabula#hasLeftSideband",
-                id = "http://www.knora.org/ontology/incunabula#hasLeftSideband"
+                name = "http://www.knora.org/ontology/0803/incunabula#hasLeftSideband",
+                id = "http://www.knora.org/ontology/0803/incunabula#hasLeftSideband"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("textarea"),
                 attributes = Some("rows=7;width=95%;wrap=soft"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Unstrukturierte Bemerkungen zu einem Objekt"),
                 label = Some("Comment"),
-                name = "http://www.knora.org/ontology/incunabula#book_comment",
-                id = "http://www.knora.org/ontology/incunabula#book_comment"
+                name = "http://www.knora.org/ontology/0803/incunabula#book_comment",
+                id = "http://www.knora.org/ontology/0803/incunabula#book_comment"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("richtext"),
                 attributes = None,
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Beschreibung"),
                 label = Some("Beschreibung (Richtext)"),
-                name = "http://www.knora.org/ontology/incunabula#description",
-                id = "http://www.knora.org/ontology/incunabula#description"
+                name = "http://www.knora.org/ontology/0803/incunabula#description",
+                id = "http://www.knora.org/ontology/0803/incunabula#description"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("textarea"),
                 attributes = Some("rows=7;width=95%;wrap=soft"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Unstrukturierte Bemerkungen zu einem Objekt"),
                 label = Some("Comment"),
-                name = "http://www.knora.org/ontology/incunabula#page_comment",
-                id = "http://www.knora.org/ontology/incunabula#page_comment"
+                name = "http://www.knora.org/ontology/0803/incunabula#page_comment",
+                id = "http://www.knora.org/ontology/0803/incunabula#page_comment"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("text"),
                 attributes = Some("maxlength=100;size=60"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Ort der Herausgabe"),
                 label = Some("Publication location"),
-                name = "http://www.knora.org/ontology/incunabula#publoc",
-                id = "http://www.knora.org/ontology/incunabula#publoc"
+                name = "http://www.knora.org/ontology/0803/incunabula#publoc",
+                id = "http://www.knora.org/ontology/0803/incunabula#publoc"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("date"),
                 attributes = None,
                 valuetype_id = "http://www.knora.org/ontology/knora-base#DateValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Datum der Herausgabe"),
                 label = Some("Datum der Herausgabe"),
-                name = "http://www.knora.org/ontology/incunabula#pubdate",
-                id = "http://www.knora.org/ontology/incunabula#pubdate"
+                name = "http://www.knora.org/ontology/0803/incunabula#pubdate",
+                id = "http://www.knora.org/ontology/0803/incunabula#pubdate"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("text"),
                 attributes = Some("maxlength=128;size=54"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Der originale Dateiname"),
                 label = Some("Urspr\u00FCnglicher Dateiname"),
-                name = "http://www.knora.org/ontology/incunabula#origname",
-                id = "http://www.knora.org/ontology/incunabula#origname"
+                name = "http://www.knora.org/ontology/0803/incunabula#origname",
+                id = "http://www.knora.org/ontology/0803/incunabula#origname"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("text"),
                 attributes = Some("maxlength=255;size=60"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Publishing is the process of production and dissemination of literature or information \u2013 the activity of making information available for public view. In some cases authors may be their own publishers, meaning: originators and developers of content also provide media to deliver and display the content. (Wikipedia http://en.wikipedia.org/wiki/Publisher)"),
                 label = Some("Publisher"),
-                name = "http://www.knora.org/ontology/incunabula#publisher",
-                id = "http://www.knora.org/ontology/incunabula#publisher"
+                name = "http://www.knora.org/ontology/0803/incunabula#publisher",
+                id = "http://www.knora.org/ontology/0803/incunabula#publisher"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("spinbox"),
                 attributes = Some("max=-1;min=0"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#IntValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("This property stands for the position within a set of rdered items (resoucres)"),
                 label = Some("Sequence number"),
-                name = "http://www.knora.org/ontology/incunabula#seqnum",
-                id = "http://www.knora.org/ontology/incunabula#seqnum"
+                name = "http://www.knora.org/ontology/0803/incunabula#seqnum",
+                id = "http://www.knora.org/ontology/0803/incunabula#seqnum"
             ),
             PropertyDefinitionInNamedGraphV1(
                 gui_name = Some("textarea"),
                 attributes = Some("cols=60;rows=3;wrap=soft"),
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
-                vocabulary = "http://www.knora.org/ontology/incunabula",
+                vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("A note concerning the object"),
                 label = Some("Note"),
-                name = "http://www.knora.org/ontology/incunabula#note",
-                id = "http://www.knora.org/ontology/incunabula#note"
+                name = "http://www.knora.org/ontology/0803/incunabula#note",
+                id = "http://www.knora.org/ontology/0803/incunabula#note"
             )
         )
     )
@@ -1010,7 +1010,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             // http://localhost:3333/v1/resourcetypes/http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page
             actorUnderTest ! ResourceTypeGetRequestV1(
                 userProfile = OntologyResponderV1Spec.userProfileWithGerman,
-                resourceTypeIri = "http://www.knora.org/ontology/incunabula#page"
+                resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#page"
             )
 
             expectMsgPF(timeout) {
@@ -1023,7 +1023,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             // http://localhost:3333/v1/resourcetypes/http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
             actorUnderTest ! ResourceTypeGetRequestV1(
                 userProfile = OntologyResponderV1Spec.userProfileWithGerman,
-                resourceTypeIri = "http://www.knora.org/ontology/incunabula#book"
+                resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#book"
             )
 
             expectMsgPF(timeout) {
@@ -1063,7 +1063,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! ResourceTypeGetRequestV1(
                 userProfile = OntologyResponderV1Spec.userProfileWithGerman,
-                resourceTypeIri = "http://www.knora.org/ontology/incunabula#image"
+                resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#image"
             )
 
             expectMsgPF(timeout) {
@@ -1073,13 +1073,13 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         "return labels in the user's preferred language" in {
             actorUnderTest ! EntityInfoGetRequestV1(
-                propertyIris = Set("http://www.knora.org/ontology/incunabula#title"),
+                propertyIris = Set("http://www.knora.org/ontology/0803/incunabula#title"),
                 userProfile = OntologyResponderV1Spec.userProfileWithGerman // irrelevant
             )
 
             expectMsgPF(timeout) {
                 case msg: EntityInfoGetResponseV1 =>
-                    val titleContent = msg.propertyInfoMap("http://www.knora.org/ontology/incunabula#title")
+                    val titleContent = msg.propertyInfoMap("http://www.knora.org/ontology/0803/incunabula#title")
                     titleContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(("de", "en"))) should ===(Some("Titel"))
                     titleContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(("fr", "en"))) should ===(Some("Titre"))
             }
@@ -1090,18 +1090,15 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 userProfile = OntologyResponderV1Spec.userProfileWithEnglish
             )
 
-            expectMsgPF(timeout) {
-                case receivedMsg: NamedGraphsResponseV1 => {
-                    checkVocabularies(received = receivedMsg, expected = vocabulariesResponseV1)
-                    receivedMsg.vocabularies should contain allElementsOf vocabulariesResponseV1.vocabularies
-                }
-            }
+            val receivedMsg = expectMsgType[NamedGraphsResponseV1](timeout)
+            checkVocabularies(received = receivedMsg, expected = vocabulariesResponseV1)
+            // receivedMsg.vocabularies should contain allElementsOf vocabulariesResponseV1.vocabularies
 
         }
 
         "get all the resource classes with their property types for incunabula named graph" in {
             actorUnderTest ! ResourceTypesForNamedGraphGetRequestV1(
-                namedGraph = Some("http://www.knora.org/ontology/incunabula"),
+                namedGraph = Some("http://www.knora.org/ontology/0803/incunabula"),
                 userProfile = OntologyResponderV1Spec.userProfileWithEnglish
             )
 
@@ -1114,7 +1111,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         "get all the properties for the named graph incunabula" in {
             actorUnderTest ! PropertyTypesForNamedGraphGetRequestV1(
-                namedGraph = Some("http://www.knora.org/ontology/incunabula"),
+                namedGraph = Some("http://www.knora.org/ontology/0803/incunabula"),
                 userProfile = OntologyResponderV1Spec.userProfileWithEnglish
             )
 

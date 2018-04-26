@@ -103,7 +103,7 @@ Get Information about a Resource Class
 Get a Resource Class by its IRI
 -------------------------------
 
-In order to get information about a resource class, the path segment ``resourcetypes`` can be used. Append the IRI of the resource class to the URL (e.g. ``http://www.knora.org/ontology/incunabula#book``).
+In order to get information about a resource class, the path segment ``resourcetypes`` can be used. Append the IRI of the resource class to the URL (e.g. ``http://www.knora.org/ontology/0803/incunabula#book``).
 
 ::
 

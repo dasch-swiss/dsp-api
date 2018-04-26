@@ -40,13 +40,13 @@ class InputOntologiesV2Spec extends CoreSpec {
                 """
                   |{
                   |  "knora-api:hasOntologies" : {
-                  |    "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+                  |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                   |    "@type" : "owl:Ontology",
                   |    "knora-api:hasProperties" : {
                   |      "anything:hasName" : {
                   |        "@id" : "anything:hasName",
                   |        "@type" : "owl:ObjectProperty",
-                  |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/anything/v2#Thing",
+                  |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
                   |        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
                   |        "rdfs:comment" : [ {
                   |          "@language" : "en",
@@ -73,7 +73,7 @@ class InputOntologiesV2Spec extends CoreSpec {
                   |    "owl" : "http://www.w3.org/2002/07/owl#",
                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                  |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+                  |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                   |  }
                   |}
                 """.stripMargin
@@ -87,7 +87,7 @@ class InputOntologiesV2Spec extends CoreSpec {
                 s"""
                    |{
                    |  "knora-api:hasOntologies" : {
-                   |    "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+                   |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |    "@type" : "owl:Ontology",
                    |    "knora-api:hasClasses" : {
                    |      "anything:WildThing" : {
@@ -102,11 +102,11 @@ class InputOntologiesV2Spec extends CoreSpec {
                    |          "@value" : "A thing that is wild"
                    |        },
                    |        "rdfs:subClassOf" : [
-                   |            "http://0.0.0.0:3333/ontology/anything/v2#Thing",
+                   |            "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
                    |            {
                    |                "@type": "http://www.w3.org/2002/07/owl#Restriction",
                    |                "owl:maxCardinality": 1,
-                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/anything/v2#hasName"
+                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName"
                    |            }
                    |        ]
                    |      }
@@ -119,7 +119,7 @@ class InputOntologiesV2Spec extends CoreSpec {
                    |    "owl" : "http://www.w3.org/2002/07/owl#",
                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                    |  }
                    |}
             """.stripMargin
@@ -133,7 +133,7 @@ class InputOntologiesV2Spec extends CoreSpec {
                 s"""
                    |{
                    |  "knora-api:hasOntologies" : {
-                   |    "@id" : "http://0.0.0.0:3333/ontology/incunabula/v2",
+                   |    "@id" : "http://0.0.0.0:3333/ontology/0001/incunabula/v2",
                    |    "@type" : "owl:Ontology",
                    |    "knora-api:hasClasses" : {
                    |      "anything:WildThing" : {
@@ -148,11 +148,11 @@ class InputOntologiesV2Spec extends CoreSpec {
                    |          "@value" : "A thing that is wild"
                    |        },
                    |        "rdfs:subClassOf" : [
-                   |            "http://0.0.0.0:3333/ontology/anything/v2#Thing",
+                   |            "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
                    |            {
                    |                "@type": "http://www.w3.org/2002/07/owl#Restriction",
                    |                "owl:maxCardinality": 1,
-                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/anything/v2#hasName"
+                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName"
                    |            }
                    |        ]
                    |      }
@@ -165,7 +165,7 @@ class InputOntologiesV2Spec extends CoreSpec {
                    |    "owl" : "http://www.w3.org/2002/07/owl#",
                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                    |  }
                    |}
             """.stripMargin
@@ -180,7 +180,7 @@ class InputOntologiesV2Spec extends CoreSpec {
                 s"""
                    |{
                    |  "knora-api:hasOntologies" : {
-                   |    "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+                   |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |    "@type" : "owl:Ontology",
                    |    "knora-api:hasClasses" : {
                    |      "anything:WildThing" : {
@@ -195,11 +195,11 @@ class InputOntologiesV2Spec extends CoreSpec {
                    |          "@value" : "A thing that is wild"
                    |        },
                    |        "rdfs:subClassOf" : [
-                   |            "http://0.0.0.0:3333/ontology/anything/v2#Thing",
+                   |            "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
                    |            {
                    |                "@type": "http://www.w3.org/2002/07/owl#Restriction",
                    |                "owl:maxCardinality": 1,
-                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/anything/v2#hasName"
+                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName"
                    |            }
                    |        ]
                    |      }
@@ -212,7 +212,7 @@ class InputOntologiesV2Spec extends CoreSpec {
                    |    "owl" : "http://www.w3.org/2002/07/owl#",
                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                    |  }
                    |}
             """.stripMargin
@@ -229,12 +229,12 @@ object InputOntologiesV2Spec {
 
     val PropertyDef = InputOntologiesV2(ontologies = Vector(InputOntologyV2(
         ontologyMetadata = OntologyMetadataV2(
-            ontologyIri = "http://0.0.0.0:3333/ontology/anything/v2".toSmartIri,
+            ontologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
             label = None,
             lastModificationDate = Some(Instant.parse("2017-12-19T15:23:42.166Z"))
         ),
-        properties = Map("http://0.0.0.0:3333/ontology/anything/v2#hasName".toSmartIri -> PropertyInfoContentV2(
-            propertyIri = "http://0.0.0.0:3333/ontology/anything/v2#hasName".toSmartIri,
+        properties = Map("http://0.0.0.0:3333/ontology/0001/anything/v2#hasName".toSmartIri -> PropertyInfoContentV2(
+            propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName".toSmartIri,
             predicates = Map(
                 "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
                     predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
@@ -242,7 +242,7 @@ object InputOntologiesV2Spec {
                 ),
                 "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
                     predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-                    objects = Seq(SmartIriLiteralV2("http://0.0.0.0:3333/ontology/anything/v2#Thing".toSmartIri)),
+                    objects = Seq(SmartIriLiteralV2("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)),
                 ),
                 "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
                     predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
@@ -272,7 +272,7 @@ object InputOntologiesV2Spec {
     )))
 
     val ClassDef = InputOntologiesV2(ontologies = Vector(InputOntologyV2(
-        classes = Map("http://0.0.0.0:3333/ontology/anything/v2#WildThing".toSmartIri -> ClassInfoContentV2(
+        classes = Map("http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri -> ClassInfoContentV2(
             predicates = Map(
                 "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
                     predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
@@ -287,13 +287,13 @@ object InputOntologiesV2Spec {
                     objects = Seq(StringLiteralV2("A thing that is wild", Some("en")))
                 )
             ),
-            classIri = "http://0.0.0.0:3333/ontology/anything/v2#WildThing".toSmartIri,
+            classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri,
             ontologySchema = ApiV2WithValueObjects,
-            directCardinalities = Map("http://0.0.0.0:3333/ontology/anything/v2#hasName".toSmartIri -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
-            subClassOf = Set("http://0.0.0.0:3333/ontology/anything/v2#Thing".toSmartIri)
+            directCardinalities = Map("http://0.0.0.0:3333/ontology/0001/anything/v2#hasName".toSmartIri -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
+            subClassOf = Set("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
         )),
         ontologyMetadata = OntologyMetadataV2(
-            ontologyIri = "http://0.0.0.0:3333/ontology/anything/v2".toSmartIri,
+            ontologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
             lastModificationDate = Some(Instant.parse("2017-12-19T15:23:42.166Z"))
         ),
         properties = Map()

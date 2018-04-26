@@ -232,7 +232,7 @@ consisting of the following exemplary content:
       },
       {
         "path": "_test_data/ontologies/incunabula-onto.ttl",
-        "name": "http://www.knora.org/ontology/incunabula"
+        "name": "http://www.knora.org/ontology/0803/incunabula"
       },
       {
         "path": "_test_data/all_data/incunabula-data.ttl",

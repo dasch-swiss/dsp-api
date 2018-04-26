@@ -468,7 +468,12 @@ object ResourceContextCodeV1 extends Enumeration {
     object ResourceContextCodeV1Protocol extends DefaultJsonProtocol {
 
         implicit object ResourceContextCodeV1Format extends JsonFormat[ResourceContextCodeV1.Value] {
-            def read(jsonVal: JsValue): Value = ???
+            def read(jsonVal: JsValue): Value = jsonVal.convertTo[Int] match {
+                case 0 => RESOURCE_CONTEXT_NONE
+                case 1 => RESOURCE_CONTEXT_IS_PARTOF
+                case 2 => RESOURCE_CONTEXT_IS_COMPOUND
+                case other => throw DataConversionException(s"Unsupported ResourceContextCodeV1: '$other")
+            }
 
             def write(contextCode: Value): JsValue = contextCode.id.toJson
         }

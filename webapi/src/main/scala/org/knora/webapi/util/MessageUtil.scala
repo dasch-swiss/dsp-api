@@ -220,18 +220,18 @@ object MessageUtil {
         firstname = Some("User"),
         username = Some("testuser"),
         token = None,
-        user_id = Some("http://data.knora.org/users/b83acc5f05"),
+        user_id = Some("http://rdfh.ch/users/b83acc5f05"),
         lang = "de"
     )
 
     private val userProfile = UserProfileV1(
-        projects = Vector("http://data.knora.org/projects/77275339"),
+        projects = Vector("http://rdfh.ch/projects/77275339"),
         groups = Nil,
         userData = userData
     )
 
     private val searchForTitleWord = FulltextSearchGetRequestV1(
-        filterByRestype = Some("http://www.knora.org/ontology/incunabula#book"),
+        filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         filterByProject = None,
         searchValue = "Zeitglöcklein",
         startAt = 0,
@@ -243,7 +243,7 @@ object MessageUtil {
 
     private val generated = FulltextSearchGetRequestV1(
         userProfile = UserProfileV1(
-            projects = Vector("http://data.knora.org/projects/77275339"),
+            projects = Vector("http://rdfh.ch/projects/77275339"),
             groups = Nil,
             userData = UserDataV1(
                 email = Some("test@test.ch"),
@@ -251,14 +251,14 @@ object MessageUtil {
                 firstname = Some("User"),
                 username = Some("testuser"),
                 token = None,
-                user_id = Some("http://data.knora.org/users/b83acc5f05"),
+                user_id = Some("http://rdfh.ch/users/b83acc5f05"),
                 lang = "de"
             )
         ),
         showNRows = 25,
         startAt = 0,
         filterByProject = None,
-        filterByRestype = Some("http://www.knora.org/ontology/incunabula#book"),
+        filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         searchValue = "Zeitglöcklein"
     )
 
