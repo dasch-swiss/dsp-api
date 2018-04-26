@@ -15,7 +15,7 @@
       "knora-api:dateValueHasStartEra" : "BCE",
       "knora-api:dateValueHasStartMonth" : 3,
       "knora-api:dateValueHasStartYear" : 44,
-      "knora-api:valueAsString" : "0044-03-15 BCE"
+      "knora-api:valueAsString" : "JULIAN:0044-03-15 BCE"
     },
     "rdfs:label" : "A thing that has a BCE date value"
   },

@@ -7,11 +7,11 @@
       "@id" : "http://data.knora.org/de6d83112e04/values/99206ecaab10",
       "@type" : "knora-api:DateValue",
       "knora-api:dateValueHasCalendar" : "JULIAN",
-      "knora-api:dateValueHasEndYear" : 1499,
-      "knora-api:dateValueHasStartYear" : 1475,
       "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasEndYear" : 1499,
       "knora-api:dateValueHasStartEra" : "CE",
-      "knora-api:valueAsString" : "1475-01-01 - 1499-12-31"
+      "knora-api:dateValueHasStartYear" : 1475,
+      "knora-api:valueAsString" : "JULIAN:1475 CE:1499 CE"
     },
     "incunabula:title" : {
       "@id" : "http://data.knora.org/de6d83112e04/values/d6f61a91ab10",
@@ -27,14 +27,14 @@
       "@type" : "knora-api:DateValue",
       "knora-api:dateValueHasCalendar" : "JULIAN",
       "knora-api:dateValueHasEndDay" : 1,
+      "knora-api:dateValueHasEndEra" : "CE",
       "knora-api:dateValueHasEndMonth" : 3,
       "knora-api:dateValueHasEndYear" : 1497,
       "knora-api:dateValueHasStartDay" : 1,
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartMonth" : 3,
       "knora-api:dateValueHasStartYear" : 1497,
-      "knora-api:dateValueHasEndEra" : "CE",
-      "knora-api:dateValueHasStartEra" : "CE",
-      "knora-api:valueAsString" : "1497-03-01"
+      "knora-api:valueAsString" : "JULIAN:1497-03-01 CE"
     },
     "incunabula:title" : [ {
       "@id" : "http://data.knora.org/8be1b7cf7103/values/463b6498b70d",
@@ -54,14 +54,14 @@
       "@type" : "knora-api:DateValue",
       "knora-api:dateValueHasCalendar" : "JULIAN",
       "knora-api:dateValueHasEndDay" : 1,
+      "knora-api:dateValueHasEndEra" : "CE",
       "knora-api:dateValueHasEndMonth" : 8,
       "knora-api:dateValueHasEndYear" : 1497,
       "knora-api:dateValueHasStartDay" : 1,
+      "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartMonth" : 8,
       "knora-api:dateValueHasStartYear" : 1497,
-      "knora-api:dateValueHasEndEra" : "CE",
-      "knora-api:dateValueHasStartEra" : "CE",
-      "knora-api:valueAsString" : "1497-08-01"
+      "knora-api:valueAsString" : "JULIAN:1497-08-01 CE"
     },
     "incunabula:title" : [ {
       "@id" : "http://data.knora.org/b6b5ff1eb703/values/e6d1cf0dcf0e",
@@ -80,11 +80,11 @@
       "@id" : "http://data.knora.org/9935159f67/values/f2877cc89901",
       "@type" : "knora-api:DateValue",
       "knora-api:dateValueHasCalendar" : "JULIAN",
-      "knora-api:dateValueHasEndYear" : 1504,
-      "knora-api:dateValueHasStartYear" : 1504,
       "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasEndYear" : 1504,
       "knora-api:dateValueHasStartEra" : "CE",
-      "knora-api:valueAsString" : "1504-01-01 - 1504-12-31"
+      "knora-api:dateValueHasStartYear" : 1504,
+      "knora-api:valueAsString" : "JULIAN:1504 CE"
     },
     "incunabula:title" : {
       "@id" : "http://data.knora.org/9935159f67/values/e6e02fe39801",

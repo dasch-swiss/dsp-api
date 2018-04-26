@@ -166,7 +166,6 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
 /**
   * Represents a Knora date value.
   *
-  * @param valueHasString         the string of the date.
   * @param valueHasStartJDN       the start of the date as JDN.
   * @param valueHasEndJDN         the end of the date as JDN.
   * @param valueHasStartPrecision the precision of the start date.
@@ -175,13 +174,34 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
   * @param comment                a comment on this `DateValueContentV2`, if any.
   */
 case class DateValueContentV2(valueType: SmartIri,
-                              valueHasString: String,
                               valueHasStartJDN: Int,
                               valueHasEndJDN: Int,
                               valueHasStartPrecision: KnoraPrecisionV1.Value,
                               valueHasEndPrecision: KnoraPrecisionV1.Value,
                               valueHasCalendar: KnoraCalendarV1.Value,
                               comment: Option[String]) extends ValueContentV2 {
+    // We compute valueHasString instead of taking it from the triplestore, because the
+    // string literal in the triplestore isn't in API v2 format.
+    override lazy val valueHasString: String = {
+        val startDate = DateUtilV2.jdnToDateYearMonthDay(
+            julianDayNumber = valueHasStartJDN,
+            precision = valueHasStartPrecision,
+            calendar = valueHasCalendar
+        )
+
+        val endDate = DateUtilV2.jdnToDateYearMonthDay(
+            julianDayNumber = valueHasEndJDN,
+            precision = valueHasEndPrecision,
+            calendar = valueHasCalendar
+        )
+
+        DateUtilV2.dateRangeToString(
+            startDate = startDate,
+            endDate = endDate,
+            calendar = valueHasCalendar
+        )
+    }
+
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
             valueType = valueType.toOntologySchema(targetSchema)
@@ -207,7 +227,7 @@ case class DateValueContentV2(valueType: SmartIri,
       */
     def toComplexDateValueAssertions: Map[IRI, JsonLDValue] = {
 
-        val startDateConversion = DateUtilV2.convertJDNToDate(valueHasStartJDN, valueHasStartPrecision, valueHasCalendar)
+        val startDateConversion = DateUtilV2.jdnToDateYearMonthDay(valueHasStartJDN, valueHasStartPrecision, valueHasCalendar)
 
         val startDateAssertions = startDateConversion.toStartDateAssertions.map {
             case (k: IRI, v: Int) => (k, JsonLDInt(v))
@@ -216,7 +236,7 @@ case class DateValueContentV2(valueType: SmartIri,
 
             case (k: IRI, v: String) => (k, JsonLDString(v))
         }
-        val endDateConversion = DateUtilV2.convertJDNToDate(valueHasEndJDN, valueHasEndPrecision, valueHasCalendar)
+        val endDateConversion = DateUtilV2.jdnToDateYearMonthDay(valueHasEndJDN, valueHasEndPrecision, valueHasCalendar)
 
         val endDateAssertions = endDateConversion.toEndDateAssertions.map {
             case (k: IRI, v: Int) => (k, JsonLDInt(v))

@@ -7,11 +7,11 @@
       "@id" : "http://data.knora.org/9935159f67/values/f2877cc89901",
       "@type" : "knora-api:DateValue",
       "knora-api:dateValueHasCalendar" : "JULIAN",
-      "knora-api:dateValueHasEndYear" : 1504,
-      "knora-api:dateValueHasStartYear" : 1504,
       "knora-api:dateValueHasEndEra" : "CE",
+      "knora-api:dateValueHasEndYear" : 1504,
       "knora-api:dateValueHasStartEra" : "CE",
-      "knora-api:valueAsString" : "1504-01-01 - 1504-12-31"
+      "knora-api:dateValueHasStartYear" : 1504,
+      "knora-api:valueAsString" : "JULIAN:1504 CE"
     },
     "incunabula:title" : {
       "@id" : "http://data.knora.org/9935159f67/values/e6e02fe39801",

@@ -101,8 +101,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     valueHasEndPrecision = KnoraPrecisionV1.YEAR,
                     valueHasStartPrecision = KnoraPrecisionV1.YEAR,
                     valueHasEndJDN = 2266376,
-                    valueHasStartJDN = 2266011,
-                    valueHasString = "1492-01-01 - 1492-12-31"
+                    valueHasStartJDN = 2266011
                 ),
                 valueIri = "http://data.knora.org/c5058f3a/values/cfd09f1e01"
             )),
@@ -297,8 +296,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     valueHasEndPrecision = KnoraPrecisionV1.YEAR,
                     valueHasStartPrecision = KnoraPrecisionV1.YEAR,
                     valueHasEndJDN = 2262358,
-                    valueHasStartJDN = 2261994,
-                    valueHasString = "1481-01-01 - 1481-12-31"
+                    valueHasStartJDN = 2261994
                 ),
                 valueIri = "http://data.knora.org/2a6221216701/values/63fc012e9205"
             )),

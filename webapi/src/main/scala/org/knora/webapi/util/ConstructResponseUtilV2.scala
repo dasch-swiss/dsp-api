@@ -463,7 +463,6 @@ object ConstructResponseUtilV2 {
 
                 DateValueContentV2(
                     valueType = valueObject.valueObjectClass.toSmartIri,
-                    valueHasString = valueObjectValueHasString,
                     valueHasStartJDN = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasStartJDN).toInt,
                     valueHasEndJDN = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasEndJDN).toInt,
                     valueHasStartPrecision = KnoraPrecisionV1.lookup(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasStartPrecision)),
