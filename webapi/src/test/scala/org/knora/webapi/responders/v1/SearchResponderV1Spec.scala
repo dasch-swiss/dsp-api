@@ -65,7 +65,7 @@ object SearchResponderV1Spec {
         icontitle = Some("Ding"),
         iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
         preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
-        obj_id = "http://rdfh.ch/a-thing-with-text-values"
+        obj_id = "http://rdfh.ch/0001/a-thing-with-text-values"
     ))
 
     private val fulltextValueInThingResultsForUser1 = Vector(SearchResultRowV1(
@@ -88,7 +88,7 @@ object SearchResponderV1Spec {
         icontitle = Some("Ding"),
         iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
         preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
-        obj_id = "http://rdfh.ch/a-thing-with-text-values"
+        obj_id = "http://rdfh.ch/0001/a-thing-with-text-values"
     ))
 
     private val fulltextThingResultsForUser2 = Vector(SearchResultRowV1(
@@ -102,7 +102,7 @@ object SearchResponderV1Spec {
         icontitle = Some("Ding"),
         iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
         preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
-        obj_id = "http://rdfh.ch/a-thing-with-text-values"
+        obj_id = "http://rdfh.ch/0001/a-thing-with-text-values"
     ))
 
     private val hasOtherThingResultsForUser1 = Vector(SearchResultRowV1(
@@ -125,7 +125,7 @@ object SearchResponderV1Spec {
         icontitle = Some("Ding"),
         iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
         preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
-        obj_id = "http://rdfh.ch/project-thing-1"
+        obj_id = "http://rdfh.ch/0001/project-thing-1"
     ))
 
     private val hasStandoffLinkToResultsForUser1 = Vector(SearchResultRowV1(
@@ -148,7 +148,7 @@ object SearchResponderV1Spec {
         icontitle = Some("Ding"),
         iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
         preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
-        obj_id = "http://rdfh.ch/project-thing-1"
+        obj_id = "http://rdfh.ch/0001/project-thing-1"
     ))
 
     private val hasStandoffLinkToResultsForUser2 = Vector(SearchResultRowV1(
@@ -171,7 +171,7 @@ object SearchResponderV1Spec {
         icontitle = Some("Ding"),
         iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
         preview_path = Some("http://localhost:3335/project-icons/anything/thing.png"),
-        obj_id = "http://rdfh.ch/project-thing-1"
+        obj_id = "http://rdfh.ch/0001/project-thing-1"
     ))
 
 }
@@ -933,7 +933,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = anythingUser1,
-                searchValue = Vector("http://rdfh.ch/project-thing-2"),
+                searchValue = Vector("http://rdfh.ch/0001/project-thing-2"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/0001/anything#hasOtherThing"),
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
@@ -947,7 +947,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = anythingUser1,
-                searchValue = Vector("http://rdfh.ch/project-thing-2"),
+                searchValue = Vector("http://rdfh.ch/0001/project-thing-2"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"),
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
@@ -963,7 +963,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = anythingUser2,
-                searchValue = Vector("http://rdfh.ch/project-thing-2"),
+                searchValue = Vector("http://rdfh.ch/0001/project-thing-2"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/0001/anything#hasOtherThing"),
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
@@ -977,7 +977,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
             actorUnderTest ! ExtendedSearchGetRequestV1(
                 userProfile = anythingUser2,
-                searchValue = Vector("http://rdfh.ch/project-thing-2"),
+                searchValue = Vector("http://rdfh.ch/0001/project-thing-2"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"),
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
