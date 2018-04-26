@@ -88,10 +88,6 @@ case class ReadValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IOVa
       * @return a JSON-LD representation of this value.
       */
     def toJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
-        if (!valueContent.valueType.getOntologySchema.contains(targetSchema)) {
-            throw DataConversionException(s"ReadValueV2 for value $valueIri is not in schema $targetSchema")
-        }
-
         val valueContentAsJsonLD = valueContent.toJsonLDValue(targetSchema, settings)
 
         // Is the value represented as a JSON-LD object in the target schema?
@@ -867,7 +863,7 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
         // Make the knora-api prefix for the target schema.
 
         val knoraApiPrefixExpansion = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
             case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
         }
 
@@ -889,4 +885,3 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
         JsonLDDocument(body = body, context = context)
     }
 }
-

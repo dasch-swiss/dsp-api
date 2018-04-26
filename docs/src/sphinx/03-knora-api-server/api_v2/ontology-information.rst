@@ -46,7 +46,7 @@ To get metadata about all ontologies:
 
     HTTP GET to http://host/v2/ontologies/metadata
 
-The response is in the default API v2 schema. Sample response:
+The response is in the complex API v2 schema. Sample response:
 
 .. code-block:: jsonld
 
@@ -67,7 +67,7 @@ The response is in the default API v2 schema. Sample response:
      }, {
        "@id" : "http://api.knora.org/ontology/knora-api/v2",
        "@type" : "http://www.w3.org/2002/07/owl#Ontology",
-       "rdfs:label" : "The default knora-api ontology"
+       "rdfs:label" : "The knora-api ontology in the complex schema"
      } ],
      "@context" : {
        "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -109,7 +109,7 @@ the ontology IRI. The API route is as follows:
 
     HTTP GET to http://host/v2/ontologies/allentities/ONTOLOGY_IRI
 
-The ontology IRI must be URL-encoded, and may be in either the default or the simple schema.
+The ontology IRI must be URL-encoded, and may be in either the complex or the simple schema.
 The response will be in the same schema.
 
 If the client dereferences a project-specific ontology IRI as a URL, the Knora API server running on
@@ -337,12 +337,12 @@ simple ontology, there is a definition of this type:
      }
    }
 
-JSON-LD Representation of an Ontology in the Default Schema
+JSON-LD Representation of an Ontology in the Complex Schema
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The default schema is suitable for client applications that need to update data in Knora.
+The complex schema is suitable for client applications that need to update data in Knora.
 For example, here is the response for the ``images`` sample ontology in the
-default schema, ``http://0.0.0.0:3333/ontology/00FF/images/v2`` (simplified for clarity):
+complex schema, ``http://0.0.0.0:3333/ontology/00FF/images/v2`` (simplified for clarity):
 
 .. code-block:: jsonld
 
@@ -559,16 +559,16 @@ default schema, ``http://0.0.0.0:3333/ontology/00FF/images/v2`` (simplified for 
     }
   }
 
-In the default schema, all Knora value properties are object properties, whose
+In the complex schema, all Knora value properties are object properties, whose
 objects are IRIs, each of which uniquely identifies a value that contains metadata and can
 potentially be edited. The ``knora-base:objectType`` of a Knora value property such as
 ``p00FF-images:description`` is a Knora value class, in this case ``knora-api:TextValue``.
 Similarly, ``p00FF-images:erfassungsdatum`` has a ``knora-api:objectType`` of ``knora-api:DateValue``,
 which has a more complex structure than the ``knora-api:Date`` datatype shown in the previous section.
 A client can find out more about these value classes by requesting the ``knora-api`` ontology in the
-default schema, ``http://api.knora.org/ontology/knora-api/v2``.
+complex schema, ``http://api.knora.org/ontology/knora-api/v2``.
 
-Moreover, additional information is provided in the default schema, to help clients that wish to create
+Moreover, additional information is provided in the complex schema, to help clients that wish to create
 or update resources and values. A Knora resource class that can be instantiated is identified with
 the boolean properties ``knora-api:isResourceClass`` and ``knora-api:canBeInstantiated``, to distinguish it
 from built-in abstract classes. Knora resource properties whose values can be edited by clients are identified with
@@ -617,7 +617,7 @@ users to work concurrently on the same ontology, but this is discouraged since i
 An ontology can be created or updated only by a system administrator, or by a project administrator in the
 ontology's project.
 
-Ontology updates always use the default schema.
+Ontology updates always use the complex schema.
 
 Creating a New Ontology
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -930,7 +930,7 @@ and link value properties (subproperties of ``knora-api:hasLinkToValue``).
 
 The property definition must specify its ``knora-api:objectType``. If the new property is a subproperty
 of ``knora-api:hasValue``, its ``knora-api:objectType`` must be one of the built-in subclasses
-of ``knora-api:Value``, which are defined in the ``knora-api`` ontology in the default schema.
+of ``knora-api:Value``, which are defined in the ``knora-api`` ontology in the complex schema.
 If the new property is a subproperty of ``knora-base:hasLinkTo``, its ``knora-api:objectType`` must
 be a subclass of ``knora-api:Resource``.
 

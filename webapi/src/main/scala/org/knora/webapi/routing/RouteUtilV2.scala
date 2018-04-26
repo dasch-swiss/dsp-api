@@ -35,6 +35,55 @@ import scala.concurrent.{ExecutionContext, Future}
   * Convenience methods for Knora routes.
   */
 object RouteUtilV2 {
+    /**
+      * The name of the HTTP header in which an ontology schema can be requested.
+      */
+    val SCHEMA_HEADER: String = "x-knora-accept-schema"
+
+    /**
+      * The name of the URL parameter in which an ontology schema can be requested.
+      */
+    val SCHEMA_PARAM: String = "schema"
+
+    /**
+      * The name of the complex schema.
+      */
+    val SIMPLE_SCHEMA_NAME: String = "simple"
+
+    /**
+      * The name of the simple schema.
+      */
+    val COMPLEX_SCHEMA_NAME: String = "complex"
+
+    /**
+      * Gets the ontology schema that is specified in an HTTP request. The schema can be specified
+      * either in the HTTP header [[SCHEMA_HEADER]] or in the URL parameter [[SCHEMA_PARAM]].
+      * If no schema is specified in the request, the default of [[ApiV2WithValueObjects]] is returned.
+      *
+      * @param requestContext the akka-http [[RequestContext]].
+      * @return the specified schema, or [[ApiV2WithValueObjects]] if no schema was specified in the request.
+      */
+    def getOntologySchema(requestContext: RequestContext): ApiV2Schema = {
+        def nameToSchema(schemaName: String): ApiV2Schema = {
+            schemaName match {
+                case SIMPLE_SCHEMA_NAME => ApiV2Simple
+                case COMPLEX_SCHEMA_NAME => ApiV2WithValueObjects
+                case _ => throw BadRequestException(s"Unrecognised ontology schema name: $schemaName")
+            }
+        }
+
+        val params: Map[String, String] = requestContext.request.uri.query().toMap
+
+        params.get(SCHEMA_PARAM) match {
+            case Some(schemaParam) => nameToSchema(schemaParam)
+
+            case None =>
+                requestContext.request.headers.find(_.lowercaseName == SCHEMA_HEADER) match {
+                    case Some(header) => nameToSchema(header.value)
+                    case None => ApiV2WithValueObjects
+                }
+        }
+    }
 
     /**
       * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
