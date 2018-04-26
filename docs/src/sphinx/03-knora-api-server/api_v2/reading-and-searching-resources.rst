@@ -24,6 +24,8 @@ Reading and Searching Resources
 
 To retrieve an existing resource, the HTTP method ``GET`` has to be used. Reading resources may require authentication, since some resources may have restricted viewing permissions.
 
+Operations for reading and searching resources can return responses in either the simple or the complex ontology schema. The complex schema is used by default. To receive a response in the simple schema, use the HTTP request header or URL parameter described in :ref:`api-schema-v2`.
+
 ***********************************************
 Get the Representation of a Resource by its IRI
 ***********************************************
