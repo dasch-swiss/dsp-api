@@ -1,12 +1,12 @@
 {
   "@type" : "schema:ItemList",
   "schema:itemListElement" : {
-    "@id" : "http://rdfh.ch/anything/thing_with_list_value",
+    "@id" : "http://rdfh.ch/0001/thing_with_list_value",
     "@type" : "anything:Thing",
     "anything:hasListItem" : {
-      "@id" : "http://rdfh.ch/anything/thing_with_list_value/list_value",
+      "@id" : "http://rdfh.ch/0001/thing_with_list_value/list_value",
       "@type" : "knora-api:ListValue",
-      "knora-api:listValueAsListNode" : "http://rdfh.ch/anything/treeList02",
+      "knora-api:listValueAsListNode" : "http://rdfh.ch/lists/0001/treeList02",
       "knora-api:listValueAsListNodeLabel" : "Baumlistenknoten 02"
     },
     "schema:name" : "A thing that has a list value"

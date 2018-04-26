@@ -1,10 +1,10 @@
 {
   "@type" : "schema:ItemList",
   "schema:itemListElement" : {
-    "@id" : "http://rdfh.ch/anything/thing_with_BCE_date",
+    "@id" : "http://rdfh.ch/0001/thing_with_BCE_date",
     "@type" : "anything:Thing",
     "anything:hasDate" : {
-      "@id" : "http://rdfh.ch/anything/thing_with_BCE_date/date_value",
+      "@id" : "http://rdfh.ch/0001/thing_with_BCE_date/date_value",
       "@type" : "knora-api:DateValue",
       "knora-api:dateValueHasCalendar" : "JULIAN",
       "knora-api:dateValueHasEndDay" : 15,

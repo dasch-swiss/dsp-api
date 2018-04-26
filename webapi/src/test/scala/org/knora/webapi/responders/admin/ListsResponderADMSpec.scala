@@ -139,7 +139,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
             "return basic list information (anything list)" in {
                 actorUnderTest ! ListInfoGetRequestADM(
-                    iri = "http://rdfh.ch/anything/otherTreeList",
+                    iri = "http://rdfh.ch/lists/0001/otherTreeList",
                     requestingUser = SharedTestDataADM.imagesUser01
                 )
 

@@ -660,39 +660,39 @@ class SearchResponderV2SpecFullData {
                             mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
                             standoff = Vector(
                                 StandoffTagV1(
+                                    attributes = Nil,
+                                    endParentIndex = None,
+                                    startParentIndex = None,
+                                    endIndex = None,
+                                    startIndex = 0,
+                                    endPosition = 25,
+                                    startPosition = 0,
+                                    originalXMLID = None,
+                                    uuid = "fd583868-2a3c-4941-a330-990f5a972f71",
+                                    dataType = None,
+                                    standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag"
+                                ),
+                                StandoffTagV1(
                                     attributes = Vector(StandoffTagIriAttributeV1(
-                                        value = "http://rdfh.ch/a-thing",
+                                        value = "http://rdfh.ch/0001/a-thing",
                                         standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink"
                                     )),
                                     endParentIndex = None,
                                     startParentIndex = Some(0),
                                     endIndex = None,
                                     startIndex = 1,
-                                    endPosition = 19,
-                                    startPosition = 14,
+                                    endPosition = 16,
+                                    startPosition = 11,
                                     originalXMLID = None,
-                                    uuid = "80133696-26a1-4941-967b-6bf210d7d5e1",
+                                    uuid = "59a36237-95a9-4acc-8361-7c8fac311063",
                                     dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                                     standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
-                                ),
-                                StandoffTagV1(
-                                    attributes = Nil,
-                                    endParentIndex = None,
-                                    startParentIndex = None,
-                                    endIndex = None,
-                                    startIndex = 0,
-                                    endPosition = 45,
-                                    startPosition = 0,
-                                    originalXMLID = None,
-                                    uuid = "2e136103-2a4b-4e59-ac8f-79a53f54b496",
-                                    dataType = None,
-                                    standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag"
                                 )
                             )
                         )),
-                        valueHasString = "Ich liebe die Dinge, sie sind alles f\u00FCr mich."
+                        valueHasString = "Na ja, die Dinge sind OK."
                     ),
-                    valueIri = "http://rdfh.ch/a-thing-with-text-values/values/1"
+                    valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/2"
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
@@ -977,17 +977,17 @@ class SearchResponderV2SpecFullData {
                             standoff = Vector(
                                 StandoffTagV1(
                                     attributes = Vector(StandoffTagIriAttributeV1(
-                                        value = "http://rdfh.ch/a-thing",
+                                        value = "http://rdfh.ch/0001/a-thing",
                                         standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink"
                                     )),
                                     endParentIndex = None,
                                     startParentIndex = Some(0),
                                     endIndex = None,
                                     startIndex = 1,
-                                    endPosition = 16,
-                                    startPosition = 11,
+                                    endPosition = 19,
+                                    startPosition = 14,
                                     originalXMLID = None,
-                                    uuid = "59a36237-95a9-4acc-8361-7c8fac311063",
+                                    uuid = "80133696-26a1-4941-967b-6bf210d7d5e1",
                                     dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                                     standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
                                 ),
@@ -997,23 +997,23 @@ class SearchResponderV2SpecFullData {
                                     startParentIndex = None,
                                     endIndex = None,
                                     startIndex = 0,
-                                    endPosition = 25,
+                                    endPosition = 45,
                                     startPosition = 0,
                                     originalXMLID = None,
-                                    uuid = "fd583868-2a3c-4941-a330-990f5a972f71",
+                                    uuid = "2e136103-2a4b-4e59-ac8f-79a53f54b496",
                                     dataType = None,
                                     standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag"
                                 )
                             )
                         )),
-                        valueHasString = "Na ja, die Dinge sind OK."
+                        valueHasString = "Ich liebe die Dinge, sie sind alles f\u00FCr mich."
                     ),
-                    valueIri = "http://rdfh.ch/a-thing-with-text-values/values/2"
+                    valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/1"
                 )
             )),
             resourceClass = "http://www.knora.org/ontology/0001/anything#Thing",
             label = "Ein Ding f\u00FCr jemanden, dem die Dinge gefallen",
-            resourceIri = "http://rdfh.ch/a-thing-with-text-values"
+            resourceIri = "http://rdfh.ch/0001/a-thing-with-text-values"
         )),
         numberOfResources = 1
     )
