@@ -103,7 +103,7 @@ object RouteUtilV2 {
                      settings: SettingsImpl,
                      responderManager: ActorSelection,
                      log: LoggingAdapter,
-                     responseSchema: ApiV2Schema = ApiV2WithValueObjects)
+                     responseSchema: ApiV2Schema)
                     (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         // Optionally log the request message. TODO: move this to the testing framework.
         if (settings.dumpMessages) {
