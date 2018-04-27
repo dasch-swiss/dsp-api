@@ -1,0 +1,22 @@
+{
+  "@type" : "schema:ItemList",
+  "schema:itemListElement" : [ {
+    "@id" : "http://rdfh.ch/c5058f3a",
+    "@type" : "p0803-incunabula:book",
+    "p0803-incunabula:title" : "Zeitglöcklein des Lebens und Leidens Christi",
+    "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
+  }, {
+    "@id" : "http://rdfh.ch/ff17e5ef9601",
+    "@type" : "p0803-incunabula:book",
+    "p0803-incunabula:title" : "Zeitglöcklein des Lebens und Leidens Christi",
+    "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
+  } ],
+  "schema:numberOfItems" : 2,
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
+    "schema" : "http://schema.org/",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "p0803-incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#"
+  }
+}
