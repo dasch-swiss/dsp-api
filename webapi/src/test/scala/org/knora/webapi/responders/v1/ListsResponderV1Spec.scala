@@ -62,7 +62,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
 
     val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     // A test UserProfileV1.
@@ -3299,7 +3299,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
         "used to query information about lists" should {
 
             "return all the toplevel and child nodes of \"Hierarchisches Stichwortverzeichnis / Signatur der Bilder\" when we do a query for the hlist 'http://rdfh.ch/lists/00FF/73d0ec0302' (root node) in the images-demo-data" in {
-                // http://localhost:3333/v1/hlists/http%3A%2F%2Fdata.knora.org%2Flists%2F73d0ec0302
+                // http://localhost:3333/v1/hlists/http%3A%2F%2Frdfh.ch%2Flists%2F73d0ec0302
                 actorUnderTest ! HListGetRequestV1(
                     userProfile = userProfileV1,
                     iri = "http://rdfh.ch/lists/00FF/73d0ec0302"
@@ -3309,7 +3309,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
             }
 
             "return all nodes of the flat (one level only) list (selection) \"Art des Bildes oder Photographie\"" in {
-                // http://localhost:3333/v1/selections/http%3A%2F%2Fdata.knora.org%2Flists%2F6cce4ce5
+                // http://localhost:3333/v1/selections/http%3A%2F%2Frdfh.ch%2Flists%2F6cce4ce5
                 actorUnderTest ! SelectionGetRequestV1(
                     userProfile = userProfileV1,
                     iri = "http://rdfh.ch/lists/00FF/6cce4ce5"
@@ -3319,7 +3319,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
             }
 
             "return the two seasons winter and summer (flat season list consisting of two items)" in {
-                // http://localhost:3333/v1/hlists/http%3A%2F%2Fdata.knora.org%2Flists%2Fd19af9ab
+                // http://localhost:3333/v1/hlists/http%3A%2F%2Frdfh.ch%2Flists%2Fd19af9ab
                 actorUnderTest ! HListGetRequestV1(
                     userProfile = userProfileV1,
                     iri = "http://rdfh.ch/lists/00FF/d19af9ab"
@@ -3329,7 +3329,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
             }
 
             "return the path to the node 'Heidi Film'" in {
-                // http://localhost:3333/v1/hlists/http%3A%2F%2Fdata.knora.org%2Flists%2Fc7f07a3fc1?reqtype=node
+                // http://localhost:3333/v1/hlists/http%3A%2F%2Frdfh.ch%2Flists%2Fc7f07a3fc1?reqtype=node
                 actorUnderTest ! NodePathGetRequestV1(
                     userProfile = userProfileV1,
                     iri = "http://rdfh.ch/lists/00FF/c7f07a3fc1"

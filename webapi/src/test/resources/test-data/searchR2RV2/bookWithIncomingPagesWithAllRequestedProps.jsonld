@@ -1,35 +1,35 @@
 {
   "@type" : "schema:ItemList",
   "schema:itemListElement" : {
-    "@id" : "http://data.knora.org/8be1b7cf7103",
+    "@id" : "http://rdfh.ch/8be1b7cf7103",
     "@type" : "incunabula:book",
     "incunabula:title" : [ {
-      "@id" : "http://data.knora.org/8be1b7cf7103/values/463b6498b70d",
+      "@id" : "http://rdfh.ch/8be1b7cf7103/values/463b6498b70d",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "[Das] Narrenschiff (lat.)"
     }, {
-      "@id" : "http://data.knora.org/8be1b7cf7103/values/0965b7d1b70d",
+      "@id" : "http://rdfh.ch/8be1b7cf7103/values/0965b7d1b70d",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Stultifera navis (...)"
     } ],
     "knora-api:hasIncomingLink" : {
-      "@id" : "http://data.knora.org/50e7460a7203/values/8bdc04c8-b765-44c8-adb3-5ab536dcd051",
+      "@id" : "http://rdfh.ch/50e7460a7203/values/8bdc04c8-b765-44c8-adb3-5ab536dcd051",
       "@type" : "knora-api:LinkValue",
       "knora-api:linkValueHasSource" : {
-        "@id" : "http://data.knora.org/50e7460a7203",
+        "@id" : "http://rdfh.ch/50e7460a7203",
         "@type" : "incunabula:page",
         "incunabula:partOfValue" : {
-          "@id" : "http://data.knora.org/50e7460a7203/values/8bdc04c8-b765-44c8-adb3-5ab536dcd051",
+          "@id" : "http://rdfh.ch/50e7460a7203/values/8bdc04c8-b765-44c8-adb3-5ab536dcd051",
           "@type" : "knora-api:LinkValue",
-          "knora-api:linkValueHasTargetIri" : "http://data.knora.org/8be1b7cf7103"
+          "knora-api:linkValueHasTargetIri" : "http://rdfh.ch/8be1b7cf7103"
         },
         "incunabula:seqnum" : {
-          "@id" : "http://data.knora.org/50e7460a7203/values/44150900c10d",
+          "@id" : "http://rdfh.ch/50e7460a7203/values/44150900c10d",
           "@type" : "knora-api:IntValue",
           "knora-api:intValueAsInt" : 1
         },
         "knora-api:hasStillImageFileValue" : [ {
-          "@id" : "http://data.knora.org/50e7460a7203/reps/bf87bff7b706",
+          "@id" : "http://rdfh.ch/50e7460a7203/reps/bf87bff7b706",
           "@type" : "knora-api:StillImageFileValue",
           "knora-api:fileValueAsUrl" : "http://localhost:1024/knora/incunabula_0000003856.jpg/full/90,128/0/default.jpg",
           "knora-api:fileValueHasFilename" : "incunabula_0000003856.jpg",
@@ -38,7 +38,7 @@
           "knora-api:stillImageFileValueHasDimY" : 128,
           "knora-api:stillImageFileValueHasIIIFBaseUrl" : "http://localhost:1024/knora"
         }, {
-          "@id" : "http://data.knora.org/50e7460a7203/reps/7ead1231b806",
+          "@id" : "http://rdfh.ch/50e7460a7203/reps/7ead1231b806",
           "@type" : "knora-api:StillImageFileValue",
           "knora-api:fileValueAsUrl" : "http://localhost:1024/knora/incunabula_0000003856.jp2/full/1904,2700/0/default.jpg",
           "knora-api:fileValueHasFilename" : "incunabula_0000003856.jp2",
@@ -58,6 +58,6 @@
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "schema" : "http://schema.org/",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "incunabula" : "http://0.0.0.0:3333/ontology/incunabula/v2#"
+    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
   }
 }

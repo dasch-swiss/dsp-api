@@ -60,7 +60,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
     // println(system.settings.config.getConfig("app.triplestore").root().render())
 
     val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
 
@@ -88,7 +88,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         WHERE {
                 {
               GRAPH ?namedGraph {
-                BIND(IRI("http://www.knora.org/ontology/incunabula#page") as ?s)
+                BIND(IRI("http://www.knora.org/ontology/0803/incunabula#page") as ?s)
                 ?s ?p ?obj
                 BIND(str(?obj) as ?o)
                 BIND(lang(?obj) as ?lang)

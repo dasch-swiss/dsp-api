@@ -650,7 +650,7 @@ Example Data stored in the permissions graph
   <http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
        knora-base:forProject <http://rdfh.ch/projects/[shortcode]> ;
        knora-base:forGroup <http://rdfh.ch/groups/[shortcode]/[UUID]> ;
-       knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission <http://www.knora.org/ontology/images#Person>"^^xsd:string .
+       knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission <http://www.knora.org/ontology/00FF/images#Person>"^^xsd:string .
 
 
 **Default object access permission on a 'ProjectMember' group:**

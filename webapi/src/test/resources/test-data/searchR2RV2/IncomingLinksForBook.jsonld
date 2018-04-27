@@ -1,14 +1,14 @@
 {
   "@type" : "schema:ItemList",
   "schema:itemListElement" : {
-    "@id" : "http://data.knora.org/881405205304",
+    "@id" : "http://rdfh.ch/881405205304",
     "@type" : "knora-api:LinkObj",
     "knora-api:hasLinkToValue" : {
-      "@id" : "http://data.knora.org/881405205304/values/9a126ec9-9387-4cc5-b565-0029a7344bf0",
+      "@id" : "http://rdfh.ch/881405205304/values/9a126ec9-9387-4cc5-b565-0029a7344bf0",
       "@type" : "knora-api:LinkValue",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://data.knora.org/8be1b7cf7103",
-        "@type" : "http://0.0.0.0:3333/ontology/incunabula/v2#book",
+        "@id" : "http://rdfh.ch/8be1b7cf7103",
+        "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
@@ -16,9 +16,9 @@
   },
   "schema:numberOfItems" : 1,
   "@context" : {
-    "schema" : "http://schema.org/",
-    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "schema" : "http://schema.org/",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
   }
 }

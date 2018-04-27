@@ -48,9 +48,9 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
 
     private val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     // The default timeout for receiving reply messages from actors.
@@ -124,7 +124,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
                 searchValue = "Narrenschiff",
                 offset = 0,
                 limitToProject = None,
-                limitToResourceClass = Some("http://www.knora.org/ontology/incunabula#book".toSmartIri), // internal Iri!
+                limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
                 requestingUser = SharedTestDataADM.anonymousUser
             )
 

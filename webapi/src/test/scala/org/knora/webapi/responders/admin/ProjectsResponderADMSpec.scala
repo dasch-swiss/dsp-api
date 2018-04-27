@@ -186,7 +186,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
 
                 received.project.shortname should be("newproject")
-                received.project.shortcode should be(Some("1111"))
+                received.project.shortcode should be("1111")
                 received.project.longname should contain("project longname")
                 received.project.description should be(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
 
@@ -212,7 +212,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
 
                 received.project.shortname should be("newproject2")
-                received.project.shortcode should be(Some("1112"))
+                received.project.shortcode should be("1112")
                 received.project.longname should contain("project longname")
                 received.project.description should be(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
 
@@ -310,7 +310,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 )
                 val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
                 received.project.shortname should be("newproject")
-                received.project.shortcode should be(Some("1111"))
+                received.project.shortcode should be("1111")
                 received.project.longname should be (Some("updated project longname"))
                 received.project.description should be (Seq(StringLiteralV2(value = """updated project description with "quotes" and <html tags>""", language = Some("en"))))
                 received.project.keywords.sorted should be (Seq("updated", "keywords").sorted)
@@ -335,7 +335,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
                 /*
                 actorUnderTest ! ProjectChangeRequestADM(
-                    projectIri = "http://data.knora.org/projects/notexisting",
+                    projectIri = "http://rdfh.ch/projects/notexisting",
                     changeProjectRequest = ChangeProjectApiRequestADM(None, None, None, None, None, None, None, None, None, None),
                     SharedAdminTestData.rootUser,
                     UUID.randomUUID()
@@ -418,7 +418,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectMembersGetRequestADM(
                     maybeIri = None,
                     maybeShortname = None,
-                    maybeShortcode = Some(SharedTestDataADM.imagesProject.shortcode.get),
+                    maybeShortcode = Some(SharedTestDataADM.imagesProject.shortcode),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -504,7 +504,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectAdminMembersGetRequestADM(
                     maybeIri = None,
                     maybeShortname = None,
-                    maybeShortcode = Some(SharedTestDataADM.imagesProject.shortcode.get),
+                    maybeShortcode = Some(SharedTestDataADM.imagesProject.shortcode),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)

@@ -6,20 +6,20 @@
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
-@prefix incunabula: <http://www.knora.org/ontology/incunabula#> .
+@prefix incunabula: <http://www.knora.org/ontology/0803/incunabula#> .
 
-<http://data.knora.org/482a33d65c36> a incunabula:Sideband ;
-	incunabula:description <http://data.knora.org/482a33d65c36/values/a4167701aa4d03> ;
-	incunabula:sbTitle <http://data.knora.org/482a33d65c36/values/25279d8dcd8e01> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+<http://rdfh.ch/482a33d65c36> a incunabula:Sideband ;
+	incunabula:description <http://rdfh.ch/482a33d65c36/values/a4167701aa4d03> ;
+	incunabula:sbTitle <http://rdfh.ch/482a33d65c36/values/25279d8dcd8e01> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
 	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:creationDate "2016-03-02T15:05:55Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
-	knora-base:hasStillImageFileValue <http://data.knora.org/482a33d65c36/reps/ed80ada52b2a> , <http://data.knora.org/482a33d65c36/reps/aca600df2b2a> ;
+	knora-base:hasStillImageFileValue <http://rdfh.ch/482a33d65c36/reps/ed80ada52b2a> , <http://rdfh.ch/482a33d65c36/reps/aca600df2b2a> ;
 	knora-base:isDeleted false ;
 	rdfs:label "l_1a" .
 
-<http://data.knora.org/482a33d65c36/reps/aca600df2b2a> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/482a33d65c36/reps/aca600df2b2a> a knora-base:StillImageFileValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:dimX 328 ;
 	knora-base:dimY 4240 ;
@@ -33,7 +33,7 @@
 	knora-base:valueCreationDate "2015-05-19T22:39:12Z"^^xsd:dateTimeStamp ;
 	knora-base:valueHasString "l1a.tiff" .
 
-<http://data.knora.org/482a33d65c36/reps/ed80ada52b2a> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/482a33d65c36/reps/ed80ada52b2a> a knora-base:StillImageFileValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:dimX 9 ;
 	knora-base:dimY 128 ;
@@ -48,7 +48,7 @@
 	knora-base:valueCreationDate "2015-05-19T22:39:12Z"^^xsd:dateTimeStamp ;
 	knora-base:valueHasString "l1a.tiff" .
 
-<http://data.knora.org/482a33d65c36/values/25279d8dcd8e01> a knora-base:TextValue ;
+<http://rdfh.ch/482a33d65c36/values/25279d8dcd8e01> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
@@ -56,7 +56,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasString "l_1a" .
 
-<http://data.knora.org/482a33d65c36/values/a4167701aa4d03> a knora-base:TextValue ;
+<http://rdfh.ch/482a33d65c36/values/a4167701aa4d03> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
@@ -64,24 +64,24 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasString "213610" .
 
-<http://data.knora.org/c5058f3a> a incunabula:book ;
-	incunabula:citation <http://data.knora.org/c5058f3a/values/184e99ca01> , <http://data.knora.org/c5058f3a/values/db77ec0302> , <http://data.knora.org/c5058f3a/values/9ea13f3d02> ;
-	incunabula:hasAuthor <http://data.knora.org/c5058f3a/values/8653a672> ;
-	incunabula:location <http://data.knora.org/c5058f3a/values/92faf25701> ;
-	incunabula:physical_desc <http://data.knora.org/c5058f3a/values/5524469101> ;
-	incunabula:pubdate <http://data.knora.org/c5058f3a/values/cfd09f1e01> ;
-	incunabula:publisher <http://data.knora.org/c5058f3a/values/497df9ab> ;
-	incunabula:publoc <http://data.knora.org/c5058f3a/values/0ca74ce5> ;
-	incunabula:title <http://data.knora.org/c5058f3a/values/c3295339> ;
-	incunabula:url <http://data.knora.org/c5058f3a/values/10e00c7acc2704> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
+<http://rdfh.ch/c5058f3a> a incunabula:book ;
+	incunabula:citation <http://rdfh.ch/c5058f3a/values/184e99ca01> , <http://rdfh.ch/c5058f3a/values/db77ec0302> , <http://rdfh.ch/c5058f3a/values/9ea13f3d02> ;
+	incunabula:hasAuthor <http://rdfh.ch/c5058f3a/values/8653a672> ;
+	incunabula:location <http://rdfh.ch/c5058f3a/values/92faf25701> ;
+	incunabula:physical_desc <http://rdfh.ch/c5058f3a/values/5524469101> ;
+	incunabula:pubdate <http://rdfh.ch/c5058f3a/values/cfd09f1e01> ;
+	incunabula:publisher <http://rdfh.ch/c5058f3a/values/497df9ab> ;
+	incunabula:publoc <http://rdfh.ch/c5058f3a/values/0ca74ce5> ;
+	incunabula:title <http://rdfh.ch/c5058f3a/values/c3295339> ;
+	incunabula:url <http://rdfh.ch/c5058f3a/values/10e00c7acc2704> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0803> ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
 	rdfs:label "Zeitglöcklein des Lebens und Leidens Christi" .
 
-<http://data.knora.org/c5058f3a/values/0ca74ce5> a knora-base:TextValue ;
+<http://rdfh.ch/c5058f3a/values/0ca74ce5> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember,knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
@@ -89,7 +89,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasString "Basel" .
 
-<http://data.knora.org/c5058f3a/values/10e00c7acc2704> a knora-base:TextValue ;
+<http://rdfh.ch/c5058f3a/values/10e00c7acc2704> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
@@ -97,7 +97,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasString "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1" .
 
-<http://data.knora.org/c5058f3a/values/184e99ca01> a knora-base:TextValue ;
+<http://rdfh.ch/c5058f3a/values/184e99ca01> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
@@ -105,7 +105,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasString "Schramm Bd. XXI, S. 27" .
 
-<http://data.knora.org/c5058f3a/values/497df9ab> a knora-base:TextValue ;
+<http://rdfh.ch/c5058f3a/values/497df9ab> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
@@ -113,7 +113,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasString "Johann Amerbach" .
 
-<http://data.knora.org/c5058f3a/values/5524469101> a knora-base:TextValue ;
+<http://rdfh.ch/c5058f3a/values/5524469101> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
@@ -121,7 +121,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasString "Dimension: 8°" .
 
-<http://data.knora.org/c5058f3a/values/8653a672> a knora-base:TextValue ;
+<http://rdfh.ch/c5058f3a/values/8653a672> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser" ;
 	knora-base:isDeleted false ;
@@ -129,7 +129,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasString "Berthold, der Bruder" .
 
-<http://data.knora.org/c5058f3a/values/92faf25701> a knora-base:TextValue ;
+<http://rdfh.ch/c5058f3a/values/92faf25701> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
@@ -137,7 +137,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasString "Universitäts- und Stadtbibliothek Köln, Sign: AD+S167" .
 
-<http://data.knora.org/c5058f3a/values/9ea13f3d02> a knora-base:TextValue ;
+<http://rdfh.ch/c5058f3a/values/9ea13f3d02> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
@@ -145,7 +145,7 @@
 	knora-base:valueHasOrder 2 ;
 	knora-base:valueHasString "ISTC ib00512000" .
 
-<http://data.knora.org/c5058f3a/values/c3295339> a knora-base:TextValue ;
+<http://rdfh.ch/c5058f3a/values/c3295339> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
@@ -153,7 +153,7 @@
 	knora-base:valueHasOrder 0 ;
 	knora-base:valueHasString "Zeitglöcklein des Lebens und Leidens Christi" .
 
-<http://data.knora.org/c5058f3a/values/cfd09f1e01> a knora-base:DateValue ;
+<http://rdfh.ch/c5058f3a/values/cfd09f1e01> a knora-base:DateValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;
@@ -166,7 +166,7 @@
 	knora-base:valueHasStartPrecision "YEAR" ;
 	knora-base:valueHasString "1492-01-01 - 1492-12-31" .
 
-<http://data.knora.org/c5058f3a/values/db77ec0302> a knora-base:TextValue ;
+<http://rdfh.ch/c5058f3a/values/db77ec0302> a knora-base:TextValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
 	knora-base:isDeleted false ;

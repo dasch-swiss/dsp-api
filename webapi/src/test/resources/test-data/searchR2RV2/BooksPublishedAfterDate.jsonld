@@ -1,10 +1,10 @@
 {
   "@type" : "schema:ItemList",
   "schema:itemListElement" : {
-    "@id" : "http://data.knora.org/9935159f67",
+    "@id" : "http://rdfh.ch/9935159f67",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://data.knora.org/9935159f67/values/f2877cc89901",
+      "@id" : "http://rdfh.ch/9935159f67/values/f2877cc89901",
       "@type" : "knora-api:DateValue",
       "knora-api:dateValueHasCalendar" : "JULIAN",
       "knora-api:dateValueHasEndEra" : "CE",
@@ -14,7 +14,7 @@
       "knora-api:valueAsString" : "JULIAN:1504 CE"
     },
     "incunabula:title" : {
-      "@id" : "http://data.knora.org/9935159f67/values/e6e02fe39801",
+      "@id" : "http://rdfh.ch/9935159f67/values/e6e02fe39801",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)"
     },
@@ -26,6 +26,6 @@
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "schema" : "http://schema.org/",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "incunabula" : "http://0.0.0.0:3333/ontology/incunabula/v2#"
+    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
   }
 }

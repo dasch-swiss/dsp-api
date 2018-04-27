@@ -1,54 +1,54 @@
 {
   "@type" : "schema:ItemList",
   "schema:itemListElement" : [ {
-    "@id" : "http://data.knora.org/nResNuvARcWYUdWyo0GWGw",
-    "@type" : "anything:Thing",
-    "rdfs:label" : "X-ray"
-  }, {
-    "@id" : "http://data.knora.org/nVh9YJ1ZStSmCHb9hIdwWw",
-    "@type" : "anything:Thing",
+    "@id" : "http://rdfh.ch/0001/nVh9YJ1ZStSmCHb9hIdwWw",
+    "@type" : "p0001-anything:Thing",
     "rdfs:label" : "excluded Charlie"
   }, {
-    "@id" : "http://data.knora.org/project-thing-1",
-    "@type" : "anything:Thing",
+    "@id" : "http://rdfh.ch/0001/project-thing-1",
+    "@type" : "p0001-anything:Thing",
     "rdfs:label" : "A thing that only project members can see"
   }, {
-    "@id" : "http://data.knora.org/project-thing-2",
-    "@type" : "anything:Thing",
+    "@id" : "http://rdfh.ch/0001/project-thing-2",
+    "@type" : "p0001-anything:Thing",
     "rdfs:label" : "Another thing that only project members can see"
- }, {
-    "@id" : "http://data.knora.org/rzRrc2G1StKUMyZVjJnxuw",
-    "@type" : "anything:Thing",
+  }, {
+    "@id" : "http://rdfh.ch/0001/rzRrc2G1StKUMyZVjJnxuw",
+    "@type" : "p0001-anything:Thing",
     "rdfs:label" : "Kilo"
   }, {
-    "@id" : "http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ",
-    "@type" : "anything:Thing",
+    "@id" : "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
+    "@type" : "p0001-anything:Thing",
     "rdfs:label" : "Golf"
   }, {
-    "@id" : "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A",
-    "@type" : "anything:Thing",
+    "@id" : "http://rdfh.ch/0001/start",
+    "@type" : "p0001-anything:Thing",
+    "rdfs:label" : "Romeo"
+  }, {
+    "@id" : "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+    "@type" : "p0001-anything:Thing",
     "rdfs:label" : "Echo"
   }, {
-    "@id" : "http://rdfh.ch/anything/thing_with_BCE_date",
-    "@type" : "anything:Thing",
+    "@id" : "http://rdfh.ch/0001/thing_with_BCE_date",
+    "@type" : "p0001-anything:Thing",
     "rdfs:label" : "A thing that has a BCE date value"
   }, {
-    "@id" : "http://rdfh.ch/anything/thing_with_BCE_date2",
-    "@type" : "anything:Thing",
+    "@id" : "http://rdfh.ch/0001/thing_with_BCE_date2",
+    "@type" : "p0001-anything:Thing",
     "rdfs:label" : "A thing that has a BCE date value"
   }, {
-    "@id" : "http://rdfh.ch/anything/thing_with_list_value",
-    "@type" : "anything:Thing",
+    "@id" : "http://rdfh.ch/0001/thing_with_list_value",
+    "@type" : "p0001-anything:Thing",
     "rdfs:label" : "A thing that has a list value"
   }, {
-    "@id" : "http://rdfh.ch/anything/thing_with_two_list_values",
-    "@type" : "anything:Thing",
+    "@id" : "http://rdfh.ch/0001/thing_with_two_list_values",
+    "@type" : "p0001-anything:Thing",
     "rdfs:label" : "A thing that has two list values"
   }, {
-    "@id" : "http://rdfh.ch/anything/uqmMo72OQ2K2xe7mkIytlg",
-    "@type" : "anything:Thing",
-    "anything:hasBoolean" : {
-      "@id" : "http://rdfh.ch/anything/WOPBNzp4TM-QxrEVt6U6hQ/values/azE8tXC6RFKv296GXYEg5Q",
+    "@id" : "http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg",
+    "@type" : "p0001-anything:Thing",
+    "p0001-anything:hasBoolean" : {
+      "@id" : "http://rdfh.ch/0001/WOPBNzp4TM-QxrEVt6U6hQ/values/azE8tXC6RFKv296GXYEg5Q",
       "@type" : "knora-api:BooleanValue",
       "knora-api:booleanValueAsBoolean" : true
     },
@@ -57,9 +57,9 @@
   "schema:numberOfItems" : 12,
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "p0001-anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "schema" : "http://schema.org/",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
   }
 }

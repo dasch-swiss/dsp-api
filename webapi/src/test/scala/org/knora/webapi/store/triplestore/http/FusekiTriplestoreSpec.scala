@@ -57,11 +57,11 @@ object FusekiTriplestoreSpec {
                         }
                         {
                             path = "_test_data/ontologies/incunabula-onto.ttl"
-                            name = "http://www.knora.org/ontology/incunabula"
+                            name = "http://www.knora.org/ontology/0803/incunabula"
                         }
                         {
                             path = "_test_data/ontologies/dokubib-onto.ttl"
-                            name = "http://www.knora.org/ontology/dokubib"
+                            name = "http://www.knora.org/ontology/0804/dokubib"
                         }
                     ]
             }
@@ -85,8 +85,8 @@ class FusekiTriplestoreSpec extends CoreSpec("FusekiTriplestoreTestSystem", Fuse
 
         RdfDataObject(path = "_test_data/ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "_test_data/ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
-        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
-        RdfDataObject(path = "_test_data/ontologies/dokubib-onto.ttl", name = "http://www.knora.org/ontology/dokubib")
+        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/0803/incunabula"),
+        RdfDataObject(path = "_test_data/ontologies/dokubib-onto.ttl", name = "http://www.knora.org/ontology/0804/dokubib")
 
     )
 

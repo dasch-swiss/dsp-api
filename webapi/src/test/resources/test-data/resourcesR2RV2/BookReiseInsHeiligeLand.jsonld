@@ -1,83 +1,83 @@
 {
   "@type" : "schema:ItemList",
   "schema:itemListElement" : {
-    "@id" : "http://data.knora.org/2a6221216701",
+    "@id" : "http://rdfh.ch/2a6221216701",
     "@type" : "incunabula:book",
     "incunabula:book_comment" : {
-      "@id" : "http://data.knora.org/2a6221216701/values/56c287fc9505",
+      "@id" : "http://rdfh.ch/2a6221216701/values/56c287fc9505",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Katalogaufnahme anhand ISTC und v.d.Haegen"
     },
     "incunabula:citation" : [ {
-      "@id" : "http://data.knora.org/2a6221216701/values/7b4a9bf89305",
+      "@id" : "http://rdfh.ch/2a6221216701/values/7b4a9bf89305",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Van der Haegen I: 9,14"
     }, {
-      "@id" : "http://data.knora.org/2a6221216701/values/3e74ee319405",
+      "@id" : "http://rdfh.ch/2a6221216701/values/3e74ee319405",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Goff M165"
     }, {
-      "@id" : "http://data.knora.org/2a6221216701/values/019e416b9405",
+      "@id" : "http://rdfh.ch/2a6221216701/values/019e416b9405",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "C 3833"
     }, {
-      "@id" : "http://data.knora.org/2a6221216701/values/c4c794a49405",
+      "@id" : "http://rdfh.ch/2a6221216701/values/c4c794a49405",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Klebs 651.2"
     }, {
-      "@id" : "http://data.knora.org/2a6221216701/values/87f1e7dd9405",
+      "@id" : "http://rdfh.ch/2a6221216701/values/87f1e7dd9405",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Schr 4799"
     }, {
-      "@id" : "http://data.knora.org/2a6221216701/values/4a1b3b179505",
+      "@id" : "http://rdfh.ch/2a6221216701/values/4a1b3b179505",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Schramm XXI p. 9 & 26"
     }, {
-      "@id" : "http://data.knora.org/2a6221216701/values/0d458e509505",
+      "@id" : "http://rdfh.ch/2a6221216701/values/0d458e509505",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "FairMur(G) 283"
     }, {
-      "@id" : "http://data.knora.org/2a6221216701/values/d06ee1899505",
+      "@id" : "http://rdfh.ch/2a6221216701/values/d06ee1899505",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "IBP 3556"
     }, {
-      "@id" : "http://data.knora.org/2a6221216701/values/939834c39505",
+      "@id" : "http://rdfh.ch/2a6221216701/values/939834c39505",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Borm 1751"
     } ],
     "incunabula:location" : {
-      "@id" : "http://data.knora.org/2a6221216701/values/262655679205",
+      "@id" : "http://rdfh.ch/2a6221216701/values/262655679205",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Basel UB, Sign: Aleph D III 13:1"
     },
     "incunabula:note" : [ {
-      "@id" : "http://data.knora.org/2a6221216701/values/ac79fbd99205",
+      "@id" : "http://rdfh.ch/2a6221216701/values/ac79fbd99205",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "deutsch von Otto von Diemeringen"
     }, {
-      "@id" : "http://data.knora.org/2a6221216701/values/6fa34e139305",
+      "@id" : "http://rdfh.ch/2a6221216701/values/6fa34e139305",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Rubr. mit Init. J zu Beginn"
     }, {
-      "@id" : "http://data.knora.org/2a6221216701/values/32cda14c9305",
+      "@id" : "http://rdfh.ch/2a6221216701/values/32cda14c9305",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Holzschnitte nicht koloriert"
     }, {
-      "@id" : "http://data.knora.org/2a6221216701/values/f5f6f4859305",
+      "@id" : "http://rdfh.ch/2a6221216701/values/f5f6f4859305",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Besitzervermerke: Kartause, H. Zscheckenbürlin"
     }, {
-      "@id" : "http://data.knora.org/2a6221216701/values/b82048bf9305",
+      "@id" : "http://rdfh.ch/2a6221216701/values/b82048bf9305",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516"
     } ],
     "incunabula:physical_desc" : {
-      "@id" : "http://data.knora.org/2a6221216701/values/e94fa8a09205",
+      "@id" : "http://rdfh.ch/2a6221216701/values/e94fa8a09205",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Extent: 1 Bd.; Dimensions: f°"
     },
     "incunabula:pubdate" : {
-      "@id" : "http://data.knora.org/2a6221216701/values/63fc012e9205",
+      "@id" : "http://rdfh.ch/2a6221216701/values/63fc012e9205",
       "@type" : "knora-api:DateValue",
       "knora-api:dateValueHasCalendar" : "JULIAN",
       "knora-api:dateValueHasEndEra" : "CE",
@@ -87,30 +87,30 @@
       "knora-api:valueAsString" : "JULIAN:1481 CE"
     },
     "incunabula:publisher" : {
-      "@id" : "http://data.knora.org/2a6221216701/values/dda85bbb9105",
+      "@id" : "http://rdfh.ch/2a6221216701/values/dda85bbb9105",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Bernhard Richel"
     },
     "incunabula:publoc" : {
-      "@id" : "http://data.knora.org/2a6221216701/values/a0d2aef49105",
+      "@id" : "http://rdfh.ch/2a6221216701/values/a0d2aef49105",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Basel"
     },
     "incunabula:title" : [ {
-      "@id" : "http://data.knora.org/2a6221216701/values/d1010fd69005",
+      "@id" : "http://rdfh.ch/2a6221216701/values/d1010fd69005",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Reise ins Heilige Land"
     }, {
-      "@id" : "http://data.knora.org/2a6221216701/values/942b620f9105",
+      "@id" : "http://rdfh.ch/2a6221216701/values/942b620f9105",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Reysen und wanderschafften durch das Gelobte Land"
     }, {
-      "@id" : "http://data.knora.org/2a6221216701/values/5755b5489105",
+      "@id" : "http://rdfh.ch/2a6221216701/values/5755b5489105",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Itinerarius"
     } ],
     "incunabula:url" : {
-      "@id" : "http://data.knora.org/2a6221216701/values/f89173afca2704",
+      "@id" : "http://rdfh.ch/2a6221216701/values/f89173afca2704",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320"
     },
@@ -122,6 +122,6 @@
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "schema" : "http://schema.org/",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "incunabula" : "http://0.0.0.0:3333/ontology/incunabula/v2#"
+    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
   }
 }

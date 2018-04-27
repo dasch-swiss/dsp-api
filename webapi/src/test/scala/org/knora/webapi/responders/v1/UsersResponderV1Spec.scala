@@ -109,12 +109,12 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
             }
 
             "return 'NotFoundException' when the user is unknown " in {
-                actorUnderTest ! UserProfileByIRIGetRequestV1("http://data.knora.org/users/notexisting", UserProfileTypeV1.RESTRICTED, rootUser)
-                expectMsg(Failure(NotFoundException(s"User 'http://data.knora.org/users/notexisting' not found")))
+                actorUnderTest ! UserProfileByIRIGetRequestV1("http://rdfh.ch/users/notexisting", UserProfileTypeV1.RESTRICTED, rootUser)
+                expectMsg(Failure(NotFoundException(s"User 'http://rdfh.ch/users/notexisting' not found")))
             }
 
             "return 'None' when the user is unknown " in {
-                actorUnderTest ! UserProfileByIRIGetV1("http://data.knora.org/users/notexisting", UserProfileTypeV1.RESTRICTED)
+                actorUnderTest ! UserProfileByIRIGetV1("http://rdfh.ch/users/notexisting", UserProfileTypeV1.RESTRICTED)
                 expectMsg(None)
             }
         }
