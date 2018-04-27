@@ -28,7 +28,7 @@ import org.knora.webapi.{BadRequestException, IRI, LanguageCodes}
 /**
   * Represents a value in a JSON-LD document.
   */
-sealed trait JsonLDValue {
+sealed trait JsonLDValue extends Ordered[JsonLDValue] {
     /**
       * Converts this JSON-LD value to a Scala object that can be passed to [[org.knora.webapi.util.JavaUtil.deepScalaToJava]],
       * whose return value can then be passed to the JSON-LD Java library.
@@ -44,6 +44,13 @@ sealed trait JsonLDValue {
   */
 case class JsonLDString(value: String) extends JsonLDValue {
     override def toAny: Any = value
+
+    override def compare(that: JsonLDValue): Int = {
+        that match {
+            case thatStr: JsonLDString => value.compare(thatStr.value)
+            case _ => 0
+        }
+    }
 }
 
 /**
@@ -53,6 +60,13 @@ case class JsonLDString(value: String) extends JsonLDValue {
   */
 case class JsonLDInt(value: Int) extends JsonLDValue {
     override def toAny: Any = value
+
+    override def compare(that: JsonLDValue): Int = {
+        that match {
+            case thatInt: JsonLDInt => value.compare(thatInt.value)
+            case _ => 0
+        }
+    }
 }
 
 /**
@@ -62,6 +76,13 @@ case class JsonLDInt(value: Int) extends JsonLDValue {
   */
 case class JsonLDBoolean(value: Boolean) extends JsonLDValue {
     override def toAny: Any = value
+
+    override def compare(that: JsonLDValue): Int = {
+        that match {
+            case thatBoolean: JsonLDBoolean => value.compare(thatBoolean.value)
+            case _ => 0
+        }
+    }
 }
 
 /**
@@ -227,6 +248,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
             case other => throw BadRequestException(s"Invalid $key: $other (boolean expected)")
         }
     }
+
+    override def compare(that: JsonLDValue): Int = 0
 }
 
 /**
@@ -261,6 +284,8 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
             case other => throw BadRequestException(s"Expected JSON-LD object: $other")
         }
     }
+
+    override def compare(that: JsonLDValue): Int = 0
 }
 
 /**
