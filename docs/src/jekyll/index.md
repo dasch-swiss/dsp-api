@@ -13,7 +13,7 @@ The Knora Stack consist of the following components:
  - The API Server: 
     - [webapi (new documentation style)](/paradox/index.html)
     - [webapi (old documentation style)](/sphinx/index.html)
-    - [Knora-Base documentation](/assets/pdf/knora-base.pdf)
+    - [Knora-Base documentation](/sphinx/02-knora-ontologies/knora-base.html)
  - The IIIF Server: [The SIPI Manual](https://dhlab-basel.github.io/Sipi/documentation/index.html)
  - A triplestore: [Graphdb-Free](http://graphdb.ontotext.com/documentation/free/) or [GraphDB-SE](http://graphdb.ontotext.com/documentation/standard/)
 
