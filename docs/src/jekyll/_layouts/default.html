@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+{% include head.html %}
+
+<body>
+    <!-- Start Layout -->
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+        {% include header.html %}
+
+        {{ content }}
+
+        {% include footer.html %}
+    </div>
+    <!-- /End Layout -->
+
+    <!-- Material Design Lite js Library -->
+    <script type="text/javascript" src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+</body>
+
+</html>

@@ -206,11 +206,13 @@
 ##########################################################
 
 ### ###########################################
-### <http://rdfh.ch/projects/77275339>
+### <http://rdfh.ch/projects/0803>
 
-<http://rdfh.ch/projects/77275339> rdf:type knora-base:knoraProject ;
+<http://rdfh.ch/projects/0803> rdf:type knora-base:knoraProject ;
 
                                           knora-base:projectShortname "incunabula"^^xsd:string ;
+
+                                          knora-base:projectShortcode "0803"^^xsd:string;
 
                                           knora-base:projectLongname "Bilderfolgen Basler Frühdrucke"^^xsd:string ;
 
@@ -262,11 +264,11 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:status "true"^^xsd:boolean ;
 
-                                         knora-base:isInProject <http://rdfh.ch/projects/77275339> ;
+                                         knora-base:isInProject <http://rdfh.ch/projects/0803> ;
 
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
 
-                                         knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/77275339> .
+                                         knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/0803> .
 
 
 ## Project Creator and Member
@@ -286,7 +288,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:status "true"^^xsd:boolean ;
 
-                                         knora-base:isInProject <http://rdfh.ch/projects/77275339> ;
+                                         knora-base:isInProject <http://rdfh.ch/projects/0803> ;
 
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -308,7 +310,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                          knora-base:status "true"^^xsd:boolean ;
 
-                                         knora-base:isInProject <http://rdfh.ch/projects/77275339> ;
+                                         knora-base:isInProject <http://rdfh.ch/projects/0803> ;
 
                                          knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
@@ -336,15 +338,15 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
                                         knora-base:status "true"^^xsd:boolean ;
 
-                                        knora-base:isInProject <http://rdfh.ch/projects/77275339> ,
+                                        knora-base:isInProject <http://rdfh.ch/projects/0803> ,
                                                                <http://rdfh.ch/projects/00FF> ,
-                                                               <http://rdfh.ch/projects/anything> ;
+                                                               <http://rdfh.ch/projects/0001> ;
 
                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
 
-                                        knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/77275339> ,
+                                        knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/0803> ,
                                                                          <http://rdfh.ch/projects/00FF> ,
-                                                                         <http://rdfh.ch/projects/anything> ;
+                                                                         <http://rdfh.ch/projects/0001> ;
 
                                         knora-base:isInGroup <http://rdfh.ch/groups/00FF/images-reviewer> .
 
@@ -355,8 +357,9 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 # ANYTHING PROJECT                #
 ###################################
 
-<http://rdfh.ch/projects/anything> a knora-base:knoraProject ;
+<http://rdfh.ch/projects/0001> a knora-base:knoraProject ;
   knora-base:projectShortname "anything"^^xsd:string ;
+  knora-base:projectShortcode "0001"^^xsd:string;
   knora-base:projectLongname "Anything Project"^^xsd:string ;
   knora-base:projectDescription "Anything Project"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
@@ -370,7 +373,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:email "anything.user01@example.org"^^xsd:string ;
   knora-base:preferredLanguage "de"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
-  knora-base:isInProject <http://rdfh.ch/projects/anything> ;
+  knora-base:isInProject <http://rdfh.ch/projects/0001> ;
   knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/AnythingAdminUser> a knora-base:User ;
@@ -381,9 +384,9 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:email "anything.admin@example.org"^^xsd:string ;
   knora-base:preferredLanguage "de"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
-  knora-base:isInProject <http://rdfh.ch/projects/anything> ;
+  knora-base:isInProject <http://rdfh.ch/projects/0001> ;
   knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
-  knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/anything> .
+  knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/0001> .
 
 <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> a knora-base:User ;
   knora-base:userid "anything-user-2" ;
@@ -393,16 +396,16 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:email "anything.user02@example.org" ;
   knora-base:preferredLanguage "de"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
-  knora-base:isInProject <http://rdfh.ch/projects/anything> ;
+  knora-base:isInProject <http://rdfh.ch/projects/0001> ;
   knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 ###################################
 # DOKUBIB                         #
 ###################################
 
-<http://rdfh.ch/projects/00FE> a knora-base:knoraProject ;
+<http://rdfh.ch/projects/0804> a knora-base:knoraProject ;
   knora-base:projectShortname "dokubib"^^xsd:string ;
-  knora-base:projectShortcode "00FE"^^xsd:string ;
+  knora-base:projectShortcode "0804"^^xsd:string ;
   knora-base:projectLongname "Dokubib"^^xsd:string ;
   knora-base:projectDescription "Dokubib"^^xsd:string ;
   knora-base:status "false"^^xsd:boolean ;
@@ -413,7 +416,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 # BEOL                            #
 ###################################
 
-<http://rdfh.ch/projects/0801> a knora-base:knoraProject ;
+<http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> a knora-base:knoraProject ;
   knora-base:projectShortname "beol"^^xsd:string ;
   knora-base:projectShortcode "0801"^^xsd:string ;
   knora-base:projectLongname "Bernoulli-Euler Online"^^xsd:string ;
@@ -429,7 +432,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:email "t.schweizer@unibas.ch"^^xsd:string ;
   knora-base:preferredLanguage "de"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
-  knora-base:isInProject <http://rdfh.ch/projects/0801> ;
+  knora-base:isInProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
   knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE> a knora-base:User ;
@@ -440,9 +443,9 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:email "beol@example.com"^^xsd:string ;
   knora-base:preferredLanguage "de"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
-  knora-base:isInProject <http://rdfh.ch/projects/0801> ;
+  knora-base:isInProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
   knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
-  knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/0801> .
+  knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> .
 
 
 ###################################
@@ -451,6 +454,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> a knora-base:knoraProject ;
   knora-base:projectShortname "biblio"^^xsd:string ;
+  knora-base:projectShortcode "0802"^^xsd:string ;
   knora-base:projectLongname "Bibliography"^^xsd:string ;
   knora-base:projectDescription "Bibliography"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;

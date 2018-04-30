@@ -54,7 +54,7 @@ class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) with Tri
     val corsSettings = CORSSupport.corsSettings
 
     private val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
 
@@ -95,7 +95,7 @@ class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) with Tri
         }
 
         "send `Access-Control-Allow-Origin` header when the Knora resource is found " in {
-            val request = Get(baseApiUrl + "/v1/resources/" + java.net.URLEncoder.encode("http://data.knora.org/0cb8286054d5", "utf-8")) ~> Origin(exampleOrigin)
+            val request = Get(baseApiUrl + "/v1/resources/" + java.net.URLEncoder.encode("http://rdfh.ch/0cb8286054d5", "utf-8")) ~> Origin(exampleOrigin)
             val response = singleAwaitingRequest(request)
 
             response.status should equal(StatusCodes.OK)
@@ -105,7 +105,7 @@ class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) with Tri
         }
 
         "send `Access-Control-Allow-Origin` header when the Knora resource is NOT found " in {
-            val request = Get(baseApiUrl + "/v1/resources/" + java.net.URLEncoder.encode("http://data.knora.org/nonexistent", "utf-8")) ~> Origin(exampleOrigin)
+            val request = Get(baseApiUrl + "/v1/resources/" + java.net.URLEncoder.encode("http://rdfh.ch/nonexistent", "utf-8")) ~> Origin(exampleOrigin)
             val response = singleAwaitingRequest(request)
 
             response.status should equal(StatusCodes.NotFound)

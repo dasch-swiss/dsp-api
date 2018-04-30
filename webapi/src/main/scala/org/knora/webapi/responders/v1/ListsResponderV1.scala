@@ -112,12 +112,12 @@ class ListsResponderV1 extends Responder {
 
                 node                                      position	   nodeName   label         child
 
-                http://data.knora.org/lists/10d16738cc    3            4          VOLKSKUNDE    http://data.knora.org/lists/a665b90cd
-                http://data.knora.org/lists/10d16738cc    3            4          VOLKSKUNDE    http://data.knora.org/lists/4238eabcc
-                http://data.knora.org/lists/10d16738cc    3            4          VOLKSKUNDE    http://data.knora.org/lists/a94bb71cc
-                http://data.knora.org/lists/10d16738cc    3            4          VOLKSKUNDE    http://data.knora.org/lists/db6b61e4cc
-                http://data.knora.org/lists/10d16738cc    3            4          VOLKSKUNDE    http://data.knora.org/lists/749fb41dcd
-                http://data.knora.org/lists/10d16738cc    3            4          VOLKSKUNDE    http://data.knora.org/lists/dd3757cd
+                http://rdfh.ch/lists/10d16738cc    3            4          VOLKSKUNDE    http://rdfh.ch/lists/a665b90cd
+                http://rdfh.ch/lists/10d16738cc    3            4          VOLKSKUNDE    http://rdfh.ch/lists/4238eabcc
+                http://rdfh.ch/lists/10d16738cc    3            4          VOLKSKUNDE    http://rdfh.ch/lists/a94bb71cc
+                http://rdfh.ch/lists/10d16738cc    3            4          VOLKSKUNDE    http://rdfh.ch/lists/db6b61e4cc
+                http://rdfh.ch/lists/10d16738cc    3            4          VOLKSKUNDE    http://rdfh.ch/lists/749fb41dcd
+                http://rdfh.ch/lists/10d16738cc    3            4          VOLKSKUNDE    http://rdfh.ch/lists/dd3757cd
 
                 In any case, childRows has at least one element (we know that at least one entry exists for a node without children).
 
@@ -226,12 +226,12 @@ class ListsResponderV1 extends Responder {
 
             /*
 
-            If we request the path to the node <http://data.knora.org/lists/c7f07a3fc1> ("Heidi Film"), the response has the following format:
+            If we request the path to the node <http://rdfh.ch/lists/c7f07a3fc1> ("Heidi Film"), the response has the following format:
 
             node                                        nodeName     label                     child
-            <http://data.knora.org/lists/c7f07a3fc1>    1            Heidi Film
-            <http://data.knora.org/lists/2ebd2706c1>    7            FILM UND FOTO             <http://data.knora.org/lists/c7f07a3fc1>
-            <http://data.knora.org/lists/691eee1cbe>    4KUN         ART                       <http://data.knora.org/lists/2ebd2706c1>
+            <http://rdfh.ch/lists/c7f07a3fc1>    1            Heidi Film
+            <http://rdfh.ch/lists/2ebd2706c1>    7            FILM UND FOTO             <http://rdfh.ch/lists/c7f07a3fc1>
+            <http://rdfh.ch/lists/691eee1cbe>    4KUN         ART                       <http://rdfh.ch/lists/2ebd2706c1>
 
             The order of the rows is arbitrary. Now we need to reconstruct the path based on the parent-child relationships between
             nodes.

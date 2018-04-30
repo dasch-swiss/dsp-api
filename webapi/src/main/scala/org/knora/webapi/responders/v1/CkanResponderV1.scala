@@ -114,7 +114,7 @@ class CkanResponderV1 extends Responder {
         */
 
         val pIri = pinfo.id
-        val resType = "http://www.knora.org/ontology/dokubib#bild"
+        val resType = "http://www.knora.org/ontology/0804/dokubib#bild"
 
         val ckanPInfo =
             CkanProjectInfoV1(

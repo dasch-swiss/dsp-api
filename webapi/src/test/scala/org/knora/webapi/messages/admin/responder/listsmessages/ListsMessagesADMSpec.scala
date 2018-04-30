@@ -37,7 +37,7 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
         "work for a 'ListInfoADM'" in {
 
             val listInfo: ListInfoADM = ListInfoADM (
-                id = "http://data.knora.org/lists/73d0ec0302",
+                id = "http://rdfh.ch/lists/73d0ec0302",
                 projectIri = "http://rdfh.ch/projects/00FF",
                 labels = Seq(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr"))),
                 comments = Seq(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
@@ -94,7 +94,7 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
         "work for a 'ListADM'" in {
 
             val listInfo: ListInfoADM = ListInfoADM (
-                id = "http://data.knora.org/lists/73d0ec0302",
+                id = "http://rdfh.ch/lists/73d0ec0302",
                 projectIri = "http://rdfh.ch/projects/00FF",
                 labels = Seq(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr"))),
                 comments = Seq(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))

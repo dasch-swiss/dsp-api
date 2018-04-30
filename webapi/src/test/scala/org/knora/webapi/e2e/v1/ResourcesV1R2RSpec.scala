@@ -96,11 +96,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     private val rdfDataObjects = List(
-
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
-
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
     )
 
     "Load test data" in {
@@ -121,10 +119,10 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val mathIntelligencerIri = new MutableTestIri
 
     // incunabula book with title "Eyn biechlin ..."
-    private val incunabulaBookBiechlin = "http://data.knora.org/9935159f67"
+    private val incunabulaBookBiechlin = "http://rdfh.ch/9935159f67"
 
     // incunabula book with title Quadragesimale
-    private val incunabulaBookQuadra = "http://data.knora.org/861b5644b302"
+    private val incunabulaBookQuadra = "http://rdfh.ch/861b5644b302"
 
     private val notTheMostBoringComment = "This is not the most boring comment I have seen."
 
@@ -248,7 +246,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
             /* Incunabula resources*/
 
             /* A Book without a preview image */
-            Get("/v1/resources.html/http%3A%2F%2Fdata.knora.org%2Fc5058f3a?noresedit=true&reqtype=properties") ~> resourcesPath ~> check {
+            Get("/v1/resources.html/http%3A%2F%2Frdfh.ch%2Fc5058f3a?noresedit=true&reqtype=properties") ~> resourcesPath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
                 assert(responseAs[String] contains "Phyiscal description")
@@ -262,7 +260,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
             }
 
             /* A Page with a preview image */
-            Get("/v1/resources.html/http%3A%2F%2Fdata.knora.org%2Fde6c38ce3401?noresedit=true&reqtype=properties") ~> resourcesPath ~> check {
+            Get("/v1/resources.html/http%3A%2F%2Frdfh.ch%2Fde6c38ce3401?noresedit=true&reqtype=properties") ~> resourcesPath ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
                 assert(responseAs[String] contains "preview")
@@ -273,7 +271,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "get the regions of a page when doing a context query with resinfo set to true" in {
 
-            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2F9d626dc76c03?resinfo=true&reqtype=context") ~> resourcesPath ~> check {
+            Get("/v1/resources/http%3A%2F%2Frdfh.ch%2F9d626dc76c03?resinfo=true&reqtype=context") ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -286,16 +284,16 @@ class ResourcesV1R2RSpec extends R2RSpec {
                         val regions: Vector[PropsGetForRegionV1] = regionsVector.map(_.convertTo[PropsGetForRegionV1])
 
                         val region1 = regions.filter {
-                            region => region.res_id == "http://data.knora.org/021ec18f1735"
+                            region => region.res_id == "http://rdfh.ch/021ec18f1735"
                         }
 
                         val region2 = regions.filter {
-                            region => region.res_id == "http://data.knora.org/b6b64a62b006"
+                            region => region.res_id == "http://rdfh.ch/b6b64a62b006"
                         }
 
-                        assert(region1.length == 1, "No region found with Iri 'http://data.knora.org/021ec18f1735'")
+                        assert(region1.length == 1, "No region found with Iri 'http://rdfh.ch/021ec18f1735'")
 
-                        assert(region2.length == 1, "No region found with Iri 'http://data.knora.org/b6b64a62b006'")
+                        assert(region2.length == 1, "No region found with Iri 'http://rdfh.ch/b6b64a62b006'")
 
                     case None => assert(false, "No regions given, but 2 were expected")
                     case _ => assert(false, "No valid regions given")
@@ -327,10 +325,10 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val expectedXML =
                 """<?xml version="1.0" encoding="UTF-8"?>
-                  |<text><p>Derselbe Holzschnitt wird auf Seite <a href="http://data.knora.org/c9824353ae06" class="salsah-link">c7r</a> der lateinischen Ausgabe des Narrenschiffs verwendet.</p></text>
+                  |<text><p>Derselbe Holzschnitt wird auf Seite <a href="http://rdfh.ch/c9824353ae06" class="salsah-link">c7r</a> der lateinischen Ausgabe des Narrenschiffs verwendet.</p></text>
                 """.stripMargin
 
-            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2F047db418ae06") ~> resourcesPath ~> check {
+            Get("/v1/resources/http%3A%2F%2Frdfh.ch%2F047db418ae06") ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -357,20 +355,20 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val expectedXML1 =
                 """<?xml version="1.0" encoding="UTF-8"?>
-                  |<text>Na ja, die <a href="http://data.knora.org/a-thing" class="salsah-link">Dinge</a> sind OK.</text>
+                  |<text>Na ja, die <a href="http://rdfh.ch/0001/a-thing" class="salsah-link">Dinge</a> sind OK.</text>
                 """.stripMargin
 
             val expectedXML2 =
                 """<?xml version="1.0" encoding="UTF-8"?>
-                  |<text>Ich liebe die <a href="http://data.knora.org/a-thing" class="salsah-link">Dinge</a>, sie sind alles für mich.</text>
+                  |<text>Ich liebe die <a href="http://rdfh.ch/0001/a-thing" class="salsah-link">Dinge</a>, sie sind alles für mich.</text>
                 """.stripMargin
 
 
-            Get("/v1/resources/http%3A%2F%2Fdata.knora.org%2Fa-thing-with-text-values") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Get("/v1/resources/http%3A%2F%2Frdfh.ch%2F0001%2Fa-thing-with-text-values") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText")
+                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
 
                 val textValues: Seq[JsValue] = text match {
                     case vals: JsArray =>
@@ -415,26 +413,26 @@ class ResourcesV1R2RSpec extends R2RSpec {
             val params =
                 s"""
                    |{
-                   |    "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                   |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A thing",
-                   |    "project_id": "http://rdfh.ch/projects/anything",
+                   |    "project_id": "http://rdfh.ch/projects/0001",
                    |    "properties": {
-                   |        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml": ${xml1.toJson.compactPrint}, "mapping_id": "$mappingIri"}}],
-                   |        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
-                   |        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
-                   |        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
-                   |        "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
-                   |        "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
-                   |        "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
-                   |        "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}],
-                   |        "http://www.knora.org/ontology/anything#hasBoolean": [{"boolean_value":true}]
+                   |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml": ${xml1.toJson.compactPrint}, "mapping_id": "$mappingIri"}}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasInteger": [{"int_value":12345}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasDecimal": [{"decimal_value":5.6}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasColor": [{"color_value":"#4169E1"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/0001/treeList10"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasBoolean": [{"boolean_value":true}]
                    |    }
                    |}
                 """.stripMargin
 
             // TODO: these properties have been commented out in the thing test ontology because of compatibility with the GUI
-            // "http://www.knora.org/ontology/anything#hasGeoname": [{"geoname_value": "2661602"}]
-            // "http://www.knora.org/ontology/anything#hasGeometry": [{"geom_value":"{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}"}],
+            // "http://www.knora.org/ontology/0001/anything#hasGeoname": [{"geoname_value": "2661602"}]
+            // "http://www.knora.org/ontology/0001/anything#hasGeometry": [{"geom_value":"{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}"}],
 
             Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
@@ -451,7 +449,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText")
+                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
 
                 val xml: String = text match {
                     case vals: JsArray =>
@@ -475,9 +473,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
             val newValueParams =
                 s"""
                    |{
-                   |    "project_id": "http://rdfh.ch/projects/anything",
+                   |    "project_id": "http://rdfh.ch/projects/0001",
                    |    "res_id": "${firstThingIri.get}",
-                   |    "prop": "http://www.knora.org/ontology/anything#hasText",
+                   |    "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                    |    "richtext_value": {
                    |        "xml": ${xml2.toJson.compactPrint},
                    |        "mapping_id": "$mappingIri"
@@ -518,7 +516,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
             val newValueParams =
                 s"""
                    |{
-                   |    "project_id": "http://rdfh.ch/projects/anything",
+                   |    "project_id": "http://rdfh.ch/projects/0001",
                    |    "richtext_value": {
                    |        "xml": ${xml.toJson.compactPrint},
                    |        "mapping_id": "$mappingIri"
@@ -585,18 +583,18 @@ class ResourcesV1R2RSpec extends R2RSpec {
             val params =
                 s"""
                    |{
-                   |    "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                   |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
-                   |    "project_id": "http://rdfh.ch/projects/anything",
+                   |    "project_id": "http://rdfh.ch/projects/0001",
                    |    "properties": {
-                   |        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint},"mapping_id" :"$mappingIri"}}],
-                   |        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
-                   |        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
-                   |        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
-                   |        "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
-                   |        "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
-                   |        "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
-                   |        "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+                   |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint},"mapping_id" :"$mappingIri"}}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasInteger": [{"int_value":12345}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasDecimal": [{"decimal_value":5.6}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasColor": [{"color_value":"#4169E1"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/0001/treeList10"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
                    |    }
                    |}
                  """.stripMargin
@@ -616,7 +614,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
             Get("/v1/resources/" + URLEncoder.encode(secondThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
-                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText")
+                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
 
                 val xmlString: String = text match {
                     case vals: JsArray =>
@@ -698,18 +696,18 @@ class ResourcesV1R2RSpec extends R2RSpec {
             val params =
                 s"""
                    |{
-                   |    "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                   |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
-                   |    "project_id": "http://rdfh.ch/projects/anything",
+                   |    "project_id": "http://rdfh.ch/projects/0001",
                    |    "properties": {
-                   |        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint}, "mapping_id": "$mappingIri"}}],
-                   |        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
-                   |        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
-                   |        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
-                   |        "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
-                   |        "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
-                   |        "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
-                   |        "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+                   |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint}, "mapping_id": "$mappingIri"}}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasInteger": [{"int_value":12345}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasDecimal": [{"decimal_value":5.6}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasColor": [{"color_value":"#4169E1"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/0001/treeList10"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
                    |    }
                    |}
                  """.stripMargin
@@ -725,24 +723,24 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val xml =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
-                   |<text><u><strong>This</strong></u> <u>text</u> <a class="salsah-link" href="$incunabulaBookQuadra">links</a> to <a class="salsah-link" href="http://data.knora.org/9935159f">two</a> things</text>
+                   |<text><u><strong>This</strong></u> <u>text</u> <a class="salsah-link" href="$incunabulaBookQuadra">links</a> to <a class="salsah-link" href="http://rdfh.ch/9935159f">two</a> things</text>
                  """.stripMargin
 
             val params =
                 s"""
                    |{
-                   |    "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                   |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
-                   |    "project_id": "http://rdfh.ch/projects/anything",
+                   |    "project_id": "http://rdfh.ch/projects/0001",
                    |    "properties": {
-                   |        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint},"mapping_id": "$mappingIri"}}],
-                   |        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
-                   |        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
-                   |        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
-                   |        "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
-                   |        "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
-                   |        "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
-                   |        "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+                   |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint},"mapping_id": "$mappingIri"}}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasInteger": [{"int_value":12345}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasDecimal": [{"decimal_value":5.6}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasColor": [{"color_value":"#4169E1"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/0001/treeList10"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
                    |    }
                    |}
                    |
@@ -773,18 +771,18 @@ class ResourcesV1R2RSpec extends R2RSpec {
             val params =
                 s"""
                    |{
-                   |    "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                   |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
-                   |    "project_id": "http://rdfh.ch/projects/anything",
+                   |    "project_id": "http://rdfh.ch/projects/0001",
                    |    "properties": {
-                   |        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml":${firstXML.toJson.compactPrint},"mapping_id": "$mappingIri"}}, {"richtext_value":{"xml":${secondXML.toJson.compactPrint},"mapping_id": "$mappingIri"}}],
-                   |        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
-                   |        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
-                   |        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
-                   |        "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
-                   |        "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
-                   |        "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
-                   |        "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+                   |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml":${firstXML.toJson.compactPrint},"mapping_id": "$mappingIri"}}, {"richtext_value":{"xml":${secondXML.toJson.compactPrint},"mapping_id": "$mappingIri"}}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasInteger": [{"int_value":12345}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasDecimal": [{"decimal_value":5.6}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasColor": [{"color_value":"#4169E1"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/0001/treeList10"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
                    |    }
                    |}
                  """.stripMargin
@@ -855,7 +853,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "mark a resource as deleted" in {
 
-            Delete("/v1/resources/http%3A%2F%2Fdata.knora.org%2F9d626dc76c03?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail2, password)) ~> resourcesPath ~> check {
+            Delete("/v1/resources/http%3A%2F%2Frdfh.ch%2F9d626dc76c03?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail2, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
             }
         }
@@ -871,18 +869,18 @@ class ResourcesV1R2RSpec extends R2RSpec {
             val params =
                 s"""
                    |{
-                   |    "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                   |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
-                   |    "project_id": "http://rdfh.ch/projects/anything",
+                   |    "project_id": "http://rdfh.ch/projects/0001",
                    |    "properties": {
-                   |        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint},"mapping_id":"$mappingIri"}}],
-                   |        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
-                   |        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
-                   |        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
-                   |        "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
-                   |        "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
-                   |        "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
-                   |        "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+                   |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint},"mapping_id":"$mappingIri"}}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasInteger": [{"int_value":12345}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasDecimal": [{"decimal_value":5.6}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasColor": [{"color_value":"#4169E1"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/0001/treeList10"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
                    |    }
                    |}
                  """.stripMargin
@@ -902,7 +900,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
             Get("/v1/resources/" + URLEncoder.encode(fourthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
-                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText")
+                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
 
                 val xmlString: String = text match {
                     case vals: JsArray =>
@@ -935,18 +933,18 @@ class ResourcesV1R2RSpec extends R2RSpec {
             val params =
                 s"""
                    |{
-                   |    "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                   |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
-                   |    "project_id": "http://rdfh.ch/projects/anything",
+                   |    "project_id": "http://rdfh.ch/projects/0001",
                    |    "properties": {
-                   |        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml":${xml3.toJson.compactPrint}, "mapping_id": "$mappingIri"}}],
-                   |        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
-                   |        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
-                   |        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
-                   |        "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
-                   |        "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
-                   |        "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
-                   |        "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+                   |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml":${xml3.toJson.compactPrint}, "mapping_id": "$mappingIri"}}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasInteger": [{"int_value":12345}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasDecimal": [{"decimal_value":5.6}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasColor": [{"color_value":"#4169E1"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/0001/treeList10"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
                    |    }
                    |}
                  """.stripMargin
@@ -966,7 +964,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
             Get("/v1/resources/" + URLEncoder.encode(fifthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
-                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText")
+                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
 
                 val xmlString: String = text match {
                     case vals: JsArray =>
@@ -1009,18 +1007,18 @@ class ResourcesV1R2RSpec extends R2RSpec {
             val params =
                 s"""
                    |{
-                   |    "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                   |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
-                   |    "project_id": "http://rdfh.ch/projects/anything",
+                   |    "project_id": "http://rdfh.ch/projects/0001",
                    |    "properties": {
-                   |        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value":{"xml": ${xml4.toJson.compactPrint},"mapping_id": "$mappingIri"}}],
-                   |        "http://www.knora.org/ontology/anything#hasInteger": [{"int_value":12345}],
-                   |        "http://www.knora.org/ontology/anything#hasDecimal": [{"decimal_value":5.6}],
-                   |        "http://www.knora.org/ontology/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
-                   |        "http://www.knora.org/ontology/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
-                   |        "http://www.knora.org/ontology/anything#hasColor": [{"color_value":"#4169E1"}],
-                   |        "http://www.knora.org/ontology/anything#hasListItem": [{"hlist_value":"http://data.knora.org/anything/treeList10"}],
-                   |        "http://www.knora.org/ontology/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
+                   |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml": ${xml4.toJson.compactPrint},"mapping_id": "$mappingIri"}}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasInteger": [{"int_value":12345}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasDecimal": [{"decimal_value":5.6}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasColor": [{"color_value":"#4169E1"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/0001/treeList10"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
                    |    }
                    |}
                  """.stripMargin
@@ -1041,7 +1039,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
 
 
-                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasText")
+                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
 
                 val xmlString: String = text match {
                     case vals: JsArray =>
@@ -1092,7 +1090,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Put("/v1/resources/label/" + URLEncoder.encode("http://data.knora.org/c5058f3a", "UTF-8"), HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPath ~> check {
+            Put("/v1/resources/label/" + URLEncoder.encode("http://rdfh.ch/c5058f3a", "UTF-8"), HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val label = AkkaHttpUtils.httpResponseToJson(response).fields.get("label") match {
@@ -1110,12 +1108,12 @@ class ResourcesV1R2RSpec extends R2RSpec {
             val params =
                 s"""
                    |{
-                   |    "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                   |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A thing with a link value that has a comment",
-                   |    "project_id": "http://rdfh.ch/projects/anything",
+                   |    "project_id": "http://rdfh.ch/projects/0001",
                    |    "properties": {
-                   |        "http://www.knora.org/ontology/anything#hasText": [{"richtext_value": {"utf8str": "simple text"}}],
-                   |        "http://www.knora.org/ontology/anything#hasOtherThing": [{"link_value":"${sixthThingIri.get}", "comment":"$notTheMostBoringComment"}]
+                   |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value": {"utf8str": "simple text"}}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasOtherThing": [{"link_value":"${sixthThingIri.get}", "comment":"$notTheMostBoringComment"}]
                    |    }
                    }
                 """.stripMargin
@@ -1135,7 +1133,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val targetResourceIri: String = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasOtherThing") match {
+                val targetResourceIri: String = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasOtherThing") match {
                     case vals: JsArray =>
                         vals.elements.head.asInstanceOf[JsString].value
                     case _ =>
@@ -1144,7 +1142,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
                 assert(targetResourceIri == sixthThingIri.get)
 
-                val linkValueComment: String = getCommentsForProp(response, "http://www.knora.org/ontology/anything#hasOtherThing") match {
+                val linkValueComment: String = getCommentsForProp(response, "http://www.knora.org/ontology/0001/anything#hasOtherThing") match {
                     case vals: JsArray =>
                         vals.elements.head.asInstanceOf[JsString].value
                     case _ =>
@@ -1160,9 +1158,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
             val newValueParams =
                 s"""
                    |{
-                   |    "project_id": "http://rdfh.ch/projects/anything",
+                   |    "project_id": "http://rdfh.ch/projects/0001",
                    |    "res_id": "${seventhThingIri.get}",
-                   |    "prop": "http://www.knora.org/ontology/anything#hasText",
+                   |    "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                    |    "richtext_value": {
                    |        "utf8str": "another simple text"
                    |    }
@@ -1190,11 +1188,11 @@ class ResourcesV1R2RSpec extends R2RSpec {
             val params =
                 s"""
                    |{
-                   |    "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                   |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A thing with a BCE date of the murder of Caesar",
-                   |    "project_id": "http://rdfh.ch/projects/anything",
+                   |    "project_id": "http://rdfh.ch/projects/0001",
                    |    "properties": {
-                   |        "http://www.knora.org/ontology/anything#hasDate": [{"date_value": "JULIAN:44-03-15 BCE"}]
+                   |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value": "JULIAN:44-03-15 BCE"}]
                    |    }
                    }
                 """.stripMargin
@@ -1214,7 +1212,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val dateObj: JsObject = getValuesForProp(response, "http://www.knora.org/ontology/anything#hasDate") match {
+                val dateObj: JsObject = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasDate") match {
                     case vals: JsArray =>
                         vals.elements.head.asInstanceOf[JsObject]
                     case _ =>
@@ -1267,10 +1265,10 @@ class ResourcesV1R2RSpec extends R2RSpec {
         "create resources from an XML import" in {
             val xmlImport =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
-                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/biblio/xml-import/v1#"
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   |    xsi:schemaLocation="http://api.knora.org/ontology/biblio/xml-import/v1# biblio.xsd"
-                   |    xmlns:biblio="http://api.knora.org/ontology/biblio/xml-import/v1#"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/0802/biblio/xml-import/v1# p0802-biblio.xsd"
+                   |    xmlns:p0802-biblio="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
                    |    xmlns:p0801-beol="http://api.knora.org/ontology/0801/beol/xml-import/v1#"
                    |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
                    |    <p0801-beol:person id="abel">
@@ -1284,31 +1282,31 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        <p0801-beol:hasFamilyName knoraType="richtext_value">Holmes</p0801-beol:hasFamilyName>
                    |        <p0801-beol:hasGivenName knoraType="richtext_value">Sherlock</p0801-beol:hasGivenName>
                    |    </p0801-beol:person>
-                   |    <biblio:Journal id="math_intelligencer">
+                   |    <p0802-biblio:Journal id="math_intelligencer">
                    |        <knoraXmlImport:label>Math Intelligencer</knoraXmlImport:label>
-                   |        <biblio:hasName knoraType="richtext_value">Math Intelligencer</biblio:hasName>
-                   |    </biblio:Journal>
-                   |    <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
+                   |        <p0802-biblio:hasName knoraType="richtext_value">Math Intelligencer</p0802-biblio:hasName>
+                   |    </p0802-biblio:Journal>
+                   |    <p0802-biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
                    |        <knoraXmlImport:label>Strings in the 16th and 17th Centuries</knoraXmlImport:label>
-                   |        <biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
+                   |        <p0802-biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
                    |            <text xmlns="">The most <strong>interesting</strong> article in <a class="salsah-link" href="ref:math_intelligencer">Math Intelligencer</a>.</text>
-                   |        </biblio:p0801-beol__comment>
-                   |        <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
-                   |        <biblio:isPartOfJournal>
-                   |            <biblio:Journal knoraType="link_value" target="math_intelligencer" linkType="ref"/>
-                   |        </biblio:isPartOfJournal>
-                   |        <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
-                   |        <biblio:publicationHasAuthor>
+                   |        </p0802-biblio:p0801-beol__comment>
+                   |        <p0802-biblio:endPage knoraType="richtext_value">73</p0802-biblio:endPage>
+                   |        <p0802-biblio:isPartOfJournal>
+                   |            <p0802-biblio:Journal knoraType="link_value" target="math_intelligencer" linkType="ref"/>
+                   |        </p0802-biblio:isPartOfJournal>
+                   |        <p0802-biblio:journalVolume knoraType="richtext_value">27</p0802-biblio:journalVolume>
+                   |        <p0802-biblio:publicationHasAuthor>
                    |            <p0801-beol:person knoraType="link_value" linkType="ref" target="abel"/>
-                   |        </biblio:publicationHasAuthor>
-                   |        <biblio:publicationHasAuthor>
+                   |        </p0802-biblio:publicationHasAuthor>
+                   |        <p0802-biblio:publicationHasAuthor>
                    |            <p0801-beol:person knoraType="link_value" linkType="ref" target="holmes"/>
-                   |        </biblio:publicationHasAuthor>
-                   |        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:500 BC:400 BC</biblio:publicationHasDate>
-                   |        <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
-                   |        <biblio:publicationHasTitle knoraType="richtext_value">An alternate title</biblio:publicationHasTitle>
-                   |        <biblio:startPage knoraType="richtext_value">48</biblio:startPage>
-                   |    </biblio:JournalArticle>
+                   |        </p0802-biblio:publicationHasAuthor>
+                   |        <p0802-biblio:publicationHasDate knoraType="date_value">GREGORIAN:500 BC:400 BC</p0802-biblio:publicationHasDate>
+                   |        <p0802-biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</p0802-biblio:publicationHasTitle>
+                   |        <p0802-biblio:publicationHasTitle knoraType="richtext_value">An alternate title</p0802-biblio:publicationHasTitle>
+                   |        <p0802-biblio:startPage knoraType="richtext_value">48</p0802-biblio:startPage>
+                   |    </p0802-biblio:JournalArticle>
                    |</knoraXmlImport:resources>""".stripMargin
 
             val projectIri = URLEncoder.encode("http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ", "UTF-8")
@@ -1328,10 +1326,10 @@ class ResourcesV1R2RSpec extends R2RSpec {
         "reject XML import data that fails schema validation" in {
             val xmlImport =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
-                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/biblio/xml-import/v1#"
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   |    xsi:schemaLocation="http://api.knora.org/ontology/biblio/xml-import/v1# biblio.xsd"
-                   |    xmlns:biblio="http://api.knora.org/ontology/biblio/xml-import/v1#"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/0802/biblio/xml-import/v1# p0802-biblio.xsd"
+                   |    xmlns:p0802-biblio="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
                    |    xmlns:p0801-beol="http://api.knora.org/ontology/0801/beol/xml-import/v1#"
                    |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
                    |    <p0801-beol:person id="abel">
@@ -1344,31 +1342,31 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        <p0801-beol:hasFamilyName knoraType="richtext_value">Holmes</p0801-beol:hasFamilyName>
                    |        <p0801-beol:hasGivenName knoraType="richtext_value">Sherlock</p0801-beol:hasGivenName>
                    |    </p0801-beol:person>
-                   |    <biblio:Journal id="math_intelligencer">
+                   |    <p0802-biblio:Journal id="math_intelligencer">
                    |        <knoraXmlImport:label>Math Intelligencer</knoraXmlImport:label>
-                   |        <biblio:hasName knoraType="richtext_value">Math Intelligencer</biblio:hasName>
-                   |    </biblio:Journal>
-                   |    <biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
+                   |        <p0802-biblio:hasName knoraType="richtext_value">Math Intelligencer</p0802-biblio:hasName>
+                   |    </p0802-biblio:Journal>
+                   |    <p0802-biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
                    |        <knoraXmlImport:label>Strings in the 16th and 17th Centuries</knoraXmlImport:label>
-                   |        <biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
+                   |        <p0802-biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
                    |            <text xmlns="">The most <strong>interesting</strong> article in <a class="salsah-link" href="ref:math_intelligencer">Math Intelligencer</a>.</text>
-                   |        </biblio:p0801-beol__comment>
-                   |        <biblio:endPage knoraType="richtext_value">73</biblio:endPage>
-                   |        <biblio:isPartOfJournal>
-                   |            <biblio:Journal knoraType="link_value" target="math_intelligencer" linkType="ref"/>
-                   |        </biblio:isPartOfJournal>
-                   |        <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
-                   |        <biblio:publicationHasAuthor>
+                   |        </p0802-biblio:p0801-beol__comment>
+                   |        <p0802-biblio:endPage knoraType="richtext_value">73</p0802-biblio:endPage>
+                   |        <p0802-biblio:isPartOfJournal>
+                   |            <p0802-biblio:Journal knoraType="link_value" target="math_intelligencer" linkType="ref"/>
+                   |        </p0802-biblio:isPartOfJournal>
+                   |        <p0802-biblio:journalVolume knoraType="richtext_value">27</p0802-biblio:journalVolume>
+                   |        <p0802-biblio:publicationHasAuthor>
                    |            <p0801-beol:person knoraType="link_value" linkType="ref" target="abel"/>
-                   |        </biblio:publicationHasAuthor>
-                   |        <biblio:publicationHasAuthor>
+                   |        </p0802-biblio:publicationHasAuthor>
+                   |        <p0802-biblio:publicationHasAuthor>
                    |            <p0801-beol:person knoraType="link_value" linkType="ref" target="holmes"/>
-                   |        </biblio:publicationHasAuthor>
-                   |        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:19foo76</biblio:publicationHasDate>
-                   |        <biblio:publicationHasTitle knoraType="richtext_value" lang="en">Strings in the 16th and 17th Centuries</biblio:publicationHasTitle>
-                   |        <biblio:publicationHasTitle knoraType="richtext_value">An alternate title</biblio:publicationHasTitle>
-                   |        <biblio:startPage knoraType="richtext_value">48</biblio:startPage>
-                   |    </biblio:JournalArticle>
+                   |        </p0802-biblio:publicationHasAuthor>
+                   |        <p0802-biblio:publicationHasDate knoraType="date_value">GREGORIAN:19foo76</p0802-biblio:publicationHasDate>
+                   |        <p0802-biblio:publicationHasTitle knoraType="richtext_value" lang="en">Strings in the 16th and 17th Centuries</p0802-biblio:publicationHasTitle>
+                   |        <p0802-biblio:publicationHasTitle knoraType="richtext_value">An alternate title</p0802-biblio:publicationHasTitle>
+                   |        <p0802-biblio:startPage knoraType="richtext_value">48</p0802-biblio:startPage>
+                   |    </p0802-biblio:JournalArticle>
                    |</knoraXmlImport:resources>""".stripMargin
 
             val projectIri = URLEncoder.encode("http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ", "UTF-8")
@@ -1384,29 +1382,29 @@ class ResourcesV1R2RSpec extends R2RSpec {
         "refer to existing resources in an XML import" in {
             val xmlImport =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
-                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/biblio/xml-import/v1#"
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   |    xsi:schemaLocation="http://api.knora.org/ontology/biblio/xml-import/v1# biblio.xsd"
-                   |    xmlns:biblio="http://api.knora.org/ontology/biblio/xml-import/v1#"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/0802/biblio/xml-import/v1# p0802-biblio.xsd"
+                   |    xmlns:p0802-biblio="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
                    |    xmlns:p0801-beol="http://api.knora.org/ontology/0801/beol/xml-import/v1#"
                    |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
-                   |    <biblio:JournalArticle id="strings_in_the_18th_century">
+                   |    <p0802-biblio:JournalArticle id="strings_in_the_18th_century">
                    |        <knoraXmlImport:label>Strings in the 18th Century</knoraXmlImport:label>
-                   |        <biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
+                   |        <p0802-biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
                    |            <text xmlns="">The most <strong>boring</strong> article in <a class="salsah-link" href="${mathIntelligencerIri.get}">Math Intelligencer</a>.</text>
-                   |        </biblio:p0801-beol__comment>
-                   |        <biblio:endPage knoraType="richtext_value">76</biblio:endPage>
-                   |        <biblio:isPartOfJournal>
-                   |            <biblio:Journal knoraType="link_value" linkType="iri" target="${mathIntelligencerIri.get}"/>
-                   |        </biblio:isPartOfJournal>
-                   |        <biblio:journalVolume knoraType="richtext_value">27</biblio:journalVolume>
-                   |        <biblio:publicationHasAuthor>
+                   |        </p0802-biblio:p0801-beol__comment>
+                   |        <p0802-biblio:endPage knoraType="richtext_value">76</p0802-biblio:endPage>
+                   |        <p0802-biblio:isPartOfJournal>
+                   |            <p0802-biblio:Journal knoraType="link_value" linkType="iri" target="${mathIntelligencerIri.get}"/>
+                   |        </p0802-biblio:isPartOfJournal>
+                   |        <p0802-biblio:journalVolume knoraType="richtext_value">27</p0802-biblio:journalVolume>
+                   |        <p0802-biblio:publicationHasAuthor>
                    |            <p0801-beol:person knoraType="link_value" linkType="iri" target="${abelAuthorIri.get}"/>
-                   |        </biblio:publicationHasAuthor>
-                   |        <biblio:publicationHasDate knoraType="date_value">GREGORIAN:1977</biblio:publicationHasDate>
-                   |        <biblio:publicationHasTitle knoraType="richtext_value">Strings in the 18th Century</biblio:publicationHasTitle>
-                   |        <biblio:startPage knoraType="richtext_value">52</biblio:startPage>
-                   |    </biblio:JournalArticle>
+                   |        </p0802-biblio:publicationHasAuthor>
+                   |        <p0802-biblio:publicationHasDate knoraType="date_value">GREGORIAN:1977</p0802-biblio:publicationHasDate>
+                   |        <p0802-biblio:publicationHasTitle knoraType="richtext_value">Strings in the 18th Century</p0802-biblio:publicationHasTitle>
+                   |        <p0802-biblio:startPage knoraType="richtext_value">52</p0802-biblio:startPage>
+                   |    </p0802-biblio:JournalArticle>
                    |</knoraXmlImport:resources>""".stripMargin
 
             val projectIri = URLEncoder.encode("http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ", "UTF-8")
@@ -1421,29 +1419,29 @@ class ResourcesV1R2RSpec extends R2RSpec {
         "create an anything:Thing with all data types from an XML import" in {
             val xmlImport =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
-                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/anything/xml-import/v1#"
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   |    xsi:schemaLocation="http://api.knora.org/ontology/anything/xml-import/v1# anything.xsd"
-                   |    xmlns:anything="http://api.knora.org/ontology/anything/xml-import/v1#"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# p0001-anything.xsd"
+                   |    xmlns:p0001-anything="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
                    |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
-                   |    <anything:Thing id="test_thing">
+                   |    <p0001-anything:Thing id="test_thing">
                    |        <knoraXmlImport:label>These are a few of my favorite things</knoraXmlImport:label>
-                   |        <anything:hasBoolean knoraType="boolean_value">true</anything:hasBoolean>
-                   |        <anything:hasColor knoraType="color_value">#4169E1</anything:hasColor>
-                   |        <anything:hasDate knoraType="date_value">JULIAN:1291-08-01:1291-08-01</anything:hasDate>
-                   |        <anything:hasDecimal knoraType="decimal_value">5.6</anything:hasDecimal>
-                   |        <anything:hasInteger knoraType="int_value">12345</anything:hasInteger>
-                   |        <anything:hasInterval knoraType="interval_value">1000000000000000.0000000000000001,1000000000000000.0000000000000002</anything:hasInterval>
-                   |        <anything:hasListItem knoraType="hlist_value">http://data.knora.org/anything/treeList10</anything:hasListItem>
-                   |        <anything:hasOtherThing>
-                   |            <anything:Thing knoraType="link_value" linkType="iri" target="${sixthThingIri.get}"/>
-                   |        </anything:hasOtherThing>
-                   |        <anything:hasText knoraType="richtext_value">This is a test.</anything:hasText>
-                   |        <anything:hasUri knoraType="uri_value">http://dhlab.unibas.ch</anything:hasUri>
-                   |    </anything:Thing>
+                   |        <p0001-anything:hasBoolean knoraType="boolean_value">true</p0001-anything:hasBoolean>
+                   |        <p0001-anything:hasColor knoraType="color_value">#4169E1</p0001-anything:hasColor>
+                   |        <p0001-anything:hasDate knoraType="date_value">JULIAN:1291-08-01:1291-08-01</p0001-anything:hasDate>
+                   |        <p0001-anything:hasDecimal knoraType="decimal_value">5.6</p0001-anything:hasDecimal>
+                   |        <p0001-anything:hasInteger knoraType="int_value">12345</p0001-anything:hasInteger>
+                   |        <p0001-anything:hasInterval knoraType="interval_value">1000000000000000.0000000000000001,1000000000000000.0000000000000002</p0001-anything:hasInterval>
+                   |        <p0001-anything:hasListItem knoraType="hlist_value">http://rdfh.ch/lists/0001/treeList10</p0001-anything:hasListItem>
+                   |        <p0001-anything:hasOtherThing>
+                   |            <p0001-anything:Thing knoraType="link_value" linkType="iri" target="${sixthThingIri.get}"/>
+                   |        </p0001-anything:hasOtherThing>
+                   |        <p0001-anything:hasText knoraType="richtext_value">This is a test.</p0001-anything:hasText>
+                   |        <p0001-anything:hasUri knoraType="uri_value">http://dhlab.unibas.ch</p0001-anything:hasUri>
+                   |    </p0001-anything:Thing>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/anything", "UTF-8")
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
 
             Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPath ~> check {
                 val responseStr = responseAs[String]
@@ -1453,7 +1451,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
         }
 
         "serve a Zip file containing XML schemas for validating an XML import" in {
-            val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/biblio", "UTF-8")
+            val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0802/biblio", "UTF-8")
 
             Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
                 val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
@@ -1471,12 +1469,12 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     }
                 }
 
-                assert(zippedFilenames == Set("p0801-beol.xsd", "biblio.xsd", "knoraXmlImport.xsd"))
+                assert(zippedFilenames == Set("p0801-beol.xsd", "p0802-biblio.xsd", "knoraXmlImport.xsd"))
             }
         }
 
         "consider inherited cardinalities when generating XML schemas for referenced ontologies in an XML import" in {
-            val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/something", "UTF-8")
+            val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0001/something", "UTF-8")
 
             Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
                 val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
@@ -1494,7 +1492,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     }
                 }
 
-                assert(zippedFilenames == Set("something.xsd", "knoraXmlImport.xsd", "anything.xsd"))
+                assert(zippedFilenames == Set("p0001-something.xsd", "knoraXmlImport.xsd", "p0001-anything.xsd"))
             }
         }
 
@@ -1510,10 +1508,10 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             xmlStringBuilder.append(
                 """<?xml version="1.0" encoding="UTF-8"?>
-                  |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/anything/xml-import/v1#"
+                  |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                  |    xsi:schemaLocation="http://api.knora.org/ontology/anything/xml-import/v1# anything.xsd"
-                  |    xmlns:anything="http://api.knora.org/ontology/anything/xml-import/v1#"
+                  |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# anything.xsd"
+                  |    xmlns:p0001-anything="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
                   |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
                   |
                 """.stripMargin)
@@ -1521,7 +1519,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
             for (i <- 1 to 10000) {
                 xmlStringBuilder.append(
                     s"""
-                       |<anything:Thing id="test_thing_$i">
+                       |<p0001-anything:Thing id="test_thing_$i">
                        |<knoraXmlImport:label>This is thing $i</knoraXmlImport:label>
                     """.stripMargin)
 
@@ -1529,68 +1527,68 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     xmlStringBuilder = xmlStringBuilder,
                     value =
                         """
-                          |<anything:hasBoolean knoraType="boolean_value">true</anything:hasBoolean>
+                          |<p0001-anything:hasBoolean knoraType="boolean_value">true</p0001-anything:hasBoolean>
                         """.stripMargin)
 
                 maybeAppendValue(random = random,
                     xmlStringBuilder = xmlStringBuilder,
                     value =
                         """
-                          |<anything:hasColor knoraType="color_value">#4169E1</anything:hasColor>
+                          |<p0001-anything:hasColor knoraType="color_value">#4169E1</p0001-anything:hasColor>
                         """.stripMargin)
 
                 maybeAppendValue(random = random,
                     xmlStringBuilder = xmlStringBuilder,
                     value =
                         """
-                          |<anything:hasDate knoraType="date_value">JULIAN:1291-08-01:1291-08-01</anything:hasDate>
+                          |<p0001-anything:hasDate knoraType="date_value">JULIAN:1291-08-01:1291-08-01</p0001-anything:hasDate>
                         """.stripMargin)
 
                 maybeAppendValue(random = random,
                     xmlStringBuilder = xmlStringBuilder,
                     value =
                         s"""
-                           |<anything:hasDecimal knoraType="decimal_value">$i.$i</anything:hasDecimal>
+                           |<p0001-anything:hasDecimal knoraType="decimal_value">$i.$i</p0001-anything:hasDecimal>
                         """.stripMargin)
 
                 maybeAppendValue(random = random,
                     xmlStringBuilder = xmlStringBuilder,
                     value =
                         s"""
-                           |<anything:hasInteger knoraType="int_value">$i</anything:hasInteger>
+                           |<p0001-anything:hasInteger knoraType="int_value">$i</p0001-anything:hasInteger>
                         """.stripMargin)
 
                 maybeAppendValue(random = random,
                     xmlStringBuilder = xmlStringBuilder,
                     value =
                         """
-                          |<anything:hasInterval knoraType="interval_value">1000000000000000.0000000000000001,1000000000000000.0000000000000002</anything:hasInterval>
+                          |<p0001-anything:hasInterval knoraType="interval_value">1000000000000000.0000000000000001,1000000000000000.0000000000000002</p0001-anything:hasInterval>
                         """.stripMargin)
 
                 maybeAppendValue(random = random,
                     xmlStringBuilder = xmlStringBuilder,
                     value =
                         """
-                          |<anything:hasListItem knoraType="hlist_value">http://data.knora.org/anything/treeList10</anything:hasListItem>
+                          |<p0001-anything:hasListItem knoraType="hlist_value">http://rdfh.ch/lists/0001/treeList10</p0001-anything:hasListItem>
                         """.stripMargin)
 
                 maybeAppendValue(random = random,
                     xmlStringBuilder = xmlStringBuilder,
                     value =
                         s"""
-                           |<anything:hasText knoraType="richtext_value">This is a test in thing $i.</anything:hasText>
+                           |<p0001-anything:hasText knoraType="richtext_value">This is a test in thing $i.</p0001-anything:hasText>
                         """.stripMargin)
 
                 maybeAppendValue(random = random,
                     xmlStringBuilder = xmlStringBuilder,
                     value =
                         """
-                          |<anything:hasUri knoraType="uri_value">http://dhlab.unibas.ch</anything:hasUri>
+                          |<p0001-anything:hasUri knoraType="uri_value">http://dhlab.unibas.ch</p0001-anything:hasUri>
                         """.stripMargin)
 
                 xmlStringBuilder.append(
                     """
-                      |</anything:Thing>
+                      |</p0001-anything:Thing>
                     """.stripMargin)
             }
 
@@ -1599,7 +1597,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                   |</knoraXmlImport:resources>
                 """.stripMargin)
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/anything", "UTF-8")
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
 
             Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlStringBuilder.toString)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPath ~> check {
                 val responseStr = responseAs[String]

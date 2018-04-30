@@ -33,7 +33,7 @@
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
-prefix dokubib: <http://www.knora.org/ontology/dokubib#>
+prefix dokubib: <http://www.knora.org/ontology/0804/dokubib#>
 
 SELECT ?bild
 @* Ensure that inference is not used in this query. *@

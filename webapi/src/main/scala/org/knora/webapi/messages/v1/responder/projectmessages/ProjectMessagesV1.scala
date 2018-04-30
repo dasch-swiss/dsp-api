@@ -162,7 +162,7 @@ case class ProjectAdminMembersGetResponseV1(members: Seq[UserDataV1],
   *
   * @param id                 The project's IRI.
   * @param shortname          The project's shortname. Needs to be system wide unique.
-  * @param longname           The project's long name.
+  * @param longname           The project's long name. Needs to be system wide unique.
   * @param description        The project's description.
   * @param keywords           The project's keywords.
   * @param logo               The project's logo.
@@ -173,7 +173,7 @@ case class ProjectAdminMembersGetResponseV1(members: Seq[UserDataV1],
   */
 case class ProjectInfoV1(id: IRI,
                          shortname: String,
-                         shortcode: Option[String],
+                         shortcode: String,
                          longname: Option[String],
                          description: Option[String],
                          keywords: Option[String],

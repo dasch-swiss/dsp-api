@@ -41,7 +41,7 @@ import scala.util.control.Exception._
 import scala.util.matching.Regex
 
 /**
-  * Provides the singleton instance of [[StringFormatter]], as well as string formatting constants.
+  * Provides instances of [[StringFormatter]], as well as string formatting constants.
   */
 object StringFormatter {
 
@@ -490,12 +490,6 @@ object IriConversions {
           * @param errorFun A function that throws an exception. It will be called if the string cannot be converted.
           */
         def toSmartIriWithErr(errorFun: => Nothing)(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIriWithErr(self, errorFun)
-
-        /**
-          * Converts an IRI string to a [[SmartIri]], verifying that the resulting [[SmartIri]] is a Knora internal definition IRI,
-          * and throwing [[DataConversionException]] otherwise.
-          */
-        def toKnoraInternalSmartIri(implicit stringFormatter: StringFormatter): SmartIri = stringFormatter.toSmartIri(self, requireInternal = true)
     }
 
 }
@@ -619,8 +613,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
     // A regex for a project-specific XML import namespace.
     private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
-        "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart + "((" +
-            ProjectIDPattern + ")/)?(" + NCNamePattern + ")" +
+        "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart + "(" +
+            ProjectIDPattern + ")/(" + NCNamePattern + ")" +
             OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
         ).r
 
@@ -628,7 +622,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     // may start with a project ID (prefixed with 'p') and a hyphen. This regex parses that pattern.
     private val PropertyFromOtherOntologyInXmlImportRegex: Regex = (
 
-        "^(p(" + ProjectIDPattern + ")-)?(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
+        "^(p(" + ProjectIDPattern + ")-)(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
         ).r
 
     // In XML import data, a standoff link tag that refers to a resource described in the import must have the
@@ -808,6 +802,11 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                             errorFun
                         }
 
+                        // A project code is required in project-specific definition IRIs.
+                        if (hasProjectSpecificHostname && projectCode.isEmpty) {
+                            errorFun
+                        }
+
                         SmartIriInfo(
                             iriType = KnoraDefinitionIri,
                             projectCode = projectCode,
@@ -981,8 +980,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             val internalOntologyIri = new StringBuilder(OntologyConstants.KnoraInternal.InternalOntologyStart)
 
             iriInfo.projectCode match {
-                case Some(projectCode) => internalOntologyIri.append(projectCode).append('/')
-                case None => ()
+                case Some(projectCode) => internalOntologyIri.append('/').append(projectCode).append('/')
+                case None => internalOntologyIri.append('/')
             }
 
             val convertedIriStr = internalOntologyIri.append(externalToInternalOntologyName(ontologyName)).append("#").append(entityName).toString
@@ -1069,7 +1068,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         }
 
         private lazy val asInternalOntologyIri: SmartIri = {
-            val convertedIriStr = makeProjectSpecificInternalOntologyIriStr(
+            val convertedIriStr = makeInternalOntologyIriStr(
                 internalOntologyName = externalToInternalOntologyName(getOntologyName),
                 projectCode = iriInfo.projectCode
             )
@@ -1665,13 +1664,10 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @return the same ontology name.
       */
     def validateProjectSpecificOntologyName(ontologyName: String, errorFun: => Nothing): String = {
-        // TODO: Uncomment this when unil.ch have renamed their ontologies to use NCNames (#667).
-        /*
         ontologyName match {
             case NCNameRegex(_*) => ()
             case _ => errorFun
         }
-        */
 
         val lowerCaseOntologyName = ontologyName.toLowerCase
 
@@ -1694,19 +1690,19 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     }
 
     /**
-      * Given a valid internal ontology name and an optional project code, constructs the corresponding internal
-      * ontology IRI.
+      * Given a valid internal (built-in or project-specific) ontology name and an optional project code, constructs the
+      * corresponding internal ontology IRI.
       *
       * @param internalOntologyName the ontology name.
       * @param projectCode          the project code.
       * @return the ontology IRI.
       */
-    private def makeProjectSpecificInternalOntologyIriStr(internalOntologyName: String, projectCode: Option[String]): IRI = {
+    private def makeInternalOntologyIriStr(internalOntologyName: String, projectCode: Option[String]): IRI = {
         val internalOntologyIri = new StringBuilder(OntologyConstants.KnoraInternal.InternalOntologyStart)
 
         projectCode match {
-            case Some(code) => internalOntologyIri.append(code).append('/')
-            case None => ()
+            case Some(code) => internalOntologyIri.append('/').append(code).append('/')
+            case None => internalOntologyIri.append('/')
         }
 
         internalOntologyIri.append(internalOntologyName).toString
@@ -1720,8 +1716,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @param projectCode          the project code.
       * @return the ontology IRI.
       */
-    def makeProjectSpecificInternalOntologyIri(internalOntologyName: String, projectCode: Option[String]): SmartIri = {
-        toSmartIri(makeProjectSpecificInternalOntologyIriStr(internalOntologyName, projectCode))
+    def makeProjectSpecificInternalOntologyIri(internalOntologyName: String, projectCode: String): SmartIri = {
+        toSmartIri(makeInternalOntologyIriStr(internalOntologyName, Some(projectCode)))
     }
 
     /**
@@ -1785,7 +1781,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       */
     def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: => Nothing): SmartIri = {
         namespace match {
-            case ProjectSpecificXmlImportNamespaceRegex(_, Optional(projectCode), ontologyName) if !isBuiltInOntologyName(ontologyName) =>
+            case ProjectSpecificXmlImportNamespaceRegex(projectCode, ontologyName) if !isBuiltInOntologyName(ontologyName) =>
                 makeProjectSpecificInternalOntologyIri(
                     internalOntologyName = externalToInternalOntologyName(ontologyName),
                     projectCode = projectCode
@@ -1820,14 +1816,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       */
     def toPropertyIriFromOtherOntologyInXmlImport(prefixLabelAndLocalName: String): Option[IRI] = {
         prefixLabelAndLocalName match {
-            case PropertyFromOtherOntologyInXmlImportRegex(_, Optional(maybeProjectID), prefixLabel, localName) =>
-                maybeProjectID match {
-                    case Some(projectID) =>
-                        Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}$projectID/$prefixLabel#$localName")
-
-                    case None =>
-                        Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}$prefixLabel#$localName")
-                }
+            case PropertyFromOtherOntologyInXmlImportRegex(_, projectID, prefixLabel, localName) =>
+                Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/$projectID/$prefixLabel#$localName")
 
             case _ => None
         }
@@ -1885,11 +1875,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @return the IRI of the project's data named graph.
       */
     def projectDataNamedGraph(projectInfo: ProjectInfoV1): IRI = {
-        if (projectInfo.shortcode.isDefined) {
-            OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortcode.get + "/" + projectInfo.shortname
-        } else {
-            OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortname
-        }
+        OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortcode + "/" + projectInfo.shortname
     }
 
     /**
@@ -1899,11 +1885,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @return the IRI of the project's data named graph.
       */
     def projectDataNamedGraphV2(project: ProjectADM): IRI = {
-        if (project.shortcode.isDefined) {
-            OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortcode.get + "/" + project.shortname
-        } else {
-            OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortname
-        }
+        OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortcode + "/" + project.shortname
     }
 
     /**

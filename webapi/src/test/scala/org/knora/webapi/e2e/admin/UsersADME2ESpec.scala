@@ -41,8 +41,8 @@ import scala.concurrent.duration._
 object UsersADME2ESpec {
     val config = ConfigFactory.parseString(
         """
-          akka.loglevel = "INFO"
-          akka.stdout-loglevel = "INFO"
+          akka.loglevel = "ERROR"
+          akka.stdout-loglevel = "ERROR"
         """.stripMargin)
 }
 
@@ -132,7 +132,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
     "Load test data" in {
         // send POST to 'v1/store/ResetTriplestoreContent'
         val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        println(request)
+        // log.debug(s"request: ${request.toString}")
         singleAwaitingRequest(request, 300.seconds)
     }
 
@@ -226,31 +226,46 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 result.lang should be("de")
             }
 
-            "update the user's password" in {
+            "update the user's password (by himself)" in {
 
                 val params01 =
                     s"""
                     {
-                        "oldPassword": "test",
-                        "newPassword": "test1234"
+                        "requesterPassword": "test",
+                        "newPassword": "test123456"
                     }
                     """.stripMargin
 
 
-                val request1 = Put(baseApiUrl + s"/admin/users/" + rootCreds.urlEncodedIri, HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, "test")) // old password
+                val request1 = Put(baseApiUrl + s"/admin/users/" + normalUserCreds.urlEncodedIri, HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(BasicHttpCredentials(normalUserCreds.email, "test")) // requester's password
                 val response1: HttpResponse = singleAwaitingRequest(request1)
+                log.debug(s"response: ${response1.toString}")
                 response1.status should be(StatusCodes.OK)
 
-                val params02 =
+                // check if the password was changed, i.e. if the new one is accepted
+                val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(BasicHttpCredentials(normalUserCreds.email, "test123456")) // new password
+                val response2: HttpResponse = singleAwaitingRequest(request2)
+                response2.status should be(StatusCodes.OK)
+            }
+
+            "update the user's password (by a system admin)" in {
+
+                val params01 =
                     s"""
                     {
-                        "oldPassword": "test1234",
-                        "newPassword": "test"
+                        "requesterPassword": "test",
+                        "newPassword": "test654321"
                     }
                     """.stripMargin
 
 
-                val request2 = Put(baseApiUrl + s"/admin/users/" + rootCreds.urlEncodedIri, HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, "test1234")) // new password
+                val request1 = Put(baseApiUrl + s"/admin/users/" + normalUserCreds.urlEncodedIri, HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, "test")) // requester's password
+                val response1: HttpResponse = singleAwaitingRequest(request1)
+                log.debug(s"response: ${response1.toString}")
+                response1.status should be(StatusCodes.OK)
+
+                // check if the password was changed, i.e. if the new one is accepted
+                val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(BasicHttpCredentials(normalUserCreds.email, "test654321")) // new password
                 val response2: HttpResponse = singleAwaitingRequest(request2)
                 response2.status should be(StatusCodes.OK)
             }

@@ -1166,7 +1166,7 @@
       },
       "knora-api:valueHasLanguage": {
         "@id": "knora-api:valueHasLanguage",
-        "@type": "owl:ObjectProperty",
+        "@type": "owl:DatatypeProperty",
         "knora-api:objectType": "http://www.w3.org/2001/XMLSchema#string",
         "knora-api:subjectType": "http://www.w3.org/2001/XMLSchema#string"
       }
