@@ -93,12 +93,18 @@ case class ReadValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IOVa
         // Is the value represented as a JSON-LD object in the target schema?
         valueContentAsJsonLD match {
             case jsonLDObject: JsonLDObject =>
-                // Yes. Add the value's ID and type.
-                JsonLDObject(
-                    jsonLDObject.value +
-                        ("@id" -> JsonLDString(valueIri)) +
-                        ("@type" -> JsonLDString(valueContent.valueType.toString))
-                )
+                // Yes. Is it just an IRI?
+                if (JsonLDUtil.isIriValue(jsonLDObject)) {
+                    // Yes. Leave it as is.
+                    jsonLDObject
+                } else {
+                    // No. Add the value's IRI and type.
+                    JsonLDObject(
+                        jsonLDObject.value +
+                            ("@id" -> JsonLDString(valueIri)) +
+                            ("@type" -> JsonLDString(valueContent.valueType.toString))
+                    )
+                }
 
             case literal: JsonLDValue =>
                 // No, it's a literal, so leave it as is.
@@ -509,7 +515,7 @@ case class HierarchicalListValueContentV2(valueType: SmartIri,
             case ApiV2WithValueObjects =>
                 JsonLDObject(
                     Map(
-                        OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNode -> JsonLDString(valueHasListNode),
+                        OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNode -> JsonLDUtil.iriToJsonLDObject(valueHasListNode),
                         OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNodeLabel -> JsonLDString(listNodeLabel)
                     )
                 )
@@ -743,7 +749,7 @@ case class LinkValueContentV2(valueType: SmartIri,
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         targetSchema match {
-            case ApiV2Simple => JsonLDString(target)
+            case ApiV2Simple => JsonLDUtil.iriToJsonLDObject(target)
 
             case ApiV2WithValueObjects =>
                 // check if the referred resource has to be included in the JSON response
@@ -811,7 +817,28 @@ case class ReadResourceV2(resourceIri: IRI,
         copy(
             resourceClass = resourceClass.toOntologySchema(targetSchema),
             values = values.map {
-                case (propertyIri, readValues) => propertyIri.toOntologySchema(targetSchema) -> readValues.map(_.toOntologySchema(targetSchema))
+                case (propertyIri, readValues) =>
+                    val propertyIriInTargetSchema = propertyIri.toOntologySchema(targetSchema)
+
+                    // In the simple schema, use link properties instead of link value properties.
+                    val adaptedPropertyIri = if (targetSchema == ApiV2Simple) {
+                        val isLinkProp = readValues.forall {
+                            readValue => readValue.valueContent match {
+                                case _: LinkValueContentV2 => true
+                                case _ => false
+                            }
+                        }
+
+                        if (isLinkProp) {
+                            propertyIriInTargetSchema.fromLinkValuePropToLinkProp
+                        } else {
+                            propertyIriInTargetSchema
+                        }
+                    } else {
+                        propertyIriInTargetSchema
+                    }
+
+                    adaptedPropertyIri -> readValues.map(_.toOntologySchema(targetSchema))
             }
         )
     }

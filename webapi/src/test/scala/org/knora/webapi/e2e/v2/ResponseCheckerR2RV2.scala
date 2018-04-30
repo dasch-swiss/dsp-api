@@ -123,7 +123,7 @@ object ResponseCheckerR2RV2 {
         val expectedResourcesAsArray: JsonLDArray = elementToArray(expectedResponse.body.value(itemListElementMember))
 
         // returns a list also if there is only one element
-        val receivedResourcesAsArray: JsonLDArray = elementToArray(expectedResponse.body.value(itemListElementMember))
+        val receivedResourcesAsArray: JsonLDArray = elementToArray(receivedResponse.body.value(itemListElementMember))
 
         // check that the actual amount of resources returned is correct
         assert(expectedResourcesAsArray.value.size == receivedResourcesAsArray.value.size, s"received list of resources has wrong length")

@@ -336,25 +336,26 @@ object ConstructResponseUtilV2 {
                     propIri -> transformedValues
             }
 
-            if (incomingLinksForResource(resourceIri).nonEmpty) {
-                // incomingResourcesWithLinkValueProps contains resources that have incoming link values
-                // flatResourcesWithValues contains the complete information
+            // incomingLinksForResource contains incoming link values for each resource
+            // flatResourcesWithValues contains the complete information
 
-                // filter out those resources that already have been processed
-                // and the main resources (they are already present on the top level of the response)
-                //
-                // the main resources point to dependent resources and would be treated as incoming links of dependent resources
-                // this would create circular dependencies
-                val incomingValueProps: Map[IRI, Seq[ValueRdfData]] = incomingLinksForResource(resourceIri).filterNot {
-                    case (incomingResIri: IRI, assertions: ResourceWithValueRdfData) =>
-                        alreadyTraversed(incomingResIri) || flatResourcesWithValues(incomingResIri).isMainResource
-                }.flatMap {
-                    case (incomingResIri: IRI, assertions: ResourceWithValueRdfData) =>
-                        assertions.valuePropertyAssertions
-                }
+            // filter out those resources that already have been processed
+            // and the main resources (they are already present on the top level of the response)
+            //
+            // the main resources point to dependent resources and would be treated as incoming links of dependent resources
+            // this would create circular dependencies
 
+            val incomingLinks = incomingLinksForResource(resourceIri).filterNot {
+                case (incomingResIri: IRI, assertions: ResourceWithValueRdfData) =>
+                    alreadyTraversed(incomingResIri) || flatResourcesWithValues(incomingResIri).isMainResource
+            }.flatMap {
+                case (incomingResIri: IRI, assertions: ResourceWithValueRdfData) =>
+                    assertions.valuePropertyAssertions
+            }
+
+            if (incomingLinks.nonEmpty) {
                 // create a virtual property representing an incoming link
-                val incomingProps: (IRI, Seq[ValueRdfData]) = OntologyConstants.KnoraBase.HasIncomingLink -> incomingValueProps.values.toSeq.flatten.map {
+                val incomingProps: (IRI, Seq[ValueRdfData]) = OntologyConstants.KnoraBase.HasIncomingLink -> incomingLinks.values.toSeq.flatten.map {
                     (linkValue: ValueRdfData) =>
 
                         // get the source of the link value (it points to the resource that is currently processed)
