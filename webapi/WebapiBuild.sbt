@@ -3,7 +3,6 @@ import NativePackagerHelper._
 import sbt.io.IO
 import sbtassembly.MergeStrategy
 import sbtassembly.MergeStrategy._
-import sun.util.logging.resources.logging
 
 connectInput in run := true
 

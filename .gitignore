@@ -1,6 +1,8 @@
 /.project
 **/.idea
 **/*.iml
+**/*.ipr
+**/*.iws
 /logs/
 /bin/
 /info.aduna.logging.dir_IS_UNDEFINED/
