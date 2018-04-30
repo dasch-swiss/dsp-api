@@ -2,7 +2,9 @@
   "knora-api:hasOntologies" : {
     "@id" : "http://0.0.0.0:3333/ontology/00FF/images/v2",
     "@type" : "http://www.w3.org/2002/07/owl#Ontology",
-    "knora-api:attachedToProject" : "http://rdfh.ch/projects/00FF",
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/00FF"
+    },
     "rdfs:label" : "The images demo ontology"
   },
   "@context" : {

@@ -10,7 +10,9 @@
         "rdfs:label" : "Date literal",
         "rdfs:subClassOf" : {
           "@type" : "rdfs:Datatype",
-          "owl:onDatatype" : "http://www.w3.org/2001/XMLSchema#string",
+          "owl:onDatatype" : {
+            "@id" : "xsd:string"
+          },
           "owl:withRestrictions" : {
             "xsd:pattern" : "(GREGORIAN|JULIAN):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?"
           }
