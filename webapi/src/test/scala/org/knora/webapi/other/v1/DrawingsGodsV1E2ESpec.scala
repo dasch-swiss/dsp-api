@@ -81,7 +81,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
             val params =
                 s"""
                    |{
-                   |    "restype_id": "http://www.knora.org/ontology/anything#Thing",
+                   |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A thing",
                    |    "project_id": "http://rdfh.ch/projects/0106",
                    |    "properties": {}
@@ -104,7 +104,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
                 s"""
                   |{
                   |    "res_id": "${thingIri.get}",
-                  |    "prop": "http://www.knora.org/ontology/anything#hasInteger",
+                  |    "prop": "http://www.knora.org/ontology/0001/anything#hasInteger",
                   |    "int_value": 1234
                   |}
                 """.stripMargin
@@ -124,7 +124,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
                 s"""
                   |{
                   |    "res_id": "${thingIri.get}",
-                  |    "prop": "http://www.knora.org/ontology/anything#hasInteger",
+                  |    "prop": "http://www.knora.org/ontology/0001/anything#hasInteger",
                   |    "int_value": 1111
                   |}
                 """.stripMargin
@@ -145,7 +145,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
                 s"""
                    |{
                    |    "res_id": "${thingIri.get}",
-                   |    "prop": "http://www.knora.org/ontology/anything#hasInteger",
+                   |    "prop": "http://www.knora.org/ontology/0001/anything#hasInteger",
                    |    "int_value": 2222
                    |}
                 """.stripMargin

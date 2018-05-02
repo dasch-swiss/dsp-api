@@ -1,6 +1,6 @@
 package org.knora.webapi.util
 
-import org.eclipse.rdf4j.model.Statement
+import org.eclipse.rdf4j.model.{Resource, Statement}
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.eclipse.rdf4j.rio.{RDFHandler, RDFWriter}
 import org.knora.webapi.{IRI, OntologyConstants}
@@ -16,14 +16,18 @@ import scala.collection.immutable.TreeMap
   */
 abstract class StatementCollectingHandler(turtleWriter: RDFWriter) extends RDFHandler {
     /**
-      * An instance of [[org.openrdf.model.ValueFactory]] for creating RDF statements.
+      * An instance of [[SimpleValueFactory]] for creating RDF statements.
       */
     protected val valueFactory: SimpleValueFactory = SimpleValueFactory.getInstance()
+
+    implicit object ResourceOrdering extends Ordering[Resource] {
+        def compare(o1: Resource, o2: Resource): Int = o1.stringValue.compare(o2.stringValue)
+    }
 
     /**
       * A collection of all the statements in the input file, grouped and sorted by subject IRI.
       */
-    protected var statements: TreeMap[IRI, Vector[Statement]] = TreeMap.empty[IRI, Vector[Statement]]
+    protected var statements: TreeMap[Resource, Vector[Statement]] = TreeMap.empty[Resource, Vector[Statement]]
 
     /**
       * A convenience method that returns the first object of the specified predicate in a list of statements.
@@ -42,14 +46,14 @@ abstract class StatementCollectingHandler(turtleWriter: RDFWriter) extends RDFHa
       * @param st the statement to be added.
       */
     override def handleStatement(st: Statement): Unit = {
-        val subjectIri = st.getSubject.stringValue()
-        val currentStatementsForSubject = statements.getOrElse(subjectIri, Vector.empty[Statement])
+        val subject = st.getSubject
+        val currentStatementsForSubject = statements.getOrElse(subject, Vector.empty[Statement])
 
         if (st.getPredicate.stringValue == OntologyConstants.Rdf.Type) {
             // Make rdf:type the first statement for the subject.
-            statements += (subjectIri -> (st +: currentStatementsForSubject))
+            statements += (subject -> (st +: currentStatementsForSubject))
         } else {
-            statements += (subjectIri -> (currentStatementsForSubject :+ st))
+            statements += (subject -> (currentStatementsForSubject :+ st))
         }
     }
 
@@ -61,7 +65,7 @@ abstract class StatementCollectingHandler(turtleWriter: RDFWriter) extends RDFHa
     override def handleComment(comment: String): Unit = {}
 
     /**
-      * Writes the specified namepace declaration to the output file.
+      * Writes the specified namespace declaration to the output file.
       *
       * @param prefix the namespace prefix.
       * @param uri    the namespace URI.

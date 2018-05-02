@@ -46,10 +46,10 @@ class ResourceCreationSpec extends SalsahSpec {
     private val rdfDataObjectsJsonList: String =
         """
             [
-                {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/incunabula"},
+                {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/0803/incunabula"},
                 {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/00FF/images"},
-                {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/anything"},
-                {"path": "_test_data/all_data/biblio-data.ttl", "name": "http://www.knora.org/data/biblio"}
+                {"path": "_test_data/all_data/anything-data.ttl", "name": "http://www.knora.org/data/0001/anything"},
+                {"path": "_test_data/all_data/biblio-data.ttl", "name": "http://www.knora.org/data/0802/biblio"}
             ]
         """
 
@@ -64,8 +64,8 @@ class ResourceCreationSpec extends SalsahSpec {
 
     private val testPassword = "test"
 
-    private val anythingProjectIri = "http://rdfh.ch/projects/anything"
-    private val incunabulaProjectIri = "http://rdfh.ch/projects/77275339"
+    private val anythingProjectIri = "http://rdfh.ch/projects/0001"
+    private val incunabulaProjectIri = "http://rdfh.ch/projects/0803"
 
     // In order to run these tests, start `webapi` using the option `allowReloadOverHTTP`
 
@@ -134,7 +134,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
             page.selectVocabulary("0") // select all
 
-            page.selectRestype("http://www.knora.org/ontology/anything#Thing")
+            page.selectRestype("http://www.knora.org/ontology/0001/anything#Thing")
 
             val resource1Label: WebElement = page.getFormFieldByName("__LABEL__")
 
@@ -146,15 +146,15 @@ class ResourceCreationSpec extends SalsahSpec {
                     resource1Label.sendKeys("Testding")
             }
 
-            val resource1FloatVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDecimal")
+            val resource1FloatVal = page.getFormFieldByName("http://www.knora.org/ontology/0001/anything#hasDecimal")
 
             resource1FloatVal.sendKeys("5.3")
 
-            val resource1TextVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasText")
+            val resource1TextVal = page.getFormFieldByName("http://www.knora.org/ontology/0001/anything#hasText")
 
             resource1TextVal.sendKeys("Dies ist ein Test")
 
-            val resource1DateVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDate")
+            val resource1DateVal = page.getFormFieldByName("http://www.knora.org/ontology/0001/anything#hasDate")
 
             val resource1Monthsel1 = page.getMonthSelection(resource1DateVal, 1)
 
@@ -184,17 +184,17 @@ class ResourceCreationSpec extends SalsahSpec {
 
             page.selectVocabulary("0") // select all
 
-            page.selectRestype("http://www.knora.org/ontology/anything#Thing")
+            page.selectRestype("http://www.knora.org/ontology/0001/anything#Thing")
 
             val resource2Label: WebElement = page.getFormFieldByName("__LABEL__")
 
             resource2Label.sendKeys("ein zweites Testding")
 
-            val resource2FloatVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasDecimal")
+            val resource2FloatVal = page.getFormFieldByName("http://www.knora.org/ontology/0001/anything#hasDecimal")
 
             resource2FloatVal.sendKeys("5.7")
 
-            val resource2TextVal = page.getFormFieldByName("http://www.knora.org/ontology/anything#hasText")
+            val resource2TextVal = page.getFormFieldByName("http://www.knora.org/ontology/0001/anything#hasText")
 
             resource2TextVal.sendKeys("Dies ist auch ein Test")
 

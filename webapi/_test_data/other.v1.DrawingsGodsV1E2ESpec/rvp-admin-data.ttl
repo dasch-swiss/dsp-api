@@ -14,7 +14,6 @@
         knora-base:projectLongname "parole-religieuse"^^xsd:string ;
         knora-base:projectDescription "parole-religieuse"^^xsd:string ;
         knora-base:projectKeywords "gods, collection"^^xsd:string ;
-        knora-base:projectOntology <http://www.knora.org/ontology/0106/parole-religieuse> ;
         knora-base:status "true"^^xsd:boolean ;
         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 

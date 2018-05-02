@@ -57,11 +57,11 @@ object JenaTDBActorSpec {
                         }
                         {
                             path = "_test_data/ontologies/incunabula-onto.ttl"
-                            name = "http://www.knora.org/ontology/incunabula"
+                            name = "http://www.knora.org/ontology/0803/incunabula"
                         }
                         {
                             path = "_test_data/ontologies/dokubib-onto.ttl"
-                            name = "http://www.knora.org/ontology/dokubib"
+                            name = "http://www.knora.org/ontology/0804/dokubib"
                         }
                     ]
             }
@@ -93,9 +93,9 @@ class JenaTDBActorSpec extends CoreSpec("JenaTDBActorTestSystem", JenaTDBActorSp
     val rdfDataObjects = List (
         RdfDataObject(path = "_test_data/ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
         RdfDataObject(path = "_test_data/ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
-        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/incunabula"),
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/ontologies/dokubib-onto.ttl", name = "http://www.knora.org/ontology/dokubib")
+        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/0803/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "_test_data/ontologies/dokubib-onto.ttl", name = "http://www.knora.org/ontology/0804/dokubib")
     )
 
     val countTriplesQuery = """
@@ -110,7 +110,7 @@ class JenaTDBActorSpec extends CoreSpec("JenaTDBActorTestSystem", JenaTDBActorSp
         WHERE {
                 {
               GRAPH ?namedGraph {
-                BIND(IRI("http://www.knora.org/ontology/incunabula#page") as ?s)
+                BIND(IRI("http://www.knora.org/ontology/0803/incunabula#page") as ?s)
                 ?s ?p ?obj
                 BIND(str(?obj) as ?o)
                 BIND(lang(?obj) as ?lang)

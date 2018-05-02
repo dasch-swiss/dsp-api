@@ -2,7 +2,7 @@
 <text documentType="html">
     <p>
         This is very boring text that as boring markup as well: <strong>strong</strong>, <strike>struck</strike>, <em>emphasized</em>, <u>underlined</u>,
-        <sub>subtext</sub>m <sup>supertext</sup>, <a href="http://www.knora.org">KNORA</a>, <a class="salsah-link" href="http://data.knora.org/7uuGcnFcQJq08dMOralyCQ">internal link</a>,
+        <sub>subtext</sub>m <sup>supertext</sup>, <a href="http://www.knora.org">KNORA</a>, <a class="salsah-link" href="http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ">internal link</a>,
     </p>
 
     <h1>header 1</h1>

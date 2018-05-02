@@ -119,17 +119,17 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return 'NotFoundException' when the user is unknown " in {
                 actorUnderTest ! UserGetRequestADM(
-                    maybeIri = Some("http://data.knora.org/users/notexisting"),
+                    maybeIri = Some("http://rdfh.ch/users/notexisting"),
                     maybeEmail = None,
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
-                expectMsg(Failure(NotFoundException(s"User 'http://data.knora.org/users/notexisting' not found")))
+                expectMsg(Failure(NotFoundException(s"User 'http://rdfh.ch/users/notexisting' not found")))
             }
 
             "return 'None' when the user is unknown " in {
                 actorUnderTest ! UserGetADM(
-                    maybeIri = Some("http://data.knora.org/users/notexisting"),
+                    maybeIri = Some("http://rdfh.ch/users/notexisting"),
                     maybeEmail = None,
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
