@@ -99,7 +99,7 @@ jobs:
         # install bundler
         - gem install bundler
         # install jekyll
-        - gem install jekyll
+        - gem install jekyll -v 3.8.1
         # check if sphinx is working
         - sphinx-build --version
         # install typedoc
