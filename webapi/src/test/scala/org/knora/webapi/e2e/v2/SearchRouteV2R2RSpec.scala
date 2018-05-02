@@ -1785,7 +1785,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             val sparqlSimplified =
                 """
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
