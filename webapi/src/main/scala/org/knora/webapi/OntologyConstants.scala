@@ -165,6 +165,7 @@ object OntologyConstants {
 
         val IsMainResource: IRI = KnoraBasePrefixExpansion + "isMainResource"
         val MatchesTextIndex: IRI = KnoraBasePrefixExpansion + "matchesTextIndex" // virtual property to be replaced by a triplestore-specific one
+        val MatchFunctionIri: IRI = KnoraBasePrefixExpansion + "match"
 
         val SubjectClassConstraint: IRI = KnoraBasePrefixExpansion + "subjectClassConstraint"
         val ObjectClassConstraint: IRI = KnoraBasePrefixExpansion + "objectClassConstraint"
@@ -569,7 +570,9 @@ object OntologyConstants {
     }
 
     object XPathFunctions {
-        val Contains = "http://www.w3.org/2005/xpath-functions#contains"
+        val XPathPrefixExpansion: IRI = "http://www.w3.org/2005/xpath-functions#"
+
+        val Contains: IRI = XPathPrefixExpansion + "contains"
     }
 
     object KnoraXmlImportV1 {
