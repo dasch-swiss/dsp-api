@@ -20,7 +20,8 @@ lazy val root = (project in file(".")).
         ).
         settings(
             // Set version string
-            version in ParadoxSite := "v1.3.0",
+            version in ParadoxSite := "v1.4.0",
+            version in SphinxSite := "v1.4.0",
 
             // Ghpages settings
             ghpagesNoJekyll := true,
